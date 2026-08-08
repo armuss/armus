@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Öğretmenler | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: #0b0b0c;
+      color: #f4f4f2;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAVBAR */
+
+    .navbar {
+      height: 76px;
+      border-bottom: 1px solid #242426;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(1180px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      color: #a8a8aa;
+      font-size: 14px;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      border: 1px solid #333336;
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .btn-light {
+      background: #f2f2ef;
+      color: #111;
+      border-color: #f2f2ef;
+    }
+
+    /* HERO */
+
+    .page-header {
+      padding: 70px 0 40px;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(38px, 5vw, 62px);
+      line-height: 1;
+      letter-spacing: -3px;
+      max-width: 700px;
+    }
+
+    .subtitle {
+      margin-top: 20px;
+      color: #99999c;
+      max-width: 600px;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* SEARCH */
+
+    .search-box {
+      margin-top: 35px;
+      display: flex;
+      gap: 12px;
+      background: #151517;
+      border: 1px solid #29292c;
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      padding: 10px 14px;
+    }
+
+    .search-box input::placeholder {
+      color: #66666a;
+    }
+
+    .search-btn {
+      background: #ededeb;
+      color: #111;
+      border: none;
+      border-radius: 12px;
+      padding: 0 25px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* FILTERS */
+
+    .marketplace {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 35px;
+      padding-bottom: 80px;
+    }
+
+    .filters {
+      background: #111113;
+      border: 1px solid #262628;
+      border-radius: 20px;
+      padding: 22px;
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+    }
+
+    .filters h3 {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      border-top: 1px solid #252527;
+      padding: 20px 0;
+    }
+
+    .filter-group:first-of-type {
+      border-top: none;
+    }
+
+    .filter-title {
+      font-size: 12px;
+      color: #8e8e91;
+      margin-bottom: 12px;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 10px 0;
+      font-size: 13px;
+      color: #c3c3c5;
+      cursor: pointer;
+    }
+
+    .filter-option input {
+      accent-color: #ddd;
+    }
+
+    select {
+      width: 100%;
+      background: #19191b;
+      color: white;
+      border: 1px solid #303034;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    /* RESULTS */
+
+    .results-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .results-count {
+      color: #89898c;
+      font-size: 13px;
+    }
+
+    .teachers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    .teacher-card {
+      background: #111113;
+      border: 1px solid #29292c;
+      border-radius: 22px;
+      padding: 22px;
+      transition: 0.2s ease;
+    }
+
+    .teacher-card:hover {
+      transform: translateY(-3px);
+      border-color: #454548;
+    }
+
+    .teacher-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #777, #222);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    .rating {
+      font-size: 12px;
+      color: #ddd;
+    }
+
+    .teacher-name {
+      margin-top: 17px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .teacher-role {
+      color: #858589;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 17px 0;
+    }
+
+    .tag {
+      font-size: 10px;
+      color: #c8c8ca;
+      border: 1px solid #303033;
+      padding: 6px 9px;
+      border-radius: 999px;
+    }
+
+    .teacher-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #252527;
+      padding-top: 17px;
+      margin-top: 8px;
+    }
+
+    .price {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .price span {
+      color: #77777b;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .trial {
+      background: #eeeeeb;
+      color: #111;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .empty {
+      display: none;
+      padding: 50px;
+      text-align: center;
+      color: #777;
+      border: 1px dashed #333;
+      border-radius: 20px;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 800px) {
+      .nav-links {
+        display: none;
+      }
+
+      .marketplace {
+        grid-template-columns: 1fr;
+      }
+
+      .filters {
+        position: static;
+      }
+
+      .teachers {
+        grid-template-columns: 1fr;
+      }
+
+      .search-box {
+        flex-direction: column;
+      }
+
+      .search-btn {
+        height: 45px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="navbar">
+    <div class="nav-inner">
+
+      <a href="index.html" class="logo">ARMUS</a>
+
+      <nav class="nav-links">
+        <a href="teachers.html">Öğretmenler</a>
+        <a href="index.html#how">Nasıl Çalışır?</a>
+        <a href="index.html#about">Hakkımızda</a>
+      </nav>
+
+      <div class="nav-buttons">
+        <button class="btn">Giriş Yap</button>
+        <button class="btn btn-light">Kayıt Ol</button>
+      </div>
+
+    </div>
+  </header>
+
+
+  <main class="container">
+
+    <section class="page-header">
+
+      <div class="eyebrow">ARMUS TEACHERS</div>
+
+      <h1>
+        Sana uygun İngilizce öğretmenini bul.
+      </h1>
+
+      <p class="subtitle">
+        Hedefine, seviyene ve bütçene uygun öğretmeni keşfet.
+        Öğretmenleri karşılaştır, profilini incele ve deneme dersiyle başla.
+      </p>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Öğretmen, uzmanlık veya konu ara..."
+        >
+        <button class="search-btn">Ara</button>
+      </div>
+
+    </section>
+
+
+    <section class="marketplace">
+
+      <!-- FILTERS -->
+
+      <aside class="filters">
+
+        <h3>Filtrele</h3>
+
+        <div class="filter-group">
+
+          <div class="filter-title">Ders Türü</div>
+
+          <label class="filter-option">
+            <input type="checkbox" value="Konuşma" class="filter">
+            Konuşma
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="IELTS" class="filter">
+            IELTS
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="TOEFL" class="filter">
+            TOEFL
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="YDS" class="filter">
+            YDS
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="İş İngilizcesi" class="filter">
+            İş İngilizcesi
+          </label>
+
+        </div>
+
+
+        <div class="filter-group">
+
+          <div class="filter-title">Seviye</div>
+
+          <label class="filter-option">
+            <input type="checkbox" value="Başlangıç" class="level-filter">
+            Başlangıç
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="Orta" class="level-filter">
+            Orta
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="İleri" class="level-filter">
+            İleri
+          </label>
+
+        </div>
+
+
+        <div class="filter-group">
+
+          <div class="filter-title">Sıralama</div>
+
+          <select id="sortSelect">
+            <option value="default">Önerilen</option>
+            <option value="priceLow">En düşük fiyat</option>
+            <option value="priceHigh">En yüksek fiyat</option>
+            <option value="rating">En yüksek puan</option>
+          </select>
+
+        </div>
+
+      </aside>
+
+
+      <!-- TEACHERS -->
+
+      <div>
+
+        <div class="results-top">
+          <div class="results-count" id="resultsCount">
+            6 öğretmen bulundu
+          </div>
+        </div>
+
+
+        <div class="teachers" id="teachersGrid">
+
+
+          <article
+            class="teacher-card"
+            data-name="Sarah"
+            data-tags="IELTS Konuşma İş İngilizcesi"
+            data-level="İleri"
+            data-price="800"
+            data-rating="4.9"
+          >
+
+            <div class="teacher-top">
+              <div class="avatar">SM</div>
+              <div class="rating">★ 4.9</div>
+            </div>
+
+            <div class="teacher-name">Sarah M.</div>
+            <div class="teacher-role">IELTS & Speaking Uzmanı</div>
+
+            <div class="tags">
+              <span class="tag">IELTS</span>
+              <span class="tag">Konuşma</span>
+              <span class="tag">İş İngilizcesi</span>
+            </div>
+
+            <div class="teacher-bottom">
+              <div class="price">₺800 <span>/ ders</span></div>
+              <button class="trial">Deneme Dersi Al</button>
+            </div>
+
+          </article>
+
+
+          <article
+            class="teacher-card"
+            data-name="David"
+            data-tags="IELTS YDS Konuşma"
+            data-level="İleri"
+            data-price="650"
+            data-rating="4.8"
+          >
+
+            <div class="teacher-top">
+              <div class="avatar">DK</div>
+              <div class="rating">★ 4.8</div>
+            </div>
+
+            <div class="teacher-name">David K.</div>
+            <div class="teacher-role">IELTS & YDS Uzmanı</div>
+
+            <div class="tags">
+              <span class="tag">IELTS</span>
+              <span class="tag">YDS</span>
+              <span class="tag">Konuşma</span>
+            </div>
+
+            <div class="teacher-bottom">
+              <div class="price">₺650 <span>/ ders</span></div>
+              <button class="trial">Deneme Dersi Al</button>
+            </div>
+
+          </article>
+
+
+          <article
+            class="teacher-card"
+            data-name="Emily"
+            data-tags="Konuşma Başlangıç"
+            data-level="Başlangıç"
+            data-price="500"
+            data-rating="4.9"
+          >
+
+            <div class="teacher-top">
+              <div class="avatar">EL</div>
+              <div class="rating">★ 4.9</div>
+            </div>
+
+            <div class="teacher-name">Emily L.</div>
+            <div class="teacher-role">English Speaking Teacher</div>
+
+            <div class="tags">
+              <span class="tag">Konuşma</span>
+              <span class="tag">Başlangıç</span>
+            </div>
+
+            <div class="teacher-bottom">
+              <div class="price">₺500 <span>/ ders</span></div>
+              <button class="trial">Deneme Dersi Al</button>
+            </div>
+
+          </article>
+
+
+          <article
+            class="teacher-card"
+            data-name="Michael"
+            data-tags="TOEFL Konuşma İleri"
+            data-level="İleri"
+            data-price="900"
+            data-rating="5.0"
+          >
+
+            <div class="teacher-top">
+              <div class="avatar">MJ</div>
+              <div class="rating">★ 5.0</div>
+            </div>
+
+            <div class="teacher-name">Michael J.</div>
+            <div class="teacher-role">TOEFL Uzmanı</div>
+
+            <div class="tags">
+              <span class="tag">TOEFL</span>
+              <span class="tag">Konuşma</span>
+            </div>
+
+            <div class="teacher-bottom">
+              <div class="price">₺900 <span>/ ders</span></div>
+              <button class="trial">Deneme Dersi Al</button>
+            </div>
+
+          </article>
+
+
+          <article
+            class="teacher-card"
+            data-name="Anna"
+            data-tags="İş İngilizcesi Konuşma Orta"
+            data-level="Orta"
+            data-price="550"
+            data-rating="4.7"
+          >
+
+            <div class="teacher-top">
+              <div class="avatar">AP</div>
+              <div class="rating">★ 4.7</div>
+            </div>
+
+            <div class="teacher-name">Anna P.</div>
+            <div class="teacher-role">Business English Coach</div>
+
+            <div class="tags">
+              <span class="tag">İş İngilizcesi</span>
+              <span class="tag">Konuşma</span>
+            </div>
+
+            <div class="teacher-bottom">
+              <div class="price">₺550 <span>/ ders</span></div>
+              <button class="trial">Deneme Dersi Al</button>
+            </div>
+
+          </article>
+
+
+          <article
+            class="teacher-card"
+            data-name="James"
+            data-tags="YDS TOEFL Orta"
+            data-level="Orta"
+            data-price="700"
+            data-rating="4.8"
+          >
+
+            <div class="teacher-top">
+              <div class="avatar">JW</div>
+              <div class="rating">★ 4.8</div>
+            </div>
+
+            <div class="teacher-name">James W.</div>
+            <div class="teacher-role">Exam Preparation Teacher</div>
+
+            <div class="tags">
+              <span class="tag">YDS</span>
+              <span class="tag">TOEFL</span>
+            </div>
+
+            <div class="teacher-bottom">
+              <div class="price">₺700 <span>/ ders</span></div>
+              <button class="trial">Deneme Dersi Al</button>
+            </div>
+
+          </article>
+
+
+        </div>
+
+        <div class="empty" id="emptyState">
+          Aramana uygun öğretmen bulunamadı.
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script>
+
+    const searchInput = document.getElementById("searchInput");
+    const cards = Array.from(document.querySelectorAll(".teacher-card"));
+    const filters = document.querySelectorAll(".filter");
+    const levelFilters = document.querySelectorAll(".level-filter");
+    const sortSelect = document.getElementById("sortSelect");
+    const grid = document.getElementById("teachersGrid");
+    const count = document.getElementById("resultsCount");
+    const empty = document.getElementById("emptyState");
+
+
+    function updateTeachers() {
+
+      const search = searchInput.value.toLowerCase();
+
+      const selectedTags = Array.from(filters)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
+      const selectedLevels = Array.from(levelFilters)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
+
+      let visibleCards = cards.filter(card => {
+
+        const name = card.dataset.name.toLowerCase();
+        const tags = card.dataset.tags.toLowerCase();
+        const level = card.dataset.level;
+
+        const matchesSearch =
+          !search ||
+          name.includes(search) ||
+          tags.includes(search);
+
+        const matchesTags =
+          selectedTags.length === 0 ||
+          selectedTags.some(tag =>
+            tags.includes(tag.toLowerCase())
+          );
+
+        const matchesLevel =
+          selectedLevels.length === 0 ||
+          selectedLevels.includes(level);
+
+        return matchesSearch && matchesTags && matchesLevel;
+      });
+
+
+      const sort = sortSelect.value;
+
+      visibleCards.sort((a, b) => {
+
+        if (sort === "priceLow") {
+          return Number(a.dataset.price) - Number(b.dataset.price);
+        }
+
+        if (sort === "priceHigh") {
+          return Number(b.dataset.price) - Number(a.dataset.price);
+        }
+
+        if (sort === "rating") {
+          return Number(b.dataset.rating) - Number(a.dataset.rating);
+        }
+
+        return 0;
+      });
+
+
+      cards.forEach(card => {
+        card.style.display = "none";
+      });
+
+      visibleCards.forEach(card => {
+        card.style.display = "block";
+        grid.appendChild(card);
+      });
+
+
+      count.textContent =
+        `${visibleCards.length} öğretmen bulundu`;
+
+      empty.style.display =
+        visibleCards.length === 0 ? "block" : "none";
+    }
+
+
+    searchInput.addEventListener("input", updateTeachers);
+
+    filters.forEach(filter =>
+      filter.addEventListener("change", updateTeachers)
+    );
+
+    levelFilters.forEach(filter =>
+      filter.addEventListener("change", updateTeachers)
+    );
+
+    sortSelect.addEventListener("change", updateTeachers);
+
+
+    document.querySelectorAll(".trial").forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        alert(
+          "Deneme dersi sistemi yakında ARMUS üzerinde aktif olacak."
+        );
+
+      });
+
+    });
+
+  </script>
+
+</body>
+</html>
