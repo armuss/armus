@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARMUS — İngilizce öğrenmenin daha iyi bir yolu.</title>
+  <meta name="description" content="Türkçe konuşan öğrenciler için doğru İngilizce öğretmenini bul." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-glow"></div>
+
+  <header class="nav shell">
+    <a class="brand" href="#">ARMUS</a>
+    <nav>
+      <a href="#teachers">Öğretmenler</a>
+      <a href="#how">Nasıl Çalışır?</a>
+      <a href="#about">Hakkımızda</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-dark">Giriş Yap</button>
+      <button class="btn btn-light">Kayıt Ol</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="dot"></span> Türkiye'nin İngilizce öğrenme platformu</div>
+        <h1>İngilizce öğrenmenin<br><span>daha iyi bir yolu.</span></h1>
+        <p>Sana uygun İngilizce öğretmenini bul. Hedefine, seviyene ve bütçene göre dersini seç.</p>
+        <div class="hero-actions">
+          <button class="btn btn-light btn-lg" data-scroll="#teachers">Öğretmen Bul <span>→</span></button>
+          <button class="btn btn-outline btn-lg">Öğretmen Ol <span>↗</span></button>
+        </div>
+        <div class="social-proof">
+          <div class="avatars">
+            <span>ZA</span><span>MK</span><span>ET</span><span>DK</span>
+          </div>
+          <div><strong>10.000+</strong><br><span>öğrenci ARMUS ile İngilizce öğreniyor</span></div>
+        </div>
+      </div>
+
+      <div class="teacher-stack" aria-label="Öne çıkan öğretmenler">
+        <article class="teacher-card side left">
+          <div class="portrait portrait-david">DK</div>
+          <div class="rating">★ 4.8</div>
+          <div class="card-body">
+            <h3>David K.</h3><small>IELTS Uzmanı</small>
+            <div class="tags"><span>IELTS</span><span>Akademik</span></div>
+            <strong>₺550 <small>/ ders</small></strong>
+            <button>Deneme Dersi Al</button>
+          </div>
+        </article>
+
+        <article class="teacher-card main">
+          <div class="portrait portrait-sarah">SM</div>
+          <div class="rating">★ 4.9</div>
+          <div class="card-body">
+            <h3>Sarah M.</h3><small>English Teacher</small>
+            <div class="tags"><span>Konuşma</span><span>IELTS</span><span>İş İngilizcesi</span></div>
+            <strong>₺600 <small>/ ders</small></strong>
+            <button>Deneme Dersi Al</button>
+          </div>
+        </article>
+
+        <article class="teacher-card side right">
+          <div class="portrait portrait-emma">EL</div>
+          <div class="rating">★ 4.9</div>
+          <div class="card-body">
+            <h3>Emma L.</h3><small>Business English</small>
+            <div class="tags"><span>İş İngilizcesi</span><span>Konuşma</span></div>
+            <strong>₺650 <small>/ ders</small></strong>
+            <button>Deneme Dersi Al</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="teachers" class="search-box shell">
+      <h2>Nasıl bir öğretmen arıyorsun?</h2>
+      <div class="search-row">
+        <div class="search-input"><span>⌕</span><input id="search" placeholder="Öğretmen, konu veya seviye ara..." /></div>
+        <button class="filter active">♙ Konuşma</button>
+        <button class="filter">▣ IELTS</button>
+        <button class="filter">▱ İş İngilizcesi</button>
+        <button class="filter">Seviye⌄</button>
+        <button class="filter">Fiyat⌄</button>
+        <button class="btn btn-light search-btn" id="searchBtn">Öğretmen Ara →</button>
+      </div>
+      <div id="searchMessage" class="search-message"></div>
+    </section>
+
+    <section class="features shell">
+      <article><div class="icon">♧</div><h3>Doğru Öğretmen</h3><p>Hedeflerine ve seviyene uygun öğretmeni kolayca bul.</p></article>
+      <article><div class="icon">□</div><h3>Esnek Dersler</h3><p>Sana uygun gün ve saatte dersini planla.</p></article>
+      <article><div class="icon">♢</div><h3>Güvenli Ödeme</h3><p>Derslerini güvenli bir şekilde online olarak planla ve öde.</p></article>
+    </section>
+
+    <section id="how" class="how shell">
+      <div class="section-label">NASIL ÇALIŞIR?</div>
+      <h2>İngilizce öğrenmeye<br>3 adımda başla.</h2>
+      <div class="steps">
+        <article><div class="step-no">01</div><div class="step-icon">⌕</div><h3>Öğretmenini bul</h3><p>İhtiyacına uygun öğretmeni ara ve profillerini incele.</p></article>
+        <article><div class="step-no">02</div><div class="step-icon">□</div><h3>Deneme dersini al</h3><p>Öğretmeninle tanış, hedeflerini paylaş ve sana uygun olup olmadığını gör.</p></article>
+        <article><div class="step-no">03</div><div class="step-icon">↗</div><h3>İngilizceni geliştir</h3><p>Düzenli derslerle hedeflerine ulaş ve kendini geliştir.</p></article>
+      </div>
+    </section>
+
+    <section class="trial shell">
+      <div class="trial-visual"><div class="fake-laptop"><div class="fake-video"><span>●</span> LIVE</div><div class="fake-person">SM</div></div></div>
+      <div class="trial-copy"><div class="section-label">DENEME DERSİ</div><h2>Öğretmenini denemeden karar verme.</h2><p>İlk dersinde öğretmeninle tanış, hedeflerini paylaş ve sana uygun olup olmadığını kendin gör.</p><button class="btn btn-light btn-lg">Öğretmenleri Keşfet →</button></div>
+      <div class="trial-note"><span>✦</span><strong>İlk deneme dersinde<br>öğretmene %100 ödeme garantisiyle planlanır.</strong></div>
+    </section>
+
+    <section id="about" class="teacher-cta shell">
+      <div><div class="section-label">ÖĞRETMENLER İÇİN</div><h2>İngilizce öğretiyor musun?</h2><p>ARMUS'ta kendi fiyatını belirle, kendi programını oluştur ve öğrencilerini bul.</p><strong class="gold">Daha çok ders ver, daha az komisyon öde.</strong><button class="btn btn-light btn-lg">ARMUS'ta Öğretmen Ol →</button></div>
+      <div class="commission"><div><strong>500+ saat</strong><b>%15</b><span>komisyon</span></div><div><strong>301–500 saat</strong><b>%18</b><span>komisyon</span></div><div><strong>0–100 saat</strong><b>%25</b><span>komisyon</span></div></div>
+      <div class="teacher-avatar">DK</div>
+    </section>
+
+    <section class="testimonials shell">
+      <div class="section-label">ÖĞRENCİLERİMİZ NE DİYOR?</div>
+      <div class="testimonial-grid">
+        <article><div class="stars">★★★★★</div><p>“ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.”</p><strong>Zeynep A.</strong><small>İstanbul</small></article>
+        <article><div class="stars">★★★★★</div><p>“Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.”</p><strong>Mehmet K.</strong><small>Ankara</small></article>
+        <article><div class="stars">★★★★★</div><p>“Esnek ders saatleri ve güvenli ödeme sistemi sayesinde içim çok rahat.”</p><strong>Elif T.</strong><small>İzmir</small></article>
+        <article><div class="stars">★★★★★</div><p>“ARMUS'ta kendi programımı oluşturup öğretmenimle kolayca buluşuyorum.”</p><strong>David K.</strong><small>Öğretmen</small></article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <div class="footer-brand"><a class="brand" href="#">ARMUS</a><p>İngilizce öğrenmenin daha iyi bir yolu.</p><div class="socials">◎ 𝕏 in ▶</div></div>
+    <div><h4>Öğrenciler</h4><a>Öğretmenler</a><a>Deneme Dersi</a><a>Nasıl Çalışır?</a><a>Yardım Merkezi</a></div>
+    <div><h4>Öğretmenler</h4><a>Öğretmen Ol</a><a>Komisyon Oranları</a><a>Öğretmen Rehberi</a><a>SSS</a></div>
+    <div><h4>Hakkımızda</h4><a>Hakkımızda</a><a>Kariyer</a><a>İletişim</a><a>Gizlilik Politikası</a></div>
+    <div><h4>Bültenimize Katılın</h4><p>Yeni özellikler ve fırsatlardan haberdar olun.</p><div class="newsletter"><input placeholder="E-posta adresiniz"><button>↗</button></div></div>
+    <div class="copyright">© 2026 ARMUS. Tüm hakları saklıdır.</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
