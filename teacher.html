@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sarah M. | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: #0b0b0c;
+      color: #f4f4f2;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1100px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid #252527;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(1100px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .back {
+      color: #99999c;
+      font-size: 13px;
+    }
+
+    .back:hover {
+      color: white;
+    }
+
+    /* PROFILE HEADER */
+
+    .profile-header {
+      padding: 65px 0 45px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 50px;
+      border-bottom: 1px solid #252527;
+    }
+
+    .profile-main {
+      display: flex;
+      gap: 25px;
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+      flex-shrink: 0;
+      border-radius: 28px;
+      background: linear-gradient(145deg, #777, #202022);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #bcbcbc;
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 40px;
+      letter-spacing: -2px;
+      line-height: 1.1;
+    }
+
+    .role {
+      color: #99999c;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .rating {
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    .rating span {
+      color: #777;
+      margin-left: 8px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .tag {
+      border: 1px solid #303034;
+      border-radius: 999px;
+      padding: 6px 11px;
+      color: #c7c7c9;
+      font-size: 11px;
+    }
+
+    /* BOOKING CARD */
+
+    .booking-card {
+      background: #121214;
+      border: 1px solid #2b2b2e;
+      border-radius: 22px;
+      padding: 25px;
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+    }
+
+    .price {
+      font-size: 27px;
+      font-weight: 800;
+    }
+
+    .price span {
+      font-size: 12px;
+      color: #777;
+      font-weight: 400;
+    }
+
+    .availability {
+      margin-top: 10px;
+      color: #8f8f92;
+      font-size: 12px;
+    }
+
+    .primary {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #eeeeeb;
+      color: #111;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .secondary {
+      width: 100%;
+      margin-top: 9px;
+      padding: 13px;
+      border: 1px solid #353538;
+      border-radius: 12px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .small-note {
+      text-align: center;
+      color: #66666a;
+      font-size: 10px;
+      margin-top: 13px;
+    }
+
+    /* CONTENT */
+
+    .content {
+      padding: 45px 0 90px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 70px;
+    }
+
+    section {
+      margin-bottom: 50px;
+    }
+
+    h2 {
+      font-size: 21px;
+      letter-spacing: -0.7px;
+      margin-bottom: 18px;
+    }
+
+    .description {
+      color: #a1a1a4;
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    /* STATS */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid #29292c;
+      border-radius: 16px;
+      padding: 18px;
+      background: #101012;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 21px;
+    }
+
+    .stat span {
+      color: #777;
+      font-size: 11px;
+    }
+
+    /* REVIEWS */
+
+    .review {
+      border-top: 1px solid #252527;
+      padding: 20px 0;
+    }
+
+    .review:first-of-type {
+      border-top: none;
+    }
+
+    .review-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .review-name {
+      font-weight: 600;
+    }
+
+    .review-text {
+      margin-top: 8px;
+      color: #99999c;
+      font-size: 13px;
+    }
+
+    /* SIDEBAR */
+
+    .side-box {
+      border: 1px solid #29292c;
+      background: #101012;
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .side-box h3 {
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .side-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #242426;
+      color: #99999c;
+      font-size: 12px;
+    }
+
+    .side-item:last-child {
+      border-bottom: none;
+    }
+
+    .side-item strong {
+      color: #ddd;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 800px) {
+
+      .profile-header {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-main {
+        flex-direction: column;
+      }
+
+      .booking-card {
+        position: static;
+      }
+
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+
+      <a href="index.html" class="logo">ARMUS</a>
+
+      <a href="teachers.html" class="back">
+        ← Öğretmenlere dön
+      </a>
+
+    </div>
+  </nav>
+
+
+  <main class="container">
+
+    <!-- PROFILE HEADER -->
+
+    <div class="profile-header">
+
+      <div class="profile-main">
+
+        <div class="avatar">
+          SM
+        </div>
+
+        <div>
+
+          <div class="verified">
+            ✓ ARMUS tarafından doğrulandı
+          </div>
+
+          <h1>Sarah M.</h1>
+
+          <div class="role">
+            IELTS & Speaking Uzmanı
+          </div>
+
+          <div class="rating">
+            ★ 4.9
+            <span>127 değerlendirme</span>
+          </div>
+
+          <div class="tags">
+            <span class="tag">IELTS</span>
+            <span class="tag">Konuşma</span>
+            <span class="tag">İş İngilizcesi</span>
+            <span class="tag">İleri Seviye</span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- BOOKING -->
+
+      <aside class="booking-card">
+
+        <div class="price">
+          ₺800 <span>/ 50 dakika</span>
+        </div>
+
+        <div class="availability">
+          ● Şu anda ders almaya uygun
+        </div>
+
+        <button
+          class="primary"
+          onclick="trialLesson()">
+          Deneme Dersi Al
+        </button>
+
+        <button
+          class="secondary"
+          onclick="bookLesson()">
+          Ders Rezervasyonu Yap
+        </button>
+
+        <div class="small-note">
+          Henüz ödeme alınmayacak
+        </div>
+
+      </aside>
+
+    </div>
+
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+      <div>
+
+        <!-- ABOUT -->
+
+        <section>
+
+          <h2>Hakkımda</h2>
+
+          <p class="description">
+            Merhaba! Ben Sarah. İngilizce öğretmeniyim ve özellikle
+            konuşma becerileri, IELTS ve profesyonel İngilizce üzerine
+            çalışıyorum.
+
+            Öğrencilerimin sadece gramer öğrenmesini değil,
+            İngilizceyi gerçek hayatta rahatça kullanabilmesini
+            hedefliyorum.
+
+            Derslerimi öğrencinin seviyesine, hedeflerine ve
+            öğrenme tarzına göre kişiselleştiriyorum.
+          </p>
+
+        </section>
+
+
+        <!-- STATS -->
+
+        <section>
+
+          <h2>Sarah hakkında</h2>
+
+          <div class="stats">
+
+            <div class="stat">
+              <strong>5+</strong>
+              <span>Yıl deneyim</span>
+            </div>
+
+            <div class="stat">
+              <strong>1,240</strong>
+              <span>Tamamlanan ders</span>
+            </div>
+
+            <div class="stat">
+              <strong>127</strong>
+              <span>Öğrenci yorumu</span>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- REVIEWS -->
+
+        <section>
+
+          <h2>Öğrenci yorumları</h2>
+
+          <div class="review">
+
+            <div class="review-top">
+              <div class="review-name">
+                Mehmet K.
+              </div>
+
+              <div>
+                ★★★★★
+              </div>
+            </div>
+
+            <p class="review-text">
+              Sarah gerçekten çok iyi bir öğretmen.
+              Konuşma konusunda kendime olan güvenim çok arttı.
+            </p>
+
+          </div>
+
+
+          <div class="review">
+
+            <div class="review-top">
+              <div class="review-name">
+                Elif A.
+              </div>
+
+              <div>
+                ★★★★★
+              </div>
+            </div>
+
+            <p class="review-text">
+              IELTS sınavına hazırlanırken çok yardımcı oldu.
+              Dersler oldukça düzenli ve profesyonel.
+            </p>
+
+          </div>
+
+
+          <div class="review">
+
+            <div class="review-top">
+              <div class="review-name">
+                Can D.
+              </div>
+
+              <div>
+                ★★★★★
+              </div>
+            </div>
+
+            <p class="review-text">
+              İlk dersten itibaren seviyemi doğru analiz etti.
+              Kesinlikle tavsiye ederim.
+            </p>
+
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- SIDEBAR -->
+
+      <aside>
+
+        <div class="side-box">
+
+          <h3>Ders bilgileri</h3>
+
+          <div class="side-item">
+            <span>Ders süresi</span>
+            <strong>50 dk</strong>
+          </div>
+
+          <div class="side-item">
+            <span>Ders formatı</span>
+            <strong>Online</strong>
+          </div>
+
+          <div class="side-item">
+            <span>Diller</span>
+            <strong>English / Türkçe</strong>
+          </div>
+
+          <div class="side-item">
+            <span>Seviye</span>
+            <strong>A2 – C2</strong>
+          </div>
+
+        </div>
+
+
+        <div class="side-box">
+
+          <h3>Uzmanlık alanları</h3>
+
+          <div class="side-item">
+            <span>IELTS</span>
+            <strong>✓</strong>
+          </div>
+
+          <div class="side-item">
+            <span>Speaking</span>
+            <strong>✓</strong>
+          </div>
+
+          <div class="side-item">
+            <span>Business English</span>
+            <strong>✓</strong>
+          </div>
+
+          <div class="side-item">
+            <span>Interview English</span>
+            <strong>✓</strong>
+          </div>
+
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+
+  <script>
+
+    function trialLesson() {
+      alert(
+        "Deneme dersi rezervasyon sistemi yakında ARMUS'ta aktif olacak."
+      );
+    }
+
+    function bookLesson() {
+      alert(
+        "Rezervasyon sistemi yakında ARMUS'ta aktif olacak."
+      );
+    }
+
+  </script>
+
+</body>
+</html>
