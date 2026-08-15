@@ -53,10 +53,10 @@ Başarılı ders saati arttıkça komisyon oranı düşer:
 
 | Başarılı Ders Saati | ARMUS Komisyonu |
 |---|---|
-| 0–100 saat | %25 |
-| 101–200 saat | %22 |
-| 201–300 saat | %20 |
-| 301–500 saat | %18 |
+| 0–100 saat | %30 |
+| 100–200 saat | %28 |
+| 200–300 saat | %25 |
+| 300–500 saat | %20 |
 | 500+ saat | %15 |
 
 Mantık: öğretmen platformda ne kadar başarılı olursa komisyon o kadar
