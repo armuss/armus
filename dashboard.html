@@ -367,15 +367,13 @@
     </div>
   </nav>
 
-  <!-- GATE: shown when logged out or logged in as a student -->
+  <!-- GATE: shown when logged out, logged in as a student, or the
+       teacher account's application isn't approved yet -->
   <div class="container">
     <div class="gate" id="gate">
       <h1 id="gateTitle">Bu panel öğretmenler için</h1>
       <p id="gateText">Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın.</p>
-      <div class="gate-actions">
-        <a class="btn" href="login.html" id="gateLoginLink">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?role=teacher" id="gateRegisterLink">Öğretmen Olarak Kayıt Ol</a>
-      </div>
+      <div class="gate-actions" id="gateActions"></div>
     </div>
   </div>
 
@@ -430,9 +428,9 @@
       <h2>Gelen rezervasyonlar</h2>
       <div id="incomingBookings"></div>
       <div class="empty-state" id="incomingEmpty">
-        Henüz rezervasyon yok. Bunun bir nedeni, profilinin henüz
-        Öğretmenler listesinde görünmüyor olması — hesabını gerçek
-        ilan listesine bağlamak sıradaki adımlardan biri.
+        Henüz rezervasyon yok. Profilin artık Öğretmenler listesinde
+        görünüyor — bir öğrenci seni bulup ders aldığında burada
+        listelenecek.
       </div>
     </section>
 
@@ -440,6 +438,11 @@
       <h2>Profilini düzenle</h2>
 
       <form id="profileForm" novalidate>
+
+        <div class="field">
+          <label for="title">Uzmanlık başlığı</label>
+          <input type="text" id="title" placeholder="örn. Konuşma & IELTS Uzmanı">
+        </div>
 
         <div class="field">
           <label for="price">Ders ücreti (₺ / 50 dakika)</label>
@@ -466,9 +469,9 @@
       </form>
 
       <p class="small-note">
-        Bu panel bir prototiptir. Buradaki değişiklikler bu tarayıcıda saklanır
-        ama Öğretmenler sayfasındaki listeye henüz otomatik yansımıyor —
-        bunun için gerçek bir veritabanı gerekiyor.
+        Bu panel bir prototiptir. Profilin artık Öğretmenler sayfasında
+        da görünüyor ve gerçekten rezervasyon alabiliyorsun — ama her şey
+        bu tarayıcıda saklanıyor; gerçek bir veritabanı henüz yok.
       </p>
     </section>
 
@@ -482,34 +485,70 @@
     const gate = document.getElementById("gate");
     const dashboardRoot = document.getElementById("dashboardRoot");
 
-    function showGate(title, text, showRegister) {
+    function showGate(title, text, actionsHtml) {
       document.getElementById("gateTitle").textContent = title;
       document.getElementById("gateText").textContent = text;
-      document.getElementById("gateRegisterLink").style.display =
-        showRegister ? "inline-block" : "none";
+      document.getElementById("gateActions").innerHTML = actionsHtml;
       gate.style.display = "block";
     }
+
+    const LOGIN_BTN = '<a class="btn" href="login.html">Giriş Yap</a>';
+    const REGISTER_BTN = '<a class="btn btn-light" href="register.html?role=teacher">Öğretmen Olarak Kayıt Ol</a>';
+    const APPLY_BTN = '<a class="btn btn-light" href="apply-teacher.html">Başvuruyu Tamamla</a>';
+    const REAPPLY_BTN = '<a class="btn btn-light" href="apply-teacher.html">Tekrar Başvur</a>';
 
     if (!session) {
 
       showGate(
         "Bu panel öğretmenler için",
         "Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın.",
-        true
+        LOGIN_BTN + REGISTER_BTN
       );
 
     } else if (session.role !== "teacher") {
 
-      document.getElementById("gateLoginLink").style.display = "none";
       showGate(
         "Bu panel öğretmenler için",
         "Şu an bir öğrenci hesabıyla giriş yaptın. Öğretmen olarak kayıt olursan kendi panelini görebilirsin.",
-        true
+        REGISTER_BTN
       );
 
     } else {
 
       const user = armusFindUser(session.email);
+
+      if (!user.status) {
+
+        showGate(
+          "Başvurunu tamamlamalısın",
+          "Panelini görebilmen için önce öğretmen başvuru formunu doldurman gerekiyor.",
+          APPLY_BTN
+        );
+
+      } else if (user.status === "pending") {
+
+        showGate(
+          "Başvurun inceleniyor",
+          "ARMUS ekibi profilini ve belgelerini inceliyor. Onaylandığında profilin Öğretmenler sayfasında yayına girecek ve bu panel açılacak.",
+          ""
+        );
+
+      } else if (user.status === "rejected") {
+
+        showGate(
+          "Başvurun onaylanmadı",
+          "Başvurunu gözden geçirip tekrar gönderebilirsin.",
+          REAPPLY_BTN
+        );
+
+      } else {
+
+      renderApprovedDashboard(user);
+
+      }
+    }
+
+    function renderApprovedDashboard(user) {
 
       gate.style.display = "none";
       dashboardRoot.style.display = "block";
@@ -519,6 +558,7 @@
       document.getElementById("dashName").textContent = user.name;
       document.getElementById("dashEmail").textContent = user.email;
 
+      document.getElementById("title").value = user.title || "";
       document.getElementById("price").value = user.price ?? 500;
       document.getElementById("availability").value =
         user.availability || "Şu anda ders almaya uygun";
@@ -555,15 +595,23 @@
 
         event.preventDefault();
 
-        armusUpdateUser(user.email, {
+        const result = armusUpdateUser(user.email, {
+          title: document.getElementById("title").value.trim(),
           price: Number(document.getElementById("price").value) || 0,
           availability: document.getElementById("availability").value,
           bio: document.getElementById("bio").value.trim(),
         });
 
         const status = document.getElementById("saveStatus");
+
+        if (result === false) {
+          status.textContent = "Kaydedilemedi (tarayıcı hafızası dolu) ✕";
+        } else {
+          status.textContent = "Kaydedildi ✓";
+        }
+
         status.classList.add("visible");
-        setTimeout(() => status.classList.remove("visible"), 2000);
+        setTimeout(() => status.classList.remove("visible"), 2500);
       });
     }
 

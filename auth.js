@@ -17,7 +17,12 @@ function armusGetUsers() {
 }
 
 function armusSaveUsers(users) {
-  localStorage.setItem(ARMUS_USERS_KEY, JSON.stringify(users));
+  try {
+    localStorage.setItem(ARMUS_USERS_KEY, JSON.stringify(users));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function armusGetSession() {
@@ -43,21 +48,28 @@ function armusFindUser(email) {
   return armusGetUsers().find(u => u.email === email) || null;
 }
 
+// Returns the updated user on success, null if the user doesn't exist,
+// or false if saving failed (e.g. localStorage quota exceeded by a
+// large photo/video upload) - callers must check for false explicitly.
 function armusUpdateUser(email, updates) {
 
   const users = armusGetUsers();
   const index = users.findIndex(u => u.email === email);
   if (index === -1) return null;
 
-  users[index] = { ...users[index], ...updates };
-  armusSaveUsers(users);
+  const updated = { ...users[index], ...updates };
+  users[index] = updated;
+
+  if (!armusSaveUsers(users)) {
+    return false;
+  }
 
   const session = armusGetSession();
   if (session && session.email === email) {
-    armusSetSession(users[index]);
+    armusSetSession(updated);
   }
 
-  return users[index];
+  return updated;
 }
 
 function armusRenderNavAuth() {

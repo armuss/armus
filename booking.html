@@ -170,6 +170,13 @@
       justify-content: center;
       font-weight: 800;
       font-size: 16px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .teacher-summary-name {
@@ -534,7 +541,8 @@
       </div>
 
       <button class="confirm-btn" id="confirmBtn">Onayla</button>
-      <div class="small-note">Henüz ödeme alınmayacak</div>
+      <div class="small-note" id="confirmError" style="display: none; color: #f0a5a5;"></div>
+      <div class="small-note" id="confirmNote">Henüz ödeme alınmayacak</div>
     </div>
 
   </main>
@@ -570,13 +578,14 @@
 
   <script src="teachers-data.js"></script>
   <script src="auth.js"></script>
+  <script src="marketplace.js"></script>
   <script src="bookings.js"></script>
   <script>
 
     const params = new URLSearchParams(window.location.search);
     const teacherId = params.get("teacher");
     const bookingType = params.get("type") === "trial" ? "trial" : "lesson";
-    const teacher = TEACHERS.find(t => t.id === teacherId);
+    const teacher = armusFindMarketplaceTeacher(teacherId);
 
     const bookingRoot = document.getElementById("bookingRoot");
     const notFound = document.getElementById("notFound");
@@ -592,7 +601,7 @@
 
       bookingRoot.style.display = "none";
 
-      const returnUrl = `booking.html?teacher=${teacher.id}&type=${bookingType}`;
+      const returnUrl = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=${bookingType}`;
       document.getElementById("gateLoginLink").href =
         `login.html?next=${encodeURIComponent(returnUrl)}`;
       document.getElementById("gateRegisterLink").href =
@@ -602,7 +611,7 @@
 
     } else {
 
-      document.getElementById("backLink").href = `teacher.html?teacher=${teacher.id}`;
+      document.getElementById("backLink").href = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
 
       const isTrial = bookingType === "trial";
 
@@ -615,7 +624,9 @@
       document.getElementById("successTitle").textContent =
         isTrial ? "Deneme dersin alındı" : "Rezervasyonun alındı";
 
-      document.getElementById("avatar").textContent = teacher.initials;
+      document.getElementById("avatar").innerHTML = teacher.photo
+        ? `<img src="${teacher.photo}" alt="">`
+        : teacher.initials;
       document.getElementById("teacherName").textContent = teacher.name;
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("priceValue").textContent = `₺${teacher.price}`;
@@ -750,10 +761,11 @@
 
         if (!selectedDate || !selectedTime) return;
 
-        armusAddBooking({
+        const result = armusAddBooking({
           studentEmail: session.email,
           studentName: session.name,
           teacherId: teacher.id,
+          teacherEmail: teacher.id,
           teacherName: teacher.name,
           type: bookingType,
           date: selectedDate,
@@ -761,6 +773,13 @@
           time: selectedTime,
           price: teacher.price,
         });
+
+        if (result === false) {
+          document.getElementById("confirmError").textContent =
+            "Rezervasyon kaydedilemedi (tarayıcı hafızası dolu). Lütfen tekrar dene.";
+          document.getElementById("confirmError").style.display = "block";
+          return;
+        }
 
         document.getElementById("successTeacher").textContent = teacher.name;
         document.getElementById("successDate").textContent = selectedDateLabel;

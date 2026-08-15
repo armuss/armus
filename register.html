@@ -331,10 +331,19 @@
 
       const newUser = { name, email, password, role: selectedRole };
       users.push(newUser);
-      armusSaveUsers(users);
+
+      if (!armusSaveUsers(users)) {
+        showError("Hesap kaydedilemedi (tarayıcı hafızası dolu). Lütfen tekrar dene.");
+        return;
+      }
+
       armusSetSession(newUser);
 
-      window.location.href = nextParam || "index.html";
+      if (selectedRole === "teacher") {
+        window.location.href = "apply-teacher.html";
+      } else {
+        window.location.href = nextParam || "index.html";
+      }
     });
 
   </script>

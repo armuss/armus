@@ -75,7 +75,7 @@
     /* PROFILE HEADER */
 
     .profile-header {
-      padding: 65px 0 45px;
+      padding: 65px 0 28px;
       display: grid;
       grid-template-columns: 1fr 300px;
       gap: 50px;
@@ -99,6 +99,13 @@
       justify-content: center;
       font-size: 30px;
       font-weight: 800;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .verified {
@@ -217,7 +224,7 @@
     /* CONTENT */
 
     .content {
-      padding: 45px 0 90px;
+      padding: 22px 0 90px;
       display: grid;
       grid-template-columns: 1fr 300px;
       gap: 70px;
@@ -237,6 +244,16 @@
       color: #a1a1a4;
       font-size: 14px;
       line-height: 1.9;
+    }
+
+    #introVideo {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 18px;
+      background: #000;
+      border: 1px solid var(--armus-border);
     }
 
     /* STATS */
@@ -481,6 +498,13 @@
 
         <div>
 
+          <!-- VIDEO -->
+
+          <section id="videoSection" style="display: none;">
+            <h2>Tanıtım Videosu</h2>
+            <video id="introVideo" controls playsinline></video>
+          </section>
+
           <!-- ABOUT -->
 
           <section>
@@ -573,11 +597,13 @@
 
 
   <script src="teachers-data.js"></script>
+  <script src="auth.js"></script>
+  <script src="marketplace.js"></script>
   <script>
 
     const params = new URLSearchParams(window.location.search);
     const teacherId = params.get("teacher") || "sarah";
-    const teacher = TEACHERS.find(t => t.id === teacherId);
+    const teacher = armusFindMarketplaceTeacher(teacherId);
 
     const profileRoot = document.getElementById("profileRoot");
     const notFound = document.getElementById("notFound");
@@ -592,17 +618,29 @@
       document.getElementById("pageTitle").textContent =
         `${teacher.name} | ARMUS`;
 
-      document.getElementById("avatar").textContent = teacher.initials;
+      document.getElementById("avatar").innerHTML = teacher.photo
+        ? `<img src="${teacher.photo}" alt="">`
+        : teacher.initials;
+
+      if (teacher.video) {
+        document.getElementById("videoSection").style.display = "block";
+        document.getElementById("introVideo").src = teacher.video;
+      }
       document.getElementById("teacherName").textContent = teacher.name;
       document.getElementById("teacherRole").textContent = teacher.role;
 
       document.getElementById("ratingValue").textContent =
-        `★ ${teacher.rating}`;
+        teacher.rating ? `★ ${teacher.rating}` : "Yeni";
       document.getElementById("reviewCountLabel").textContent =
-        `${teacher.reviewCount} değerlendirme`;
+        teacher.reviewCount > 0
+          ? `${teacher.reviewCount} değerlendirme`
+          : "Henüz değerlendirme yok";
 
       const headerTags = document.getElementById("headerTags");
-      teacher.tags.concat(`${teacher.level} Seviye`).forEach(tag => {
+      const displayTags = teacher.level
+        ? teacher.tags.concat(`${teacher.level} Seviye`)
+        : teacher.tags;
+      displayTags.forEach(tag => {
         const span = document.createElement("span");
         span.className = "tag";
         span.textContent = tag;
@@ -632,6 +670,12 @@
         teacher.reviewCount;
 
       const reviewsList = document.getElementById("reviewsList");
+
+      if (teacher.reviews.length === 0) {
+        reviewsList.innerHTML =
+          '<p class="description">Bu öğretmen için henüz öğrenci yorumu yok.</p>';
+      }
+
       teacher.reviews.forEach(review => {
 
         const div = document.createElement("div");
@@ -682,11 +726,11 @@
     }
 
     function trialLesson() {
-      window.location.href = `booking.html?teacher=${teacherId}&type=trial`;
+      window.location.href = `booking.html?teacher=${encodeURIComponent(teacherId)}&type=trial`;
     }
 
     function bookLesson() {
-      window.location.href = `booking.html?teacher=${teacherId}&type=lesson`;
+      window.location.href = `booking.html?teacher=${encodeURIComponent(teacherId)}&type=lesson`;
     }
 
   </script>

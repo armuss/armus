@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Öğretmen Başvuruları | ARMUS Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(920px, calc(100% - 40px));
+      margin: auto;
+      padding: 40px 0 90px;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h1 {
+      font-size: 28px;
+      letter-spacing: -1px;
+      margin: 14px 0 6px;
+    }
+
+    .warning {
+      margin: 18px 0 34px;
+      padding: 14px 16px;
+      border: 1px solid rgba(220, 90, 90, .35);
+      background: rgba(220, 90, 90, .08);
+      border-radius: 14px;
+      color: #f0b5b5;
+      font-size: 12.5px;
+      line-height: 1.7;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin: 40px 0 14px;
+      color: #d8d8da;
+    }
+
+    .empty-note {
+      color: #6e6e72;
+      font-size: 13px;
+      padding: 16px 0;
+    }
+
+    .app-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .app-top {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .app-avatar {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      border-radius: 16px;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      overflow: hidden;
+    }
+
+    .app-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .app-name {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .app-email {
+      color: #8e8e91;
+      font-size: 12.5px;
+      margin-top: 2px;
+    }
+
+    .app-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10.5px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      border: 1px solid var(--armus-border);
+      color: #b6b6b8;
+    }
+
+    .app-badge.pending {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .app-badge.approved {
+      border-color: #4caf7d;
+      color: #8fd6ae;
+    }
+
+    .app-badge.rejected {
+      border-color: rgba(220, 90, 90, .5);
+      color: #f0a5a5;
+    }
+
+    .app-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 9px 14px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .btn-approve {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .btn-reject {
+      border-color: rgba(220, 90, 90, .5);
+      color: #f0a5a5;
+    }
+
+    .app-details {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--armus-border-soft);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      font-size: 12.5px;
+    }
+
+    .app-details h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #77777b;
+      margin-bottom: 6px;
+    }
+
+    .app-details p {
+      color: #c3c3c5;
+      line-height: 1.7;
+    }
+
+    .app-details a {
+      color: var(--armus-gold-text);
+      text-decoration: underline;
+    }
+
+    .app-video {
+      grid-column: 1 / -1;
+    }
+
+    .app-video video {
+      width: 100%;
+      max-width: 360px;
+      border-radius: 12px;
+      background: #000;
+      display: block;
+      margin-top: 6px;
+    }
+
+    .app-bio {
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <a href="index.html" class="logo">ARMUS</a>
+    <h1>Öğretmen Başvuruları</h1>
+
+    <div class="warning">
+      Bu bir prototip admin panelidir - gerçek bir yetkilendirme/giriş kontrolü yok,
+      bu adresi bilen herkes erişebilir. Gerçek bir sürümde bu sayfa sadece ARMUS
+      ekibine açık olmalı.
+    </div>
+
+    <h2>Bekleyen başvurular</h2>
+    <div id="pendingList"></div>
+    <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
+
+    <h2>Onaylanmış öğretmenler</h2>
+    <div id="approvedList"></div>
+    <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
+
+    <h2>Reddedilen başvurular</h2>
+    <div id="rejectedList"></div>
+    <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+
+    function initials(name) {
+      return name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+    }
+
+    function renderApplication(user) {
+
+      const card = document.createElement("div");
+      card.className = "app-card";
+
+      const avatarInner = user.photo
+        ? `<img src="${user.photo.dataUrl}" alt="">`
+        : initials(user.name);
+
+      const badgeLabel = { pending: "İnceleniyor", approved: "Onaylandı", rejected: "Reddedildi" }[user.status] || "Bilinmiyor";
+
+      let actions = "";
+      if (user.status === "pending") {
+        actions = `
+          <button class="btn btn-approve" data-action="approve">Onayla</button>
+          <button class="btn btn-reject" data-action="reject">Reddet</button>
+        `;
+      } else if (user.status === "approved") {
+        actions = `<button class="btn btn-reject" data-action="reject">Onayı kaldır</button>`;
+      } else if (user.status === "rejected") {
+        actions = `<button class="btn btn-approve" data-action="approve">Onayla</button>`;
+      }
+
+      card.innerHTML = `
+        <div class="app-top">
+          <div class="app-avatar">${avatarInner}</div>
+          <div>
+            <div class="app-name">${user.name}</div>
+            <div class="app-email">${user.email}</div>
+            <span class="app-badge ${user.status}">${badgeLabel}</span>
+          </div>
+          <div class="app-actions">${actions}</div>
+        </div>
+
+        <div class="app-details">
+          <div>
+            <h4>Konum / Konu</h4>
+            <p>${user.country || "—"} · ${user.subjectTaught || "—"}</p>
+          </div>
+          <div>
+            <h4>Ücret / Uygunluk</h4>
+            <p>₺${user.price ?? "—"} / 50 dk · ${user.availability || "—"}</p>
+          </div>
+
+          <div>
+            <h4>Sertifika</h4>
+            <p>
+              ${user.hasCertificate
+                ? `${user.certificateName || "—"} (${user.certificateYears || "—"})` +
+                  (user.certificateFile ? ` · <a href="${user.certificateFile.dataUrl}" target="_blank" rel="noopener">${user.certificateFile.name}</a>` : "")
+                : "Belirtilmedi"}
+            </p>
+          </div>
+          <div>
+            <h4>Eğitim</h4>
+            <p>
+              ${user.hasEducation
+                ? `${user.university || "—"} · ${user.degreeType || "—"} (${user.graduationYear || "—"})<br>${user.specialization || ""}`
+                : "Belirtilmedi"}
+            </p>
+          </div>
+
+          <div class="app-bio">
+            <h4>Açıklama</h4>
+            <p>${user.bio || "—"}</p>
+          </div>
+
+          ${user.video ? `
+            <div class="app-video">
+              <h4>Tanıtım videosu</h4>
+              <video controls playsinline src="${user.video.dataUrl}"></video>
+            </div>
+          ` : ""}
+        </div>
+      `;
+
+      card.querySelectorAll("[data-action]").forEach(button => {
+        button.addEventListener("click", () => {
+          const newStatus = button.dataset.action === "approve" ? "approved" : "rejected";
+          armusUpdateUser(user.email, { status: newStatus });
+          renderAll();
+        });
+      });
+
+      return card;
+    }
+
+    function renderAll() {
+
+      const teachers = armusGetUsers().filter(u => u.role === "teacher" && u.status);
+
+      const groups = {
+        pending: teachers.filter(u => u.status === "pending"),
+        approved: teachers.filter(u => u.status === "approved"),
+        rejected: teachers.filter(u => u.status === "rejected"),
+      };
+
+      ["pending", "approved", "rejected"].forEach(status => {
+
+        const list = document.getElementById(`${status}List`);
+        const empty = document.getElementById(`${status}Empty`);
+        list.innerHTML = "";
+
+        if (groups[status].length === 0) {
+          empty.style.display = "block";
+        } else {
+          empty.style.display = "none";
+          groups[status].forEach(user => list.appendChild(renderApplication(user)));
+        }
+      });
+    }
+
+    renderAll();
+
+  </script>
+
+</body>
+</html>

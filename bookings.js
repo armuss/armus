@@ -1,11 +1,8 @@
 /*
  * ARMUS - mock bookings (frontend prototype only)
  * Bookings are stored in localStorage alongside the mock accounts in
- * auth.js. Real teachers (registered via register.html) aren't wired
- * into the bookable marketplace yet - only the demo teachers from
- * teachers-data.js can actually be booked - so a self-registered
- * teacher's "incoming bookings" list will legitimately stay empty
- * until that gap is closed with a real backend.
+ * auth.js. Both demo teachers (teachers-data.js) and approved
+ * self-registered teachers (see marketplace.js) can be booked.
  */
 
 const ARMUS_BOOKINGS_KEY = "armus_bookings";
@@ -19,9 +16,15 @@ function armusGetBookings() {
 }
 
 function armusSaveBookings(list) {
-  localStorage.setItem(ARMUS_BOOKINGS_KEY, JSON.stringify(list));
+  try {
+    localStorage.setItem(ARMUS_BOOKINGS_KEY, JSON.stringify(list));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
+// Returns the new booking record on success, or false if saving failed.
 function armusAddBooking(booking) {
 
   const list = armusGetBookings();
@@ -33,7 +36,10 @@ function armusAddBooking(booking) {
   };
 
   list.push(record);
-  armusSaveBookings(list);
+
+  if (!armusSaveBookings(list)) {
+    return false;
+  }
 
   return record;
 }
