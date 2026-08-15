@@ -39,6 +39,27 @@ function armusClearSession() {
   localStorage.removeItem(ARMUS_SESSION_KEY);
 }
 
+function armusFindUser(email) {
+  return armusGetUsers().find(u => u.email === email) || null;
+}
+
+function armusUpdateUser(email, updates) {
+
+  const users = armusGetUsers();
+  const index = users.findIndex(u => u.email === email);
+  if (index === -1) return null;
+
+  users[index] = { ...users[index], ...updates };
+  armusSaveUsers(users);
+
+  const session = armusGetSession();
+  if (session && session.email === email) {
+    armusSetSession(users[index]);
+  }
+
+  return users[index];
+}
+
 function armusRenderNavAuth() {
 
   const el = document.getElementById("navAuthButtons");
@@ -50,8 +71,12 @@ function armusRenderNavAuth() {
 
     const firstName = session.name.split(" ")[0];
     const roleLabel = session.role === "teacher" ? "Öğretmen" : "Öğrenci";
+    const dashboardLink = session.role === "teacher"
+      ? '<a class="btn" href="dashboard.html">Panelim</a>'
+      : "";
 
     el.innerHTML = `
+      ${dashboardLink}
       <span class="nav-greeting">Merhaba, ${firstName} <small>(${roleLabel})</small></span>
       <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
     `;

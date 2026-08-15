@@ -253,9 +253,17 @@
   <script src="auth.js"></script>
   <script>
 
-    let selectedRole = "student";
+    const requestedRole = new URLSearchParams(window.location.search).get("role");
+    let selectedRole = requestedRole === "teacher" ? "teacher" : "student";
 
     document.querySelectorAll(".role-option").forEach(option => {
+
+      if (option.dataset.role === selectedRole) {
+        document.querySelectorAll(".role-option").forEach(o =>
+          o.classList.remove("active")
+        );
+        option.classList.add("active");
+      }
 
       option.addEventListener("click", () => {
 

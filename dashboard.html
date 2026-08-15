@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Öğretmen Paneli | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(880px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(880px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .nav-greeting {
+      font-size: 13px;
+      color: #c7c7c7;
+      margin-right: 4px;
+    }
+
+    .nav-greeting small {
+      color: #8f8f8f;
+    }
+
+    /* GATE (logged out / wrong role) */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 28px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* DASHBOARD */
+
+    main.container {
+      padding: 45px 0 90px;
+      display: none;
+    }
+
+    .dash-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      margin-bottom: 34px;
+    }
+
+    .avatar {
+      width: 70px;
+      height: 70px;
+      flex-shrink: 0;
+      border-radius: 20px;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 22px;
+    }
+
+    .dash-name {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .dash-email {
+      color: #8e8e91;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      margin-top: 8px;
+      border: 1px solid var(--armus-silver-border-strong);
+      color: var(--armus-silver-1);
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+
+    h2 {
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    /* STATS */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px;
+      background: var(--armus-panel);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 21px;
+      color: var(--armus-gold-text);
+    }
+
+    .stat span {
+      color: #8e8e91;
+      font-size: 11px;
+    }
+
+    /* COMMISSION */
+
+    .commission-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      background: var(--armus-panel);
+    }
+
+    .commission-box div span {
+      display: block;
+      color: #8e8e91;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .commission-box strong {
+      font-size: 26px;
+      color: var(--armus-gold-text);
+    }
+
+    /* FORM */
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #a3a3a6;
+      margin-bottom: 7px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .save-btn {
+      padding: 13px 24px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .save-status {
+      display: inline-block;
+      margin-left: 12px;
+      color: var(--armus-gold-text);
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .save-status.visible {
+      opacity: 1;
+    }
+
+    .small-note {
+      color: #66666a;
+      font-size: 11px;
+      margin-top: 26px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 700px) {
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <!-- GATE: shown when logged out or logged in as a student -->
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1 id="gateTitle">Bu panel öğretmenler için</h1>
+      <p id="gateText">Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html" id="gateLoginLink">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?role=teacher" id="gateRegisterLink">Öğretmen Olarak Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <main class="container" id="dashboardRoot">
+
+    <div class="dash-header">
+      <div class="avatar" id="avatar"></div>
+      <div>
+        <div class="dash-name" id="dashName"></div>
+        <div class="dash-email" id="dashEmail"></div>
+        <div class="role-badge">Öğretmen</div>
+      </div>
+    </div>
+
+    <section>
+      <h2>Genel bakış</h2>
+      <div class="stats">
+        <div class="stat">
+          <strong id="statLessons">0</strong>
+          <span>Tamamlanan ders</span>
+        </div>
+        <div class="stat">
+          <strong id="statHours">0</strong>
+          <span>Başarılı ders saati</span>
+        </div>
+        <div class="stat">
+          <strong id="statEarnings">₺0</strong>
+          <span>Bu ay kazanç</span>
+        </div>
+        <div class="stat">
+          <strong id="statRating">—</strong>
+          <span>Ortalama puan</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Komisyon oranın</h2>
+      <div class="commission-box">
+        <div>
+          <strong id="commissionRate">%25</strong>
+          <span id="commissionRange">0–100 saat arası</span>
+        </div>
+        <div style="text-align: right;">
+          <span>Daha çok ders ver, komisyonun düşsün.</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Profilini düzenle</h2>
+
+      <form id="profileForm" novalidate>
+
+        <div class="field">
+          <label for="price">Ders ücreti (₺ / 50 dakika)</label>
+          <input type="number" id="price" min="0" step="1">
+        </div>
+
+        <div class="field">
+          <label for="availability">Uygunluk durumu</label>
+          <select id="availability">
+            <option value="Şu anda ders almaya uygun">Şu anda ders almaya uygun</option>
+            <option value="Bu hafta sınırlı uygunluk">Bu hafta sınırlı uygunluk</option>
+            <option value="Şu anda müsait değilim">Şu anda müsait değilim</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="bio">Hakkımda</label>
+          <textarea id="bio" placeholder="Kendinden ve öğretim tarzından bahset..."></textarea>
+        </div>
+
+        <button type="submit" class="save-btn">Kaydet</button>
+        <span class="save-status" id="saveStatus">Kaydedildi ✓</span>
+
+      </form>
+
+      <p class="small-note">
+        Bu panel bir prototiptir. Buradaki değişiklikler bu tarayıcıda saklanır
+        ama Öğretmenler sayfasındaki listeye henüz otomatik yansımıyor —
+        bunun için gerçek bir veritabanı gerekiyor.
+      </p>
+    </section>
+
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+
+    const session = armusGetSession();
+    const gate = document.getElementById("gate");
+    const dashboardRoot = document.getElementById("dashboardRoot");
+
+    function showGate(title, text, showRegister) {
+      document.getElementById("gateTitle").textContent = title;
+      document.getElementById("gateText").textContent = text;
+      document.getElementById("gateRegisterLink").style.display =
+        showRegister ? "inline-block" : "none";
+      gate.style.display = "block";
+    }
+
+    if (!session) {
+
+      showGate(
+        "Bu panel öğretmenler için",
+        "Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın.",
+        true
+      );
+
+    } else if (session.role !== "teacher") {
+
+      document.getElementById("gateLoginLink").style.display = "none";
+      showGate(
+        "Bu panel öğretmenler için",
+        "Şu an bir öğrenci hesabıyla giriş yaptın. Öğretmen olarak kayıt olursan kendi panelini görebilirsin.",
+        true
+      );
+
+    } else {
+
+      const user = armusFindUser(session.email);
+
+      gate.style.display = "none";
+      dashboardRoot.style.display = "block";
+
+      document.getElementById("avatar").textContent =
+        user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
+      document.getElementById("dashName").textContent = user.name;
+      document.getElementById("dashEmail").textContent = user.email;
+
+      document.getElementById("price").value = user.price ?? 500;
+      document.getElementById("availability").value =
+        user.availability || "Şu anda ders almaya uygun";
+      document.getElementById("bio").value = user.bio || "";
+
+      document.getElementById("profileForm").addEventListener("submit", event => {
+
+        event.preventDefault();
+
+        armusUpdateUser(user.email, {
+          price: Number(document.getElementById("price").value) || 0,
+          availability: document.getElementById("availability").value,
+          bio: document.getElementById("bio").value.trim(),
+        });
+
+        const status = document.getElementById("saveStatus");
+        status.classList.add("visible");
+        setTimeout(() => status.classList.remove("visible"), 2000);
+      });
+    }
+
+  </script>
+
+</body>
+</html>
