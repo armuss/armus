@@ -20,7 +20,7 @@
 
     body {
       font-family: "Inter", sans-serif;
-      background-color: #0b0b0c;
+      background-color: var(--armus-bg);
       background-image: var(--armus-bg-glow);
       color: #f4f4f2;
       min-height: 100vh;
@@ -40,7 +40,7 @@
 
     .navbar {
       height: 76px;
-      border-bottom: 1px solid #242426;
+      border-bottom: 1px solid var(--armus-border-soft);
       display: flex;
       align-items: center;
     }
@@ -80,7 +80,7 @@
     }
 
     .btn {
-      border: 1px solid #333336;
+      border: 1px solid var(--armus-border);
       border-radius: 12px;
       padding: 11px 18px;
       background: transparent;
@@ -128,8 +128,8 @@
       margin-top: 35px;
       display: flex;
       gap: 12px;
-      background: #151517;
-      border: 1px solid #29292c;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
       border-radius: 18px;
       padding: 10px;
     }
@@ -170,8 +170,8 @@
     }
 
     .filters {
-      background: #111113;
-      border: 1px solid #262628;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border-soft);
       border-radius: 20px;
       padding: 22px;
       height: fit-content;
@@ -185,7 +185,7 @@
     }
 
     .filter-group {
-      border-top: 1px solid #252527;
+      border-top: 1px solid var(--armus-border-soft);
       padding: 20px 0;
     }
 
@@ -215,9 +215,9 @@
 
     select {
       width: 100%;
-      background: #19191b;
+      background: var(--armus-panel);
       color: white;
-      border: 1px solid #303034;
+      border: 1px solid var(--armus-border);
       border-radius: 10px;
       padding: 10px;
       font-family: inherit;
@@ -245,8 +245,8 @@
     }
 
     .teacher-card {
-      background: #111113;
-      border: 1px solid #29292c;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
       border-radius: 22px;
       padding: 22px;
       transition: 0.2s ease;
@@ -254,7 +254,7 @@
 
     .teacher-card:hover {
       transform: translateY(-3px);
-      border-color: #454548;
+      border-color: #6b5a34;
     }
 
     .teacher-top {
@@ -303,7 +303,7 @@
     .tag {
       font-size: 10px;
       color: #c8c8ca;
-      border: 1px solid #303033;
+      border: 1px solid var(--armus-border);
       padding: 6px 9px;
       border-radius: 999px;
     }
@@ -312,7 +312,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid #252527;
+      border-top: 1px solid var(--armus-border-soft);
       padding-top: 17px;
       margin-top: 8px;
     }
@@ -347,7 +347,7 @@
       padding: 50px;
       text-align: center;
       color: #777;
-      border: 1px dashed #333;
+      border: 1px dashed var(--armus-border);
       border-radius: 20px;
     }
 
