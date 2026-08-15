@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
 
   <style>
     * {
@@ -19,7 +20,8 @@
 
     body {
       font-family: "Inter", sans-serif;
-      background: #0b0b0c;
+      background-color: #0b0b0c;
+      background-image: var(--armus-bg-glow);
       color: #f4f4f2;
       line-height: 1.6;
     }
@@ -55,6 +57,10 @@
       font-size: 22px;
       font-weight: 800;
       letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .back {
@@ -90,8 +96,8 @@
       display: inline-block;
       padding: 12px 22px;
       border-radius: 12px;
-      background: #eeeeeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       font-weight: 700;
       font-size: 13px;
     }
@@ -131,7 +137,8 @@
       height: 54px;
       flex-shrink: 0;
       border-radius: 16px;
-      background: linear-gradient(145deg, #777, #202022);
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -155,6 +162,7 @@
       text-align: right;
       font-weight: 800;
       font-size: 18px;
+      color: var(--armus-gold-text);
     }
 
     .teacher-summary-price span {
@@ -233,9 +241,9 @@
     }
 
     .date-pill.selected {
-      background: #eeeeeb;
-      border-color: #eeeeeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+      color: var(--armus-on-gold);
     }
 
     .date-pill.selected .day-name {
@@ -266,9 +274,9 @@
     }
 
     .slot.selected {
-      background: #eeeeeb;
-      border-color: #eeeeeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+      color: var(--armus-on-gold);
       font-weight: 700;
     }
 
@@ -316,8 +324,8 @@
       padding: 15px;
       border: none;
       border-radius: 12px;
-      background: #eeeeeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       font-family: inherit;
       font-weight: 700;
       font-size: 14px;
@@ -348,8 +356,8 @@
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: #1c2e1f;
-      color: #7ee08a;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       font-size: 26px;
       display: flex;
       align-items: center;
@@ -397,9 +405,9 @@
     }
 
     .btn-light {
-      background: #f2f2ef;
-      color: #111;
-      border-color: #f2f2ef;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
       font-weight: 700;
     }
 
