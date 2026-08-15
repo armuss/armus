@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
 
   <style>
     * {
@@ -19,7 +20,8 @@
 
     body {
       font-family: "Inter", sans-serif;
-      background: #0b0b0c;
+      background-color: #0b0b0c;
+      background-image: var(--armus-bg-glow);
       color: #f4f4f2;
       min-height: 100vh;
     }
@@ -55,6 +57,10 @@
       font-size: 22px;
       font-weight: 800;
       letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .nav-links {
@@ -84,9 +90,9 @@
     }
 
     .btn-light {
-      background: #f2f2ef;
-      color: #111;
-      border-color: #f2f2ef;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
     }
 
     /* HERO */
@@ -144,8 +150,8 @@
     }
 
     .search-btn {
-      background: #ededeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       border: none;
       border-radius: 12px;
       padding: 0 25px;
@@ -204,7 +210,7 @@
     }
 
     .filter-option input {
-      accent-color: #ddd;
+      accent-color: var(--armus-gold-2);
     }
 
     select {
@@ -261,7 +267,8 @@
       width: 54px;
       height: 54px;
       border-radius: 16px;
-      background: linear-gradient(145deg, #777, #222);
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -271,7 +278,7 @@
 
     .rating {
       font-size: 12px;
-      color: #ddd;
+      color: var(--armus-gold-text);
     }
 
     .teacher-name {
@@ -313,6 +320,7 @@
     .price {
       font-size: 16px;
       font-weight: 700;
+      color: var(--armus-gold-text);
     }
 
     .price span {
@@ -323,8 +331,8 @@
 
     .trial {
       display: inline-block;
-      background: #eeeeeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       border: none;
       border-radius: 10px;
       padding: 9px 13px;

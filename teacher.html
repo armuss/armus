@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
 
   <style>
     * {
@@ -19,7 +20,8 @@
 
     body {
       font-family: "Inter", sans-serif;
-      background: #0b0b0c;
+      background-color: #0b0b0c;
+      background-image: var(--armus-bg-glow);
       color: #f4f4f2;
       line-height: 1.6;
     }
@@ -55,6 +57,10 @@
       font-size: 22px;
       font-weight: 800;
       letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .back {
@@ -86,7 +92,8 @@
       height: 110px;
       flex-shrink: 0;
       border-radius: 28px;
-      background: linear-gradient(145deg, #777, #202022);
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -98,7 +105,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: #bcbcbc;
+      color: var(--armus-gold-text);
       font-size: 11px;
       margin-bottom: 8px;
     }
@@ -133,7 +140,7 @@
     }
 
     .tag {
-      border: 1px solid #303034;
+      border: 1px solid var(--armus-silver-border);
       border-radius: 999px;
       padding: 6px 11px;
       color: #c7c7c9;
@@ -155,6 +162,7 @@
     .price {
       font-size: 27px;
       font-weight: 800;
+      color: var(--armus-gold-text);
     }
 
     .price span {
@@ -175,8 +183,8 @@
       padding: 14px;
       border: none;
       border-radius: 12px;
-      background: #eeeeeb;
-      color: #111;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       font-family: inherit;
       font-weight: 700;
       cursor: pointer;
@@ -186,12 +194,17 @@
       width: 100%;
       margin-top: 9px;
       padding: 13px;
-      border: 1px solid #353538;
+      border: 1px solid var(--armus-silver-border-strong);
       border-radius: 12px;
       background: transparent;
       color: white;
       font-family: inherit;
       cursor: pointer;
+    }
+
+    .secondary:hover {
+      border-color: var(--armus-silver-1);
+      background: rgba(183, 186, 195, .08);
     }
 
     .small-note {
@@ -270,6 +283,10 @@
 
     .review-name {
       font-weight: 600;
+    }
+
+    .stars {
+      color: var(--armus-gold-text);
     }
 
     .review-text {
@@ -628,6 +645,7 @@
         name.textContent = review.name;
 
         const stars = document.createElement("div");
+        stars.className = "stars";
         stars.textContent = "★".repeat(review.stars);
 
         top.appendChild(name);
