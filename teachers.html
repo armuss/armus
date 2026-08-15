@@ -286,6 +286,13 @@
       justify-content: center;
       font-weight: 700;
       font-size: 17px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .rating {
@@ -556,6 +563,9 @@
       const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
       const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
       const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : "Yeni";
+      const avatarInner = teacher.photo
+        ? `<img src="${teacher.photo}" alt="">`
+        : teacher.initials;
 
       const article = document.createElement("article");
       article.className = "teacher-card";
@@ -567,7 +577,7 @@
 
       article.innerHTML = `
         <div class="teacher-top">
-          <div class="avatar">${teacher.initials}</div>
+          <div class="avatar">${avatarInner}</div>
           <div class="rating">${ratingLabel}</div>
         </div>
 

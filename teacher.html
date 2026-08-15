@@ -99,6 +99,13 @@
       justify-content: center;
       font-size: 30px;
       font-weight: 800;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .verified {
@@ -237,6 +244,14 @@
       color: #a1a1a4;
       font-size: 14px;
       line-height: 1.9;
+    }
+
+    #introVideo {
+      width: 100%;
+      border-radius: 18px;
+      background: #000;
+      border: 1px solid var(--armus-border);
+      display: block;
     }
 
     /* STATS */
@@ -481,6 +496,13 @@
 
         <div>
 
+          <!-- VIDEO -->
+
+          <section id="videoSection" style="display: none;">
+            <h2>Tanıtım Videosu</h2>
+            <video id="introVideo" controls playsinline></video>
+          </section>
+
           <!-- ABOUT -->
 
           <section>
@@ -594,7 +616,14 @@
       document.getElementById("pageTitle").textContent =
         `${teacher.name} | ARMUS`;
 
-      document.getElementById("avatar").textContent = teacher.initials;
+      document.getElementById("avatar").innerHTML = teacher.photo
+        ? `<img src="${teacher.photo}" alt="">`
+        : teacher.initials;
+
+      if (teacher.video) {
+        document.getElementById("videoSection").style.display = "block";
+        document.getElementById("introVideo").src = teacher.video;
+      }
       document.getElementById("teacherName").textContent = teacher.name;
       document.getElementById("teacherRole").textContent = teacher.role;
 
@@ -606,7 +635,10 @@
           : "Henüz değerlendirme yok";
 
       const headerTags = document.getElementById("headerTags");
-      teacher.tags.concat(`${teacher.level} Seviye`).forEach(tag => {
+      const displayTags = teacher.level
+        ? teacher.tags.concat(`${teacher.level} Seviye`)
+        : teacher.tags;
+      displayTags.forEach(tag => {
         const span = document.createElement("span");
         span.className = "tag";
         span.textContent = tag;

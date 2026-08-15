@@ -170,6 +170,13 @@
       justify-content: center;
       font-weight: 800;
       font-size: 16px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .teacher-summary-name {
@@ -534,7 +541,8 @@
       </div>
 
       <button class="confirm-btn" id="confirmBtn">Onayla</button>
-      <div class="small-note">Henüz ödeme alınmayacak</div>
+      <div class="small-note" id="confirmError" style="display: none; color: #f0a5a5;"></div>
+      <div class="small-note" id="confirmNote">Henüz ödeme alınmayacak</div>
     </div>
 
   </main>
@@ -616,7 +624,9 @@
       document.getElementById("successTitle").textContent =
         isTrial ? "Deneme dersin alındı" : "Rezervasyonun alındı";
 
-      document.getElementById("avatar").textContent = teacher.initials;
+      document.getElementById("avatar").innerHTML = teacher.photo
+        ? `<img src="${teacher.photo}" alt="">`
+        : teacher.initials;
       document.getElementById("teacherName").textContent = teacher.name;
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("priceValue").textContent = `₺${teacher.price}`;
@@ -751,7 +761,7 @@
 
         if (!selectedDate || !selectedTime) return;
 
-        armusAddBooking({
+        const result = armusAddBooking({
           studentEmail: session.email,
           studentName: session.name,
           teacherId: teacher.id,
@@ -763,6 +773,13 @@
           time: selectedTime,
           price: teacher.price,
         });
+
+        if (result === false) {
+          document.getElementById("confirmError").textContent =
+            "Rezervasyon kaydedilemedi (tarayıcı hafızası dolu). Lütfen tekrar dene.";
+          document.getElementById("confirmError").style.display = "block";
+          return;
+        }
 
         document.getElementById("successTeacher").textContent = teacher.name;
         document.getElementById("successDate").textContent = selectedDateLabel;

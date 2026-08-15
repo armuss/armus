@@ -170,6 +170,13 @@
       justify-content: center;
       font-weight: 800;
       font-size: 15px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .lesson-info {
@@ -303,12 +310,15 @@
 
           const teacher = armusFindMarketplaceTeacher(booking.teacherId);
           const isPast = booking.date < todayKey;
+          const avatarInner = teacher
+            ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
+            : "?";
 
           const card = document.createElement("div");
           card.className = "lesson-card" + (isPast ? " lesson-past" : "");
 
           card.innerHTML = `
-            <div class="avatar">${teacher ? teacher.initials : "?"}</div>
+            <div class="avatar">${avatarInner}</div>
             <div class="lesson-info">
               <div class="lesson-teacher">
                 ${booking.teacherName}

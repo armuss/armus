@@ -1,8 +1,10 @@
 /*
  * ARMUS - merges the fixed demo teachers (teachers-data.js) with real
  * registered teacher accounts (auth.js) into one bookable list, so a
- * teacher who signs up and fills in their dashboard profile actually
- * shows up in the marketplace instead of only existing in isolation.
+ * teacher who signs up, completes their application and gets approved
+ * by ARMUS actually shows up in the marketplace instead of only
+ * existing in isolation. Only status === "approved" teachers are
+ * bookable - "pending" and "rejected" applicants stay hidden.
  *
  * Requires teachers-data.js (TEACHERS) and auth.js (armusGetUsers) to
  * be loaded first.
@@ -21,13 +23,15 @@ function armusTeacherFromUser(user) {
   return {
     id: user.email,
     initials: initials || "?",
+    photo: user.photo ? user.photo.dataUrl : null,
+    video: user.video ? user.video.dataUrl : null,
     name: user.name,
     role: user.title || "İngilizce Öğretmeni",
     price: user.price ?? 500,
     rating: null,
     reviewCount: 0,
-    tags: ["Yeni Öğretmen"],
-    level: "Tüm seviyeler",
+    tags: [user.subjectTaught || "Genel İngilizce", "Yeni Öğretmen"],
+    level: "",
     availability: user.availability || "Şu anda ders almaya uygun",
     about: user.bio
       ? [user.bio]
@@ -36,7 +40,7 @@ function armusTeacherFromUser(user) {
     completedLessons: "0",
     languages: "English / Türkçe",
     levelRange: "A1 – C2",
-    specialties: ["Genel İngilizce"],
+    specialties: [user.subjectTaught || "Genel İngilizce"],
     reviews: [],
   };
 }
@@ -44,7 +48,7 @@ function armusTeacherFromUser(user) {
 function armusGetMarketplaceTeachers() {
 
   const registeredTeachers = armusGetUsers()
-    .filter(user => user.role === "teacher")
+    .filter(user => user.role === "teacher" && user.status === "approved")
     .map(armusTeacherFromUser);
 
   return TEACHERS.concat(registeredTeachers);

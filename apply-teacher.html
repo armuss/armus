@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Öğretmen Başvurusu | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(620px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(620px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 40px 0 90px;
+    }
+
+    #wizardRoot {
+      display: none;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 32px);
+      letter-spacing: -1px;
+      margin-bottom: 26px;
+    }
+
+    /* STEP TRACKER */
+
+    .tracker {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 30px;
+    }
+
+    .tracker-step {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: #6e6e72;
+      padding: 6px 10px 6px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--armus-border);
+    }
+
+    .tracker-step .dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1c1c1f;
+      border: 1px solid var(--armus-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .tracker-step.active {
+      color: #f4f4f2;
+      border-color: var(--armus-gold-2);
+    }
+
+    .tracker-step.active .dot {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .tracker-step.done .dot {
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      border-color: transparent;
+    }
+
+    /* STEP PANEL */
+
+    .step-panel {
+      display: none;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      padding: 26px;
+    }
+
+    .step-panel.active {
+      display: block;
+    }
+
+    .step-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .step-hint {
+      color: #8e8e91;
+      font-size: 12.5px;
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #a3a3a6;
+      margin-bottom: 7px;
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      color: #c3c3c5;
+      margin-bottom: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-row input {
+      accent-color: var(--armus-gold-2);
+      width: 16px;
+      height: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* FILE UPLOAD */
+
+    .upload-box {
+      border: 1px dashed var(--armus-border);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .upload-box:hover {
+      border-color: var(--armus-gold-2);
+    }
+
+    .upload-box input {
+      display: none;
+    }
+
+    .upload-box .upload-label {
+      color: #c3c3c5;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .upload-box .upload-note {
+      color: #6e6e72;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .upload-preview {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      font-size: 12px;
+      color: #c3c3c5;
+    }
+
+    .upload-preview img {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .upload-error {
+      display: none;
+      color: #f0a5a5;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    /* NAV BUTTONS */
+
+    .step-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 26px;
+    }
+
+    .step-error {
+      display: none;
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #f0a5a5;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    /* SUCCESS */
+
+    .success {
+      display: none;
+      text-align: center;
+      padding: 70px 0;
+    }
+
+    .success-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 22px;
+    }
+
+    .success h1 {
+      font-size: 24px;
+      letter-spacing: -1px;
+      margin-bottom: 10px;
+    }
+
+    .success p {
+      color: #99999c;
+      font-size: 14px;
+      max-width: 400px;
+      margin: 0 auto 26px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="index.html" class="btn">← Ana sayfa</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1>Bu sayfa öğretmenler için</h1>
+      <p>Başvuru yapabilmen için önce öğretmen olarak kayıt olmalısın.</p>
+      <a class="btn btn-light" href="register.html?role=teacher">Öğretmen Olarak Kayıt Ol</a>
+    </div>
+  </div>
+
+  <main class="container" id="wizardRoot">
+
+    <div class="eyebrow">ÖĞRETMEN BAŞVURUSU</div>
+    <h1>Profilini tamamla</h1>
+
+    <div class="tracker" id="tracker"></div>
+
+    <div class="step-error" id="stepError"></div>
+
+    <!-- STEP 1: ABOUT -->
+    <section class="step-panel" data-step="1">
+      <div class="step-title">Hakkında</div>
+      <div class="step-hint">Az sonra bu bilgiler ARMUS ekibi tarafından incelenecek.</div>
+
+      <div class="field">
+        <label for="country">Yaşadığın ülke</label>
+        <input type="text" id="country" placeholder="örn. Türkiye">
+      </div>
+
+      <div class="field">
+        <label for="subject">Öğrettiğin konu</label>
+        <select id="subject">
+          <option value="Genel İngilizce">Genel İngilizce</option>
+          <option value="Konuşma">Konuşma</option>
+          <option value="IELTS">IELTS</option>
+          <option value="TOEFL">TOEFL</option>
+          <option value="YDS">YDS</option>
+          <option value="İş İngilizcesi">İş İngilizcesi</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- STEP 2: PHOTO -->
+    <section class="step-panel" data-step="2">
+      <div class="step-title">Fotoğraf</div>
+      <div class="step-hint">Yüzünün net göründüğü, tek başına olduğun bir fotoğraf yükle.</div>
+
+      <label class="upload-box" id="photoBox">
+        <input type="file" id="photoInput" accept="image/png,image/jpeg">
+        <div class="upload-label">Fotoğraf yükle</div>
+        <div class="upload-note">JPG veya PNG, maks 2MB</div>
+      </label>
+
+      <div class="upload-preview" id="photoPreview">
+        <img id="photoPreviewImg" alt="">
+        <span id="photoPreviewName"></span>
+      </div>
+
+      <div class="upload-error" id="photoError"></div>
+    </section>
+
+    <!-- STEP 3: CERTIFICATION -->
+    <section class="step-panel" data-step="3">
+      <div class="step-title">Sertifika</div>
+      <div class="step-hint">Bir öğretim sertifikan varsa ekle, profiline güven katar.</div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="noCertificate">
+        Bir öğretim sertifikam yok
+      </label>
+
+      <div id="certificateFields">
+
+        <div class="field">
+          <label for="certificateName">Sertifika adı</label>
+          <input type="text" id="certificateName" placeholder="örn. CELTA">
+        </div>
+
+        <div class="field">
+          <label for="certificateYears">Kaç yıldır geçerli / ne zaman alındı</label>
+          <input type="text" id="certificateYears" placeholder="örn. 2021">
+        </div>
+
+        <label class="upload-box" id="certificateBox">
+          <input type="file" id="certificateInput" accept="image/png,image/jpeg,application/pdf">
+          <div class="upload-label">Sertifika dosyası yükle</div>
+          <div class="upload-note">PDF, JPG veya PNG, maks 3MB</div>
+        </label>
+
+        <div class="upload-preview" id="certificatePreview">
+          <span id="certificatePreviewName"></span>
+        </div>
+
+        <div class="upload-error" id="certificateError"></div>
+
+      </div>
+    </section>
+
+    <!-- STEP 4: EDUCATION -->
+    <section class="step-panel" data-step="4">
+      <div class="step-title">Eğitim</div>
+      <div class="step-hint">Yükseköğrenim bilgini paylaş.</div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="noEducation">
+        Bir yükseköğrenim derecem yok
+      </label>
+
+      <div id="educationFields">
+
+        <div class="field">
+          <label for="university">Üniversite</label>
+          <input type="text" id="university" placeholder="örn. Boğaziçi Üniversitesi">
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="degreeType">Derece türü</label>
+            <select id="degreeType">
+              <option value="Lisans">Lisans</option>
+              <option value="Yüksek Lisans">Yüksek Lisans</option>
+              <option value="Doktora">Doktora</option>
+              <option value="Ön Lisans">Ön Lisans</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="graduationYear">Mezuniyet yılı</label>
+            <input type="text" id="graduationYear" placeholder="örn. 2019">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="specialization">Bölüm / uzmanlık</label>
+          <input type="text" id="specialization" placeholder="örn. İngiliz Dili ve Edebiyatı">
+        </div>
+
+      </div>
+    </section>
+
+    <!-- STEP 5: DESCRIPTION -->
+    <section class="step-panel" data-step="5">
+      <div class="step-title">Açıklama</div>
+      <div class="step-hint">Kendinden ve öğretim tarzından bahset. Bu metin profilinde görünecek.</div>
+
+      <div class="field">
+        <textarea id="description" placeholder="Merhaba! Ben..."></textarea>
+      </div>
+    </section>
+
+    <!-- STEP 6: VIDEO -->
+    <section class="step-panel" data-step="6">
+      <div class="step-title">Tanıtım videosu</div>
+      <div class="step-hint">
+        Kısa bir tanıtım videosu yükle; onaylandıktan sonra profilinde oynatılacak.
+      </div>
+
+      <label class="upload-box" id="videoBox">
+        <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime">
+        <div class="upload-label">Video yükle</div>
+        <div class="upload-note">MP4/WEBM, maks 8MB (kısa ve düşük çözünürlüklü bir video seç)</div>
+      </label>
+
+      <div class="upload-preview" id="videoPreview">
+        <span id="videoPreviewName"></span>
+      </div>
+
+      <div class="upload-error" id="videoError"></div>
+    </section>
+
+    <!-- STEP 7: AVAILABILITY -->
+    <section class="step-panel" data-step="7">
+      <div class="step-title">Uygunluk</div>
+      <div class="step-hint">Şu an için genel uygunluk durumun. Bunu panelinden istediğin zaman değiştirebilirsin.</div>
+
+      <div class="field">
+        <select id="availability">
+          <option value="Şu anda ders almaya uygun">Şu anda ders almaya uygun</option>
+          <option value="Bu hafta sınırlı uygunluk">Bu hafta sınırlı uygunluk</option>
+          <option value="Şu anda müsait değilim">Şu anda müsait değilim</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- STEP 8: PRICING -->
+    <section class="step-panel" data-step="8">
+      <div class="step-title">Ücret</div>
+      <div class="step-hint">50 dakikalık bir ders için ücretini belirle. Bunu daha sonra panelinden değiştirebilirsin.</div>
+
+      <div class="field">
+        <label for="price">Ders ücreti (₺)</label>
+        <input type="number" id="price" min="0" step="1" placeholder="örn. 500">
+      </div>
+    </section>
+
+    <div class="step-nav">
+      <button class="btn" id="backBtn">← Geri</button>
+      <button class="btn btn-light" id="nextBtn">İleri →</button>
+    </div>
+
+  </main>
+
+  <main class="container">
+    <div class="success" id="successView">
+      <div class="success-icon">✓</div>
+      <h1>Başvurun alındı</h1>
+      <p>
+        ARMUS ekibi profilini ve belgelerini inceleyecek. Onaylandığında
+        profilin Öğretmenler sayfasında yayına girecek ve bildirim
+        alacaksın (panelinden de durumunu görebilirsin).
+      </p>
+      <a class="btn btn-light" href="dashboard.html">Panelime git</a>
+    </div>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+
+    const session = armusGetSession();
+    const gate = document.getElementById("gate");
+    const wizardRoot = document.getElementById("wizardRoot");
+
+    if (!session || session.role !== "teacher") {
+
+      gate.style.display = "block";
+
+    } else {
+
+      wizardRoot.style.display = "block";
+
+      const TOTAL_STEPS = 8;
+      const STEP_LABELS = [
+        "Hakkında", "Fotoğraf", "Sertifika", "Eğitim",
+        "Açıklama", "Video", "Uygunluk", "Ücret"
+      ];
+
+      let currentStep = 1;
+
+      const uploads = { photo: null, certificate: null, video: null };
+
+      const tracker = document.getElementById("tracker");
+      STEP_LABELS.forEach((label, i) => {
+        const step = i + 1;
+        const pill = document.createElement("div");
+        pill.className = "tracker-step";
+        pill.dataset.step = step;
+        pill.innerHTML = `<span class="dot">${step}</span> ${label}`;
+        tracker.appendChild(pill);
+      });
+
+      function renderTracker() {
+        document.querySelectorAll(".tracker-step").forEach(pill => {
+          const step = Number(pill.dataset.step);
+          pill.classList.toggle("active", step === currentStep);
+          pill.classList.toggle("done", step < currentStep);
+        });
+      }
+
+      function showStep(step) {
+
+        document.querySelectorAll(".step-panel").forEach(panel => {
+          panel.classList.toggle("active", Number(panel.dataset.step) === step);
+        });
+
+        document.getElementById("backBtn").style.visibility =
+          step === 1 ? "hidden" : "visible";
+
+        document.getElementById("nextBtn").textContent =
+          step === TOTAL_STEPS ? "Başvuruyu Gönder" : "İleri →";
+
+        document.getElementById("stepError").style.display = "none";
+
+        renderTracker();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function showStepError(message) {
+        const box = document.getElementById("stepError");
+        box.textContent = message;
+        box.style.display = "block";
+      }
+
+      // ---- toggle optional sections ----
+
+      document.getElementById("noCertificate").addEventListener("change", event => {
+        document.getElementById("certificateFields").style.display =
+          event.target.checked ? "none" : "block";
+      });
+
+      document.getElementById("noEducation").addEventListener("change", event => {
+        document.getElementById("educationFields").style.display =
+          event.target.checked ? "none" : "block";
+      });
+
+      // ---- file upload helper ----
+
+      function readFileAsDataURL(file, maxBytes) {
+        return new Promise((resolve, reject) => {
+
+          if (file.size > maxBytes) {
+            reject(new Error(`Dosya çok büyük (maks ${(maxBytes / 1024 / 1024).toFixed(1)}MB).`));
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => resolve({ name: file.name, dataUrl: reader.result });
+          reader.onerror = () => reject(new Error("Dosya okunamadı."));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function wireUpload(inputId, maxBytes, errorId, onSuccess) {
+
+        document.getElementById(inputId).addEventListener("change", async event => {
+
+          const file = event.target.files[0];
+          const errorBox = document.getElementById(errorId);
+          errorBox.style.display = "none";
+
+          if (!file) return;
+
+          try {
+            const result = await readFileAsDataURL(file, maxBytes);
+            onSuccess(result);
+          } catch (err) {
+            errorBox.textContent = err.message;
+            errorBox.style.display = "block";
+            event.target.value = "";
+          }
+        });
+      }
+
+      wireUpload("photoInput", 2 * 1024 * 1024, "photoError", result => {
+        uploads.photo = result;
+        document.getElementById("photoPreviewImg").src = result.dataUrl;
+        document.getElementById("photoPreviewName").textContent = result.name;
+        document.getElementById("photoPreview").style.display = "flex";
+      });
+
+      wireUpload("certificateInput", 3 * 1024 * 1024, "certificateError", result => {
+        uploads.certificate = result;
+        document.getElementById("certificatePreviewName").textContent = result.name;
+        document.getElementById("certificatePreview").style.display = "flex";
+      });
+
+      wireUpload("videoInput", 8 * 1024 * 1024, "videoError", result => {
+        uploads.video = result;
+        document.getElementById("videoPreviewName").textContent = result.name;
+        document.getElementById("videoPreview").style.display = "flex";
+      });
+
+      // ---- per-step validation ----
+
+      function validateStep(step) {
+
+        if (step === 1) {
+          if (!document.getElementById("country").value.trim()) {
+            showStepError("Yaşadığın ülkeyi yaz.");
+            return false;
+          }
+        }
+
+        if (step === 2) {
+          if (!uploads.photo) {
+            showStepError("Devam etmek için bir fotoğraf yükle.");
+            return false;
+          }
+        }
+
+        if (step === 3) {
+          const skip = document.getElementById("noCertificate").checked;
+          if (!skip && !document.getElementById("certificateName").value.trim()) {
+            showStepError("Sertifika adını yaz, ya da 'sertifikam yok' seçeneğini işaretle.");
+            return false;
+          }
+        }
+
+        if (step === 4) {
+          const skip = document.getElementById("noEducation").checked;
+          if (!skip && !document.getElementById("university").value.trim()) {
+            showStepError("Üniversite adını yaz, ya da 'yükseköğrenim derecem yok' seçeneğini işaretle.");
+            return false;
+          }
+        }
+
+        if (step === 5) {
+          if (!document.getElementById("description").value.trim()) {
+            showStepError("Kendinden kısaca bahset.");
+            return false;
+          }
+        }
+
+        if (step === 6) {
+          if (!uploads.video) {
+            showStepError("Devam etmek için bir tanıtım videosu yükle.");
+            return false;
+          }
+        }
+
+        if (step === 8) {
+          const price = Number(document.getElementById("price").value);
+          if (!price || price <= 0) {
+            showStepError("Geçerli bir ders ücreti gir.");
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      // ---- navigation ----
+
+      document.getElementById("backBtn").addEventListener("click", () => {
+        if (currentStep > 1) {
+          currentStep -= 1;
+          showStep(currentStep);
+        }
+      });
+
+      document.getElementById("nextBtn").addEventListener("click", () => {
+
+        if (!validateStep(currentStep)) return;
+
+        if (currentStep < TOTAL_STEPS) {
+          currentStep += 1;
+          showStep(currentStep);
+          return;
+        }
+
+        // final step - submit application
+        submitApplication();
+      });
+
+      function submitApplication() {
+
+        const hasCertificate = !document.getElementById("noCertificate").checked;
+        const hasEducation = !document.getElementById("noEducation").checked;
+        const subject = document.getElementById("subject").value;
+
+        const result = armusUpdateUser(session.email, {
+          country: document.getElementById("country").value.trim(),
+          subjectTaught: subject,
+          title: subject + " Öğretmeni",
+          photo: uploads.photo,
+          hasCertificate,
+          certificateName: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
+          certificateYears: hasCertificate ? document.getElementById("certificateYears").value.trim() : "",
+          certificateFile: hasCertificate ? uploads.certificate : null,
+          hasEducation,
+          university: hasEducation ? document.getElementById("university").value.trim() : "",
+          degreeType: hasEducation ? document.getElementById("degreeType").value : "",
+          graduationYear: hasEducation ? document.getElementById("graduationYear").value.trim() : "",
+          specialization: hasEducation ? document.getElementById("specialization").value.trim() : "",
+          bio: document.getElementById("description").value.trim(),
+          video: uploads.video,
+          availability: document.getElementById("availability").value,
+          price: Number(document.getElementById("price").value) || 0,
+          status: "pending",
+          appliedAt: new Date().toISOString(),
+        });
+
+        if (result === false) {
+          showStepError(
+            "Başvuru kaydedilemedi - dosyaların toplam boyutu tarayıcı hafızasına sığmadı. " +
+            "Fotoğraf veya videoyu daha küçük bir dosyayla değiştirip tekrar dene."
+          );
+          return;
+        }
+
+        wizardRoot.style.display = "none";
+        document.getElementById("successView").style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      showStep(currentStep);
+    }
+
+  </script>
+
+</body>
+</html>
