@@ -573,6 +573,7 @@
 
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
+  <script src="reviews.js"></script>
   <script>
 
     const session = armusGetSession();
@@ -662,6 +663,39 @@
       const incomingBookings = armusGetBookingsForTeacherEmail(user.email);
       const incomingList = document.getElementById("incomingBookings");
       const incomingEmpty = document.getElementById("incomingEmpty");
+
+      // ---- overview stats (real, computed from bookings/reviews) ----
+
+      function commissionForHours(hours) {
+        if (hours < 100) return { rate: 30, range: "0–100 saat arası" };
+        if (hours < 200) return { rate: 28, range: "100–200 saat arası" };
+        if (hours < 300) return { rate: 25, range: "200–300 saat arası" };
+        if (hours < 500) return { rate: 20, range: "300–500 saat arası" };
+        return { rate: 15, range: "500+ saat" };
+      }
+
+      const completedBookings = incomingBookings.filter(armusIsBookingPast);
+      const totalHours = Math.round((completedBookings.length * 50 / 60) * 10) / 10;
+      const tier = commissionForHours(totalHours);
+
+      const now = new Date();
+      const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const grossThisMonth = completedBookings
+        .filter(b => b.date.startsWith(thisMonthKey))
+        .reduce((sum, b) => sum + (b.price || 0), 0);
+      const netThisMonth = Math.round(grossThisMonth * (1 - tier.rate / 100));
+
+      const teacherReviews = armusGetReviewsForTeacher(user.email);
+      const avgRating = teacherReviews.length
+        ? (teacherReviews.reduce((sum, r) => sum + r.stars, 0) / teacherReviews.length).toFixed(1)
+        : "—";
+
+      document.getElementById("statLessons").textContent = completedBookings.length;
+      document.getElementById("statHours").textContent = totalHours;
+      document.getElementById("statEarnings").textContent = `₺${netThisMonth}`;
+      document.getElementById("statRating").textContent = avgRating;
+      document.getElementById("commissionRate").textContent = `%${tier.rate}`;
+      document.getElementById("commissionRange").textContent = tier.range;
 
       if (incomingBookings.length === 0) {
 

@@ -6,8 +6,9 @@
  * existing in isolation. Only status === "approved" teachers are
  * bookable - "pending" and "rejected" applicants stay hidden.
  *
- * Requires teachers-data.js (TEACHERS) and auth.js (armusGetUsers) to
- * be loaded first.
+ * Requires teachers-data.js (TEACHERS), auth.js (armusGetUsers),
+ * bookings.js (armusGetBookingsForTeacherEmail) and reviews.js
+ * (armusGetReviewsForTeacher) to be loaded first.
  */
 
 function armusTeacherFromUser(user) {
@@ -20,6 +21,19 @@ function armusTeacherFromUser(user) {
     .join("")
     .toUpperCase();
 
+  const rawReviews = armusGetReviewsForTeacher(user.email);
+  const reviews = rawReviews.map(r => ({
+    name: armusFormatReviewerName(r.studentName),
+    stars: r.stars,
+    text: r.text,
+  }));
+  const rating = rawReviews.length
+    ? Math.round((rawReviews.reduce((sum, r) => sum + r.stars, 0) / rawReviews.length) * 10) / 10
+    : null;
+
+  const completedCount = armusGetBookingsForTeacherEmail(user.email)
+    .filter(armusIsBookingPast).length;
+
   return {
     id: user.email,
     initials: initials || "?",
@@ -28,8 +42,8 @@ function armusTeacherFromUser(user) {
     name: user.name,
     role: user.title || "İngilizce Öğretmeni",
     price: user.price ?? 500,
-    rating: null,
-    reviewCount: 0,
+    rating,
+    reviewCount: reviews.length,
     tags: [user.subjectTaught || "Genel İngilizce", "Yeni Öğretmen"],
     level: "",
     availability: user.availability || "Şu anda ders almaya uygun",
@@ -37,13 +51,13 @@ function armusTeacherFromUser(user) {
       ? [user.bio]
       : ["Bu öğretmen henüz bir tanıtım yazısı eklemedi."],
     experience: "Yeni",
-    completedLessons: "0",
+    completedLessons: String(completedCount),
     languages: user.languages && user.languages.length
       ? user.languages.map(l => `${l.language} (${l.level})`).join(", ")
       : "English / Türkçe",
     levelRange: "A1 – C2",
     specialties: [user.subjectTaught || "Genel İngilizce"],
-    reviews: [],
+    reviews,
     weeklyAvailability: Array.isArray(user.weeklyAvailability)
       ? user.weeklyAvailability
       : null,
