@@ -430,9 +430,9 @@
       <h2>Gelen rezervasyonlar</h2>
       <div id="incomingBookings"></div>
       <div class="empty-state" id="incomingEmpty">
-        Henüz rezervasyon yok. Bunun bir nedeni, profilinin henüz
-        Öğretmenler listesinde görünmüyor olması — hesabını gerçek
-        ilan listesine bağlamak sıradaki adımlardan biri.
+        Henüz rezervasyon yok. Profilin artık Öğretmenler listesinde
+        görünüyor — bir öğrenci seni bulup ders aldığında burada
+        listelenecek.
       </div>
     </section>
 
@@ -440,6 +440,11 @@
       <h2>Profilini düzenle</h2>
 
       <form id="profileForm" novalidate>
+
+        <div class="field">
+          <label for="title">Uzmanlık başlığı</label>
+          <input type="text" id="title" placeholder="örn. Konuşma & IELTS Uzmanı">
+        </div>
 
         <div class="field">
           <label for="price">Ders ücreti (₺ / 50 dakika)</label>
@@ -466,9 +471,9 @@
       </form>
 
       <p class="small-note">
-        Bu panel bir prototiptir. Buradaki değişiklikler bu tarayıcıda saklanır
-        ama Öğretmenler sayfasındaki listeye henüz otomatik yansımıyor —
-        bunun için gerçek bir veritabanı gerekiyor.
+        Bu panel bir prototiptir. Profilin artık Öğretmenler sayfasında
+        da görünüyor ve gerçekten rezervasyon alabiliyorsun — ama her şey
+        bu tarayıcıda saklanıyor; gerçek bir veritabanı henüz yok.
       </p>
     </section>
 
@@ -519,6 +524,7 @@
       document.getElementById("dashName").textContent = user.name;
       document.getElementById("dashEmail").textContent = user.email;
 
+      document.getElementById("title").value = user.title || "";
       document.getElementById("price").value = user.price ?? 500;
       document.getElementById("availability").value =
         user.availability || "Şu anda ders almaya uygun";
@@ -556,6 +562,7 @@
         event.preventDefault();
 
         armusUpdateUser(user.email, {
+          title: document.getElementById("title").value.trim(),
           price: Number(document.getElementById("price").value) || 0,
           availability: document.getElementById("availability").value,
           bio: document.getElementById("bio").value.trim(),

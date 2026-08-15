@@ -271,6 +271,7 @@
 
   <script src="teachers-data.js"></script>
   <script src="auth.js"></script>
+  <script src="marketplace.js"></script>
   <script src="bookings.js"></script>
   <script>
 
@@ -300,7 +301,7 @@
 
         bookings.forEach(booking => {
 
-          const teacher = TEACHERS.find(t => t.id === booking.teacherId);
+          const teacher = armusFindMarketplaceTeacher(booking.teacherId);
           const isPast = booking.date < todayKey;
 
           const card = document.createElement("div");

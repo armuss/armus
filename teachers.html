@@ -546,11 +546,16 @@
 
   <script src="teachers-data.js"></script>
   <script src="auth.js"></script>
+  <script src="marketplace.js"></script>
   <script>
 
     const grid = document.getElementById("teachersGrid");
 
-    TEACHERS.forEach(teacher => {
+    armusGetMarketplaceTeachers().forEach(teacher => {
+
+      const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
+      const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
+      const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : "Yeni";
 
       const article = document.createElement("article");
       article.className = "teacher-card";
@@ -558,15 +563,15 @@
       article.dataset.tags = teacher.tags.join(" ");
       article.dataset.level = teacher.level;
       article.dataset.price = teacher.price;
-      article.dataset.rating = teacher.rating;
+      article.dataset.rating = teacher.rating || 0;
 
       article.innerHTML = `
         <div class="teacher-top">
           <div class="avatar">${teacher.initials}</div>
-          <div class="rating">★ ${teacher.rating}</div>
+          <div class="rating">${ratingLabel}</div>
         </div>
 
-        <a href="teacher.html?teacher=${teacher.id}" class="teacher-name">${teacher.name}</a>
+        <a href="${teacherLink}" class="teacher-name">${teacher.name}</a>
         <div class="teacher-role">${teacher.role}</div>
 
         <div class="tags">
@@ -575,7 +580,7 @@
 
         <div class="teacher-bottom">
           <div class="price">₺${teacher.price} <span>/ ders</span></div>
-          <a class="trial" href="booking.html?teacher=${teacher.id}&type=trial">Deneme Dersi Al</a>
+          <a class="trial" href="${bookingLink}">Deneme Dersi Al</a>
         </div>
       `;
 
@@ -678,6 +683,8 @@
     );
 
     sortSelect.addEventListener("change", updateTeachers);
+
+    updateTeachers();
 
   </script>
 
