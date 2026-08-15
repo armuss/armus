@@ -597,6 +597,8 @@
 
 
   <script src="teachers-data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
@@ -605,10 +607,13 @@
 
     const params = new URLSearchParams(window.location.search);
     const teacherId = params.get("teacher") || "sarah";
-    const teacher = armusFindMarketplaceTeacher(teacherId);
 
     const profileRoot = document.getElementById("profileRoot");
     const notFound = document.getElementById("notFound");
+
+    (async function() {
+
+    const teacher = await armusFindMarketplaceTeacher(teacherId);
 
     if (!teacher) {
 
@@ -726,6 +731,8 @@
         specialtiesList.appendChild(item);
       });
     }
+
+    })();
 
     function trialLesson() {
       window.location.href = `booking.html?teacher=${encodeURIComponent(teacherId)}&type=trial`;

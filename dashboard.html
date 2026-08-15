@@ -591,12 +591,15 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase-config.js"></script>
+
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
   <script>
 
-    const session = armusGetSession();
     const gate = document.getElementById("gate");
     const dashboardRoot = document.getElementById("dashboardRoot");
 
@@ -611,6 +614,10 @@
     const REGISTER_BTN = '<a class="btn btn-light" href="register.html?role=teacher">Öğretmen Olarak Kayıt Ol</a>';
     const APPLY_BTN = '<a class="btn btn-light" href="apply-teacher.html">Başvuruyu Tamamla</a>';
     const REAPPLY_BTN = '<a class="btn btn-light" href="apply-teacher.html">Tekrar Başvur</a>';
+
+    (async function() {
+
+    const session = await armusGetSession();
 
     if (!session) {
 
@@ -630,7 +637,7 @@
 
     } else {
 
-      const user = armusFindUser(session.email);
+      const user = session;
 
       if (!user.status) {
 
@@ -658,18 +665,20 @@
 
       } else {
 
-      renderApprovedDashboard(user);
+      await renderApprovedDashboard(user);
 
       }
     }
 
-    function renderApprovedDashboard(user) {
+    })();
+
+    async function renderApprovedDashboard(user) {
 
       gate.style.display = "none";
       dashboardRoot.style.display = "block";
 
-      document.getElementById("avatar").innerHTML = user.photo
-        ? `<img src="${user.photo.dataUrl}" alt="">`
+      document.getElementById("avatar").innerHTML = user.photo_url
+        ? `<img src="${user.photo_url}" alt="">`
         : user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
       document.getElementById("dashName").textContent = user.name;
       document.getElementById("dashEmail").textContent = user.email;
@@ -680,7 +689,7 @@
         user.availability || "Şu anda ders almaya uygun";
       document.getElementById("bio").value = user.bio || "";
 
-      const incomingBookings = armusGetBookingsForTeacherEmail(user.email);
+      const incomingBookings = await armusGetBookingsForTeacher(user.id);
       const incomingList = document.getElementById("incomingBookings");
       const incomingEmpty = document.getElementById("incomingEmpty");
 
@@ -705,7 +714,7 @@
         .reduce((sum, b) => sum + (b.price || 0), 0);
       const netThisMonth = Math.round(grossThisMonth * (1 - tier.rate / 100));
 
-      const teacherReviews = armusGetReviewsForTeacher(user.email);
+      const teacherReviews = await armusGetReviewsForTeacher(user.id);
       const avgRating = teacherReviews.length
         ? (teacherReviews.reduce((sum, r) => sum + r.stars, 0) / teacherReviews.length).toFixed(1)
         : "—";
@@ -740,11 +749,11 @@
         });
       }
 
-      document.getElementById("profileForm").addEventListener("submit", event => {
+      document.getElementById("profileForm").addEventListener("submit", async event => {
 
         event.preventDefault();
 
-        const result = armusUpdateUser(user.email, {
+        const result = await armusUpdateOwnProfile({
           title: document.getElementById("title").value.trim(),
           price: Number(document.getElementById("price").value) || 0,
           availability: document.getElementById("availability").value,
@@ -754,7 +763,7 @@
         const status = document.getElementById("saveStatus");
 
         if (result === false) {
-          status.textContent = "Kaydedilemedi (tarayıcı hafızası dolu) ✕";
+          status.textContent = "Kaydedilemedi ✕";
         } else {
           status.textContent = "Kaydedildi ✓";
         }
@@ -779,12 +788,12 @@
         ["Cum", 5], ["Cmt", 6], ["Paz", 0]
       ];
 
-      const hasOwnAvailability = Array.isArray(user.weeklyAvailability);
+      const hasOwnAvailability = Array.isArray(user.weekly_availability);
       document.getElementById("availabilityDefaultNote").style.display =
         hasOwnAvailability ? "none" : "block";
 
       const weeklyState = hasOwnAvailability
-        ? DAY_COLUMNS.map(([, dayIndex]) => user.weeklyAvailability[dayIndex] || [])
+        ? DAY_COLUMNS.map(([, dayIndex]) => user.weekly_availability[dayIndex] || [])
         : DAY_COLUMNS.map(() => []);
 
       const grid = document.getElementById("availabilityGrid");
@@ -831,7 +840,7 @@
         grid.appendChild(row);
       });
 
-      document.getElementById("saveAvailabilityBtn").addEventListener("click", () => {
+      document.getElementById("saveAvailabilityBtn").addEventListener("click", async () => {
 
         // convert back from display order to getDay()-indexed array
         const weeklyAvailability = [];
@@ -839,12 +848,12 @@
           weeklyAvailability[dayIndex] = weeklyState[colIndex];
         });
 
-        const result = armusUpdateUser(user.email, { weeklyAvailability });
+        const result = await armusUpdateOwnProfile({ weekly_availability: weeklyAvailability });
 
         const status = document.getElementById("availabilitySaveStatus");
 
         if (result === false) {
-          status.textContent = "Kaydedilemedi (tarayıcı hafızası dolu) ✕";
+          status.textContent = "Kaydedilemedi ✕";
         } else {
           status.textContent = "Kaydedildi ✓";
           document.getElementById("availabilityDefaultNote").style.display = "none";

@@ -1,83 +1,82 @@
 /*
- * ARMUS - mock auth (frontend prototype only)
- * No real backend yet: "accounts" and the current session just live in
- * localStorage on this browser. Good enough to make the login/register
- * flow feel real until a database is wired up.
+ * ARMUS - real auth backed by Supabase.
+ * Requires supabase-config.js (Supabase SDK + armusSupabase client) to be
+ * loaded before this file.
  */
 
-const ARMUS_USERS_KEY = "armus_users";
-const ARMUS_SESSION_KEY = "armus_session";
-
-function armusGetUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(ARMUS_USERS_KEY)) || [];
-  } catch {
-    return [];
-  }
+async function armusSignUp({ name, email, password, role }) {
+  return armusSupabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, role } },
+  });
 }
 
-function armusSaveUsers(users) {
-  try {
-    localStorage.setItem(ARMUS_USERS_KEY, JSON.stringify(users));
-    return true;
-  } catch {
-    return false;
-  }
+async function armusSignIn({ email, password }) {
+  return armusSupabase.auth.signInWithPassword({ email, password });
 }
 
-function armusGetSession() {
-  try {
-    return JSON.parse(localStorage.getItem(ARMUS_SESSION_KEY));
-  } catch {
-    return null;
-  }
+async function armusSignOut() {
+  await armusSupabase.auth.signOut();
 }
 
-function armusSetSession(user) {
-  localStorage.setItem(
-    ARMUS_SESSION_KEY,
-    JSON.stringify({ name: user.name, email: user.email, role: user.role })
-  );
+// Returns the current user's full profile row (auth + application data
+// merged), or null if nobody is logged in.
+async function armusGetSession() {
+
+  const { data: { user } } = await armusSupabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile, error } = await armusSupabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile) return null;
+  return profile;
 }
 
-function armusClearSession() {
-  localStorage.removeItem(ARMUS_SESSION_KEY);
+// Updates the currently logged-in user's own profile row.
+// Returns the updated row, or false if the update failed.
+async function armusUpdateOwnProfile(updates) {
+
+  const { data: { user } } = await armusSupabase.auth.getUser();
+  if (!user) return false;
+
+  const { data, error } = await armusSupabase
+    .from("profiles")
+    .update(updates)
+    .eq("id", user.id)
+    .select()
+    .single();
+
+  if (error) return false;
+  return data;
 }
 
-function armusFindUser(email) {
-  return armusGetUsers().find(u => u.email === email) || null;
+// Admin-only: updates another user's profile by id (e.g. approve/reject a
+// teacher application). The profiles_update_own_or_admin RLS policy is
+// what actually enforces this - a non-admin caller gets an error here.
+async function armusAdminUpdateProfile(profileId, updates) {
+
+  const { data, error } = await armusSupabase
+    .from("profiles")
+    .update(updates)
+    .eq("id", profileId)
+    .select()
+    .single();
+
+  if (error) return false;
+  return data;
 }
 
-// Returns the updated user on success, null if the user doesn't exist,
-// or false if saving failed (e.g. localStorage quota exceeded by a
-// large photo/video upload) - callers must check for false explicitly.
-function armusUpdateUser(email, updates) {
-
-  const users = armusGetUsers();
-  const index = users.findIndex(u => u.email === email);
-  if (index === -1) return null;
-
-  const updated = { ...users[index], ...updates };
-  users[index] = updated;
-
-  if (!armusSaveUsers(users)) {
-    return false;
-  }
-
-  const session = armusGetSession();
-  if (session && session.email === email) {
-    armusSetSession(updated);
-  }
-
-  return updated;
-}
-
-function armusRenderNavAuth() {
+async function armusRenderNavAuth() {
 
   const el = document.getElementById("navAuthButtons");
   if (!el) return;
 
-  const session = armusGetSession();
+  const session = await armusGetSession();
 
   if (session) {
 
@@ -94,8 +93,8 @@ function armusRenderNavAuth() {
       <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
     `;
 
-    document.getElementById("armusLogoutBtn").addEventListener("click", () => {
-      armusClearSession();
+    document.getElementById("armusLogoutBtn").addEventListener("click", async () => {
+      await armusSignOut();
       window.location.reload();
     });
 

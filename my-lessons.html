@@ -376,15 +376,20 @@
   </main>
 
   <script src="teachers-data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
   <script src="marketplace.js"></script>
   <script>
 
-    const session = armusGetSession();
     const gate = document.getElementById("gate");
     const pageRoot = document.getElementById("pageRoot");
+
+    (async function() {
+
+    const session = await armusGetSession();
 
     if (!session) {
 
@@ -394,16 +399,16 @@
 
       pageRoot.style.display = "block";
 
-      const bookings = armusGetBookingsForStudent(session.email);
+      const bookings = await armusGetBookingsForStudent(session.id);
       const list = document.getElementById("lessonsList");
       const empty = document.getElementById("emptyState");
 
-      function buildReviewBlock(booking) {
+      async function buildReviewBlock(booking) {
 
         const wrap = document.createElement("div");
         wrap.className = "review-block";
 
-        const existing = armusGetReviews().find(r => r.bookingId === booking.id);
+        const existing = await armusGetReviewForBooking(booking.id);
 
         if (existing) {
 
@@ -448,28 +453,28 @@
           });
         });
 
-        submitBtn.addEventListener("click", () => {
+        submitBtn.addEventListener("click", async () => {
 
           if (selectedStars === 0) {
             alert("Lütfen bir puan seç.");
             return;
           }
 
-          const result = armusAddReview({
+          const result = await armusAddReview({
             bookingId: booking.id,
             teacherId: booking.teacherId,
+            studentId: session.id,
             studentName: session.name,
-            studentEmail: session.email,
             stars: selectedStars,
             text: textarea.value.trim(),
           });
 
           if (result === false) {
-            alert("Değerlendirme kaydedilemedi (tarayıcı hafızası dolu).");
+            alert("Değerlendirme kaydedilemedi.");
             return;
           }
 
-          const replacement = buildReviewBlock(booking);
+          const replacement = await buildReviewBlock(booking);
           wrap.replaceWith(replacement);
         });
 
@@ -484,9 +489,9 @@
 
         const todayKey = new Date().toISOString().slice(0, 10);
 
-        bookings.forEach(booking => {
+        for (const booking of bookings) {
 
-          const teacher = armusFindMarketplaceTeacher(booking.teacherId);
+          const teacher = await armusFindMarketplaceTeacher(booking.teacherId);
           const isPast = booking.date < todayKey;
           const avatarInner = teacher
             ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
@@ -513,13 +518,15 @@
           `;
 
           if (isPast) {
-            card.appendChild(buildReviewBlock(booking));
+            card.appendChild(await buildReviewBlock(booking));
           }
 
           list.appendChild(card);
-        });
+        }
       }
     }
+
+    })();
 
   </script>
 

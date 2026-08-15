@@ -225,6 +225,33 @@
     .app-bio {
       grid-column: 1 / -1;
     }
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
   </style>
 </head>
 
@@ -233,30 +260,74 @@
   <div class="container">
 
     <a href="index.html" class="logo">ARMUS</a>
-    <h1>Öğretmen Başvuruları</h1>
 
-    <div class="warning">
-      Bu bir prototip admin panelidir - gerçek bir yetkilendirme/giriş kontrolü yok,
-      bu adresi bilen herkes erişebilir. Gerçek bir sürümde bu sayfa sadece ARMUS
-      ekibine açık olmalı.
+    <div class="gate" id="gate">
+      <h1 id="gateTitle"></h1>
+      <p id="gateText"></p>
+      <div class="gate-actions" id="gateActions"></div>
     </div>
 
-    <h2>Bekleyen başvurular</h2>
-    <div id="pendingList"></div>
-    <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
+    <div id="adminRoot" style="display: none;">
 
-    <h2>Onaylanmış öğretmenler</h2>
-    <div id="approvedList"></div>
-    <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
+      <h1>Öğretmen Başvuruları</h1>
 
-    <h2>Reddedilen başvurular</h2>
-    <div id="rejectedList"></div>
-    <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+      <div class="warning">
+        Bu panele sadece is_admin işaretli hesaplar erişebilir.
+      </div>
+
+      <h2>Bekleyen başvurular</h2>
+      <div id="pendingList"></div>
+      <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
+
+      <h2>Onaylanmış öğretmenler</h2>
+      <div id="approvedList"></div>
+      <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
+
+      <h2>Reddedilen başvurular</h2>
+      <div id="rejectedList"></div>
+      <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+
+    </div>
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase-config.js"></script>
+
   <script src="auth.js"></script>
   <script>
+
+    const gate = document.getElementById("gate");
+    const adminRoot = document.getElementById("adminRoot");
+
+    function showGate(title, text, actionsHtml) {
+      document.getElementById("gateTitle").textContent = title;
+      document.getElementById("gateText").textContent = text;
+      document.getElementById("gateActions").innerHTML = actionsHtml;
+      gate.style.display = "block";
+    }
+
+    const LOGIN_BTN = '<a class="btn" href="login.html?next=admin.html">Giriş Yap</a>';
+
+    (async function() {
+
+      const session = await armusGetSession();
+
+      if (!session) {
+        showGate("Giriş gerekiyor", "Bu panele erişmek için giriş yapmalısın.", LOGIN_BTN);
+        return;
+      }
+
+      if (!session.is_admin) {
+        showGate("Yetkin yok", "Bu hesabın admin yetkisi yok.", "");
+        return;
+      }
+
+      adminRoot.style.display = "block";
+      renderAll();
+
+    })();
 
     function initials(name) {
       return name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
@@ -267,8 +338,8 @@
       const card = document.createElement("div");
       card.className = "app-card";
 
-      const avatarInner = user.photo
-        ? `<img src="${user.photo.dataUrl}" alt="">`
+      const avatarInner = user.photo_url
+        ? `<img src="${user.photo_url}" alt="">`
         : initials(user.name);
 
       const badgeLabel = { pending: "İnceleniyor", approved: "Onaylandı", rejected: "Reddedildi" }[user.status] || "Bilinmiyor";
@@ -299,7 +370,7 @@
         <div class="app-details">
           <div>
             <h4>Konum / Konu</h4>
-            <p>${user.country || "—"} · ${user.subjectTaught || "—"}</p>
+            <p>${user.country || "—"} · ${user.subject_taught || "—"}</p>
           </div>
           <div>
             <h4>Ücret / Uygunluk</h4>
@@ -322,17 +393,17 @@
           <div>
             <h4>Sertifika</h4>
             <p>
-              ${user.hasCertificate
-                ? `${user.certificateName || "—"} (${user.certificateYears || "—"})` +
-                  (user.certificateFile ? ` · <a href="${user.certificateFile.dataUrl}" target="_blank" rel="noopener">${user.certificateFile.name}</a>` : "")
+              ${user.has_certificate
+                ? `${user.certificate_name || "—"} (${user.certificate_years || "—"})` +
+                  (user.certificate_file_url ? ` · <a href="${user.certificate_file_url}" target="_blank" rel="noopener">${user.certificate_file_name || "dosya"}</a>` : "")
                 : "Belirtilmedi"}
             </p>
           </div>
           <div>
             <h4>Eğitim</h4>
             <p>
-              ${user.hasEducation
-                ? `${user.university || "—"} · ${user.degreeType || "—"} (${user.graduationYear || "—"})<br>${user.specialization || ""}`
+              ${user.has_education
+                ? `${user.university || "—"} · ${user.degree_type || "—"} (${user.graduation_year || "—"})<br>${user.specialization || ""}`
                 : "Belirtilmedi"}
             </p>
           </div>
@@ -342,19 +413,19 @@
             <p>${user.bio || "—"}</p>
           </div>
 
-          ${user.video ? `
+          ${user.video_url ? `
             <div class="app-video">
               <h4>Tanıtım videosu</h4>
-              <video controls playsinline src="${user.video.dataUrl}"></video>
+              <video controls playsinline src="${user.video_url}"></video>
             </div>
           ` : ""}
         </div>
       `;
 
       card.querySelectorAll("[data-action]").forEach(button => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
           const newStatus = button.dataset.action === "approve" ? "approved" : "rejected";
-          armusUpdateUser(user.email, { status: newStatus });
+          await armusAdminUpdateProfile(user.id, { status: newStatus });
           renderAll();
         });
       });
@@ -362,9 +433,15 @@
       return card;
     }
 
-    function renderAll() {
+    async function renderAll() {
 
-      const teachers = armusGetUsers().filter(u => u.role === "teacher" && u.status);
+      const { data, error } = await armusSupabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "teacher")
+        .not("status", "is", null);
+
+      const teachers = error ? [] : data;
 
       const groups = {
         pending: teachers.filter(u => u.status === "pending"),
@@ -386,8 +463,6 @@
         }
       });
     }
-
-    renderAll();
 
   </script>
 
