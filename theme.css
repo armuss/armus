@@ -19,8 +19,14 @@
   --armus-silver-border: rgba(196, 199, 209, 0.35);
   --armus-silver-border-strong: rgba(196, 199, 209, 0.7);
 
+  --armus-bg: #171310;
+  --armus-panel: #1e180f;
+  --armus-panel-2: #241d13;
+  --armus-border: #3c331f;
+  --armus-border-soft: #2f2819;
+
   --armus-bg-glow:
-    radial-gradient(circle at 18% 12%, rgba(212, 175, 106, 0.10), transparent 32%),
-    radial-gradient(circle at 84% 18%, rgba(183, 186, 195, 0.07), transparent 34%),
-    radial-gradient(circle at 50% 100%, rgba(212, 175, 106, 0.05), transparent 40%);
+    radial-gradient(circle at 15% 8%, rgba(212, 175, 106, 0.22), transparent 45%),
+    radial-gradient(circle at 88% 15%, rgba(183, 186, 195, 0.16), transparent 48%),
+    radial-gradient(circle at 50% 105%, rgba(212, 175, 106, 0.14), transparent 58%);
 }
