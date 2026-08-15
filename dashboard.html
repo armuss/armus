@@ -357,6 +357,71 @@
       line-height: 1.7;
     }
 
+    .section-hint {
+      color: #8e8e91;
+      font-size: 12.5px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .availability-note {
+      display: none;
+      background: rgba(212, 175, 106, .08);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--armus-gold-text);
+      font-size: 12px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .availability-grid-wrap {
+      overflow-x: auto;
+      margin-bottom: 18px;
+    }
+
+    .availability-grid {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 560px;
+    }
+
+    .availability-grid th {
+      font-size: 11px;
+      color: #8e8e91;
+      font-weight: 600;
+      padding: 6px 4px;
+    }
+
+    .availability-grid td {
+      text-align: center;
+      padding: 3px;
+    }
+
+    .availability-grid .time-label {
+      text-align: right;
+      padding-right: 10px;
+      font-size: 11.5px;
+      color: #8e8e91;
+      white-space: nowrap;
+    }
+
+    .avail-cell {
+      width: 36px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel);
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .avail-cell.active {
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+    }
+
     @media (max-width: 700px) {
       .stats {
         grid-template-columns: 1fr 1fr;
@@ -482,6 +547,28 @@
       </p>
     </section>
 
+    <section>
+      <h2>Haftalık uygunluk</h2>
+      <p class="section-hint">
+        Hangi gün ve saatlerde ders verebileceğini işaretle. Öğrenciler
+        rezervasyon yaparken sadece burada açık bıraktığın saatleri görecek.
+      </p>
+
+      <div class="availability-note" id="availabilityDefaultNote">
+        Henüz saatlerini belirlemedin — bu süre boyunca öğrenciler senin
+        için otomatik oluşturulan örnek uygunluk saatlerini görüyor.
+        Aşağıdan saatlerini işaretleyip kaydettiğinde gerçek saatlerin
+        geçerli olacak.
+      </div>
+
+      <div class="availability-grid-wrap">
+        <table class="availability-grid" id="availabilityGrid"></table>
+      </div>
+
+      <button type="button" class="save-btn" id="saveAvailabilityBtn">Uygunluğu Kaydet</button>
+      <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
+    </section>
+
   </main>
 
   <script src="auth.js"></script>
@@ -592,7 +679,7 @@
               <span>${booking.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${booking.price}</span>
             </div>
             <div class="booking-when">
-              ${booking.dateLabel}<br><span style="color:inherit">${booking.time}</span>
+              ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
             </div>
           `;
           incomingList.appendChild(row);
@@ -616,6 +703,97 @@
           status.textContent = "Kaydedilemedi (tarayıcı hafızası dolu) ✕";
         } else {
           status.textContent = "Kaydedildi ✓";
+        }
+
+        status.classList.add("visible");
+        setTimeout(() => status.classList.remove("visible"), 2500);
+      });
+
+      // ---- weekly availability grid ----
+      // Stored as an array of 7 arrays of "HH:MM" strings, indexed to
+      // match Date.prototype.getDay() (0 = Sunday ... 6 = Saturday) so
+      // booking.html can look a date up with zero translation.
+
+      const TIME_SLOTS = [
+        "09:00", "10:00", "11:00", "13:00",
+        "14:00", "15:00", "16:00", "18:00", "19:00"
+      ];
+
+      // [label, getDay() index] in Monday-first display order
+      const DAY_COLUMNS = [
+        ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
+        ["Cum", 5], ["Cmt", 6], ["Paz", 0]
+      ];
+
+      const hasOwnAvailability = Array.isArray(user.weeklyAvailability);
+      document.getElementById("availabilityDefaultNote").style.display =
+        hasOwnAvailability ? "none" : "block";
+
+      const weeklyState = hasOwnAvailability
+        ? DAY_COLUMNS.map(([, dayIndex]) => user.weeklyAvailability[dayIndex] || [])
+        : DAY_COLUMNS.map(() => []);
+
+      const grid = document.getElementById("availabilityGrid");
+
+      const headRow = document.createElement("tr");
+      headRow.innerHTML = "<th></th>" + DAY_COLUMNS.map(([label]) => `<th>${label}</th>`).join("");
+      grid.appendChild(headRow);
+
+      TIME_SLOTS.forEach((time, timeIndex) => {
+
+        const row = document.createElement("tr");
+        row.innerHTML = `<td class="time-label">${time}</td>`;
+
+        DAY_COLUMNS.forEach((_, colIndex) => {
+
+          const cell = document.createElement("td");
+          const btn = document.createElement("div");
+          btn.className = "avail-cell";
+          btn.setAttribute("role", "button");
+          btn.setAttribute("aria-label", `${DAY_COLUMNS[colIndex][0]} ${time}`);
+
+          if (weeklyState[colIndex].includes(time)) {
+            btn.classList.add("active");
+          }
+
+          btn.addEventListener("click", () => {
+
+            const dayList = weeklyState[colIndex];
+            const idx = dayList.indexOf(time);
+
+            if (idx === -1) {
+              dayList.push(time);
+            } else {
+              dayList.splice(idx, 1);
+            }
+
+            btn.classList.toggle("active");
+          });
+
+          cell.appendChild(btn);
+          row.appendChild(cell);
+        });
+
+        grid.appendChild(row);
+      });
+
+      document.getElementById("saveAvailabilityBtn").addEventListener("click", () => {
+
+        // convert back from display order to getDay()-indexed array
+        const weeklyAvailability = [];
+        DAY_COLUMNS.forEach(([, dayIndex], colIndex) => {
+          weeklyAvailability[dayIndex] = weeklyState[colIndex];
+        });
+
+        const result = armusUpdateUser(user.email, { weeklyAvailability });
+
+        const status = document.getElementById("availabilitySaveStatus");
+
+        if (result === false) {
+          status.textContent = "Kaydedilemedi (tarayıcı hafızası dolu) ✕";
+        } else {
+          status.textContent = "Kaydedildi ✓";
+          document.getElementById("availabilityDefaultNote").style.display = "none";
         }
 
         status.classList.add("visible");

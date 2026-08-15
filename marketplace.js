@@ -44,6 +44,9 @@ function armusTeacherFromUser(user) {
     levelRange: "A1 – C2",
     specialties: [user.subjectTaught || "Genel İngilizce"],
     reviews: [],
+    weeklyAvailability: Array.isArray(user.weeklyAvailability)
+      ? user.weeklyAvailability
+      : null,
   };
 }
 

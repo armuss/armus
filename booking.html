@@ -517,7 +517,7 @@
     <div class="step" id="timeStep" style="display: none;">
       <div class="step-title">
         <span class="step-number">2</span>
-        Saat seç
+        Saat seç <span style="color: #77777b; font-weight: 400; font-size: 12px;">(50 dakikalık ders)</span>
       </div>
       <div class="slot-grid" id="slotGrid"></div>
     </div>
@@ -658,7 +658,13 @@
         return date.toISOString().slice(0, 10);
       }
 
-      function slotsForDate(dateKey) {
+      function slotsForDate(dateKey, dayOfWeek) {
+
+        if (teacher.weeklyAvailability) {
+          const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
+          return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+        }
+
         return ALL_SLOTS.map(time => {
           const n = hashCode(teacher.id + dateKey + time);
           return { time, available: n % 3 !== 0 };
@@ -703,18 +709,18 @@
           selectedTime = null;
 
           confirmBox.style.display = "none";
-          renderSlots(dateKey);
+          renderSlots(dateKey, date.getDay());
         });
 
         dateRow.appendChild(pill);
       }
 
-      function renderSlots(dateKey) {
+      function renderSlots(dateKey, dayOfWeek) {
 
         slotStep.style.display = "block";
         slotGrid.innerHTML = "";
 
-        const slots = slotsForDate(dateKey);
+        const slots = slotsForDate(dateKey, dayOfWeek);
 
         if (!slots.some(s => s.available)) {
           slotGrid.innerHTML =
@@ -750,7 +756,7 @@
 
         document.getElementById("confirmTeacher").textContent = teacher.name;
         document.getElementById("confirmDate").textContent = selectedDateLabel;
-        document.getElementById("confirmTime").textContent = selectedTime;
+        document.getElementById("confirmTime").textContent = armusFormatTimeRange(selectedTime);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
 
         confirmBox.style.display = "block";
@@ -783,7 +789,7 @@
 
         document.getElementById("successTeacher").textContent = teacher.name;
         document.getElementById("successDate").textContent = selectedDateLabel;
-        document.getElementById("successTime").textContent = selectedTime;
+        document.getElementById("successTime").textContent = armusFormatTimeRange(selectedTime);
 
         bookingRoot.style.display = "none";
         document.getElementById("successView").style.display = "block";
