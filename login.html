@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Giriş Yap | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(440px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(440px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .back {
+      color: #99999c;
+      font-size: 13px;
+    }
+
+    .back:hover {
+      color: white;
+    }
+
+    main.container {
+      padding: 55px 0 90px;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 30px;
+      letter-spacing: -1.2px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* FORM */
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #a3a3a6;
+      margin-bottom: 7px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .form-error {
+      display: none;
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #f0a5a5;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .switch-note {
+      text-align: center;
+      color: #8f8f92;
+      font-size: 13px;
+      margin-top: 22px;
+    }
+
+    .switch-note a {
+      color: var(--armus-gold-text);
+      font-weight: 600;
+    }
+
+    .small-note {
+      text-align: center;
+      color: #66666a;
+      font-size: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="index.html" class="back">← Ana sayfa</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="eyebrow">TEKRAR HOŞ GELDİN</div>
+    <h1>Giriş yap</h1>
+
+    <div class="form-error" id="formError"></div>
+
+    <form id="loginForm" novalidate>
+
+      <div class="field">
+        <label for="email">E-posta</label>
+        <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com">
+      </div>
+
+      <div class="field">
+        <label for="password">Şifre</label>
+        <input type="password" id="password" autocomplete="current-password" placeholder="Şifren">
+      </div>
+
+      <button type="submit" class="submit-btn">Giriş Yap</button>
+
+    </form>
+
+    <div class="switch-note">
+      Hesabın yok mu? <a href="register.html">Kayıt ol</a>
+    </div>
+
+    <div class="small-note">
+      Bu bir prototip; hesaplar sadece bu tarayıcıda saklanır.
+    </div>
+
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+
+    const form = document.getElementById("loginForm");
+    const errorBox = document.getElementById("formError");
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+    }
+
+    form.addEventListener("submit", event => {
+
+      event.preventDefault();
+      errorBox.style.display = "none";
+
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value;
+
+      const users = armusGetUsers();
+      const match = users.find(u => u.email === email && u.password === password);
+
+      if (!match) {
+        showError("E-posta veya şifre hatalı.");
+        return;
+      }
+
+      armusSetSession(match);
+      window.location.href = "index.html";
+    });
+
+  </script>
+
+</body>
+</html>

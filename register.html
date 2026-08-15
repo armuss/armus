@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Kayıt Ol | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(440px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(440px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .back {
+      color: #99999c;
+      font-size: 13px;
+    }
+
+    .back:hover {
+      color: white;
+    }
+
+    main.container {
+      padding: 55px 0 90px;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 30px;
+      letter-spacing: -1.2px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* ROLE TOGGLE */
+
+    .role-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 26px;
+    }
+
+    .role-option {
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #a3a3a6;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .role-option.active {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    /* FORM */
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #a3a3a6;
+      margin-bottom: 7px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .form-error {
+      display: none;
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #f0a5a5;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .switch-note {
+      text-align: center;
+      color: #8f8f92;
+      font-size: 13px;
+      margin-top: 22px;
+    }
+
+    .switch-note a {
+      color: var(--armus-gold-text);
+      font-weight: 600;
+    }
+
+    .small-note {
+      text-align: center;
+      color: #66666a;
+      font-size: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="index.html" class="back">← Ana sayfa</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="eyebrow">ARMUS'A KATIL</div>
+    <h1>Hesap oluştur</h1>
+
+    <div class="role-toggle">
+      <div class="role-option active" data-role="student">Öğrenci olarak</div>
+      <div class="role-option" data-role="teacher">Öğretmen olarak</div>
+    </div>
+
+    <div class="form-error" id="formError"></div>
+
+    <form id="registerForm" novalidate>
+
+      <div class="field">
+        <label for="name">Ad Soyad</label>
+        <input type="text" id="name" autocomplete="name" placeholder="Adın Soyadın">
+      </div>
+
+      <div class="field">
+        <label for="email">E-posta</label>
+        <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com">
+      </div>
+
+      <div class="field">
+        <label for="password">Şifre</label>
+        <input type="password" id="password" autocomplete="new-password" placeholder="En az 6 karakter">
+      </div>
+
+      <div class="field">
+        <label for="password2">Şifre (tekrar)</label>
+        <input type="password" id="password2" autocomplete="new-password" placeholder="Şifreni tekrar yaz">
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Hesap Oluştur</button>
+
+    </form>
+
+    <div class="switch-note">
+      Zaten hesabın var mı? <a href="login.html">Giriş yap</a>
+    </div>
+
+    <div class="small-note">
+      Bu bir prototip; hesaplar sadece bu tarayıcıda saklanır.
+    </div>
+
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+
+    let selectedRole = "student";
+
+    document.querySelectorAll(".role-option").forEach(option => {
+
+      option.addEventListener("click", () => {
+
+        document.querySelectorAll(".role-option").forEach(o =>
+          o.classList.remove("active")
+        );
+        option.classList.add("active");
+        selectedRole = option.dataset.role;
+      });
+    });
+
+    const form = document.getElementById("registerForm");
+    const errorBox = document.getElementById("formError");
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+    }
+
+    form.addEventListener("submit", event => {
+
+      event.preventDefault();
+      errorBox.style.display = "none";
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value;
+      const password2 = document.getElementById("password2").value;
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!name) {
+        showError("Lütfen adını soyadını yaz.");
+        return;
+      }
+
+      if (!emailPattern.test(email)) {
+        showError("Geçerli bir e-posta adresi gir.");
+        return;
+      }
+
+      if (password.length < 6) {
+        showError("Şifre en az 6 karakter olmalı.");
+        return;
+      }
+
+      if (password !== password2) {
+        showError("Şifreler birbiriyle eşleşmiyor.");
+        return;
+      }
+
+      const users = armusGetUsers();
+
+      if (users.some(u => u.email === email)) {
+        showError("Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.");
+        return;
+      }
+
+      const newUser = { name, email, password, role: selectedRole };
+      users.push(newUser);
+      armusSaveUsers(users);
+      armusSetSession(newUser);
+
+      window.location.href = "index.html";
+    });
+
+  </script>
+
+</body>
+</html>
