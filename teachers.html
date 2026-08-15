@@ -89,6 +89,7 @@
       color: white;
       font-family: inherit;
       cursor: pointer;
+      text-decoration: none;
     }
 
     .nav-greeting {
@@ -452,6 +453,25 @@
 
       .search-btn {
         height: 45px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .nav-greeting {
+        display: none;
+      }
+
+      .nav-buttons {
+        gap: 6px;
+      }
+
+      .nav-buttons .btn {
+        padding: 9px 12px;
+        font-size: 12px;
+      }
+
+      .logo {
+        font-size: 19px;
       }
     }
   </style>
