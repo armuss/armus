@@ -658,7 +658,13 @@
         return date.toISOString().slice(0, 10);
       }
 
-      function slotsForDate(dateKey) {
+      function slotsForDate(dateKey, dayOfWeek) {
+
+        if (teacher.weeklyAvailability) {
+          const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
+          return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+        }
+
         return ALL_SLOTS.map(time => {
           const n = hashCode(teacher.id + dateKey + time);
           return { time, available: n % 3 !== 0 };
@@ -703,18 +709,18 @@
           selectedTime = null;
 
           confirmBox.style.display = "none";
-          renderSlots(dateKey);
+          renderSlots(dateKey, date.getDay());
         });
 
         dateRow.appendChild(pill);
       }
 
-      function renderSlots(dateKey) {
+      function renderSlots(dateKey, dayOfWeek) {
 
         slotStep.style.display = "block";
         slotGrid.innerHTML = "";
 
-        const slots = slotsForDate(dateKey);
+        const slots = slotsForDate(dateKey, dayOfWeek);
 
         if (!slots.some(s => s.available)) {
           slotGrid.innerHTML =
