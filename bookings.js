@@ -55,3 +55,20 @@ function armusGetBookingsForTeacherEmail(email) {
     .filter(b => b.teacherEmail === email)
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 }
+
+const ARMUS_LESSON_MINUTES = 50;
+
+// "10:00" -> "10:00 – 10:50"
+function armusFormatTimeRange(startTime, durationMinutes = ARMUS_LESSON_MINUTES) {
+
+  const [hours, minutes] = startTime.split(":").map(Number);
+  const totalMinutes = hours * 60 + minutes + durationMinutes;
+
+  const endHours = Math.floor(totalMinutes / 60) % 24;
+  const endMinutes = totalMinutes % 60;
+
+  const endTime =
+    String(endHours).padStart(2, "0") + ":" + String(endMinutes).padStart(2, "0");
+
+  return `${startTime} – ${endTime}`;
+}

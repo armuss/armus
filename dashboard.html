@@ -679,7 +679,7 @@
               <span>${booking.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${booking.price}</span>
             </div>
             <div class="booking-when">
-              ${booking.dateLabel}<br><span style="color:inherit">${booking.time}</span>
+              ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
             </div>
           `;
           incomingList.appendChild(row);

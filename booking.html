@@ -517,7 +517,7 @@
     <div class="step" id="timeStep" style="display: none;">
       <div class="step-title">
         <span class="step-number">2</span>
-        Saat seç
+        Saat seç <span style="color: #77777b; font-weight: 400; font-size: 12px;">(50 dakikalık ders)</span>
       </div>
       <div class="slot-grid" id="slotGrid"></div>
     </div>
@@ -756,7 +756,7 @@
 
         document.getElementById("confirmTeacher").textContent = teacher.name;
         document.getElementById("confirmDate").textContent = selectedDateLabel;
-        document.getElementById("confirmTime").textContent = selectedTime;
+        document.getElementById("confirmTime").textContent = armusFormatTimeRange(selectedTime);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
 
         confirmBox.style.display = "block";
@@ -789,7 +789,7 @@
 
         document.getElementById("successTeacher").textContent = teacher.name;
         document.getElementById("successDate").textContent = selectedDateLabel;
-        document.getElementById("successTime").textContent = selectedTime;
+        document.getElementById("successTime").textContent = armusFormatTimeRange(selectedTime);
 
         bookingRoot.style.display = "none";
         document.getElementById("successView").style.display = "block";
