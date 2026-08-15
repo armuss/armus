@@ -211,6 +211,62 @@
       margin-bottom: 12px;
     }
 
+    .filter-price-label {
+      float: right;
+      color: #c3c3c5;
+    }
+
+    .price-slider-wrap {
+      position: relative;
+      height: 26px;
+      margin-top: 8px;
+    }
+
+    .price-slider-wrap input[type="range"] {
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 100%;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    .price-slider-wrap input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: #303034;
+      border-radius: 2px;
+    }
+
+    .price-slider-wrap input[type="range"]::-moz-range-track {
+      height: 4px;
+      background: #303034;
+      border-radius: 2px;
+    }
+
+    .price-slider-wrap input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      pointer-events: auto;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      cursor: pointer;
+      margin-top: -6px;
+    }
+
+    .price-slider-wrap input[type="range"]::-moz-range-thumb {
+      pointer-events: auto;
+      width: 15px;
+      height: 15px;
+      border: none;
+      border-radius: 50%;
+      background: var(--armus-gold-2);
+      cursor: pointer;
+    }
+
     .filter-option {
       display: flex;
       align-items: center;
@@ -492,6 +548,21 @@
 
         <div class="filter-group">
 
+          <div class="filter-title">
+            Fiyat aralığı
+            <span id="priceRangeLabel" class="filter-price-label"></span>
+          </div>
+
+          <div class="price-slider-wrap">
+            <input type="range" id="priceMin" min="0" max="1000" step="50" value="0">
+            <input type="range" id="priceMax" min="0" max="1000" step="50" value="1000">
+          </div>
+
+        </div>
+
+
+        <div class="filter-group">
+
           <div class="filter-title">Seviye</div>
 
           <label class="filter-option">
@@ -507,6 +578,38 @@
           <label class="filter-option">
             <input type="checkbox" value="İleri" class="level-filter">
             İleri
+          </label>
+
+        </div>
+
+
+        <div class="filter-group">
+
+          <div class="filter-title">Diller</div>
+
+          <label class="filter-option">
+            <input type="checkbox" value="İngilizce" class="lang-filter">
+            İngilizce
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="Türkçe" class="lang-filter">
+            Türkçe
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="Almanca" class="lang-filter">
+            Almanca
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="Fransızca" class="lang-filter">
+            Fransızca
+          </label>
+
+          <label class="filter-option">
+            <input type="checkbox" value="İspanyolca" class="lang-filter">
+            İspanyolca
           </label>
 
         </div>
@@ -577,6 +680,7 @@
       article.dataset.level = teacher.level;
       article.dataset.price = teacher.price;
       article.dataset.rating = teacher.rating || 0;
+      article.dataset.languages = teacher.languages;
 
       article.innerHTML = `
         <div class="teacher-top">
@@ -604,12 +708,27 @@
     const cards = Array.from(document.querySelectorAll(".teacher-card"));
     const filters = document.querySelectorAll(".filter");
     const levelFilters = document.querySelectorAll(".level-filter");
+    const langFilters = document.querySelectorAll(".lang-filter");
+    const priceMin = document.getElementById("priceMin");
+    const priceMax = document.getElementById("priceMax");
+    const priceRangeLabel = document.getElementById("priceRangeLabel");
     const sortSelect = document.getElementById("sortSelect");
     const count = document.getElementById("resultsCount");
     const empty = document.getElementById("emptyState");
 
 
     function updateTeachers() {
+
+      // keep the two price handles from crossing over each other
+      if (Number(priceMin.value) > Number(priceMax.value)) {
+        const swap = priceMin.value;
+        priceMin.value = priceMax.value;
+        priceMax.value = swap;
+      }
+
+      const minPrice = Number(priceMin.value);
+      const maxPrice = Number(priceMax.value);
+      priceRangeLabel.textContent = `₺${minPrice} – ₺${maxPrice}${maxPrice >= 1000 ? "+" : ""}`;
 
       const search = searchInput.value.toLowerCase();
 
@@ -621,12 +740,18 @@
         .filter(input => input.checked)
         .map(input => input.value);
 
+      const selectedLangs = Array.from(langFilters)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
 
       let visibleCards = cards.filter(card => {
 
         const name = card.dataset.name.toLowerCase();
         const tags = card.dataset.tags.toLowerCase();
         const level = card.dataset.level;
+        const languages = (card.dataset.languages || "").toLowerCase();
+        const price = Number(card.dataset.price);
 
         const matchesSearch =
           !search ||
@@ -643,7 +768,16 @@
           selectedLevels.length === 0 ||
           selectedLevels.includes(level);
 
-        return matchesSearch && matchesTags && matchesLevel;
+        const matchesLangs =
+          selectedLangs.length === 0 ||
+          selectedLangs.some(lang =>
+            languages.includes(lang.toLowerCase())
+          );
+
+        const matchesPrice =
+          price >= minPrice && (maxPrice >= 1000 || price <= maxPrice);
+
+        return matchesSearch && matchesTags && matchesLevel && matchesLangs && matchesPrice;
       });
 
 
@@ -694,6 +828,13 @@
     levelFilters.forEach(filter =>
       filter.addEventListener("change", updateTeachers)
     );
+
+    langFilters.forEach(filter =>
+      filter.addEventListener("change", updateTeachers)
+    );
+
+    priceMin.addEventListener("input", updateTeachers);
+    priceMax.addEventListener("input", updateTeachers);
 
     sortSelect.addEventListener("change", updateTeachers);
 
