@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Sarah M. | ARMUS</title>
+  <title id="pageTitle">Öğretmen Profili | ARMUS</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -310,6 +310,36 @@
       color: #ddd;
     }
 
+    /* NOT FOUND */
+
+    .not-found {
+      display: none;
+      padding: 90px 0;
+      text-align: center;
+    }
+
+    .not-found h1 {
+      font-size: 28px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .not-found p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .not-found a {
+      display: inline-block;
+      padding: 12px 22px;
+      border-radius: 12px;
+      background: #eeeeeb;
+      color: #111;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
     /* MOBILE */
 
     @media (max-width: 800px) {
@@ -354,269 +384,284 @@
 
   <main class="container">
 
-    <!-- PROFILE HEADER -->
+    <!-- NOT FOUND (shown when ?teacher= is missing/unknown) -->
 
-    <div class="profile-header">
-
-      <div class="profile-main">
-
-        <div class="avatar">
-          SM
-        </div>
-
-        <div>
-
-          <div class="verified">
-            ✓ ARMUS tarafından doğrulandı
-          </div>
-
-          <h1>Sarah M.</h1>
-
-          <div class="role">
-            IELTS & Speaking Uzmanı
-          </div>
-
-          <div class="rating">
-            ★ 4.9
-            <span>127 değerlendirme</span>
-          </div>
-
-          <div class="tags">
-            <span class="tag">IELTS</span>
-            <span class="tag">Konuşma</span>
-            <span class="tag">İş İngilizcesi</span>
-            <span class="tag">İleri Seviye</span>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- BOOKING -->
-
-      <aside class="booking-card">
-
-        <div class="price">
-          ₺800 <span>/ 50 dakika</span>
-        </div>
-
-        <div class="availability">
-          ● Şu anda ders almaya uygun
-        </div>
-
-        <button
-          class="primary"
-          onclick="trialLesson()">
-          Deneme Dersi Al
-        </button>
-
-        <button
-          class="secondary"
-          onclick="bookLesson()">
-          Ders Rezervasyonu Yap
-        </button>
-
-        <div class="small-note">
-          Henüz ödeme alınmayacak
-        </div>
-
-      </aside>
-
+    <div class="not-found" id="notFound">
+      <h1>Öğretmen bulunamadı</h1>
+      <p>Aradığın öğretmen profili mevcut değil ya da kaldırılmış olabilir.</p>
+      <a href="teachers.html">← Öğretmenlere dön</a>
     </div>
 
 
-    <!-- CONTENT -->
+    <!-- PROFILE (populated by script from TEACHERS data) -->
 
-    <div class="content">
+    <div id="profileRoot">
 
-      <div>
+      <!-- PROFILE HEADER -->
 
-        <!-- ABOUT -->
+      <div class="profile-header">
 
-        <section>
+        <div class="profile-main">
 
-          <h2>Hakkımda</h2>
+          <div class="avatar" id="avatar"></div>
 
-          <p class="description">
-            Merhaba! Ben Sarah. İngilizce öğretmeniyim ve özellikle
-            konuşma becerileri, IELTS ve profesyonel İngilizce üzerine
-            çalışıyorum.
+          <div>
 
-            Öğrencilerimin sadece gramer öğrenmesini değil,
-            İngilizceyi gerçek hayatta rahatça kullanabilmesini
-            hedefliyorum.
-
-            Derslerimi öğrencinin seviyesine, hedeflerine ve
-            öğrenme tarzına göre kişiselleştiriyorum.
-          </p>
-
-        </section>
-
-
-        <!-- STATS -->
-
-        <section>
-
-          <h2>Sarah hakkında</h2>
-
-          <div class="stats">
-
-            <div class="stat">
-              <strong>5+</strong>
-              <span>Yıl deneyim</span>
+            <div class="verified">
+              ✓ ARMUS tarafından doğrulandı
             </div>
 
-            <div class="stat">
-              <strong>1,240</strong>
-              <span>Tamamlanan ders</span>
+            <h1 id="teacherName"></h1>
+
+            <div class="role" id="teacherRole"></div>
+
+            <div class="rating">
+              <span id="ratingValue"></span>
+              <span id="reviewCountLabel"></span>
             </div>
 
-            <div class="stat">
-              <strong>127</strong>
-              <span>Öğrenci yorumu</span>
-            </div>
+            <div class="tags" id="headerTags"></div>
 
           </div>
 
-        </section>
+        </div>
 
 
-        <!-- REVIEWS -->
+        <!-- BOOKING -->
 
-        <section>
+        <aside class="booking-card">
 
-          <h2>Öğrenci yorumları</h2>
-
-          <div class="review">
-
-            <div class="review-top">
-              <div class="review-name">
-                Mehmet K.
-              </div>
-
-              <div>
-                ★★★★★
-              </div>
-            </div>
-
-            <p class="review-text">
-              Sarah gerçekten çok iyi bir öğretmen.
-              Konuşma konusunda kendime olan güvenim çok arttı.
-            </p>
-
+          <div class="price">
+            <span id="priceValue"></span> <span>/ 50 dakika</span>
           </div>
 
+          <div class="availability" id="availability"></div>
 
-          <div class="review">
+          <button
+            class="primary"
+            onclick="trialLesson()">
+            Deneme Dersi Al
+          </button>
 
-            <div class="review-top">
-              <div class="review-name">
-                Elif A.
-              </div>
+          <button
+            class="secondary"
+            onclick="bookLesson()">
+            Ders Rezervasyonu Yap
+          </button>
 
-              <div>
-                ★★★★★
-              </div>
-            </div>
-
-            <p class="review-text">
-              IELTS sınavına hazırlanırken çok yardımcı oldu.
-              Dersler oldukça düzenli ve profesyonel.
-            </p>
-
+          <div class="small-note">
+            Henüz ödeme alınmayacak
           </div>
 
-
-          <div class="review">
-
-            <div class="review-top">
-              <div class="review-name">
-                Can D.
-              </div>
-
-              <div>
-                ★★★★★
-              </div>
-            </div>
-
-            <p class="review-text">
-              İlk dersten itibaren seviyemi doğru analiz etti.
-              Kesinlikle tavsiye ederim.
-            </p>
-
-          </div>
-
-        </section>
+        </aside>
 
       </div>
 
 
-      <!-- SIDEBAR -->
+      <!-- CONTENT -->
 
-      <aside>
+      <div class="content">
 
-        <div class="side-box">
+        <div>
 
-          <h3>Ders bilgileri</h3>
+          <!-- ABOUT -->
 
-          <div class="side-item">
-            <span>Ders süresi</span>
-            <strong>50 dk</strong>
-          </div>
-
-          <div class="side-item">
-            <span>Ders formatı</span>
-            <strong>Online</strong>
-          </div>
-
-          <div class="side-item">
-            <span>Diller</span>
-            <strong>English / Türkçe</strong>
-          </div>
-
-          <div class="side-item">
-            <span>Seviye</span>
-            <strong>A2 – C2</strong>
-          </div>
-
-        </div>
+          <section>
+            <h2>Hakkımda</h2>
+            <div class="description" id="aboutText"></div>
+          </section>
 
 
-        <div class="side-box">
+          <!-- STATS -->
 
-          <h3>Uzmanlık alanları</h3>
+          <section>
 
-          <div class="side-item">
-            <span>IELTS</span>
-            <strong>✓</strong>
-          </div>
+            <h2 id="statsTitle">Hakkında</h2>
 
-          <div class="side-item">
-            <span>Speaking</span>
-            <strong>✓</strong>
-          </div>
+            <div class="stats">
 
-          <div class="side-item">
-            <span>Business English</span>
-            <strong>✓</strong>
-          </div>
+              <div class="stat">
+                <strong id="statExperience"></strong>
+                <span>Yıl deneyim</span>
+              </div>
 
-          <div class="side-item">
-            <span>Interview English</span>
-            <strong>✓</strong>
-          </div>
+              <div class="stat">
+                <strong id="statLessons"></strong>
+                <span>Tamamlanan ders</span>
+              </div>
+
+              <div class="stat">
+                <strong id="statReviews"></strong>
+                <span>Öğrenci yorumu</span>
+              </div>
+
+            </div>
+
+          </section>
+
+
+          <!-- REVIEWS -->
+
+          <section>
+            <h2>Öğrenci yorumları</h2>
+            <div id="reviewsList"></div>
+          </section>
 
         </div>
 
-      </aside>
+
+        <!-- SIDEBAR -->
+
+        <aside>
+
+          <div class="side-box">
+
+            <h3>Ders bilgileri</h3>
+
+            <div class="side-item">
+              <span>Ders süresi</span>
+              <strong>50 dk</strong>
+            </div>
+
+            <div class="side-item">
+              <span>Ders formatı</span>
+              <strong>Online</strong>
+            </div>
+
+            <div class="side-item">
+              <span>Diller</span>
+              <strong id="languages"></strong>
+            </div>
+
+            <div class="side-item">
+              <span>Seviye</span>
+              <strong id="levelRange"></strong>
+            </div>
+
+          </div>
+
+
+          <div class="side-box">
+            <h3>Uzmanlık alanları</h3>
+            <div id="specialtiesList"></div>
+          </div>
+
+        </aside>
+
+      </div>
 
     </div>
 
   </main>
 
 
+  <script src="teachers-data.js"></script>
   <script>
+
+    const params = new URLSearchParams(window.location.search);
+    const teacherId = params.get("teacher") || "sarah";
+    const teacher = TEACHERS.find(t => t.id === teacherId);
+
+    const profileRoot = document.getElementById("profileRoot");
+    const notFound = document.getElementById("notFound");
+
+    if (!teacher) {
+
+      profileRoot.style.display = "none";
+      notFound.style.display = "block";
+
+    } else {
+
+      document.getElementById("pageTitle").textContent =
+        `${teacher.name} | ARMUS`;
+
+      document.getElementById("avatar").textContent = teacher.initials;
+      document.getElementById("teacherName").textContent = teacher.name;
+      document.getElementById("teacherRole").textContent = teacher.role;
+
+      document.getElementById("ratingValue").textContent =
+        `★ ${teacher.rating}`;
+      document.getElementById("reviewCountLabel").textContent =
+        `${teacher.reviewCount} değerlendirme`;
+
+      const headerTags = document.getElementById("headerTags");
+      teacher.tags.concat(`${teacher.level} Seviye`).forEach(tag => {
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = tag;
+        headerTags.appendChild(span);
+      });
+
+      document.getElementById("priceValue").textContent =
+        `₺${teacher.price}`;
+      document.getElementById("availability").textContent =
+        `● ${teacher.availability}`;
+
+      const aboutText = document.getElementById("aboutText");
+      teacher.about.forEach(paragraph => {
+        const p = document.createElement("p");
+        p.textContent = paragraph;
+        p.style.marginBottom = "14px";
+        aboutText.appendChild(p);
+      });
+
+      document.getElementById("statsTitle").textContent =
+        `${teacher.name.split(" ")[0]} hakkında`;
+      document.getElementById("statExperience").textContent =
+        teacher.experience.replace(" Yıl deneyim", "");
+      document.getElementById("statLessons").textContent =
+        teacher.completedLessons;
+      document.getElementById("statReviews").textContent =
+        teacher.reviewCount;
+
+      const reviewsList = document.getElementById("reviewsList");
+      teacher.reviews.forEach(review => {
+
+        const div = document.createElement("div");
+        div.className = "review";
+
+        const top = document.createElement("div");
+        top.className = "review-top";
+
+        const name = document.createElement("div");
+        name.className = "review-name";
+        name.textContent = review.name;
+
+        const stars = document.createElement("div");
+        stars.textContent = "★".repeat(review.stars);
+
+        top.appendChild(name);
+        top.appendChild(stars);
+
+        const text = document.createElement("p");
+        text.className = "review-text";
+        text.textContent = review.text;
+
+        div.appendChild(top);
+        div.appendChild(text);
+        reviewsList.appendChild(div);
+      });
+
+      document.getElementById("languages").textContent = teacher.languages;
+      document.getElementById("levelRange").textContent = teacher.levelRange;
+
+      const specialtiesList = document.getElementById("specialtiesList");
+      teacher.specialties.forEach(specialty => {
+
+        const item = document.createElement("div");
+        item.className = "side-item";
+
+        const label = document.createElement("span");
+        label.textContent = specialty;
+
+        const check = document.createElement("strong");
+        check.textContent = "✓";
+
+        item.appendChild(label);
+        item.appendChild(check);
+        specialtiesList.appendChild(item);
+      });
+    }
 
     function trialLesson() {
       alert(

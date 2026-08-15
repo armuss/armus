@@ -510,192 +510,7 @@
         </div>
 
 
-        <div class="teachers" id="teachersGrid">
-
-
-          <article
-            class="teacher-card"
-            data-name="Sarah"
-            data-tags="IELTS Konuşma İş İngilizcesi"
-            data-level="İleri"
-            data-price="800"
-            data-rating="4.9"
-          >
-
-            <div class="teacher-top">
-              <div class="avatar">SM</div>
-              <div class="rating">★ 4.9</div>
-            </div>
-
-            <a href="teacher.html" class="teacher-name">Sarah M.</a>
-            <div class="teacher-role">IELTS & Speaking Uzmanı</div>
-
-            <div class="tags">
-              <span class="tag">IELTS</span>
-              <span class="tag">Konuşma</span>
-              <span class="tag">İş İngilizcesi</span>
-            </div>
-
-            <div class="teacher-bottom">
-              <div class="price">₺800 <span>/ ders</span></div>
-              <button class="trial">Deneme Dersi Al</button>
-            </div>
-
-          </article>
-
-
-          <article
-            class="teacher-card"
-            data-name="David"
-            data-tags="IELTS YDS Konuşma"
-            data-level="İleri"
-            data-price="650"
-            data-rating="4.8"
-          >
-
-            <div class="teacher-top">
-              <div class="avatar">DK</div>
-              <div class="rating">★ 4.8</div>
-            </div>
-
-            <div class="teacher-name">David K.</div>
-            <div class="teacher-role">IELTS & YDS Uzmanı</div>
-
-            <div class="tags">
-              <span class="tag">IELTS</span>
-              <span class="tag">YDS</span>
-              <span class="tag">Konuşma</span>
-            </div>
-
-            <div class="teacher-bottom">
-              <div class="price">₺650 <span>/ ders</span></div>
-              <button class="trial">Deneme Dersi Al</button>
-            </div>
-
-          </article>
-
-
-          <article
-            class="teacher-card"
-            data-name="Emily"
-            data-tags="Konuşma Başlangıç"
-            data-level="Başlangıç"
-            data-price="500"
-            data-rating="4.9"
-          >
-
-            <div class="teacher-top">
-              <div class="avatar">EL</div>
-              <div class="rating">★ 4.9</div>
-            </div>
-
-            <div class="teacher-name">Emily L.</div>
-            <div class="teacher-role">English Speaking Teacher</div>
-
-            <div class="tags">
-              <span class="tag">Konuşma</span>
-              <span class="tag">Başlangıç</span>
-            </div>
-
-            <div class="teacher-bottom">
-              <div class="price">₺500 <span>/ ders</span></div>
-              <button class="trial">Deneme Dersi Al</button>
-            </div>
-
-          </article>
-
-
-          <article
-            class="teacher-card"
-            data-name="Michael"
-            data-tags="TOEFL Konuşma İleri"
-            data-level="İleri"
-            data-price="900"
-            data-rating="5.0"
-          >
-
-            <div class="teacher-top">
-              <div class="avatar">MJ</div>
-              <div class="rating">★ 5.0</div>
-            </div>
-
-            <div class="teacher-name">Michael J.</div>
-            <div class="teacher-role">TOEFL Uzmanı</div>
-
-            <div class="tags">
-              <span class="tag">TOEFL</span>
-              <span class="tag">Konuşma</span>
-            </div>
-
-            <div class="teacher-bottom">
-              <div class="price">₺900 <span>/ ders</span></div>
-              <button class="trial">Deneme Dersi Al</button>
-            </div>
-
-          </article>
-
-
-          <article
-            class="teacher-card"
-            data-name="Anna"
-            data-tags="İş İngilizcesi Konuşma Orta"
-            data-level="Orta"
-            data-price="550"
-            data-rating="4.7"
-          >
-
-            <div class="teacher-top">
-              <div class="avatar">AP</div>
-              <div class="rating">★ 4.7</div>
-            </div>
-
-            <div class="teacher-name">Anna P.</div>
-            <div class="teacher-role">Business English Coach</div>
-
-            <div class="tags">
-              <span class="tag">İş İngilizcesi</span>
-              <span class="tag">Konuşma</span>
-            </div>
-
-            <div class="teacher-bottom">
-              <div class="price">₺550 <span>/ ders</span></div>
-              <button class="trial">Deneme Dersi Al</button>
-            </div>
-
-          </article>
-
-
-          <article
-            class="teacher-card"
-            data-name="James"
-            data-tags="YDS TOEFL Orta"
-            data-level="Orta"
-            data-price="700"
-            data-rating="4.8"
-          >
-
-            <div class="teacher-top">
-              <div class="avatar">JW</div>
-              <div class="rating">★ 4.8</div>
-            </div>
-
-            <div class="teacher-name">James W.</div>
-            <div class="teacher-role">Exam Preparation Teacher</div>
-
-            <div class="tags">
-              <span class="tag">YDS</span>
-              <span class="tag">TOEFL</span>
-            </div>
-
-            <div class="teacher-bottom">
-              <div class="price">₺700 <span>/ ders</span></div>
-              <button class="trial">Deneme Dersi Al</button>
-            </div>
-
-          </article>
-
-
-        </div>
+        <div class="teachers" id="teachersGrid"></div>
 
         <div class="empty" id="emptyState">
           Aramana uygun öğretmen bulunamadı.
@@ -708,14 +523,48 @@
   </main>
 
 
+  <script src="teachers-data.js"></script>
   <script>
+
+    const grid = document.getElementById("teachersGrid");
+
+    TEACHERS.forEach(teacher => {
+
+      const article = document.createElement("article");
+      article.className = "teacher-card";
+      article.dataset.name = teacher.name;
+      article.dataset.tags = teacher.tags.join(" ");
+      article.dataset.level = teacher.level;
+      article.dataset.price = teacher.price;
+      article.dataset.rating = teacher.rating;
+
+      article.innerHTML = `
+        <div class="teacher-top">
+          <div class="avatar">${teacher.initials}</div>
+          <div class="rating">★ ${teacher.rating}</div>
+        </div>
+
+        <a href="teacher.html?teacher=${teacher.id}" class="teacher-name">${teacher.name}</a>
+        <div class="teacher-role">${teacher.role}</div>
+
+        <div class="tags">
+          ${teacher.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}
+        </div>
+
+        <div class="teacher-bottom">
+          <div class="price">₺${teacher.price} <span>/ ders</span></div>
+          <button class="trial">Deneme Dersi Al</button>
+        </div>
+      `;
+
+      grid.appendChild(article);
+    });
 
     const searchInput = document.getElementById("searchInput");
     const cards = Array.from(document.querySelectorAll(".teacher-card"));
     const filters = document.querySelectorAll(".filter");
     const levelFilters = document.querySelectorAll(".level-filter");
     const sortSelect = document.getElementById("sortSelect");
-    const grid = document.getElementById("teachersGrid");
     const count = document.getElementById("resultsCount");
     const empty = document.getElementById("emptyState");
 
