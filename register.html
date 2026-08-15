@@ -250,6 +250,10 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase-config.js"></script>
+
   <script src="auth.js"></script>
   <script>
 
@@ -290,7 +294,7 @@
       errorBox.style.display = "block";
     }
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
 
       event.preventDefault();
       errorBox.style.display = "none";
@@ -322,22 +326,16 @@
         return;
       }
 
-      const users = armusGetUsers();
+      const { error } = await armusSignUp({ name, email, password, role: selectedRole });
 
-      if (users.some(u => u.email === email)) {
-        showError("Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.");
+      if (error) {
+        showError(
+          error.message.includes("already registered") || error.message.includes("already been registered")
+            ? "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene."
+            : "Hesap oluşturulamadı: " + error.message
+        );
         return;
       }
-
-      const newUser = { name, email, password, role: selectedRole };
-      users.push(newUser);
-
-      if (!armusSaveUsers(users)) {
-        showError("Hesap kaydedilemedi (tarayıcı hafızası dolu). Lütfen tekrar dene.");
-        return;
-      }
-
-      armusSetSession(newUser);
 
       if (selectedRole === "teacher") {
         window.location.href = "apply-teacher.html";

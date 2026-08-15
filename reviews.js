@@ -1,57 +1,65 @@
 /*
- * ARMUS - mock reviews (frontend prototype only)
+ * ARMUS - reviews backed by Supabase.
  * A student can review a teacher once their booking's date has passed.
- * Stored in localStorage alongside accounts/bookings. Self-contained -
- * no other ARMUS script needs to load before this one.
+ * Self-contained - no other ARMUS script needs to load before this one,
+ * other than supabase-config.js for the armusSupabase client.
  */
 
-const ARMUS_REVIEWS_KEY = "armus_reviews";
-
-function armusGetReviews() {
-  try {
-    return JSON.parse(localStorage.getItem(ARMUS_REVIEWS_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function armusSaveReviews(list) {
-  try {
-    localStorage.setItem(ARMUS_REVIEWS_KEY, JSON.stringify(list));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 // Returns the new review record on success, or false if saving failed.
-function armusAddReview(review) {
+async function armusAddReview(review) {
 
-  const list = armusGetReviews();
+  const { data, error } = await armusSupabase
+    .from("reviews")
+    .insert({
+      booking_id: review.bookingId,
+      teacher_id: review.teacherId,
+      student_id: review.studentId,
+      student_name: review.studentName,
+      stars: review.stars,
+      comment: review.text || null,
+    })
+    .select()
+    .single();
 
-  const record = {
-    id: "rv_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-    createdAt: new Date().toISOString(),
-    ...review,
+  if (error) return false;
+  return armusMapReviewRow(data);
+}
+
+async function armusGetReviewsForTeacher(teacherId) {
+
+  const { data, error } = await armusSupabase
+    .from("reviews")
+    .select("*")
+    .eq("teacher_id", teacherId)
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+  return data.map(armusMapReviewRow);
+}
+
+async function armusGetReviewForBooking(bookingId) {
+
+  const { data, error } = await armusSupabase
+    .from("reviews")
+    .select("*")
+    .eq("booking_id", bookingId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return armusMapReviewRow(data);
+}
+
+function armusMapReviewRow(row) {
+  return {
+    id: row.id,
+    bookingId: row.booking_id,
+    teacherId: row.teacher_id,
+    studentId: row.student_id,
+    studentName: row.student_name,
+    stars: row.stars,
+    text: row.comment || "",
+    createdAt: row.created_at,
   };
-
-  list.push(record);
-
-  if (!armusSaveReviews(list)) {
-    return false;
-  }
-
-  return record;
-}
-
-function armusGetReviewsForTeacher(teacherId) {
-  return armusGetReviews()
-    .filter(r => r.teacherId === teacherId)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
-
-function armusHasReviewed(bookingId) {
-  return armusGetReviews().some(r => r.bookingId === bookingId);
 }
 
 // "Mehmet Kaya" -> "Mehmet K."

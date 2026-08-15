@@ -737,12 +737,19 @@
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase-config.js"></script>
+
   <script src="auth.js"></script>
   <script>
 
-    const session = armusGetSession();
     const gate = document.getElementById("gate");
     const wizardRoot = document.getElementById("wizardRoot");
+
+    (async function() {
+
+    const session = await armusGetSession();
 
     if (!session || session.role !== "teacher") {
 
@@ -1124,7 +1131,7 @@
         }
       });
 
-      document.getElementById("nextBtn").addEventListener("click", () => {
+      document.getElementById("nextBtn").addEventListener("click", async () => {
 
         if (!validateStep(currentStep)) return;
 
@@ -1135,10 +1142,10 @@
         }
 
         // final step - submit application
-        submitApplication();
+        await submitApplication();
       });
 
-      function submitApplication() {
+      async function submitApplication() {
 
         const hasCertificate = !document.getElementById("noCertificate").checked;
         const hasEducation = !document.getElementById("noEducation").checked;
@@ -1148,36 +1155,36 @@
           document.getElementById("lastName").value.trim()
         ).trim();
 
-        const result = armusUpdateUser(session.email, {
+        const result = await armusUpdateOwnProfile({
           name: fullName,
           country: document.getElementById("country").value.trim(),
-          subjectTaught: subject,
+          subject_taught: subject,
           title: subject + " Öğretmeni",
           languages: getLanguages(),
           phone: document.getElementById("phone").value.trim(),
-          ageConfirmed: true,
-          photo: uploads.photo,
-          hasCertificate,
-          certificateName: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
-          certificateYears: hasCertificate ? document.getElementById("certificateYears").value.trim() : "",
-          certificateFile: hasCertificate ? uploads.certificate : null,
-          hasEducation,
+          age_confirmed: true,
+          photo_url: uploads.photo ? uploads.photo.dataUrl : null,
+          has_certificate: hasCertificate,
+          certificate_name: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
+          certificate_years: hasCertificate ? document.getElementById("certificateYears").value.trim() : "",
+          certificate_file_url: hasCertificate && uploads.certificate ? uploads.certificate.dataUrl : null,
+          certificate_file_name: hasCertificate && uploads.certificate ? uploads.certificate.name : null,
+          has_education: hasEducation,
           university: hasEducation ? document.getElementById("university").value.trim() : "",
-          degreeType: hasEducation ? document.getElementById("degreeType").value : "",
-          graduationYear: hasEducation ? document.getElementById("graduationYear").value.trim() : "",
+          degree_type: hasEducation ? document.getElementById("degreeType").value : "",
+          graduation_year: hasEducation ? document.getElementById("graduationYear").value.trim() : "",
           specialization: hasEducation ? document.getElementById("specialization").value.trim() : "",
           bio: document.getElementById("description").value.trim(),
-          video: uploads.video,
+          video_url: uploads.video ? uploads.video.dataUrl : null,
           availability: document.getElementById("availability").value,
           price: Number(document.getElementById("price").value) || 0,
           status: "pending",
-          appliedAt: new Date().toISOString(),
+          applied_at: new Date().toISOString(),
         });
 
         if (result === false) {
           showStepError(
-            "Başvuru kaydedilemedi - dosyaların toplam boyutu tarayıcı hafızasına sığmadı. " +
-            "Fotoğraf veya videoyu daha küçük bir dosyayla değiştirip tekrar dene."
+            "Başvuru kaydedilemedi. Fotoğraf veya videoyu daha küçük bir dosyayla değiştirip tekrar dene."
           );
           return;
         }
@@ -1189,6 +1196,8 @@
 
       showStep(currentStep);
     }
+
+    })();
 
   </script>
 

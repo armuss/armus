@@ -206,6 +206,10 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase-config.js"></script>
+
   <script src="auth.js"></script>
   <script>
 
@@ -223,7 +227,7 @@
       errorBox.style.display = "block";
     }
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
 
       event.preventDefault();
       errorBox.style.display = "none";
@@ -231,15 +235,12 @@
       const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value;
 
-      const users = armusGetUsers();
-      const match = users.find(u => u.email === email && u.password === password);
+      const { error } = await armusSignIn({ email, password });
 
-      if (!match) {
+      if (error) {
         showError("E-posta veya şifre hatalı.");
         return;
       }
-
-      armusSetSession(match);
 
       const next = new URLSearchParams(window.location.search).get("next");
       window.location.href = next || "index.html";

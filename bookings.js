@@ -1,59 +1,87 @@
 /*
- * ARMUS - mock bookings (frontend prototype only)
- * Bookings are stored in localStorage alongside the mock accounts in
- * auth.js. Both demo teachers (teachers-data.js) and approved
- * self-registered teachers (see marketplace.js) can be booked.
+ * ARMUS - bookings backed by Supabase.
+ * Both demo teachers (teachers-data.js, no real account) and approved
+ * self-registered teachers (see marketplace.js) can be booked - demo
+ * teacher ids are plain strings, real teacher ids are profile UUIDs,
+ * so teacher_id is stored as plain text rather than a strict FK.
  */
 
-const ARMUS_BOOKINGS_KEY = "armus_bookings";
-
-function armusGetBookings() {
-  try {
-    return JSON.parse(localStorage.getItem(ARMUS_BOOKINGS_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function armusSaveBookings(list) {
-  try {
-    localStorage.setItem(ARMUS_BOOKINGS_KEY, JSON.stringify(list));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 // Returns the new booking record on success, or false if saving failed.
-function armusAddBooking(booking) {
+async function armusAddBooking(booking) {
 
-  const list = armusGetBookings();
+  const { data, error } = await armusSupabase
+    .from("bookings")
+    .insert({
+      student_id: booking.studentId,
+      student_name: booking.studentName,
+      teacher_id: booking.teacherId,
+      teacher_name: booking.teacherName,
+      type: booking.type,
+      lesson_date: booking.date,
+      lesson_time: booking.time,
+      price: booking.price,
+    })
+    .select()
+    .single();
 
-  const record = {
-    id: "bk_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-    createdAt: new Date().toISOString(),
-    ...booking,
+  if (error) return false;
+  return armusMapBookingRow(data);
+}
+
+async function armusGetBookingsForStudent(studentId) {
+
+  const { data, error } = await armusSupabase
+    .from("bookings")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("lesson_date", { ascending: true })
+    .order("lesson_time", { ascending: true });
+
+  if (error) return [];
+  return data.map(armusMapBookingRow);
+}
+
+async function armusGetBookingsForTeacher(teacherId) {
+
+  const { data, error } = await armusSupabase
+    .from("bookings")
+    .select("*")
+    .eq("teacher_id", teacherId)
+    .order("lesson_date", { ascending: true })
+    .order("lesson_time", { ascending: true });
+
+  if (error) return [];
+  return data.map(armusMapBookingRow);
+}
+
+const ARMUS_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const ARMUS_MONTH_NAMES = [
+  "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+  "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
+];
+
+// "2026-08-10" -> "10 Ağustos, Pzt"
+function armusFormatDateLabel(dateKey) {
+  const date = new Date(dateKey + "T00:00:00");
+  return `${date.getDate()} ${ARMUS_MONTH_NAMES[date.getMonth()]}, ${ARMUS_DAY_NAMES[date.getDay()]}`;
+}
+
+// booking rows come back with snake_case columns; expose the same
+// camelCase shape the rest of the app already expects.
+function armusMapBookingRow(row) {
+  return {
+    id: row.id,
+    studentId: row.student_id,
+    studentName: row.student_name,
+    teacherId: row.teacher_id,
+    teacherName: row.teacher_name,
+    type: row.type,
+    date: row.lesson_date,
+    dateLabel: armusFormatDateLabel(row.lesson_date),
+    time: row.lesson_time,
+    price: row.price,
+    createdAt: row.created_at,
   };
-
-  list.push(record);
-
-  if (!armusSaveBookings(list)) {
-    return false;
-  }
-
-  return record;
-}
-
-function armusGetBookingsForStudent(email) {
-  return armusGetBookings()
-    .filter(b => b.studentEmail === email)
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-}
-
-function armusGetBookingsForTeacherEmail(email) {
-  return armusGetBookings()
-    .filter(b => b.teacherEmail === email)
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 }
 
 const ARMUS_LESSON_MINUTES = 50;

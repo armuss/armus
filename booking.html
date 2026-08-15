@@ -579,6 +579,8 @@
   </main>
 
   <script src="teachers-data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
@@ -588,12 +590,15 @@
     const params = new URLSearchParams(window.location.search);
     const teacherId = params.get("teacher");
     const bookingType = params.get("type") === "trial" ? "trial" : "lesson";
-    const teacher = armusFindMarketplaceTeacher(teacherId);
 
     const bookingRoot = document.getElementById("bookingRoot");
     const notFound = document.getElementById("notFound");
     const loginGate = document.getElementById("loginGate");
-    const session = armusGetSession();
+
+    (async function() {
+
+    const teacher = await armusFindMarketplaceTeacher(teacherId);
+    const session = await armusGetSession();
 
     if (!teacher) {
 
@@ -766,26 +771,24 @@
         confirmBox.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
-      confirmBtn.addEventListener("click", () => {
+      confirmBtn.addEventListener("click", async () => {
 
         if (!selectedDate || !selectedTime) return;
 
-        const result = armusAddBooking({
-          studentEmail: session.email,
+        const result = await armusAddBooking({
+          studentId: session.id,
           studentName: session.name,
           teacherId: teacher.id,
-          teacherEmail: teacher.id,
           teacherName: teacher.name,
           type: bookingType,
           date: selectedDate,
-          dateLabel: selectedDateLabel,
           time: selectedTime,
           price: teacher.price,
         });
 
         if (result === false) {
           document.getElementById("confirmError").textContent =
-            "Rezervasyon kaydedilemedi (tarayıcı hafızası dolu). Lütfen tekrar dene.";
+            "Rezervasyon kaydedilemedi. Lütfen tekrar dene.";
           document.getElementById("confirmError").style.display = "block";
           return;
         }
@@ -799,6 +802,8 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     }
+
+    })();
 
   </script>
 
