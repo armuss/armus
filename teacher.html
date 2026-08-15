@@ -664,15 +664,11 @@
     }
 
     function trialLesson() {
-      alert(
-        "Deneme dersi rezervasyon sistemi yakında ARMUS'ta aktif olacak."
-      );
+      window.location.href = `booking.html?teacher=${teacherId}&type=trial`;
     }
 
     function bookLesson() {
-      alert(
-        "Rezervasyon sistemi yakında ARMUS'ta aktif olacak."
-      );
+      window.location.href = `booking.html?teacher=${teacherId}&type=lesson`;
     }
 
   </script>
