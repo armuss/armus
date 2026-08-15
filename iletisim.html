@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>İletişim | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--armus-gold-text);
+      text-decoration: underline;
+    }
+
+    .container {
+      width: min(720px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(720px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .back {
+      color: #99999c;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: white;
+    }
+
+    main.container {
+      padding: 50px 0 100px;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 36px);
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .intro {
+      color: #c3c3c5;
+      font-size: 14.5px;
+      margin-bottom: 40px;
+      max-width: 520px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+
+    .contact-card {
+      padding: 20px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+    }
+
+    .contact-card .label {
+      color: #8e8e91;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .contact-card .value {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .contact-card .value a {
+      color: var(--armus-gold-text);
+      text-decoration: none;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 480px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #b8b8bb;
+      margin-bottom: -4px;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 13.5px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .submit-btn {
+      align-self: flex-start;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 22px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13.5px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .form-note {
+      color: #6e6e72;
+      font-size: 12.5px;
+      margin-top: 4px;
+    }
+
+    .sent-msg {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-silver-border);
+      border-radius: 12px;
+      color: #c3c3c5;
+      font-size: 13.5px;
+      max-width: 480px;
+    }
+
+    @media (max-width: 560px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="index.html" class="back">← Ana sayfa</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="eyebrow">İLETİŞİM</div>
+    <h1>Bize ulaş</h1>
+    <p class="intro">
+      Sorun, önerin veya bir şikayetin mi var? Aşağıdaki bilgilerden veya
+      formdan bize ulaşabilirsin, en kısa sürede dönüş yaparız.
+    </p>
+
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="label">E-posta</div>
+        <div class="value"><a href="mailto:destek@armus.com.tr">destek@armus.com.tr</a></div>
+      </div>
+      <div class="contact-card">
+        <div class="label">Destek saatleri</div>
+        <div class="value">Hafta içi 09:00 – 18:00</div>
+      </div>
+    </div>
+
+    <form id="contactForm">
+      <label for="name">Ad Soyad</label>
+      <input type="text" id="name" required>
+
+      <label for="email">E-posta</label>
+      <input type="email" id="email" required>
+
+      <label for="message">Mesajın</label>
+      <textarea id="message" required></textarea>
+
+      <button type="submit" class="submit-btn">Gönder</button>
+      <div class="form-note">
+        ARMUS şu anda prototip aşamasında olduğu için bu form mesajını
+        sunucuya iletmez; canlıya geçtiğimizde bu alan gerçek destek
+        sistemimize bağlanacak.
+      </div>
+    </form>
+
+    <div class="sent-msg" id="sentMsg">
+      Mesajın alındı, teşekkürler! (Prototip modunda gerçekten gönderilmedi.)
+    </div>
+
+  </main>
+
+  <script>
+    document.getElementById("contactForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      document.getElementById("sentMsg").style.display = "block";
+      e.target.reset();
+    });
+  </script>
+
+</body>
+</html>

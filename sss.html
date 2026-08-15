@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sıkça Sorulan Sorular | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--armus-gold-text);
+    }
+
+    .container {
+      width: min(760px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(760px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .back {
+      color: #99999c;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: white;
+    }
+
+    main.container {
+      padding: 50px 0 100px;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 36px);
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .intro {
+      color: #c3c3c5;
+      font-size: 14.5px;
+      margin-bottom: 36px;
+      max-width: 560px;
+    }
+
+    .section-title {
+      color: var(--armus-gold-text);
+      font-size: 12.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin: 34px 0 12px;
+    }
+
+    .section-title:first-of-type {
+      margin-top: 0;
+    }
+
+    details {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px 18px;
+      font-size: 14.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      color: var(--armus-gold-text);
+      font-size: 18px;
+      font-weight: 400;
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+
+    details[open] summary::after {
+      transform: rotate(45deg);
+    }
+
+    details p {
+      padding: 0 18px 18px;
+      color: #c3c3c5;
+      font-size: 13.5px;
+    }
+
+    .contact-cta {
+      margin-top: 44px;
+      padding: 22px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .contact-cta p {
+      color: #99999c;
+      font-size: 13.5px;
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      display: inline-block;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 20px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="index.html" class="back">← Ana sayfa</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="eyebrow">YARDIM</div>
+    <h1>Sıkça Sorulan Sorular</h1>
+    <p class="intro">
+      Öğrenciler ve öğretmenler için en sık sorulan sorular ve cevapları.
+      Aradığını bulamazsan bize ulaşabilirsin.
+    </p>
+
+    <div class="section-title">Öğrenciler için</div>
+
+    <details>
+      <summary>ARMUS'ta nasıl ders alırım?</summary>
+      <p>Öğretmenler sayfasından sana uygun bir öğretmen seç, profilinde uygun bir tarih ve saat seçerek rezervasyon yap. Rezervasyon için önce ücretsiz bir hesap oluşturman gerekir.</p>
+    </details>
+
+    <details>
+      <summary>Bir ders kaç dakika sürer?</summary>
+      <p>Standart bir ders 50 dakika sürer.</p>
+    </details>
+
+    <details>
+      <summary>Deneme dersi nedir?</summary>
+      <p>Deneme dersi, bir öğretmenle ilk kez tanışmak için tasarlanmış, daha düşük ücretli bir ilk derstir. Deneme dersinden memnun kalırsan aynı öğretmenden düzenli ders almaya devam edebilirsin.</p>
+    </details>
+
+    <details>
+      <summary>Rezervasyonumu nereden görebilirim?</summary>
+      <p>Giriş yaptıktan sonra "Derslerim" sayfasından tüm geçmiş ve yaklaşan rezervasyonlarını görebilirsin.</p>
+    </details>
+
+    <details>
+      <summary>Aldığım dersi nasıl değerlendiririm?</summary>
+      <p>Ders tarihi geçtikten sonra "Derslerim" sayfasında o dersin altında "Bu dersi değerlendir" butonunu görürsün; yıldız puanı verip yorum yazabilirsin.</p>
+    </details>
+
+    <details>
+      <summary>Derse katılamazsam ne olur?</summary>
+      <p>Öğretmenin o saat için zamanı ayrıldığından, katılmadığın derslerin ücreti yine de tahsil edilir. Detaylar için Kullanım Şartları sayfamıza bakabilirsin.</p>
+    </details>
+
+    <div class="section-title">Öğretmenler için</div>
+
+    <details>
+      <summary>ARMUS'ta nasıl öğretmen olurum?</summary>
+      <p>"Öğretmen Ol" butonuna tıklayıp önce bir hesap oluştur, ardından başvuru formunu (kişisel bilgiler, fotoğraf, sertifika/eğitim bilgisi, tanıtım videosu, hakkında yazısı, uygunluk ve ücret) eksiksiz doldur. Başvurun ARMUS ekibi tarafından incelenip onaylandıktan sonra profilin Öğretmenler sayfasında yayınlanır.</p>
+    </details>
+
+    <details>
+      <summary>Başvurum ne kadar sürede incelenir?</summary>
+      <p>Başvurular genellikle birkaç iş günü içinde incelenir. Sonuç e-posta ile ve panelin üzerinden bildirilir.</p>
+    </details>
+
+    <details>
+      <summary>Tanıtım videom için ne gerekiyor?</summary>
+      <p>Video en az 60 saniye uzunluğunda ve yatay (landscape) çekilmiş olmalı, ayrıca dosya boyutu 20 MB'ı geçmemeli.</p>
+    </details>
+
+    <details>
+      <summary>Hakkımda yazım için bir kural var mı?</summary>
+      <p>Evet, açıklama metni en az 400 kelime olmalı. Bu, öğrencilerin seni tanıması için yeterli bilgi vermeni sağlar.</p>
+    </details>
+
+    <details>
+      <summary>ARMUS ne kadar komisyon alıyor?</summary>
+      <p>Komisyon oranı tamamladığın toplam başarılı ders saatine göre kademeli olarak düşer: 0–100 saat arası %30, 100–200 saat arası %28, 200–300 saat arası %25, 300–500 saat arası %20, 500 saat üzeri %15. Detaylar için panelindeki kazanç özetine ve Kullanım Şartları sayfamıza bakabilirsin.</p>
+    </details>
+
+    <details>
+      <summary>Uygunluk saatlerimi nasıl ayarlarım?</summary>
+      <p>Öğretmen panelindeki "Haftalık uygunluk" bölümünden, ders vermek istediğin gün ve saatleri işaretleyip kaydedebilirsin. Öğrenciler rezervasyon yaparken sadece bu saatleri görür.</p>
+    </details>
+
+    <div class="contact-cta">
+      <p>Aradığın cevabı bulamadın mı?</p>
+      <a class="btn" href="iletisim.html">Bize ulaş</a>
+    </div>
+
+  </main>
+
+</body>
+</html>
