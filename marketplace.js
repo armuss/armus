@@ -38,7 +38,9 @@ function armusTeacherFromUser(user) {
       : ["Bu öğretmen henüz bir tanıtım yazısı eklemedi."],
     experience: "Yeni",
     completedLessons: "0",
-    languages: "English / Türkçe",
+    languages: user.languages && user.languages.length
+      ? user.languages.map(l => `${l.language} (${l.level})`).join(", ")
+      : "English / Türkçe",
     levelRange: "A1 – C2",
     specialties: [user.subjectTaught || "Genel İngilizce"],
     reviews: [],

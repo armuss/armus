@@ -265,6 +265,54 @@
       gap: 14px;
     }
 
+    .field input:disabled {
+      color: #77777b;
+      cursor: not-allowed;
+    }
+
+    /* LANGUAGES */
+
+    .language-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .language-row input {
+      flex: 1;
+    }
+
+    .language-row select {
+      width: 130px;
+      flex-shrink: 0;
+    }
+
+    .remove-language-btn {
+      flex-shrink: 0;
+      width: 46px;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      background: transparent;
+      color: #a3a3a6;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .remove-language-btn:hover {
+      border-color: rgba(220, 90, 90, .5);
+      color: #f0a5a5;
+    }
+
+    .add-language-btn {
+      border: none;
+      background: transparent;
+      color: var(--armus-gold-text);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
     /* FILE UPLOAD */
 
     .upload-box {
@@ -446,8 +494,24 @@
       <div class="step-title">Hakkında</div>
       <div class="step-hint">Az sonra bu bilgiler ARMUS ekibi tarafından incelenecek.</div>
 
+      <div class="grid-2">
+        <div class="field">
+          <label for="firstName">Ad</label>
+          <input type="text" id="firstName" placeholder="Adın">
+        </div>
+        <div class="field">
+          <label for="lastName">Soyad</label>
+          <input type="text" id="lastName" placeholder="Soyadın">
+        </div>
+      </div>
+
       <div class="field">
-        <label for="country">Yaşadığın ülke</label>
+        <label for="emailDisplay">E-posta</label>
+        <input type="text" id="emailDisplay" disabled>
+      </div>
+
+      <div class="field">
+        <label for="country">Doğum ülkesi</label>
         <input type="text" id="country" placeholder="örn. Türkiye">
       </div>
 
@@ -462,6 +526,22 @@
           <option value="İş İngilizcesi">İş İngilizcesi</option>
         </select>
       </div>
+
+      <div class="field">
+        <label>Konuştuğun diller</label>
+        <div id="languagesList"></div>
+        <button type="button" class="add-language-btn" id="addLanguageBtn">+ Başka bir dil ekle</button>
+      </div>
+
+      <div class="field">
+        <label for="phone">Telefon numarası (opsiyonel)</label>
+        <input type="text" id="phone" placeholder="+90 5xx xxx xx xx">
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="ageConfirm">
+        18 yaşından büyük olduğumu onaylıyorum
+      </label>
     </section>
 
     <!-- STEP 2: PHOTO -->
@@ -664,6 +744,53 @@
 
       const uploads = { photo: null, certificate: null, video: null };
 
+      // ---- prefill name/email from the account created at signup ----
+
+      const nameParts = session.name.trim().split(/\s+/);
+      document.getElementById("firstName").value = nameParts[0] || "";
+      document.getElementById("lastName").value = nameParts.slice(1).join(" ");
+      document.getElementById("emailDisplay").value = session.email;
+
+      // ---- languages you speak (repeatable rows) ----
+
+      const LANGUAGE_LEVELS = ["Ana dil", "C2", "C1", "B2", "B1", "A2", "A1"];
+      const languagesList = document.getElementById("languagesList");
+
+      function addLanguageRow(language = "", level = "Ana dil") {
+
+        const row = document.createElement("div");
+        row.className = "language-row";
+        row.innerHTML = `
+          <input type="text" class="language-name" placeholder="Dil (örn. İngilizce)" value="${language}">
+          <select class="language-level">
+            ${LANGUAGE_LEVELS.map(l => `<option value="${l}"${l === level ? " selected" : ""}>${l}</option>`).join("")}
+          </select>
+          <button type="button" class="remove-language-btn" aria-label="Dili kaldır">×</button>
+        `;
+
+        row.querySelector(".remove-language-btn").addEventListener("click", () => {
+          if (languagesList.children.length > 1) {
+            row.remove();
+          }
+        });
+
+        languagesList.appendChild(row);
+      }
+
+      addLanguageRow("Türkçe", "Ana dil");
+      addLanguageRow("İngilizce", "C1");
+
+      document.getElementById("addLanguageBtn").addEventListener("click", () => addLanguageRow());
+
+      function getLanguages() {
+        return Array.from(languagesList.querySelectorAll(".language-row"))
+          .map(row => ({
+            language: row.querySelector(".language-name").value.trim(),
+            level: row.querySelector(".language-level").value,
+          }))
+          .filter(l => l.language);
+      }
+
       const tracker = document.getElementById("tracker");
       STEP_LABELS.forEach((label, i) => {
         const step = i + 1;
@@ -780,8 +907,25 @@
       function validateStep(step) {
 
         if (step === 1) {
+
+          if (!document.getElementById("firstName").value.trim() ||
+              !document.getElementById("lastName").value.trim()) {
+            showStepError("Adını ve soyadını yaz.");
+            return false;
+          }
+
           if (!document.getElementById("country").value.trim()) {
-            showStepError("Yaşadığın ülkeyi yaz.");
+            showStepError("Doğum ülkeni yaz.");
+            return false;
+          }
+
+          if (getLanguages().length === 0) {
+            showStepError("En az bir dil ekle.");
+            return false;
+          }
+
+          if (!document.getElementById("ageConfirm").checked) {
+            showStepError("Devam etmek için 18 yaşından büyük olduğunu onaylamalısın.");
             return false;
           }
         }
@@ -862,11 +1006,19 @@
         const hasCertificate = !document.getElementById("noCertificate").checked;
         const hasEducation = !document.getElementById("noEducation").checked;
         const subject = document.getElementById("subject").value;
+        const fullName = (
+          document.getElementById("firstName").value.trim() + " " +
+          document.getElementById("lastName").value.trim()
+        ).trim();
 
         const result = armusUpdateUser(session.email, {
+          name: fullName,
           country: document.getElementById("country").value.trim(),
           subjectTaught: subject,
           title: subject + " Öğretmeni",
+          languages: getLanguages(),
+          phone: document.getElementById("phone").value.trim(),
+          ageConfirmed: true,
           photo: uploads.photo,
           hasCertificate,
           certificateName: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
