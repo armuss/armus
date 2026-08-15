@@ -306,6 +306,19 @@
           </div>
 
           <div>
+            <h4>Diller</h4>
+            <p>
+              ${user.languages && user.languages.length
+                ? user.languages.map(l => `${l.language} (${l.level})`).join(", ")
+                : "—"}
+            </p>
+          </div>
+          <div>
+            <h4>Telefon</h4>
+            <p>${user.phone || "—"}</p>
+          </div>
+
+          <div>
             <h4>Sertifika</h4>
             <p>
               ${user.hasCertificate
