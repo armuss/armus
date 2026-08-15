@@ -80,6 +80,8 @@
     }
 
     .btn {
+      display: inline-block;
+      text-align: center;
       border: 1px solid var(--armus-border);
       border-radius: 12px;
       padding: 11px 18px;
@@ -87,6 +89,16 @@
       color: white;
       font-family: inherit;
       cursor: pointer;
+    }
+
+    .nav-greeting {
+      font-size: 13px;
+      color: #c7c7c7;
+      margin-right: 4px;
+    }
+
+    .nav-greeting small {
+      color: #8f8f8f;
     }
 
     .btn-light {
@@ -394,9 +406,9 @@
         <a href="index.html#about">Hakkımızda</a>
       </nav>
 
-      <div class="nav-buttons">
-        <button class="btn">Giriş Yap</button>
-        <button class="btn btn-light">Kayıt Ol</button>
+      <div class="nav-buttons" id="navAuthButtons">
+        <a class="btn" href="login.html">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html">Kayıt Ol</a>
       </div>
 
     </div>
@@ -533,6 +545,7 @@
 
 
   <script src="teachers-data.js"></script>
+  <script src="auth.js"></script>
   <script>
 
     const grid = document.getElementById("teachersGrid");
