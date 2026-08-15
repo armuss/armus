@@ -322,6 +322,7 @@
     }
 
     .trial {
+      display: inline-block;
       background: #eeeeeb;
       color: #111;
       border: none;
@@ -553,7 +554,7 @@
 
         <div class="teacher-bottom">
           <div class="price">₺${teacher.price} <span>/ ders</span></div>
-          <button class="trial">Deneme Dersi Al</button>
+          <a class="trial" href="booking.html?teacher=${teacher.id}&type=trial">Deneme Dersi Al</a>
         </div>
       `;
 
@@ -656,19 +657,6 @@
     );
 
     sortSelect.addEventListener("change", updateTeachers);
-
-
-    document.querySelectorAll(".trial").forEach(button => {
-
-      button.addEventListener("click", () => {
-
-        alert(
-          "Deneme dersi sistemi yakında ARMUS üzerinde aktif olacak."
-        );
-
-      });
-
-    });
 
   </script>
 
