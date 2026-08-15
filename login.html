@@ -197,7 +197,7 @@
     </form>
 
     <div class="switch-note">
-      Hesabın yok mu? <a href="register.html">Kayıt ol</a>
+      Hesabın yok mu? <a href="register.html" id="switchToRegister">Kayıt ol</a>
     </div>
 
     <div class="small-note">
@@ -208,6 +208,12 @@
 
   <script src="auth.js"></script>
   <script>
+
+    const nextParam = new URLSearchParams(window.location.search).get("next");
+    if (nextParam) {
+      document.getElementById("switchToRegister").href =
+        `register.html?next=${encodeURIComponent(nextParam)}`;
+    }
 
     const form = document.getElementById("loginForm");
     const errorBox = document.getElementById("formError");
@@ -234,7 +240,9 @@
       }
 
       armusSetSession(match);
-      window.location.href = "index.html";
+
+      const next = new URLSearchParams(window.location.search).get("next");
+      window.location.href = next || "index.html";
     });
 
   </script>

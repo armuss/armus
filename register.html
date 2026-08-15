@@ -241,7 +241,7 @@
     </form>
 
     <div class="switch-note">
-      Zaten hesabın var mı? <a href="login.html">Giriş yap</a>
+      Zaten hesabın var mı? <a href="login.html" id="switchToLogin">Giriş yap</a>
     </div>
 
     <div class="small-note">
@@ -253,8 +253,15 @@
   <script src="auth.js"></script>
   <script>
 
-    const requestedRole = new URLSearchParams(window.location.search).get("role");
+    const searchParams = new URLSearchParams(window.location.search);
+    const requestedRole = searchParams.get("role");
+    const nextParam = searchParams.get("next");
     let selectedRole = requestedRole === "teacher" ? "teacher" : "student";
+
+    if (nextParam) {
+      document.getElementById("switchToLogin").href =
+        `login.html?next=${encodeURIComponent(nextParam)}`;
+    }
 
     document.querySelectorAll(".role-option").forEach(option => {
 
@@ -327,7 +334,7 @@
       armusSaveUsers(users);
       armusSetSession(newUser);
 
-      window.location.href = "index.html";
+      window.location.href = nextParam || "index.html";
     });
 
   </script>

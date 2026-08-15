@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Derslerim | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(760px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(760px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .nav-greeting {
+      font-size: 13px;
+      color: #c7c7c7;
+      margin-right: 4px;
+    }
+
+    .nav-greeting small {
+      color: #8f8f8f;
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 45px 0 90px;
+      display: none;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 34px);
+      letter-spacing: -1.2px;
+      margin-bottom: 30px;
+    }
+
+    /* LESSON CARD */
+
+    .lesson-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 18px;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .lesson-info {
+      flex: 1;
+    }
+
+    .lesson-teacher {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .lesson-meta {
+      color: #8e8e91;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .lesson-type {
+      display: inline-block;
+      border: 1px solid var(--armus-silver-border-strong);
+      color: var(--armus-silver-1);
+      font-size: 10px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .lesson-when {
+      text-align: right;
+    }
+
+    .lesson-date {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .lesson-time {
+      color: var(--armus-gold-text);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .lesson-past {
+      opacity: 0.55;
+    }
+
+    /* EMPTY STATE */
+
+    .empty-state {
+      display: none;
+      padding: 60px 0;
+      text-align: center;
+      border: 1px dashed var(--armus-border);
+      border-radius: 20px;
+    }
+
+    .empty-state p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1>Derslerini görmek için giriş yap</h1>
+      <p>Rezervasyonlarını görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html?next=my-lessons.html">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=my-lessons.html">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="pageRoot">
+
+    <div class="eyebrow">DERSLERİM</div>
+    <h1>Rezervasyonların</h1>
+
+    <div id="lessonsList"></div>
+
+    <div class="empty-state" id="emptyState">
+      <p>Henüz bir dersin yok.</p>
+      <a class="btn btn-light" href="teachers.html">Öğretmen bul →</a>
+    </div>
+
+  </main>
+
+  <script src="teachers-data.js"></script>
+  <script src="auth.js"></script>
+  <script src="bookings.js"></script>
+  <script>
+
+    const session = armusGetSession();
+    const gate = document.getElementById("gate");
+    const pageRoot = document.getElementById("pageRoot");
+
+    if (!session) {
+
+      gate.style.display = "block";
+
+    } else {
+
+      pageRoot.style.display = "block";
+
+      const bookings = armusGetBookingsForStudent(session.email);
+      const list = document.getElementById("lessonsList");
+      const empty = document.getElementById("emptyState");
+
+      if (bookings.length === 0) {
+
+        empty.style.display = "block";
+
+      } else {
+
+        const todayKey = new Date().toISOString().slice(0, 10);
+
+        bookings.forEach(booking => {
+
+          const teacher = TEACHERS.find(t => t.id === booking.teacherId);
+          const isPast = booking.date < todayKey;
+
+          const card = document.createElement("div");
+          card.className = "lesson-card" + (isPast ? " lesson-past" : "");
+
+          card.innerHTML = `
+            <div class="avatar">${teacher ? teacher.initials : "?"}</div>
+            <div class="lesson-info">
+              <div class="lesson-teacher">
+                ${booking.teacherName}
+                <span class="lesson-type">${booking.type === "trial" ? "Deneme Dersi" : "Ders"}</span>
+              </div>
+              <div class="lesson-meta">₺${booking.price} / 50 dakika${isPast ? " · geçti" : ""}</div>
+            </div>
+            <div class="lesson-when">
+              <div class="lesson-date">${booking.dateLabel}</div>
+              <div class="lesson-time">${booking.time}</div>
+            </div>
+          `;
+
+          list.appendChild(card);
+        });
+      }
+    }
+
+  </script>
+
+</body>
+</html>
