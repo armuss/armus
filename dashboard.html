@@ -304,6 +304,45 @@
       opacity: 1;
     }
 
+    .empty-state {
+      display: none;
+      padding: 22px;
+      text-align: center;
+      color: #8e8e91;
+      font-size: 12.5px;
+      line-height: 1.7;
+      border: 1px dashed var(--armus-border);
+      border-radius: 16px;
+    }
+
+    .booking-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .booking-row strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .booking-row span {
+      color: #8e8e91;
+      font-size: 12px;
+    }
+
+    .booking-row .booking-when {
+      text-align: right;
+      color: var(--armus-gold-text);
+      font-weight: 700;
+    }
+
     .small-note {
       color: #66666a;
       font-size: 11px;
@@ -388,6 +427,16 @@
     </section>
 
     <section>
+      <h2>Gelen rezervasyonlar</h2>
+      <div id="incomingBookings"></div>
+      <div class="empty-state" id="incomingEmpty">
+        Henüz rezervasyon yok. Bunun bir nedeni, profilinin henüz
+        Öğretmenler listesinde görünmüyor olması — hesabını gerçek
+        ilan listesine bağlamak sıradaki adımlardan biri.
+      </div>
+    </section>
+
+    <section>
       <h2>Profilini düzenle</h2>
 
       <form id="profileForm" novalidate>
@@ -426,6 +475,7 @@
   </main>
 
   <script src="auth.js"></script>
+  <script src="bookings.js"></script>
   <script>
 
     const session = armusGetSession();
@@ -473,6 +523,33 @@
       document.getElementById("availability").value =
         user.availability || "Şu anda ders almaya uygun";
       document.getElementById("bio").value = user.bio || "";
+
+      const incomingBookings = armusGetBookingsForTeacherEmail(user.email);
+      const incomingList = document.getElementById("incomingBookings");
+      const incomingEmpty = document.getElementById("incomingEmpty");
+
+      if (incomingBookings.length === 0) {
+
+        incomingEmpty.style.display = "block";
+
+      } else {
+
+        incomingBookings.forEach(booking => {
+
+          const row = document.createElement("div");
+          row.className = "booking-row";
+          row.innerHTML = `
+            <div>
+              <strong>${booking.studentName}</strong>
+              <span>${booking.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${booking.price}</span>
+            </div>
+            <div class="booking-when">
+              ${booking.dateLabel}<br><span style="color:inherit">${booking.time}</span>
+            </div>
+          `;
+          incomingList.appendChild(row);
+        });
+      }
 
       document.getElementById("profileForm").addEventListener("submit", event => {
 
