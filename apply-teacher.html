@@ -237,6 +237,18 @@
       min-height: 90px;
     }
 
+    .word-count {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #77777b;
+      text-align: right;
+    }
+
+    .word-count.done {
+      color: var(--armus-gold-text);
+      font-weight: 600;
+    }
+
     .field input:focus,
     .field select:focus,
     .field textarea:focus {
@@ -647,10 +659,14 @@
     <!-- STEP 5: DESCRIPTION -->
     <section class="step-panel" data-step="5">
       <div class="step-title">Açıklama</div>
-      <div class="step-hint">Kendinden ve öğretim tarzından bahset. Bu metin profilinde görünecek.</div>
+      <div class="step-hint">
+        Kendinden, deneyiminden ve öğretim tarzından bahset. Bu metin profilinde
+        görünecek. En az 400 kelime yazmalısın.
+      </div>
 
       <div class="field">
-        <textarea id="description" placeholder="Merhaba! Ben..."></textarea>
+        <textarea id="description" placeholder="Merhaba! Ben..." style="min-height: 260px;"></textarea>
+        <div class="word-count" id="wordCount">0 / 400 kelime</div>
       </div>
     </section>
 
@@ -790,6 +806,26 @@
           }))
           .filter(l => l.language);
       }
+
+      // ---- description word count ----
+
+      const MIN_DESCRIPTION_WORDS = 400;
+      const descriptionInput = document.getElementById("description");
+      const wordCount = document.getElementById("wordCount");
+
+      function countWords(text) {
+        const trimmed = text.trim();
+        return trimmed ? trimmed.split(/\s+/).length : 0;
+      }
+
+      function updateWordCount() {
+        const words = countWords(descriptionInput.value);
+        wordCount.textContent = `${words} / ${MIN_DESCRIPTION_WORDS} kelime`;
+        wordCount.classList.toggle("done", words >= MIN_DESCRIPTION_WORDS);
+      }
+
+      descriptionInput.addEventListener("input", updateWordCount);
+      updateWordCount();
 
       const tracker = document.getElementById("tracker");
       STEP_LABELS.forEach((label, i) => {
@@ -984,8 +1020,9 @@
         }
 
         if (step === 5) {
-          if (!document.getElementById("description").value.trim()) {
-            showStepError("Kendinden kısaca bahset.");
+          const words = countWords(document.getElementById("description").value);
+          if (words < MIN_DESCRIPTION_WORDS) {
+            showStepError(`En az ${MIN_DESCRIPTION_WORDS} kelime yazmalısın (şu an ${words} kelime).`);
             return false;
           }
         }
