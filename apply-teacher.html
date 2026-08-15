@@ -938,18 +938,48 @@
         }
 
         if (step === 3) {
+
           const skip = document.getElementById("noCertificate").checked;
-          if (!skip && !document.getElementById("certificateName").value.trim()) {
-            showStepError("Sertifika adını yaz, ya da 'sertifikam yok' seçeneğini işaretle.");
-            return false;
+
+          if (!skip) {
+
+            if (!document.getElementById("certificateName").value.trim()) {
+              showStepError("Sertifika adını yaz, ya da 'sertifikam yok' seçeneğini işaretle.");
+              return false;
+            }
+
+            if (!document.getElementById("certificateYears").value.trim()) {
+              showStepError("Sertifikanın ne zaman alındığını yaz.");
+              return false;
+            }
+
+            if (!uploads.certificate) {
+              showStepError("Sertifika dosyanı yükle, ya da 'sertifikam yok' seçeneğini işaretle.");
+              return false;
+            }
           }
         }
 
         if (step === 4) {
+
           const skip = document.getElementById("noEducation").checked;
-          if (!skip && !document.getElementById("university").value.trim()) {
-            showStepError("Üniversite adını yaz, ya da 'yükseköğrenim derecem yok' seçeneğini işaretle.");
-            return false;
+
+          if (!skip) {
+
+            if (!document.getElementById("university").value.trim()) {
+              showStepError("Üniversite adını yaz, ya da 'yükseköğrenim derecem yok' seçeneğini işaretle.");
+              return false;
+            }
+
+            if (!document.getElementById("graduationYear").value.trim()) {
+              showStepError("Mezuniyet yılını yaz.");
+              return false;
+            }
+
+            if (!document.getElementById("specialization").value.trim()) {
+              showStepError("Bölümünü / uzmanlığını yaz.");
+              return false;
+            }
           }
         }
 
