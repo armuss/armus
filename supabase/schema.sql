@@ -114,21 +114,31 @@ create policy "profiles_insert_own"
   on profiles for insert
   with check (auth.uid() = id);
 
+-- admin check goes through a security-definer function rather than a
+-- raw subquery on profiles - a policy on profiles that subqueries
+-- profiles directly makes Postgres re-evaluate RLS recursively and
+-- eventually fail (every profile read errors out with a 500), so the
+-- admin check has to happen in a function that bypasses RLS instead.
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce((select is_admin from profiles where id = auth.uid()), false);
+$$;
+
 -- profiles: a user can update their own row; an admin can update any row
 -- (needed so admins can approve/reject teacher applications)
 create policy "profiles_update_own_or_admin"
   on profiles for update
-  using (
-    auth.uid() = id
-    or exists (select 1 from profiles p where p.id = auth.uid() and p.is_admin)
-  );
+  using (auth.uid() = id or public.is_admin());
 
 -- profiles: admins can see every application, not just approved ones
 create policy "profiles_select_admin_all"
   on profiles for select
-  using (
-    exists (select 1 from profiles p where p.id = auth.uid() and p.is_admin)
-  );
+  using (public.is_admin());
 
 -- bookings: student or teacher involved in the booking can read it
 create policy "bookings_select_participant"
