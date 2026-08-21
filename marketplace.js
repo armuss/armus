@@ -66,6 +66,25 @@ async function armusTeacherFromProfile(profile) {
   };
 }
 
+// Demo teachers (teachers-data.js) have a fixed, hand-written reviews
+// list for marketing purposes - it was never a real reflection of
+// reviewCount/rating (those are decorative). Real students can still
+// book and review them though, so real reviews get added on top of the
+// hand-written ones rather than replacing them.
+async function armusEnrichDemoTeacherReviews(teacher) {
+
+  const rawReviews = await armusGetReviewsForTeacher(teacher.id);
+  if (!rawReviews.length) return teacher;
+
+  const liveReviews = rawReviews.map(r => ({
+    name: armusFormatReviewerName(r.studentName),
+    stars: r.stars,
+    text: r.text,
+  }));
+
+  return { ...teacher, reviews: liveReviews.concat(teacher.reviews) };
+}
+
 async function armusGetMarketplaceTeachers() {
 
   const { data, error } = await armusSupabase
@@ -74,16 +93,14 @@ async function armusGetMarketplaceTeachers() {
     .eq("role", "teacher")
     .eq("status", "approved");
 
-  if (error || !data) return TEACHERS;
-
-  const registeredTeachers = await Promise.all(data.map(armusTeacherFromProfile));
+  const registeredTeachers = (!error && data) ? await Promise.all(data.map(armusTeacherFromProfile)) : [];
   return TEACHERS.concat(registeredTeachers);
 }
 
 async function armusFindMarketplaceTeacher(id) {
 
   const demoTeacher = TEACHERS.find(t => t.id === id);
-  if (demoTeacher) return demoTeacher;
+  if (demoTeacher) return armusEnrichDemoTeacherReviews(demoTeacher);
 
   const { data, error } = await armusSupabase
     .from("profiles")
