@@ -249,6 +249,11 @@
         return;
       }
 
+      if (session && session.role === "teacher") {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
       const next = new URLSearchParams(window.location.search).get("next");
       window.location.href = next || "index.html";
     });
