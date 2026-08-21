@@ -78,7 +78,20 @@ async function armusRenderNavAuth() {
 
   const session = await armusGetSession();
 
-  if (session) {
+  if (session && session.is_admin) {
+
+    el.innerHTML = `
+      <a class="btn" href="admin.html">Admin Paneli</a>
+      <span class="nav-greeting">Merhaba, ${session.name.split(" ")[0]} <small>(Admin)</small></span>
+      <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
+    `;
+
+    document.getElementById("armusLogoutBtn").addEventListener("click", async () => {
+      await armusSignOut();
+      window.location.href = "index.html";
+    });
+
+  } else if (session) {
 
     const firstName = session.name.split(" ")[0];
     const roleLabel = session.role === "teacher" ? "Öğretmen" : "Öğrenci";

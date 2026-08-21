@@ -468,7 +468,7 @@
   <div class="gate" id="gate">
     <h1 id="gateTitle"></h1>
     <p id="gateText"></p>
-    <a href="admin-login.html" id="gateLink">Admin girişi</a>
+    <a href="login.html?next=admin.html" id="gateLink">Giriş yap</a>
   </div>
 
   <div class="shell" id="shell">
@@ -569,7 +569,7 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await armusSignOut();
-      window.location.href = "admin-login.html";
+      window.location.href = "index.html";
     });
 
     document.querySelectorAll(".nav-btn").forEach(btn => {

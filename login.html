@@ -242,6 +242,13 @@
         return;
       }
 
+      const session = await armusGetSession();
+
+      if (session && session.is_admin) {
+        window.location.href = "admin.html";
+        return;
+      }
+
       const next = new URLSearchParams(window.location.search).get("next");
       window.location.href = next || "index.html";
     });
