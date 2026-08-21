@@ -145,6 +145,11 @@ create policy "bookings_select_participant"
   on bookings for select
   using (auth.uid() = student_id or auth.uid()::text = teacher_id);
 
+-- bookings: admins can read every booking (for the admin panel)
+create policy "bookings_select_admin_all"
+  on bookings for select
+  using (public.is_admin());
+
 -- bookings: a logged-in student can create a booking for themselves
 create policy "bookings_insert_own_student"
   on bookings for insert

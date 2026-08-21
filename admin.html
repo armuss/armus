@@ -4,12 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Öğretmen Başvuruları | ARMUS Admin</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css">
+  <title>ARMUS Admin</title>
 
   <style>
     * {
@@ -19,90 +14,245 @@
     }
 
     body {
-      font-family: "Inter", sans-serif;
-      background-color: var(--armus-bg);
-      background-image: var(--armus-bg-glow);
-      color: #f4f4f2;
-      line-height: 1.6;
+      font-family: -apple-system, "Segoe UI", Inter, sans-serif;
+      background: #0b0c0f;
+      color: #e8e8ea;
       min-height: 100vh;
     }
 
     a {
       color: inherit;
-      text-decoration: none;
     }
 
-    .container {
-      width: min(920px, calc(100% - 40px));
-      margin: auto;
-      padding: 40px 0 90px;
+    /* ---- gate (login required / not admin) ---- */
+
+    .gate {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-direction: column;
+      padding: 20px;
     }
 
-    .logo {
+    .gate h1 {
       font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      background: var(--armus-gold-gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      margin-bottom: 10px;
     }
 
-    h1 {
-      font-size: 28px;
-      letter-spacing: -1px;
-      margin: 14px 0 6px;
+    .gate p {
+      color: #9a9aa2;
+      font-size: 14px;
+      margin-bottom: 22px;
+      max-width: 360px;
     }
 
-    .warning {
-      margin: 18px 0 34px;
-      padding: 14px 16px;
-      border: 1px solid rgba(220, 90, 90, .35);
-      background: rgba(220, 90, 90, .08);
-      border-radius: 14px;
-      color: #f0b5b5;
+    .gate a {
+      display: inline-block;
+      background: #8f95ff;
+      color: #10111a;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-decoration: none;
+      padding: 11px 20px;
+      border-radius: 10px;
+    }
+
+    /* ---- shell ---- */
+
+    .shell {
+      display: none;
+      min-height: 100vh;
+      grid-template-columns: 220px 1fr;
+    }
+
+    .sidebar {
+      background: #101115;
+      border-right: 1px solid #1e1f25;
+      padding: 22px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: #8f95ff;
+      background: rgba(143, 149, 255, 0.12);
+      border: 1px solid rgba(143, 149, 255, 0.3);
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin: 4px 8px 22px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: #b4b4bc;
+      font-family: inherit;
+      font-size: 13.5px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+
+    .nav-btn:hover {
+      background: #1a1b21;
+    }
+
+    .nav-btn.active {
+      background: rgba(143, 149, 255, 0.12);
+      color: #c7caff;
+      font-weight: 600;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #26272e;
+      color: #b4b4bc;
+      font-family: inherit;
       font-size: 12.5px;
-      line-height: 1.7;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* ---- main ---- */
+
+    main {
+      padding: 30px 34px 60px;
+      overflow-x: hidden;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
     }
 
     h2 {
-      font-size: 16px;
-      margin: 40px 0 14px;
+      font-size: 22px;
+      letter-spacing: -0.4px;
+      margin-bottom: 22px;
+    }
+
+    h3 {
+      font-size: 14px;
       color: #d8d8da;
+      margin: 30px 0 12px;
+    }
+
+    h3:first-of-type {
+      margin-top: 0;
+    }
+
+    /* ---- overview stat cards ---- */
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card {
+      background: #16171c;
+      border: 1px solid #24252b;
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 24px;
+      color: #c7caff;
+    }
+
+    .stat-card span {
+      color: #8b8b93;
+      font-size: 11.5px;
+    }
+
+    /* ---- tables ---- */
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #16171c;
+      border: 1px solid #24252b;
+      border-radius: 14px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 11px 14px;
+      border-bottom: 1px solid #24252b;
+    }
+
+    th {
+      color: #8b8b93;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
     }
 
     .empty-note {
-      color: #6e6e72;
+      color: #6e6e76;
       font-size: 13px;
       padding: 16px 0;
     }
 
+    /* ---- teacher application cards ---- */
+
     .app-card {
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 18px;
-      padding: 22px;
-      margin-bottom: 16px;
+      background: #16171c;
+      border: 1px solid #24252b;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 14px;
     }
 
     .app-top {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       align-items: flex-start;
     }
 
     .app-avatar {
-      width: 66px;
-      height: 88px;
+      width: 58px;
+      height: 78px;
       flex-shrink: 0;
-      border-radius: 14px;
-      background: var(--armus-silver-gradient);
-      color: #1c1c1e;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #c9cbe0, #8f95ff);
+      color: #10111a;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 18px;
+      font-size: 16px;
       overflow: hidden;
     }
 
@@ -113,29 +263,29 @@
     }
 
     .app-name {
-      font-size: 17px;
+      font-size: 15.5px;
       font-weight: 700;
     }
 
     .app-email {
-      color: #8e8e91;
-      font-size: 12.5px;
+      color: #8b8b93;
+      font-size: 12px;
       margin-top: 2px;
     }
 
     .app-badge {
       display: inline-block;
-      margin-top: 8px;
-      font-size: 10.5px;
+      margin-top: 7px;
+      font-size: 10px;
       border-radius: 999px;
       padding: 3px 9px;
-      border: 1px solid var(--armus-border);
-      color: #b6b6b8;
+      border: 1px solid #33343b;
+      color: #b0b0b8;
     }
 
     .app-badge.pending {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
+      border-color: #c9a24a;
+      color: #e0bb6a;
     }
 
     .app-badge.approved {
@@ -148,6 +298,11 @@
       color: #f0a5a5;
     }
 
+    .app-badge.none {
+      border-color: #33343b;
+      color: #77777f;
+    }
+
     .app-actions {
       margin-left: auto;
       display: flex;
@@ -158,20 +313,20 @@
     .btn {
       display: inline-block;
       text-align: center;
-      border: 1px solid var(--armus-border);
-      border-radius: 10px;
-      padding: 9px 14px;
+      border: 1px solid #2a2b32;
+      border-radius: 9px;
+      padding: 8px 13px;
       background: transparent;
-      color: white;
+      color: #e8e8ea;
       font-family: inherit;
-      font-size: 12.5px;
+      font-size: 12px;
       cursor: pointer;
       text-decoration: none;
     }
 
     .btn-approve {
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
+      background: #8f95ff;
+      color: #10111a;
       border-color: transparent;
       font-weight: 700;
     }
@@ -182,158 +337,281 @@
     }
 
     .app-details {
-      margin-top: 18px;
-      padding-top: 16px;
-      border-top: 1px solid var(--armus-border-soft);
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #24252b;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
       font-size: 12.5px;
     }
 
     .app-details h4 {
-      font-size: 11px;
+      font-size: 10.5px;
       text-transform: uppercase;
       letter-spacing: .5px;
-      color: #77777b;
-      margin-bottom: 6px;
+      color: #74747c;
+      margin-bottom: 5px;
     }
 
     .app-details p {
-      color: #c3c3c5;
+      color: #c3c3c8;
       line-height: 1.7;
     }
 
     .app-details a {
-      color: var(--armus-gold-text);
-      text-decoration: underline;
+      color: #a6acff;
     }
 
-    .app-video {
+    .app-full {
       grid-column: 1 / -1;
     }
 
     .app-video video {
       width: 100%;
-      max-width: 360px;
-      border-radius: 12px;
+      max-width: 340px;
+      border-radius: 10px;
       background: #000;
       display: block;
       margin-top: 6px;
     }
 
-    .app-bio {
-      grid-column: 1 / -1;
+    /* ---- availability mini grid ---- */
+
+    .avail-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-top: 6px;
     }
 
-    .gate {
-      display: none;
-      padding: 100px 0;
-      text-align: center;
+    .avail-day {
+      background: #101115;
+      border: 1px solid #24252b;
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 10px;
     }
 
-    .gate h1 {
-      font-size: 26px;
-      letter-spacing: -1px;
-      margin-bottom: 14px;
+    .avail-day .day-label {
+      color: #8b8b93;
+      font-weight: 700;
+      margin-bottom: 4px;
     }
 
-    .gate p {
-      color: #99999c;
-      font-size: 14px;
-      margin-bottom: 26px;
-      max-width: 420px;
-      margin-left: auto;
-      margin-right: auto;
+    .avail-day .slot {
+      color: #a6acff;
+      padding: 1px 0;
     }
 
-    .gate-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
+    .avail-day .none {
+      color: #55555c;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        flex-direction: row;
+        align-items: center;
+        overflow-x: auto;
+        padding: 12px;
+        gap: 6px;
+      }
+
+      .sidebar .tag {
+        display: none;
+      }
+
+      .nav-btn {
+        white-space: nowrap;
+        width: auto;
+      }
+
+      .sidebar-bottom {
+        margin-top: 0;
+        margin-left: 6px;
+      }
+
+      .logout-btn {
+        width: auto;
+        white-space: nowrap;
+      }
+
+      main {
+        padding: 20px 16px 50px;
+      }
+
+      .stat-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .app-details {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+  <div class="gate" id="gate">
+    <h1 id="gateTitle"></h1>
+    <p id="gateText"></p>
+    <a href="admin-login.html" id="gateLink">Admin girişi</a>
+  </div>
 
-    <a href="index.html" class="logo">ARMUS</a>
+  <div class="shell" id="shell">
 
-    <div class="gate" id="gate">
-      <h1 id="gateTitle"></h1>
-      <p id="gateText"></p>
-      <div class="gate-actions" id="gateActions"></div>
+    <div class="sidebar">
+      <div class="tag">ARMUS ADMIN</div>
+
+      <button class="nav-btn active" data-panel="overview">Genel Bakış</button>
+      <button class="nav-btn" data-panel="teachers">Öğretmenler</button>
+      <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
+      <button class="nav-btn" data-panel="students">Öğrenciler</button>
+
+      <div class="sidebar-bottom">
+        <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
+      </div>
     </div>
 
-    <div id="adminRoot" style="display: none;">
+    <main>
 
-      <h1>Öğretmen Başvuruları</h1>
-
-      <div class="warning">
-        Bu panele sadece is_admin işaretli hesaplar erişebilir.
+      <div class="panel active" id="panel-overview">
+        <h2>Genel Bakış</h2>
+        <div class="stat-grid" id="overviewStats"></div>
       </div>
 
-      <h2>Bekleyen başvurular</h2>
-      <div id="pendingList"></div>
-      <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
+      <div class="panel" id="panel-teachers">
+        <h2>Öğretmenler</h2>
 
-      <h2>Onaylanmış öğretmenler</h2>
-      <div id="approvedList"></div>
-      <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
+        <h3>Bekleyen başvurular</h3>
+        <div id="pendingList"></div>
+        <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
 
-      <h2>Reddedilen başvurular</h2>
-      <div id="rejectedList"></div>
-      <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+        <h3>Onaylanmış öğretmenler</h3>
+        <div id="approvedList"></div>
+        <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
 
-    </div>
+        <h3>Reddedilen başvurular</h3>
+        <div id="rejectedList"></div>
+        <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+
+        <h3>Henüz başvurmamış öğretmen hesapları</h3>
+        <div id="noAppList"></div>
+        <div class="empty-note" id="noAppEmpty" style="display: none;">Yok.</div>
+      </div>
+
+      <div class="panel" id="panel-bookings">
+        <h2>Rezervasyonlar</h2>
+        <table id="bookingsTable">
+          <thead>
+            <tr>
+              <th>Öğrenci</th>
+              <th>Öğretmen</th>
+              <th>Tür</th>
+              <th>Tarih</th>
+              <th>Saat</th>
+              <th>Ücret</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsBody"></tbody>
+        </table>
+        <div class="empty-note" id="bookingsEmpty" style="display: none;">Henüz rezervasyon yok.</div>
+      </div>
+
+      <div class="panel" id="panel-students">
+        <h2>Öğrenciler</h2>
+        <table id="studentsTable">
+          <thead>
+            <tr>
+              <th>Ad Soyad</th>
+              <th>E-posta</th>
+              <th>Kayıt tarihi</th>
+              <th>Rezervasyon sayısı</th>
+            </tr>
+          </thead>
+          <tbody id="studentsBody"></tbody>
+        </table>
+        <div class="empty-note" id="studentsEmpty" style="display: none;">Henüz öğrenci yok.</div>
+      </div>
+
+    </main>
 
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script src="supabase-config.js"></script>
-
   <script src="auth.js"></script>
+  <script src="bookings.js"></script>
+  <script src="reviews.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
-    const adminRoot = document.getElementById("adminRoot");
+    const shell = document.getElementById("shell");
 
-    function showGate(title, text, actionsHtml) {
+    function showGate(title, text) {
       document.getElementById("gateTitle").textContent = title;
       document.getElementById("gateText").textContent = text;
-      document.getElementById("gateActions").innerHTML = actionsHtml;
-      gate.style.display = "block";
+      gate.style.display = "flex";
     }
 
-    const LOGIN_BTN = '<a class="btn" href="login.html?next=admin.html">Giriş Yap</a>';
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await armusSignOut();
+      window.location.href = "admin-login.html";
+    });
 
-    (async function() {
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(`panel-${btn.dataset.panel}`).classList.add("active");
+      });
+    });
 
-      const session = await armusGetSession();
+    const TIME_SLOTS = [
+      "09:00", "10:00", "11:00", "13:00",
+      "14:00", "15:00", "16:00", "18:00", "19:00"
+    ];
+    const DAY_COLUMNS = [
+      ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
+      ["Cum", 5], ["Cmt", 6], ["Paz", 0]
+    ];
 
-      if (!session) {
-        showGate("Giriş gerekiyor", "Bu panele erişmek için giriş yapmalısın.", LOGIN_BTN);
-        return;
+    function renderAvailabilityGrid(weeklyAvailability) {
+
+      if (!Array.isArray(weeklyAvailability)) {
+        return '<p style="color:#74747c;font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
       }
 
-      if (!session.is_admin) {
-        showGate("Yetkin yok", "Bu hesabın admin yetkisi yok.", "");
-        return;
-      }
+      const days = DAY_COLUMNS.map(([label, dayIndex]) => {
+        const slots = (weeklyAvailability[dayIndex] || []).slice().sort();
+        const inner = slots.length
+          ? slots.map(s => `<div class="slot">${s}</div>`).join("")
+          : '<div class="none">—</div>';
+        return `<div class="avail-day"><div class="day-label">${label}</div>${inner}</div>`;
+      }).join("");
 
-      adminRoot.style.display = "block";
-      renderAll();
-
-    })();
+      return `<div class="avail-grid">${days}</div>`;
+    }
 
     function initials(name) {
       return name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
     }
 
-    function renderApplication(user) {
+    function renderTeacherCard(user) {
 
       const card = document.createElement("div");
       card.className = "app-card";
@@ -342,7 +620,9 @@
         ? `<img src="${user.photo_url}" alt="">`
         : initials(user.name);
 
-      const badgeLabel = { pending: "İnceleniyor", approved: "Onaylandı", rejected: "Reddedildi" }[user.status] || "Bilinmiyor";
+      const badgeLabel = {
+        pending: "İnceleniyor", approved: "Onaylandı", rejected: "Reddedildi"
+      }[user.status] || "Başvurmadı";
 
       let actions = "";
       if (user.status === "pending") {
@@ -356,17 +636,20 @@
         actions = `<button class="btn btn-approve" data-action="approve">Onayla</button>`;
       }
 
+      const hasApplication = Boolean(user.status);
+
       card.innerHTML = `
         <div class="app-top">
           <div class="app-avatar">${avatarInner}</div>
           <div>
             <div class="app-name">${user.name}</div>
             <div class="app-email">${user.email}</div>
-            <span class="app-badge ${user.status}">${badgeLabel}</span>
+            <span class="app-badge ${user.status || "none"}">${badgeLabel}</span>
           </div>
           <div class="app-actions">${actions}</div>
         </div>
 
+        ${hasApplication ? `
         <div class="app-details">
           <div>
             <h4>Konum / Konu</h4>
@@ -408,61 +691,183 @@
             </p>
           </div>
 
-          <div class="app-bio">
+          <div class="app-full">
             <h4>Açıklama</h4>
             <p>${user.bio || "—"}</p>
           </div>
 
+          <div class="app-full">
+            <h4>Haftalık uygunluk</h4>
+            ${renderAvailabilityGrid(user.weekly_availability)}
+          </div>
+
           ${user.video_url ? `
-            <div class="app-video">
+            <div class="app-full app-video">
               <h4>Tanıtım videosu</h4>
               <video controls playsinline src="${user.video_url}"></video>
             </div>
           ` : ""}
         </div>
+        ` : ""}
       `;
 
       card.querySelectorAll("[data-action]").forEach(button => {
         button.addEventListener("click", async () => {
           const newStatus = button.dataset.action === "approve" ? "approved" : "rejected";
           await armusAdminUpdateProfile(user.id, { status: newStatus });
-          renderAll();
+          loadAll();
         });
       });
 
       return card;
     }
 
-    async function renderAll() {
-
-      const { data, error } = await armusSupabase
-        .from("profiles")
-        .select("*")
-        .eq("role", "teacher")
-        .not("status", "is", null);
-
-      const teachers = error ? [] : data;
+    function renderTeachersPanel(teachers) {
 
       const groups = {
         pending: teachers.filter(u => u.status === "pending"),
         approved: teachers.filter(u => u.status === "approved"),
         rejected: teachers.filter(u => u.status === "rejected"),
+        noApp: teachers.filter(u => !u.status),
       };
 
-      ["pending", "approved", "rejected"].forEach(status => {
+      const map = { pending: "pending", approved: "approved", rejected: "rejected", noApp: "noApp" };
 
-        const list = document.getElementById(`${status}List`);
-        const empty = document.getElementById(`${status}Empty`);
+      Object.entries(map).forEach(([key]) => {
+        const list = document.getElementById(`${key}List`);
+        const empty = document.getElementById(`${key}Empty`);
         list.innerHTML = "";
 
-        if (groups[status].length === 0) {
+        if (groups[key].length === 0) {
           empty.style.display = "block";
         } else {
           empty.style.display = "none";
-          groups[status].forEach(user => list.appendChild(renderApplication(user)));
+          groups[key].forEach(user => list.appendChild(renderTeacherCard(user)));
         }
       });
     }
+
+    function renderBookingsPanel(bookings) {
+
+      const body = document.getElementById("bookingsBody");
+      const empty = document.getElementById("bookingsEmpty");
+      body.innerHTML = "";
+
+      if (bookings.length === 0) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      bookings
+        .slice()
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
+        .forEach(b => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${b.studentName}</td>
+            <td>${b.teacherName}</td>
+            <td>${b.type === "trial" ? "Deneme Dersi" : "Ders"}</td>
+            <td>${b.dateLabel}</td>
+            <td>${b.time}</td>
+            <td>₺${b.price}</td>
+          `;
+          body.appendChild(tr);
+        });
+    }
+
+    function renderStudentsPanel(students, bookings) {
+
+      const body = document.getElementById("studentsBody");
+      const empty = document.getElementById("studentsEmpty");
+      body.innerHTML = "";
+
+      if (students.length === 0) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      students.forEach(s => {
+        const count = bookings.filter(b => b.studentId === s.id).length;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${s.name}</td>
+          <td>${s.email}</td>
+          <td>${new Date(s.created_at).toLocaleDateString("tr-TR")}</td>
+          <td>${count}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderOverview(profiles, bookings, reviews) {
+
+      const students = profiles.filter(p => p.role === "student");
+      const teachers = profiles.filter(p => p.role === "teacher");
+      const approvedTeachers = teachers.filter(t => t.status === "approved");
+      const pendingTeachers = teachers.filter(t => t.status === "pending");
+      const completedBookings = bookings.filter(armusIsBookingPast);
+      const grossRevenue = completedBookings.reduce((sum, b) => sum + (b.price || 0), 0);
+      const avgRating = reviews.length
+        ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
+        : "—";
+
+      const stats = [
+        [students.length, "Toplam öğrenci"],
+        [teachers.length, "Toplam öğretmen hesabı"],
+        [approvedTeachers.length, "Onaylı öğretmen"],
+        [pendingTeachers.length, "Bekleyen başvuru"],
+        [bookings.length, "Toplam rezervasyon"],
+        [completedBookings.length, "Tamamlanan ders"],
+        [`₺${grossRevenue}`, "Toplam ciro (tamamlanan dersler)"],
+        [`${avgRating} (${reviews.length})`, "Ortalama puan / değerlendirme"],
+      ];
+
+      document.getElementById("overviewStats").innerHTML = stats.map(([value, label]) => `
+        <div class="stat-card"><strong>${value}</strong><span>${label}</span></div>
+      `).join("");
+    }
+
+    async function loadAll() {
+
+      const [profilesRes, bookingsRaw, reviewsRes] = await Promise.all([
+        armusSupabase.from("profiles").select("*"),
+        armusSupabase.from("bookings").select("*"),
+        armusSupabase.from("reviews").select("*"),
+      ]);
+
+      const profiles = profilesRes.data || [];
+      const bookings = (bookingsRaw.data || []).map(armusMapBookingRow);
+      const reviews = reviewsRes.data || [];
+
+      const teachers = profiles.filter(p => p.role === "teacher");
+      const students = profiles.filter(p => p.role === "student");
+
+      renderOverview(profiles, bookings, reviews);
+      renderTeachersPanel(teachers);
+      renderBookingsPanel(bookings);
+      renderStudentsPanel(students, bookings);
+    }
+
+    (async function() {
+
+      const session = await armusGetSession();
+
+      if (!session) {
+        showGate("Giriş gerekiyor", "Bu panele erişmek için admin hesabınla giriş yapmalısın.");
+        return;
+      }
+
+      if (!session.is_admin) {
+        showGate("Yetkin yok", "Bu hesabın admin yetkisi yok.");
+        return;
+      }
+
+      shell.style.display = "grid";
+      await loadAll();
+
+    })();
 
   </script>
 
