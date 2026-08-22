@@ -867,12 +867,7 @@
       // match Date.prototype.getDay() (0 = Sunday ... 6 = Saturday) so
       // booking.html can look a date up with zero translation.
 
-      const TIME_SLOTS = [
-        "00:00", "01:00", "02:00", "03:00", "04:00", "05:00",
-        "06:00", "07:00", "08:00", "09:00", "10:00", "11:00",
-        "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
-        "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
-      ];
+      const TIME_SLOTS = armusAllTimeSlots();
 
       // [label, getDay() index] in Monday-first display order
       const DAY_COLUMNS = [
@@ -897,7 +892,7 @@
       TIME_SLOTS.forEach((time, timeIndex) => {
 
         const row = document.createElement("tr");
-        row.innerHTML = `<td class="time-label">${time}</td>`;
+        row.innerHTML = `<td class="time-label">${armusFormatTimeRange(time)}</td>`;
 
         DAY_COLUMNS.forEach((_, colIndex) => {
 
