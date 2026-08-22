@@ -6,6 +6,11 @@
 
   <title>ARMUS Admin</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+
   <style>
     * {
       box-sizing: border-box;
@@ -14,9 +19,10 @@
     }
 
     body {
-      font-family: -apple-system, "Segoe UI", Inter, sans-serif;
-      background: #0b0c0f;
-      color: #e8e8ea;
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
       min-height: 100vh;
     }
 
@@ -36,22 +42,34 @@
       padding: 20px;
     }
 
+    .gate .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 30px;
+      text-decoration: none;
+    }
+
     .gate h1 {
       font-size: 22px;
       margin-bottom: 10px;
     }
 
     .gate p {
-      color: #9a9aa2;
+      color: #99999c;
       font-size: 14px;
       margin-bottom: 22px;
       max-width: 360px;
     }
 
-    .gate a {
+    .gate a.gate-btn {
       display: inline-block;
-      background: #8f95ff;
-      color: #10111a;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       font-weight: 700;
       font-size: 13.5px;
       text-decoration: none;
@@ -64,28 +82,35 @@
     .shell {
       display: none;
       min-height: 100vh;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 230px 1fr;
     }
 
     .sidebar {
-      background: #101115;
-      border-right: 1px solid #1e1f25;
+      background: rgba(255, 255, 255, 0.02);
+      border-right: 1px solid var(--armus-border-soft);
       padding: 22px 14px;
       display: flex;
       flex-direction: column;
     }
 
+    .sidebar .logo {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      padding: 4px 10px 4px;
+    }
+
     .sidebar .tag {
-      display: inline-block;
-      font-size: 11px;
+      display: block;
+      font-size: 10.5px;
       font-weight: 700;
-      letter-spacing: 0.6px;
-      color: #8f95ff;
-      background: rgba(143, 149, 255, 0.12);
-      border: 1px solid rgba(143, 149, 255, 0.3);
-      border-radius: 999px;
-      padding: 4px 10px;
-      margin: 4px 8px 22px;
+      letter-spacing: 0.5px;
+      color: #8e8e91;
+      padding: 0 10px 20px;
     }
 
     .nav-btn {
@@ -96,7 +121,7 @@
       text-align: left;
       background: transparent;
       border: none;
-      color: #b4b4bc;
+      color: #b8b8bb;
       font-family: inherit;
       font-size: 13.5px;
       padding: 11px 12px;
@@ -106,12 +131,12 @@
     }
 
     .nav-btn:hover {
-      background: #1a1b21;
+      background: var(--armus-panel);
     }
 
     .nav-btn.active {
-      background: rgba(143, 149, 255, 0.12);
-      color: #c7caff;
+      background: var(--armus-panel);
+      color: var(--armus-gold-text);
       font-weight: 600;
     }
 
@@ -122,8 +147,8 @@
     .logout-btn {
       width: 100%;
       background: transparent;
-      border: 1px solid #26272e;
-      color: #b4b4bc;
+      border: 1px solid var(--armus-border);
+      color: #b8b8bb;
       font-family: inherit;
       font-size: 12.5px;
       padding: 10px 12px;
@@ -172,8 +197,8 @@
     }
 
     .stat-card {
-      background: #16171c;
-      border: 1px solid #24252b;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
       border-radius: 14px;
       padding: 18px;
     }
@@ -181,11 +206,11 @@
     .stat-card strong {
       display: block;
       font-size: 24px;
-      color: #c7caff;
+      color: var(--armus-gold-text);
     }
 
     .stat-card span {
-      color: #8b8b93;
+      color: #8e8e91;
       font-size: 11.5px;
     }
 
@@ -194,8 +219,8 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #16171c;
-      border: 1px solid #24252b;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
       border-radius: 14px;
       overflow: hidden;
       font-size: 13px;
@@ -204,11 +229,11 @@
     th, td {
       text-align: left;
       padding: 11px 14px;
-      border-bottom: 1px solid #24252b;
+      border-bottom: 1px solid var(--armus-border-soft);
     }
 
     th {
-      color: #8b8b93;
+      color: #8e8e91;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.4px;
@@ -220,7 +245,7 @@
     }
 
     .empty-note {
-      color: #6e6e76;
+      color: #6e6e72;
       font-size: 13px;
       padding: 16px 0;
     }
@@ -228,8 +253,8 @@
     /* ---- teacher application cards ---- */
 
     .app-card {
-      background: #16171c;
-      border: 1px solid #24252b;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
       border-radius: 16px;
       padding: 20px;
       margin-bottom: 14px;
@@ -246,8 +271,8 @@
       height: 78px;
       flex-shrink: 0;
       border-radius: 12px;
-      background: linear-gradient(145deg, #c9cbe0, #8f95ff);
-      color: #10111a;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -268,7 +293,7 @@
     }
 
     .app-email {
-      color: #8b8b93;
+      color: #8e8e91;
       font-size: 12px;
       margin-top: 2px;
     }
@@ -279,13 +304,13 @@
       font-size: 10px;
       border-radius: 999px;
       padding: 3px 9px;
-      border: 1px solid #33343b;
-      color: #b0b0b8;
+      border: 1px solid var(--armus-border);
+      color: #b6b6b8;
     }
 
     .app-badge.pending {
-      border-color: #c9a24a;
-      color: #e0bb6a;
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
     }
 
     .app-badge.approved {
@@ -299,8 +324,8 @@
     }
 
     .app-badge.none {
-      border-color: #33343b;
-      color: #77777f;
+      border-color: var(--armus-border);
+      color: #77777b;
     }
 
     .app-actions {
@@ -313,11 +338,11 @@
     .btn {
       display: inline-block;
       text-align: center;
-      border: 1px solid #2a2b32;
+      border: 1px solid var(--armus-border);
       border-radius: 9px;
       padding: 8px 13px;
       background: transparent;
-      color: #e8e8ea;
+      color: white;
       font-family: inherit;
       font-size: 12px;
       cursor: pointer;
@@ -325,8 +350,8 @@
     }
 
     .btn-approve {
-      background: #8f95ff;
-      color: #10111a;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
       border-color: transparent;
       font-weight: 700;
     }
@@ -339,7 +364,7 @@
     .app-details {
       margin-top: 16px;
       padding-top: 14px;
-      border-top: 1px solid #24252b;
+      border-top: 1px solid var(--armus-border-soft);
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
@@ -350,17 +375,17 @@
       font-size: 10.5px;
       text-transform: uppercase;
       letter-spacing: .5px;
-      color: #74747c;
+      color: #77777b;
       margin-bottom: 5px;
     }
 
     .app-details p {
-      color: #c3c3c8;
+      color: #c3c3c5;
       line-height: 1.7;
     }
 
     .app-details a {
-      color: #a6acff;
+      color: var(--armus-gold-text);
     }
 
     .app-full {
@@ -386,21 +411,21 @@
     }
 
     .avail-day {
-      background: #101115;
-      border: 1px solid #24252b;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border-soft);
       border-radius: 8px;
       padding: 6px;
       font-size: 10px;
     }
 
     .avail-day .day-label {
-      color: #8b8b93;
+      color: #8e8e91;
       font-weight: 700;
       margin-bottom: 4px;
     }
 
     .avail-day .slot {
-      color: #a6acff;
+      color: var(--armus-gold-text);
       padding: 1px 0;
     }
 
@@ -422,8 +447,10 @@
         overflow-x: auto;
         padding: 12px;
         gap: 6px;
+        background: var(--armus-bg);
       }
 
+      .sidebar .logo,
       .sidebar .tag {
         display: none;
       }
@@ -466,15 +493,17 @@
 <body>
 
   <div class="gate" id="gate">
+    <a href="index.html" class="logo">ARMUS</a>
     <h1 id="gateTitle"></h1>
     <p id="gateText"></p>
-    <a href="login.html?next=admin.html" id="gateLink">Giriş yap</a>
+    <a class="gate-btn" href="login.html?next=admin.html" id="gateLink">Giriş yap</a>
   </div>
 
   <div class="shell" id="shell">
 
     <div class="sidebar">
-      <div class="tag">ARMUS ADMIN</div>
+      <div class="logo">ARMUS</div>
+      <span class="tag">ADMIN PANELİ</span>
 
       <button class="nav-btn active" data-panel="overview">Genel Bakış</button>
       <button class="nav-btn" data-panel="teachers">Öğretmenler</button>
@@ -581,10 +610,6 @@
       });
     });
 
-    const TIME_SLOTS = [
-      "09:00", "10:00", "11:00", "13:00",
-      "14:00", "15:00", "16:00", "18:00", "19:00"
-    ];
     const DAY_COLUMNS = [
       ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
       ["Cum", 5], ["Cmt", 6], ["Paz", 0]
@@ -593,13 +618,13 @@
     function renderAvailabilityGrid(weeklyAvailability) {
 
       if (!Array.isArray(weeklyAvailability)) {
-        return '<p style="color:#74747c;font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
+        return '<p style="color:#77777b;font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
       }
 
       const days = DAY_COLUMNS.map(([label, dayIndex]) => {
         const slots = (weeklyAvailability[dayIndex] || []).slice().sort();
         const inner = slots.length
-          ? slots.map(s => `<div class="slot">${s}</div>`).join("")
+          ? slots.map(s => `<div class="slot">${armusFormatTimeRange(s)}</div>`).join("")
           : '<div class="none">—</div>';
         return `<div class="avail-day"><div class="day-label">${label}</div>${inner}</div>`;
       }).join("");
