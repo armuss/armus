@@ -85,6 +85,11 @@
       font-weight: 700;
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
     /* GATE */
 
     .gate {
@@ -1142,7 +1147,14 @@
         }
 
         // final step - submit application
+        const submitBtn = document.getElementById("nextBtn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Gönderiliyor...";
+
         await submitApplication();
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Başvuruyu Gönder";
       });
 
       async function submitApplication() {
