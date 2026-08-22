@@ -243,6 +243,52 @@
       min-height: 90px;
     }
 
+    .availability-grid-wrap {
+      overflow-x: auto;
+      margin-bottom: 10px;
+    }
+
+    .availability-grid {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 560px;
+    }
+
+    .availability-grid th {
+      font-size: 11px;
+      color: #8e8e91;
+      font-weight: 600;
+      padding: 6px 4px;
+    }
+
+    .availability-grid td {
+      text-align: center;
+      padding: 3px;
+    }
+
+    .availability-grid .time-label {
+      text-align: right;
+      padding-right: 10px;
+      font-size: 11.5px;
+      color: #8e8e91;
+      white-space: nowrap;
+    }
+
+    .avail-cell {
+      width: 36px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-bg);
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .avail-cell.active {
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+    }
+
     .word-count {
       margin-top: 8px;
       font-size: 12px;
@@ -700,14 +746,14 @@
     <!-- STEP 7: AVAILABILITY -->
     <section class="step-panel" data-step="7">
       <div class="step-title">Uygunluk</div>
-      <div class="step-hint">Şu an için genel uygunluk durumun. Bunu panelinden istediğin zaman değiştirebilirsin.</div>
+      <div class="step-hint">
+        Hangi gün ve saatlerde ders verebileceğini işaretle. Öğrenciler
+        rezervasyon yaparken sadece burada işaretlediğin saatleri görecek.
+        Bunu daha sonra panelinden istediğin zaman değiştirebilirsin.
+      </div>
 
-      <div class="field">
-        <select id="availability">
-          <option value="Şu anda ders almaya uygun">Şu anda ders almaya uygun</option>
-          <option value="Bu hafta sınırlı uygunluk">Bu hafta sınırlı uygunluk</option>
-          <option value="Şu anda müsait değilim">Şu anda müsait değilim</option>
-        </select>
+      <div class="availability-grid-wrap">
+        <table class="availability-grid" id="availabilityGrid"></table>
       </div>
     </section>
 
@@ -819,6 +865,78 @@
             level: row.querySelector(".language-level").value,
           }))
           .filter(l => l.language);
+      }
+
+      // ---- weekly availability grid ----
+      // Same shape dashboard.html's grid saves: an array of 7 arrays of
+      // "HH:MM" strings, indexed to match Date.prototype.getDay()
+      // (0 = Sunday ... 6 = Saturday) so booking.html needs no translation.
+
+      const AVAIL_TIME_SLOTS = [
+        "09:00", "10:00", "11:00", "13:00",
+        "14:00", "15:00", "16:00", "18:00", "19:00"
+      ];
+
+      // [label, getDay() index] in Monday-first display order
+      const AVAIL_DAY_COLUMNS = [
+        ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
+        ["Cum", 5], ["Cmt", 6], ["Paz", 0]
+      ];
+
+      const weeklyState = AVAIL_DAY_COLUMNS.map(() => []);
+
+      const availabilityGrid = document.getElementById("availabilityGrid");
+
+      const availHeadRow = document.createElement("tr");
+      availHeadRow.innerHTML = "<th></th>" + AVAIL_DAY_COLUMNS.map(([label]) => `<th>${label}</th>`).join("");
+      availabilityGrid.appendChild(availHeadRow);
+
+      AVAIL_TIME_SLOTS.forEach(time => {
+
+        const row = document.createElement("tr");
+        row.innerHTML = `<td class="time-label">${time}</td>`;
+
+        AVAIL_DAY_COLUMNS.forEach((_, colIndex) => {
+
+          const cell = document.createElement("td");
+          const btn = document.createElement("div");
+          btn.className = "avail-cell";
+          btn.setAttribute("role", "button");
+          btn.setAttribute("aria-label", `${AVAIL_DAY_COLUMNS[colIndex][0]} ${time}`);
+
+          btn.addEventListener("click", () => {
+
+            const dayList = weeklyState[colIndex];
+            const idx = dayList.indexOf(time);
+
+            if (idx === -1) {
+              dayList.push(time);
+            } else {
+              dayList.splice(idx, 1);
+            }
+
+            btn.classList.toggle("active");
+          });
+
+          cell.appendChild(btn);
+          row.appendChild(cell);
+        });
+
+        availabilityGrid.appendChild(row);
+      });
+
+      function hasAnyAvailability() {
+        return weeklyState.some(day => day.length > 0);
+      }
+
+      // converts weeklyState (display order) to the getDay()-indexed
+      // array the database and booking.html expect
+      function getWeeklyAvailability() {
+        const weeklyAvailability = [];
+        AVAIL_DAY_COLUMNS.forEach(([, dayIndex], colIndex) => {
+          weeklyAvailability[dayIndex] = weeklyState[colIndex];
+        });
+        return weeklyAvailability;
       }
 
       // ---- description word count ----
@@ -1116,6 +1234,13 @@
           }
         }
 
+        if (step === 7) {
+          if (!hasAnyAvailability()) {
+            showStepError("Devam etmek için en az bir uygunluk saati işaretle.");
+            return false;
+          }
+        }
+
         if (step === 8) {
           const price = Number(document.getElementById("price").value);
           if (!price || price <= 0) {
@@ -1188,7 +1313,8 @@
           specialization: hasEducation ? document.getElementById("specialization").value.trim() : "",
           bio: document.getElementById("description").value.trim(),
           video_url: uploads.video ? uploads.video.dataUrl : null,
-          availability: document.getElementById("availability").value,
+          availability: "Şu anda ders almaya uygun",
+          weekly_availability: getWeeklyAvailability(),
           price: Number(document.getElementById("price").value) || 0,
           status: "pending",
           applied_at: new Date().toISOString(),
