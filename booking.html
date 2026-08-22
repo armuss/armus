@@ -287,7 +287,7 @@
 
     .slot-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
       gap: 10px;
     }
 
@@ -657,10 +657,7 @@
         "Oca", "Şub", "Mar", "Nis", "May", "Haz",
         "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
       ];
-      const ALL_SLOTS = [
-        "09:00", "10:00", "11:00", "13:00",
-        "14:00", "15:00", "16:00", "18:00", "19:00"
-      ];
+      const ALL_SLOTS = armusAllTimeSlots();
 
       function toDateKey(date) {
         return date.toISOString().slice(0, 10);
@@ -740,7 +737,7 @@
 
           const div = document.createElement("div");
           div.className = "slot" + (slot.available ? "" : " unavailable");
-          div.textContent = slot.time;
+          div.textContent = armusFormatTimeRange(slot.time);
 
           if (slot.available) {
 

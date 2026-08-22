@@ -100,3 +100,17 @@ function armusFormatTimeRange(startTime, durationMinutes = ARMUS_LESSON_MINUTES)
 
   return `${startTime} – ${endTime}`;
 }
+
+// Every half-hour lesson start time in a day: "00:00", "00:30", ... "23:30".
+// Shared by the availability grids (apply-teacher.html, dashboard.html)
+// and the booking slot picker (booking.html) so they always agree on
+// which start times exist.
+function armusAllTimeSlots() {
+  const slots = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  return slots;
+}
