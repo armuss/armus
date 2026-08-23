@@ -811,7 +811,10 @@
 
       renderPendingNotes();
 
-      const incomingBookings = await armusGetBookingsForTeacher(user.id);
+      const [incomingBookings, teacherReviews] = await Promise.all([
+        armusGetBookingsForTeacher(user.id),
+        armusGetReviewsForTeacher(user.id),
+      ]);
       const incomingList = document.getElementById("incomingBookings");
       const incomingEmpty = document.getElementById("incomingEmpty");
 
@@ -836,7 +839,6 @@
         .reduce((sum, b) => sum + (b.price || 0), 0);
       const netThisMonth = Math.round(grossThisMonth * (1 - tier.rate / 100));
 
-      const teacherReviews = await armusGetReviewsForTeacher(user.id);
       const avgRating = teacherReviews.length
         ? (teacherReviews.reduce((sum, r) => sum + r.stars, 0) / teacherReviews.length).toFixed(1)
         : "—";
