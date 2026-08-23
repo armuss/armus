@@ -373,12 +373,12 @@
 
     .teacher-card {
       display: flex;
-      gap: 20px;
+      gap: 28px;
       align-items: center;
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
-      border-radius: 20px;
-      padding: 20px;
+      border-radius: 22px;
+      padding: 28px;
       transition: 0.2s ease;
     }
 
@@ -387,16 +387,16 @@
     }
 
     .avatar {
-      width: 76px;
-      height: 100px;
-      border-radius: 14px;
+      width: 150px;
+      height: 180px;
+      border-radius: 18px;
       background: var(--armus-silver-gradient);
       color: #1c1c1e;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 19px;
+      font-size: 34px;
       overflow: hidden;
       flex-shrink: 0;
     }
@@ -419,12 +419,12 @@
     }
 
     .teacher-name {
-      font-size: 17px;
+      font-size: 23px;
       font-weight: 700;
     }
 
     .rating {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--armus-gold-text);
     }
 
@@ -432,7 +432,7 @@
       background: transparent;
       border: none;
       color: #6b6b6f;
-      font-size: 17px;
+      font-size: 21px;
       cursor: pointer;
       line-height: 1;
       padding: 2px;
@@ -444,30 +444,49 @@
     }
 
     .teacher-role {
-      color: #858589;
-      font-size: 12.5px;
-      margin-top: 4px;
+      color: #a5a5a9;
+      font-size: 14.5px;
+      margin-top: 6px;
     }
 
     .stats-line {
       color: #8e8e91;
-      font-size: 11.5px;
-      margin-top: 6px;
+      font-size: 12.5px;
+      margin-top: 9px;
     }
 
     .tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 16px;
     }
 
     .tag {
-      font-size: 10px;
+      font-size: 11.5px;
       color: #c8c8ca;
       border: 1px solid var(--armus-border);
-      padding: 6px 9px;
+      padding: 7px 12px;
       border-radius: 999px;
+    }
+
+    .card-desc {
+      margin-top: 16px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #a3a3a7;
+      max-width: 60ch;
+    }
+
+    .card-desc a {
+      color: var(--armus-gold-text);
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .card-desc a:hover {
+      text-decoration: underline;
     }
 
     .card-side {
@@ -476,33 +495,46 @@
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 10px;
+      gap: 14px;
+      width: 190px;
     }
 
     .price {
-      font-size: 18px;
+      font-size: 27px;
       font-weight: 700;
       color: var(--armus-gold-text);
     }
 
     .price span {
       color: #77777b;
-      font-size: 11px;
+      font-size: 12.5px;
       font-weight: 400;
     }
 
     .trial {
-      display: inline-block;
+      display: block;
+      width: 100%;
+      text-align: center;
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
       border: none;
-      border-radius: 10px;
-      padding: 10px 16px;
+      border-radius: 13px;
+      padding: 15px 20px;
       font-family: inherit;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
+    }
+
+    .msg-link {
+      font-size: 12.5px;
+      color: #999;
+      text-decoration: none;
+    }
+
+    .msg-link:hover {
+      color: var(--armus-gold-text);
     }
 
     .empty {
@@ -526,11 +558,25 @@
         align-items: flex-start;
       }
 
+      .avatar {
+        width: 100%;
+        height: 160px;
+      }
+
+      .card-mid-top {
+        flex-wrap: wrap;
+      }
+
       .card-side {
         width: 100%;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .trial {
+        width: auto;
       }
 
       .sort-wrap {
@@ -727,6 +773,16 @@
         ? `${teacher.students} öğrenci · ${teacher.completedLessons} ders`
         : `${teacher.completedLessons} ders`;
 
+      const aboutText = Array.isArray(teacher.about) ? teacher.about[0] : "";
+      const aboutSnippet = aboutText && aboutText.length > 130
+        ? aboutText.slice(0, 130).trim() + "…"
+        : aboutText;
+
+      const isDemoTeacher = typeof TEACHERS !== "undefined" && TEACHERS.some(t => t.id === teacher.id);
+      const messageLink = isDemoTeacher
+        ? ""
+        : `<a class="msg-link" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Mesaj Gönder</a>`;
+
       article.innerHTML = `
         <div class="avatar">${avatarInner}</div>
 
@@ -741,11 +797,13 @@
           <div class="tags">
             ${teacher.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}
           </div>
+          ${aboutSnippet ? `<div class="card-desc">${aboutSnippet} <a href="${teacherLink}">Devamını oku</a></div>` : ""}
         </div>
 
         <div class="card-side">
           <div class="price">₺${teacher.price} <span>/ ders</span></div>
           <a class="trial" href="${bookingLink}">Deneme Dersi Al</a>
+          ${messageLink}
         </div>
       `;
 
