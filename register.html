@@ -92,6 +92,13 @@
 
     /* ROLE TOGGLE */
 
+    .role-note {
+      color: var(--armus-gold-text);
+      font-size: 13px;
+      font-weight: 600;
+      margin: -6px 0 22px;
+    }
+
     .role-toggle {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -208,7 +215,9 @@
     <div class="eyebrow">ARMUS'A KATIL</div>
     <h1>Hesap oluştur</h1>
 
-    <div class="role-toggle">
+    <p class="role-note" id="roleNote"></p>
+
+    <div class="role-toggle" id="roleToggle" style="display:none">
       <div class="role-option active" data-role="student">Öğrenci olarak</div>
       <div class="role-option" data-role="teacher">Öğretmen olarak</div>
     </div>
@@ -261,31 +270,19 @@
     const searchParams = new URLSearchParams(window.location.search);
     const requestedRole = searchParams.get("role");
     const nextParam = searchParams.get("next");
-    let selectedRole = requestedRole === "teacher" ? "teacher" : "student";
+
+    // Role is decided by how the visitor got here (the general "Kayıt Ol"
+    // link vs. an "Öğretmen Ol" link with ?role=teacher) - not a toggle on
+    // this page, so there's no accidental student/teacher mix-up.
+    const selectedRole = requestedRole === "teacher" ? "teacher" : "student";
+    document.getElementById("roleNote").textContent = selectedRole === "teacher"
+      ? "Öğretmen olarak kayıt oluyorsun."
+      : "Öğrenci olarak kayıt oluyorsun.";
 
     if (nextParam) {
       document.getElementById("switchToLogin").href =
         `login.html?next=${encodeURIComponent(nextParam)}`;
     }
-
-    document.querySelectorAll(".role-option").forEach(option => {
-
-      if (option.dataset.role === selectedRole) {
-        document.querySelectorAll(".role-option").forEach(o =>
-          o.classList.remove("active")
-        );
-        option.classList.add("active");
-      }
-
-      option.addEventListener("click", () => {
-
-        document.querySelectorAll(".role-option").forEach(o =>
-          o.classList.remove("active")
-        );
-        option.classList.add("active");
-        selectedRole = option.dataset.role;
-      });
-    });
 
     const form = document.getElementById("registerForm");
     const errorBox = document.getElementById("formError");
