@@ -10,7 +10,13 @@
  * (armusSupabase), bookings.js and reviews.js to be loaded first.
  */
 
-async function armusTeacherFromProfile(profile) {
+// Pure/synchronous: turns an already-fetched profile row plus its
+// already-fetched reviews/bookings into the marketplace teacher shape.
+// Split out from armusTeacherFromProfile so a single-teacher lookup can
+// fetch the profile and its reviews/bookings all in parallel (they only
+// need the id, not the profile row) instead of fetching them one stage
+// after the other.
+function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
 
   const initials = profile.name
     .split(" ")
@@ -19,11 +25,6 @@ async function armusTeacherFromProfile(profile) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-
-  const [rawReviews, bookings] = await Promise.all([
-    armusGetReviewsForTeacher(profile.id),
-    armusGetBookingsForTeacher(profile.id),
-  ]);
 
   const reviews = rawReviews.map(r => ({
     name: armusFormatReviewerName(r.studentName),
@@ -66,6 +67,14 @@ async function armusTeacherFromProfile(profile) {
       ? profile.weekly_availability
       : null,
   };
+}
+
+async function armusTeacherFromProfile(profile) {
+  const [rawReviews, bookings] = await Promise.all([
+    armusGetReviewsForTeacher(profile.id),
+    armusGetBookingsForTeacher(profile.id),
+  ]);
+  return armusBuildTeacherFromParts(profile, rawReviews, bookings);
 }
 
 // Demo teachers (teachers-data.js) have a fixed, hand-written reviews
@@ -111,13 +120,21 @@ async function armusFindMarketplaceTeacher(id) {
   const demoTeacher = TEACHERS.find(t => t.id === id);
   if (demoTeacher) return armusEnrichDemoTeacherReviews(demoTeacher);
 
-  const { data, error } = await armusSupabase
-    .from("profiles")
-    .select("*")
-    .eq("id", id)
-    .eq("status", "approved")
-    .maybeSingle();
+  // profile, reviews and bookings only depend on id, not on each other,
+  // so fetch all three at once instead of waiting for the profile before
+  // starting the other two - cuts a full round trip off the teacher
+  // profile page's load time
+  const [profileRes, rawReviews, bookings] = await Promise.all([
+    armusSupabase
+      .from("profiles")
+      .select("*")
+      .eq("id", id)
+      .eq("status", "approved")
+      .maybeSingle(),
+    armusGetReviewsForTeacher(id),
+    armusGetBookingsForTeacher(id),
+  ]);
 
-  if (error || !data) return null;
-  return armusTeacherFromProfile(data);
+  if (profileRes.error || !profileRes.data) return null;
+  return armusBuildTeacherFromParts(profileRes.data, rawReviews, bookings);
 }
