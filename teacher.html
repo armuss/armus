@@ -77,9 +77,6 @@
 
     .profile-header {
       padding: 65px 0 28px;
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 50px;
       border-bottom: 1px solid var(--armus-border-soft);
     }
 
@@ -165,6 +162,7 @@
       height: fit-content;
       position: sticky;
       top: 20px;
+      margin-bottom: 18px;
     }
 
     .price {
@@ -398,10 +396,6 @@
 
     @media (max-width: 800px) {
 
-      .profile-header {
-        grid-template-columns: 1fr;
-      }
-
       .profile-main {
         flex-direction: column;
       }
@@ -480,43 +474,6 @@
 
         </div>
 
-
-        <!-- BOOKING -->
-
-        <aside class="booking-card">
-
-          <div class="price">
-            <span id="priceValue"></span> <span>/ 50 dakika</span>
-            <button type="button" id="favBtn" class="fav-btn" aria-label="Favorilere ekle">♥</button>
-          </div>
-
-          <div class="availability" id="availability"></div>
-
-          <button
-            class="primary"
-            onclick="trialLesson()">
-            Deneme Dersi Al
-          </button>
-
-          <button
-            class="secondary"
-            onclick="bookLesson()">
-            Ders Rezervasyonu Yap
-          </button>
-
-          <button
-            class="secondary"
-            id="messageBtn"
-            style="display: none;">
-            Mesaj Gönder
-          </button>
-
-          <div class="small-note">
-            Henüz ödeme alınmayacak
-          </div>
-
-        </aside>
-
       </div>
 
 
@@ -590,6 +547,42 @@
         <!-- SIDEBAR -->
 
         <aside>
+
+          <!-- BOOKING -->
+
+          <div class="booking-card">
+
+            <div class="price">
+              <span id="priceValue"></span> <span>/ 50 dakika</span>
+              <button type="button" id="favBtn" class="fav-btn" aria-label="Favorilere ekle">♥</button>
+            </div>
+
+            <div class="availability" id="availability"></div>
+
+            <button
+              class="primary"
+              onclick="trialLesson()">
+              Deneme Dersi Al
+            </button>
+
+            <button
+              class="secondary"
+              onclick="bookLesson()">
+              Ders Rezervasyonu Yap
+            </button>
+
+            <button
+              class="secondary"
+              id="messageBtn"
+              style="display: none;">
+              Mesaj Gönder
+            </button>
+
+            <div class="small-note">
+              Henüz ödeme alınmayacak
+            </div>
+
+          </div>
 
           <div class="side-box">
 
