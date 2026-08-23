@@ -8,7 +8,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
   <link rel="stylesheet" href="theme.css">
 
   <style>
@@ -645,13 +646,13 @@
 
   <script src="teachers-data.js"></script>
   <script src="favorites.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="auth.js"></script>
-  <script src="bookings.js"></script>
-  <script src="reviews.js"></script>
-  <script src="marketplace.js"></script>
   <script>
+
+    // Everything in this block only needs teachers-data.js and favorites.js
+    // (both local, no network), so it renders the demo teachers and makes
+    // the whole grid (filters, sort, favorites) usable immediately - it
+    // does not wait on the Supabase SDK below, which is a slow external
+    // script fetch on a bad connection.
 
     const grid = document.getElementById("teachersGrid");
 
@@ -675,11 +676,7 @@
       panel.addEventListener("click", event => event.stopPropagation());
     });
 
-    (async function() {
-
-    const teachers = await armusGetMarketplaceTeachers();
-
-    teachers.forEach(teacher => {
+    function renderTeacherCard(teacher) {
 
       const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
       const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
@@ -725,9 +722,8 @@
       `;
 
       grid.appendChild(article);
-    });
 
-    document.querySelectorAll(".fav-btn").forEach(btn => {
+      const btn = article.querySelector(".fav-btn");
       btn.classList.toggle("active", armusIsFavorite(btn.dataset.fav));
       btn.addEventListener("click", event => {
         event.preventDefault();
@@ -735,10 +731,15 @@
         btn.classList.toggle("active", nowFavorited);
         if (favoritesOnlyFilter.checked) updateTeachers();
       });
-    });
+    }
+
+    // Demo teachers need no network call, so they render immediately -
+    // real (self-registered) teachers are fetched in the background below
+    // and merged in as soon as they arrive, instead of blocking the whole
+    // list on that request.
+    TEACHERS.forEach(renderTeacherCard);
 
     const searchInput = document.getElementById("searchInput");
-    const cards = Array.from(document.querySelectorAll(".teacher-card"));
     const filters = document.querySelectorAll(".filter");
     const levelFilters = document.querySelectorAll(".level-filter");
     const langFilters = document.querySelectorAll(".lang-filter");
@@ -778,6 +779,9 @@
         .filter(input => input.checked)
         .map(input => input.value);
 
+      // queried fresh each run, since real teachers can still be merging
+      // into the grid asynchronously after the first render
+      const cards = Array.from(document.querySelectorAll(".teacher-card"));
 
       let visibleCards = cards.filter(card => {
 
@@ -893,7 +897,23 @@
 
     updateTeachers();
 
-    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="bookings.js"></script>
+  <script src="reviews.js"></script>
+  <script src="marketplace.js"></script>
+  <script>
+
+    // real (self-registered) teachers need a Supabase round trip - merge
+    // them into the already-visible grid as soon as they arrive instead
+    // of making the whole list wait on the network
+    armusGetRegisteredTeachers().then(registeredTeachers => {
+      registeredTeachers.forEach(renderTeacherCard);
+      updateTeachers();
+    });
 
   </script>
 
