@@ -62,8 +62,11 @@ function armusInitHeroRotator(){
   if(reduceMotion)return;
 
   function fillCard(article,teacher){
-    article.querySelector('.portrait').className='portrait portrait-'+teacher.id;
-    article.querySelector('.portrait').textContent=teacher.initials;
+    const portrait=article.querySelector('.portrait');
+    portrait.className='portrait portrait-'+teacher.id;
+    portrait.innerHTML=teacher.photo
+      ? '<img src="'+teacher.photo+'" alt="">'
+      : teacher.initials;
     article.querySelector('.rating').textContent='★ '+teacher.rating;
     article.querySelector('h3').textContent=teacher.name;
     article.querySelector('.role-label').textContent=teacher.role;
