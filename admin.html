@@ -801,23 +801,35 @@
 
       card.querySelectorAll("[data-action]").forEach(button => {
         button.addEventListener("click", async () => {
+          button.disabled = true;
           const newStatus = button.dataset.action === "approve" ? "approved" : "rejected";
-          await armusAdminUpdateProfile(user.id, { status: newStatus });
-          loadAll();
+          const updated = await armusAdminUpdateProfile(user.id, { status: newStatus });
+          if (updated) {
+            applyProfileUpdate(updated);
+          } else {
+            button.disabled = false;
+          }
         });
       });
 
       card.querySelectorAll("[data-change-action]").forEach(button => {
         button.addEventListener("click", async () => {
 
+          button.disabled = true;
+          let updated;
+
           if (button.dataset.changeAction === "approve") {
             const { submitted_at, ...fieldsToApply } = user.pending_changes;
-            await armusAdminUpdateProfile(user.id, { ...fieldsToApply, pending_changes: null });
+            updated = await armusAdminUpdateProfile(user.id, { ...fieldsToApply, pending_changes: null });
           } else {
-            await armusAdminUpdateProfile(user.id, { pending_changes: null });
+            updated = await armusAdminUpdateProfile(user.id, { pending_changes: null });
           }
 
-          loadAll();
+          if (updated) {
+            applyProfileUpdate(updated);
+          } else {
+            button.disabled = false;
+          }
         });
       });
 
@@ -988,6 +1000,34 @@
       `).join("");
     }
 
+    // kept at module scope so an approve/reject action can patch a single
+    // profile locally and re-render, instead of re-fetching every table
+    // from Supabase on every click
+    let armusAdminProfiles = [];
+    let armusAdminBookings = [];
+    let armusAdminReviews = [];
+
+    function renderAllFromState() {
+      const teachers = armusAdminProfiles.filter(p => p.role === "teacher");
+      const students = armusAdminProfiles.filter(p => p.role === "student");
+
+      renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
+      renderTeachersPanel(teachers);
+      renderChangesPanel(teachers);
+      renderBookingsPanel(armusAdminBookings);
+      renderStudentsPanel(students, armusAdminBookings);
+    }
+
+    // armusAdminUpdateProfile already returns the updated row, so an
+    // approve/reject action can just patch it into the in-memory list
+    // and re-render - no network round trip needed beyond the write itself
+    function applyProfileUpdate(updatedProfile) {
+      armusAdminProfiles = armusAdminProfiles.map(p =>
+        p.id === updatedProfile.id ? updatedProfile : p
+      );
+      renderAllFromState();
+    }
+
     async function loadAll() {
 
       const [profilesRes, bookingsRaw, reviewsRes] = await Promise.all([
@@ -996,18 +1036,11 @@
         armusSupabase.from("reviews").select("*"),
       ]);
 
-      const profiles = profilesRes.data || [];
-      const bookings = (bookingsRaw.data || []).map(armusMapBookingRow);
-      const reviews = reviewsRes.data || [];
+      armusAdminProfiles = profilesRes.data || [];
+      armusAdminBookings = (bookingsRaw.data || []).map(armusMapBookingRow);
+      armusAdminReviews = reviewsRes.data || [];
 
-      const teachers = profiles.filter(p => p.role === "teacher");
-      const students = profiles.filter(p => p.role === "student");
-
-      renderOverview(profiles, bookings, reviews);
-      renderTeachersPanel(teachers);
-      renderChangesPanel(teachers);
-      renderBookingsPanel(bookings);
-      renderStudentsPanel(students, bookings);
+      renderAllFromState();
     }
 
     (async function() {
