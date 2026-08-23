@@ -167,6 +167,9 @@
     }
 
     .price {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 27px;
       font-weight: 800;
       color: var(--armus-gold-text);
@@ -176,6 +179,22 @@
       font-size: 12px;
       color: #777;
       font-weight: 400;
+    }
+
+    .fav-btn {
+      background: transparent;
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      color: #8f8f92;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 8px 11px;
+    }
+
+    .fav-btn.active {
+      color: var(--armus-gold-text);
+      border-color: var(--armus-gold-2);
     }
 
     .availability {
@@ -260,7 +279,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
     }
 
@@ -467,6 +486,7 @@
 
           <div class="price">
             <span id="priceValue"></span> <span>/ 50 dakika</span>
+            <button type="button" id="favBtn" class="fav-btn" aria-label="Favorilere ekle">♥</button>
           </div>
 
           <div class="availability" id="availability"></div>
@@ -531,6 +551,11 @@
                 <span>Tamamlanan ders</span>
               </div>
 
+              <div class="stat" id="statStudentsBox" style="display: none;">
+                <strong id="statStudents"></strong>
+                <span>Öğrenci</span>
+              </div>
+
               <div class="stat">
                 <strong id="statReviews"></strong>
                 <span>Öğrenci yorumu</span>
@@ -587,6 +612,11 @@
             <div id="specialtiesList"></div>
           </div>
 
+          <div class="side-box" id="scheduleBox" style="display: none;">
+            <h3>Haftalık Program</h3>
+            <div id="schedulePreview"></div>
+          </div>
+
         </aside>
 
       </div>
@@ -597,6 +627,7 @@
 
 
   <script src="teachers-data.js"></script>
+  <script src="favorites.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
@@ -659,6 +690,13 @@
       document.getElementById("availability").textContent =
         `● ${teacher.availability}`;
 
+      const favBtn = document.getElementById("favBtn");
+      favBtn.classList.toggle("active", armusIsFavorite(teacher.id));
+      favBtn.addEventListener("click", () => {
+        const nowFavorited = armusToggleFavorite(teacher.id);
+        favBtn.classList.toggle("active", nowFavorited);
+      });
+
       const aboutText = document.getElementById("aboutText");
       teacher.about.forEach(paragraph => {
         const p = document.createElement("p");
@@ -675,6 +713,11 @@
         teacher.completedLessons;
       document.getElementById("statReviews").textContent =
         teacher.reviewCount;
+
+      if (teacher.students !== undefined) {
+        document.getElementById("statStudentsBox").style.display = "block";
+        document.getElementById("statStudents").textContent = teacher.students;
+      }
 
       const reviewsList = document.getElementById("reviewsList");
 
@@ -730,6 +773,33 @@
         item.appendChild(check);
         specialtiesList.appendChild(item);
       });
+
+      if (Array.isArray(teacher.weeklyAvailability)) {
+
+        // Monday-first display order, [label, getDay() index]
+        const scheduleDays = [
+          ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
+          ["Cum", 5], ["Cmt", 6], ["Paz", 0]
+        ];
+
+        const schedulePreview = document.getElementById("schedulePreview");
+
+        scheduleDays.forEach(([label, dayIndex]) => {
+
+          const slots = teacher.weeklyAvailability[dayIndex] || [];
+          const hours = slots.length * 0.5;
+
+          const item = document.createElement("div");
+          item.className = "side-item";
+          item.innerHTML = slots.length
+            ? `<span>${label}</span><strong>${hours} saat müsait</strong>`
+            : `<span>${label}</span><strong style="color:#55555c;font-weight:400;">Müsait değil</strong>`;
+
+          schedulePreview.appendChild(item);
+        });
+
+        document.getElementById("scheduleBox").style.display = "block";
+      }
     }
 
     })();
