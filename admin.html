@@ -140,6 +140,21 @@
       font-weight: 600;
     }
 
+    .nav-badge {
+      display: none;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 1px 7px;
+      margin-left: auto;
+    }
+
+    .nav-badge.visible {
+      display: inline-block;
+    }
+
     .sidebar-bottom {
       margin-top: auto;
     }
@@ -185,6 +200,14 @@
 
     h3:first-of-type {
       margin-top: 0;
+    }
+
+    .section-hint {
+      color: #8e8e91;
+      font-size: 12.5px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      max-width: 560px;
     }
 
     /* ---- overview stat cards ---- */
@@ -401,6 +424,32 @@
       margin-top: 6px;
     }
 
+    /* ---- pending profile change ---- */
+
+    .pending-change-box {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(212, 175, 106, .06);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 14px;
+    }
+
+    .pending-change-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: var(--armus-gold-text);
+      font-size: 13px;
+    }
+
+    .pending-change-box .app-details {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
     /* ---- availability mini grid ---- */
 
     .avail-grid {
@@ -507,6 +556,7 @@
 
       <button class="nav-btn active" data-panel="overview">Genel Bakış</button>
       <button class="nav-btn" data-panel="teachers">Öğretmenler</button>
+      <button class="nav-btn" data-panel="changes">Profil Değişiklikleri <span class="nav-badge" id="changesBadge"></span></button>
       <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="students">Öğrenciler</button>
 
@@ -540,6 +590,16 @@
         <h3>Henüz başvurmamış öğretmen hesapları</h3>
         <div id="noAppList"></div>
         <div class="empty-note" id="noAppEmpty" style="display: none;">Yok.</div>
+      </div>
+
+      <div class="panel" id="panel-changes">
+        <h2>Profil Değişiklikleri</h2>
+        <p class="section-hint">
+          Onaylı öğretmenlerin profil veya uygunluk değişikliği isteklerini
+          buradan tek yerden görüp onaylayabilir ya da reddedebilirsin.
+        </p>
+        <div id="changesList"></div>
+        <div class="empty-note" id="changesEmpty" style="display: none;">Bekleyen profil değişikliği yok.</div>
       </div>
 
       <div class="panel" id="panel-bookings">
@@ -734,6 +794,8 @@
           ` : ""}
         </div>
         ` : ""}
+
+        ${renderPendingChangeBlock(user)}
       `;
 
       card.querySelectorAll("[data-action]").forEach(button => {
@@ -744,7 +806,58 @@
         });
       });
 
+      card.querySelectorAll("[data-change-action]").forEach(button => {
+        button.addEventListener("click", async () => {
+
+          if (button.dataset.changeAction === "approve") {
+            const { submitted_at, ...fieldsToApply } = user.pending_changes;
+            await armusAdminUpdateProfile(user.id, { ...fieldsToApply, pending_changes: null });
+          } else {
+            await armusAdminUpdateProfile(user.id, { pending_changes: null });
+          }
+
+          loadAll();
+        });
+      });
+
       return card;
+    }
+
+    function renderPendingChangeBlock(user) {
+
+      if (user.status !== "approved" || !user.pending_changes) return "";
+
+      const pc = user.pending_changes;
+      let rows = "";
+
+      if (pc.title !== undefined) {
+        rows += `<div><h4>Uzmanlık başlığı</h4><p>${user.title || "—"} → <strong>${pc.title}</strong></p></div>`;
+      }
+      if (pc.price !== undefined) {
+        rows += `<div><h4>Ücret</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
+      }
+      if (pc.availability !== undefined) {
+        rows += `<div><h4>Uygunluk durumu</h4><p>${user.availability || "—"} → <strong>${pc.availability}</strong></p></div>`;
+      }
+      if (pc.bio !== undefined) {
+        rows += `<div class="app-full"><h4>Açıklama</h4><p><strong>${pc.bio}</strong></p></div>`;
+      }
+      if (Array.isArray(pc.weekly_availability)) {
+        rows += `<div class="app-full"><h4>Yeni haftalık uygunluk</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
+      }
+
+      return `
+        <div class="pending-change-box">
+          <div class="pending-change-head">
+            <strong>Bekleyen profil değişikliği</strong>
+            <div class="app-actions">
+              <button class="btn btn-approve" data-change-action="approve">Değişikliği Onayla</button>
+              <button class="btn btn-reject" data-change-action="reject">Değişikliği Reddet</button>
+            </div>
+          </div>
+          <div class="app-details">${rows}</div>
+        </div>
+      `;
     }
 
     function renderTeachersPanel(teachers) {
@@ -770,6 +883,26 @@
           groups[key].forEach(user => list.appendChild(renderTeacherCard(user)));
         }
       });
+    }
+
+    function renderChangesPanel(teachers) {
+
+      const withPendingChange = teachers.filter(u => u.status === "approved" && u.pending_changes);
+
+      const list = document.getElementById("changesList");
+      const empty = document.getElementById("changesEmpty");
+      const badge = document.getElementById("changesBadge");
+      list.innerHTML = "";
+
+      if (withPendingChange.length === 0) {
+        empty.style.display = "block";
+        badge.classList.remove("visible");
+      } else {
+        empty.style.display = "none";
+        badge.textContent = withPendingChange.length;
+        badge.classList.add("visible");
+        withPendingChange.forEach(user => list.appendChild(renderTeacherCard(user)));
+      }
     }
 
     function renderBookingsPanel(bookings) {
@@ -871,6 +1004,7 @@
 
       renderOverview(profiles, bookings, reviews);
       renderTeachersPanel(teachers);
+      renderChangesPanel(teachers);
       renderBookingsPanel(bookings);
       renderStudentsPanel(students, bookings);
     }

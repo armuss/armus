@@ -623,6 +623,12 @@
           geçerli olacak.
         </div>
 
+        <div class="availability-note" id="availabilityPendingNote" style="display: none;">
+          Yeni uygunluk saatlerini gönderdin, ARMUS ekibi onayladığında
+          öğrenciler için geçerli olacak. Aşağıdaki tablo gönderdiğin
+          (henüz onaylanmamış) saatleri gösteriyor.
+        </div>
+
         <div class="availability-grid-wrap">
           <table class="availability-grid" id="availabilityGrid"></table>
         </div>
@@ -633,6 +639,12 @@
 
       <div class="panel" id="panel-profile">
         <h2>Profilini Düzenle</h2>
+
+        <div class="availability-note" id="profilePendingNote" style="display: none;">
+          Yeni profil bilgilerini gönderdin, ARMUS ekibi onayladığında
+          herkese görünecek. Aşağıdaki form gönderdiğin (henüz
+          onaylanmamış) bilgileri gösteriyor.
+        </div>
 
         <form id="profileForm" novalidate>
 
@@ -773,11 +785,29 @@
       document.getElementById("dashName").textContent = user.name;
       document.getElementById("dashEmail").textContent = user.email;
 
-      document.getElementById("title").value = user.title || "";
-      document.getElementById("price").value = user.price ?? 500;
+      // fields with a pending (not-yet-approved) change show the
+      // proposed value, not the live one, so the teacher can see what
+      // they submitted while it's under review
+      const pending = user.pending_changes || {};
+
+      document.getElementById("title").value = pending.title ?? user.title ?? "";
+      document.getElementById("price").value = pending.price ?? user.price ?? 500;
       document.getElementById("availability").value =
-        user.availability || "Şu anda ders almaya uygun";
-      document.getElementById("bio").value = user.bio || "";
+        pending.availability ?? user.availability ?? "Şu anda ders almaya uygun";
+      document.getElementById("bio").value = pending.bio ?? user.bio ?? "";
+
+      function renderPendingNotes() {
+        const hasProfilePending = ["title", "price", "availability", "bio"]
+          .some(key => user.pending_changes && user.pending_changes[key] !== undefined);
+        const hasAvailabilityPending = Boolean(
+          user.pending_changes && user.pending_changes.weekly_availability !== undefined
+        );
+
+        document.getElementById("profilePendingNote").style.display = hasProfilePending ? "block" : "none";
+        document.getElementById("availabilityPendingNote").style.display = hasAvailabilityPending ? "block" : "none";
+      }
+
+      renderPendingNotes();
 
       const incomingBookings = await armusGetBookingsForTeacher(user.id);
       const incomingList = document.getElementById("incomingBookings");
@@ -843,19 +873,24 @@
 
         event.preventDefault();
 
-        const result = await armusUpdateOwnProfile({
+        const newPendingChanges = {
+          ...(user.pending_changes || {}),
           title: document.getElementById("title").value.trim(),
           price: Number(document.getElementById("price").value) || 0,
           availability: document.getElementById("availability").value,
           bio: document.getElementById("bio").value.trim(),
-        });
+        };
+
+        const result = await armusUpdateOwnProfile({ pending_changes: newPendingChanges });
 
         const status = document.getElementById("saveStatus");
 
         if (result === false) {
-          status.textContent = "Kaydedilemedi ✕";
+          status.textContent = "Gönderilemedi ✕";
         } else {
-          status.textContent = "Kaydedildi ✓";
+          user.pending_changes = newPendingChanges;
+          renderPendingNotes();
+          status.textContent = "Onay için gönderildi ✓";
         }
 
         status.classList.add("visible");
@@ -879,9 +914,18 @@
       document.getElementById("availabilityDefaultNote").style.display =
         hasOwnAvailability ? "none" : "block";
 
-      const weeklyState = hasOwnAvailability
-        ? DAY_COLUMNS.map(([, dayIndex]) => user.weekly_availability[dayIndex] || [])
-        : DAY_COLUMNS.map(() => []);
+      // if there's a pending (not yet approved) weekly availability
+      // change, show that instead - it's what the teacher last submitted
+      const pendingAvailability =
+        user.pending_changes && Array.isArray(user.pending_changes.weekly_availability)
+          ? user.pending_changes.weekly_availability
+          : null;
+
+      const weeklyState = pendingAvailability
+        ? DAY_COLUMNS.map(([, dayIndex]) => pendingAvailability[dayIndex] || [])
+        : hasOwnAvailability
+          ? DAY_COLUMNS.map(([, dayIndex]) => user.weekly_availability[dayIndex] || [])
+          : DAY_COLUMNS.map(() => []);
 
       const grid = document.getElementById("availabilityGrid");
 
@@ -935,15 +979,21 @@
           weeklyAvailability[dayIndex] = weeklyState[colIndex];
         });
 
-        const result = await armusUpdateOwnProfile({ weekly_availability: weeklyAvailability });
+        const newPendingChanges = {
+          ...(user.pending_changes || {}),
+          weekly_availability: weeklyAvailability,
+        };
+
+        const result = await armusUpdateOwnProfile({ pending_changes: newPendingChanges });
 
         const status = document.getElementById("availabilitySaveStatus");
 
         if (result === false) {
-          status.textContent = "Kaydedilemedi ✕";
+          status.textContent = "Gönderilemedi ✕";
         } else {
-          status.textContent = "Kaydedildi ✓";
-          document.getElementById("availabilityDefaultNote").style.display = "none";
+          user.pending_changes = newPendingChanges;
+          renderPendingNotes();
+          status.textContent = "Onay için gönderildi ✓";
         }
 
         status.classList.add("visible");
