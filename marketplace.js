@@ -10,12 +10,12 @@
  * (armusSupabase), bookings.js and reviews.js to be loaded first.
  */
 
-// Pure/synchronous: turns an already-fetched profile row plus its
-// already-fetched reviews/bookings into the marketplace teacher shape.
-// Split out from armusTeacherFromProfile so a single-teacher lookup can
-// fetch the profile and its reviews/bookings all in parallel (they only
-// need the id, not the profile row) instead of fetching them one stage
-// after the other.
+// Turns an already-fetched profile row plus its already-fetched
+// reviews/bookings into the marketplace teacher shape. Kept separate
+// from the fetching so callers can fetch a profile's reviews/bookings
+// however suits them best (in parallel with the profile itself, or
+// pulled out of an already-fetched full table) instead of always
+// re-querying per teacher.
 function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
 
   const initials = profile.name
@@ -69,14 +69,6 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
   };
 }
 
-async function armusTeacherFromProfile(profile) {
-  const [rawReviews, bookings] = await Promise.all([
-    armusGetReviewsForTeacher(profile.id),
-    armusGetBookingsForTeacher(profile.id),
-  ]);
-  return armusBuildTeacherFromParts(profile, rawReviews, bookings);
-}
-
 // Demo teachers (teachers-data.js) have a fixed, hand-written reviews
 // list for marketing purposes - it was never a real reflection of
 // reviewCount/rating (those are decorative). Real students can still
@@ -100,15 +92,35 @@ async function armusEnrichDemoTeacherReviews(teacher) {
 // separate from armusGetMarketplaceTeachers so a page can render the
 // zero-network demo teachers immediately and merge these in once they
 // arrive, instead of making the whole list wait on the network.
+//
+// Fetches every teacher's profile alongside the *entire* reviews and
+// bookings tables in one parallel round trip, then groups them
+// client-side per teacher - fetching each teacher's reviews/bookings
+// individually (once their ids are known from the profiles query)
+// would mean waiting for the profiles query to finish before even
+// starting the reviews/bookings ones, doubling the wait.
 async function armusGetRegisteredTeachers() {
 
-  const { data, error } = await armusSupabase
-    .from("profiles")
-    .select("*")
-    .eq("role", "teacher")
-    .eq("status", "approved");
+  const [profilesRes, reviewsRes, bookingsRes] = await Promise.all([
+    armusSupabase
+      .from("profiles")
+      .select("*")
+      .eq("role", "teacher")
+      .eq("status", "approved"),
+    armusSupabase.from("reviews").select("*"),
+    armusSupabase.from("bookings").select("*"),
+  ]);
 
-  return (!error && data) ? Promise.all(data.map(armusTeacherFromProfile)) : [];
+  if (profilesRes.error || !profilesRes.data) return [];
+
+  const allReviews = (reviewsRes.data || []).map(armusMapReviewRow);
+  const allBookings = (bookingsRes.data || []).map(armusMapBookingRow);
+
+  return profilesRes.data.map(profile => armusBuildTeacherFromParts(
+    profile,
+    allReviews.filter(r => r.teacherId === profile.id),
+    allBookings.filter(b => b.teacherId === profile.id)
+  ));
 }
 
 async function armusGetMarketplaceTeachers() {
