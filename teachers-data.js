@@ -9,6 +9,7 @@ const TEACHERS = [
   {
     id: "sarah",
     initials: "SM",
+    photo: "https://i.pravatar.cc/300?img=47",
     name: "Sarah M.",
     role: "IELTS & Speaking Uzmanı",
     price: 800,
@@ -37,6 +38,7 @@ const TEACHERS = [
   {
     id: "david",
     initials: "DK",
+    photo: "https://i.pravatar.cc/300?img=13",
     name: "David K.",
     role: "IELTS & YDS Uzmanı",
     price: 650,
@@ -64,6 +66,7 @@ const TEACHERS = [
   {
     id: "emily",
     initials: "EL",
+    photo: "https://i.pravatar.cc/300?img=25",
     name: "Emily L.",
     role: "English Speaking Teacher",
     price: 500,
@@ -91,6 +94,7 @@ const TEACHERS = [
   {
     id: "michael",
     initials: "MJ",
+    photo: "https://i.pravatar.cc/300?img=52",
     name: "Michael J.",
     role: "TOEFL Uzmanı",
     price: 900,
@@ -118,6 +122,7 @@ const TEACHERS = [
   {
     id: "anna",
     initials: "AP",
+    photo: "https://i.pravatar.cc/300?img=44",
     name: "Anna P.",
     role: "Business English Coach",
     price: 550,
@@ -145,6 +150,7 @@ const TEACHERS = [
   {
     id: "james",
     initials: "JW",
+    photo: "https://i.pravatar.cc/300?img=33",
     name: "James W.",
     role: "Exam Preparation Teacher",
     price: 700,
