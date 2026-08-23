@@ -6,9 +6,18 @@ document.querySelectorAll('.filter').forEach(btn=>{
     btn.classList.toggle('active');
   });
 });
-document.getElementById('searchBtn').addEventListener('click',()=>{
+function armusRunHomeSearch(){
   const q=document.getElementById('search').value.trim();
-  document.getElementById('searchMessage').textContent=q
-    ? `"${q}" için öğretmen arama özelliği MVP'nin sonraki aşamasında bağlanacak.`
-    : 'Arama alanına bir konu, seviye veya öğretmen adı yaz.';
+  if(!q){
+    document.getElementById('searchMessage').textContent='Arama alanına bir konu, seviye veya öğretmen adı yaz.';
+    return;
+  }
+  window.location.href='teachers.html?q='+encodeURIComponent(q);
+}
+document.getElementById('searchBtn').addEventListener('click',armusRunHomeSearch);
+document.getElementById('search').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    armusRunHomeSearch();
+  }
 });
