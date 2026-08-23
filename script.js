@@ -6,21 +6,6 @@ document.querySelectorAll('.filter').forEach(btn=>{
     btn.classList.toggle('active');
   });
 });
-function armusRunHomeSearch(){
-  const q=document.getElementById('search').value.trim();
-  if(!q){
-    document.getElementById('searchMessage').textContent='Arama alanına bir konu, seviye veya öğretmen adı yaz.';
-    return;
-  }
-  window.location.href='teachers.html?q='+encodeURIComponent(q);
-}
-document.getElementById('searchBtn').addEventListener('click',armusRunHomeSearch);
-document.getElementById('search').addEventListener('keydown',e=>{
-  if(e.key==='Enter'){
-    e.preventDefault();
-    armusRunHomeSearch();
-  }
-});
 
 // Scroll-triggered reveal: elements marked .reveal fade/slide in once
 // they enter the viewport.
@@ -102,3 +87,27 @@ function armusInitHeroRotator(){
   },10000);
 }
 armusInitHeroRotator();
+
+// Proof carousel: 3 stat/testimonial cards auto-cross-fade, with dots
+// showing progress and doubling as manual controls.
+function armusInitProofCarousel(){
+  const slides=document.querySelectorAll('.proof-slide');
+  const dots=document.querySelectorAll('.proof-dot');
+  if(!slides.length)return;
+
+  let index=0;
+
+  function show(i){
+    slides.forEach((s,n)=>s.classList.toggle('active',n===i));
+    dots.forEach((d,n)=>d.classList.toggle('active',n===i));
+    index=i;
+  }
+
+  dots.forEach((dot,n)=>dot.addEventListener('click',()=>show(n)));
+
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduceMotion){
+    setInterval(()=>show((index+1)%slides.length),5000);
+  }
+}
+armusInitProofCarousel();
