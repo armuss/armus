@@ -38,6 +38,7 @@ create table profiles (
   status text check (status in ('pending', 'approved', 'rejected')),
   applied_at timestamptz,
   weekly_availability jsonb,
+  pending_changes jsonb,
 
   created_at timestamptz not null default now()
 );
@@ -139,6 +140,37 @@ create policy "profiles_update_own_or_admin"
 create policy "profiles_select_admin_all"
   on profiles for select
   using (public.is_admin());
+
+-- once approved, a teacher can no longer write the "live" fields
+-- directly - only pending_changes, which an admin must approve
+create or replace function public.enforce_teacher_profile_lock()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if public.is_admin() then
+    return new;
+  end if;
+
+  if old.status = 'approved' and (
+    new.title is distinct from old.title
+    or new.price is distinct from old.price
+    or new.availability is distinct from old.availability
+    or new.bio is distinct from old.bio
+    or new.weekly_availability is distinct from old.weekly_availability
+  ) then
+    raise exception 'profile_locked: approved profile fields can only change through pending_changes + admin approval';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger profiles_lock_teacher_fields
+  before update on profiles
+  for each row execute procedure public.enforce_teacher_profile_lock();
 
 -- bookings: student or teacher involved in the booking can read it
 create policy "bookings_select_participant"
