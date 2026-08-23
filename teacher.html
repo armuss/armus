@@ -703,25 +703,30 @@
       });
 
       // messaging only makes sense for real (self-registered) teachers -
-      // demo teachers (teachers-data.js) have no real account to receive it
+      // demo teachers (teachers-data.js) have no real account to receive it.
+      // This session check is only for the secondary "Mesaj Gönder" button,
+      // so it runs in the background instead of being awaited - otherwise
+      // it holds up the About/Stats/Reviews sections below for an entire
+      // extra network round trip they have nothing to do with.
       const isDemoTeacher = TEACHERS.some(t => t.id === teacher.id);
 
       if (!isDemoTeacher) {
 
-        const session = await armusGetSession();
+        armusGetSession().then(session => {
 
-        if (!session || session.role === "student") {
+          if (!session || session.role === "student") {
 
-          const messageBtn = document.getElementById("messageBtn");
-          messageBtn.style.display = "block";
+            const messageBtn = document.getElementById("messageBtn");
+            messageBtn.style.display = "block";
 
-          messageBtn.addEventListener("click", () => {
-            const target = `mesajlar.html?teacher=${encodeURIComponent(teacher.id)}`;
-            window.location.href = session
-              ? target
-              : `login.html?next=${encodeURIComponent(target)}`;
-          });
-        }
+            messageBtn.addEventListener("click", () => {
+              const target = `mesajlar.html?teacher=${encodeURIComponent(teacher.id)}`;
+              window.location.href = session
+                ? target
+                : `login.html?next=${encodeURIComponent(target)}`;
+            });
+          }
+        });
       }
 
       const aboutText = document.getElementById("aboutText");
