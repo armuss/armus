@@ -140,6 +140,21 @@
       font-weight: 600;
     }
 
+    .nav-badge {
+      display: none;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 1px 7px;
+      margin-left: auto;
+    }
+
+    .nav-badge.visible {
+      display: inline-block;
+    }
+
     .sidebar-bottom {
       margin-top: auto;
     }
@@ -185,6 +200,14 @@
 
     h3:first-of-type {
       margin-top: 0;
+    }
+
+    .section-hint {
+      color: #8e8e91;
+      font-size: 12.5px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      max-width: 560px;
     }
 
     /* ---- overview stat cards ---- */
@@ -533,6 +556,7 @@
 
       <button class="nav-btn active" data-panel="overview">Genel Bakış</button>
       <button class="nav-btn" data-panel="teachers">Öğretmenler</button>
+      <button class="nav-btn" data-panel="changes">Profil Değişiklikleri <span class="nav-badge" id="changesBadge"></span></button>
       <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="students">Öğrenciler</button>
 
@@ -566,6 +590,16 @@
         <h3>Henüz başvurmamış öğretmen hesapları</h3>
         <div id="noAppList"></div>
         <div class="empty-note" id="noAppEmpty" style="display: none;">Yok.</div>
+      </div>
+
+      <div class="panel" id="panel-changes">
+        <h2>Profil Değişiklikleri</h2>
+        <p class="section-hint">
+          Onaylı öğretmenlerin profil veya uygunluk değişikliği isteklerini
+          buradan tek yerden görüp onaylayabilir ya da reddedebilirsin.
+        </p>
+        <div id="changesList"></div>
+        <div class="empty-note" id="changesEmpty" style="display: none;">Bekleyen profil değişikliği yok.</div>
       </div>
 
       <div class="panel" id="panel-bookings">
@@ -851,6 +885,26 @@
       });
     }
 
+    function renderChangesPanel(teachers) {
+
+      const withPendingChange = teachers.filter(u => u.status === "approved" && u.pending_changes);
+
+      const list = document.getElementById("changesList");
+      const empty = document.getElementById("changesEmpty");
+      const badge = document.getElementById("changesBadge");
+      list.innerHTML = "";
+
+      if (withPendingChange.length === 0) {
+        empty.style.display = "block";
+        badge.classList.remove("visible");
+      } else {
+        empty.style.display = "none";
+        badge.textContent = withPendingChange.length;
+        badge.classList.add("visible");
+        withPendingChange.forEach(user => list.appendChild(renderTeacherCard(user)));
+      }
+    }
+
     function renderBookingsPanel(bookings) {
 
       const body = document.getElementById("bookingsBody");
@@ -950,6 +1004,7 @@
 
       renderOverview(profiles, bookings, reviews);
       renderTeachersPanel(teachers);
+      renderChangesPanel(teachers);
       renderBookingsPanel(bookings);
       renderStudentsPanel(students, bookings);
     }
