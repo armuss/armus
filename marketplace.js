@@ -87,7 +87,11 @@ async function armusEnrichDemoTeacherReviews(teacher) {
   return { ...teacher, reviews: liveReviews.concat(teacher.reviews) };
 }
 
-async function armusGetMarketplaceTeachers() {
+// Only the real, self-registered teachers (a Supabase round trip). Kept
+// separate from armusGetMarketplaceTeachers so a page can render the
+// zero-network demo teachers immediately and merge these in once they
+// arrive, instead of making the whole list wait on the network.
+async function armusGetRegisteredTeachers() {
 
   const { data, error } = await armusSupabase
     .from("profiles")
@@ -95,8 +99,11 @@ async function armusGetMarketplaceTeachers() {
     .eq("role", "teacher")
     .eq("status", "approved");
 
-  const registeredTeachers = (!error && data) ? await Promise.all(data.map(armusTeacherFromProfile)) : [];
-  return TEACHERS.concat(registeredTeachers);
+  return (!error && data) ? Promise.all(data.map(armusTeacherFromProfile)) : [];
+}
+
+async function armusGetMarketplaceTeachers() {
+  return TEACHERS.concat(await armusGetRegisteredTeachers());
 }
 
 async function armusFindMarketplaceTeacher(id) {
