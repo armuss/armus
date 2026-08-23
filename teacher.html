@@ -503,6 +503,13 @@
             Ders Rezervasyonu Yap
           </button>
 
+          <button
+            class="secondary"
+            id="messageBtn"
+            style="display: none;">
+            Mesaj Gönder
+          </button>
+
           <div class="small-note">
             Henüz ödeme alınmayacak
           </div>
@@ -634,6 +641,7 @@
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
   <script src="marketplace.js"></script>
+  <script src="messages.js"></script>
   <script>
 
     const params = new URLSearchParams(window.location.search);
@@ -696,6 +704,28 @@
         const nowFavorited = armusToggleFavorite(teacher.id);
         favBtn.classList.toggle("active", nowFavorited);
       });
+
+      // messaging only makes sense for real (self-registered) teachers -
+      // demo teachers (teachers-data.js) have no real account to receive it
+      const isDemoTeacher = TEACHERS.some(t => t.id === teacher.id);
+
+      if (!isDemoTeacher) {
+
+        const session = await armusGetSession();
+
+        if (!session || session.role === "student") {
+
+          const messageBtn = document.getElementById("messageBtn");
+          messageBtn.style.display = "block";
+
+          messageBtn.addEventListener("click", () => {
+            const target = `mesajlar.html?teacher=${encodeURIComponent(teacher.id)}`;
+            window.location.href = session
+              ? target
+              : `login.html?next=${encodeURIComponent(target)}`;
+          });
+        }
+      }
 
       const aboutText = document.getElementById("aboutText");
       teacher.about.forEach(paragraph => {
