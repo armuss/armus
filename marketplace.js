@@ -35,6 +35,7 @@ async function armusTeacherFromProfile(profile) {
     : null;
 
   const completedCount = bookings.filter(armusIsBookingPast).length;
+  const studentCount = new Set(bookings.map(b => b.studentId)).size;
 
   return {
     id: profile.id,
@@ -54,6 +55,7 @@ async function armusTeacherFromProfile(profile) {
       : ["Bu öğretmen henüz bir tanıtım yazısı eklemedi."],
     experience: "Yeni",
     completedLessons: String(completedCount),
+    students: studentCount,
     languages: profile.languages && profile.languages.length
       ? profile.languages.map(l => `${l.language} (${l.level})`).join(", ")
       : "English / Türkçe",
