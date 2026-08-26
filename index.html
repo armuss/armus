@@ -92,7 +92,7 @@
       </div>
     </section>
 
-    <section class="proof shell">
+    <section class="proof shell" data-flag-id="flagProof">
       <h2 class="reveal">Binlerce öğrenci, yüzlerce öğretmen.<br>Kişisel ve kanıtlanmış ilerleme.</h2>
       <div class="proof-carousel reveal">
         <div class="proof-stage">
@@ -168,14 +168,14 @@
       </div>
     </section>
 
-    <section class="promise-banner">
+    <section class="promise-banner" data-flag-id="flagPromiseBanner">
       <div class="shell reveal">
         <h2>Seveceğin dersler. Garantili.</h2>
         <p>Memnun kalmazsan başka bir öğretmeni ücretsiz dene.</p>
       </div>
     </section>
 
-    <section id="about" class="teacher-cta shell">
+    <section id="about" class="teacher-cta shell" data-flag-id="flagTeacherCta">
       <div class="tcta-visual reveal">
         <img src="https://i.pravatar.cc/600?img=13" alt="">
       </div>
@@ -193,7 +193,7 @@
       </div>
     </section>
 
-    <section class="commission-section shell reveal">
+    <section class="commission-section shell reveal" data-flag-id="flagCommission">
       <div class="section-label">KOMİSYON ORANLARI</div>
       <h2>Daha çok ders ver,<br>daha az komisyon öde.</h2>
       <div class="commission-row">
@@ -205,7 +205,7 @@
       </div>
     </section>
 
-    <section class="testimonials shell">
+    <section class="testimonials shell" data-flag-id="flagTestimonials">
       <div class="section-label reveal">ÖĞRENCİLERİMİZ NE DİYOR?</div>
       <div class="testimonial-grid" id="testimonialGrid">
         <article class="reveal"><div class="stars">★★★★★</div><p>“ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.”</p><strong>Zeynep A.</strong><small>İstanbul</small></article>
@@ -254,6 +254,19 @@
       `).join("");
     })();
   </script>
+
+  <script>
+    // Admin can toggle homepage sections off without a code deploy.
+    // Defaults to showing everything if the setting doesn't exist yet.
+    (async function () {
+      const flags = await armusGetSiteSetting("feature_flags");
+      if (!flags) return;
+      document.querySelectorAll("[data-flag-id]").forEach(el => {
+        if (flags[el.dataset.flagId] === false) el.style.display = "none";
+      });
+    })();
+  </script>
+
   <script>armusRenderAnnouncementBanner();</script>
 </body>
 </html>

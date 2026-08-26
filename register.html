@@ -139,7 +139,8 @@
       margin-bottom: 7px;
     }
 
-    .field input {
+    .field input,
+    .field select {
       width: 100%;
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
@@ -151,7 +152,8 @@
       outline: none;
     }
 
-    .field input:focus {
+    .field input:focus,
+    .field select:focus {
       border-color: var(--armus-gold-2);
     }
 
@@ -237,6 +239,34 @@
       </div>
 
       <div class="field">
+        <label for="city">Şehir <small style="color:#888;font-weight:400;">(opsiyonel)</small></label>
+        <select id="city">
+          <option value="">Seçmek istemiyorum</option>
+          <option>Adana</option><option>Adıyaman</option><option>Afyonkarahisar</option><option>Ağrı</option>
+          <option>Aksaray</option><option>Amasya</option><option>Ankara</option><option>Antalya</option>
+          <option>Ardahan</option><option>Artvin</option><option>Aydın</option><option>Balıkesir</option>
+          <option>Bartın</option><option>Batman</option><option>Bayburt</option><option>Bilecik</option>
+          <option>Bingöl</option><option>Bitlis</option><option>Bolu</option><option>Burdur</option>
+          <option>Bursa</option><option>Çanakkale</option><option>Çankırı</option><option>Çorum</option>
+          <option>Denizli</option><option>Diyarbakır</option><option>Düzce</option><option>Edirne</option>
+          <option>Elazığ</option><option>Erzincan</option><option>Erzurum</option><option>Eskişehir</option>
+          <option>Gaziantep</option><option>Giresun</option><option>Gümüşhane</option><option>Hakkâri</option>
+          <option>Hatay</option><option>Iğdır</option><option>Isparta</option><option>İstanbul</option>
+          <option>İzmir</option><option>Kahramanmaraş</option><option>Karabük</option><option>Karaman</option>
+          <option>Kars</option><option>Kastamonu</option><option>Kayseri</option><option>Kırıkkale</option>
+          <option>Kırklareli</option><option>Kırşehir</option><option>Kilis</option><option>Kocaeli</option>
+          <option>Konya</option><option>Kütahya</option><option>Malatya</option><option>Manisa</option>
+          <option>Mardin</option><option>Mersin</option><option>Muğla</option><option>Muş</option>
+          <option>Nevşehir</option><option>Niğde</option><option>Ordu</option><option>Osmaniye</option>
+          <option>Rize</option><option>Sakarya</option><option>Samsun</option><option>Siirt</option>
+          <option>Sinop</option><option>Sivas</option><option>Şanlıurfa</option><option>Şırnak</option>
+          <option>Tekirdağ</option><option>Tokat</option><option>Trabzon</option><option>Tunceli</option>
+          <option>Uşak</option><option>Van</option><option>Yalova</option><option>Yozgat</option>
+          <option>Zonguldak</option><option>Yurt dışı</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label for="password">Şifre</label>
         <input type="password" id="password" autocomplete="new-password" placeholder="En az 6 karakter">
       </div>
@@ -300,6 +330,7 @@
 
       const name = document.getElementById("name").value.trim();
       const email = document.getElementById("email").value.trim().toLowerCase();
+      const city = document.getElementById("city").value;
       const password = document.getElementById("password").value;
       const password2 = document.getElementById("password2").value;
 
@@ -325,7 +356,7 @@
         return;
       }
 
-      const { error } = await armusSignUp({ name, email, password, role: selectedRole });
+      const { error } = await armusSignUp({ name, email, password, role: selectedRole, city });
 
       if (error) {
         showError(

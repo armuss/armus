@@ -12,6 +12,7 @@ create table profiles (
   name text not null,
   role text not null check (role in ('student', 'teacher')),
   is_admin boolean not null default false,
+  city text,
 
   -- teacher application fields
   country text,
@@ -84,12 +85,13 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, name, role)
+  insert into public.profiles (id, email, name, role, city)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'name', ''),
-    coalesce(new.raw_user_meta_data->>'role', 'student')
+    coalesce(new.raw_user_meta_data->>'role', 'student'),
+    new.raw_user_meta_data->>'city'
   );
   return new;
 end;
