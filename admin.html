@@ -570,6 +570,98 @@
       color: #f4f4f2;
     }
 
+    /* ---- live pulse feed ---- */
+
+    .live-pulse {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 6px 18px;
+      max-height: 280px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+
+    .pulse-item {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--armus-border-soft);
+      font-size: 13px;
+      color: #d8d8da;
+    }
+
+    .pulse-item:last-child {
+      border-bottom: none;
+    }
+
+    .pulse-time {
+      color: #6e6e72;
+      font-size: 11px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .pulse-empty {
+      color: #6e6e72;
+      font-size: 13px;
+      padding: 16px 0;
+    }
+
+    /* ---- testimonial live preview ---- */
+
+    .testimonial-preview {
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 20px;
+      padding: 22px;
+      max-width: 280px;
+    }
+
+    .testimonial-preview .tp-stars {
+      color: var(--armus-gold-text);
+      letter-spacing: 2px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .testimonial-preview .tp-quote {
+      color: #aaa;
+      font-size: 12.5px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      min-height: 40px;
+    }
+
+    .testimonial-preview .tp-name {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .testimonial-preview .tp-location {
+      color: #777;
+      font-size: 10.5px;
+    }
+
+    /* ---- dispute status badges ---- */
+
+    .app-badge.dispute-open {
+      border-color: rgba(220, 90, 90, .5);
+      color: #f0a5a5;
+    }
+
+    .app-badge.dispute-in_progress {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .app-badge.dispute-resolved {
+      border-color: #4caf7d;
+      color: #8fd6ae;
+    }
+
     @media (max-width: 860px) {
       .shell {
         grid-template-columns: 1fr;
@@ -658,6 +750,10 @@
       <button class="nav-btn" data-panel="students">Öğrenciler</button>
       <button class="nav-btn" data-panel="log">Etkinlik Günlüğü</button>
       <button class="nav-btn" data-panel="testimonials">Anasayfa Yorumları</button>
+      <button class="nav-btn" data-panel="disputes">Anlaşmazlıklar <span class="nav-badge" id="disputesBadge"></span></button>
+      <button class="nav-btn" data-panel="reviews">İncelemeler <span class="nav-badge" id="reviewsBadge"></span></button>
+      <button class="nav-btn" data-panel="earnings">Kazançlar</button>
+      <button class="nav-btn" data-panel="announcement">Site Duyurusu</button>
 
       <div class="sidebar-bottom">
         <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
@@ -671,12 +767,29 @@
         <div class="stat-grid" id="overviewStats"></div>
         <h3>Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
+        <h3>Canlı Akış <span style="color:#4caf7d;font-size:10px;vertical-align:middle;">● CANLI</span></h3>
+        <p class="section-hint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
+        <div id="livePulse" class="live-pulse"></div>
       </div>
 
       <div class="panel" id="panel-teachers">
         <h2>Öğretmenler</h2>
 
         <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara...">
+
+        <div id="atRiskSection" style="display: none;">
+          <h3 style="color: #f0a5a5;">⚠️ Riskli öğretmenler</h3>
+          <p class="section-hint">Rezervasyonu duran, uzun süredir hiç ders almamış ya da son değerlendirmeleri düşen onaylı öğretmenler - erken müdahale için.</p>
+          <div id="atRiskList"></div>
+        </div>
+
+        <div class="panel-toolbar" id="bulkActionsBar" style="display: none;">
+          <span class="section-hint" style="margin: 0;" id="bulkSelectedCount">0 başvuru seçildi</span>
+          <div class="row-actions">
+            <button class="btn btn-approve" id="bulkApproveBtn">Seçilenleri Onayla</button>
+            <button class="btn btn-reject" id="bulkRejectBtn">Seçilenleri Reddet</button>
+          </div>
+        </div>
 
         <h3>Bekleyen başvurular</h3>
         <div id="pendingList"></div>
@@ -798,11 +911,81 @@
             </label>
           </div>
           <button class="btn btn-approve" id="addTestimonialBtn">Ekle</button>
+
+          <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--armus-border-soft);">
+            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: #77777b; margin-bottom: 12px;">Canlı önizleme - ana sayfada böyle görünecek</h4>
+            <div id="testimonialPreview" class="testimonial-preview"></div>
+          </div>
         </div>
 
         <h3>Mevcut yorumlar</h3>
         <div id="testimonialsList"></div>
         <div class="empty-note" id="testimonialsEmpty" style="display: none;">Henüz eklenmiş yorum yok.</div>
+      </div>
+
+      <div class="panel" id="panel-disputes">
+        <h2>Anlaşmazlıklar</h2>
+        <p class="section-hint">
+          Öğrenci ya da öğretmenlerin bir rezervasyonla ilgili bildirdiği
+          sorunlar burada listelenir. (Bu panel disputes tablosu
+          Supabase'de oluşturulduktan sonra dolmaya başlar.)
+        </p>
+        <input type="text" class="admin-search" id="searchDisputes" placeholder="İsim veya konu ara...">
+        <div id="disputesList"></div>
+        <div class="empty-note" id="disputesEmpty" style="display: none;">Bildirilmiş bir sorun yok.</div>
+      </div>
+
+      <div class="panel" id="panel-reviews">
+        <h2>İncelemeler</h2>
+        <p class="section-hint">
+          Düşük puanlı ya da olumsuz kelimeler içeren değerlendirmeler
+          burada otomatik olarak işaretlenir, böylece hepsini tek tek
+          okumana gerek kalmaz.
+        </p>
+        <div id="flaggedReviewsList"></div>
+        <div class="empty-note" id="flaggedReviewsEmpty" style="display: none;">İşaretlenecek bir değerlendirme yok.</div>
+      </div>
+
+      <div class="panel" id="panel-earnings">
+        <h2>Kazançlar / Komisyon</h2>
+        <p class="section-hint">
+          Her öğretmenin tamamlanan derslerden elde ettiği ciro, komisyon
+          dilimi ve ARMUS'un aldığı komisyon. Dilimler ana sayfadaki
+          komisyon oranlarıyla aynıdır.
+        </p>
+        <table id="earningsTable">
+          <thead>
+            <tr>
+              <th>Öğretmen</th>
+              <th>Tamamlanan ders</th>
+              <th>Toplam saat</th>
+              <th>Ciro</th>
+              <th>Komisyon dilimi</th>
+              <th>ARMUS komisyonu</th>
+              <th>Öğretmen payı</th>
+            </tr>
+          </thead>
+          <tbody id="earningsBody"></tbody>
+        </table>
+        <div class="empty-note" id="earningsEmpty" style="display: none;">Henüz tamamlanan ders yok.</div>
+      </div>
+
+      <div class="panel" id="panel-announcement">
+        <h2>Site Duyurusu</h2>
+        <p class="section-hint">
+          Buraya yazdığın mesaj, aktif ettiğinde sitenin üstünde herkese
+          (öğrenci, öğretmen, ziyaretçi) sabit bir şerit olarak gösterilir.
+          Kapatma butonuna basan kullanıcılar aynı mesajı bir daha görmez.
+        </p>
+        <div class="app-card">
+          <textarea class="admin-search" id="announcementMessage" placeholder="Örn: Bugün bakım çalışması var, dersler etkilenmeyecek." style="min-height: 70px; resize: vertical; margin-bottom: 12px;"></textarea>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #b8b8bb; margin-bottom: 16px;">
+            <input type="checkbox" id="announcementActive" style="width: 16px; height: 16px;">
+            Aktif (sitede göster)
+          </label>
+          <button class="btn btn-approve" id="saveAnnouncementBtn">Kaydet</button>
+          <span id="announcementSavedNote" style="margin-left: 10px; color: #8fd6ae; font-size: 12.5px; display: none;">Kaydedildi ✓</span>
+        </div>
       </div>
 
       <!-- STUDENT DETAIL (read-only "view as") -->
@@ -826,6 +1009,8 @@
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
   <script src="testimonials.js"></script>
+  <script src="disputes.js"></script>
+  <script src="site-settings.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -905,8 +1090,13 @@
 
       const hasApplication = Boolean(user.status);
 
+      const bulkCheckbox = user.status === "pending"
+        ? `<input type="checkbox" class="bulk-select-checkbox" data-bulk-select="${user.id}" ${armusBulkSelected.has(user.id) ? "checked" : ""} style="width:17px;height:17px;margin-right:12px;flex-shrink:0;align-self:flex-start;margin-top:4px;">`
+        : "";
+
       card.innerHTML = `
         <div class="app-top">
+          ${bulkCheckbox}
           <div class="app-avatar">${avatarInner}</div>
           <div>
             <div class="app-name">${user.name}</div>
@@ -979,6 +1169,16 @@
 
         ${renderPendingChangeBlock(user)}
       `;
+
+      const bulkBox = card.querySelector("[data-bulk-select]");
+      if (bulkBox) {
+        bulkBox.addEventListener("click", event => event.stopPropagation());
+        bulkBox.addEventListener("change", () => {
+          if (bulkBox.checked) armusBulkSelected.add(user.id);
+          else armusBulkSelected.delete(user.id);
+          renderBulkActionsBar();
+        });
+      }
 
       card.querySelectorAll("[data-action]").forEach(button => {
         button.addEventListener("click", async () => {
@@ -1515,6 +1715,424 @@
       return !error;
     }
 
+    // ---- bulk approve/reject pending applications ----
+
+    const armusBulkSelected = new Set();
+
+    function renderBulkActionsBar() {
+      const bar = document.getElementById("bulkActionsBar");
+      const count = armusBulkSelected.size;
+      if (count === 0) {
+        bar.style.display = "none";
+        return;
+      }
+      bar.style.display = "flex";
+      document.getElementById("bulkSelectedCount").textContent = `${count} başvuru seçildi`;
+    }
+
+    async function armusRunBulkAction(newStatus) {
+      const ids = Array.from(armusBulkSelected);
+      if (!ids.length) return;
+      if (!confirm(`${ids.length} başvuruyu ${newStatus === "approved" ? "onaylamak" : "reddetmek"} istediğine emin misin?`)) return;
+
+      document.getElementById("bulkApproveBtn").disabled = true;
+      document.getElementById("bulkRejectBtn").disabled = true;
+
+      const results = await Promise.all(ids.map(id => armusAdminUpdateProfile(id, { status: newStatus })));
+
+      results.forEach((updated, i) => {
+        if (!updated) return;
+        armusAdminProfiles = armusAdminProfiles.map(p => p.id === updated.id ? updated : p);
+        armusLogAdminAction(
+          newStatus === "approved" ? "profile_approve" : "profile_reject",
+          "profile", ids[i], updated.name
+        );
+        armusBulkSelected.delete(ids[i]);
+      });
+
+      document.getElementById("bulkApproveBtn").disabled = false;
+      document.getElementById("bulkRejectBtn").disabled = false;
+      renderAllFromState();
+    }
+
+    document.getElementById("bulkApproveBtn").addEventListener("click", () => armusRunBulkAction("approved"));
+    document.getElementById("bulkRejectBtn").addEventListener("click", () => armusRunBulkAction("rejected"));
+
+    // ---- "at risk" teacher detection ----
+    // Pure client-side heuristic over data already loaded - no schema
+    // changes needed. Flags approved teachers who look like they might be
+    // slipping away, so the admin can reach out before losing them.
+
+    function computeAtRiskTeachers(teachers, bookings, reviews) {
+
+      const daysSince = isoOrDateKey => {
+        const t = isoOrDateKey.length === 10 ? isoOrDateKey + "T00:00:00" : isoOrDateKey;
+        return Math.floor((Date.now() - new Date(t).getTime()) / 86400000);
+      };
+
+      return teachers
+        .filter(t => t.status === "approved")
+        .map(teacher => {
+
+          const teacherBookings = bookings
+            .filter(b => b.teacherId === teacher.id)
+            .slice()
+            .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+          const teacherReviews = reviews.filter(r => r.teacher_id === teacher.id);
+          const accountAgeDays = teacher.created_at ? daysSince(teacher.created_at) : 0;
+          const reasons = [];
+
+          if (teacherBookings.length === 0 && accountAgeDays >= 14) {
+            reasons.push(`Onaylı ama ${accountAgeDays} gündür hiç rezervasyon almadı`);
+          } else if (teacherBookings.length) {
+            const daysSinceLast = daysSince(teacherBookings[0].date);
+            if (daysSinceLast >= 30) {
+              reasons.push(`${daysSinceLast} gündür yeni rezervasyon yok`);
+            }
+          }
+
+          if (teacherReviews.length >= 2) {
+            const recent = teacherReviews.slice(-3);
+            const avg = recent.reduce((sum, r) => sum + r.stars, 0) / recent.length;
+            if (avg < 3.5) {
+              reasons.push(`Son değerlendirmeler düşük (ort. ${avg.toFixed(1)}★)`);
+            }
+          }
+
+          return { teacher, reasons };
+        })
+        .filter(x => x.reasons.length > 0);
+    }
+
+    function renderAtRiskPanel(atRisk) {
+      const wrap = document.getElementById("atRiskSection");
+      const list = document.getElementById("atRiskList");
+
+      if (!atRisk.length) {
+        wrap.style.display = "none";
+        list.innerHTML = "";
+        return;
+      }
+
+      wrap.style.display = "block";
+      list.innerHTML = atRisk.map(({ teacher, reasons }) => `
+        <div class="app-card" style="border-color: rgba(220,90,90,.4);">
+          <div class="app-top">
+            <div>
+              <div class="app-name">${teacher.name}</div>
+              <div class="app-email">${teacher.email}</div>
+            </div>
+            <div class="app-actions">
+              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Mesaj Gönder</a>
+            </div>
+          </div>
+          <div class="app-details">
+            <div class="app-full"><h4>Risk sebepleri</h4><p>${reasons.join(" · ")}</p></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // ---- testimonial live preview ----
+
+    function updateTestimonialPreview() {
+      const name = document.getElementById("newTName").value.trim() || "İsim Soyisim";
+      const location = document.getElementById("newTLocation").value.trim();
+      const quote = document.getElementById("newTQuote").value.trim() || "Yorum metni burada görünecek...";
+      const rating = Number(document.getElementById("newTRating").value) || 5;
+
+      document.getElementById("testimonialPreview").innerHTML = `
+        <div class="tp-stars">${"★".repeat(rating)}${"☆".repeat(5 - rating)}</div>
+        <div class="tp-quote">“${quote}”</div>
+        <span class="tp-name">${name}</span>
+        ${location ? `<span class="tp-location">${location}</span>` : ""}
+      `;
+    }
+
+    ["newTName", "newTLocation", "newTQuote", "newTRating"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updateTestimonialPreview);
+      document.getElementById(id).addEventListener("change", updateTestimonialPreview);
+    });
+
+    // ---- disputes ----
+    // Requires the disputes table from migration_8.sql
+
+    const DISPUTE_STATUS_LABELS = { open: "Açık", in_progress: "İşlemde", resolved: "Çözüldü" };
+
+    function renderDisputesPanel(disputes) {
+      const list = document.getElementById("disputesList");
+      const empty = document.getElementById("disputesEmpty");
+      const badge = document.getElementById("disputesBadge");
+      list.innerHTML = "";
+
+      const openCount = disputes.filter(d => d.status !== "resolved").length;
+      if (openCount) {
+        badge.textContent = openCount;
+        badge.classList.add("visible");
+      } else {
+        badge.classList.remove("visible");
+      }
+
+      if (!disputes.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      disputes.forEach(d => {
+        const card = document.createElement("div");
+        card.className = "app-card";
+        card.innerHTML = `
+          <div class="app-top">
+            <div>
+              <div class="app-name">${d.subject}</div>
+              <div class="app-email">${d.reporter_name} (${d.reporter_role === "teacher" ? "öğretmen" : "öğrenci"})${d.other_party_name ? ` · ${d.other_party_name} ile ilgili` : ""}</div>
+              <span class="app-badge dispute-${d.status}">${DISPUTE_STATUS_LABELS[d.status] || d.status}</span>
+            </div>
+            <div class="app-actions">
+              ${d.status !== "in_progress" ? `<button class="btn" data-dispute-status="${d.id}" data-new-status="in_progress">İşleme Al</button>` : ""}
+              ${d.status !== "resolved" ? `<button class="btn btn-approve" data-dispute-status="${d.id}" data-new-status="resolved">Çözüldü İşaretle</button>` : ""}
+            </div>
+          </div>
+          <div class="app-details">
+            <div class="app-full"><h4>Açıklama</h4><p>${d.description}</p></div>
+            <div class="app-full">
+              <h4>Admin notu</h4>
+              <textarea class="admin-search" data-dispute-notes="${d.id}" style="min-height: 50px; resize: vertical; margin-bottom: 8px;">${d.admin_notes || ""}</textarea>
+              <button class="btn" data-save-notes="${d.id}">Notu Kaydet</button>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      list.querySelectorAll("[data-dispute-status]").forEach(button => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          const id = button.dataset.disputeStatus;
+          const newStatus = button.dataset.newStatus;
+          const updates = { status: newStatus };
+          if (newStatus === "resolved") updates.resolved_at = new Date().toISOString();
+          const updated = await armusAdminUpdateDispute(id, updates);
+          if (updated) {
+            armusAdminDisputes = armusAdminDisputes.map(x => x.id === id ? updated : x);
+            armusLogAdminAction(
+              newStatus === "resolved" ? "dispute_resolve" : "dispute_in_progress",
+              "dispute", id, updated.subject
+            );
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+
+      list.querySelectorAll("[data-save-notes]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.saveNotes;
+          const textarea = list.querySelector(`[data-dispute-notes="${id}"]`);
+          button.disabled = true;
+          const updated = await armusAdminUpdateDispute(id, { admin_notes: textarea.value.trim() });
+          button.disabled = false;
+          if (updated) {
+            armusAdminDisputes = armusAdminDisputes.map(x => x.id === id ? updated : x);
+            button.textContent = "Kaydedildi ✓";
+            setTimeout(() => { button.textContent = "Notu Kaydet"; }, 1500);
+          }
+        });
+      });
+    }
+
+    document.getElementById("searchDisputes").addEventListener("input", e => {
+      armusAdminSearch.disputes = e.target.value;
+      renderAllFromState();
+    });
+
+    // ---- sentiment-flagged reviews ----
+    // No AI available client-side, so this is a simple keyword + low-star
+    // heuristic - good enough to surface reviews worth a human's attention
+    // without reading every single one.
+
+    const ARMUS_NEGATIVE_KEYWORDS = [
+      "kötü", "berbat", "gelmedi", "iptal", "kaba", "geç kaldı", "memnun değil",
+      "tavsiye etmem", "para", "iade", "sorun", "rezil", "vakit kaybı", "yetersiz",
+    ];
+
+    function computeFlaggedReviews(reviews) {
+      return reviews
+        .filter(r => {
+          if (r.stars <= 2) return true;
+          const text = (r.comment || "").toLowerCase();
+          return ARMUS_NEGATIVE_KEYWORDS.some(word => text.includes(word));
+        })
+        .slice()
+        .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+    }
+
+    function renderFlaggedReviewsPanel(flagged, teachers) {
+      const list = document.getElementById("flaggedReviewsList");
+      const empty = document.getElementById("flaggedReviewsEmpty");
+      const badge = document.getElementById("reviewsBadge");
+      list.innerHTML = "";
+
+      if (flagged.length) {
+        badge.textContent = flagged.length;
+        badge.classList.add("visible");
+      } else {
+        badge.classList.remove("visible");
+      }
+
+      if (!flagged.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      list.innerHTML = flagged.map(r => {
+        const teacher = teachers.find(t => t.id === r.teacher_id);
+        return `
+        <div class="app-card">
+          <div class="app-top">
+            <div>
+              <div class="app-name">${r.student_name}</div>
+              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · öğretmen: ${teacher ? teacher.name : r.teacher_id}</div>
+            </div>
+            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Öğretmene Mesaj</a></div>` : ""}
+          </div>
+          <div class="app-details">
+            <div class="app-full"><h4>Yorum</h4><p>${r.comment || "—"}</p></div>
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+
+    // ---- commission / payout ledger ----
+    // Same tiering logic dashboard.html shows each teacher for themselves,
+    // applied here across every teacher at once.
+
+    function commissionForHours(hours) {
+      if (hours < 100) return { rate: 30, range: "0–100 saat" };
+      if (hours < 200) return { rate: 28, range: "100–200 saat" };
+      if (hours < 300) return { rate: 25, range: "200–300 saat" };
+      if (hours < 500) return { rate: 20, range: "300–500 saat" };
+      return { rate: 15, range: "500+ saat" };
+    }
+
+    function computeEarnings(teachers, bookings) {
+      return teachers
+        .filter(t => t.status === "approved")
+        .map(teacher => {
+          const completed = bookings.filter(b => b.teacherId === teacher.id && armusIsBookingPast(b));
+          const hours = Math.round((completed.length * 50 / 60) * 10) / 10;
+          const gross = completed.reduce((sum, b) => sum + (b.price || 0), 0);
+          const tier = commissionForHours(hours);
+          const commission = Math.round(gross * (tier.rate / 100));
+          return {
+            teacher, completedCount: completed.length, hours, gross,
+            tier, commission, payout: gross - commission,
+          };
+        })
+        .filter(row => row.completedCount > 0)
+        .sort((a, b) => b.gross - a.gross);
+    }
+
+    function renderEarningsPanel(rows) {
+      const body = document.getElementById("earningsBody");
+      const empty = document.getElementById("earningsEmpty");
+      body.innerHTML = "";
+
+      if (!rows.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      rows.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.teacher.name}</td>
+          <td>${row.completedCount}</td>
+          <td>${row.hours}</td>
+          <td>₺${row.gross}</td>
+          <td>%${row.tier.rate} <span style="color:#8e8e91;">(${row.tier.range})</span></td>
+          <td>₺${row.commission}</td>
+          <td>₺${row.payout}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    // ---- live pulse feed ----
+    // Requires bookings/profiles/reviews to be added to the
+    // supabase_realtime publication (migration_8.sql).
+
+    let armusPulseEvents = [];
+
+    function pushPulseEvent(html) {
+      armusPulseEvents.unshift({ html, time: new Date() });
+      armusPulseEvents = armusPulseEvents.slice(0, 25);
+      renderPulse();
+    }
+
+    function renderPulse() {
+      const el = document.getElementById("livePulse");
+      if (!el) return;
+      if (!armusPulseEvents.length) {
+        el.innerHTML = `<div class="pulse-empty">Henüz canlı bir olay yok. Yeni bir rezervasyon, kayıt ya da değerlendirme geldiğinde burada anında görünecek.</div>`;
+        return;
+      }
+      el.innerHTML = armusPulseEvents.map(e => `
+        <div class="pulse-item">
+          <span class="pulse-time">${e.time.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
+          <span>${e.html}</span>
+        </div>
+      `).join("");
+    }
+
+    function armusInitLivePulse() {
+      armusSupabase.channel("admin-pulse")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, payload => {
+          const b = payload.new;
+          pushPulseEvent(`📅 Yeni rezervasyon: <strong>${b.student_name}</strong> → ${b.teacher_name}`);
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, payload => {
+          const p = payload.new;
+          pushPulseEvent(`👤 Yeni kayıt: <strong>${p.name}</strong> (${p.role === "teacher" ? "öğretmen adayı" : "öğrenci"})`);
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "reviews" }, payload => {
+          const r = payload.new;
+          pushPulseEvent(`⭐ Yeni değerlendirme: <strong>${r.student_name}</strong> ${"★".repeat(r.stars)}`);
+        })
+        .subscribe();
+      renderPulse();
+    }
+
+    // ---- site-wide announcement banner ----
+    // Requires the site_settings table from migration_8.sql
+
+    async function loadAnnouncementIntoForm() {
+      const setting = await armusGetSiteSetting("announcement");
+      document.getElementById("announcementMessage").value = setting ? (setting.message || "") : "";
+      document.getElementById("announcementActive").checked = Boolean(setting && setting.active);
+    }
+
+    document.getElementById("saveAnnouncementBtn").addEventListener("click", async () => {
+      const message = document.getElementById("announcementMessage").value.trim();
+      const active = document.getElementById("announcementActive").checked;
+      const button = document.getElementById("saveAnnouncementBtn");
+      button.disabled = true;
+      const saved = await armusSetSiteSetting("announcement", { message, active });
+      button.disabled = false;
+      if (saved) {
+        const note = document.getElementById("announcementSavedNote");
+        note.style.display = "inline";
+        setTimeout(() => { note.style.display = "none"; }, 2000);
+      } else {
+        alert("Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir.");
+      }
+    });
+
     // kept at module scope so an approve/reject action can patch a single
     // profile locally and re-render, instead of re-fetching every table
     // from Supabase on every click
@@ -1523,7 +2141,8 @@
     let armusAdminReviews = [];
     let armusAdminLogs = [];
     let armusAdminTestimonials = [];
-    let armusAdminSearch = { teachers: "", bookings: "", students: "" };
+    let armusAdminDisputes = [];
+    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "" };
 
     function matchesSearch(value, term) {
       return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
@@ -1542,15 +2161,23 @@
       const filteredStudents = students.filter(s =>
         matchesSearch(s.name, armusAdminSearch.students) || matchesSearch(s.email, armusAdminSearch.students)
       );
+      const filteredDisputes = armusAdminDisputes.filter(d =>
+        matchesSearch(d.reporter_name, armusAdminSearch.disputes) || matchesSearch(d.subject, armusAdminSearch.disputes)
+      );
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderTrendChart(armusAdminBookings);
+      renderAtRiskPanel(computeAtRiskTeachers(teachers, armusAdminBookings, armusAdminReviews));
+      renderBulkActionsBar();
       renderTeachersPanel(filteredTeachers);
       renderChangesPanel(teachers);
       renderBookingsPanel(filteredBookings);
       renderStudentsPanel(filteredStudents, armusAdminBookings);
       renderLogPanel(armusAdminLogs);
       renderTestimonialsPanel(armusAdminTestimonials);
+      renderDisputesPanel(filteredDisputes);
+      renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
+      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings));
     }
 
     // armusAdminUpdateProfile already returns the updated row, so an
@@ -1595,12 +2222,13 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
         armusSupabase.from("admin_actions").select("*"),
         armusAdminGetAllTestimonials(),
+        armusAdminGetAllDisputes(),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -1608,6 +2236,7 @@
       armusAdminReviews = reviewsRes.data || [];
       armusAdminLogs = logsRes.data || [];
       armusAdminTestimonials = testimonialsRes || [];
+      armusAdminDisputes = disputesRes || [];
 
       renderAllFromState();
     }
@@ -1627,6 +2256,9 @@
       }
 
       shell.style.display = "grid";
+      updateTestimonialPreview();
+      armusInitLivePulse();
+      loadAnnouncementIntoForm();
       await loadAll();
 
     })();
