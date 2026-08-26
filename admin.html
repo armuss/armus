@@ -657,6 +657,7 @@
       <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="students">Öğrenciler</button>
       <button class="nav-btn" data-panel="log">Etkinlik Günlüğü</button>
+      <button class="nav-btn" data-panel="testimonials">Anasayfa Yorumları</button>
 
       <div class="sidebar-bottom">
         <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
@@ -769,6 +770,41 @@
         <div class="empty-note" id="logEmpty" style="display: none;">Henüz kayıtlı işlem yok.</div>
       </div>
 
+      <div class="panel" id="panel-testimonials">
+        <h2>Anasayfa Yorumları</h2>
+        <p class="section-hint">
+          Ana sayfadaki "Öğrencilerimiz ne diyor?" bölümünde gösterilen
+          yorumları buradan yönetebilirsin. En az bir "Yayında" yorum
+          olduğunda ana sayfa bunları otomatik gösterir; hiçbiri yayında
+          değilse ana sayfa sabit örnek yorumları göstermeye devam eder.
+        </p>
+
+        <div class="app-card">
+          <h3 style="margin-top:0;">Yeni yorum ekle</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <input type="text" class="admin-search" id="newTName" placeholder="İsim (örn. Zeynep A.)" style="margin-bottom:0;">
+            <input type="text" class="admin-search" id="newTLocation" placeholder="Şehir / rol (örn. İstanbul)" style="margin-bottom:0;">
+          </div>
+          <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;"></textarea>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <label style="font-size:12.5px;color:#b8b8bb;">Puan:
+              <select id="newTRating" style="margin-left:6px;background:var(--armus-panel);color:#f4f4f2;border:1px solid var(--armus-border);border-radius:8px;padding:6px 8px;font-family:inherit;">
+                <option value="5">5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
+            </label>
+          </div>
+          <button class="btn btn-approve" id="addTestimonialBtn">Ekle</button>
+        </div>
+
+        <h3>Mevcut yorumlar</h3>
+        <div id="testimonialsList"></div>
+        <div class="empty-note" id="testimonialsEmpty" style="display: none;">Henüz eklenmiş yorum yok.</div>
+      </div>
+
       <!-- STUDENT DETAIL (read-only "view as") -->
       <div class="detail-overlay" id="detailOverlay">
         <div class="detail-panel">
@@ -789,6 +825,7 @@
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
+  <script src="testimonials.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -1340,6 +1377,136 @@
         });
     }
 
+    // ---- homepage testimonials management ----
+
+    function renderTestimonialsPanel(testimonials) {
+
+      const list = document.getElementById("testimonialsList");
+      const empty = document.getElementById("testimonialsEmpty");
+      list.innerHTML = "";
+
+      if (!testimonials.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const sorted = testimonials.slice().sort((a, b) => a.display_order - b.display_order);
+
+      sorted.forEach((t, idx) => {
+        const card = document.createElement("div");
+        card.className = "app-card";
+        card.innerHTML = `
+          <div class="app-top">
+            <div>
+              <div class="app-name">${t.name}${t.location ? ` · ${t.location}` : ""}</div>
+              <div class="app-email">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
+              <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? "Yayında" : "Gizli"}</span>
+            </div>
+            <div class="app-actions">
+              <button class="btn" data-move-up="${t.id}" ${idx === 0 ? "disabled" : ""}>↑</button>
+              <button class="btn" data-move-down="${t.id}" ${idx === sorted.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="btn" data-toggle-pub="${t.id}">${t.is_published ? "Gizle" : "Yayınla"}</button>
+              <button class="btn btn-reject" data-delete-testimonial="${t.id}">Sil</button>
+            </div>
+          </div>
+          <div class="app-details">
+            <div class="app-full"><h4>Yorum</h4><p>${t.quote}</p></div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      async function swapOrder(a, b) {
+        const [ua, ub] = await Promise.all([
+          armusAdminUpdateTestimonial(a.id, { display_order: b.display_order }),
+          armusAdminUpdateTestimonial(b.id, { display_order: a.display_order }),
+        ]);
+        armusAdminTestimonials = armusAdminTestimonials.map(x => {
+          if (ua && x.id === ua.id) return ua;
+          if (ub && x.id === ub.id) return ub;
+          return x;
+        });
+        renderAllFromState();
+      }
+
+      list.querySelectorAll("[data-move-up]").forEach(button => {
+        button.addEventListener("click", () => {
+          const idx = sorted.findIndex(t => t.id === button.dataset.moveUp);
+          if (idx > 0) swapOrder(sorted[idx], sorted[idx - 1]);
+        });
+      });
+      list.querySelectorAll("[data-move-down]").forEach(button => {
+        button.addEventListener("click", () => {
+          const idx = sorted.findIndex(t => t.id === button.dataset.moveDown);
+          if (idx !== -1 && idx < sorted.length - 1) swapOrder(sorted[idx], sorted[idx + 1]);
+        });
+      });
+      list.querySelectorAll("[data-toggle-pub]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.togglePub;
+          const t = armusAdminTestimonials.find(x => x.id === id);
+          button.disabled = true;
+          const updated = await armusAdminUpdateTestimonial(id, { is_published: !t.is_published });
+          if (updated) {
+            armusAdminTestimonials = armusAdminTestimonials.map(x => x.id === id ? updated : x);
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+      list.querySelectorAll("[data-delete-testimonial]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (!confirm("Bu yorumu silmek istediğine emin misin?")) return;
+          const id = button.dataset.deleteTestimonial;
+          button.disabled = true;
+          const ok = await armusAdminDeleteTestimonial(id);
+          if (ok) {
+            armusAdminTestimonials = armusAdminTestimonials.filter(x => x.id !== id);
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+    }
+
+    document.getElementById("addTestimonialBtn").addEventListener("click", async () => {
+
+      const name = document.getElementById("newTName").value.trim();
+      const location = document.getElementById("newTLocation").value.trim();
+      const quote = document.getElementById("newTQuote").value.trim();
+      const rating = Number(document.getElementById("newTRating").value);
+
+      if (!name || !quote) {
+        alert("İsim ve yorum metni gerekli.");
+        return;
+      }
+
+      const maxOrder = armusAdminTestimonials.reduce((max, t) => Math.max(max, t.display_order || 0), -1);
+      const button = document.getElementById("addTestimonialBtn");
+      button.disabled = true;
+
+      const created = await armusAdminCreateTestimonial({
+        name, location, quote, rating,
+        display_order: maxOrder + 1,
+        is_published: true,
+      });
+
+      button.disabled = false;
+
+      if (created) {
+        armusAdminTestimonials.push(created);
+        document.getElementById("newTName").value = "";
+        document.getElementById("newTLocation").value = "";
+        document.getElementById("newTQuote").value = "";
+        renderAllFromState();
+      } else {
+        alert("Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir.");
+      }
+    });
+
     // ---- admin booking cancellation ----
     // Requires the bookings_delete_admin RLS policy from migration_7.sql
 
@@ -1355,6 +1522,7 @@
     let armusAdminBookings = [];
     let armusAdminReviews = [];
     let armusAdminLogs = [];
+    let armusAdminTestimonials = [];
     let armusAdminSearch = { teachers: "", bookings: "", students: "" };
 
     function matchesSearch(value, term) {
@@ -1382,6 +1550,7 @@
       renderBookingsPanel(filteredBookings);
       renderStudentsPanel(filteredStudents, armusAdminBookings);
       renderLogPanel(armusAdminLogs);
+      renderTestimonialsPanel(armusAdminTestimonials);
     }
 
     // armusAdminUpdateProfile already returns the updated row, so an
@@ -1426,17 +1595,19 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
         armusSupabase.from("admin_actions").select("*"),
+        armusAdminGetAllTestimonials(),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
       armusAdminBookings = (bookingsRaw.data || []).map(armusMapBookingRow);
       armusAdminReviews = reviewsRes.data || [];
       armusAdminLogs = logsRes.data || [];
+      armusAdminTestimonials = testimonialsRes || [];
 
       renderAllFromState();
     }

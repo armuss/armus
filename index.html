@@ -207,7 +207,7 @@
 
     <section class="testimonials shell">
       <div class="section-label reveal">ÖĞRENCİLERİMİZ NE DİYOR?</div>
-      <div class="testimonial-grid">
+      <div class="testimonial-grid" id="testimonialGrid">
         <article class="reveal"><div class="stars">★★★★★</div><p>“ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.”</p><strong>Zeynep A.</strong><small>İstanbul</small></article>
         <article class="reveal"><div class="stars">★★★★★</div><p>“Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.”</p><strong>Mehmet K.</strong><small>Ankara</small></article>
         <article class="reveal"><div class="stars">★★★★★</div><p>“Esnek ders saatleri ve güvenli ödeme sistemi sayesinde içim çok rahat.”</p><strong>Elif T.</strong><small>İzmir</small></article>
@@ -231,6 +231,27 @@
 
   <script src="auth.js"></script>
   <script src="teachers-data.js"></script>
+  <script src="testimonials.js"></script>
   <script src="script.js"></script>
+
+  <script>
+    // Swap the static homepage testimonials for real ones from the admin
+    // panel, if any have been published. Falls back to the static markup
+    // already in the page (testimonials table empty, or not migrated yet).
+    (async function () {
+      const testimonials = await armusGetPublishedTestimonials();
+      if (!testimonials.length) return;
+
+      const grid = document.getElementById("testimonialGrid");
+      grid.innerHTML = testimonials.map(t => `
+        <article class="reveal in-view">
+          <div class="stars">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
+          <p>“${t.quote}”</p>
+          <strong>${t.name}</strong>
+          <small>${t.location || ""}</small>
+        </article>
+      `).join("");
+    })();
+  </script>
 </body>
 </html>
