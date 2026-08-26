@@ -483,6 +483,93 @@
       color: #55555c;
     }
 
+    /* ---- search / toolbar / row actions ---- */
+
+    .admin-search {
+      width: 100%;
+      max-width: 360px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #f4f4f2;
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    .admin-search::placeholder {
+      color: #6e6e72;
+    }
+
+    .panel-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .panel-toolbar .admin-search {
+      margin-bottom: 0;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ---- trend chart ---- */
+
+    #trendChart {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 8px;
+    }
+
+    /* ---- student detail overlay ---- */
+
+    .detail-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .detail-overlay.visible {
+      display: flex;
+    }
+
+    .detail-panel {
+      background: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      border: 1px solid var(--armus-border);
+      border-radius: 18px;
+      padding: 24px;
+      width: min(640px, 100%);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .detail-head h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #f4f4f2;
+    }
+
     @media (max-width: 860px) {
       .shell {
         grid-template-columns: 1fr;
@@ -536,6 +623,15 @@
         display: block;
         overflow-x: auto;
       }
+
+      .panel-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .panel-toolbar .admin-search {
+        max-width: none;
+      }
     }
   </style>
 </head>
@@ -560,6 +656,8 @@
       <button class="nav-btn" data-panel="changes">Profil Değişiklikleri <span class="nav-badge" id="changesBadge"></span></button>
       <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="students">Öğrenciler</button>
+      <button class="nav-btn" data-panel="log">Etkinlik Günlüğü</button>
+      <button class="nav-btn" data-panel="testimonials">Anasayfa Yorumları</button>
 
       <div class="sidebar-bottom">
         <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
@@ -571,10 +669,14 @@
       <div class="panel active" id="panel-overview">
         <h2>Genel Bakış</h2>
         <div class="stat-grid" id="overviewStats"></div>
+        <h3>Son 6 ay - rezervasyon trendi</h3>
+        <div id="trendChart"></div>
       </div>
 
       <div class="panel" id="panel-teachers">
         <h2>Öğretmenler</h2>
+
+        <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara...">
 
         <h3>Bekleyen başvurular</h3>
         <div id="pendingList"></div>
@@ -605,6 +707,10 @@
 
       <div class="panel" id="panel-bookings">
         <h2>Rezervasyonlar</h2>
+        <div class="panel-toolbar">
+          <input type="text" class="admin-search" id="searchBookings" placeholder="Öğrenci veya öğretmen ara...">
+          <button class="btn" id="exportBookingsBtn">Excel'e Aktar (CSV)</button>
+        </div>
         <table id="bookingsTable">
           <thead>
             <tr>
@@ -614,6 +720,7 @@
               <th>Tarih</th>
               <th>Saat</th>
               <th>Ücret</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="bookingsBody"></tbody>
@@ -623,6 +730,10 @@
 
       <div class="panel" id="panel-students">
         <h2>Öğrenciler</h2>
+        <div class="panel-toolbar">
+          <input type="text" class="admin-search" id="searchStudents" placeholder="İsim veya e-posta ara...">
+          <button class="btn" id="exportStudentsBtn">Excel'e Aktar (CSV)</button>
+        </div>
         <table id="studentsTable">
           <thead>
             <tr>
@@ -630,11 +741,79 @@
               <th>E-posta</th>
               <th>Kayıt tarihi</th>
               <th>Rezervasyon sayısı</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="studentsBody"></tbody>
         </table>
         <div class="empty-note" id="studentsEmpty" style="display: none;">Henüz öğrenci yok.</div>
+      </div>
+
+      <div class="panel" id="panel-log">
+        <h2>Etkinlik Günlüğü</h2>
+        <p class="section-hint">
+          Onay/red ve iptal gibi admin işlemlerinin geçmişi. (Bu panel
+          admin_actions tablosu Supabase'de oluşturulduktan sonra dolmaya
+          başlar - o ana kadar boş görünmesi normal.)
+        </p>
+        <table id="logTable">
+          <thead>
+            <tr>
+              <th>Admin</th>
+              <th>İşlem</th>
+              <th>Hedef</th>
+              <th>Zaman</th>
+            </tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+        <div class="empty-note" id="logEmpty" style="display: none;">Henüz kayıtlı işlem yok.</div>
+      </div>
+
+      <div class="panel" id="panel-testimonials">
+        <h2>Anasayfa Yorumları</h2>
+        <p class="section-hint">
+          Ana sayfadaki "Öğrencilerimiz ne diyor?" bölümünde gösterilen
+          yorumları buradan yönetebilirsin. En az bir "Yayında" yorum
+          olduğunda ana sayfa bunları otomatik gösterir; hiçbiri yayında
+          değilse ana sayfa sabit örnek yorumları göstermeye devam eder.
+        </p>
+
+        <div class="app-card">
+          <h3 style="margin-top:0;">Yeni yorum ekle</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <input type="text" class="admin-search" id="newTName" placeholder="İsim (örn. Zeynep A.)" style="margin-bottom:0;">
+            <input type="text" class="admin-search" id="newTLocation" placeholder="Şehir / rol (örn. İstanbul)" style="margin-bottom:0;">
+          </div>
+          <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;"></textarea>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <label style="font-size:12.5px;color:#b8b8bb;">Puan:
+              <select id="newTRating" style="margin-left:6px;background:var(--armus-panel);color:#f4f4f2;border:1px solid var(--armus-border);border-radius:8px;padding:6px 8px;font-family:inherit;">
+                <option value="5">5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
+            </label>
+          </div>
+          <button class="btn btn-approve" id="addTestimonialBtn">Ekle</button>
+        </div>
+
+        <h3>Mevcut yorumlar</h3>
+        <div id="testimonialsList"></div>
+        <div class="empty-note" id="testimonialsEmpty" style="display: none;">Henüz eklenmiş yorum yok.</div>
+      </div>
+
+      <!-- STUDENT DETAIL (read-only "view as") -->
+      <div class="detail-overlay" id="detailOverlay">
+        <div class="detail-panel">
+          <div class="detail-head">
+            <h3 id="detailTitle"></h3>
+            <button class="btn" id="detailCloseBtn">Kapat ✕</button>
+          </div>
+          <div id="detailBody"></div>
+        </div>
       </div>
 
     </main>
@@ -646,6 +825,7 @@
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
+  <script src="testimonials.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -721,6 +901,7 @@
       } else if (user.status === "rejected") {
         actions = `<button class="btn btn-approve" data-action="approve">Onayla</button>`;
       }
+      actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">Mesaj Gönder</a>`;
 
       const hasApplication = Boolean(user.status);
 
@@ -806,6 +987,10 @@
           const updated = await armusAdminUpdateProfile(user.id, { status: newStatus });
           if (updated) {
             applyProfileUpdate(updated);
+            armusLogAdminAction(
+              newStatus === "approved" ? "profile_approve" : "profile_reject",
+              "profile", user.id, user.name
+            );
           } else {
             button.disabled = false;
           }
@@ -817,8 +1002,9 @@
 
           button.disabled = true;
           let updated;
+          const approved = button.dataset.changeAction === "approve";
 
-          if (button.dataset.changeAction === "approve") {
+          if (approved) {
             const { submitted_at, ...fieldsToApply } = user.pending_changes;
             updated = await armusAdminUpdateProfile(user.id, { ...fieldsToApply, pending_changes: null });
           } else {
@@ -827,6 +1013,10 @@
 
           if (updated) {
             applyProfileUpdate(updated);
+            armusLogAdminAction(
+              approved ? "change_approve" : "change_reject",
+              "profile", user.id, user.name
+            );
           } else {
             button.disabled = false;
           }
@@ -942,9 +1132,31 @@
             <td>${b.dateLabel}</td>
             <td>${b.time}</td>
             <td>₺${b.price}</td>
+            <td><button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button></td>
           `;
           body.appendChild(tr);
         });
+
+      body.querySelectorAll("[data-cancel-booking]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Bu işlem geri alınamaz.")) return;
+          button.disabled = true;
+          button.textContent = "İptal ediliyor...";
+          const bookingId = button.dataset.cancelBooking;
+          const ok = await armusAdminCancelBooking(bookingId);
+          if (ok) {
+            const cancelled = armusAdminBookings.find(b => b.id === bookingId);
+            armusAdminBookings = armusAdminBookings.filter(b => b.id !== bookingId);
+            await armusLogAdminAction("booking_cancel", "booking", bookingId,
+              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})` : bookingId);
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+            button.textContent = "İptal Et";
+            alert("Rezervasyon iptal edilemedi. Tekrar dene.");
+          }
+        });
+      });
     }
 
     function renderStudentsPanel(students, bookings) {
@@ -967,10 +1179,68 @@
           <td>${s.email}</td>
           <td>${new Date(s.created_at).toLocaleDateString("tr-TR")}</td>
           <td>${count}</td>
+          <td class="row-actions">
+            <button class="btn" data-view-student="${s.id}">Detaylar</button>
+            <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(s.id)}">Mesaj</a>
+          </td>
         `;
         body.appendChild(tr);
       });
+
+      body.querySelectorAll("[data-view-student]").forEach(button => {
+        button.addEventListener("click", () => {
+          const student = students.find(s => s.id === button.dataset.viewStudent);
+          if (student) openStudentDetail(student, bookings);
+        });
+      });
     }
+
+    // ---- student detail ("view as") - read-only, no session impersonation ----
+
+    function openStudentDetail(student, bookings) {
+
+      const studentBookings = bookings
+        .filter(b => b.studentId === student.id)
+        .slice()
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+
+      document.getElementById("detailTitle").textContent = student.name;
+
+      const rows = studentBookings.length
+        ? studentBookings.map(b => `
+            <tr>
+              <td>${b.teacherName}</td>
+              <td>${b.type === "trial" ? "Deneme Dersi" : "Ders"}</td>
+              <td>${b.dateLabel}</td>
+              <td>${b.time}</td>
+              <td>₺${b.price}</td>
+            </tr>
+          `).join("")
+        : `<tr><td colspan="5" class="empty-note">Henüz rezervasyonu yok.</td></tr>`;
+
+      document.getElementById("detailBody").innerHTML = `
+        <div class="app-details" style="margin-bottom:20px;">
+          <div><h4>E-posta</h4><p>${student.email}</p></div>
+          <div><h4>Kayıt tarihi</h4><p>${new Date(student.created_at).toLocaleDateString("tr-TR")}</p></div>
+        </div>
+        <h3 style="margin-top:0;">Rezervasyon geçmişi</h3>
+        <table>
+          <thead><tr><th>Öğretmen</th><th>Tür</th><th>Tarih</th><th>Saat</th><th>Ücret</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+
+      document.getElementById("detailOverlay").classList.add("visible");
+    }
+
+    document.getElementById("detailCloseBtn").addEventListener("click", () => {
+      document.getElementById("detailOverlay").classList.remove("visible");
+    });
+    document.getElementById("detailOverlay").addEventListener("click", event => {
+      if (event.target.id === "detailOverlay") {
+        document.getElementById("detailOverlay").classList.remove("visible");
+      }
+    });
 
     function renderOverview(profiles, bookings, reviews) {
 
@@ -1000,22 +1270,287 @@
       `).join("");
     }
 
+    // ---- trend chart: bookings per month, last 6 months, hand-rolled SVG
+    // bars so no charting library needs to be added to the project ----
+
+    function renderTrendChart(bookings) {
+
+      const container = document.getElementById("trendChart");
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString("tr-TR", { month: "short" }),
+        });
+      }
+
+      const counts = months.map(m => bookings.filter(b => b.date.startsWith(m.key)).length);
+      const max = Math.max(1, ...counts);
+      const barWidth = 48, gap = 24, chartHeight = 130;
+      const width = months.length * (barWidth + gap);
+
+      const bars = counts.map((count, i) => {
+        const h = count ? Math.max(4, Math.round((count / max) * (chartHeight - 24))) : 0;
+        const x = i * (barWidth + gap);
+        const y = chartHeight - h;
+        return `
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
+          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:#d8d8da">${count}</text>
+          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:#8e8e91">${months[i].label}</text>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
+          ${bars}
+        </svg>
+      `;
+    }
+
+    // ---- CSV export (client-side, no server round trip) ----
+
+    function armusDownloadCsv(filename, headers, rows) {
+      const escape = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const csv = [headers, ...rows].map(row => row.map(escape).join(",")).join("\r\n");
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ---- admin activity log ----
+    // Best-effort: if the admin_actions table hasn't been created in
+    // Supabase yet, these calls just fail quietly (error is ignored)
+    // instead of breaking the action that triggered them.
+
+    async function armusLogAdminAction(action, targetType, targetId, targetLabel) {
+      const session = await armusGetSession();
+      if (!session) return;
+      await armusSupabase.from("admin_actions").insert({
+        admin_id: session.id,
+        admin_name: session.name,
+        action,
+        target_type: targetType,
+        target_id: targetId,
+        target_label: targetLabel,
+      });
+    }
+
+    function renderLogPanel(logs) {
+      const body = document.getElementById("logBody");
+      const empty = document.getElementById("logEmpty");
+      body.innerHTML = "";
+
+      if (!logs.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const actionLabels = {
+        profile_approve: "Başvuru onaylandı",
+        profile_reject: "Başvuru reddedildi",
+        change_approve: "Profil değişikliği onaylandı",
+        change_reject: "Profil değişikliği reddedildi",
+        booking_cancel: "Rezervasyon iptal edildi",
+      };
+
+      logs
+        .slice()
+        .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
+        .forEach(log => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${log.admin_name}</td>
+            <td>${actionLabels[log.action] || log.action}</td>
+            <td>${log.target_label || log.target_id || "—"}</td>
+            <td>${new Date(log.created_at).toLocaleString("tr-TR")}</td>
+          `;
+          body.appendChild(tr);
+        });
+    }
+
+    // ---- homepage testimonials management ----
+
+    function renderTestimonialsPanel(testimonials) {
+
+      const list = document.getElementById("testimonialsList");
+      const empty = document.getElementById("testimonialsEmpty");
+      list.innerHTML = "";
+
+      if (!testimonials.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const sorted = testimonials.slice().sort((a, b) => a.display_order - b.display_order);
+
+      sorted.forEach((t, idx) => {
+        const card = document.createElement("div");
+        card.className = "app-card";
+        card.innerHTML = `
+          <div class="app-top">
+            <div>
+              <div class="app-name">${t.name}${t.location ? ` · ${t.location}` : ""}</div>
+              <div class="app-email">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
+              <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? "Yayında" : "Gizli"}</span>
+            </div>
+            <div class="app-actions">
+              <button class="btn" data-move-up="${t.id}" ${idx === 0 ? "disabled" : ""}>↑</button>
+              <button class="btn" data-move-down="${t.id}" ${idx === sorted.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="btn" data-toggle-pub="${t.id}">${t.is_published ? "Gizle" : "Yayınla"}</button>
+              <button class="btn btn-reject" data-delete-testimonial="${t.id}">Sil</button>
+            </div>
+          </div>
+          <div class="app-details">
+            <div class="app-full"><h4>Yorum</h4><p>${t.quote}</p></div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      async function swapOrder(a, b) {
+        const [ua, ub] = await Promise.all([
+          armusAdminUpdateTestimonial(a.id, { display_order: b.display_order }),
+          armusAdminUpdateTestimonial(b.id, { display_order: a.display_order }),
+        ]);
+        armusAdminTestimonials = armusAdminTestimonials.map(x => {
+          if (ua && x.id === ua.id) return ua;
+          if (ub && x.id === ub.id) return ub;
+          return x;
+        });
+        renderAllFromState();
+      }
+
+      list.querySelectorAll("[data-move-up]").forEach(button => {
+        button.addEventListener("click", () => {
+          const idx = sorted.findIndex(t => t.id === button.dataset.moveUp);
+          if (idx > 0) swapOrder(sorted[idx], sorted[idx - 1]);
+        });
+      });
+      list.querySelectorAll("[data-move-down]").forEach(button => {
+        button.addEventListener("click", () => {
+          const idx = sorted.findIndex(t => t.id === button.dataset.moveDown);
+          if (idx !== -1 && idx < sorted.length - 1) swapOrder(sorted[idx], sorted[idx + 1]);
+        });
+      });
+      list.querySelectorAll("[data-toggle-pub]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.togglePub;
+          const t = armusAdminTestimonials.find(x => x.id === id);
+          button.disabled = true;
+          const updated = await armusAdminUpdateTestimonial(id, { is_published: !t.is_published });
+          if (updated) {
+            armusAdminTestimonials = armusAdminTestimonials.map(x => x.id === id ? updated : x);
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+      list.querySelectorAll("[data-delete-testimonial]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (!confirm("Bu yorumu silmek istediğine emin misin?")) return;
+          const id = button.dataset.deleteTestimonial;
+          button.disabled = true;
+          const ok = await armusAdminDeleteTestimonial(id);
+          if (ok) {
+            armusAdminTestimonials = armusAdminTestimonials.filter(x => x.id !== id);
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+    }
+
+    document.getElementById("addTestimonialBtn").addEventListener("click", async () => {
+
+      const name = document.getElementById("newTName").value.trim();
+      const location = document.getElementById("newTLocation").value.trim();
+      const quote = document.getElementById("newTQuote").value.trim();
+      const rating = Number(document.getElementById("newTRating").value);
+
+      if (!name || !quote) {
+        alert("İsim ve yorum metni gerekli.");
+        return;
+      }
+
+      const maxOrder = armusAdminTestimonials.reduce((max, t) => Math.max(max, t.display_order || 0), -1);
+      const button = document.getElementById("addTestimonialBtn");
+      button.disabled = true;
+
+      const created = await armusAdminCreateTestimonial({
+        name, location, quote, rating,
+        display_order: maxOrder + 1,
+        is_published: true,
+      });
+
+      button.disabled = false;
+
+      if (created) {
+        armusAdminTestimonials.push(created);
+        document.getElementById("newTName").value = "";
+        document.getElementById("newTLocation").value = "";
+        document.getElementById("newTQuote").value = "";
+        renderAllFromState();
+      } else {
+        alert("Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir.");
+      }
+    });
+
+    // ---- admin booking cancellation ----
+    // Requires the bookings_delete_admin RLS policy from migration_7.sql
+
+    async function armusAdminCancelBooking(bookingId) {
+      const { error } = await armusSupabase.from("bookings").delete().eq("id", bookingId);
+      return !error;
+    }
+
     // kept at module scope so an approve/reject action can patch a single
     // profile locally and re-render, instead of re-fetching every table
     // from Supabase on every click
     let armusAdminProfiles = [];
     let armusAdminBookings = [];
     let armusAdminReviews = [];
+    let armusAdminLogs = [];
+    let armusAdminTestimonials = [];
+    let armusAdminSearch = { teachers: "", bookings: "", students: "" };
+
+    function matchesSearch(value, term) {
+      return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
+    }
 
     function renderAllFromState() {
       const teachers = armusAdminProfiles.filter(p => p.role === "teacher");
       const students = armusAdminProfiles.filter(p => p.role === "student");
 
+      const filteredTeachers = teachers.filter(t =>
+        matchesSearch(t.name, armusAdminSearch.teachers) || matchesSearch(t.email, armusAdminSearch.teachers)
+      );
+      const filteredBookings = armusAdminBookings.filter(b =>
+        matchesSearch(b.studentName, armusAdminSearch.bookings) || matchesSearch(b.teacherName, armusAdminSearch.bookings)
+      );
+      const filteredStudents = students.filter(s =>
+        matchesSearch(s.name, armusAdminSearch.students) || matchesSearch(s.email, armusAdminSearch.students)
+      );
+
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
-      renderTeachersPanel(teachers);
+      renderTrendChart(armusAdminBookings);
+      renderTeachersPanel(filteredTeachers);
       renderChangesPanel(teachers);
-      renderBookingsPanel(armusAdminBookings);
-      renderStudentsPanel(students, armusAdminBookings);
+      renderBookingsPanel(filteredBookings);
+      renderStudentsPanel(filteredStudents, armusAdminBookings);
+      renderLogPanel(armusAdminLogs);
+      renderTestimonialsPanel(armusAdminTestimonials);
     }
 
     // armusAdminUpdateProfile already returns the updated row, so an
@@ -1028,17 +1563,51 @@
       renderAllFromState();
     }
 
+    document.getElementById("searchTeachers").addEventListener("input", e => {
+      armusAdminSearch.teachers = e.target.value;
+      renderAllFromState();
+    });
+    document.getElementById("searchBookings").addEventListener("input", e => {
+      armusAdminSearch.bookings = e.target.value;
+      renderAllFromState();
+    });
+    document.getElementById("searchStudents").addEventListener("input", e => {
+      armusAdminSearch.students = e.target.value;
+      renderAllFromState();
+    });
+
+    document.getElementById("exportBookingsBtn").addEventListener("click", () => {
+      const rows = armusAdminBookings
+        .filter(b => matchesSearch(b.studentName, armusAdminSearch.bookings) || matchesSearch(b.teacherName, armusAdminSearch.bookings))
+        .map(b => [b.studentName, b.teacherName, b.type === "trial" ? "Deneme Dersi" : "Ders", b.dateLabel, b.time, b.price]);
+      armusDownloadCsv("rezervasyonlar.csv", ["Öğrenci", "Öğretmen", "Tür", "Tarih", "Saat", "Ücret"], rows);
+    });
+
+    document.getElementById("exportStudentsBtn").addEventListener("click", () => {
+      const students = armusAdminProfiles.filter(p => p.role === "student")
+        .filter(s => matchesSearch(s.name, armusAdminSearch.students) || matchesSearch(s.email, armusAdminSearch.students));
+      const rows = students.map(s => [
+        s.name, s.email, new Date(s.created_at).toLocaleDateString("tr-TR"),
+        armusAdminBookings.filter(b => b.studentId === s.id).length,
+      ]);
+      armusDownloadCsv("ogrenciler.csv", ["Ad Soyad", "E-posta", "Kayıt tarihi", "Rezervasyon sayısı"], rows);
+    });
+
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
+        armusSupabase.from("admin_actions").select("*"),
+        armusAdminGetAllTestimonials(),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
       armusAdminBookings = (bookingsRaw.data || []).map(armusMapBookingRow);
       armusAdminReviews = reviewsRes.data || [];
+      armusAdminLogs = logsRes.data || [];
+      armusAdminTestimonials = testimonialsRes || [];
 
       renderAllFromState();
     }
