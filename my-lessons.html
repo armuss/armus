@@ -239,6 +239,69 @@
       display: block;
     }
 
+    .dispute-block {
+      margin-top: 12px;
+    }
+
+    .dispute-prompt-btn {
+      border: 1px solid rgba(220, 90, 90, .5);
+      color: #f0a5a5;
+      background: transparent;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .dispute-form {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .dispute-form select,
+    .dispute-form textarea {
+      width: 100%;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .dispute-form textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .dispute-submit-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      background: rgba(220, 90, 90, .85);
+      color: white;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .submitted-dispute {
+      color: #c3c3c5;
+      font-size: 13px;
+    }
+
+    .submitted-dispute .dispute-status {
+      color: #f0a5a5;
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 600;
+    }
+
     .avatar {
       width: 54px;
       height: 72px;
@@ -379,10 +442,12 @@
   <script src="teachers-data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
+  <script src="site-settings.js"></script>
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
   <script src="marketplace.js"></script>
+  <script src="disputes.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -482,6 +547,90 @@
         return wrap;
       }
 
+      const ownDisputes = await armusGetOwnDisputes(session.id);
+      const disputeByBooking = new Map(ownDisputes.filter(d => d.booking_id).map(d => [d.booking_id, d]));
+
+      const DISPUTE_SUBJECTS = [
+        "Öğretmen derse gelmedi",
+        "Ders kalitesiyle ilgili bir sorun",
+        "İletişim / uygunsuz davranış",
+        "Ödeme ile ilgili bir sorun",
+        "Diğer",
+      ];
+      const DISPUTE_STATUS_LABELS = { open: "Bildirdin, inceleniyor", in_progress: "İnceleniyor", resolved: "Çözüldü" };
+
+      function buildDisputeBlock(booking) {
+
+        const wrap = document.createElement("div");
+        wrap.className = "dispute-block";
+
+        const existing = disputeByBooking.get(booking.id);
+
+        if (existing) {
+          wrap.innerHTML = `
+            <div class="submitted-dispute">
+              <span class="dispute-status">⚑ ${DISPUTE_STATUS_LABELS[existing.status] || existing.status}</span>
+              <p>${existing.subject}</p>
+            </div>
+          `;
+          return wrap;
+        }
+
+        wrap.innerHTML = `
+          <button type="button" class="dispute-prompt-btn">⚑ Bir sorun bildir</button>
+          <div class="dispute-form">
+            <select>
+              ${DISPUTE_SUBJECTS.map(s => `<option value="${s}">${s}</option>`).join("")}
+            </select>
+            <textarea placeholder="Ne oldu, kısaca anlat..."></textarea>
+            <button type="button" class="dispute-submit-btn">Gönder</button>
+          </div>
+        `;
+
+        const promptBtn = wrap.querySelector(".dispute-prompt-btn");
+        const form = wrap.querySelector(".dispute-form");
+        const select = wrap.querySelector("select");
+        const textarea = wrap.querySelector("textarea");
+        const submitBtn = wrap.querySelector(".dispute-submit-btn");
+
+        promptBtn.addEventListener("click", () => {
+          promptBtn.style.display = "none";
+          form.style.display = "block";
+        });
+
+        submitBtn.addEventListener("click", async () => {
+
+          const description = textarea.value.trim();
+          if (!description) {
+            alert("Lütfen ne olduğunu kısaca yaz.");
+            return;
+          }
+
+          submitBtn.disabled = true;
+
+          const created = await armusCreateDispute({
+            bookingId: booking.id,
+            reporterId: session.id,
+            reporterName: session.name,
+            reporterRole: "student",
+            otherPartyName: booking.teacherName,
+            subject: select.value,
+            description,
+          });
+
+          if (!created) {
+            alert("Bildirilemedi. Lütfen tekrar dene.");
+            submitBtn.disabled = false;
+            return;
+          }
+
+          disputeByBooking.set(booking.id, created);
+          wrap.replaceWith(buildDisputeBlock(booking));
+        });
+
+        return wrap;
+      }
+
       if (bookings.length === 0) {
 
         empty.style.display = "block";
@@ -521,6 +670,7 @@
           if (isPast) {
             card.appendChild(await buildReviewBlock(booking));
           }
+          card.appendChild(buildDisputeBlock(booking));
 
           list.appendChild(card);
         }
@@ -531,5 +681,6 @@
 
   </script>
 
+  <script>armusRenderAnnouncementBanner();</script>
 </body>
 </html>
