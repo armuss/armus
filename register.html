@@ -168,6 +168,18 @@
       margin-bottom: 18px;
     }
 
+    .form-success {
+      display: none;
+      background: rgba(143, 214, 174, .1);
+      border: 1px solid rgba(143, 214, 174, .35);
+      color: #8fd6ae;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
     .submit-btn {
       width: 100%;
       margin-top: 6px;
@@ -225,6 +237,7 @@
     </div>
 
     <div class="form-error" id="formError"></div>
+    <div class="form-success" id="formSuccess"></div>
 
     <form id="registerForm" novalidate>
 
@@ -317,6 +330,8 @@
 
     const form = document.getElementById("registerForm");
     const errorBox = document.getElementById("formError");
+    const successBox = document.getElementById("formSuccess");
+    const submitBtn = document.getElementById("submitBtn");
 
     function showError(message) {
       errorBox.textContent = message;
@@ -356,7 +371,9 @@
         return;
       }
 
-      const { error } = await armusSignUp({ name, email, password, role: selectedRole, city });
+      submitBtn.disabled = true;
+      const { data, error } = await armusSignUp({ name, email, password, role: selectedRole, city });
+      submitBtn.disabled = false;
 
       if (error) {
         showError(
@@ -364,6 +381,17 @@
             ? "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene."
             : "Hesap oluşturulamadı: " + error.message
         );
+        return;
+      }
+
+      // Supabase projects that have "Confirm email" turned on don't return
+      // a session here - the account exists but isn't logged in yet until
+      // the confirmation link is clicked. Redirecting as if logged in
+      // would just bounce them back out, so show a clear next step instead.
+      if (!data || !data.session) {
+        form.style.display = "none";
+        successBox.innerHTML = "Hesabın oluşturuldu! <strong>" + email + "</strong> adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.";
+        successBox.style.display = "block";
         return;
       }
 
