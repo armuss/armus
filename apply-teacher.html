@@ -1014,25 +1014,34 @@
       });
 
       // ---- file upload helper ----
+      // Files go to Supabase Storage (not base64-encoded into a profiles
+      // column) - a base64 video easily exceeds the request size the
+      // API accepts for a single table update. The preview shows
+      // instantly from a local blob URL while the real upload happens
+      // in the background; submitApplication() awaits the upload
+      // promise so it always has the final public URL before saving.
 
-      function readFileAsDataURL(file, maxBytes) {
-        return new Promise((resolve, reject) => {
-
-          if (file.size > maxBytes) {
-            reject(new Error(`Dosya çok büyük (maks ${(maxBytes / 1024 / 1024).toFixed(1)}MB).`));
-            return;
-          }
-
-          const reader = new FileReader();
-          reader.onload = () => resolve({ name: file.name, dataUrl: reader.result });
-          reader.onerror = () => reject(new Error("Dosya okunamadı."));
-          reader.readAsDataURL(file);
-        });
+      function validateFileSize(file, maxBytes) {
+        if (file.size > maxBytes) {
+          throw new Error(`Dosya çok büyük (maks ${(maxBytes / 1024 / 1024).toFixed(1)}MB).`);
+        }
       }
 
-      function wireUpload(inputId, maxBytes, errorId, onSuccess) {
+      function uploadToStorage(file, folder) {
+        const ext = (file.name.includes(".") ? file.name.split(".").pop() : "bin").toLowerCase();
+        const path = `${session.id}/${folder}-${Date.now()}.${ext}`;
+        return armusSupabase.storage
+          .from("teacher-uploads")
+          .upload(path, file, { upsert: true, contentType: file.type || undefined })
+          .then(({ error }) => {
+            if (error) throw new Error(error.message || "Dosya yüklenemedi.");
+            return armusSupabase.storage.from("teacher-uploads").getPublicUrl(path).data.publicUrl;
+          });
+      }
 
-        document.getElementById(inputId).addEventListener("change", async event => {
+      function wireUpload(inputId, maxBytes, errorId, folder, onSuccess) {
+
+        document.getElementById(inputId).addEventListener("change", event => {
 
           const file = event.target.files[0];
           const errorBox = document.getElementById(errorId);
@@ -1041,8 +1050,16 @@
           if (!file) return;
 
           try {
-            const result = await readFileAsDataURL(file, maxBytes);
-            onSuccess(result);
+            validateFileSize(file, maxBytes);
+
+            const previewUrl = URL.createObjectURL(file);
+            const promise = uploadToStorage(file, folder).catch(err => {
+              errorBox.textContent = "Yüklenemedi: " + err.message;
+              errorBox.style.display = "block";
+              throw err;
+            });
+
+            onSuccess({ name: file.name, previewUrl, promise });
           } catch (err) {
             errorBox.textContent = err.message;
             errorBox.style.display = "block";
@@ -1051,14 +1068,14 @@
         });
       }
 
-      wireUpload("photoInput", 2 * 1024 * 1024, "photoError", result => {
+      wireUpload("photoInput", 2 * 1024 * 1024, "photoError", "photo", result => {
         uploads.photo = result;
-        document.getElementById("photoPreviewImg").src = result.dataUrl;
+        document.getElementById("photoPreviewImg").src = result.previewUrl;
         document.getElementById("photoPreviewName").textContent = result.name;
         document.getElementById("photoPreview").style.display = "flex";
       });
 
-      wireUpload("certificateInput", 3 * 1024 * 1024, "certificateError", result => {
+      wireUpload("certificateInput", 3 * 1024 * 1024, "certificateError", "certificate", result => {
         uploads.certificate = result;
         document.getElementById("certificatePreviewName").textContent = result.name;
         document.getElementById("certificatePreview").style.display = "flex";
@@ -1122,13 +1139,18 @@
             throw new Error("Video yatay (landscape) çekilmiş olmalı, dikey video kabul edilmiyor.");
           }
 
-          const result = await readFileAsDataURL(file, VIDEO_MAX_BYTES);
-          uploads.video = result;
+          const previewUrl = URL.createObjectURL(file);
+          const promise = uploadToStorage(file, "video").catch(err => {
+            errorBox.textContent = "Yüklenemedi: " + err.message;
+            errorBox.style.display = "block";
+            throw err;
+          });
+          uploads.video = { name: file.name, previewUrl, promise };
 
           const minutes = Math.floor(meta.duration / 60);
           const seconds = Math.round(meta.duration % 60).toString().padStart(2, "0");
           document.getElementById("videoPreviewName").textContent =
-            `${result.name} · ${minutes}:${seconds}`;
+            `${file.name} · ${minutes}:${seconds}`;
           document.getElementById("videoPreview").style.display = "flex";
 
         } catch (err) {
@@ -1292,6 +1314,22 @@
           document.getElementById("lastName").value.trim()
         ).trim();
 
+        // uploads happen in the background as soon as a file is picked
+        // (see wireUpload/uploadToStorage) - by submit time these are
+        // usually already done, but awaiting here covers the case where
+        // the user clicks "Gönder" before an upload has finished
+        let photoUrl = null, certificateUrl = null, videoUrl = null;
+        try {
+          [photoUrl, certificateUrl, videoUrl] = await Promise.all([
+            uploads.photo ? uploads.photo.promise : Promise.resolve(null),
+            hasCertificate && uploads.certificate ? uploads.certificate.promise : Promise.resolve(null),
+            uploads.video ? uploads.video.promise : Promise.resolve(null),
+          ]);
+        } catch (err) {
+          showStepError("Bir dosya yüklenemedi. İlgili adıma dönüp dosyayı tekrar seç.");
+          return;
+        }
+
         const result = await armusUpdateOwnProfile({
           name: fullName,
           country: document.getElementById("country").value.trim(),
@@ -1300,11 +1338,11 @@
           languages: getLanguages(),
           phone: document.getElementById("phone").value.trim(),
           age_confirmed: true,
-          photo_url: uploads.photo ? uploads.photo.dataUrl : null,
+          photo_url: photoUrl,
           has_certificate: hasCertificate,
           certificate_name: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
           certificate_years: hasCertificate ? document.getElementById("certificateYears").value.trim() : "",
-          certificate_file_url: hasCertificate && uploads.certificate ? uploads.certificate.dataUrl : null,
+          certificate_file_url: hasCertificate ? certificateUrl : null,
           certificate_file_name: hasCertificate && uploads.certificate ? uploads.certificate.name : null,
           has_education: hasEducation,
           university: hasEducation ? document.getElementById("university").value.trim() : "",
@@ -1312,7 +1350,7 @@
           graduation_year: hasEducation ? document.getElementById("graduationYear").value.trim() : "",
           specialization: hasEducation ? document.getElementById("specialization").value.trim() : "",
           bio: document.getElementById("description").value.trim(),
-          video_url: uploads.video ? uploads.video.dataUrl : null,
+          video_url: videoUrl,
           availability: "Şu anda ders almaya uygun",
           weekly_availability: getWeeklyAvailability(),
           price: Number(document.getElementById("price").value) || 0,
@@ -1321,9 +1359,7 @@
         });
 
         if (result === false) {
-          showStepError(
-            "Başvuru kaydedilemedi. Fotoğraf veya videoyu daha küçük bir dosyayla değiştirip tekrar dene."
-          );
+          showStepError("Başvuru kaydedilemedi. Lütfen tekrar dene.");
           return;
         }
 

@@ -420,3 +420,43 @@ create policy "teacher_notes_write_own"
   on teacher_notes for all
   using (auth.uid() = teacher_id)
   with check (auth.uid() = teacher_id);
+
+-- === TEACHER APPLICATION UPLOADS (STORAGE) ========================
+-- apply-teacher.html uploads the profile photo, certificate, and intro
+-- video here instead of base64-encoding them into a profiles column -
+-- that hit Supabase's request size limit for anything but tiny files.
+-- Reads are open because the bucket is public (the photo/video are
+-- shown on public teacher profile pages anyway); writes are restricted
+-- to a teacher's own folder ("<uid>/...").
+
+insert into storage.buckets (id, name, public)
+values ('teacher-uploads', 'teacher-uploads', true)
+on conflict (id) do nothing;
+
+create policy "teacher_uploads_insert_own"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'teacher-uploads'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "teacher_uploads_update_own"
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'teacher-uploads'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'teacher-uploads'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "teacher_uploads_delete_own"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'teacher-uploads'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
