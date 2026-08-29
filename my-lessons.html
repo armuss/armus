@@ -163,6 +163,32 @@
       gap: 16px;
     }
 
+    .lesson-join {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--armus-border-soft);
+    }
+
+    .join-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .join-hint {
+      color: #8e8e91;
+      font-size: 12.5px;
+    }
+
     .review-block {
       margin-top: 16px;
       padding-top: 16px;
@@ -665,6 +691,13 @@
                 <div class="lesson-time">${armusFormatTimeRange(booking.time)}</div>
               </div>
             </div>
+            ${(!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
+              <div class="lesson-join">
+                ${armusCanJoinLessonNow(booking)
+                  ? `<a class="join-btn" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>`
+                  : `<span class="join-hint">Ders saatinde bu kart üzerinden odaya katılabileceksin.</span>`}
+              </div>
+            ` : ""}
           `;
 
           if (isPast) {

@@ -54,6 +54,22 @@ async function armusGetBookingsForTeacher(teacherId) {
   return data.map(armusMapBookingRow);
 }
 
+// A single booking by id - RLS (bookings_select_participant) already
+// makes sure only the student, the teacher, or an admin can ever get a
+// row back, so a non-participant querying someone else's booking id
+// just gets null, same as a booking that doesn't exist.
+async function armusGetBookingById(bookingId) {
+
+  const { data, error } = await armusSupabase
+    .from("bookings")
+    .select("*")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return armusMapBookingRow(data);
+}
+
 const ARMUS_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 const ARMUS_MONTH_NAMES = [
   "Oca", "Şub", "Mar", "Nis", "May", "Haz",
@@ -99,6 +115,34 @@ function armusFormatTimeRange(startTime, durationMinutes = ARMUS_LESSON_MINUTES)
     String(endHours).padStart(2, "0") + ":" + String(endMinutes).padStart(2, "0");
 
   return `${startTime} – ${endTime}`;
+}
+
+// A stable, hard-to-guess Jitsi Meet room name derived from the booking
+// id - both participants compute the same name independently from the
+// booking they can already (per RLS) see, no extra column needed.
+function armusRoomNameForBooking(bookingId) {
+  return "armus-lesson-" + String(bookingId).replace(/-/g, "");
+}
+
+// The lesson's start/end as real Date objects, and the ARMUS_JOIN_WINDOW
+// join window around it - shared by class.html (does it show the call or
+// a "too early/too late" screen) and my-lessons.html/dashboard.html (does
+// the "Derse Katıl" button link out or show as disabled).
+const ARMUS_JOIN_EARLY_MINUTES = 15;
+const ARMUS_JOIN_LATE_GRACE_MINUTES = 15;
+
+function armusLessonWindow(booking) {
+  const start = new Date(`${booking.date}T${booking.time}:00`);
+  const end = new Date(start.getTime() + ARMUS_LESSON_MINUTES * 60000);
+  const joinsFrom = new Date(start.getTime() - ARMUS_JOIN_EARLY_MINUTES * 60000);
+  const joinsUntil = new Date(end.getTime() + ARMUS_JOIN_LATE_GRACE_MINUTES * 60000);
+  return { start, end, joinsFrom, joinsUntil };
+}
+
+function armusCanJoinLessonNow(booking) {
+  const { joinsFrom, joinsUntil } = armusLessonWindow(booking);
+  const now = new Date();
+  return now >= joinsFrom && now <= joinsUntil;
 }
 
 // Every half-hour lesson start time in a day: "00:00", "00:30", ... "23:30".

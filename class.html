@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Ders Odası | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    /* ---- states shown before the call mounts ---- */
+
+    .state-screen {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .state-screen .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+      margin-bottom: 30px;
+    }
+
+    .state-screen h1 {
+      font-size: 24px;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+    }
+
+    .state-screen p {
+      color: #99999c;
+      font-size: 14px;
+      max-width: 420px;
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .state-screen .lesson-meta {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 14px 22px;
+      font-size: 13.5px;
+      color: #d8d8da;
+      margin-bottom: 24px;
+    }
+
+    .state-screen .lesson-meta strong {
+      color: var(--armus-gold-text);
+    }
+
+    /* ---- active room ---- */
+
+    .room {
+      display: none;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .room-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      background: rgba(0, 0, 0, .2);
+      flex-shrink: 0;
+    }
+
+    .room-bar .logo {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .room-bar .lesson-with {
+      font-size: 12.5px;
+      color: #b8b8bb;
+    }
+
+    #jitsiContainer {
+      flex: 1;
+      min-height: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="state-screen" id="gate">
+    <a href="index.html" class="logo">ARMUS</a>
+    <h1 id="gateTitle"></h1>
+    <p id="gateText"></p>
+    <div id="gateActions"></div>
+  </div>
+
+  <div class="state-screen" id="tooEarly">
+    <a href="index.html" class="logo">ARMUS</a>
+    <h1>Ders zamanı henüz gelmedi</h1>
+    <p>Bu odaya dersin başlamasına <strong id="minutesUntil"></strong> dakika kala girebilirsin.</p>
+    <div class="lesson-meta" id="tooEarlyMeta"></div>
+    <a class="btn" id="tooEarlyBack" href="my-lessons.html">← Derslerime dön</a>
+  </div>
+
+  <div class="state-screen" id="tooLate">
+    <a href="index.html" class="logo">ARMUS</a>
+    <h1>Bu ders sona erdi</h1>
+    <p>Bu dersin oda süresi doldu. Yeni bir ders için tekrar rezervasyon yapabilirsin.</p>
+    <a class="btn btn-light" id="tooLateBack" href="my-lessons.html">← Derslerime dön</a>
+  </div>
+
+  <div class="room" id="room">
+    <div class="room-bar">
+      <a href="index.html" class="logo">ARMUS</a>
+      <span class="lesson-with" id="lessonWith"></span>
+      <a class="btn" id="leaveBtn" href="my-lessons.html">Ayrıl</a>
+    </div>
+    <div id="jitsiContainer"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="bookings.js"></script>
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <script>
+
+    const gate = document.getElementById("gate");
+    const tooEarly = document.getElementById("tooEarly");
+    const tooLate = document.getElementById("tooLate");
+    const room = document.getElementById("room");
+
+    function showGate(title, text, actionsHtml) {
+      document.getElementById("gateTitle").textContent = title;
+      document.getElementById("gateText").textContent = text;
+      document.getElementById("gateActions").innerHTML = actionsHtml || "";
+      gate.style.display = "flex";
+    }
+
+    (async function () {
+
+      const bookingId = new URLSearchParams(window.location.search).get("booking");
+
+      if (!bookingId) {
+        showGate("Ders odası bulunamadı", "Geçerli bir ders bağlantısıyla buraya gelmelisin.", '<a class="btn btn-light" href="my-lessons.html">Derslerime dön</a>');
+        return;
+      }
+
+      const session = await armusGetSession();
+
+      if (!session) {
+        showGate(
+          "Giriş yapmalısın",
+          "Bu ders odasına girmek için hesabınla giriş yapmalısın.",
+          `<a class="btn btn-light" href="login.html?next=${encodeURIComponent(window.location.href)}">Giriş Yap</a>`
+        );
+        return;
+      }
+
+      const booking = await armusGetBookingById(bookingId);
+
+      // RLS already restricts this to participants (or admin) - a null
+      // result covers both "doesn't exist" and "not your booking"
+      // without telling a snooper which one it is.
+      if (!booking) {
+        showGate(
+          "Bu derse erişimin yok",
+          "Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin.",
+          '<a class="btn btn-light" href="my-lessons.html">Derslerime dön</a>'
+        );
+        return;
+      }
+
+      const isStudent = session.id === booking.studentId;
+      const isTeacher = session.id === booking.teacherId;
+      const backHref = isTeacher ? "dashboard.html" : "my-lessons.html";
+      document.getElementById("tooEarlyBack").href = backHref;
+      document.getElementById("tooLateBack").href = backHref;
+      document.getElementById("leaveBtn").href = backHref;
+
+      const { start, joinsFrom, joinsUntil } = armusLessonWindow(booking);
+      const now = new Date();
+
+      if (now < joinsFrom) {
+        const minutesUntil = Math.ceil((joinsFrom - now) / 60000);
+        document.getElementById("minutesUntil").textContent = minutesUntil;
+        document.getElementById("tooEarlyMeta").innerHTML =
+          `<strong>${isStudent ? booking.teacherName : booking.studentName}</strong> ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`;
+        tooEarly.style.display = "flex";
+        return;
+      }
+
+      if (now > joinsUntil) {
+        tooLate.style.display = "flex";
+        return;
+      }
+
+      document.getElementById("lessonWith").textContent =
+        (isStudent ? booking.teacherName : booking.studentName) + " ile ders · " + armusFormatTimeRange(booking.time);
+
+      room.style.display = "flex";
+
+      new JitsiMeetExternalAPI("meet.jit.si", {
+        roomName: armusRoomNameForBooking(booking.id),
+        parentNode: document.getElementById("jitsiContainer"),
+        userInfo: { displayName: session.name },
+        configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
+        interfaceConfigOverwrite: { MOBILE_APP_PROMO: false },
+      });
+
+    })();
+
+  </script>
+
+</body>
+</html>

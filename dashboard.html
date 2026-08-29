@@ -567,6 +567,28 @@
     .today-row .today-when {
       color: var(--armus-gold-text);
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .join-btn-sm {
+      display: inline-block;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 11.5px;
+      text-decoration: none;
+    }
+
+    .join-hint-sm {
+      color: #6e6e72;
+      font-size: 11px;
+      font-weight: 400;
     }
 
     /* ---- achievement badges ---- */
@@ -1297,7 +1319,10 @@
         document.getElementById("todayList").innerHTML = todayBookings.map(b => `
           <div class="today-row">
             <span>${b.studentName} · ${b.type === "trial" ? "Deneme Dersi" : "Ders"}</span>
-            <span class="today-when">${armusFormatTimeRange(b.time)}</span>
+            <span class="today-when">
+              ${armusFormatTimeRange(b.time)}
+              ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">🎥 Katıl</a>` : ""}
+            </span>
           </div>
         `).join("");
       }
@@ -1452,6 +1477,7 @@
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
+                  ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>` : ""}
                 </div>
               </div>
             `).join("")}
