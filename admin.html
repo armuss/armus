@@ -662,6 +662,287 @@
       color: #8fd6ae;
     }
 
+    /* ---- keyboard hint chips ---- */
+
+    kbd {
+      display: inline-block;
+      background: var(--armus-panel-2, var(--armus-panel));
+      border: 1px solid var(--armus-border);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-family: inherit;
+      font-size: 11px;
+      color: #d8d8da;
+    }
+
+    .app-card.kbd-focus {
+      outline: 2px solid var(--armus-gold-2);
+      outline-offset: 2px;
+    }
+
+    /* ---- daily digest ---- */
+
+    .digest-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #e6e6e4;
+    }
+
+    /* ---- milestone confetti ---- */
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 50;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -20px;
+      width: 8px;
+      height: 14px;
+      opacity: .9;
+      animation: armus-confetti-fall linear forwards;
+    }
+
+    @keyframes armus-confetti-fall {
+      to {
+        top: 105vh;
+        transform: translateX(var(--drift, 0px)) rotate(540deg);
+      }
+    }
+
+    /* ---- health score gauge ---- */
+
+    .health-gauge {
+      flex-shrink: 0;
+      width: 46px;
+      height: 46px;
+    }
+
+    .health-gauge text {
+      font-size: 13px;
+      font-weight: 800;
+      text-anchor: middle;
+      dominant-baseline: central;
+      fill: #f4f4f2;
+    }
+
+    /* ---- demand heatmap ---- */
+
+    .heatmap-wrap {
+      overflow-x: auto;
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: 60px repeat(12, 1fr);
+      gap: 3px;
+      min-width: 720px;
+      margin-top: 8px;
+    }
+
+    .heatmap-grid .hm-label {
+      font-size: 10.5px;
+      color: #8e8e91;
+      display: flex;
+      align-items: center;
+    }
+
+    .heatmap-grid .hm-head {
+      font-size: 9.5px;
+      color: #6e6e72;
+      text-align: center;
+      padding-bottom: 4px;
+    }
+
+    .heatmap-grid .hm-cell {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: var(--armus-panel-2, var(--armus-panel));
+    }
+
+    /* ---- city breakdown bars ---- */
+
+    .city-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .city-bar-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 40px;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .city-bar-track {
+      background: var(--armus-panel-2, var(--armus-panel));
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .city-bar-fill {
+      height: 100%;
+      background: var(--armus-gold-gradient);
+      border-radius: 999px;
+    }
+
+    /* ---- feature flag toggles ---- */
+
+    .flag-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--armus-border-soft);
+    }
+
+    .flag-row:last-child {
+      border-bottom: none;
+    }
+
+    .flag-row-label strong {
+      display: block;
+      font-size: 13.5px;
+      margin-bottom: 2px;
+    }
+
+    .flag-row-label span {
+      color: #8e8e91;
+      font-size: 12px;
+    }
+
+    .flag-switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: var(--armus-border);
+      border: none;
+      cursor: pointer;
+    }
+
+    .flag-switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left .15s ease;
+    }
+
+    .flag-switch.on {
+      background: var(--armus-gold-gradient);
+    }
+
+    .flag-switch.on::after {
+      left: 21px;
+    }
+
+    /* ---- command palette ---- */
+
+    .palette-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 30;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 12vh 20px 20px;
+    }
+
+    .palette-overlay.visible {
+      display: flex;
+    }
+
+    .palette-box {
+      background: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      width: min(560px, 100%);
+      max-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+    }
+
+    .palette-box input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--armus-border-soft);
+      color: #f4f4f2;
+      font-family: inherit;
+      font-size: 15px;
+      padding: 16px 18px;
+      outline: none;
+    }
+
+    .palette-results {
+      overflow-y: auto;
+      padding: 6px;
+    }
+
+    .palette-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .palette-item.active {
+      background: var(--armus-panel);
+    }
+
+    .palette-item .pi-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: #8e8e91;
+      border: 1px solid var(--armus-border);
+      border-radius: 5px;
+      padding: 2px 6px;
+      flex-shrink: 0;
+    }
+
+    .palette-item .pi-sub {
+      color: #8e8e91;
+      font-size: 11.5px;
+    }
+
+    .palette-empty {
+      color: #6e6e72;
+      font-size: 13px;
+      padding: 16px 12px;
+    }
+
+    .palette-hint {
+      border-top: 1px solid var(--armus-border-soft);
+      padding: 8px 14px;
+      font-size: 11px;
+      color: #6e6e72;
+    }
+
     @media (max-width: 860px) {
       .shell {
         grid-template-columns: 1fr;
@@ -754,6 +1035,9 @@
       <button class="nav-btn" data-panel="reviews">İncelemeler <span class="nav-badge" id="reviewsBadge"></span></button>
       <button class="nav-btn" data-panel="earnings">Kazançlar</button>
       <button class="nav-btn" data-panel="announcement">Site Duyurusu</button>
+      <button class="nav-btn" data-panel="demand">Talep Haritası</button>
+      <button class="nav-btn" data-panel="cities">Şehirler</button>
+      <button class="nav-btn" data-panel="flags">Görünüm Ayarları</button>
 
       <div class="sidebar-bottom">
         <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
@@ -764,18 +1048,21 @@
 
       <div class="panel active" id="panel-overview">
         <h2>Genel Bakış</h2>
+        <div class="digest-card" id="digestCard"></div>
         <div class="stat-grid" id="overviewStats"></div>
         <h3>Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
         <h3>Canlı Akış <span style="color:#4caf7d;font-size:10px;vertical-align:middle;">● CANLI</span></h3>
         <p class="section-hint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
+        <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
       </div>
 
       <div class="panel" id="panel-teachers">
         <h2>Öğretmenler</h2>
 
         <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara...">
+        <p class="section-hint" style="margin-top: -12px;">Klavye: bekleyen başvurular arasında <kbd>j</kbd>/<kbd>k</kbd> ile gezin, <kbd>a</kbd> onayla, <kbd>r</kbd> reddet. Her yerden <kbd>Ctrl</kbd>+<kbd>K</kbd> ile hızlı ara.</p>
 
         <div id="atRiskSection" style="display: none;">
           <h3 style="color: #f0a5a5;">⚠️ Riskli öğretmenler</h3>
@@ -988,6 +1275,37 @@
         </div>
       </div>
 
+      <div class="panel" id="panel-demand">
+        <h2>Talep Haritası</h2>
+        <p class="section-hint">
+          Rezervasyonların hangi gün ve saatlerde yoğunlaştığını gösterir -
+          koyu hücreler yoğun talebi işaret eder. Yeni öğretmen ararken
+          hangi saatlere öncelik vermen gerektiğini buradan görebilirsin.
+        </p>
+        <div id="demandHeatmap" class="heatmap-wrap"></div>
+        <div class="empty-note" id="demandEmpty" style="display: none;">Henüz ısı haritası için yeterli rezervasyon yok.</div>
+      </div>
+
+      <div class="panel" id="panel-cities">
+        <h2>Şehirlere Göre Dağılım</h2>
+        <p class="section-hint">
+          Öğrenci ve öğretmenlerin bildirdiği şehirlere göre dağılım. Yeni
+          kayıtlarda toplanan şehir bilgisine göre dolar - eski hesaplarda
+          şehir bilgisi olmayabilir.
+        </p>
+        <div id="cityList" class="city-bars"></div>
+        <div class="empty-note" id="cityEmpty" style="display: none;">Henüz şehir bilgisi olan kayıt yok.</div>
+      </div>
+
+      <div class="panel" id="panel-flags">
+        <h2>Görünüm Ayarları</h2>
+        <p class="section-hint">
+          Ana sayfadaki bazı bölümleri kod değişikliği yapmadan buradan
+          geçici olarak kapatabilirsin. Değişiklik hemen etkili olur.
+        </p>
+        <div class="app-card" id="flagsCard"></div>
+      </div>
+
       <!-- STUDENT DETAIL (read-only "view as") -->
       <div class="detail-overlay" id="detailOverlay">
         <div class="detail-panel">
@@ -996,6 +1314,15 @@
             <button class="btn" id="detailCloseBtn">Kapat ✕</button>
           </div>
           <div id="detailBody"></div>
+        </div>
+      </div>
+
+      <!-- COMMAND PALETTE (Ctrl/Cmd+K quick search) -->
+      <div class="palette-overlay" id="paletteOverlay">
+        <div class="palette-box">
+          <input type="text" id="paletteInput" placeholder="Öğretmen, öğrenci, rezervasyon, anlaşmazlık ara..." autocomplete="off">
+          <div id="paletteResults" class="palette-results"></div>
+          <div class="palette-hint">↑↓ gezin · Enter git · Esc kapat</div>
         </div>
       </div>
 
@@ -1066,6 +1393,8 @@
 
       const card = document.createElement("div");
       card.className = "app-card";
+      card.dataset.teacherId = user.id;
+      card.dataset.id = user.id;
 
       const avatarInner = user.photo_url
         ? `<img src="${user.photo_url}" alt="">`
@@ -1094,6 +1423,10 @@
         ? `<input type="checkbox" class="bulk-select-checkbox" data-bulk-select="${user.id}" ${armusBulkSelected.has(user.id) ? "checked" : ""} style="width:17px;height:17px;margin-right:12px;flex-shrink:0;align-self:flex-start;margin-top:4px;">`
         : "";
 
+      const healthGauge = user.status === "approved"
+        ? renderHealthGauge(computeHealthScore(user, armusAdminBookings, armusAdminReviews, armusAdminDisputes))
+        : "";
+
       card.innerHTML = `
         <div class="app-top">
           ${bulkCheckbox}
@@ -1103,6 +1436,7 @@
             <div class="app-email">${user.email}</div>
             <span class="app-badge ${user.status || "none"}">${badgeLabel}</span>
           </div>
+          ${healthGauge}
           <div class="app-actions">${actions}</div>
         </div>
 
@@ -1325,6 +1659,7 @@
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
         .forEach(b => {
           const tr = document.createElement("tr");
+          tr.dataset.id = b.id;
           tr.innerHTML = `
             <td>${b.studentName}</td>
             <td>${b.teacherName}</td>
@@ -1374,6 +1709,7 @@
       students.forEach(s => {
         const count = bookings.filter(b => b.studentId === s.id).length;
         const tr = document.createElement("tr");
+        tr.dataset.id = s.id;
         tr.innerHTML = `
           <td>${s.name}</td>
           <td>${s.email}</td>
@@ -1596,6 +1932,7 @@
       sorted.forEach((t, idx) => {
         const card = document.createElement("div");
         card.className = "app-card";
+        card.dataset.id = t.id;
         card.innerHTML = `
           <div class="app-top">
             <div>
@@ -1882,6 +2219,7 @@
       disputes.forEach(d => {
         const card = document.createElement("div");
         card.className = "app-card";
+        card.dataset.id = d.id;
         card.innerHTML = `
           <div class="app-top">
             <div>
@@ -2133,6 +2471,428 @@
       }
     });
 
+    // ---- daily narrative digest ----
+    // No AI involved - just a template sentence built from stats already
+    // on the page, so the overview reads like a summary instead of a wall
+    // of numbers.
+
+    function renderDigest(profiles, bookings, disputes) {
+      const el = document.getElementById("digestCard");
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const weekAgoKey = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+
+      const newToday = profiles.filter(p => (p.created_at || "").slice(0, 10) === todayKey).length;
+      const bookingsToday = bookings.filter(b => b.date === todayKey).length;
+      const bookingsThisWeek = bookings.filter(b => b.date >= weekAgoKey);
+
+      const teacherCounts = {};
+      bookingsThisWeek.forEach(b => { teacherCounts[b.teacherName] = (teacherCounts[b.teacherName] || 0) + 1; });
+      const topTeacherEntry = Object.entries(teacherCounts).sort((a, b) => b[1] - a[1])[0];
+
+      const openDisputes = (disputes || []).filter(d => d.status !== "resolved").length;
+
+      const parts = [
+        newToday > 0 ? `bugün <strong>${newToday}</strong> yeni kayıt oldu` : `bugün henüz yeni kayıt olmadı`,
+        bookingsToday > 0 ? `<strong>${bookingsToday}</strong> rezervasyon yapıldı` : `henüz rezervasyon yapılmadı`,
+      ];
+      if (topTeacherEntry) {
+        parts.push(`bu hafta en çok ders veren öğretmen <strong>${topTeacherEntry[0]}</strong> (${topTeacherEntry[1]} ders)`);
+      }
+
+      let text = "👋 Günaydın! " + parts.join(", ") + ".";
+      if (openDisputes > 0) {
+        text += ` ⚑ <strong>${openDisputes}</strong> çözülmemiş anlaşmazlık var, göz atmalısın.`;
+      }
+
+      el.innerHTML = text;
+    }
+
+    // ---- teacher health score gauge ----
+    // A single 0-100 number combining rating, how recently they've taught,
+    // and unresolved complaints - a faster read than scanning every stat.
+
+    function computeHealthScore(teacher, bookings, reviews, disputes) {
+      const teacherBookings = bookings.filter(b => b.teacherId === teacher.id);
+      const teacherReviews = reviews.filter(r => r.teacher_id === teacher.id);
+      const openDisputesAboutTeacher = (disputes || []).filter(d =>
+        d.status !== "resolved" && (d.other_party_name || "").toLowerCase() === (teacher.name || "").toLowerCase()
+      );
+
+      const ratingScore = teacherReviews.length
+        ? (teacherReviews.reduce((sum, r) => sum + r.stars, 0) / teacherReviews.length / 5) * 50
+        : 35;
+
+      let recencyScore = 10;
+      if (teacherBookings.length) {
+        const mostRecentDate = teacherBookings.reduce((latest, b) => b.date > latest ? b.date : latest, teacherBookings[0].date);
+        const daysSince = Math.floor((Date.now() - new Date(mostRecentDate + "T00:00:00").getTime()) / 86400000);
+        recencyScore = daysSince <= 7 ? 35 : daysSince <= 30 ? 25 : daysSince <= 90 ? 12 : 0;
+      }
+
+      const disputeScore = Math.max(0, 15 - openDisputesAboutTeacher.length * 10);
+
+      return Math.round(Math.max(0, Math.min(100, ratingScore + recencyScore + disputeScore)));
+    }
+
+    function renderHealthGauge(score) {
+      const radius = 18, circumference = 2 * Math.PI * radius;
+      const offset = circumference * (1 - score / 100);
+      const color = score >= 75 ? "#8fd6ae" : score >= 45 ? "var(--armus-gold-text)" : "#f0a5a5";
+      return `
+        <svg class="health-gauge" viewBox="0 0 46 46">
+          <title>Sağlık skoru: ${score}/100</title>
+          <circle cx="23" cy="23" r="${radius}" fill="none" style="stroke:var(--armus-border-soft)" stroke-width="4"></circle>
+          <circle cx="23" cy="23" r="${radius}" fill="none" style="stroke:${color}" stroke-width="4" stroke-linecap="round"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+            transform="rotate(-90 23 23)"></circle>
+          <text x="23" y="24" style="fill:${color}">${score}</text>
+        </svg>
+      `;
+    }
+
+    // ---- demand heatmap (day x 2-hour block) ----
+
+    function computeHeatmap(bookings) {
+      const grid = Array.from({ length: 7 }, () => Array(12).fill(0));
+      bookings.forEach(b => {
+        const jsDay = new Date(b.date + "T00:00:00").getDay();
+        const row = jsDay === 0 ? 6 : jsDay - 1;
+        const hour = Number((b.time || "0:0").split(":")[0]);
+        const col = Math.min(11, Math.max(0, Math.floor(hour / 2)));
+        grid[row][col]++;
+      });
+      return grid;
+    }
+
+    function renderHeatmap(grid) {
+      const container = document.getElementById("demandHeatmap");
+      const empty = document.getElementById("demandEmpty");
+      const total = grid.reduce((sum, row) => sum + row.reduce((a, b) => a + b, 0), 0);
+
+      if (!total) {
+        empty.style.display = "block";
+        container.innerHTML = "";
+        return;
+      }
+      empty.style.display = "none";
+
+      const max = Math.max(1, ...grid.map(row => Math.max(...row)));
+      const dayLabels = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+
+      const head = `<div class="hm-head"></div>` +
+        Array.from({ length: 12 }, (_, i) => `<div class="hm-head">${String(i * 2).padStart(2, "0")}</div>`).join("");
+
+      const rows = grid.map((row, r) => {
+        const cells = row.map(count => {
+          const intensity = count / max;
+          const style = count === 0 ? "" : `style="background:rgba(212,175,106,${(0.15 + intensity * 0.75).toFixed(2)})"`;
+          return `<div class="hm-cell" ${style} title="${dayLabels[r]}: ${count} rezervasyon"></div>`;
+        }).join("");
+        return `<div class="hm-label">${dayLabels[r]}</div>${cells}`;
+      }).join("");
+
+      container.innerHTML = `<div class="heatmap-grid">${head}${rows}</div>`;
+    }
+
+    // ---- city breakdown ----
+    // Requires the profiles.city column from migration_9.sql - existing
+    // accounts have no city until they update their profile, so this is
+    // expected to be sparse at first and fill in as new users sign up.
+
+    function computeCityBreakdown(profiles) {
+      const counts = {};
+      profiles.forEach(p => {
+        const city = (p.city || "").trim();
+        if (!city) return;
+        counts[city] = (counts[city] || 0) + 1;
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderCityBreakdown(entries) {
+      const list = document.getElementById("cityList");
+      const empty = document.getElementById("cityEmpty");
+
+      if (!entries.length) {
+        empty.style.display = "block";
+        list.innerHTML = "";
+        return;
+      }
+      empty.style.display = "none";
+
+      const max = entries[0][1];
+      list.innerHTML = entries.map(([city, count]) => `
+        <div class="city-bar-row">
+          <span>${city}</span>
+          <div class="city-bar-track"><div class="city-bar-fill" style="width:${Math.round((count / max) * 100)}%"></div></div>
+          <span>${count}</span>
+        </div>
+      `).join("");
+    }
+
+    // ---- homepage section feature flags ----
+    // Reuses the site_settings table from migration_8.sql under a new
+    // key, so no further schema change is needed.
+
+    const ARMUS_FEATURE_FLAGS = [
+      { key: "flagProof", label: "Kanıt / istatistik bölümü", desc: "Ana sayfadaki dönen fotoğraf ve istatistik kartları." },
+      { key: "flagPromiseBanner", label: "Altın söz bandı", desc: "\"Seveceğin dersler. Garantili.\" bandı." },
+      { key: "flagTeacherCta", label: "Öğretmen ol bölümü", desc: "\"İngilizce öğretiyor musun?\" bölümü." },
+      { key: "flagCommission", label: "Komisyon oranları", desc: "Komisyon dilimlerini gösteren bölüm." },
+      { key: "flagTestimonials", label: "Öğrenci yorumları", desc: "\"Öğrencilerimiz ne diyor?\" bölümü." },
+    ];
+
+    let armusFeatureFlags = {};
+
+    async function loadFlagsIntoPanel() {
+      const saved = await armusGetSiteSetting("feature_flags");
+      armusFeatureFlags = saved || {};
+      renderFlagsPanel();
+    }
+
+    function renderFlagsPanel() {
+      const card = document.getElementById("flagsCard");
+
+      card.innerHTML = ARMUS_FEATURE_FLAGS.map(f => {
+        const on = armusFeatureFlags[f.key] !== false;
+        return `
+          <div class="flag-row">
+            <div class="flag-row-label"><strong>${f.label}</strong><span>${f.desc}</span></div>
+            <button class="flag-switch ${on ? "on" : ""}" data-flag-toggle="${f.key}" aria-label="${f.label}"></button>
+          </div>
+        `;
+      }).join("");
+
+      card.querySelectorAll("[data-flag-toggle]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const key = button.dataset.flagToggle;
+          const newValue = !(armusFeatureFlags[key] !== false);
+          button.disabled = true;
+          const previous = armusFeatureFlags;
+          armusFeatureFlags = { ...armusFeatureFlags, [key]: newValue };
+          const saved = await armusSetSiteSetting("feature_flags", armusFeatureFlags);
+          button.disabled = false;
+          if (saved) {
+            renderFlagsPanel();
+          } else {
+            armusFeatureFlags = previous;
+            alert("Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir.");
+          }
+        });
+      });
+    }
+
+    // ---- milestone confetti ----
+
+    const ARMUS_MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+
+    function fireConfetti() {
+      const layer = document.getElementById("confettiLayer");
+      if (!layer) return;
+      const colors = ["#d4af6a", "#f0e6d2", "#8fd6ae", "#f0a5a5", "#b7bac3"];
+      for (let i = 0; i < 60; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "%";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.setProperty("--drift", (Math.random() * 200 - 100) + "px");
+        piece.style.animationDuration = (2.5 + Math.random() * 1.5) + "s";
+        piece.style.animationDelay = (Math.random() * 0.6) + "s";
+        layer.appendChild(piece);
+      }
+      setTimeout(() => { layer.innerHTML = ""; }, 4500);
+    }
+
+    function checkMilestones(profiles) {
+      const studentCount = profiles.filter(p => p.role === "student").length;
+      const crossed = ARMUS_MILESTONES.filter(m => studentCount >= m);
+      if (!crossed.length) return;
+      const latest = crossed[crossed.length - 1];
+
+      let celebrated = [];
+      try { celebrated = JSON.parse(localStorage.getItem("armusCelebratedMilestones") || "[]"); } catch (e) {}
+      if (celebrated.includes(latest)) return;
+
+      fireConfetti();
+      celebrated.push(latest);
+      try { localStorage.setItem("armusCelebratedMilestones", JSON.stringify(celebrated)); } catch (e) {}
+    }
+
+    // ---- command palette (Ctrl/Cmd+K quick search) ----
+
+    function buildPaletteIndex() {
+      const items = [];
+
+      armusAdminProfiles.forEach(p => {
+        items.push({
+          type: p.role === "teacher" ? "Öğretmen" : "Öğrenci",
+          label: p.name,
+          sub: p.email,
+          panel: p.role === "teacher" ? "teachers" : "students",
+          id: p.id,
+        });
+      });
+      armusAdminBookings.forEach(b => {
+        items.push({
+          type: "Rezervasyon",
+          label: `${b.studentName} → ${b.teacherName}`,
+          sub: `${b.dateLabel} · ${b.time}`,
+          panel: "bookings",
+          id: b.id,
+        });
+      });
+      armusAdminDisputes.forEach(d => {
+        items.push({
+          type: "Anlaşmazlık",
+          label: d.subject,
+          sub: d.reporter_name,
+          panel: "disputes",
+          id: d.id,
+        });
+      });
+      armusAdminTestimonials.forEach(t => {
+        items.push({
+          type: "Yorum",
+          label: t.name,
+          sub: (t.quote || "").slice(0, 40),
+          panel: "testimonials",
+          id: t.id,
+        });
+      });
+
+      return items;
+    }
+
+    let armusPaletteResults = [];
+    let armusPaletteActiveIndex = 0;
+
+    function openPalette() {
+      document.getElementById("paletteOverlay").classList.add("visible");
+      const input = document.getElementById("paletteInput");
+      input.value = "";
+      renderPaletteResults("");
+      input.focus();
+    }
+
+    function closePalette() {
+      document.getElementById("paletteOverlay").classList.remove("visible");
+    }
+
+    function renderPaletteResults(query) {
+      const term = query.trim().toLowerCase();
+      const all = buildPaletteIndex();
+      armusPaletteResults = term
+        ? all.filter(item => item.label.toLowerCase().includes(term) || (item.sub || "").toLowerCase().includes(term)).slice(0, 30)
+        : all.slice(0, 12);
+      armusPaletteActiveIndex = 0;
+
+      const container = document.getElementById("paletteResults");
+      if (!armusPaletteResults.length) {
+        container.innerHTML = `<div class="palette-empty">Sonuç yok.</div>`;
+        return;
+      }
+      container.innerHTML = armusPaletteResults.map((item, i) => `
+        <div class="palette-item ${i === 0 ? "active" : ""}" data-index="${i}">
+          <span class="pi-type">${item.type}</span>
+          <span>${item.label}${item.sub ? ` <span class="pi-sub">· ${item.sub}</span>` : ""}</span>
+        </div>
+      `).join("");
+
+      container.querySelectorAll(".palette-item").forEach(el => {
+        el.addEventListener("click", () => {
+          armusPaletteActiveIndex = Number(el.dataset.index);
+          goToPaletteResult();
+        });
+      });
+    }
+
+    function movePaletteActive(delta) {
+      if (!armusPaletteResults.length) return;
+      armusPaletteActiveIndex = (armusPaletteActiveIndex + delta + armusPaletteResults.length) % armusPaletteResults.length;
+      document.querySelectorAll(".palette-item").forEach((el, i) => {
+        el.classList.toggle("active", i === armusPaletteActiveIndex);
+      });
+      const activeEl = document.querySelector(".palette-item.active");
+      if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+    }
+
+    function goToPaletteResult() {
+      const item = armusPaletteResults[armusPaletteActiveIndex];
+      if (!item) return;
+      closePalette();
+      const navBtn = document.querySelector(`[data-panel="${item.panel}"]`);
+      if (navBtn) navBtn.click();
+      setTimeout(() => {
+        const target = document.querySelector(`[data-id="${item.id}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.classList.add("kbd-focus");
+          setTimeout(() => target.classList.remove("kbd-focus"), 2000);
+        }
+      }, 100);
+    }
+
+    document.getElementById("paletteInput").addEventListener("input", e => renderPaletteResults(e.target.value));
+    document.getElementById("paletteOverlay").addEventListener("click", e => {
+      if (e.target.id === "paletteOverlay") closePalette();
+    });
+    document.getElementById("paletteInput").addEventListener("keydown", e => {
+      if (e.key === "ArrowDown") { e.preventDefault(); movePaletteActive(1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); movePaletteActive(-1); }
+      else if (e.key === "Enter") { e.preventDefault(); goToPaletteResult(); }
+      else if (e.key === "Escape") { e.preventDefault(); closePalette(); }
+    });
+
+    // ---- keyboard shortcuts for pending applications (j/k/a/r) + global Ctrl/Cmd+K ----
+
+    let armusFocusedPendingIndex = -1;
+
+    function focusPendingCard(index) {
+      const cards = Array.from(document.querySelectorAll("#pendingList .app-card"));
+      cards.forEach(c => c.classList.remove("kbd-focus"));
+      if (!cards.length) { armusFocusedPendingIndex = -1; return; }
+      armusFocusedPendingIndex = Math.max(0, Math.min(index, cards.length - 1));
+      const card = cards[armusFocusedPendingIndex];
+      card.classList.add("kbd-focus");
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    document.addEventListener("keydown", event => {
+
+      const isCtrlK = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
+      if (isCtrlK) {
+        event.preventDefault();
+        const overlay = document.getElementById("paletteOverlay");
+        overlay.classList.contains("visible") ? closePalette() : openPalette();
+        return;
+      }
+
+      if (document.getElementById("paletteOverlay").classList.contains("visible")) return;
+
+      const tag = (event.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || event.target.isContentEditable) return;
+
+      const teachersPanelActive = document.getElementById("panel-teachers").classList.contains("active");
+      if (!teachersPanelActive) return;
+
+      const cards = document.querySelectorAll("#pendingList .app-card");
+      if (!cards.length) return;
+
+      if (event.key === "j") {
+        event.preventDefault();
+        focusPendingCard(armusFocusedPendingIndex + 1);
+      } else if (event.key === "k") {
+        event.preventDefault();
+        focusPendingCard(armusFocusedPendingIndex <= 0 ? 0 : armusFocusedPendingIndex - 1);
+      } else if (event.key === "a" || event.key === "r") {
+        if (armusFocusedPendingIndex < 0) return;
+        const card = cards[armusFocusedPendingIndex];
+        if (!card) return;
+        const button = card.querySelector(event.key === "a" ? "[data-action='approve']" : "[data-action='reject']");
+        if (button) button.click();
+      }
+    });
+
     // kept at module scope so an approve/reject action can patch a single
     // profile locally and re-render, instead of re-fetching every table
     // from Supabase on every click
@@ -2166,6 +2926,7 @@
       );
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
+      renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
       renderTrendChart(armusAdminBookings);
       renderAtRiskPanel(computeAtRiskTeachers(teachers, armusAdminBookings, armusAdminReviews));
       renderBulkActionsBar();
@@ -2178,6 +2939,9 @@
       renderDisputesPanel(filteredDisputes);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings));
+      renderHeatmap(computeHeatmap(armusAdminBookings));
+      renderCityBreakdown(computeCityBreakdown(armusAdminProfiles));
+      checkMilestones(armusAdminProfiles);
     }
 
     // armusAdminUpdateProfile already returns the updated row, so an
@@ -2259,6 +3023,7 @@
       updateTestimonialPreview();
       armusInitLivePulse();
       loadAnnouncementIntoForm();
+      loadFlagsIntoPanel();
       await loadAll();
 
     })();

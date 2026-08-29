@@ -4,11 +4,11 @@
  * loaded before this file.
  */
 
-async function armusSignUp({ name, email, password, role }) {
+async function armusSignUp({ name, email, password, role, city }) {
   return armusSupabase.auth.signUp({
     email,
     password,
-    options: { data: { name, role } },
+    options: { data: { name, role, city: city || null } },
   });
 }
 
