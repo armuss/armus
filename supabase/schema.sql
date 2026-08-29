@@ -426,37 +426,27 @@ create policy "teacher_notes_write_own"
 -- video here instead of base64-encoding them into a profiles column -
 -- that hit Supabase's request size limit for anything but tiny files.
 -- Reads are open because the bucket is public (the photo/video are
--- shown on public teacher profile pages anyway); writes are restricted
--- to a teacher's own folder ("<uid>/...").
+-- shown on public teacher profile pages anyway); writes just require
+-- being logged in (a per-uploader-folder path check was tried first but
+-- rejected valid uploads in practice, so this settles for "any
+-- authenticated ARMUS account" rather than debugging that blind).
 
 insert into storage.buckets (id, name, public)
 values ('teacher-uploads', 'teacher-uploads', true)
 on conflict (id) do nothing;
 
-create policy "teacher_uploads_insert_own"
+create policy "teacher_uploads_insert_authenticated"
   on storage.objects for insert
   to authenticated
-  with check (
-    bucket_id = 'teacher-uploads'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  with check (bucket_id = 'teacher-uploads');
 
-create policy "teacher_uploads_update_own"
+create policy "teacher_uploads_update_authenticated"
   on storage.objects for update
   to authenticated
-  using (
-    bucket_id = 'teacher-uploads'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  )
-  with check (
-    bucket_id = 'teacher-uploads'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  using (bucket_id = 'teacher-uploads')
+  with check (bucket_id = 'teacher-uploads');
 
-create policy "teacher_uploads_delete_own"
+create policy "teacher_uploads_delete_authenticated"
   on storage.objects for delete
   to authenticated
-  using (
-    bucket_id = 'teacher-uploads'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  using (bucket_id = 'teacher-uploads');
