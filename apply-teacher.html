@@ -1034,7 +1034,7 @@
           .from("teacher-uploads")
           .upload(path, file, { upsert: true, contentType: file.type || undefined })
           .then(({ error }) => {
-            if (error) throw new Error(error.message || "Dosya yüklenemedi.");
+            if (error) throw new Error((error.message || "Dosya yüklenemedi.") + ` [${path}]`);
             return armusSupabase.storage.from("teacher-uploads").getPublicUrl(path).data.publicUrl;
           });
       }
