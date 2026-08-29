@@ -62,6 +62,33 @@
 
     testBtn.disabled = false;
 
+    async function runOneTest(upsert) {
+      const path = session.user.id + "/debug-test-" + Date.now() + "-" + (upsert ? "upsert" : "plain") + ".txt";
+      const blob = new Blob(["armus storage test"], { type: "text/plain" });
+
+      const { error: uploadError } = await armusSupabase
+        .storage.from("teacher-uploads")
+        .upload(path, blob, { upsert, contentType: "text/plain" });
+
+      const label = "upsert: " + upsert;
+
+      if (uploadError) {
+        return (
+          '<span class="bad">BAŞARISIZ</span> (' + label + ")\n" +
+          "path: " + path + "\n" +
+          "error.message: " + uploadError.message + "\n" +
+          "error (tam JSON):\n" + JSON.stringify(uploadError, Object.getOwnPropertyNames(uploadError), 2)
+        );
+      }
+
+      const pub = armusSupabase.storage.from("teacher-uploads").getPublicUrl(path);
+      return (
+        '<span class="ok">BAŞARILI</span> (' + label + ")\n" +
+        "path: " + path + "\n" +
+        "public url: " + pub.data.publicUrl
+      );
+    }
+
     testBtn.addEventListener("click", async () => {
       testBtn.disabled = true;
       testBtn.textContent = "Test ediliyor...";
@@ -69,26 +96,12 @@
       resultBox.style.display = "block";
       resultBox.textContent = "Yükleniyor...";
 
-      const path = session.user.id + "/debug-test-" + Date.now() + ".txt";
-      const blob = new Blob(["armus storage test"], { type: "text/plain" });
+      const [withUpsert, withoutUpsert] = await Promise.all([
+        runOneTest(true),
+        runOneTest(false),
+      ]);
 
-      const { data: uploadData, error: uploadError } = await armusSupabase
-        .storage.from("teacher-uploads")
-        .upload(path, blob, { upsert: true, contentType: "text/plain" });
-
-      if (uploadError) {
-        resultBox.innerHTML =
-          '<span class="bad">BAŞARISIZ</span>\n' +
-          "path: " + path + "\n" +
-          "error.message: " + uploadError.message + "\n" +
-          "error (tam JSON):\n" + JSON.stringify(uploadError, Object.getOwnPropertyNames(uploadError), 2);
-      } else {
-        const pub = armusSupabase.storage.from("teacher-uploads").getPublicUrl(path);
-        resultBox.innerHTML =
-          '<span class="ok">BAŞARILI</span>\n' +
-          "path: " + path + "\n" +
-          "public url: " + pub.data.publicUrl;
-      }
+      resultBox.innerHTML = withUpsert + "\n\n----------\n\n" + withoutUpsert;
 
       testBtn.disabled = false;
       testBtn.textContent = "Yükleme Testi Yap";
