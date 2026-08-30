@@ -452,6 +452,181 @@
       font-size: 12.5px;
     }
 
+    /* speaking confidence check-in */
+
+    .confidence-card {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      background: var(--armus-panel);
+      margin-bottom: 24px;
+    }
+
+    .confidence-prompt-q {
+      font-size: 13.5px;
+      margin-bottom: 12px;
+      color: #d8d8da;
+    }
+
+    .confidence-scale {
+      display: flex;
+      gap: 8px;
+    }
+
+    .confidence-btn {
+      flex: 1;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-bg);
+      color: white;
+      border-radius: 10px;
+      padding: 10px 0;
+      font-size: 19px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .confidence-btn:hover {
+      border-color: var(--armus-gold-2);
+    }
+
+    .confidence-trend {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .confidence-trend-text {
+      font-size: 12.5px;
+      color: #8e8e91;
+      max-width: 300px;
+    }
+
+    /* vocabulary vault */
+
+    .vocab-card {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      background: var(--armus-panel);
+      margin-bottom: 24px;
+    }
+
+    .vocab-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .vocab-stat {
+      font-size: 12px;
+      color: #8e8e91;
+    }
+
+    .vocab-stat strong {
+      color: var(--armus-gold-text);
+      font-size: 15px;
+    }
+
+    .vocab-review-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .vocab-review-btn:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .vocab-flash {
+      display: none;
+      text-align: center;
+      padding: 20px 0 4px;
+      border-top: 1px solid var(--armus-border-soft);
+      margin-top: 14px;
+    }
+
+    .vocab-flash-hint {
+      color: #6e6e72;
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .vocab-flash-term {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .vocab-flash-meaning {
+      font-size: 15px;
+      color: var(--armus-gold-text);
+      min-height: 22px;
+      margin-bottom: 16px;
+    }
+
+    .vocab-flash-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .vocab-flash-actions button {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: #eee;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .vocab-flash-actions .know-btn {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .vocab-add-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .vocab-add-form input {
+      flex: 1;
+      min-width: 120px;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .vocab-add-form button {
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 9px 16px;
+      background: var(--armus-panel-2);
+      color: #eee;
+      font-family: inherit;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
     /* lesson list (condensed) */
 
     .mini-lesson-row {
@@ -690,6 +865,14 @@
       <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%;"></div></div>
     </div>
 
+    <div id="confidenceSection">
+      <h2>Konuşma Güvenin</h2>
+      <div class="confidence-card" id="confidenceCard"></div>
+    </div>
+
+    <h2>Kelime Kasan</h2>
+    <div class="vocab-card" id="vocabCard"></div>
+
     <h2>Rozetlerin</h2>
     <div class="badge-row" id="badgeRow"></div>
 
@@ -719,6 +902,7 @@
   <script src="marketplace.js"></script>
   <script src="messages.js"></script>
   <script src="favorites.js"></script>
+  <script src="student-extras.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -802,10 +986,12 @@
       document.getElementById("greetAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
       document.getElementById("greetName").textContent = `Merhaba, ${session.name.split(" ")[0]} 👋`;
 
-      const [bookings, conversations, marketplaceTeachers] = await Promise.all([
+      const [bookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
         armusGetBookingsForStudent(session.id),
         armusGetConversations(),
         armusGetMarketplaceTeachers(),
+        armusGetConfidenceCheckins(session.id),
+        armusGetVocabEntries(session.id),
       ]);
 
       const todayKey = new Date().toISOString().slice(0, 10);
@@ -918,6 +1104,181 @@
         status.classList.add("visible");
         setTimeout(() => { status.textContent = ""; }, 2500);
       });
+
+      // ---- speaking confidence check-in ----
+
+      const confidenceSection = document.getElementById("confidenceSection");
+      const confidenceCard = document.getElementById("confidenceCard");
+
+      function renderConfidenceSparkline(checkins) {
+        const w = 200, h = 46, pad = 6;
+        const stepX = checkins.length > 1 ? (w - pad * 2) / (checkins.length - 1) : 0;
+        const points = checkins.map((c, i) => {
+          const x = pad + i * stepX;
+          const y = pad + (h - pad * 2) * (1 - (c.score - 1) / 4);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(" ");
+        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="#d4af6a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      }
+
+      function renderConfidenceTrend() {
+
+        if (confidenceCheckins.length === 0) {
+          confidenceSection.style.display = "none";
+          return;
+        }
+
+        const recent = confidenceCheckins.slice(-10);
+        const avg = Math.round((recent.reduce((sum, c) => sum + c.score, 0) / recent.length) * 10) / 10;
+        let trendText = `Son ${recent.length} ders sonrası ortalama güvenin: ${avg} / 5.`;
+
+        if (recent.length >= 4) {
+          const half = Math.floor(recent.length / 2);
+          const firstAvg = recent.slice(0, half).reduce((sum, c) => sum + c.score, 0) / half;
+          const secondAvg = recent.slice(-half).reduce((sum, c) => sum + c.score, 0) / half;
+          if (secondAvg - firstAvg >= 0.4) trendText += " Güvenin yükseliyor 📈";
+          else if (firstAvg - secondAvg >= 0.4) trendText += " Son zamanlarda biraz düşüş var, bu gayet normal.";
+          else trendText += " İstikrarlı gidiyorsun.";
+        }
+
+        confidenceCard.innerHTML = `
+          <div class="confidence-trend">
+            ${renderConfidenceSparkline(recent)}
+            <div class="confidence-trend-text">${trendText}</div>
+          </div>
+        `;
+      }
+
+      const pendingCheckinBooking = pastBookings
+        .slice()
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
+        .find(b => !confidenceCheckins.some(c => c.booking_id === b.id));
+
+      if (pendingCheckinBooking) {
+
+        confidenceCard.innerHTML = `
+          <div class="confidence-prompt-q">${pendingCheckinBooking.teacherName} ile olan dersin nasıldı? Ne kadar rahat konuştun?</div>
+          <div class="confidence-scale">
+            ${["😟", "🙁", "😐", "🙂", "😄"].map((emoji, i) => `<button type="button" class="confidence-btn" data-score="${i + 1}">${emoji}</button>`).join("")}
+          </div>
+        `;
+
+        confidenceCard.querySelectorAll(".confidence-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const score = Number(btn.dataset.score);
+            confidenceCard.innerHTML = `<div class="confidence-trend-text">Kaydediliyor...</div>`;
+            const result = await armusAddConfidenceCheckin(session.id, pendingCheckinBooking.id, score);
+            if (result) confidenceCheckins.push(result);
+            renderConfidenceTrend();
+          });
+        });
+
+      } else {
+        renderConfidenceTrend();
+      }
+
+      // ---- vocabulary vault ----
+
+      function updateVocabCounts() {
+        const dueCount = vocabEntries.filter(armusIsVocabDue).length;
+        const totalEl = document.getElementById("vocabTotalCount");
+        const dueEl = document.getElementById("vocabDueLine");
+        if (totalEl) totalEl.textContent = vocabEntries.length;
+        if (dueEl) {
+          dueEl.innerHTML = dueCount > 0
+            ? `<strong>${dueCount}</strong> tekrar bugün seni bekliyor`
+            : "Bugün için tekrar yok 🎉";
+        }
+        const reviewBtn = document.getElementById("vocabReviewBtn");
+        if (reviewBtn) reviewBtn.disabled = dueCount === 0;
+      }
+
+      let vocabReviewQueue = [];
+
+      function showNextFlashcard() {
+
+        const flash = document.getElementById("vocabFlash");
+
+        if (vocabReviewQueue.length === 0) {
+          flash.style.display = "block";
+          flash.innerHTML = `<div class="vocab-flash-hint">Bugünlük tekrar tamamlandı! 🎉</div>`;
+          return;
+        }
+
+        const entry = vocabReviewQueue[0];
+        flash.style.display = "block";
+        flash.innerHTML = `
+          <div class="vocab-flash-hint">Anlamı görmek için kelimeye tıkla</div>
+          <div class="vocab-flash-term" id="vocabFlashTerm">${entry.term}</div>
+          <div class="vocab-flash-meaning" id="vocabFlashMeaning" style="visibility:hidden;">${entry.meaning}</div>
+          <div class="vocab-flash-actions">
+            <button type="button" class="know-btn" id="vocabKnowBtn">Biliyorum ✓</button>
+            <button type="button" id="vocabAgainBtn">Tekrar Göster</button>
+          </div>
+        `;
+
+        document.getElementById("vocabFlashTerm").addEventListener("click", () => {
+          document.getElementById("vocabFlashMeaning").style.visibility = "visible";
+        });
+
+        document.getElementById("vocabKnowBtn").addEventListener("click", async () => {
+          await armusReviewVocabEntry(entry.id, true);
+          entry.review_count += 1;
+          entry.last_reviewed_at = new Date().toISOString();
+          vocabReviewQueue.shift();
+          showNextFlashcard();
+          updateVocabCounts();
+        });
+
+        document.getElementById("vocabAgainBtn").addEventListener("click", async () => {
+          await armusReviewVocabEntry(entry.id, false);
+          entry.review_count = 0;
+          entry.last_reviewed_at = new Date().toISOString();
+          vocabReviewQueue.shift();
+          showNextFlashcard();
+          updateVocabCounts();
+        });
+      }
+
+      function renderVocabCard() {
+
+        const dueCount = vocabEntries.filter(armusIsVocabDue).length;
+
+        document.getElementById("vocabCard").innerHTML = `
+          <div class="vocab-top">
+            <div>
+              <div class="vocab-stat"><strong id="vocabTotalCount">${vocabEntries.length}</strong> kelime kayıtlı</div>
+              <div class="vocab-stat" id="vocabDueLine">${dueCount > 0 ? `<strong>${dueCount}</strong> tekrar bugün seni bekliyor` : "Bugün için tekrar yok 🎉"}</div>
+            </div>
+            <button type="button" class="vocab-review-btn" id="vocabReviewBtn" ${dueCount === 0 ? "disabled" : ""}>Şimdi Tekrar Et</button>
+          </div>
+          <div class="vocab-flash" id="vocabFlash"></div>
+          <form class="vocab-add-form" id="vocabAddForm">
+            <input type="text" id="vocabTermInput" placeholder="Yeni kelime/ifade" required maxlength="80">
+            <input type="text" id="vocabMeaningInput" placeholder="Anlamı" required maxlength="120">
+            <button type="submit">Ekle</button>
+          </form>
+        `;
+
+        document.getElementById("vocabReviewBtn").addEventListener("click", () => {
+          vocabReviewQueue = vocabEntries.filter(armusIsVocabDue);
+          showNextFlashcard();
+        });
+
+        document.getElementById("vocabAddForm").addEventListener("submit", async event => {
+          event.preventDefault();
+          const term = document.getElementById("vocabTermInput").value.trim();
+          const meaning = document.getElementById("vocabMeaningInput").value.trim();
+          if (!term || !meaning) return;
+          const entry = await armusAddVocabEntry(session.id, term, meaning);
+          if (entry) {
+            vocabEntries.unshift(entry);
+            renderVocabCard();
+          }
+        });
+      }
+
+      renderVocabCard();
 
       // ---- badges ----
 

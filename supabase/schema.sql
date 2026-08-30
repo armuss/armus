@@ -517,3 +517,42 @@ create policy "teacher_uploads_select_authenticated"
 -- weekly goal progress bar on student-dashboard.html.
 
 alter table profiles add column weekly_lesson_goal integer not null default 3;
+
+-- a student's personal word/phrase bank with a lightweight leveled
+-- review schedule (see armusIsVocabDue in student-dashboard.html)
+
+create table vocab_entries (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references profiles(id) on delete cascade,
+  term text not null,
+  meaning text not null,
+  review_count integer not null default 0,
+  last_reviewed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table vocab_entries enable row level security;
+
+create policy "vocab_entries_all_own"
+  on vocab_entries for all
+  using (auth.uid() = student_id)
+  with check (auth.uid() = student_id);
+
+-- a quick 1-5 self-rating a student can leave once per completed
+-- lesson ("bugün ne kadar rahat konuştun?"), charted as a trend
+
+create table confidence_checkins (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references profiles(id) on delete cascade,
+  booking_id uuid not null references bookings(id) on delete cascade,
+  score smallint not null check (score between 1 and 5),
+  created_at timestamptz not null default now(),
+  unique (student_id, booking_id)
+);
+
+alter table confidence_checkins enable row level security;
+
+create policy "confidence_checkins_all_own"
+  on confidence_checkins for all
+  using (auth.uid() = student_id)
+  with check (auth.uid() = student_id);
