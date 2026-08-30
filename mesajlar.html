@@ -543,7 +543,7 @@
           <button type="button" class="icon-btn" id="micBtn" title="Sesli mesaj gönder">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
           </button>
-          <textarea id="messageInput" placeholder="Bir mesaj yaz..." required></textarea>
+          <textarea id="messageInput" placeholder="Bir mesaj yaz..."></textarea>
           <button type="submit">Gönder</button>
         </form>
       </div>
@@ -804,6 +804,13 @@
 
       event.preventDefault();
       if (!activeConversationId) return;
+
+      // recording a voice message? "Gönder" stops it and sends it,
+      // instead of trying to submit the (empty) text box
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        return;
+      }
 
       const input = document.getElementById("messageInput");
       const body = input.value.trim();
