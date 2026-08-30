@@ -303,6 +303,18 @@
       opacity: 0.65;
     }
 
+    .chat-warning {
+      display: none;
+      margin: 0 14px 12px;
+      padding: 10px 14px;
+      border: 1px solid #c0392b;
+      background: rgba(192, 57, 43, .12);
+      color: #ff9d91;
+      border-radius: 10px;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
     .thread-input {
       display: flex;
       gap: 10px;
@@ -388,6 +400,7 @@
         <div class="thread-body" id="threadBody">
           <div class="thread-placeholder">Yazışmalarını görmek için soldan bir kişi seç.</div>
         </div>
+        <div class="chat-warning" id="chatWarning"></div>
         <form class="thread-input" id="threadForm" style="display: none;">
           <textarea id="messageInput" placeholder="Bir mesaj yaz..." required></textarea>
           <button type="submit">Gönder</button>
@@ -410,6 +423,17 @@
     let currentSession = null;
     let currentChannel = null;
     let activeConversationId = null;
+    let activeConversationHasBooking = false;
+
+    function showChatWarning(message) {
+      const box = document.getElementById("chatWarning");
+      box.textContent = message;
+      box.style.display = "block";
+    }
+
+    function hideChatWarning() {
+      document.getElementById("chatWarning").style.display = "none";
+    }
 
     function initials(name) {
       return name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
@@ -447,14 +471,15 @@
           </div>
         `;
 
-        item.addEventListener("click", () => openConversation(c.id, c.otherName, c.otherPhoto));
+        item.addEventListener("click", () => openConversation(c.id, c.otherName, c.otherPhoto, c.otherId));
         list.appendChild(item);
       });
     }
 
-    async function openConversation(conversationId, otherName, otherPhoto) {
+    async function openConversation(conversationId, otherName, otherPhoto, otherId) {
 
       activeConversationId = conversationId;
+      hideChatWarning();
 
       const header = document.getElementById("threadHeader");
       header.style.display = "flex";
@@ -462,6 +487,8 @@
       header.innerHTML = `${avatarInner}<span>${otherName}</span>`;
 
       document.getElementById("threadForm").style.display = "flex";
+
+      activeConversationHasBooking = await armusHasBookingWithOtherParty(otherId);
 
       await loadThread(conversationId);
 
@@ -526,8 +553,24 @@
       const body = input.value.trim();
       if (!body) return;
 
+      if (!activeConversationHasBooking && armusMessageViolatesContactPolicy(body)) {
+        showChatWarning(
+          "Bu mesaj gönderilemedi: telefon numarası, e-posta veya WhatsApp/Instagram gibi platform dışı iletişim bilgisi paylaşımı, resmi bir ders rezervasyonu olana kadar yasak. Lütfen yazışmaya ARMUS üzerinden devam et."
+        );
+        return;
+      }
+
+      hideChatWarning();
       input.value = "";
-      await armusSendMessage(activeConversationId, body);
+
+      const result = await armusSendMessage(activeConversationId, body);
+
+      if (result === "blocked") {
+        input.value = body;
+        showChatWarning(
+          "Bu mesaj gönderilemedi: telefon numarası, e-posta veya platform dışı iletişim bilgisi paylaşımı, resmi bir ders rezervasyonu olana kadar yasak."
+        );
+      }
     });
 
     (async function() {
@@ -551,10 +594,10 @@
         if (convo) {
           const fresh = await refreshConvoList(convo.id);
           const match = fresh.find(c => c.id === convo.id);
-          if (match) await openConversation(match.id, match.otherName, match.otherPhoto);
+          if (match) await openConversation(match.id, match.otherName, match.otherPhoto, match.otherId);
         }
       } else if (conversations.length > 0) {
-        await openConversation(conversations[0].id, conversations[0].otherName, conversations[0].otherPhoto);
+        await openConversation(conversations[0].id, conversations[0].otherName, conversations[0].otherPhoto, conversations[0].otherId);
       }
 
     })();

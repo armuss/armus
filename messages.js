@@ -99,7 +99,10 @@ async function armusGetMessages(conversationId) {
   return data;
 }
 
-// Returns the new message row on success, or false if sending failed.
+// Returns the new message row on success, false if sending failed, or
+// the string "blocked" if the messages_block_contact_sharing trigger
+// (migration_16.sql) rejected it - see armusMessageViolatesContactPolicy
+// for the client-side check that normally catches this first.
 async function armusSendMessage(conversationId, body) {
 
   const session = await armusGetSession();
@@ -111,8 +114,54 @@ async function armusSendMessage(conversationId, body) {
     .select()
     .single();
 
-  if (error) return false;
+  if (error) {
+    return error.message && error.message.includes("contact_sharing_blocked") ? "blocked" : false;
+  }
   return data;
+}
+
+// Same heuristic the messages_block_contact_sharing DB trigger enforces
+// (migration_16.sql) - checked client-side too so a blocked message
+// shows a clear inline reason instead of a generic "couldn't send"
+// error. The trigger is the real enforcement (this can't be bypassed by
+// skipping the UI); this is just a friendlier first line.
+function armusMessageViolatesContactPolicy(text) {
+
+  if (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) return true;
+
+  // a run of 8+ digits, allowing up to 2 non-digit separators between
+  // consecutive digits - catches phone numbers written as "0532 111 22 33",
+  // "+90-532-111-22-33", etc. without flagging unrelated short numbers.
+  if (/(\d[\s\-.()]{0,2}){7,}\d/.test(text)) return true;
+
+  const keywords = [
+    "whatsapp", "telegram", "instagram", "insta", "snapchat", "imo", "viber", "signal",
+    "numaram", "numarayı", "numarası", "telefonum", "e-posta", "eposta",
+    "gmail", "hotmail", "outlook",
+  ];
+  const lower = text.toLowerCase();
+  return keywords.some(kw => lower.includes(kw));
+}
+
+// Whether the current user already has a booking with otherId - once
+// they do, the contact-sharing restriction lifts (see migration_16.sql).
+async function armusHasBookingWithOtherParty(otherId) {
+
+  const session = await armusGetSession();
+  if (!session) return false;
+
+  const studentId = session.role === "student" ? session.id : otherId;
+  const teacherId = session.role === "student" ? otherId : session.id;
+
+  const { data, error } = await armusSupabase
+    .from("bookings")
+    .select("id")
+    .eq("student_id", studentId)
+    .eq("teacher_id", teacherId)
+    .limit(1);
+
+  if (error) return false;
+  return Boolean(data && data.length);
 }
 
 async function armusMarkMessagesRead(conversationId, myUserId) {
