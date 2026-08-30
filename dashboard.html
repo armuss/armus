@@ -407,6 +407,68 @@
       font-weight: 700;
     }
 
+    .booking-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 5px 0 6px;
+    }
+
+    .booking-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tag-first {
+      color: #5fd9ac;
+      border: 1px solid #5fd9ac;
+    }
+
+    .tag-trial {
+      color: #74b3f7;
+      border: 1px solid #74b3f7;
+    }
+
+    .tag-lesson {
+      color: #d38fe0;
+      border: 1px solid #d38fe0;
+    }
+
+    .tag-done {
+      color: #ccc;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .tag-upcoming {
+      color: var(--armus-gold-text);
+      background: rgba(212, 175, 106, .14);
+    }
+
+    .tag-review {
+      color: #1c1408;
+      background: var(--armus-gold-gradient);
+      font-weight: 800;
+    }
+
+    .booking-earning {
+      font-size: 11px;
+      color: #8e8e91;
+    }
+
+    .booking-earning strong {
+      color: #5fd9ac;
+    }
+
+    .booking-earning.pending strong {
+      color: var(--armus-gold-text);
+    }
+
     .section-hint {
       color: #8e8e91;
       font-size: 12.5px;
@@ -568,6 +630,89 @@
       cursor: pointer;
       line-height: 1;
       padding: 3px;
+    }
+
+    /* ---- read-only weekly bookings calendar ---- */
+
+    .cal-week-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .cal-week-header .cal-month-label {
+      flex: 1;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .cal-week-header .cal-nav {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: #eee;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+
+    .cal-week-header .cal-nav-today {
+      width: auto;
+      padding: 0 14px;
+      font-size: 12px;
+    }
+
+    .bk-daynum {
+      display: block;
+      font-size: 15px;
+      margin-top: 2px;
+      color: #eee;
+    }
+
+    .week-header-day.bk-today .bk-daynum {
+      color: var(--armus-gold-text);
+    }
+
+    .bk-block {
+      cursor: default;
+    }
+
+    .bk-block .tl-block-label {
+      padding: 3px 6px 0;
+      color: inherit;
+    }
+
+    .bk-block-time {
+      font-size: 9.5px;
+      opacity: .85;
+      padding: 0 6px;
+    }
+
+    .bk-block.tag-first-block {
+      background: rgba(95, 217, 172, .22);
+      border: 1px solid #5fd9ac;
+      color: #5fd9ac;
+    }
+
+    .bk-block.tag-trial-block {
+      background: rgba(116, 179, 247, .22);
+      border: 1px solid #74b3f7;
+      color: #74b3f7;
+    }
+
+    .bk-block.tag-lesson-block {
+      background: rgba(211, 143, 224, .22);
+      border: 1px solid #d38fe0;
+      color: #d38fe0;
+    }
+
+    .bk-block.bk-past {
+      opacity: .5;
     }
 
     /* ---- online-now toggle ---- */
@@ -1102,6 +1247,23 @@
       <div class="panel" id="panel-bookings">
         <h2>Gelen Rezervasyonlar</h2>
         <p class="section-hint">Öğrencilere göre gruplandı. Her öğrenci için sadece senin görebildiğin özel bir not tutabilirsin.</p>
+
+        <div class="week-wrap">
+          <div class="cal-week-header">
+            <button type="button" class="cal-nav" id="bkPrevBtn" aria-label="Önceki hafta">←</button>
+            <div class="cal-month-label" id="bkWeekLabel"></div>
+            <button type="button" class="cal-nav cal-nav-today" id="bkTodayBtn">Bugün</button>
+            <button type="button" class="cal-nav" id="bkNextBtn" aria-label="Sonraki hafta">→</button>
+          </div>
+          <div class="week-header">
+            <div class="week-header-gutter"></div>
+            <div class="week-header-days" id="bkHeaderDays"></div>
+          </div>
+          <div class="timeline-scroll" id="bkTimelineScroll">
+            <div class="timeline-wrap" id="bkTimelineWrap"></div>
+          </div>
+        </div>
+
         <div id="incomingBookings"></div>
         <div class="empty-state" id="incomingEmpty">
           Henüz rezervasyon yok. Profilin Öğretmenler listesinde
@@ -1340,6 +1502,158 @@
       const incomingList = document.getElementById("incomingBookings");
       const incomingEmpty = document.getElementById("incomingEmpty");
 
+      // ---- read-only weekly bookings calendar ----
+      // Same visual language as the availability timeline below (hour
+      // grid, 7 day columns), but showing real scheduled lessons on
+      // real dates instead of a draggable recurring pattern - a week at
+      // a time, navigable, nothing to edit here.
+
+      const BK_HOUR_PX = 44;
+      const BK_PX_PER_MIN = BK_HOUR_PX / 60;
+      const BK_MONTH_NAMES = [
+        "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+        "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+      ];
+      const BK_DOW_LABELS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+
+      function bkTimeToMinutes(time) {
+        const [h, m] = time.split(":").map(Number);
+        return h * 60 + m;
+      }
+
+      function bkStartOfWeek(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+        return d;
+      }
+
+      let bkWeekStart = bkStartOfWeek(new Date());
+
+      const bookingsByDateKey = new Map();
+      incomingBookings.forEach(b => {
+        if (!bookingsByDateKey.has(b.date)) bookingsByDateKey.set(b.date, []);
+        bookingsByDateKey.get(b.date).push(b);
+      });
+
+      // "first lesson" per student, computed once and shared with both
+      // the calendar blocks and the grouped list below
+      const firstBookingIdByStudent = new Map();
+      {
+        const byStudent = new Map();
+        incomingBookings.forEach(b => {
+          if (!byStudent.has(b.studentId)) byStudent.set(b.studentId, []);
+          byStudent.get(b.studentId).push(b);
+        });
+        byStudent.forEach(list => {
+          const first = list.slice().sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+          firstBookingIdByStudent.set(first.id, true);
+        });
+      }
+
+      function bkTagClass(booking) {
+        if (firstBookingIdByStudent.has(booking.id)) return "tag-first-block";
+        return booking.type === "trial" ? "tag-trial-block" : "tag-lesson-block";
+      }
+
+      function renderBookingsCalendar() {
+
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(bkWeekStart);
+          d.setDate(d.getDate() + i);
+          weekDates.push(d);
+        }
+
+        const startD = weekDates[0];
+        const endD = weekDates[6];
+        document.getElementById("bkWeekLabel").textContent =
+          startD.getMonth() === endD.getMonth()
+            ? `${startD.getDate()}–${endD.getDate()} ${BK_MONTH_NAMES[endD.getMonth()]} ${endD.getFullYear()}`
+            : `${startD.getDate()} ${BK_MONTH_NAMES[startD.getMonth()]} – ${endD.getDate()} ${BK_MONTH_NAMES[endD.getMonth()]} ${endD.getFullYear()}`;
+
+        const todayKeyNow = new Date().toISOString().slice(0, 10);
+
+        const headerEl = document.getElementById("bkHeaderDays");
+        headerEl.innerHTML = "";
+        weekDates.forEach((d, i) => {
+          const key = d.toISOString().slice(0, 10);
+          const col = document.createElement("div");
+          col.className = "week-header-day" + (key === todayKeyNow ? " bk-today" : "");
+          col.innerHTML = `${BK_DOW_LABELS[i]}<span class="bk-daynum">${d.getDate()}</span>`;
+          headerEl.appendChild(col);
+        });
+
+        const wrap = document.getElementById("bkTimelineWrap");
+        wrap.innerHTML = "";
+        wrap.style.height = (24 * BK_HOUR_PX) + "px";
+
+        for (let h = 0; h < 24; h++) {
+
+          const line = document.createElement("div");
+          line.className = "tl-hour-line";
+          line.style.top = (h * BK_HOUR_PX) + "px";
+          wrap.appendChild(line);
+
+          const label = document.createElement("div");
+          label.className = "tl-hour-label";
+          label.style.top = (h * BK_HOUR_PX) + "px";
+          label.textContent = String(h).padStart(2, "0") + ":00";
+          wrap.appendChild(label);
+        }
+
+        for (let i = 1; i < 7; i++) {
+          const sep = document.createElement("div");
+          sep.className = "tl-day-sep";
+          sep.style.left = `calc(${i} * (100% / 7))`;
+          wrap.appendChild(sep);
+        }
+
+        weekDates.forEach((d, colIndex) => {
+
+          const key = d.toISOString().slice(0, 10);
+          const dayBookings = bookingsByDateKey.get(key) || [];
+
+          dayBookings.forEach(booking => {
+
+            const startMin = bkTimeToMinutes(booking.time);
+            const endMin = startMin + ARMUS_LESSON_MINUTES;
+            const isPast = armusIsBookingPast(booking);
+
+            const el = document.createElement("div");
+            el.className = "tl-block bk-block " + bkTagClass(booking) + (isPast ? " bk-past" : "");
+            el.style.top = (startMin * BK_PX_PER_MIN) + "px";
+            el.style.height = ((endMin - startMin) * BK_PX_PER_MIN) + "px";
+            el.style.left = `calc(${colIndex} * (100% / 7) + 2px)`;
+            el.style.width = "calc((100% / 7) - 4px)";
+            el.title = `${booking.studentName} — ${booking.type === "trial" ? "Deneme Dersi" : "Ders"} — ₺${booking.price}`;
+            el.innerHTML = `
+              <div class="tl-block-label">${isPast ? "✓ " : ""}${booking.studentName}</div>
+              <div class="bk-block-time">${armusFormatTimeRange(booking.time)}</div>
+            `;
+            wrap.appendChild(el);
+          });
+        });
+      }
+
+      document.getElementById("bkPrevBtn").addEventListener("click", () => {
+        bkWeekStart.setDate(bkWeekStart.getDate() - 7);
+        renderBookingsCalendar();
+      });
+
+      document.getElementById("bkNextBtn").addEventListener("click", () => {
+        bkWeekStart.setDate(bkWeekStart.getDate() + 7);
+        renderBookingsCalendar();
+      });
+
+      document.getElementById("bkTodayBtn").addEventListener("click", () => {
+        bkWeekStart = bkStartOfWeek(new Date());
+        renderBookingsCalendar();
+      });
+
+      renderBookingsCalendar();
+      document.getElementById("bkTimelineScroll").scrollTop = 7 * BK_HOUR_PX;
+
       // ---- overview stats (real, computed from bookings/reviews) ----
 
       function commissionForHours(hours) {
@@ -1544,6 +1858,8 @@
           bookingsByStudent.get(b.studentId).push(b);
         });
 
+        const reviewByBookingId = Object.fromEntries(teacherReviews.map(r => [r.bookingId, r]));
+
         bookingsByStudent.forEach((studentBookings, studentId) => {
 
           const group = document.createElement("div");
@@ -1556,18 +1872,37 @@
               <strong>${studentBookings[0].studentName}</strong>
               <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? "Notu Gör/Düzenle" : "Not Ekle"}</button>
             </div>
-            ${studentBookings.map(booking => `
+            ${studentBookings.map(booking => {
+
+              const isPast = armusIsBookingPast(booking);
+              const review = reviewByBookingId[booking.id];
+              const net = Math.round(booking.price * (1 - tier.rate / 100));
+
+              const tags = [
+                firstBookingIdByStudent.has(booking.id) ? '<span class="booking-tag tag-first">🟢 İlk Ders</span>' : "",
+                booking.type === "trial" ? '<span class="booking-tag tag-trial">🔵 Deneme Dersi</span>' : '<span class="booking-tag tag-lesson">🟣 Ders</span>',
+                isPast ? '<span class="booking-tag tag-done">✓ Tamamlandı</span>' : '<span class="booking-tag tag-upcoming">🕒 Yaklaşıyor</span>',
+                review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
+              ].join("");
+
+              const earningHtml = isPast
+                ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
+                : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
+
+              return `
               <div class="booking-row">
                 <div>
                   <strong>${booking.studentName}</strong>
-                  <span>${booking.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${booking.price}</span>
+                  <div class="booking-tags">${tags}</div>
+                  <div class="booking-earning${isPast ? "" : " pending"}">${earningHtml}</div>
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>` : ""}
                 </div>
               </div>
-            `).join("")}
+              `;
+            }).join("")}
             <div class="note-box" data-note-box>
               <textarea placeholder="Bu öğrenci hakkında sadece senin görebileceğin bir not yaz...">${existingNote ? existingNote.note : ""}</textarea>
               <button type="button" class="btn" data-save-note>Notu Kaydet</button>
