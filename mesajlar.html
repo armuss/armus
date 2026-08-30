@@ -280,6 +280,11 @@
       justify-content: flex-end;
     }
 
+    .msg-row {
+      align-items: flex-end;
+      gap: 6px;
+    }
+
     .msg-bubble {
       max-width: 70%;
       padding: 10px 14px;
@@ -288,6 +293,86 @@
       line-height: 1.5;
       background: var(--armus-panel-2);
       border: 1px solid var(--armus-border-soft);
+    }
+
+    .msg-bubble.correction-bubble {
+      border-color: var(--armus-gold-2);
+    }
+
+    .correction-label {
+      font-size: 10.5px;
+      color: var(--armus-gold-text);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 4px;
+    }
+
+    .original-text {
+      text-decoration: line-through;
+      color: #9a9a9a;
+      font-size: 12px;
+      margin-bottom: 4px;
+      opacity: .85;
+    }
+
+    .msg-attachment img,
+    .msg-attachment video {
+      max-width: 220px;
+      max-height: 220px;
+      border-radius: 10px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .msg-attachment audio {
+      width: 220px;
+      margin-bottom: 4px;
+    }
+
+    .msg-correct-btn {
+      border: none;
+      background: transparent;
+      color: #77777b;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .msg-correct-btn:hover {
+      color: var(--armus-gold-text);
+    }
+
+    .correct-form-wrap {
+      display: flex;
+      gap: 8px;
+      margin: 4px 0 10px;
+      max-width: 70%;
+    }
+
+    .correct-form-wrap textarea {
+      flex: 1;
+      min-height: 40px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: white;
+      font-family: inherit;
+      font-size: 12.5px;
+      resize: vertical;
+    }
+
+    .correct-form-wrap button {
+      border: none;
+      border-radius: 10px;
+      padding: 0 14px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
     }
 
     .msg-row.mine .msg-bubble {
@@ -337,7 +422,7 @@
       outline: none;
     }
 
-    .thread-input button {
+    .thread-input button[type="submit"] {
       border: none;
       border-radius: 12px;
       padding: 0 22px;
@@ -346,6 +431,59 @@
       font-family: inherit;
       font-weight: 700;
       font-size: 13px;
+      cursor: pointer;
+    }
+
+    .icon-btn {
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel-2);
+      color: #eee;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      font-size: 17px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn.recording {
+      background: #c0392b;
+      border-color: #c0392b;
+      color: white;
+    }
+
+    .recording-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px 10px;
+      font-size: 12px;
+      color: #ff9d91;
+    }
+
+    .recording-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e74c3c;
+      animation: armus-pulse 1s infinite;
+    }
+
+    @keyframes armus-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .3; }
+    }
+
+    .recording-indicator button {
+      border: none;
+      background: transparent;
+      color: #ff9d91;
+      text-decoration: underline;
+      font-family: inherit;
+      font-size: 12px;
       cursor: pointer;
     }
 
@@ -401,7 +539,15 @@
           <div class="thread-placeholder">Yazışmalarını görmek için soldan bir kişi seç.</div>
         </div>
         <div class="chat-warning" id="chatWarning"></div>
+        <div class="recording-indicator" id="recordingIndicator">
+          <span class="recording-dot"></span>
+          <span id="recordingTimer">0:00</span>
+          <button type="button" id="cancelRecordingBtn">İptal</button>
+        </div>
         <form class="thread-input" id="threadForm" style="display: none;">
+          <input type="file" id="attachInput" accept="image/*,video/*" hidden>
+          <button type="button" class="icon-btn" id="attachBtn" title="Fotoğraf/video gönder">📎</button>
+          <button type="button" class="icon-btn" id="micBtn" title="Sesli mesaj gönder">🎤</button>
           <textarea id="messageInput" placeholder="Bir mesaj yaz..." required></textarea>
           <button type="submit">Gönder</button>
         </form>
@@ -467,7 +613,7 @@
           <div class="convo-avatar">${avatarInner}</div>
           <div class="convo-info">
             <div class="convo-name">${c.otherName}${c.unreadCount > 0 ? '<span class="unread-dot"></span>' : ""}</div>
-            <div class="convo-preview">${c.lastMessage ? c.lastMessage.body : "Henüz mesaj yok"}</div>
+            <div class="convo-preview">${c.lastMessage ? (c.lastMessage.body || attachmentPreviewLabel(c.lastMessage.attachment_type)) : "Henüz mesaj yok"}</div>
           </div>
         `;
 
@@ -504,21 +650,98 @@
       await refreshConvoList(conversationId);
     }
 
+    let messagesById = {};
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    function attachmentPreviewLabel(type) {
+      if (type === "image") return "📷 Fotoğraf";
+      if (type === "video") return "🎥 Video";
+      if (type === "audio") return "🎤 Sesli mesaj";
+      return "Mesaj";
+    }
+
+    function buildBubbleContent(message) {
+
+      let html = "";
+
+      if (message.corrected_of_id) {
+        const original = messagesById[message.corrected_of_id];
+        html += `<div class="correction-label">✏️ Düzeltme</div>`;
+        if (original) html += `<div class="original-text">${escapeHtml(original.body)}</div>`;
+        html += escapeHtml(message.body);
+
+      } else {
+
+        if (message.attachment_type === "image") {
+          html += `<div class="msg-attachment"><a href="${message.attachment_url}" target="_blank" rel="noopener"><img src="${message.attachment_url}" alt=""></a></div>`;
+        } else if (message.attachment_type === "video") {
+          html += `<div class="msg-attachment"><video src="${message.attachment_url}" controls></video></div>`;
+        } else if (message.attachment_type === "audio") {
+          html += `<div class="msg-attachment"><audio src="${message.attachment_url}" controls></audio></div>`;
+        }
+
+        if (message.body) html += escapeHtml(message.body);
+      }
+
+      html += `<span class="msg-time">${formatTime(message.created_at)}</span>`;
+      return html;
+    }
+
+    function openCorrectForm(message, row) {
+
+      const existing = row.nextElementSibling;
+      if (existing && existing.classList.contains("correct-form-wrap")) {
+        existing.remove();
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.className = "correct-form-wrap";
+      wrap.innerHTML = `
+        <textarea>${escapeHtml(message.body)}</textarea>
+        <button type="button">Gönder</button>
+      `;
+      row.insertAdjacentElement("afterend", wrap);
+      wrap.querySelector("textarea").focus();
+
+      wrap.querySelector("button").addEventListener("click", async () => {
+        const correctedText = wrap.querySelector("textarea").value.trim();
+        if (!correctedText) return;
+        wrap.remove();
+        await armusSendMessage(activeConversationId, correctedText, { correctedOfId: message.id });
+      });
+    }
+
     function appendMessage(message) {
+
+      messagesById[message.id] = message;
 
       const body = document.getElementById("threadBody");
       const placeholder = body.querySelector(".thread-placeholder");
       if (placeholder) placeholder.remove();
 
       const isMine = message.sender_id === currentSession.id;
+      const isCorrection = Boolean(message.corrected_of_id);
+      const canCorrect = !isMine && !isCorrection && currentSession.role === "teacher" && Boolean(message.body);
+
       const row = document.createElement("div");
       row.className = "msg-row" + (isMine ? " mine" : "");
       row.innerHTML = `
-        <div class="msg-bubble">
-          ${message.body}
-          <span class="msg-time">${formatTime(message.created_at)}</span>
+        <div class="msg-bubble${isCorrection ? " correction-bubble" : ""}">
+          ${buildBubbleContent(message)}
         </div>
+        ${canCorrect ? `<button type="button" class="msg-correct-btn" title="Düzelt">✏️</button>` : ""}
       `;
+
+      if (canCorrect) {
+        row.querySelector(".msg-correct-btn").addEventListener("click", () => openCorrectForm(message, row));
+      }
+
       body.appendChild(row);
       body.scrollTop = body.scrollHeight;
     }
@@ -527,6 +750,7 @@
 
       const body = document.getElementById("threadBody");
       body.innerHTML = "";
+      messagesById = {};
 
       const messages = await armusGetMessages(conversationId);
 
@@ -571,6 +795,118 @@
           "Bu mesaj gönderilemedi: telefon numarası, e-posta veya platform dışı iletişim bilgisi paylaşımı, resmi bir ders rezervasyonu olana kadar yasak."
         );
       }
+    });
+
+    // ---- photo/video attachments ----
+
+    document.getElementById("attachBtn").addEventListener("click", () => {
+      if (!activeConversationId) return;
+      document.getElementById("attachInput").click();
+    });
+
+    document.getElementById("attachInput").addEventListener("change", async event => {
+
+      const file = event.target.files[0];
+      event.target.value = "";
+      if (!file || !activeConversationId) return;
+
+      const maxBytes = file.type.startsWith("video/") ? 25 * 1024 * 1024 : 8 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        showChatWarning(`Dosya çok büyük (maks ${Math.round(maxBytes / 1024 / 1024)}MB).`);
+        return;
+      }
+
+      hideChatWarning();
+      const uploaded = await armusUploadChatAttachment(file, activeConversationId);
+
+      if (!uploaded) {
+        showChatWarning("Dosya gönderilemedi. Lütfen tekrar dene.");
+        return;
+      }
+
+      await armusSendMessage(activeConversationId, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+    });
+
+    // ---- voice messages ----
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordingCancelled = false;
+    let recordingTimerInterval = null;
+
+    document.getElementById("micBtn").addEventListener("click", async () => {
+
+      if (!activeConversationId) return;
+
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        return;
+      }
+
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        showChatWarning("Mikrofon erişimi alınamadı. Tarayıcı izinlerini kontrol et.");
+        return;
+      }
+
+      hideChatWarning();
+      recordedChunks = [];
+      recordingCancelled = false;
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = event => {
+        if (event.data.size > 0) recordedChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+
+        stream.getTracks().forEach(track => track.stop());
+        clearInterval(recordingTimerInterval);
+        document.getElementById("recordingIndicator").style.display = "none";
+        document.getElementById("micBtn").classList.remove("recording");
+
+        const wasCancelled = recordingCancelled;
+        recordingCancelled = false;
+        if (wasCancelled || recordedChunks.length === 0) return;
+
+        const blob = new Blob(recordedChunks, { type: "audio/webm" });
+        if (blob.size > 15 * 1024 * 1024) {
+          showChatWarning("Ses kaydı çok büyük, daha kısa bir kayıt dene.");
+          return;
+        }
+
+        const file = new File([blob], "voice-message.webm", { type: "audio/webm" });
+        const uploaded = await armusUploadChatAttachment(file, activeConversationId);
+
+        if (!uploaded) {
+          showChatWarning("Ses mesajı gönderilemedi. Lütfen tekrar dene.");
+          return;
+        }
+
+        await armusSendMessage(activeConversationId, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+      };
+
+      mediaRecorder.start();
+      document.getElementById("micBtn").classList.add("recording");
+      const indicator = document.getElementById("recordingIndicator");
+      indicator.style.display = "flex";
+
+      const recordingStartedAt = Date.now();
+      const MAX_RECORDING_SECONDS = 120;
+
+      recordingTimerInterval = setInterval(() => {
+        const secs = Math.floor((Date.now() - recordingStartedAt) / 1000);
+        document.getElementById("recordingTimer").textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+        if (secs >= MAX_RECORDING_SECONDS) mediaRecorder.stop();
+      }, 300);
+    });
+
+    document.getElementById("cancelRecordingBtn").addEventListener("click", () => {
+      if (!mediaRecorder) return;
+      recordingCancelled = true;
+      mediaRecorder.stop();
     });
 
     (async function() {
