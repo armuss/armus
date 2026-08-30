@@ -101,8 +101,6 @@ async function armusRenderNavAuth() {
 
     el.innerHTML = `
       ${dashboardLink}
-      <a class="btn" href="my-lessons.html">Derslerim</a>
-      <a class="btn" href="mesajlar.html">Mesajlar</a>
       <span class="nav-greeting">Merhaba, ${firstName} <small>(${roleLabel})</small></span>
       <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
     `;
