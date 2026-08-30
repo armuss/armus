@@ -327,6 +327,17 @@
 
     /* CONFIRM */
 
+    .payment-notice {
+      margin-bottom: 22px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      background: rgba(240, 165, 165, .08);
+      border: 1px solid rgba(240, 165, 165, .35);
+      color: #f0c5c5;
+    }
+
     .confirm-box {
       margin-top: 40px;
       padding: 22px;
@@ -350,6 +361,33 @@
 
     .confirm-row strong {
       color: #ddd;
+    }
+
+    .payer-fields {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .payer-fields label {
+      font-size: 11.5px;
+      color: #99999c;
+      margin-top: 8px;
+    }
+
+    .payer-fields label:first-child {
+      margin-top: 0;
+    }
+
+    .payer-fields input {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 11px 13px;
+      color: #f4f4f2;
+      font-family: inherit;
+      font-size: 13.5px;
     }
 
     .confirm-btn {
@@ -494,6 +532,8 @@
   <!-- BOOKING FLOW -->
   <main class="container" id="bookingRoot">
 
+    <div class="payment-notice" id="paymentNotice" style="display: none;"></div>
+
     <div class="eyebrow" id="flowLabel">REZERVASYON</div>
     <h1 id="flowTitle">Ders zamanını seç</h1>
 
@@ -543,9 +583,16 @@
         <strong id="confirmPrice"></strong>
       </div>
 
-      <button class="confirm-btn" id="confirmBtn">Onayla</button>
+      <div class="payer-fields">
+        <label for="payerPhone">Telefon numarası</label>
+        <input type="text" id="payerPhone" placeholder="+90 5xx xxx xx xx">
+        <label for="payerIdentity">T.C. kimlik numarası</label>
+        <input type="text" id="payerIdentity" placeholder="11 haneli" maxlength="11" inputmode="numeric">
+      </div>
+
+      <button class="confirm-btn" id="confirmBtn">Ödemeye Geç</button>
       <div class="small-note" id="confirmError" style="display: none; color: #f0a5a5;"></div>
-      <div class="small-note" id="confirmNote">Henüz ödeme alınmayacak</div>
+      <div class="small-note" id="confirmNote">Güvenli ödeme sayfasına yönlendirileceksin</div>
     </div>
 
   </main>
@@ -642,7 +689,7 @@
       document.getElementById("priceValue").textContent = `₺${teacher.price}`;
 
       const confirmBtn = document.getElementById("confirmBtn");
-      confirmBtn.textContent = isTrial ? "Deneme Dersini Onayla" : "Rezervasyonu Onayla";
+      confirmBtn.textContent = isTrial ? "Deneme Dersi İçin Öde" : "Ödemeye Geç";
 
       // ---- deterministic mock availability ----
 
@@ -660,6 +707,44 @@
         "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
       ];
       const ALL_SLOTS = armusAllTimeSlots();
+
+      // ---- returning from iyzico's checkout (payment-callback redirected
+      // here) - show a receipt or a failure notice instead of the picker,
+      // nothing in this page's own JS state survived the round trip ----
+
+      const paymentStatus = params.get("payment");
+
+      if (paymentStatus === "success") {
+
+        const paidDate = params.get("date");
+        const paidTime = params.get("time");
+
+        document.getElementById("successTeacher").textContent = teacher.name;
+        if (paidDate) {
+          const d = new Date(`${paidDate}T00:00:00`);
+          document.getElementById("successDate").textContent =
+            `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}, ${DAY_NAMES[d.getDay()]}`;
+        }
+        if (paidTime) {
+          document.getElementById("successTime").textContent = armusFormatTimeRange(paidTime);
+        }
+
+        bookingRoot.style.display = "none";
+        document.getElementById("successView").style.display = "block";
+        return;
+      }
+
+      const paymentNotice = document.getElementById("paymentNotice");
+
+      if (paymentStatus === "failed") {
+        paymentNotice.textContent =
+          "Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı - istersen tekrar deneyebilirsin.";
+        paymentNotice.style.display = "block";
+      } else if (paymentStatus === "error") {
+        paymentNotice.textContent =
+          "Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle ilgileneceğiz.";
+        paymentNotice.style.display = "block";
+      }
 
       function toDateKey(date) {
         return date.toISOString().slice(0, 10);
@@ -785,31 +870,49 @@
 
         if (!selectedDate || !selectedTime) return;
 
-        const result = await armusAddBooking({
-          studentId: session.id,
-          studentName: session.name,
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          type: bookingType,
-          date: selectedDate,
-          time: selectedTime,
-          price: teacher.price,
-        });
+        const confirmError = document.getElementById("confirmError");
+        confirmError.style.display = "none";
 
-        if (result === false) {
-          document.getElementById("confirmError").textContent =
-            "Rezervasyon kaydedilemedi. Lütfen tekrar dene.";
-          document.getElementById("confirmError").style.display = "block";
+        const phone = document.getElementById("payerPhone").value.trim();
+        const identityNumber = document.getElementById("payerIdentity").value.trim();
+
+        if (phone.replace(/\D/g, "").length < 10) {
+          confirmError.textContent = "Lütfen geçerli bir telefon numarası gir.";
+          confirmError.style.display = "block";
+          return;
+        }
+        if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
+          confirmError.textContent = "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).";
+          confirmError.style.display = "block";
           return;
         }
 
-        document.getElementById("successTeacher").textContent = teacher.name;
-        document.getElementById("successDate").textContent = selectedDateLabel;
-        document.getElementById("successTime").textContent = armusFormatTimeRange(selectedTime);
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Yönlendiriliyor...";
 
-        bookingRoot.style.display = "none";
-        document.getElementById("successView").style.display = "block";
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        const { data, error } = await armusSupabase.functions.invoke("create-payment", {
+          body: {
+            teacherId: teacher.id,
+            teacherName: teacher.name,
+            type: bookingType,
+            date: selectedDate,
+            time: selectedTime,
+            price: teacher.price,
+            phone,
+            identityNumber,
+          },
+        });
+
+        if (error || !data || !data.paymentPageUrl) {
+          confirmError.textContent =
+            (data && data.error) || "Ödeme başlatılamadı. Lütfen tekrar dene.";
+          confirmError.style.display = "block";
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = isTrial ? "Deneme Dersi İçin Öde" : "Ödemeye Geç";
+          return;
+        }
+
+        window.location.href = data.paymentPageUrl;
       });
     }
 

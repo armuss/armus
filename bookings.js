@@ -6,28 +6,6 @@
  * so teacher_id is stored as plain text rather than a strict FK.
  */
 
-// Returns the new booking record on success, or false if saving failed.
-async function armusAddBooking(booking) {
-
-  const { data, error } = await armusSupabase
-    .from("bookings")
-    .insert({
-      student_id: booking.studentId,
-      student_name: booking.studentName,
-      teacher_id: booking.teacherId,
-      teacher_name: booking.teacherName,
-      type: booking.type,
-      lesson_date: booking.date,
-      lesson_time: booking.time,
-      price: booking.price,
-    })
-    .select()
-    .single();
-
-  if (error) return false;
-  return armusMapBookingRow(data);
-}
-
 async function armusGetBookingsForStudent(studentId) {
 
   const { data, error } = await armusSupabase
