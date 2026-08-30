@@ -62,6 +62,35 @@ create table bookings (
   created_at timestamptz not null default now()
 );
 
+-- === PENDING PAYMENTS ============================================
+-- Sits in front of "bookings": create-payment (Edge Function) writes a
+-- row here and sends the student to iyzico's hosted checkout; only
+-- payment-callback (Edge Function, after re-checking the charge with
+-- iyzico itself) turns a row here into a real "bookings" row. RLS is on
+-- with zero policies on purpose - only the service role (used by both
+-- Edge Functions) can ever touch this table; client-side code has no
+-- access at all. See migration_22.sql and supabase/functions/.
+
+create table pending_payments (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null unique,
+  iyzico_token text,
+  student_id uuid not null references profiles(id) on delete cascade,
+  student_name text not null,
+  teacher_id text not null,
+  teacher_name text not null,
+  type text not null check (type in ('trial', 'lesson')),
+  lesson_date date not null,
+  lesson_time text not null,
+  price numeric not null,
+  status text not null default 'pending'
+    check (status in ('pending', 'succeeded', 'failed', 'paid_no_booking')),
+  booking_id uuid references bookings(id),
+  created_at timestamptz not null default now()
+);
+
+alter table pending_payments enable row level security;
+
 -- === REVIEWS =====================================================
 
 create table reviews (
@@ -184,10 +213,10 @@ create policy "bookings_select_admin_all"
   on bookings for select
   using (public.is_admin());
 
--- bookings: a logged-in student can create a booking for themselves
-create policy "bookings_insert_own_student"
-  on bookings for insert
-  with check (auth.uid() = student_id);
+-- bookings: no client-facing insert policy - a booking is only ever
+-- created by the payment-callback Edge Function (service role, after
+-- confirming the charge with iyzico), never directly by a student. See
+-- pending_payments above and migration_22.sql.
 
 -- reviews: readable by everyone (shown on public teacher profiles)
 create policy "reviews_select_all"
