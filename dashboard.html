@@ -564,47 +564,101 @@
       font-family: inherit;
     }
 
-    .slot-chip-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 16px;
-      max-height: 340px;
+    /* draggable/resizable availability timeline (replaces the flat
+       chip grid) - a teacher drags across an empty stretch of a day to
+       mark it available, drags a block's edges to resize it, drags its
+       body to move it, and can delete it outright. */
+
+    .timeline-scroll {
+      max-height: 440px;
       overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .slot-section-label {
-      font-size: 10.5px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      color: var(--armus-gold-text);
-      margin-bottom: 8px;
-    }
-
-    .slot-section-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-      gap: 7px;
-    }
-
-    .slot-chip {
       border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
       background: var(--armus-bg);
-      color: #ccc;
-      border-radius: 9px;
-      padding: 9px 6px;
-      font-size: 12px;
-      cursor: pointer;
-      font-family: inherit;
-      text-align: center;
     }
 
-    .slot-chip.active {
-      background: var(--armus-gold-gradient);
-      border-color: transparent;
-      color: var(--armus-on-gold);
+    .timeline-wrap {
+      position: relative;
+      margin-left: 56px;
+      margin-right: 14px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .tl-hour-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px solid var(--armus-border-soft);
+    }
+
+    .tl-hour-label {
+      position: absolute;
+      left: -52px;
+      width: 44px;
+      text-align: right;
+      font-size: 10.5px;
+      color: #77777b;
+      transform: translateY(-6px);
+    }
+
+    .tl-block {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      background: rgba(212, 175, 106, .24);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 8px;
+      box-sizing: border-box;
+      cursor: grab;
+    }
+
+    .tl-block-label {
+      padding: 4px 26px 4px 8px;
+      font-size: 11px;
+      color: var(--armus-gold-text);
       font-weight: 700;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .tl-handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 10px;
+      cursor: ns-resize;
+    }
+
+    .tl-handle-top {
+      top: -5px;
+    }
+
+    .tl-handle-bottom {
+      bottom: -5px;
+    }
+
+    .tl-delete {
+      position: absolute;
+      top: 1px;
+      right: 3px;
+      border: none;
+      background: transparent;
+      color: var(--armus-gold-text);
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 3px;
+    }
+
+    .timeline-hint {
+      color: #77777b;
+      font-size: 11.5px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      max-width: 560px;
     }
 
     /* ---- online-now toggle ---- */
@@ -1173,7 +1227,14 @@
             </div>
             <button type="button" class="cal-clear-btn" id="calClearDayBtn">Bu günü temizle</button>
           </div>
-          <div class="slot-chip-grid" id="slotChipGrid"></div>
+          <div class="timeline-scroll" id="timelineScroll">
+            <div class="timeline-wrap" id="timelineWrap"></div>
+          </div>
+          <p class="timeline-hint">
+            Boş bir alana tıklayıp aşağı sürükleyerek uygunluk ekle. Bir bloğun üst
+            veya alt kenarından tutup büyütüp küçültebilir, gövdesinden tutup taşıyabilir,
+            üzerine gelip × ile silebilirsin.
+          </p>
           <button type="button" class="save-btn" id="saveAvailabilityBtn">Kaydet</button>
           <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
         </div>
@@ -1677,7 +1738,6 @@
       // pattern for day-to-day use; booking.html still falls back to that
       // (set once during signup) for any date not listed here.
 
-      const TIME_SLOTS = armusAllTimeSlots();
       const MONTH_NAMES = [
         "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
         "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
@@ -1743,6 +1803,118 @@
         }
       }
 
+      // ---- draggable/resizable day timeline ----
+      // A day's availability is stored as a flat list of 30-min slot
+      // start times (unchanged - booking.html still just checks
+      // daySlots.includes(time)), but edited here as continuous
+      // draggable blocks instead of individual toggles: a block
+      // "14:00-17:00" expands to ["14:00","14:30",...,"16:30"] on save.
+
+      const HOUR_PX = 52;
+      const PX_PER_MIN = HOUR_PX / 60;
+      const DAY_MINUTES = 24 * 60;
+
+      function timeToMinutes(time) {
+        const [h, m] = time.split(":").map(Number);
+        return h * 60 + m;
+      }
+
+      function minutesToTimeLabel(min) {
+        const clamped = Math.max(0, Math.min(DAY_MINUTES, min));
+        const h = Math.floor(clamped / 60);
+        const m = clamped % 60;
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
+
+      function snapTo30(min) {
+        return Math.round(min / 30) * 30;
+      }
+
+      function pxToMin(px) {
+        return px / PX_PER_MIN;
+      }
+
+      function slotsToBlocks(slots) {
+        const sorted = slots.slice().sort();
+        const blocks = [];
+        let current = null;
+        sorted.forEach(time => {
+          const startMin = timeToMinutes(time);
+          if (current && startMin === current.end) {
+            current.end += 30;
+          } else {
+            current = { start: startMin, end: startMin + 30 };
+            blocks.push(current);
+          }
+        });
+        return blocks;
+      }
+
+      function blocksToSlots(blocks) {
+        const slots = [];
+        blocks.forEach(b => {
+          for (let m = b.start; m < b.end; m += 30) slots.push(minutesToTimeLabel(m));
+        });
+        return slots;
+      }
+
+      // collapses touching/overlapping blocks into one after a drag
+      function mergeBlocks(blocks) {
+        const sorted = blocks.slice().sort((a, b) => a.start - b.start);
+        const merged = [];
+        sorted.forEach(b => {
+          const last = merged[merged.length - 1];
+          if (last && b.start <= last.end) last.end = Math.max(last.end, b.end);
+          else merged.push({ start: b.start, end: b.end });
+        });
+        return merged;
+      }
+
+      let dayBlocks = [];
+
+      function syncDayBlocksToAvailability() {
+        const slots = blocksToSlots(dayBlocks);
+        if (slots.length) calendarAvailability[selectedDateKey] = slots;
+        else delete calendarAvailability[selectedDateKey];
+      }
+
+      function renderTimeline() {
+
+        const wrap = document.getElementById("timelineWrap");
+        wrap.innerHTML = "";
+        wrap.style.height = (24 * HOUR_PX) + "px";
+
+        for (let h = 0; h < 24; h++) {
+
+          const line = document.createElement("div");
+          line.className = "tl-hour-line";
+          line.style.top = (h * HOUR_PX) + "px";
+          wrap.appendChild(line);
+
+          const label = document.createElement("div");
+          label.className = "tl-hour-label";
+          label.style.top = (h * HOUR_PX) + "px";
+          label.textContent = String(h).padStart(2, "0") + ":00";
+          wrap.appendChild(label);
+        }
+
+        dayBlocks.forEach((block, index) => {
+
+          const el = document.createElement("div");
+          el.className = "tl-block";
+          el.dataset.index = String(index);
+          el.style.top = (block.start * PX_PER_MIN) + "px";
+          el.style.height = ((block.end - block.start) * PX_PER_MIN) + "px";
+          el.innerHTML = `
+            <div class="tl-handle tl-handle-top"></div>
+            <div class="tl-block-label">${minutesToTimeLabel(block.start)} – ${minutesToTimeLabel(block.end)}</div>
+            <button type="button" class="tl-delete" data-index="${index}" title="Sil">×</button>
+            <div class="tl-handle tl-handle-bottom"></div>
+          `;
+          wrap.appendChild(el);
+        });
+      }
+
       function renderDayPanel() {
 
         const panel = document.getElementById("calDayPanel");
@@ -1755,65 +1927,112 @@
         panel.style.display = "block";
         document.getElementById("calSelectedDateLabel").textContent = armusFormatDateLabel(selectedDateKey);
 
-        const daySlots = calendarAvailability[selectedDateKey] || [];
-        const chipGrid = document.getElementById("slotChipGrid");
-        chipGrid.innerHTML = "";
+        dayBlocks = slotsToBlocks(calendarAvailability[selectedDateKey] || []);
+        renderTimeline();
 
-        groupTimeSlots(TIME_SLOTS).forEach(group => {
-
-          const section = document.createElement("div");
-          section.className = "slot-section";
-
-          const heading = document.createElement("div");
-          heading.className = "slot-section-label";
-          heading.textContent = group.label;
-          section.appendChild(heading);
-
-          const row = document.createElement("div");
-          row.className = "slot-section-row";
-
-          group.slots.forEach(time => {
-
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "slot-chip" + (daySlots.includes(time) ? " active" : "");
-            chip.textContent = armusFormatTimeRange(time);
-
-            chip.addEventListener("click", () => {
-              const list = calendarAvailability[selectedDateKey] || (calendarAvailability[selectedDateKey] = []);
-              const idx = list.indexOf(time);
-              if (idx === -1) list.push(time); else list.splice(idx, 1);
-              chip.classList.toggle("active");
-            });
-
-            row.appendChild(chip);
-          });
-
-          section.appendChild(row);
-          chipGrid.appendChild(section);
-        });
+        // open on a sensible default view (07:00) instead of midnight
+        document.getElementById("timelineScroll").scrollTop = 7 * HOUR_PX;
       }
 
-      // Groups half-hour slot start times into time-of-day sections so
-      // the day panel reads as a few short, labeled rows instead of one
-      // flat wall of 48 chips - each chip shows the full lesson range
-      // (e.g. "14:00 – 14:50") rather than just a bare start time.
-      function groupTimeSlots(slots) {
+      // drag state for create/move/resize - kept outside the mousedown
+      // handler so mousemove/mouseup (attached once, on document) can
+      // see it across the whole gesture, even if the pointer leaves the
+      // timeline element mid-drag
+      let dragMode = null; // "create" | "move" | "resize-top" | "resize-bottom"
+      let dragBlockIndex = null;
+      let dragStartY = 0;
+      let dragOriginal = null;
+      let dragCreateAnchor = null;
 
-        const groups = [
-          { label: "Gece", test: hour => hour < 6, slots: [] },
-          { label: "Sabah", test: hour => hour >= 6 && hour < 12, slots: [] },
-          { label: "Öğleden Sonra", test: hour => hour >= 12 && hour < 18, slots: [] },
-          { label: "Akşam", test: hour => hour >= 18, slots: [] },
-        ];
-
-        slots.forEach(time => {
-          const hour = Number(time.split(":")[0]);
-          groups.find(group => group.test(hour)).slots.push(time);
-        });
-
-        return groups.filter(group => group.slots.length);
+      function wrapRelativeY(e) {
+        const rect = document.getElementById("timelineWrap").getBoundingClientRect();
+        return e.clientY - rect.top;
       }
+
+      document.getElementById("timelineWrap").addEventListener("mousedown", e => {
+
+        if (!selectedDateKey) return;
+
+        const deleteBtn = e.target.closest(".tl-delete");
+        if (deleteBtn) {
+          dayBlocks.splice(Number(deleteBtn.dataset.index), 1);
+          syncDayBlocksToAvailability();
+          renderTimeline();
+          renderCalendar();
+          return;
+        }
+
+        const handle = e.target.closest(".tl-handle");
+        const blockEl = e.target.closest(".tl-block");
+
+        if (handle && blockEl) {
+          dragMode = handle.classList.contains("tl-handle-top") ? "resize-top" : "resize-bottom";
+          dragBlockIndex = Number(blockEl.dataset.index);
+          dragOriginal = { ...dayBlocks[dragBlockIndex] };
+          dragStartY = wrapRelativeY(e);
+          e.preventDefault();
+          return;
+        }
+
+        if (blockEl) {
+          dragMode = "move";
+          dragBlockIndex = Number(blockEl.dataset.index);
+          dragOriginal = { ...dayBlocks[dragBlockIndex] };
+          dragStartY = wrapRelativeY(e);
+          e.preventDefault();
+          return;
+        }
+
+        // empty area - start a brand new block
+        const startMin = Math.max(0, Math.min(DAY_MINUTES - 30, snapTo30(pxToMin(wrapRelativeY(e)))));
+        dragCreateAnchor = startMin;
+        dayBlocks.push({ start: startMin, end: startMin + 30 });
+        dragMode = "create";
+        dragBlockIndex = dayBlocks.length - 1;
+        renderTimeline();
+        e.preventDefault();
+      });
+
+      document.addEventListener("mousemove", e => {
+
+        if (!dragMode) return;
+        const block = dayBlocks[dragBlockIndex];
+        if (!block) return;
+
+        const y = wrapRelativeY(e);
+
+        if (dragMode === "create") {
+          const currentMin = Math.max(0, Math.min(DAY_MINUTES, snapTo30(pxToMin(y))));
+          block.start = Math.min(dragCreateAnchor, currentMin);
+          block.end = Math.max(dragCreateAnchor + 30, currentMin);
+
+        } else if (dragMode === "move") {
+          const deltaMin = snapTo30(pxToMin(y) - pxToMin(dragStartY));
+          const duration = dragOriginal.end - dragOriginal.start;
+          const newStart = Math.max(0, Math.min(DAY_MINUTES - duration, dragOriginal.start + deltaMin));
+          block.start = newStart;
+          block.end = newStart + duration;
+
+        } else if (dragMode === "resize-top") {
+          block.start = Math.max(0, Math.min(dragOriginal.end - 30, snapTo30(pxToMin(y))));
+
+        } else if (dragMode === "resize-bottom") {
+          block.end = Math.max(dragOriginal.start + 30, Math.min(DAY_MINUTES, snapTo30(pxToMin(y))));
+        }
+
+        renderTimeline();
+      });
+
+      document.addEventListener("mouseup", () => {
+        if (!dragMode) return;
+        dragMode = null;
+        dragBlockIndex = null;
+        dragOriginal = null;
+        dayBlocks = mergeBlocks(dayBlocks);
+        syncDayBlocksToAvailability();
+        renderTimeline();
+        renderCalendar();
+      });
 
       document.getElementById("calPrevBtn").addEventListener("click", () => {
         viewMonth.setMonth(viewMonth.getMonth() - 1);
@@ -1827,9 +2046,10 @@
 
       document.getElementById("calClearDayBtn").addEventListener("click", () => {
         if (!selectedDateKey) return;
+        dayBlocks = [];
         delete calendarAvailability[selectedDateKey];
         renderCalendar();
-        renderDayPanel();
+        renderTimeline();
       });
 
       document.getElementById("saveAvailabilityBtn").addEventListener("click", async () => {
