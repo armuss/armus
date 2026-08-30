@@ -236,6 +236,21 @@
   <script src="script.js"></script>
 
   <script>
+    // A student who's already logged in shouldn't land on the marketing
+    // homepage - most commonly this is someone arriving here straight
+    // from a Supabase email-confirmation link (which lands on the site's
+    // root, bypassing register.html/login.html's own post-login redirect
+    // entirely), but it also covers any other way of ending up here
+    // while already signed in.
+    (async function() {
+      const session = await armusGetSession();
+      if (session && !session.is_admin && session.role === "student") {
+        window.location.href = "student-dashboard.html";
+      }
+    })();
+  </script>
+
+  <script>
     // Swap the static homepage testimonials for real ones from the admin
     // panel, if any have been published. Falls back to the static markup
     // already in the page (testimonials table empty, or not migrated yet).
