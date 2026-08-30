@@ -142,9 +142,196 @@
       color: #b8b8bb;
     }
 
+    /* ---- lesson progress timer ---- */
+
+    .lesson-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      flex-shrink: 0;
+    }
+
+    .lesson-progress-track {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .08);
+      overflow: hidden;
+    }
+
+    .lesson-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--armus-gold-gradient);
+      transition: width 1s linear, background .4s ease;
+    }
+
+    .lesson-progress-fill.overtime {
+      background: linear-gradient(90deg, #e2574c, #f2a154);
+    }
+
+    .lesson-progress-label {
+      font-size: 12px;
+      color: #b8b8bb;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- video area + vocab pin widget ---- */
+
+    .room-body {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+
     #jitsiContainer {
       flex: 1;
       min-height: 0;
+    }
+
+    .vocab-pin {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 5;
+    }
+
+    .vocab-pin-btn {
+      border: 1px solid var(--armus-border);
+      background: rgba(20, 18, 14, .85);
+      backdrop-filter: blur(6px);
+      color: #f4f4f2;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .vocab-pin-btn:hover {
+      border-color: var(--armus-gold-text);
+      color: var(--armus-gold-text);
+    }
+
+    .vocab-pin-form {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 220px;
+    }
+
+    .vocab-pin-form input {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #f4f4f2;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .vocab-pin-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .vocab-pin-actions .btn {
+      padding: 7px 12px;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .vocab-pin-toast {
+      background: rgba(20, 18, 14, .9);
+      border: 1px solid var(--armus-gold-text);
+      color: var(--armus-gold-text);
+      font-size: 12.5px;
+      padding: 8px 14px;
+      border-radius: 999px;
+    }
+
+    /* ---- post-class quick review / note popup ---- */
+
+    .post-class-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+
+    .post-class-modal {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 18px;
+      padding: 26px;
+      width: min(400px, 100%);
+    }
+
+    .post-class-modal h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      letter-spacing: -.4px;
+    }
+
+    .post-class-stars {
+      display: flex;
+      gap: 6px;
+      font-size: 28px;
+      margin-bottom: 14px;
+      cursor: pointer;
+    }
+
+    .post-class-stars span {
+      color: #4a4a4d;
+      transition: color .15s;
+    }
+
+    .post-class-stars span.active {
+      color: var(--armus-gold-text);
+    }
+
+    .post-class-modal textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #f4f4f2;
+      font-family: inherit;
+      font-size: 13.5px;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .post-class-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .post-class-actions .btn {
+      flex: 1;
+    }
+
+    /* the [hidden] attribute is how these two get toggled in JS - these
+       overrides beat the unconditional display:flex/flex above them */
+    .post-class-overlay[hidden],
+    .vocab-pin-form[hidden] {
+      display: none;
     }
   </style>
 </head>
@@ -177,15 +364,49 @@
     <div class="room-bar">
       <a href="index.html" class="logo">ARMUS</a>
       <span class="lesson-with" id="lessonWith"></span>
-      <a class="btn" id="leaveBtn" href="my-lessons.html">Ayrıl</a>
+      <button type="button" class="btn" id="leaveBtn">Ayrıl</button>
     </div>
-    <div id="jitsiContainer"></div>
+    <div class="lesson-progress" id="lessonProgress">
+      <div class="lesson-progress-track">
+        <div class="lesson-progress-fill" id="progressFill"></div>
+      </div>
+      <div class="lesson-progress-label" id="progressLabel"></div>
+    </div>
+    <div class="room-body">
+      <div id="jitsiContainer"></div>
+      <div class="vocab-pin" id="vocabPin">
+        <button type="button" class="vocab-pin-btn" id="vocabPinBtn">+ Kelime Ekle</button>
+        <form class="vocab-pin-form" id="vocabPinForm" hidden>
+          <input type="text" id="vocabTermInput" placeholder="Kelime" required>
+          <input type="text" id="vocabMeaningInput" placeholder="Anlamı" required>
+          <div class="vocab-pin-actions">
+            <button type="submit" class="btn btn-light">Ekle</button>
+            <button type="button" class="btn" id="vocabPinCancel">İptal</button>
+          </div>
+        </form>
+        <div class="vocab-pin-toast" id="vocabPinToast" hidden>✓ Kelime kaydedildi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="post-class-overlay" id="postClassOverlay" hidden>
+    <div class="post-class-modal">
+      <h2 id="postClassTitle"></h2>
+      <div id="postClassBody"></div>
+      <div class="post-class-actions">
+        <button type="button" class="btn" id="postClassSkip">Atla</button>
+        <button type="button" class="btn btn-light" id="postClassSave">Kaydet ve Çık</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
+  <script src="reviews.js"></script>
+  <script src="teacher-notes.js"></script>
+  <script src="student-extras.js"></script>
   <script src="https://meet.jit.si/external_api.js"></script>
   <script>
 
@@ -240,9 +461,8 @@
       const backHref = isTeacher ? "dashboard.html" : "my-lessons.html";
       document.getElementById("tooEarlyBack").href = backHref;
       document.getElementById("tooLateBack").href = backHref;
-      document.getElementById("leaveBtn").href = backHref;
 
-      const { start, joinsFrom, joinsUntil } = armusLessonWindow(booking);
+      const { start, end, joinsFrom, joinsUntil } = armusLessonWindow(booking);
       const now = new Date();
 
       if (now < joinsFrom) {
@@ -264,13 +484,167 @@
 
       room.style.display = "flex";
 
-      new JitsiMeetExternalAPI("meet.jit.si", {
+      const jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
         roomName: armusRoomNameForBooking(booking.id),
         parentNode: document.getElementById("jitsiContainer"),
         userInfo: { displayName: session.name },
         configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
         interfaceConfigOverwrite: { MOBILE_APP_PROMO: false },
       });
+
+      // ---- lesson progress timer: fills as the lesson runs, flips to
+      // an "overtime" color and counts up past the scheduled end ----
+
+      const progressFill = document.getElementById("progressFill");
+      const progressLabel = document.getElementById("progressLabel");
+
+      function formatClock(ms) {
+        const totalSeconds = Math.max(0, Math.round(ms / 1000));
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        return `${m}:${String(s).padStart(2, "0")}`;
+      }
+
+      function updateLessonProgress() {
+        const nowTick = new Date();
+        const pct = Math.min(100, Math.max(0, ((nowTick - start) / (end - start)) * 100));
+        progressFill.style.width = pct + "%";
+
+        if (nowTick > end) {
+          progressFill.classList.add("overtime");
+          progressLabel.textContent = `Ders bitti · +${formatClock(nowTick - end)} ek süre`;
+        } else {
+          progressFill.classList.remove("overtime");
+          progressLabel.textContent = `${formatClock(nowTick - start)} geçti · ${formatClock(end - nowTick)} kaldı`;
+        }
+      }
+
+      updateLessonProgress();
+      const progressInterval = setInterval(updateLessonProgress, 1000);
+
+      // ---- pin a word to the student's vocab vault mid-lesson ----
+      // (works for either side - always saved onto the student's own
+      // vault, see migration_21.sql for the RLS letting the teacher
+      // write into it too)
+
+      const vocabPinBtn = document.getElementById("vocabPinBtn");
+      const vocabPinForm = document.getElementById("vocabPinForm");
+      const vocabPinToast = document.getElementById("vocabPinToast");
+
+      vocabPinBtn.addEventListener("click", () => {
+        vocabPinBtn.hidden = true;
+        vocabPinForm.hidden = false;
+        document.getElementById("vocabTermInput").focus();
+      });
+
+      document.getElementById("vocabPinCancel").addEventListener("click", () => {
+        vocabPinForm.reset();
+        vocabPinForm.hidden = true;
+        vocabPinBtn.hidden = false;
+      });
+
+      vocabPinForm.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const term = document.getElementById("vocabTermInput").value.trim();
+        const meaning = document.getElementById("vocabMeaningInput").value.trim();
+        if (!term || !meaning) return;
+
+        const saved = await armusAddVocabEntry(booking.studentId, term, meaning);
+
+        vocabPinForm.reset();
+        vocabPinForm.hidden = true;
+        vocabPinBtn.hidden = false;
+
+        if (saved) {
+          vocabPinToast.hidden = false;
+          setTimeout(() => { vocabPinToast.hidden = true; }, 2200);
+        }
+      });
+
+      // ---- leaving: a quick review (student) or private note (teacher)
+      // before heading back, whether "Ayrıl" or Jitsi's own hangup
+      // button was used ----
+
+      const postClassOverlay = document.getElementById("postClassOverlay");
+      const postClassTitle = document.getElementById("postClassTitle");
+      const postClassBody = document.getElementById("postClassBody");
+      const postClassSkip = document.getElementById("postClassSkip");
+      const postClassSave = document.getElementById("postClassSave");
+
+      function finishAndLeave() {
+        window.location.href = backHref;
+      }
+
+      let postClassOpened = false;
+
+      async function openPostClassModal() {
+
+        if (postClassOpened) return;
+        postClassOpened = true;
+
+        clearInterval(progressInterval);
+        try { jitsiApi.dispose(); } catch (err) {}
+
+        if (isStudent) {
+
+          const existingReview = await armusGetReviewForBooking(booking.id);
+          if (existingReview) { finishAndLeave(); return; }
+
+          postClassTitle.textContent = "Bu ders nasıldı?";
+          let stars = 0;
+          postClassBody.innerHTML = `
+            <div class="post-class-stars" id="postClassStars">
+              ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
+            </div>
+            <textarea id="postClassComment" placeholder="İstersen kısa bir not bırak (opsiyonel)"></textarea>
+          `;
+
+          const starEls = postClassBody.querySelectorAll("[data-star]");
+          starEls.forEach(el => {
+            el.addEventListener("click", () => {
+              stars = Number(el.dataset.star);
+              starEls.forEach(s => s.classList.toggle("active", Number(s.dataset.star) <= stars));
+            });
+          });
+
+          postClassSave.onclick = async () => {
+            if (stars > 0) {
+              await armusAddReview({
+                bookingId: booking.id,
+                teacherId: booking.teacherId,
+                studentId: session.id,
+                studentName: session.name,
+                stars,
+                text: postClassBody.querySelector("#postClassComment").value.trim(),
+              });
+            }
+            finishAndLeave();
+          };
+
+        } else {
+
+          const notes = await armusGetTeacherNotes(session.id);
+          const existing = notes[booking.studentId];
+
+          postClassTitle.textContent = `${booking.studentName} için not`;
+          postClassBody.innerHTML = `
+            <textarea id="postClassNote" placeholder="Bu öğrenci hakkında kısa bir not (sadece sen görürsün)">${existing ? existing.note : ""}</textarea>
+          `;
+
+          postClassSave.onclick = async () => {
+            const note = postClassBody.querySelector("#postClassNote").value.trim();
+            if (note) await armusSaveTeacherNote(session.id, booking.studentId, note);
+            finishAndLeave();
+          };
+        }
+
+        postClassSkip.onclick = finishAndLeave;
+        postClassOverlay.hidden = false;
+      }
+
+      document.getElementById("leaveBtn").addEventListener("click", openPostClassModal);
+      jitsiApi.addEventListener("readyToClose", openPostClassModal);
 
     })();
 

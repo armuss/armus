@@ -194,7 +194,10 @@ create policy "reviews_select_all"
   on reviews for select
   using (true);
 
--- reviews: a student can review only their own completed booking
+-- reviews: a student can review only their own completed booking - same
+-- day or earlier counts as "completed" (rather than strictly before
+-- today), so a student can rate a lesson right after leaving the live
+-- classroom (class.html) instead of waiting for the next calendar day.
 create policy "reviews_insert_own_student"
   on reviews for insert
   with check (
@@ -203,7 +206,7 @@ create policy "reviews_insert_own_student"
       select 1 from bookings b
       where b.id = booking_id
         and b.student_id = auth.uid()
-        and b.lesson_date < current_date
+        and b.lesson_date <= current_date
     )
   );
 
@@ -580,6 +583,19 @@ create policy "vocab_entries_all_own"
   on vocab_entries for all
   using (auth.uid() = student_id)
   with check (auth.uid() = student_id);
+
+-- vocab_entries: a teacher can also pin a word into a student's vault
+-- mid-lesson (class.html's "Kelime Ekle" widget), scoped to students
+-- they actually share a booking with.
+create policy "vocab_entries_insert_teacher"
+  on vocab_entries for insert
+  with check (
+    exists (
+      select 1 from bookings b
+      where b.teacher_id = auth.uid()::text
+        and b.student_id = vocab_entries.student_id
+    )
+  );
 
 -- a quick 1-5 self-rating a student can leave once per completed
 -- lesson ("bugün ne kadar rahat konuştun?"), charted as a trend
