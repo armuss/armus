@@ -428,183 +428,146 @@
       max-width: 560px;
     }
 
-    /* ---- availability calendar ---- */
+    /* ---- weekly availability timeline ---- */
+    /* One merged table: 7 day-of-week columns (Pzt-Paz, no dates - this
+       pattern repeats every week), each independently draggable. A
+       teacher drags across an empty stretch of a day's column to mark
+       it available, drags a block's edges to resize it, drags its body
+       to move it within that day, and can delete it outright. */
 
-    .cal-wrap {
-      max-width: 720px;
-      margin-left: auto;
-      margin-right: auto;
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 22px 26px;
-      background: var(--armus-panel);
-      margin-bottom: 20px;
+    .week-wrap {
+      max-width: 960px;
+      margin: 0 auto 20px;
     }
 
-    .cal-header {
+    .week-header {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
     }
 
-    .cal-month-label {
-      font-weight: 700;
-      font-size: 16px;
+    .week-header-gutter {
+      width: 56px;
+      flex-shrink: 0;
     }
 
-    .cal-nav {
-      border: 1px solid var(--armus-border);
-      background: transparent;
-      color: #eee;
-      border-radius: 8px;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      font-size: 14px;
-      font-family: inherit;
-    }
-
-    .cal-grid {
+    .week-header-days {
+      flex: 1;
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      margin: 0 14px;
     }
 
-    .cal-dow {
-      text-align: center;
-      font-size: 12px;
-      color: #8e8e91;
-      padding-bottom: 6px;
-    }
-
-    .cal-day {
-      position: relative;
-      aspect-ratio: 1;
-      max-width: 76px;
-      margin: 0 auto;
-      width: 100%;
+    .week-header-day {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      color: #eee;
-    }
-
-    .cal-day.empty {
-      visibility: hidden;
-      cursor: default;
-    }
-
-    .cal-day.past {
-      color: #4a4a4d;
-      cursor: default;
-    }
-
-    .cal-day:not(.past):not(.empty):hover {
-      border-color: var(--armus-border);
-    }
-
-    .cal-day.selected {
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
+      gap: 5px;
+      text-align: center;
+      font-size: 12.5px;
       font-weight: 700;
+      color: #d8d8da;
+      padding: 4px 0 10px;
     }
 
-    .cal-day.has-slots::after {
-      content: "";
-      position: absolute;
-      bottom: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--armus-gold-2);
-    }
-
-    .cal-day.selected.has-slots::after {
-      background: var(--armus-on-gold);
-    }
-
-    .cal-day-panel {
-      max-width: 720px;
-      margin-left: auto;
-      margin-right: auto;
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 22px 26px;
-      background: var(--armus-panel);
-    }
-
-    .cal-day-panel-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .cal-day-panel-sub {
-      font-size: 11.5px;
-      color: #8e8e91;
-      margin-top: 3px;
-    }
-
-    .cal-clear-btn {
+    .wk-clear {
       border: none;
       background: transparent;
-      color: #8e8e91;
-      font-size: 11.5px;
+      color: #6e6e72;
+      font-size: 11px;
       cursor: pointer;
-      text-decoration: underline;
-      font-family: inherit;
+      padding: 2px;
+      line-height: 1;
     }
 
-    .slot-chip-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 16px;
-      max-height: 340px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .slot-section-label {
-      font-size: 10.5px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
+    .wk-clear:hover {
       color: var(--armus-gold-text);
-      margin-bottom: 8px;
     }
 
-    .slot-section-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-      gap: 7px;
-    }
-
-    .slot-chip {
+    .timeline-scroll {
+      max-height: 460px;
+      overflow-y: auto;
       border: 1px solid var(--armus-border);
+      border-radius: 12px;
       background: var(--armus-bg);
-      color: #ccc;
-      border-radius: 9px;
-      padding: 9px 6px;
-      font-size: 12px;
-      cursor: pointer;
-      font-family: inherit;
-      text-align: center;
     }
 
-    .slot-chip.active {
-      background: var(--armus-gold-gradient);
-      border-color: transparent;
-      color: var(--armus-on-gold);
+    .timeline-wrap {
+      position: relative;
+      margin-left: 56px;
+      margin-right: 14px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .tl-hour-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px solid var(--armus-border-soft);
+    }
+
+    .tl-hour-label {
+      position: absolute;
+      left: -52px;
+      width: 44px;
+      text-align: right;
+      font-size: 10.5px;
+      color: #77777b;
+      transform: translateY(-6px);
+    }
+
+    .tl-day-sep {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-left: 1px solid var(--armus-border-soft);
+    }
+
+    .tl-block {
+      position: absolute;
+      background: rgba(212, 175, 106, .24);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 8px;
+      box-sizing: border-box;
+      cursor: grab;
+      overflow: hidden;
+    }
+
+    .tl-block-label {
+      padding: 4px 20px 4px 6px;
+      font-size: 10.5px;
+      color: var(--armus-gold-text);
       font-weight: 700;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .tl-handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 10px;
+      cursor: ns-resize;
+    }
+
+    .tl-handle-top {
+      top: -5px;
+    }
+
+    .tl-handle-bottom {
+      bottom: -5px;
+    }
+
+    .tl-delete {
+      position: absolute;
+      top: 1px;
+      right: 2px;
+      border: none;
+      background: transparent;
+      color: var(--armus-gold-text);
+      font-size: 13px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 3px;
     }
 
     /* ---- online-now toggle ---- */
@@ -1148,35 +1111,27 @@
       </div>
 
       <div class="panel" id="panel-availability">
-        <h2>Uygunluk Takvimi</h2>
+        <h2>Haftalık Uygunluk</h2>
         <p class="section-hint">
-          Takvimden bir tarih seç, sonra o gün için müsait olduğun saatleri
-          işaretle. Öğrenciler rezervasyon yaparken sadece burada açık
-          bıraktığın gün ve saatleri görecek. Değişiklikler anında geçerli
-          olur, onay beklemene gerek yok.
+          Boş bir alana tıklayıp aşağı sürükleyerek o gün için uygunluk ekle. Bir
+          bloğun üst veya alt kenarından tutup büyütüp küçültebilir, gövdesinden
+          tutup taşıyabilir, üzerine gelip × ile silebilirsin. Bu düzen belirli bir
+          tarihe değil, haftanın günlerine göre çalışır ve her hafta tekrarlanır.
+          Değişiklikler anında geçerli olur, onay beklemene gerek yok.
         </p>
 
-        <div class="cal-wrap">
-          <div class="cal-header">
-            <button type="button" class="cal-nav" id="calPrevBtn" aria-label="Önceki ay">←</button>
-            <div class="cal-month-label" id="calMonthLabel"></div>
-            <button type="button" class="cal-nav" id="calNextBtn" aria-label="Sonraki ay">→</button>
+        <div class="week-wrap">
+          <div class="week-header">
+            <div class="week-header-gutter"></div>
+            <div class="week-header-days" id="weekHeaderDays"></div>
           </div>
-          <div class="cal-grid" id="calGrid"></div>
+          <div class="timeline-scroll" id="timelineScroll">
+            <div class="timeline-wrap" id="timelineWrap"></div>
+          </div>
         </div>
 
-        <div class="cal-day-panel" id="calDayPanel" style="display: none;">
-          <div class="cal-day-panel-head">
-            <div>
-              <strong id="calSelectedDateLabel"></strong>
-              <div class="cal-day-panel-sub">Her ders 50 dakika sürer</div>
-            </div>
-            <button type="button" class="cal-clear-btn" id="calClearDayBtn">Bu günü temizle</button>
-          </div>
-          <div class="slot-chip-grid" id="slotChipGrid"></div>
-          <button type="button" class="save-btn" id="saveAvailabilityBtn">Kaydet</button>
-          <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
-        </div>
+        <button type="button" class="save-btn" id="saveAvailabilityBtn">Kaydet</button>
+        <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
       </div>
 
       <div class="panel" id="panel-profile">
@@ -1669,175 +1624,279 @@
         setTimeout(() => status.classList.remove("visible"), 2500);
       });
 
-      // ---- availability calendar ----
-      // availability_dates: { "2026-09-01": ["14:00","14:30"], ... } - a
-      // teacher-owned field the profile lock trigger deliberately leaves
-      // alone (like is_online/income_goal), so changes here are instant,
-      // no admin approval needed. Replaces the older weekly_availability
-      // pattern for day-to-day use; booking.html still falls back to that
-      // (set once during signup) for any date not listed here.
+      // ---- weekly availability timeline ----
+      // availability_dates is a teacher-owned field the profile lock
+      // trigger deliberately leaves alone (like is_online/income_goal),
+      // so changes here are instant, no admin approval needed. It's
+      // reused here keyed by day-of-week (getDay() index, as a string
+      // "0".."6") instead of a real date - a recurring weekly pattern,
+      // not date-specific. booking.html looks up the booked date's
+      // day-of-week in this map, falling back to the older
+      // weekly_availability array (set once during signup) if empty.
+      //
+      // A day's slots are stored as a flat list of 30-min start times
+      // (e.g. ["14:00","14:30"]), but edited here as continuous
+      // draggable blocks: a block "14:00-17:00" expands to
+      // ["14:00","14:30",...,"16:30"] on save.
 
-      const TIME_SLOTS = armusAllTimeSlots();
-      const MONTH_NAMES = [
-        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
+      const DAY_COLUMNS = [
+        ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
+        ["Cum", 5], ["Cmt", 6], ["Paz", 0],
       ];
 
-      const calendarAvailability = { ...(user.availability_dates || {}) };
-      let viewMonth = new Date();
-      viewMonth.setDate(1);
-      let selectedDateKey = null;
+      const HOUR_PX = 44;
+      const PX_PER_MIN = HOUR_PX / 60;
+      const DAY_MINUTES = 24 * 60;
 
-      function calDateKey(year, month, day) {
-        return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      function timeToMinutes(time) {
+        const [h, m] = time.split(":").map(Number);
+        return h * 60 + m;
       }
 
-      function renderCalendar() {
+      function minutesToTimeLabel(min) {
+        const clamped = Math.max(0, Math.min(DAY_MINUTES, min));
+        const h = Math.floor(clamped / 60);
+        const m = clamped % 60;
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
 
-        const grid = document.getElementById("calGrid");
-        grid.innerHTML = "";
+      function snapTo30(min) {
+        return Math.round(min / 30) * 30;
+      }
 
-        document.getElementById("calMonthLabel").textContent =
-          `${MONTH_NAMES[viewMonth.getMonth()]} ${viewMonth.getFullYear()}`;
+      function pxToMin(px) {
+        return px / PX_PER_MIN;
+      }
 
-        ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].forEach(label => {
-          const el = document.createElement("div");
-          el.className = "cal-dow";
-          el.textContent = label;
-          grid.appendChild(el);
+      function slotsToBlocks(slots) {
+        const sorted = slots.slice().sort();
+        const blocks = [];
+        let current = null;
+        sorted.forEach(time => {
+          const startMin = timeToMinutes(time);
+          if (current && startMin === current.end) {
+            current.end += 30;
+          } else {
+            current = { start: startMin, end: startMin + 30 };
+            blocks.push(current);
+          }
+        });
+        return blocks;
+      }
+
+      function blocksToSlots(blocks) {
+        const slots = [];
+        blocks.forEach(b => {
+          for (let m = b.start; m < b.end; m += 30) slots.push(minutesToTimeLabel(m));
+        });
+        return slots;
+      }
+
+      // collapses touching/overlapping blocks into one after a drag
+      function mergeBlocks(blocks) {
+        const sorted = blocks.slice().sort((a, b) => a.start - b.start);
+        const merged = [];
+        sorted.forEach(b => {
+          const last = merged[merged.length - 1];
+          if (last && b.start <= last.end) last.end = Math.max(last.end, b.end);
+          else merged.push({ start: b.start, end: b.end });
+        });
+        return merged;
+      }
+
+      // weekBlocks[getDay() index] = [{start,end}, ...] in minutes
+      const weekBlocks = {};
+      DAY_COLUMNS.forEach(([, dayIdx]) => {
+        const raw = user.availability_dates && user.availability_dates[String(dayIdx)];
+        weekBlocks[dayIdx] = slotsToBlocks(Array.isArray(raw) ? raw : []);
+      });
+
+      function renderWeekHeader() {
+
+        const el = document.getElementById("weekHeaderDays");
+        el.innerHTML = "";
+
+        DAY_COLUMNS.forEach(([label, dayIdx]) => {
+          const col = document.createElement("div");
+          col.className = "week-header-day";
+          col.innerHTML = `${label} <button type="button" class="wk-clear" data-day="${dayIdx}" title="Bu günü temizle">✕</button>`;
+          el.appendChild(col);
         });
 
-        const year = viewMonth.getFullYear();
-        const month = viewMonth.getMonth();
-        const startOffset = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-first
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const todayKey = new Date().toISOString().slice(0, 10);
-
-        for (let i = 0; i < startOffset; i++) {
-          const el = document.createElement("div");
-          el.className = "cal-day empty";
-          grid.appendChild(el);
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-
-          const key = calDateKey(year, month, day);
-          const el = document.createElement("div");
-          el.className = "cal-day";
-          el.textContent = day;
-
-          const isPast = key < todayKey;
-          if (isPast) el.classList.add("past");
-          if (calendarAvailability[key] && calendarAvailability[key].length) el.classList.add("has-slots");
-          if (key === selectedDateKey) el.classList.add("selected");
-
-          if (!isPast) {
-            el.addEventListener("click", () => {
-              selectedDateKey = key;
-              renderCalendar();
-              renderDayPanel();
-            });
-          }
-
-          grid.appendChild(el);
-        }
+        el.querySelectorAll(".wk-clear").forEach(btn => {
+          btn.addEventListener("click", () => {
+            weekBlocks[Number(btn.dataset.day)] = [];
+            renderTimeline();
+          });
+        });
       }
 
-      function renderDayPanel() {
+      function renderTimeline() {
 
-        const panel = document.getElementById("calDayPanel");
+        const wrap = document.getElementById("timelineWrap");
+        wrap.innerHTML = "";
+        wrap.style.height = (24 * HOUR_PX) + "px";
 
-        if (!selectedDateKey) {
-          panel.style.display = "none";
+        for (let h = 0; h < 24; h++) {
+
+          const line = document.createElement("div");
+          line.className = "tl-hour-line";
+          line.style.top = (h * HOUR_PX) + "px";
+          wrap.appendChild(line);
+
+          const label = document.createElement("div");
+          label.className = "tl-hour-label";
+          label.style.top = (h * HOUR_PX) + "px";
+          label.textContent = String(h).padStart(2, "0") + ":00";
+          wrap.appendChild(label);
+        }
+
+        for (let i = 1; i < 7; i++) {
+          const sep = document.createElement("div");
+          sep.className = "tl-day-sep";
+          sep.style.left = `calc(${i} * (100% / 7))`;
+          wrap.appendChild(sep);
+        }
+
+        DAY_COLUMNS.forEach(([, dayIdx], colIndex) => {
+          (weekBlocks[dayIdx] || []).forEach((block, blockIndex) => {
+
+            const el = document.createElement("div");
+            el.className = "tl-block";
+            el.dataset.day = String(dayIdx);
+            el.dataset.index = String(blockIndex);
+            el.style.top = (block.start * PX_PER_MIN) + "px";
+            el.style.height = ((block.end - block.start) * PX_PER_MIN) + "px";
+            el.style.left = `calc(${colIndex} * (100% / 7) + 2px)`;
+            el.style.width = "calc((100% / 7) - 4px)";
+            el.innerHTML = `
+              <div class="tl-handle tl-handle-top"></div>
+              <div class="tl-block-label">${minutesToTimeLabel(block.start)}–${minutesToTimeLabel(block.end)}</div>
+              <button type="button" class="tl-delete" data-day="${dayIdx}" data-index="${blockIndex}" title="Sil">×</button>
+              <div class="tl-handle tl-handle-bottom"></div>
+            `;
+            wrap.appendChild(el);
+          });
+        });
+      }
+
+      // drag state for create/move/resize - kept outside the mousedown
+      // handler so mousemove/mouseup (attached once, on document) can
+      // see it across the whole gesture, even if the pointer leaves the
+      // timeline element mid-drag
+      let dragMode = null; // "create" | "move" | "resize-top" | "resize-bottom"
+      let dragDay = null;
+      let dragIndex = null;
+      let dragStartY = 0;
+      let dragOriginal = null;
+      let dragCreateAnchor = null;
+
+      function wrapRect() {
+        return document.getElementById("timelineWrap").getBoundingClientRect();
+      }
+
+      function relY(e) {
+        return e.clientY - wrapRect().top;
+      }
+
+      function dayIndexFromX(clientX) {
+        const rect = wrapRect();
+        const colWidth = rect.width / 7;
+        const colIndex = Math.max(0, Math.min(6, Math.floor((clientX - rect.left) / colWidth)));
+        return DAY_COLUMNS[colIndex][1];
+      }
+
+      document.getElementById("timelineWrap").addEventListener("mousedown", e => {
+
+        const deleteBtn = e.target.closest(".tl-delete");
+        if (deleteBtn) {
+          const day = Number(deleteBtn.dataset.day);
+          weekBlocks[day].splice(Number(deleteBtn.dataset.index), 1);
+          renderTimeline();
           return;
         }
 
-        panel.style.display = "block";
-        document.getElementById("calSelectedDateLabel").textContent = armusFormatDateLabel(selectedDateKey);
+        const handle = e.target.closest(".tl-handle");
+        const blockEl = e.target.closest(".tl-block");
 
-        const daySlots = calendarAvailability[selectedDateKey] || [];
-        const chipGrid = document.getElementById("slotChipGrid");
-        chipGrid.innerHTML = "";
+        if (handle && blockEl) {
+          dragMode = handle.classList.contains("tl-handle-top") ? "resize-top" : "resize-bottom";
+          dragDay = Number(blockEl.dataset.day);
+          dragIndex = Number(blockEl.dataset.index);
+          dragOriginal = { ...weekBlocks[dragDay][dragIndex] };
+          dragStartY = relY(e);
+          e.preventDefault();
+          return;
+        }
 
-        groupTimeSlots(TIME_SLOTS).forEach(group => {
+        if (blockEl) {
+          dragMode = "move";
+          dragDay = Number(blockEl.dataset.day);
+          dragIndex = Number(blockEl.dataset.index);
+          dragOriginal = { ...weekBlocks[dragDay][dragIndex] };
+          dragStartY = relY(e);
+          e.preventDefault();
+          return;
+        }
 
-          const section = document.createElement("div");
-          section.className = "slot-section";
-
-          const heading = document.createElement("div");
-          heading.className = "slot-section-label";
-          heading.textContent = group.label;
-          section.appendChild(heading);
-
-          const row = document.createElement("div");
-          row.className = "slot-section-row";
-
-          group.slots.forEach(time => {
-
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "slot-chip" + (daySlots.includes(time) ? " active" : "");
-            chip.textContent = armusFormatTimeRange(time);
-
-            chip.addEventListener("click", () => {
-              const list = calendarAvailability[selectedDateKey] || (calendarAvailability[selectedDateKey] = []);
-              const idx = list.indexOf(time);
-              if (idx === -1) list.push(time); else list.splice(idx, 1);
-              chip.classList.toggle("active");
-            });
-
-            row.appendChild(chip);
-          });
-
-          section.appendChild(row);
-          chipGrid.appendChild(section);
-        });
-      }
-
-      // Groups half-hour slot start times into time-of-day sections so
-      // the day panel reads as a few short, labeled rows instead of one
-      // flat wall of 48 chips - each chip shows the full lesson range
-      // (e.g. "14:00 – 14:50") rather than just a bare start time.
-      function groupTimeSlots(slots) {
-
-        const groups = [
-          { label: "Gece", test: hour => hour < 6, slots: [] },
-          { label: "Sabah", test: hour => hour >= 6 && hour < 12, slots: [] },
-          { label: "Öğleden Sonra", test: hour => hour >= 12 && hour < 18, slots: [] },
-          { label: "Akşam", test: hour => hour >= 18, slots: [] },
-        ];
-
-        slots.forEach(time => {
-          const hour = Number(time.split(":")[0]);
-          groups.find(group => group.test(hour)).slots.push(time);
-        });
-
-        return groups.filter(group => group.slots.length);
-      }
-
-      document.getElementById("calPrevBtn").addEventListener("click", () => {
-        viewMonth.setMonth(viewMonth.getMonth() - 1);
-        renderCalendar();
+        // empty area - start a brand new block in the clicked day's column
+        const day = dayIndexFromX(e.clientX);
+        const startMin = Math.max(0, Math.min(DAY_MINUTES - 30, snapTo30(pxToMin(relY(e)))));
+        dragCreateAnchor = startMin;
+        weekBlocks[day].push({ start: startMin, end: startMin + 30 });
+        dragMode = "create";
+        dragDay = day;
+        dragIndex = weekBlocks[day].length - 1;
+        renderTimeline();
+        e.preventDefault();
       });
 
-      document.getElementById("calNextBtn").addEventListener("click", () => {
-        viewMonth.setMonth(viewMonth.getMonth() + 1);
-        renderCalendar();
+      document.addEventListener("mousemove", e => {
+
+        if (!dragMode) return;
+        const block = weekBlocks[dragDay] && weekBlocks[dragDay][dragIndex];
+        if (!block) return;
+
+        const y = relY(e);
+
+        if (dragMode === "create") {
+          const currentMin = Math.max(0, Math.min(DAY_MINUTES, snapTo30(pxToMin(y))));
+          block.start = Math.min(dragCreateAnchor, currentMin);
+          block.end = Math.max(dragCreateAnchor + 30, currentMin);
+
+        } else if (dragMode === "move") {
+          const deltaMin = snapTo30(pxToMin(y) - pxToMin(dragStartY));
+          const duration = dragOriginal.end - dragOriginal.start;
+          const newStart = Math.max(0, Math.min(DAY_MINUTES - duration, dragOriginal.start + deltaMin));
+          block.start = newStart;
+          block.end = newStart + duration;
+
+        } else if (dragMode === "resize-top") {
+          block.start = Math.max(0, Math.min(dragOriginal.end - 30, snapTo30(pxToMin(y))));
+
+        } else if (dragMode === "resize-bottom") {
+          block.end = Math.max(dragOriginal.start + 30, Math.min(DAY_MINUTES, snapTo30(pxToMin(y))));
+        }
+
+        renderTimeline();
       });
 
-      document.getElementById("calClearDayBtn").addEventListener("click", () => {
-        if (!selectedDateKey) return;
-        delete calendarAvailability[selectedDateKey];
-        renderCalendar();
-        renderDayPanel();
+      document.addEventListener("mouseup", () => {
+        if (!dragMode) return;
+        if (dragDay !== null) weekBlocks[dragDay] = mergeBlocks(weekBlocks[dragDay]);
+        dragMode = null;
+        dragDay = null;
+        dragIndex = null;
+        dragOriginal = null;
+        renderTimeline();
       });
 
       document.getElementById("saveAvailabilityBtn").addEventListener("click", async () => {
 
-        // drop emptied-out dates so the stored JSON doesn't grow forever
         const cleaned = {};
-        Object.keys(calendarAvailability).forEach(key => {
-          if (calendarAvailability[key] && calendarAvailability[key].length) cleaned[key] = calendarAvailability[key];
+        DAY_COLUMNS.forEach(([, dayIdx]) => {
+          const slots = blocksToSlots(weekBlocks[dayIdx]);
+          if (slots.length) cleaned[String(dayIdx)] = slots;
         });
 
         const result = await armusUpdateOwnProfile({ availability_dates: cleaned });
@@ -1848,14 +1907,15 @@
         } else {
           user.availability_dates = cleaned;
           status.textContent = "Kaydedildi ✓";
-          renderCalendar();
         }
 
         status.classList.add("visible");
         setTimeout(() => status.classList.remove("visible"), 2500);
       });
 
-      renderCalendar();
+      renderWeekHeader();
+      renderTimeline();
+      document.getElementById("timelineScroll").scrollTop = 7 * HOUR_PX;
     }
 
   </script>
