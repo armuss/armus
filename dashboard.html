@@ -428,50 +428,154 @@
       max-width: 560px;
     }
 
-    .availability-grid-wrap {
-      overflow-x: auto;
-      margin-bottom: 18px;
-    }
+    /* ---- availability calendar ---- */
 
-    .availability-grid {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 560px;
-    }
-
-    .availability-grid th {
-      font-size: 11px;
-      color: #8e8e91;
-      font-weight: 600;
-      padding: 6px 4px;
-    }
-
-    .availability-grid td {
-      text-align: center;
-      padding: 3px;
-    }
-
-    .availability-grid .time-label {
-      text-align: right;
-      padding-right: 10px;
-      font-size: 11.5px;
-      color: #8e8e91;
-      white-space: nowrap;
-    }
-
-    .avail-cell {
-      width: 36px;
-      height: 30px;
-      border-radius: 8px;
+    .cal-wrap {
+      max-width: 420px;
       border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 20px;
       background: var(--armus-panel);
-      cursor: pointer;
-      margin: 0 auto;
+      margin-bottom: 20px;
     }
 
-    .avail-cell.active {
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .cal-month-label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .cal-nav {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: #eee;
+      border-radius: 8px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-dow {
+      text-align: center;
+      font-size: 10.5px;
+      color: #8e8e91;
+      padding-bottom: 4px;
+    }
+
+    .cal-day {
+      position: relative;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 12.5px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      color: #eee;
+    }
+
+    .cal-day.empty {
+      visibility: hidden;
+      cursor: default;
+    }
+
+    .cal-day.past {
+      color: #4a4a4d;
+      cursor: default;
+    }
+
+    .cal-day:not(.past):not(.empty):hover {
+      border-color: var(--armus-border);
+    }
+
+    .cal-day.selected {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-weight: 700;
+    }
+
+    .cal-day.has-slots::after {
+      content: "";
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--armus-gold-2);
+    }
+
+    .cal-day.selected.has-slots::after {
+      background: var(--armus-on-gold);
+    }
+
+    .cal-day-panel {
+      max-width: 420px;
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      background: var(--armus-panel);
+    }
+
+    .cal-day-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .cal-clear-btn {
+      border: none;
+      background: transparent;
+      color: #8e8e91;
+      font-size: 11.5px;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+
+    .slot-chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .slot-chip {
+      border: 1px solid var(--armus-border);
+      background: var(--armus-bg);
+      color: #ccc;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .slot-chip.active {
       background: var(--armus-gold-gradient);
       border-color: transparent;
+      color: var(--armus-on-gold);
+      font-weight: 700;
     }
 
     /* ---- online-now toggle ---- */
@@ -1015,31 +1119,32 @@
       </div>
 
       <div class="panel" id="panel-availability">
-        <h2>Haftalık Uygunluk</h2>
+        <h2>Uygunluk Takvimi</h2>
         <p class="section-hint">
-          Hangi gün ve saatlerde ders verebileceğini işaretle. Öğrenciler
-          rezervasyon yaparken sadece burada açık bıraktığın saatleri görecek.
+          Takvimden bir tarih seç, sonra o gün için müsait olduğun saatleri
+          işaretle. Öğrenciler rezervasyon yaparken sadece burada açık
+          bıraktığın gün ve saatleri görecek. Değişiklikler anında geçerli
+          olur, onay beklemene gerek yok.
         </p>
 
-        <div class="availability-note" id="availabilityDefaultNote">
-          Henüz saatlerini belirlemedin — bu süre boyunca öğrenciler senin
-          için otomatik oluşturulan örnek uygunluk saatlerini görüyor.
-          Aşağıdan saatlerini işaretleyip kaydettiğinde gerçek saatlerin
-          geçerli olacak.
+        <div class="cal-wrap">
+          <div class="cal-header">
+            <button type="button" class="cal-nav" id="calPrevBtn" aria-label="Önceki ay">←</button>
+            <div class="cal-month-label" id="calMonthLabel"></div>
+            <button type="button" class="cal-nav" id="calNextBtn" aria-label="Sonraki ay">→</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
         </div>
 
-        <div class="availability-note" id="availabilityPendingNote" style="display: none;">
-          Yeni uygunluk saatlerini gönderdin, ARMUS ekibi onayladığında
-          öğrenciler için geçerli olacak. Aşağıdaki tablo gönderdiğin
-          (henüz onaylanmamış) saatleri gösteriyor.
+        <div class="cal-day-panel" id="calDayPanel" style="display: none;">
+          <div class="cal-day-panel-head">
+            <strong id="calSelectedDateLabel"></strong>
+            <button type="button" class="cal-clear-btn" id="calClearDayBtn">Bu günü temizle</button>
+          </div>
+          <div class="slot-chip-grid" id="slotChipGrid"></div>
+          <button type="button" class="save-btn" id="saveAvailabilityBtn">Kaydet</button>
+          <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
         </div>
-
-        <div class="availability-grid-wrap">
-          <table class="availability-grid" id="availabilityGrid"></table>
-        </div>
-
-        <button type="button" class="save-btn" id="saveAvailabilityBtn">Uygunluğu Kaydet</button>
-        <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
       </div>
 
       <div class="panel" id="panel-profile">
@@ -1207,12 +1312,8 @@
       function renderPendingNotes() {
         const hasProfilePending = ["title", "price", "availability", "bio"]
           .some(key => user.pending_changes && user.pending_changes[key] !== undefined);
-        const hasAvailabilityPending = Boolean(
-          user.pending_changes && user.pending_changes.weekly_availability !== undefined
-        );
 
         document.getElementById("profilePendingNote").style.display = hasProfilePending ? "block" : "none";
-        document.getElementById("availabilityPendingNote").style.display = hasAvailabilityPending ? "block" : "none";
       }
 
       renderPendingNotes();
@@ -1536,108 +1637,155 @@
         setTimeout(() => status.classList.remove("visible"), 2500);
       });
 
-      // ---- weekly availability grid ----
-      // Stored as an array of 7 arrays of "HH:MM" strings, indexed to
-      // match Date.prototype.getDay() (0 = Sunday ... 6 = Saturday) so
-      // booking.html can look a date up with zero translation.
+      // ---- availability calendar ----
+      // availability_dates: { "2026-09-01": ["14:00","14:30"], ... } - a
+      // teacher-owned field the profile lock trigger deliberately leaves
+      // alone (like is_online/income_goal), so changes here are instant,
+      // no admin approval needed. Replaces the older weekly_availability
+      // pattern for day-to-day use; booking.html still falls back to that
+      // (set once during signup) for any date not listed here.
 
       const TIME_SLOTS = armusAllTimeSlots();
-
-      // [label, getDay() index] in Monday-first display order
-      const DAY_COLUMNS = [
-        ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
-        ["Cum", 5], ["Cmt", 6], ["Paz", 0]
+      const MONTH_NAMES = [
+        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
       ];
 
-      const hasOwnAvailability = Array.isArray(user.weekly_availability);
-      document.getElementById("availabilityDefaultNote").style.display =
-        hasOwnAvailability ? "none" : "block";
+      const calendarAvailability = { ...(user.availability_dates || {}) };
+      let viewMonth = new Date();
+      viewMonth.setDate(1);
+      let selectedDateKey = null;
 
-      // if there's a pending (not yet approved) weekly availability
-      // change, show that instead - it's what the teacher last submitted
-      const pendingAvailability =
-        user.pending_changes && Array.isArray(user.pending_changes.weekly_availability)
-          ? user.pending_changes.weekly_availability
-          : null;
+      function calDateKey(year, month, day) {
+        return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      }
 
-      const weeklyState = pendingAvailability
-        ? DAY_COLUMNS.map(([, dayIndex]) => pendingAvailability[dayIndex] || [])
-        : hasOwnAvailability
-          ? DAY_COLUMNS.map(([, dayIndex]) => user.weekly_availability[dayIndex] || [])
-          : DAY_COLUMNS.map(() => []);
+      function renderCalendar() {
 
-      const grid = document.getElementById("availabilityGrid");
+        const grid = document.getElementById("calGrid");
+        grid.innerHTML = "";
 
-      const headRow = document.createElement("tr");
-      headRow.innerHTML = "<th></th>" + DAY_COLUMNS.map(([label]) => `<th>${label}</th>`).join("");
-      grid.appendChild(headRow);
+        document.getElementById("calMonthLabel").textContent =
+          `${MONTH_NAMES[viewMonth.getMonth()]} ${viewMonth.getFullYear()}`;
 
-      TIME_SLOTS.forEach((time, timeIndex) => {
-
-        const row = document.createElement("tr");
-        row.innerHTML = `<td class="time-label">${armusFormatTimeRange(time)}</td>`;
-
-        DAY_COLUMNS.forEach((_, colIndex) => {
-
-          const cell = document.createElement("td");
-          const btn = document.createElement("div");
-          btn.className = "avail-cell";
-          btn.setAttribute("role", "button");
-          btn.setAttribute("aria-label", `${DAY_COLUMNS[colIndex][0]} ${time}`);
-
-          if (weeklyState[colIndex].includes(time)) {
-            btn.classList.add("active");
-          }
-
-          btn.addEventListener("click", () => {
-
-            const dayList = weeklyState[colIndex];
-            const idx = dayList.indexOf(time);
-
-            if (idx === -1) {
-              dayList.push(time);
-            } else {
-              dayList.splice(idx, 1);
-            }
-
-            btn.classList.toggle("active");
-          });
-
-          cell.appendChild(btn);
-          row.appendChild(cell);
+        ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].forEach(label => {
+          const el = document.createElement("div");
+          el.className = "cal-dow";
+          el.textContent = label;
+          grid.appendChild(el);
         });
 
-        grid.appendChild(row);
+        const year = viewMonth.getFullYear();
+        const month = viewMonth.getMonth();
+        const startOffset = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-first
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const todayKey = new Date().toISOString().slice(0, 10);
+
+        for (let i = 0; i < startOffset; i++) {
+          const el = document.createElement("div");
+          el.className = "cal-day empty";
+          grid.appendChild(el);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+
+          const key = calDateKey(year, month, day);
+          const el = document.createElement("div");
+          el.className = "cal-day";
+          el.textContent = day;
+
+          const isPast = key < todayKey;
+          if (isPast) el.classList.add("past");
+          if (calendarAvailability[key] && calendarAvailability[key].length) el.classList.add("has-slots");
+          if (key === selectedDateKey) el.classList.add("selected");
+
+          if (!isPast) {
+            el.addEventListener("click", () => {
+              selectedDateKey = key;
+              renderCalendar();
+              renderDayPanel();
+            });
+          }
+
+          grid.appendChild(el);
+        }
+      }
+
+      function renderDayPanel() {
+
+        const panel = document.getElementById("calDayPanel");
+
+        if (!selectedDateKey) {
+          panel.style.display = "none";
+          return;
+        }
+
+        panel.style.display = "block";
+        document.getElementById("calSelectedDateLabel").textContent = armusFormatDateLabel(selectedDateKey);
+
+        const daySlots = calendarAvailability[selectedDateKey] || [];
+        const chipGrid = document.getElementById("slotChipGrid");
+        chipGrid.innerHTML = "";
+
+        TIME_SLOTS.forEach(time => {
+
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "slot-chip" + (daySlots.includes(time) ? " active" : "");
+          chip.textContent = time;
+
+          chip.addEventListener("click", () => {
+            const list = calendarAvailability[selectedDateKey] || (calendarAvailability[selectedDateKey] = []);
+            const idx = list.indexOf(time);
+            if (idx === -1) list.push(time); else list.splice(idx, 1);
+            chip.classList.toggle("active");
+          });
+
+          chipGrid.appendChild(chip);
+        });
+      }
+
+      document.getElementById("calPrevBtn").addEventListener("click", () => {
+        viewMonth.setMonth(viewMonth.getMonth() - 1);
+        renderCalendar();
+      });
+
+      document.getElementById("calNextBtn").addEventListener("click", () => {
+        viewMonth.setMonth(viewMonth.getMonth() + 1);
+        renderCalendar();
+      });
+
+      document.getElementById("calClearDayBtn").addEventListener("click", () => {
+        if (!selectedDateKey) return;
+        delete calendarAvailability[selectedDateKey];
+        renderCalendar();
+        renderDayPanel();
       });
 
       document.getElementById("saveAvailabilityBtn").addEventListener("click", async () => {
 
-        // convert back from display order to getDay()-indexed array
-        const weeklyAvailability = [];
-        DAY_COLUMNS.forEach(([, dayIndex], colIndex) => {
-          weeklyAvailability[dayIndex] = weeklyState[colIndex];
+        // drop emptied-out dates so the stored JSON doesn't grow forever
+        const cleaned = {};
+        Object.keys(calendarAvailability).forEach(key => {
+          if (calendarAvailability[key] && calendarAvailability[key].length) cleaned[key] = calendarAvailability[key];
         });
 
-        const newPendingChanges = {
-          ...(user.pending_changes || {}),
-          weekly_availability: weeklyAvailability,
-        };
-
-        const result = await armusUpdateOwnProfile({ pending_changes: newPendingChanges });
-
+        const result = await armusUpdateOwnProfile({ availability_dates: cleaned });
         const status = document.getElementById("availabilitySaveStatus");
 
         if (result === false) {
-          status.textContent = "Gönderilemedi ✕";
+          status.textContent = "Kaydedilemedi ✕";
         } else {
-          user.pending_changes = newPendingChanges;
-          renderPendingNotes();
-          status.textContent = "Onay için gönderildi ✓";
+          user.availability_dates = cleaned;
+          status.textContent = "Kaydedildi ✓";
+          renderCalendar();
         }
 
         status.classList.add("visible");
         setTimeout(() => status.classList.remove("visible"), 2500);
       });
+
+      renderCalendar();
     }
 
   </script>

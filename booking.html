@@ -667,6 +667,16 @@
 
       function slotsForDate(dateKey, dayOfWeek) {
 
+        // real per-date availability (dashboard.html's calendar) wins
+        // when the teacher has set anything at all; otherwise fall back
+        // to their older weekly-recurring pattern (set once during the
+        // apply-teacher.html signup wizard), and finally to a
+        // deterministic mock for demo teachers with neither.
+        if (teacher.availabilityDates && Object.keys(teacher.availabilityDates).length) {
+          const daySlots = teacher.availabilityDates[dateKey] || [];
+          return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+        }
+
         if (teacher.weeklyAvailability) {
           const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
           return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
