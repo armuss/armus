@@ -535,10 +535,16 @@
 
     .cal-day-panel-head {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .cal-day-panel-sub {
+      font-size: 11.5px;
+      color: #8e8e91;
+      margin-top: 3px;
     }
 
     .cal-clear-btn {
@@ -553,22 +559,38 @@
 
     .slot-chip-grid {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+      flex-direction: column;
+      gap: 16px;
       margin-bottom: 16px;
-      max-height: 220px;
+      max-height: 340px;
       overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .slot-section-label {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--armus-gold-text);
+      margin-bottom: 8px;
+    }
+
+    .slot-section-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+      gap: 7px;
     }
 
     .slot-chip {
       border: 1px solid var(--armus-border);
       background: var(--armus-bg);
       color: #ccc;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 11.5px;
+      border-radius: 9px;
+      padding: 9px 6px;
+      font-size: 12px;
       cursor: pointer;
       font-family: inherit;
+      text-align: center;
     }
 
     .slot-chip.active {
@@ -1138,7 +1160,10 @@
 
         <div class="cal-day-panel" id="calDayPanel" style="display: none;">
           <div class="cal-day-panel-head">
-            <strong id="calSelectedDateLabel"></strong>
+            <div>
+              <strong id="calSelectedDateLabel"></strong>
+              <div class="cal-day-panel-sub">Her ders 50 dakika sürer</div>
+            </div>
             <button type="button" class="cal-clear-btn" id="calClearDayBtn">Bu günü temizle</button>
           </div>
           <div class="slot-chip-grid" id="slotChipGrid"></div>
@@ -1727,22 +1752,60 @@
         const chipGrid = document.getElementById("slotChipGrid");
         chipGrid.innerHTML = "";
 
-        TIME_SLOTS.forEach(time => {
+        groupTimeSlots(TIME_SLOTS).forEach(group => {
 
-          const chip = document.createElement("button");
-          chip.type = "button";
-          chip.className = "slot-chip" + (daySlots.includes(time) ? " active" : "");
-          chip.textContent = time;
+          const section = document.createElement("div");
+          section.className = "slot-section";
 
-          chip.addEventListener("click", () => {
-            const list = calendarAvailability[selectedDateKey] || (calendarAvailability[selectedDateKey] = []);
-            const idx = list.indexOf(time);
-            if (idx === -1) list.push(time); else list.splice(idx, 1);
-            chip.classList.toggle("active");
+          const heading = document.createElement("div");
+          heading.className = "slot-section-label";
+          heading.textContent = group.label;
+          section.appendChild(heading);
+
+          const row = document.createElement("div");
+          row.className = "slot-section-row";
+
+          group.slots.forEach(time => {
+
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "slot-chip" + (daySlots.includes(time) ? " active" : "");
+            chip.textContent = armusFormatTimeRange(time);
+
+            chip.addEventListener("click", () => {
+              const list = calendarAvailability[selectedDateKey] || (calendarAvailability[selectedDateKey] = []);
+              const idx = list.indexOf(time);
+              if (idx === -1) list.push(time); else list.splice(idx, 1);
+              chip.classList.toggle("active");
+            });
+
+            row.appendChild(chip);
           });
 
-          chipGrid.appendChild(chip);
+          section.appendChild(row);
+          chipGrid.appendChild(section);
         });
+      }
+
+      // Groups half-hour slot start times into time-of-day sections so
+      // the day panel reads as a few short, labeled rows instead of one
+      // flat wall of 48 chips - each chip shows the full lesson range
+      // (e.g. "14:00 – 14:50") rather than just a bare start time.
+      function groupTimeSlots(slots) {
+
+        const groups = [
+          { label: "Gece", test: hour => hour < 6, slots: [] },
+          { label: "Sabah", test: hour => hour >= 6 && hour < 12, slots: [] },
+          { label: "Öğleden Sonra", test: hour => hour >= 12 && hour < 18, slots: [] },
+          { label: "Akşam", test: hour => hour >= 18, slots: [] },
+        ];
+
+        slots.forEach(time => {
+          const hour = Number(time.split(":")[0]);
+          groups.find(group => group.test(hour)).slots.push(time);
+        });
+
+        return groups.filter(group => group.slots.length);
       }
 
       document.getElementById("calPrevBtn").addEventListener("click", () => {
