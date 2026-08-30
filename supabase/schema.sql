@@ -273,6 +273,58 @@ create policy "messages_update_participant"
 
 alter publication supabase_realtime add table messages;
 
+-- lets each side of a conversation read the other's name/photo - without
+-- this, a student's profile row (no "approved" status of its own) is
+-- invisible to profiles_select_public_or_own, so a teacher's inbox falls
+-- back to a generic "Kullanıcı" label for every student they message.
+create policy "profiles_select_conversation_partner"
+  on profiles for select
+  using (
+    exists (
+      select 1 from conversations c
+      where (c.student_id = auth.uid() and c.teacher_id = profiles.id)
+         or (c.teacher_id = auth.uid() and c.student_id = profiles.id)
+    )
+  );
+
+-- blocks off-platform contact sharing (phone numbers, email addresses,
+-- named outside messaging apps) in chat until the two of them actually
+-- have a booking together - see migration_16.sql for the full reasoning.
+create or replace function public.enforce_no_contact_sharing()
+returns trigger
+language plpgsql
+as $$
+declare
+  already_booked boolean;
+begin
+
+  select exists (
+    select 1
+    from bookings b
+    join conversations c on c.id = new.conversation_id
+    where b.student_id = c.student_id
+      and b.teacher_id = c.teacher_id::text
+  ) into already_booked;
+
+  if already_booked then
+    return new;
+  end if;
+
+  if new.body ~* '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'
+    or new.body ~ '(\d[ \-.()]{0,2}){7,}\d'
+    or new.body ~* '(whatsapp|telegram|instagram|\minsta\M|snapchat|\mimo\M|viber|signal|numaram|numaray|numaras|telefonum|e-?posta|eposta|gmail|hotmail|outlook)'
+  then
+    raise exception 'contact_sharing_blocked: iletisim bilgisi paylasimi ve platform disi iletisim, resmi bir ders satin alana kadar yasaktir';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger messages_block_contact_sharing
+  before insert on messages
+  for each row execute procedure public.enforce_no_contact_sharing();
+
 -- === ADMIN PANEL EXTRAS ==========================================
 -- Booking cancellation from the admin panel, an admin activity log,
 -- and homepage testimonials managed from the admin panel.
