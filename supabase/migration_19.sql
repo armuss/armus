@@ -1,20 +1,26 @@
--- Migration 19: real-date availability calendar for teachers.
+-- Migration 19: teacher-editable weekly availability, drag-block UI.
 --
--- Replaces the old "Haftalık Uygunluk" weekly-recurring grid on the
--- teacher dashboard with an actual calendar - a teacher picks a
--- specific date and marks which times they're free that day, not just
--- a repeating Mon-Sun pattern.
+-- Adds availability_dates, a generic jsonb column the dashboard uses
+-- to store the teacher's availability as { "1": ["14:00","14:30"] }
+-- keyed by day-of-week (JS getDay() index as a string) - a recurring
+-- weekly pattern edited as draggable blocks, replacing the old flat
+-- "Haftalık Uygunluk" chip grid. (An earlier version of this feature
+-- keyed it by real date instead; that was short-lived and the column
+-- itself never needed to change shape at the SQL level - only what the
+-- dashboard's JS stores in it did.)
 --
 -- Like is_online/income_goal, this is a live/operational field a
 -- teacher needs to update instantly and often, so it's deliberately
 -- NOT one of the fields profiles_lock_teacher_fields blocks - no
--- admin-approval round trip for every date change.
+-- admin-approval round trip for every change.
 --
--- booking.html prefers this when a date has an entry here; if not, it
--- falls back to the old weekly_availability pattern (still set once
--- during the apply-teacher.html signup wizard), and finally to a
+-- booking.html prefers this when the teacher has set anything here; if
+-- not, it falls back to the old weekly_availability array (still set
+-- once during the apply-teacher.html signup wizard), and finally to a
 -- deterministic mock for demo teachers.
 --
 -- Run this once in Supabase Dashboard -> SQL Editor -> New query -> Run.
+-- Already run this for the earlier date-keyed version? Nothing further
+-- to run - the column is unchanged, only its JS-side contents differ.
 
 alter table profiles add column if not exists availability_dates jsonb not null default '{}';

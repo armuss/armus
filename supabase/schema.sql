@@ -593,11 +593,12 @@ create policy "chat_attachments_select_authenticated"
   to authenticated
   using (bucket_id = 'chat-attachments');
 
--- === TEACHER AVAILABILITY CALENDAR ================================
--- { "2026-09-01": ["14:00","14:30"], ... } - a real per-date calendar,
--- replacing the weekly-recurring grid for day-to-day use on the
--- dashboard. Deliberately not one of the fields
--- profiles_lock_teacher_fields blocks (like is_online/income_goal) -
--- a teacher needs to update this instantly and often.
+-- === TEACHER AVAILABILITY (WEEKLY, DRAG-EDITED) ===================
+-- { "1": ["14:00","14:30"], ... } - keyed by day-of-week
+-- (JS getDay() index as a string, "0" = Sunday .. "6" = Saturday), not
+-- a real date: a recurring weekly pattern the teacher edits as
+-- draggable blocks on the dashboard. Deliberately not one of the
+-- fields profiles_lock_teacher_fields blocks (like is_online/income_goal)
+-- - a teacher needs to update this instantly and often.
 
 alter table profiles add column availability_dates jsonb not null default '{}';
