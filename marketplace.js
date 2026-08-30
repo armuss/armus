@@ -66,6 +66,9 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
     weeklyAvailability: Array.isArray(profile.weekly_availability)
       ? profile.weekly_availability
       : null,
+    availabilityDates: profile.availability_dates && typeof profile.availability_dates === "object"
+      ? profile.availability_dates
+      : {},
     isOnline: Boolean(profile.is_online),
   };
 }
