@@ -97,7 +97,7 @@ async function armusRenderNavAuth() {
     const roleLabel = session.role === "teacher" ? "Öğretmen" : "Öğrenci";
     const dashboardLink = session.role === "teacher"
       ? '<a class="btn" href="dashboard.html">Panelim</a>'
-      : "";
+      : '<a class="btn" href="student-dashboard.html">Panelim</a>';
 
     el.innerHTML = `
       ${dashboardLink}

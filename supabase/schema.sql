@@ -450,3 +450,18 @@ create policy "teacher_uploads_delete_authenticated"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'teacher-uploads');
+
+-- uploads use { upsert: true }, which needs storage to check whether the
+-- object already exists first - that existence check runs as the
+-- authenticated user and needs its own SELECT policy.
+
+create policy "teacher_uploads_select_authenticated"
+  on storage.objects for select
+  to authenticated
+  using (bucket_id = 'teacher-uploads');
+
+-- === STUDENT DASHBOARD EXTRAS =====================================
+-- how many lessons a student wants to take this week - powers the
+-- weekly goal progress bar on student-dashboard.html.
+
+alter table profiles add column weekly_lesson_goal integer not null default 3;
