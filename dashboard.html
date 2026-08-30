@@ -407,6 +407,68 @@
       font-weight: 700;
     }
 
+    .booking-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 5px 0 6px;
+    }
+
+    .booking-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tag-first {
+      color: #5fd9ac;
+      border: 1px solid #5fd9ac;
+    }
+
+    .tag-trial {
+      color: #74b3f7;
+      border: 1px solid #74b3f7;
+    }
+
+    .tag-lesson {
+      color: #d38fe0;
+      border: 1px solid #d38fe0;
+    }
+
+    .tag-done {
+      color: #ccc;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .tag-upcoming {
+      color: var(--armus-gold-text);
+      background: rgba(212, 175, 106, .14);
+    }
+
+    .tag-review {
+      color: #1c1408;
+      background: var(--armus-gold-gradient);
+      font-weight: 800;
+    }
+
+    .booking-earning {
+      font-size: 11px;
+      color: #8e8e91;
+    }
+
+    .booking-earning strong {
+      color: #5fd9ac;
+    }
+
+    .booking-earning.pending strong {
+      color: var(--armus-gold-text);
+    }
+
     .section-hint {
       color: #8e8e91;
       font-size: 12.5px;
@@ -1544,6 +1606,8 @@
           bookingsByStudent.get(b.studentId).push(b);
         });
 
+        const reviewByBookingId = Object.fromEntries(teacherReviews.map(r => [r.bookingId, r]));
+
         bookingsByStudent.forEach((studentBookings, studentId) => {
 
           const group = document.createElement("div");
@@ -1551,23 +1615,48 @@
 
           const existingNote = teacherNotes[studentId];
 
+          // "first lesson" = this student's earliest scheduled booking
+          // with this teacher, not necessarily the one they made first
+          const firstBookingId = studentBookings
+            .slice()
+            .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0].id;
+
           group.innerHTML = `
             <div class="student-group-head">
               <strong>${studentBookings[0].studentName}</strong>
               <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? "Notu Gör/Düzenle" : "Not Ekle"}</button>
             </div>
-            ${studentBookings.map(booking => `
+            ${studentBookings.map(booking => {
+
+              const isPast = armusIsBookingPast(booking);
+              const review = reviewByBookingId[booking.id];
+              const net = Math.round(booking.price * (1 - tier.rate / 100));
+
+              const tags = [
+                booking.id === firstBookingId ? '<span class="booking-tag tag-first">🟢 İlk Ders</span>' : "",
+                booking.type === "trial" ? '<span class="booking-tag tag-trial">🔵 Deneme Dersi</span>' : '<span class="booking-tag tag-lesson">🟣 Ders</span>',
+                isPast ? '<span class="booking-tag tag-done">✓ Tamamlandı</span>' : '<span class="booking-tag tag-upcoming">🕒 Yaklaşıyor</span>',
+                review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
+              ].join("");
+
+              const earningHtml = isPast
+                ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
+                : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
+
+              return `
               <div class="booking-row">
                 <div>
                   <strong>${booking.studentName}</strong>
-                  <span>${booking.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${booking.price}</span>
+                  <div class="booking-tags">${tags}</div>
+                  <div class="booking-earning${isPast ? "" : " pending"}">${earningHtml}</div>
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>` : ""}
                 </div>
               </div>
-            `).join("")}
+              `;
+            }).join("")}
             <div class="note-box" data-note-box>
               <textarea placeholder="Bu öğrenci hakkında sadece senin görebileceğin bir not yaz...">${existingNote ? existingNote.note : ""}</textarea>
               <button type="button" class="btn" data-save-note>Notu Kaydet</button>
