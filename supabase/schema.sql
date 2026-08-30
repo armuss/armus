@@ -224,9 +224,15 @@ create table messages (
   id uuid primary key default gen_random_uuid(),
   conversation_id uuid not null references conversations(id) on delete cascade,
   sender_id uuid not null references profiles(id) on delete cascade,
-  body text not null,
+  body text not null default '',
+  attachment_url text,
+  attachment_type text check (attachment_type in ('image', 'video', 'audio')),
+  -- when set, this message IS a correction of the message it points to -
+  -- the corrected text lives in this row's own body ("Düzelt Beni")
+  corrected_of_id uuid references messages(id) on delete set null,
   created_at timestamptz not null default now(),
-  read_at timestamptz
+  read_at timestamptz,
+  constraint messages_body_or_attachment check (body <> '' or attachment_url is not null)
 );
 
 alter table conversations enable row level security;
@@ -556,3 +562,33 @@ create policy "confidence_checkins_all_own"
   on confidence_checkins for all
   using (auth.uid() = student_id)
   with check (auth.uid() = student_id);
+
+-- === CHAT ATTACHMENTS (STORAGE) ===================================
+-- Public bucket, same trade-off as teacher-uploads: reads are open to
+-- anyone with the URL (an unguessable path, not browsable), writes
+-- just require being logged in.
+
+insert into storage.buckets (id, name, public)
+values ('chat-attachments', 'chat-attachments', true)
+on conflict (id) do nothing;
+
+create policy "chat_attachments_insert_authenticated"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'chat-attachments');
+
+create policy "chat_attachments_update_authenticated"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'chat-attachments')
+  with check (bucket_id = 'chat-attachments');
+
+create policy "chat_attachments_delete_authenticated"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'chat-attachments');
+
+create policy "chat_attachments_select_authenticated"
+  on storage.objects for select
+  to authenticated
+  using (bucket_id = 'chat-attachments');

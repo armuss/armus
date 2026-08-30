@@ -103,14 +103,27 @@ async function armusGetMessages(conversationId) {
 // the string "blocked" if the messages_block_contact_sharing trigger
 // (migration_16.sql) rejected it - see armusMessageViolatesContactPolicy
 // for the client-side check that normally catches this first.
-async function armusSendMessage(conversationId, body) {
+//
+// options:
+//   attachmentUrl/attachmentType - a voice/photo/video attachment
+//     (from armusUploadChatAttachment)
+//   correctedOfId - marks this message as a "Düzelt Beni" correction of
+//     an earlier message; body is the corrected text
+async function armusSendMessage(conversationId, body, options = {}) {
 
   const session = await armusGetSession();
   if (!session) return false;
 
+  const row = { conversation_id: conversationId, sender_id: session.id, body: body || "" };
+  if (options.attachmentUrl) {
+    row.attachment_url = options.attachmentUrl;
+    row.attachment_type = options.attachmentType;
+  }
+  if (options.correctedOfId) row.corrected_of_id = options.correctedOfId;
+
   const { data, error } = await armusSupabase
     .from("messages")
-    .insert({ conversation_id: conversationId, sender_id: session.id, body })
+    .insert(row)
     .select()
     .single();
 
@@ -118,6 +131,38 @@ async function armusSendMessage(conversationId, body) {
     return error.message && error.message.includes("contact_sharing_blocked") ? "blocked" : false;
   }
   return data;
+}
+
+function armusAttachmentTypeForFile(file) {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  return null;
+}
+
+// Uploads a photo/video/voice-recording file to the chat-attachments
+// bucket and returns { url, type }, or false if the upload failed or
+// the file isn't an image/video/audio type. Each path is unique
+// (conversation + sender + timestamp), so this never needs upsert.
+async function armusUploadChatAttachment(file, conversationId) {
+
+  const session = await armusGetSession();
+  if (!session) return false;
+
+  const type = armusAttachmentTypeForFile(file);
+  if (!type) return false;
+
+  const ext = file.name && file.name.includes(".") ? file.name.split(".").pop() : (type === "audio" ? "webm" : "bin");
+  const path = `${conversationId}/${session.id}-${Date.now()}.${ext}`;
+
+  const { error } = await armusSupabase.storage
+    .from("chat-attachments")
+    .upload(path, file, { contentType: file.type || undefined });
+
+  if (error) return false;
+
+  const { data } = armusSupabase.storage.from("chat-attachments").getPublicUrl(path);
+  return { url: data.publicUrl, type };
 }
 
 // Same heuristic the messages_block_contact_sharing DB trigger enforces
