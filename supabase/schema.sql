@@ -227,11 +227,14 @@ create table messages (
   body text not null default '',
   attachment_url text,
   attachment_type text check (attachment_type in ('image', 'video', 'audio')),
-  -- when set, this message IS a correction of the message it points to -
-  -- the corrected text lives in this row's own body ("Düzelt Beni")
+  -- vestigial: an earlier "Düzelt Beni" feature let a teacher attach a
+  -- correction to a student's message this way; removed from the UI
+  -- (see enforce_message_edit_rules below - only the sender can ever
+  -- change a message's own body now), kept only so old rows still resolve
   corrected_of_id uuid references messages(id) on delete set null,
   created_at timestamptz not null default now(),
   read_at timestamptz,
+  edited_at timestamptz,
   constraint messages_body_or_attachment check (body <> '' or attachment_url is not null)
 );
 
@@ -267,6 +270,10 @@ create policy "messages_insert_own"
     )
   );
 
+-- broad on purpose - the OTHER participant needs to update read_at to
+-- mark a message read. What a participant can actually change on a row
+-- they didn't send is narrowed by the trigger below (body edits only
+-- ever allowed for the sender, and only briefly).
 create policy "messages_update_participant"
   on messages for update
   using (
@@ -276,6 +283,36 @@ create policy "messages_update_participant"
         and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
     )
   );
+
+-- only the sender can edit a message's body, and only within 2 minutes
+-- of sending it - RLS alone can't express "this column, this
+-- condition, one specific role" cleanly, hence a trigger.
+create or replace function public.enforce_message_edit_rules()
+returns trigger
+language plpgsql
+as $$
+begin
+
+  if new.body is distinct from old.body then
+
+    if auth.uid() <> old.sender_id then
+      raise exception 'message_edit_denied: only the sender can edit a message';
+    end if;
+
+    if old.created_at < now() - interval '2 minutes' then
+      raise exception 'message_edit_expired: messages can only be edited within 2 minutes of sending';
+    end if;
+
+    new.edited_at := now();
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger messages_enforce_edit_rules
+  before update on messages
+  for each row execute procedure public.enforce_message_edit_rules();
 
 alter publication supabase_realtime add table messages;
 

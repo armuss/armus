@@ -107,8 +107,6 @@ async function armusGetMessages(conversationId) {
 // options:
 //   attachmentUrl/attachmentType - a voice/photo/video attachment
 //     (from armusUploadChatAttachment)
-//   correctedOfId - marks this message as a "Düzelt Beni" correction of
-//     an earlier message; body is the corrected text
 async function armusSendMessage(conversationId, body, options = {}) {
 
   const session = await armusGetSession();
@@ -119,7 +117,6 @@ async function armusSendMessage(conversationId, body, options = {}) {
     row.attachment_url = options.attachmentUrl;
     row.attachment_type = options.attachmentType;
   }
-  if (options.correctedOfId) row.corrected_of_id = options.correctedOfId;
 
   const { data, error } = await armusSupabase
     .from("messages")
@@ -129,6 +126,30 @@ async function armusSendMessage(conversationId, body, options = {}) {
 
   if (error) {
     return error.message && error.message.includes("contact_sharing_blocked") ? "blocked" : false;
+  }
+  return data;
+}
+
+// Edits a message's text. Returns the updated row on success, false on
+// a generic failure, or "denied"/"expired" for the two specific cases
+// the messages_enforce_edit_rules trigger (migration_20.sql) rejects -
+// only the original sender can edit, and only within 2 minutes of
+// sending. That trigger is the real enforcement; callers should also
+// hide the edit affordance client-side once a message ages past that
+// window instead of relying on this error.
+async function armusEditMessage(messageId, newBody) {
+
+  const { data, error } = await armusSupabase
+    .from("messages")
+    .update({ body: newBody })
+    .eq("id", messageId)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.message && error.message.includes("message_edit_denied")) return "denied";
+    if (error.message && error.message.includes("message_edit_expired")) return "expired";
+    return false;
   }
   return data;
 }
@@ -218,16 +239,28 @@ async function armusMarkMessagesRead(conversationId, myUserId) {
     .is("read_at", null);
 }
 
-// Calls onInsert(messageRow) whenever a new message arrives in this
-// conversation. Returns the channel, so the caller can unsubscribe
-// (armusSupabase.removeChannel(channel)) when leaving the page/thread.
-function armusSubscribeToMessages(conversationId, onInsert) {
-  return armusSupabase
+// Calls onInsert(messageRow) whenever a new message arrives, and
+// onUpdate(messageRow) (optional) whenever one is edited or its read_at
+// changes, in this conversation. Returns the channel, so the caller can
+// unsubscribe (armusSupabase.removeChannel(channel)) when leaving the
+// page/thread.
+function armusSubscribeToMessages(conversationId, onInsert, onUpdate) {
+
+  const channel = armusSupabase
     .channel(`messages-${conversationId}`)
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
       payload => onInsert(payload.new)
-    )
-    .subscribe();
+    );
+
+  if (onUpdate) {
+    channel.on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+      payload => onUpdate(payload.new)
+    );
+  }
+
+  return channel.subscribe();
 }
