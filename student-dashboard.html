@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Panelim | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .nav-greeting {
+      font-size: 13px;
+      color: #c7c7c7;
+      margin-right: 4px;
+    }
+
+    .nav-greeting small {
+      color: #8f8f8f;
+    }
+
+    @media (max-width: 560px) {
+      .nav-greeting { display: none; }
+      .nav-buttons { gap: 6px; }
+      .nav-buttons .btn { padding: 9px 12px; font-size: 12px; }
+      .logo { font-size: 19px; }
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 40px 0 90px;
+      display: none;
+    }
+
+    .avatar {
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* header greeting */
+
+    .greet-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .greet-head .avatar {
+      width: 56px;
+      height: 56px;
+      font-size: 18px;
+      border-radius: 50%;
+    }
+
+    .greet-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .greet-sub {
+      color: #8e8e91;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    h2 {
+      font-size: 15px;
+      color: #d8d8da;
+      margin: 30px 0 14px;
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+    }
+
+    .section-link {
+      float: right;
+      font-size: 12.5px;
+      color: var(--armus-gold-text);
+      font-weight: 600;
+    }
+
+    /* hero: next lesson / onboarding */
+
+    .hero-lesson {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 20px;
+      padding: 24px 26px;
+      margin-bottom: 26px;
+    }
+
+    .hero-lesson .avatar {
+      width: 62px;
+      height: 82px;
+      font-size: 19px;
+    }
+
+    .hero-eyebrow {
+      color: var(--armus-gold-text);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+
+    .hero-lesson-name {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .hero-lesson-meta {
+      color: #a8a8ab;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .hero-lesson-right {
+      margin-left: auto;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .join-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 22px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-decoration: none;
+    }
+
+    .join-hint {
+      color: #8e8e91;
+      font-size: 11.5px;
+      max-width: 150px;
+    }
+
+    .onboarding-hero {
+      border: 1px dashed var(--armus-border);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      margin-bottom: 26px;
+    }
+
+    .onboarding-hero h1 {
+      font-size: 24px;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
+    }
+
+    .onboarding-hero p {
+      color: #99999c;
+      font-size: 13.5px;
+      max-width: 440px;
+      margin: 0 auto 22px;
+    }
+
+    .onboarding-steps {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-bottom: 26px;
+      flex-wrap: wrap;
+    }
+
+    .onboarding-step {
+      max-width: 150px;
+      font-size: 12px;
+      color: #a8a8ab;
+    }
+
+    .onboarding-step .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12.5px;
+      margin: 0 auto 8px;
+    }
+
+    /* stats */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px;
+      background: var(--armus-panel);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 21px;
+      color: var(--armus-gold-text);
+    }
+
+    .stat span {
+      color: #8e8e91;
+      font-size: 11px;
+    }
+
+    @media (max-width: 700px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* goal box */
+
+    .goal-box {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      background: var(--armus-panel);
+      margin-bottom: 24px;
+    }
+
+    .goal-box-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .goal-box-top span {
+      color: #8e8e91;
+      font-size: 12px;
+    }
+
+    .goal-inputs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .goal-inputs input {
+      width: 70px;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .goal-inputs button {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: #eee;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .goal-track {
+      background: var(--armus-bg);
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+    }
+
+    .goal-fill {
+      height: 100%;
+      background: var(--armus-gold-gradient);
+      border-radius: 999px;
+      transition: width .4s ease;
+    }
+
+    .goal-caption {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #8e8e91;
+    }
+
+    /* badges */
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .badge-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 999px;
+      padding: 8px 16px 8px 10px;
+      font-size: 12.5px;
+      color: var(--armus-gold-text);
+    }
+
+    .badge-chip .badge-icon {
+      font-size: 16px;
+    }
+
+    .badge-empty {
+      color: #8e8e91;
+      font-size: 12.5px;
+    }
+
+    /* lesson list (condensed) */
+
+    .mini-lesson-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 16px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+
+    .mini-lesson-row .avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 13px;
+      border-radius: 10px;
+    }
+
+    .mini-lesson-name {
+      font-weight: 700;
+      font-size: 13.5px;
+    }
+
+    .mini-lesson-meta {
+      color: #8e8e91;
+      font-size: 11.5px;
+      margin-top: 2px;
+    }
+
+    .mini-lesson-when {
+      margin-left: auto;
+      text-align: right;
+      font-size: 12.5px;
+    }
+
+    .mini-lesson-date {
+      font-weight: 700;
+    }
+
+    .mini-lesson-time {
+      color: var(--armus-gold-text);
+      margin-top: 2px;
+    }
+
+    .join-btn-sm {
+      display: inline-block;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 13px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 11.5px;
+      text-decoration: none;
+      margin-left: 10px;
+    }
+
+    /* messages preview */
+
+    .msg-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+
+    .msg-row .avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 13px;
+      border-radius: 50%;
+    }
+
+    .msg-name {
+      font-weight: 700;
+      font-size: 13.5px;
+    }
+
+    .msg-snippet {
+      color: #8e8e91;
+      font-size: 12px;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 380px;
+    }
+
+    .unread-badge {
+      margin-left: auto;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-size: 11px;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 3px 9px;
+      flex-shrink: 0;
+    }
+
+    /* recommended teachers */
+
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .rec-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .rec-card .avatar {
+      width: 54px;
+      height: 54px;
+      font-size: 16px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+    }
+
+    .rec-name {
+      font-weight: 700;
+      font-size: 13.5px;
+    }
+
+    .rec-meta {
+      color: #8e8e91;
+      font-size: 11.5px;
+      margin: 4px 0 12px;
+    }
+
+    .rec-cta {
+      display: inline-block;
+      border: 1px solid var(--armus-gold-2);
+      color: var(--armus-gold-text);
+      border-radius: 10px;
+      padding: 7px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    /* favorites */
+
+    .fav-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .fav-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 6px 16px 6px 6px;
+      background: var(--armus-panel);
+      font-size: 12.5px;
+    }
+
+    .fav-chip .avatar {
+      width: 28px;
+      height: 28px;
+      font-size: 11px;
+      border-radius: 50%;
+    }
+
+    /* empty states */
+
+    .empty-hint {
+      color: #8e8e91;
+      font-size: 12.5px;
+      padding: 4px 0 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1>Panelini görmek için giriş yap</h1>
+      <p>Derslerini, ilerlemeni ve önerileri görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html?next=student-dashboard.html">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=student-dashboard.html">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="pageRoot">
+
+    <div class="greet-head">
+      <div class="avatar" id="greetAvatar"></div>
+      <div>
+        <div class="greet-name" id="greetName"></div>
+        <div class="greet-sub" id="greetSub">Bugün İngilizce öğrenmeye devam etmeye ne dersin?</div>
+      </div>
+    </div>
+
+    <div id="heroSlot"></div>
+
+    <div class="stats" id="statsRow"></div>
+
+    <div class="goal-box">
+      <div class="goal-box-top">
+        <div>
+          <strong id="goalTitle">Bu Haftaki Hedefin</strong><br>
+          <span id="goalCaption">0 / 0 ders</span>
+        </div>
+        <div class="goal-inputs">
+          <input type="number" id="goalInput" min="1" max="30" />
+          <button id="goalSaveBtn">Kaydet</button>
+          <span class="save-status" id="goalSaveStatus" style="color:var(--armus-gold-text);font-size:12px;"></span>
+        </div>
+      </div>
+      <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%;"></div></div>
+    </div>
+
+    <h2>Rozetlerin</h2>
+    <div class="badge-row" id="badgeRow"></div>
+
+    <h2>Yaklaşan Dersler <a class="section-link" href="my-lessons.html">Tümünü Gör →</a></h2>
+    <div id="upcomingList"></div>
+
+    <h2>Mesajlar <a class="section-link" href="mesajlar.html">Tüm Mesajlar →</a></h2>
+    <div id="msgList"></div>
+
+    <h2>Senin İçin Önerilenler</h2>
+    <div class="rec-grid" id="recGrid"></div>
+
+    <div id="favSection" style="display:none;">
+      <h2>Favori Öğretmenlerin</h2>
+      <div class="fav-row" id="favRow"></div>
+    </div>
+
+  </main>
+
+  <script src="teachers-data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="site-settings.js"></script>
+  <script src="auth.js"></script>
+  <script src="bookings.js"></script>
+  <script src="reviews.js"></script>
+  <script src="marketplace.js"></script>
+  <script src="messages.js"></script>
+  <script src="favorites.js"></script>
+  <script>
+
+    const gate = document.getElementById("gate");
+    const pageRoot = document.getElementById("pageRoot");
+
+    function initialsOf(name) {
+      return (name || "?")
+        .split(" ")
+        .map(part => part[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || "?";
+    }
+
+    function avatarInnerFor(photoUrl, name) {
+      return photoUrl ? `<img src="${photoUrl}" alt="">` : initialsOf(name);
+    }
+
+    // Monday (yyyy-mm-dd) of the week dateStr falls in.
+    function weekKeyOf(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      const dayIndex = (d.getDay() + 6) % 7; // 0 = Monday
+      d.setDate(d.getDate() - dayIndex);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function shiftWeekKey(mondayKey, deltaWeeks) {
+      const d = new Date(mondayKey + "T00:00:00");
+      d.setDate(d.getDate() + deltaWeeks * 7);
+      return d.toISOString().slice(0, 10);
+    }
+
+    // Consecutive weeks (ending at the current one) with at least one
+    // completed lesson. The current week doesn't break the streak just
+    // because it isn't over yet - it only needs a lesson once it's past.
+    function computeStreak(pastBookings, todayKey) {
+      const weeksWithLesson = new Set(pastBookings.map(b => weekKeyOf(b.date)));
+      let cursor = weekKeyOf(todayKey);
+      if (!weeksWithLesson.has(cursor)) {
+        cursor = shiftWeekKey(cursor, -1);
+      }
+      let streak = 0;
+      while (weeksWithLesson.has(cursor)) {
+        streak++;
+        cursor = shiftWeekKey(cursor, -1);
+      }
+      return streak;
+    }
+
+    const STUDENT_BADGES = [
+      { icon: "🎉", label: "İlk Dersin", test: s => s.completed >= 1 },
+      { icon: "📚", label: "5 Ders Tamamladın", test: s => s.completed >= 5 },
+      { icon: "🏆", label: "10 Ders Tamamladın", test: s => s.completed >= 10 },
+      { icon: "💎", label: "25 Ders Tamamladın", test: s => s.completed >= 25 },
+      { icon: "🔥", label: "Kararlı Öğrenci", test: s => s.streak >= 3 },
+      { icon: "🌍", label: "Çok Yönlü Öğrenci", test: s => s.teacherCount >= 3 },
+    ];
+
+    (async function() {
+
+      const session = await armusGetSession();
+
+      if (!session) {
+        gate.style.display = "block";
+        return;
+      }
+
+      if (session.is_admin) {
+        window.location.href = "admin.html";
+        return;
+      }
+
+      if (session.role === "teacher") {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      pageRoot.style.display = "block";
+
+      document.getElementById("greetAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
+      document.getElementById("greetName").textContent = `Merhaba, ${session.name.split(" ")[0]} 👋`;
+
+      const [bookings, conversations, marketplaceTeachers] = await Promise.all([
+        armusGetBookingsForStudent(session.id),
+        armusGetConversations(),
+        armusGetMarketplaceTeachers(),
+      ]);
+
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const teacherById = new Map(marketplaceTeachers.map(t => [t.id, t]));
+
+      const pastBookings = bookings.filter(b => b.date < todayKey);
+      const upcomingBookings = bookings
+        .filter(b => b.date >= todayKey)
+        .filter(b => !(b.date === todayKey && armusLessonWindow(b).joinsUntil < new Date()));
+
+      const stats = {
+        completed: pastBookings.length,
+        hours: Math.round((pastBookings.length * ARMUS_LESSON_MINUTES / 60) * 10) / 10,
+        teacherCount: new Set(bookings.map(b => b.teacherId)).size,
+        streak: computeStreak(pastBookings, todayKey),
+      };
+
+      // ---- hero: next lesson or onboarding ----
+
+      const heroSlot = document.getElementById("heroSlot");
+
+      if (upcomingBookings.length > 0) {
+
+        const next = upcomingBookings[0];
+        const teacher = teacherById.get(next.teacherId) || null;
+        const canJoin = armusCanJoinLessonNow(next);
+        const diffDays = Math.round(
+          (new Date(next.date + "T00:00:00") - new Date(todayKey + "T00:00:00")) / 86400000
+        );
+        const whenLabel = diffDays === 0 ? "Bugün" : diffDays === 1 ? "Yarın" : `${diffDays} gün sonra`;
+
+        heroSlot.innerHTML = `
+          <div class="hero-lesson">
+            <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
+            <div>
+              <div class="hero-eyebrow">Sıradaki Dersin</div>
+              <div class="hero-lesson-name">${next.teacherName}</div>
+              <div class="hero-lesson-meta">${whenLabel} · ${armusFormatTimeRange(next.time)} · ${next.type === "trial" ? "Deneme Dersi" : "Ders"}</div>
+            </div>
+            <div class="hero-lesson-right">
+              ${canJoin
+                ? `<a class="join-btn" href="class.html?booking=${next.id}">🎥 Derse Katıl</a>`
+                : `<span class="join-hint">Ders saatinde bu karttan katılabileceksin.</span>`}
+            </div>
+          </div>
+        `;
+
+      } else if (bookings.length === 0) {
+
+        heroSlot.innerHTML = `
+          <div class="onboarding-hero">
+            <h1>İngilizce yolculuğun burada başlıyor</h1>
+            <p>Henüz hiç dersin yok. Sana uygun bir öğretmen bul, ilk dersini planla ve öğrenmeye başla.</p>
+            <div class="onboarding-steps">
+              <div class="onboarding-step"><div class="step-num">1</div>Sana uygun bir öğretmen seç</div>
+              <div class="onboarding-step"><div class="step-num">2</div>Uygun bir saat rezerve et</div>
+              <div class="onboarding-step"><div class="step-num">3</div>Ders saatinde odaya katıl</div>
+            </div>
+            <a class="btn btn-light" href="teachers.html">Öğretmen Bul →</a>
+          </div>
+        `;
+
+      } else {
+
+        heroSlot.innerHTML = `
+          <div class="onboarding-hero">
+            <h1>Sırada ders yok</h1>
+            <p>Öğrenmeye devam etmek için yeni bir ders planla.</p>
+            <a class="btn btn-light" href="teachers.html">Yeni Ders Planla →</a>
+          </div>
+        `;
+      }
+
+      // ---- stats ----
+
+      document.getElementById("statsRow").innerHTML = `
+        <div class="stat"><strong>${stats.completed}</strong><span>TAMAMLANAN DERS</span></div>
+        <div class="stat"><strong>${stats.hours}</strong><span>ÖĞRENME SAATİ</span></div>
+        <div class="stat"><strong>${stats.teacherCount}</strong><span>FARKLI ÖĞRETMEN</span></div>
+        <div class="stat"><strong>${stats.streak}</strong><span>HAFTALIK SERİ</span></div>
+      `;
+
+      // ---- weekly goal ----
+
+      const currentWeekKey = weekKeyOf(todayKey);
+      const thisWeekCount = bookings.filter(b => weekKeyOf(b.date) === currentWeekKey).length;
+      const goal = Math.max(1, Number(session.weekly_lesson_goal) || 3);
+
+      const goalInput = document.getElementById("goalInput");
+      const goalFill = document.getElementById("goalFill");
+      const goalCaption = document.getElementById("goalCaption");
+
+      function renderGoal(currentGoal) {
+        goalInput.value = currentGoal;
+        goalCaption.textContent = `${thisWeekCount} / ${currentGoal} ders bu hafta`;
+        goalFill.style.width = Math.min(100, Math.round((thisWeekCount / currentGoal) * 100)) + "%";
+      }
+      renderGoal(goal);
+
+      document.getElementById("goalSaveBtn").addEventListener("click", async () => {
+        const value = Math.max(1, Math.min(30, Number(goalInput.value) || 3));
+        const status = document.getElementById("goalSaveStatus");
+        const result = await armusUpdateOwnProfile({ weekly_lesson_goal: value });
+        if (result === false) {
+          status.textContent = "Kaydedilemedi";
+        } else {
+          renderGoal(value);
+          status.textContent = "Kaydedildi ✓";
+        }
+        status.classList.add("visible");
+        setTimeout(() => { status.textContent = ""; }, 2500);
+      });
+
+      // ---- badges ----
+
+      const earned = STUDENT_BADGES.filter(b => b.test(stats));
+      const badgeRow = document.getElementById("badgeRow");
+      badgeRow.innerHTML = earned.length
+        ? earned.map(b => `<div class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</div>`).join("")
+        : `<div class="badge-empty">İlk dersini tamamladığında burada rozetler görünmeye başlayacak.</div>`;
+
+      // ---- upcoming lessons (condensed) ----
+
+      const upcomingList = document.getElementById("upcomingList");
+      const upcomingToShow = upcomingBookings.slice(0, 3);
+
+      if (upcomingToShow.length === 0) {
+        upcomingList.innerHTML = `<div class="empty-hint">Yaklaşan bir dersin yok.</div>`;
+      } else {
+        upcomingList.innerHTML = upcomingToShow.map(b => {
+          const teacher = teacherById.get(b.teacherId) || null;
+          const canJoin = armusCanJoinLessonNow(b);
+          return `
+            <div class="mini-lesson-row">
+              <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
+              <div>
+                <div class="mini-lesson-name">${b.teacherName}</div>
+                <div class="mini-lesson-meta">${b.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${b.price}</div>
+              </div>
+              <div class="mini-lesson-when">
+                <div class="mini-lesson-date">${b.dateLabel}</div>
+                <div class="mini-lesson-time">${armusFormatTimeRange(b.time)}</div>
+              </div>
+              ${canJoin ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">Katıl</a>` : ""}
+            </div>
+          `;
+        }).join("");
+      }
+
+      // ---- messages preview ----
+
+      const msgList = document.getElementById("msgList");
+      const convosToShow = conversations.slice(0, 3);
+
+      if (convosToShow.length === 0) {
+        msgList.innerHTML = `<div class="empty-hint">Henüz bir mesajlaşman yok.</div>`;
+      } else {
+        msgList.innerHTML = convosToShow.map(c => {
+          const snippet = c.lastMessage ? c.lastMessage.body : "Henüz mesaj yok";
+          return `
+            <a class="msg-row" href="mesajlar.html?teacher=${c.otherId}" style="display:flex;">
+              <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
+              <div>
+                <div class="msg-name">${c.otherName}</div>
+                <div class="msg-snippet">${snippet}</div>
+              </div>
+              ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
+            </a>
+          `;
+        }).join("");
+      }
+
+      // ---- recommended teachers ----
+
+      const bookedTeacherIds = new Set(bookings.map(b => b.teacherId));
+      const ranked = marketplaceTeachers
+        .slice()
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviewCount || 0) - (a.reviewCount || 0));
+      const notYetBooked = ranked.filter(t => !bookedTeacherIds.has(t.id));
+      const recommended = (notYetBooked.length >= 3 ? notYetBooked : ranked).slice(0, 3);
+
+      document.getElementById("recGrid").innerHTML = recommended.map(t => `
+        <div class="rec-card">
+          <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
+          <div class="rec-name">${t.name}</div>
+          <div class="rec-meta">${t.rating ? "★ " + t.rating : "Yeni Öğretmen"} · ₺${t.price}</div>
+          <a class="rec-cta" href="teacher.html?id=${t.id}">Profili Gör</a>
+        </div>
+      `).join("");
+
+      // ---- favorite teachers ----
+
+      const favoriteIds = armusGetFavorites();
+      const favoriteTeachers = favoriteIds.map(id => teacherById.get(id)).filter(Boolean);
+
+      if (favoriteTeachers.length > 0) {
+        document.getElementById("favSection").style.display = "block";
+        document.getElementById("favRow").innerHTML = favoriteTeachers.map(t => `
+          <a class="fav-chip" href="teacher.html?id=${t.id}">
+            <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
+            ${t.name}
+          </a>
+        `).join("");
+      }
+
+    })();
+
+  </script>
+
+  <script>armusRenderAnnouncementBanner();</script>
+</body>
+</html>
