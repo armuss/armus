@@ -1658,6 +1658,13 @@
         .slice()
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
         .forEach(b => {
+          const isPast = armusIsBookingPast(b);
+          const isCancelled = b.status === "cancelled";
+          const actionCell = isCancelled
+            ? `İptal edildi${b.refunded ? " · iade edildi" : ""}`
+            : isPast
+              ? "—"
+              : `<button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button>`;
           const tr = document.createElement("tr");
           tr.dataset.id = b.id;
           tr.innerHTML = `
@@ -1667,28 +1674,31 @@
             <td>${b.dateLabel}</td>
             <td>${b.time}</td>
             <td>₺${b.price}</td>
-            <td><button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button></td>
+            <td>${actionCell}</td>
           `;
           body.appendChild(tr);
         });
 
       body.querySelectorAll("[data-cancel-booking]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Bu işlem geri alınamaz.")) return;
+          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye iade edilir.")) return;
           button.disabled = true;
           button.textContent = "İptal ediliyor...";
           const bookingId = button.dataset.cancelBooking;
-          const ok = await armusAdminCancelBooking(bookingId);
-          if (ok) {
+          const result = await armusCancelBooking(bookingId);
+          if (result.ok) {
             const cancelled = armusAdminBookings.find(b => b.id === bookingId);
-            armusAdminBookings = armusAdminBookings.filter(b => b.id !== bookingId);
+            if (cancelled) {
+              cancelled.status = "cancelled";
+              cancelled.refunded = result.refunded;
+            }
             await armusLogAdminAction("booking_cancel", "booking", bookingId,
-              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})` : bookingId);
+              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - iade edildi" : ""}` : bookingId);
             renderAllFromState();
           } else {
             button.disabled = false;
             button.textContent = "İptal Et";
-            alert("Rezervasyon iptal edilemedi. Tekrar dene.");
+            alert(result.error);
           }
         });
       });
@@ -1784,7 +1794,7 @@
       const teachers = profiles.filter(p => p.role === "teacher");
       const approvedTeachers = teachers.filter(t => t.status === "approved");
       const pendingTeachers = teachers.filter(t => t.status === "pending");
-      const completedBookings = bookings.filter(armusIsBookingPast);
+      const completedBookings = bookings.filter(b => b.status !== "cancelled" && armusIsBookingPast(b));
       const grossRevenue = completedBookings.reduce((sum, b) => sum + (b.price || 0), 0);
       const avgRating = reviews.length
         ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
@@ -2043,14 +2053,6 @@
         alert("Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir.");
       }
     });
-
-    // ---- admin booking cancellation ----
-    // Requires the bookings_delete_admin RLS policy from migration_7.sql
-
-    async function armusAdminCancelBooking(bookingId) {
-      const { error } = await armusSupabase.from("bookings").delete().eq("id", bookingId);
-      return !error;
-    }
 
     // ---- bulk approve/reject pending applications ----
 
@@ -2361,7 +2363,7 @@
       return teachers
         .filter(t => t.status === "approved")
         .map(teacher => {
-          const completed = bookings.filter(b => b.teacherId === teacher.id && armusIsBookingPast(b));
+          const completed = bookings.filter(b => b.teacherId === teacher.id && b.status !== "cancelled" && armusIsBookingPast(b));
           const hours = Math.round((completed.length * 50 / 60) * 10) / 10;
           const gross = completed.reduce((sum, b) => sum + (b.price || 0), 0);
           const tier = commissionForHours(hours);

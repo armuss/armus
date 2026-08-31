@@ -108,9 +108,19 @@ Deno.serve(async (req) => {
     return redirectTo(`booking.html?payment=error&${query}`);
   }
 
+  // stored so cancel-booking can refund this exact charge later
+  const transactionId = Array.isArray(result.itemTransactions) && result.itemTransactions[0]
+    ? result.itemTransactions[0].paymentTransactionId
+    : null;
+
   await supabaseAdmin
     .from("pending_payments")
-    .update({ status: "succeeded", booking_id: booking.id })
+    .update({
+      status: "succeeded",
+      booking_id: booking.id,
+      iyzico_payment_id: result.paymentId ?? null,
+      iyzico_payment_transaction_id: transactionId,
+    })
     .eq("id", pending.id);
 
   return redirectTo(`booking.html?payment=success&${query}`);

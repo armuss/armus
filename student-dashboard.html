@@ -986,13 +986,17 @@
       document.getElementById("greetAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
       document.getElementById("greetName").textContent = `Merhaba, ${session.name.split(" ")[0]} 👋`;
 
-      const [bookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
+      const [allBookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
         armusGetBookingsForStudent(session.id),
         armusGetConversations(),
         armusGetMarketplaceTeachers(),
         armusGetConfidenceCheckins(session.id),
         armusGetVocabEntries(session.id),
       ]);
+
+      // a cancelled booking (my-lessons.html shows and manages those) never
+      // counts toward "next lesson", stats, or anything else on this page
+      const bookings = allBookings.filter(b => b.status !== "cancelled");
 
       const todayKey = new Date().toISOString().slice(0, 10);
       const teacherById = new Map(marketplaceTeachers.map(t => [t.id, t]));

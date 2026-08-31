@@ -462,6 +462,15 @@
       document.getElementById("tooEarlyBack").href = backHref;
       document.getElementById("tooLateBack").href = backHref;
 
+      if (booking.status === "cancelled") {
+        showGate(
+          "Bu ders iptal edildi",
+          "Bu ders artık gerçekleşmeyecek.",
+          `<a class="btn btn-light" href="${backHref}">← Geri dön</a>`
+        );
+        return;
+      }
+
       const { start, end, joinsFrom, joinsUntil } = armusLessonWindow(booking);
       const now = new Date();
 
