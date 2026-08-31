@@ -10,7 +10,7 @@
 
 alter table profiles add column if not exists email_verified boolean not null default false;
 
-create table email_verifications (
+create table if not exists email_verifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
   code text not null,
