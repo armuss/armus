@@ -1,12 +1,23 @@
-// ARMUS - starts an iyzico Checkout Form payment for a booking.
+// ARMUS - starts an iyzico Checkout Form payment for a booking, applying
+// the student's wallet balance (see migration_25.sql/26.sql) against the
+// price first.
 //
 // Called from booking.html (armusSupabase.functions.invoke("create-payment", ...))
-// right when the student clicks "Onayla". Nothing is written to the real
-// "bookings" table here - a pending_payments row is created instead, and
-// the booking itself is only created by payment-callback once iyzico
-// confirms the charge actually succeeded. This is what stops a student
-// from getting a lesson slot without paying (or a slot being held forever
-// for a payment that never completes).
+// right when the student clicks "Onayla". Three outcomes:
+//   - wallet balance >= price: the booking is created directly, right
+//     here, with no iyzico step at all - response is { bookedDirectly: true }
+//   - wallet balance covers part of it: only the remainder is charged to
+//     the card via iyzico - response is { paymentPageUrl }
+//   - no wallet balance: unchanged, full price charged to the card
+// Either way nothing is written to the real "bookings" table for a card
+// payment - a pending_payments row is created instead, and the booking
+// itself is only created by payment-callback once iyzico confirms the
+// charge actually succeeded. This is what stops a student from getting a
+// lesson slot without paying (or a slot being held forever for a payment
+// that never completes). The wallet portion is only actually debited once
+// the booking is confirmed (immediately below for a wallet-only booking,
+// or in payment-callback for a partial one) - never upfront, so an
+// abandoned or failed card charge can't lose wallet money for nothing.
 //
 // Deploy: Supabase Dashboard -> Edge Functions -> Create a new function,
 // name it "create-payment", paste this file in, Deploy.
@@ -67,7 +78,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("name, email, city")
+      .select("name, email, city, wallet_balance")
       .eq("id", user.id)
       .single();
 
@@ -111,6 +122,10 @@ Deno.serve(async (req) => {
     const firstName = nameParts[0] || "ARMUS";
     const lastName = nameParts.slice(1).join(" ") || "Kullanıcı";
 
+    const walletBalance = Number(profile.wallet_balance || 0);
+    const walletApplied = Math.max(0, Math.min(walletBalance, numericPrice));
+    const remainingPrice = Math.round((numericPrice - walletApplied) * 100) / 100;
+
     const { data: pending, error: pendingError } = await supabaseAdmin
       .from("pending_payments")
       .insert({
@@ -123,6 +138,8 @@ Deno.serve(async (req) => {
         lesson_date: date,
         lesson_time: time,
         price: numericPrice,
+        wallet_applied: walletApplied,
+        status: remainingPrice <= 0 ? "succeeded" : "pending",
       })
       .select()
       .single();
@@ -132,14 +149,61 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Ödeme başlatılamadı." }, 500);
     }
 
+    // wallet balance covers the whole price - book it now, no card charge
+    // and no iyzico step needed at all
+    if (remainingPrice <= 0) {
+
+      if (walletApplied > 0) {
+        await supabaseAdmin.from("profiles").update({ wallet_balance: walletBalance - walletApplied }).eq("id", user.id);
+      }
+
+      const { data: booking, error: bookingError } = await supabaseAdmin
+        .from("bookings")
+        .insert({
+          student_id: user.id,
+          student_name: profile.name,
+          teacher_id: teacherId,
+          teacher_name: teacherName,
+          type,
+          lesson_date: date,
+          lesson_time: time,
+          price: numericPrice,
+        })
+        .select()
+        .single();
+
+      if (bookingError || !booking) {
+        console.error("wallet-covered booking insert failed", bookingError);
+        // wallet was already debited above - put it back, nothing was booked
+        if (walletApplied > 0) {
+          await supabaseAdmin.from("profiles").update({ wallet_balance: walletBalance }).eq("id", user.id);
+        }
+        await supabaseAdmin.from("pending_payments").update({ status: "failed" }).eq("id", pending.id);
+        return jsonResponse({ error: "Rezervasyon oluşturulamadı." }, 500);
+      }
+
+      await supabaseAdmin.from("pending_payments").update({ booking_id: booking.id }).eq("id", pending.id);
+
+      if (walletApplied > 0) {
+        await supabaseAdmin.from("wallet_transactions").insert({
+          student_id: user.id,
+          amount: -walletApplied,
+          reason: "booking_payment",
+          booking_id: booking.id,
+        });
+      }
+
+      return jsonResponse({ bookedDirectly: true });
+    }
+
     const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-callback`;
     const addressLine = profile.city || "Türkiye";
 
     const iyzicoRequest = {
       locale: Iyzipay.LOCALE.TR,
       conversationId,
-      price: numericPrice.toFixed(2),
-      paidPrice: numericPrice.toFixed(2),
+      price: remainingPrice.toFixed(2),
+      paidPrice: remainingPrice.toFixed(2),
       currency: Iyzipay.CURRENCY.TRY,
       basketId: pending.id,
       paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
@@ -171,10 +235,10 @@ Deno.serve(async (req) => {
       basketItems: [
         {
           id: pending.id,
-          name: `${type === "trial" ? "Deneme Dersi" : "Ders"} - ${teacherName}`,
+          name: `${type === "trial" ? "Deneme Dersi" : "Ders"} - ${teacherName}${walletApplied > 0 ? " (cüzdan indirimi uygulandı)" : ""}`,
           category1: "Eğitim",
           itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
-          price: numericPrice.toFixed(2),
+          price: remainingPrice.toFixed(2),
         },
       ],
     };

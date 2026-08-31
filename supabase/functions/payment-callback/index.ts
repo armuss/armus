@@ -123,5 +123,29 @@ Deno.serve(async (req) => {
     })
     .eq("id", pending.id);
 
+  // the card only ever covers what the wallet didn't - now that the card
+  // charge succeeded, debit the wallet portion too (never done upfront,
+  // so an abandoned/failed checkout never loses wallet money)
+  const walletApplied = Number(pending.wallet_applied || 0);
+  if (walletApplied > 0) {
+    const { data: studentProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("wallet_balance")
+      .eq("id", pending.student_id)
+      .single();
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({ wallet_balance: Number(studentProfile?.wallet_balance || 0) - walletApplied })
+      .eq("id", pending.student_id);
+
+    await supabaseAdmin.from("wallet_transactions").insert({
+      student_id: pending.student_id,
+      amount: -walletApplied,
+      reason: "booking_payment",
+      booking_id: booking.id,
+    });
+  }
+
   return redirectTo(`booking.html?payment=success&${query}`);
 });

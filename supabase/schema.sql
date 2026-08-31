@@ -102,6 +102,10 @@ create table pending_payments (
   lesson_date date not null,
   lesson_time text not null,
   price numeric not null,
+  -- how much of `price` was covered from the student's wallet balance
+  -- (see the WALLET section above) rather than charged to the card -
+  -- only actually debited once the booking is confirmed, never upfront
+  wallet_applied numeric not null default 0,
   status text not null default 'pending'
     check (status in ('pending', 'succeeded', 'failed', 'paid_no_booking')),
   booking_id uuid references bookings(id),
