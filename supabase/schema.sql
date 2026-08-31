@@ -62,6 +62,11 @@ create table bookings (
   created_at timestamptz not null default now()
 );
 
+-- whether the "your lesson starts soon" reminder email (send-lesson-reminder
+-- Edge Function, fired by the armus-lesson-reminders cron job at the
+-- bottom of this file) has already gone out for this booking
+alter table bookings add column if not exists reminder_sent boolean not null default false;
+
 -- === PENDING PAYMENTS ============================================
 -- Sits in front of "bookings": create-payment (Edge Function) writes a
 -- row here and sends the student to iyzico's hosted checkout; only
@@ -129,6 +134,25 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- === EMAIL VERIFICATION (SIGNUP) ===================================
+-- A 6-digit code emailed via Resend (send-verification-email Edge
+-- Function) right after signup; verify-email-code checks it and flips
+-- profiles.email_verified. RLS is on with zero policies on purpose -
+-- only those two Edge Functions (service role) ever touch this table.
+
+alter table profiles add column if not exists email_verified boolean not null default false;
+
+create table email_verifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles(id) on delete cascade,
+  code text not null,
+  expires_at timestamptz not null,
+  attempts integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table email_verifications enable row level security;
 
 -- === ROW LEVEL SECURITY ==========================================
 
@@ -684,3 +708,32 @@ create policy "chat_attachments_select_authenticated"
 -- - a teacher needs to update this instantly and often.
 
 alter table profiles add column availability_dates jsonb not null default '{}';
+
+-- === LESSON REMINDER EMAILS =======================================
+-- Runs every 10 minutes: any lesson starting 50-70 minutes from now that
+-- hasn't been reminded about yet gets a call to send-lesson-reminder (one
+-- HTTP call per matching booking). The Edge Function itself marks
+-- reminder_sent = true, and only after the email really went out - so a
+-- failed HTTP call here just gets retried on the next run instead of
+-- silently skipping that booking forever.
+--
+-- send-lesson-reminder must have "Verify JWT" turned OFF (same as
+-- payment-callback) since this call carries no Supabase auth token.
+
+create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_net with schema extensions;
+
+select cron.schedule(
+  'armus-lesson-reminders',
+  '*/10 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-lesson-reminder',
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    body := jsonb_build_object('booking_id', b.id)
+  )
+  from bookings b
+  where b.reminder_sent = false
+    and (b.lesson_date + b.lesson_time::time) between now() + interval '50 minutes' and now() + interval '70 minutes'
+  $$
+);
