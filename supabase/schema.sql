@@ -153,11 +153,15 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- === WALLET (CANCELLATION CREDIT) =================================
--- Cancelling an eligible booking (see cancel-booking) credits this
--- instead of refunding the original card - wallet_transactions is the
--- audit trail behind the balance. Service role only; a student can read
--- their own transaction history but never write it directly.
+-- === WALLET =========================================================
+-- profiles.wallet_balance can grow two ways: a cancellation credit (see
+-- cancel-booking) or a direct top-up (create-wallet-topup /
+-- wallet-topup-callback - a real iyzico charge with no booking attached).
+-- It only ever shrinks by spending it on a booking (see create-payment /
+-- payment-callback). There is deliberately no way to cash it back out to
+-- a card - once money is in the wallet it can only be spent on lessons.
+-- wallet_transactions is the audit trail behind the balance - service
+-- role only; a student can read their own history but never write it.
 
 alter table profiles add column if not exists wallet_balance numeric not null default 0;
 
@@ -175,6 +179,22 @@ alter table wallet_transactions enable row level security;
 create policy "wallet_transactions_select_own" on wallet_transactions
   for select
   using (auth.uid() = student_id);
+
+-- a real iyzico charge whose only purpose is to add money to
+-- wallet_balance - wallet-topup-callback only credits it once iyzico
+-- confirms the charge actually succeeded, same pending-row-first pattern
+-- as pending_payments.
+create table wallet_topups (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references profiles(id) on delete cascade,
+  amount numeric not null,
+  iyzico_token text,
+  iyzico_payment_id text,
+  status text not null default 'pending' check (status in ('pending', 'succeeded', 'failed')),
+  created_at timestamptz not null default now()
+);
+
+alter table wallet_topups enable row level security;
 
 -- === EMAIL VERIFICATION (SIGNUP) ===================================
 -- A 6-digit code emailed via Resend (send-verification-email Edge

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Cüzdanım | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: #f4f4f2;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(560px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(560px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .nav-greeting {
+      font-size: 13px;
+      color: #c7c7c7;
+      margin-right: 4px;
+    }
+
+    .nav-greeting small {
+      color: #8f8f8f;
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: #99999c;
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 45px 0 90px;
+      display: none;
+    }
+
+    .eyebrow {
+      color: #99999c;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 32px);
+      letter-spacing: -1.2px;
+      margin-bottom: 26px;
+    }
+
+    /* BALANCE CARD */
+
+    .balance-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .balance-label {
+      font-size: 12px;
+      color: #99999c;
+      letter-spacing: .3px;
+      margin-bottom: 8px;
+    }
+
+    .balance-value {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: var(--armus-gold-text);
+    }
+
+    .balance-note {
+      margin-top: 10px;
+      font-size: 11.5px;
+      color: #77777b;
+    }
+
+    /* BANNER */
+
+    .topup-banner {
+      display: none;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13px;
+      margin-bottom: 22px;
+    }
+
+    .topup-banner.success {
+      background: rgba(143, 214, 174, .1);
+      border: 1px solid rgba(143, 214, 174, .35);
+      color: #8fd6ae;
+    }
+
+    .topup-banner.failed {
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #f0a5a5;
+    }
+
+    /* SECTIONS */
+
+    .section {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 22px;
+    }
+
+    .section h2 {
+      font-size: 16px;
+      letter-spacing: -.4px;
+      margin-bottom: 18px;
+    }
+
+    /* TOP-UP FORM */
+
+    .amount-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .amount-chip {
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: #f4f4f2;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .amount-chip.active {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #a3a3a6;
+      margin-bottom: 7px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .topup-submit-btn {
+      width: 100%;
+      margin-top: 4px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .topup-submit-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .topup-error {
+      display: none;
+      color: #f0a5a5;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* HISTORY */
+
+    .history-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--armus-border-soft);
+      font-size: 13px;
+    }
+
+    .history-row:last-child {
+      border-bottom: none;
+    }
+
+    .history-reason {
+      color: #f4f4f2;
+    }
+
+    .history-date {
+      color: #77777b;
+      font-size: 11.5px;
+      margin-top: 2px;
+    }
+
+    .history-amount {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .history-amount.positive {
+      color: #8fd6ae;
+    }
+
+    .history-amount.negative {
+      color: #c7c7c7;
+    }
+
+    .history-empty {
+      color: #77777b;
+      font-size: 13px;
+      text-align: center;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <span class="logo">ARMUS</span>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1>Cüzdanını görmek için giriş yap</h1>
+      <p>Cüzdan bakiyeni görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html?next=wallet.html">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=wallet.html">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="pageRoot">
+
+    <div class="eyebrow">CÜZDANIM</div>
+    <h1>Cüzdanım</h1>
+
+    <div class="topup-banner" id="topupBanner"></div>
+
+    <div class="balance-card">
+      <div class="balance-label">MEVCUT BAKİYE</div>
+      <div class="balance-value" id="balanceValue">₺0</div>
+      <div class="balance-note">Bu bakiye sadece ders rezervasyonlarında kullanılabilir, nakde çevrilemez.</div>
+    </div>
+
+    <div class="section">
+      <h2>Para Ekle</h2>
+
+      <div class="topup-error" id="topupError"></div>
+
+      <form id="topupForm">
+        <div class="amount-chips" id="amountChips">
+          <button type="button" class="amount-chip" data-amount="100">₺100</button>
+          <button type="button" class="amount-chip" data-amount="250">₺250</button>
+          <button type="button" class="amount-chip" data-amount="500">₺500</button>
+          <button type="button" class="amount-chip" data-amount="1000">₺1000</button>
+        </div>
+
+        <div class="field">
+          <label for="customAmount">Ya da tutar gir</label>
+          <input type="number" id="customAmount" placeholder="Örn. 300" min="50">
+        </div>
+
+        <div class="field">
+          <label for="topupPhone">Telefon numarası</label>
+          <input type="text" id="topupPhone" placeholder="+90 5xx xxx xx xx">
+        </div>
+
+        <div class="field">
+          <label for="topupIdentity">T.C. kimlik numarası</label>
+          <input type="text" id="topupIdentity" placeholder="11 haneli" maxlength="11" inputmode="numeric">
+        </div>
+
+        <button type="submit" class="topup-submit-btn" id="topupSubmitBtn">Öde ve Ekle</button>
+      </form>
+    </div>
+
+    <div class="section" id="history">
+      <h2>İşlem Geçmişi</h2>
+      <div id="historyList"></div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+
+    const gate = document.getElementById("gate");
+    const pageRoot = document.getElementById("pageRoot");
+
+    const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+    const MONTH_NAMES = [
+      "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+      "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+    ];
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}, ${DAY_NAMES[d.getDay()]}`;
+    }
+
+    const REASON_LABELS = {
+      topup: "Cüzdana Yükleme",
+      booking_payment: "Ders Ödemesi",
+      booking_cancelled: "Ders İptali (iade)",
+    };
+
+    (async function () {
+
+      const session = await armusGetSession();
+
+      if (!session) {
+        gate.style.display = "block";
+        return;
+      }
+
+      pageRoot.style.display = "block";
+
+      document.getElementById("balanceValue").textContent = `₺${Number(session.wallet_balance || 0)}`;
+
+      const params = new URLSearchParams(window.location.search);
+      const topupStatus = params.get("topup");
+      const banner = document.getElementById("topupBanner");
+
+      if (topupStatus === "success") {
+        banner.textContent = "Bakiyen eklendi! ✓";
+        banner.className = "topup-banner success";
+        banner.style.display = "block";
+      } else if (topupStatus === "failed") {
+        banner.textContent = "Ödeme tamamlanmadı ya da iptal edildi. Bakiyene bir şey eklenmedi.";
+        banner.className = "topup-banner failed";
+        banner.style.display = "block";
+      }
+
+      if (window.location.hash === "#history") {
+        document.getElementById("history").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // ---- transaction history ----
+
+      const { data: transactions } = await armusSupabase
+        .from("wallet_transactions")
+        .select("*")
+        .eq("student_id", session.id)
+        .order("created_at", { ascending: false });
+
+      const historyList = document.getElementById("historyList");
+
+      if (!transactions || transactions.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">Henüz bir işlem yok.</div>';
+      } else {
+        historyList.innerHTML = transactions.map(t => {
+          const isPositive = Number(t.amount) > 0;
+          return `
+            <div class="history-row">
+              <div>
+                <div class="history-reason">${REASON_LABELS[t.reason] || t.reason}</div>
+                <div class="history-date">${formatDate(t.created_at)}</div>
+              </div>
+              <div class="history-amount ${isPositive ? "positive" : "negative"}">${isPositive ? "+" : ""}₺${t.amount}</div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // ---- top-up form ----
+
+      const amountChips = document.querySelectorAll(".amount-chip");
+      const customAmountInput = document.getElementById("customAmount");
+      let selectedAmount = null;
+
+      amountChips.forEach(chip => {
+        chip.addEventListener("click", () => {
+          amountChips.forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          selectedAmount = Number(chip.dataset.amount);
+          customAmountInput.value = "";
+        });
+      });
+
+      customAmountInput.addEventListener("input", () => {
+        amountChips.forEach(c => c.classList.remove("active"));
+        selectedAmount = null;
+      });
+
+      const topupForm = document.getElementById("topupForm");
+      const topupError = document.getElementById("topupError");
+      const topupSubmitBtn = document.getElementById("topupSubmitBtn");
+
+      topupForm.addEventListener("submit", async event => {
+
+        event.preventDefault();
+        topupError.style.display = "none";
+
+        const amount = selectedAmount || Number(customAmountInput.value);
+        const phone = document.getElementById("topupPhone").value.trim();
+        const identityNumber = document.getElementById("topupIdentity").value.trim();
+
+        if (!amount || amount < 50) {
+          topupError.textContent = "Lütfen en az ₺50 gir.";
+          topupError.style.display = "block";
+          return;
+        }
+        if (phone.replace(/\D/g, "").length < 10) {
+          topupError.textContent = "Lütfen geçerli bir telefon numarası gir.";
+          topupError.style.display = "block";
+          return;
+        }
+        if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
+          topupError.textContent = "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).";
+          topupError.style.display = "block";
+          return;
+        }
+
+        topupSubmitBtn.disabled = true;
+        topupSubmitBtn.textContent = "Yönlendiriliyor...";
+
+        const { data, error } = await armusSupabase.functions.invoke("create-wallet-topup", {
+          body: { amount, phone, identityNumber },
+        });
+
+        if (error || !data || !data.paymentPageUrl) {
+          topupError.textContent = (data && data.error) || "İşlem başlatılamadı. Lütfen tekrar dene.";
+          topupError.style.display = "block";
+          topupSubmitBtn.disabled = false;
+          topupSubmitBtn.textContent = "Öde ve Ekle";
+          return;
+        }
+
+        window.location.href = data.paymentPageUrl;
+      });
+
+    })();
+
+  </script>
+
+  <script>armusRenderAnnouncementBanner();</script>
+</body>
+</html>
