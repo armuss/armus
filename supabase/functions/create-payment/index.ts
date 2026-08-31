@@ -99,16 +99,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Geçersiz fiyat." }, 400);
     }
 
-    const cleanPhone = String(phone || "").replace(/[^\d+]/g, "");
-    if (cleanPhone.replace(/\D/g, "").length < 10) {
-      return jsonResponse({ error: "Geçerli bir telefon numarası gir." }, 400);
-    }
-
-    const cleanIdentity = String(identityNumber || "").trim();
-    if (!looksLikeIdentityNumber(cleanIdentity)) {
-      return jsonResponse({ error: "Geçerli bir T.C. kimlik numarası gir (11 haneli)." }, 400);
-    }
-
     // service-role: pending_payments has no client-facing RLS policies at
     // all (see migration_22.sql) - only this trusted server context ever
     // writes to it
@@ -125,6 +115,23 @@ Deno.serve(async (req) => {
     const walletBalance = Number(profile.wallet_balance || 0);
     const walletApplied = Math.max(0, Math.min(walletBalance, numericPrice));
     const remainingPrice = Math.round((numericPrice - walletApplied) * 100) / 100;
+
+    // only needed when there's an actual card charge - a wallet-only
+    // booking never touches iyzico, so nothing to validate here
+    let cleanPhone = "";
+    let cleanIdentity = "";
+
+    if (remainingPrice > 0) {
+      cleanPhone = String(phone || "").replace(/[^\d+]/g, "");
+      if (cleanPhone.replace(/\D/g, "").length < 10) {
+        return jsonResponse({ error: "Geçerli bir telefon numarası gir." }, 400);
+      }
+
+      cleanIdentity = String(identityNumber || "").trim();
+      if (!looksLikeIdentityNumber(cleanIdentity)) {
+        return jsonResponse({ error: "Geçerli bir T.C. kimlik numarası gir (11 haneli)." }, 400);
+      }
+    }
 
     const { data: pending, error: pendingError } = await supabaseAdmin
       .from("pending_payments")
