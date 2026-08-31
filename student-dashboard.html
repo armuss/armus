@@ -169,40 +169,6 @@
       margin-bottom: 26px;
     }
 
-    .wallet-badge {
-      display: none;
-      margin-left: auto;
-      align-items: center;
-      gap: 10px;
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 14px;
-      padding: 10px 16px;
-    }
-
-    .wallet-badge-icon {
-      color: var(--armus-gold-text);
-      flex-shrink: 0;
-    }
-
-    .wallet-badge-icon svg {
-      width: 22px;
-      height: 22px;
-      display: block;
-    }
-
-    .wallet-badge-label {
-      font-size: 10.5px;
-      color: #99999c;
-      letter-spacing: .3px;
-    }
-
-    .wallet-badge-value {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--armus-gold-text);
-    }
-
     .greet-head .avatar {
       width: 56px;
       height: 56px;
@@ -878,19 +844,6 @@
         <div class="greet-name" id="greetName"></div>
         <div class="greet-sub" id="greetSub">Bugün İngilizce öğrenmeye devam etmeye ne dersin?</div>
       </div>
-      <div class="wallet-badge" id="walletBadge">
-        <span class="wallet-badge-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="6" width="20" height="14" rx="3"></rect>
-            <path d="M2 10h20"></path>
-            <circle cx="17" cy="15" r="1.4" fill="currentColor" stroke="none"></circle>
-          </svg>
-        </span>
-        <div>
-          <div class="wallet-badge-label">CÜZDAN BAKİYEN</div>
-          <div class="wallet-badge-value" id="walletBadgeValue"></div>
-        </div>
-      </div>
     </div>
 
     <div id="heroSlot"></div>
@@ -1035,14 +988,6 @@
 
       document.getElementById("greetAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
       document.getElementById("greetName").textContent = `Merhaba, ${session.name.split(" ")[0]} 👋`;
-
-      // shown only when there's an actual balance - most students never
-      // see this, it only fills up from a cancellation credit (see
-      // cancel-booking)
-      if (Number(session.wallet_balance) > 0) {
-        document.getElementById("walletBadgeValue").textContent = `₺${session.wallet_balance}`;
-        document.getElementById("walletBadge").style.display = "flex";
-      }
 
       const [allBookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
         armusGetBookingsForStudent(session.id),
