@@ -1,30 +1,23 @@
-// ARMUS - cancels a booking and, when eligible, refunds the original
-// iyzico charge. Called by the student (my-lessons.html), the teacher
-// (dashboard.html), or an admin (admin.html) - all three go through this
-// one function so a refund is never skipped just because cancellation
-// happened from a different panel.
+// ARMUS - cancels a booking and, when eligible, credits the student's
+// ARMUS wallet balance for what they paid (nothing goes back to the
+// card - see migration_25.sql). Called by the student (my-lessons.html),
+// the teacher (dashboard.html), or an admin (admin.html) - all three go
+// through this one function so a credit is never skipped just because
+// cancellation happened from a different panel.
 //
 // Policy:
-//   - admin cancels: always a full refund (platform-side decision)
-//   - teacher cancels: always a full refund (not the student's fault)
-//   - student cancels >= 4 hours before the lesson: full refund
-//   - student cancels < 4 hours before the lesson: no refund, but the
+//   - admin cancels: always a full wallet credit (platform-side decision)
+//   - teacher cancels: always a full wallet credit (not the student's fault)
+//   - student cancels >= 4 hours before the lesson: full wallet credit
+//   - student cancels < 4 hours before the lesson: no credit, but the
 //     booking is still cancelled (frees the slot either way)
 // A booking with no successful payment on file (pre-payment-system
 // bookings, or a payment that never completed) simply has nothing to
-// refund - it still gets cancelled normally.
+// credit - it still gets cancelled normally.
 //
-// No secrets needed beyond IYZICO_API_KEY / IYZICO_SECRET_KEY (same ones
-// create-payment already uses) and the auto-injected SUPABASE_* ones.
+// No secrets needed beyond the auto-injected SUPABASE_* ones.
 
-import Iyzipay from "npm:iyzipay@^2.0.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const iyzipay = new Iyzipay({
-  apiKey: Deno.env.get("IYZICO_API_KEY") ?? "",
-  secretKey: Deno.env.get("IYZICO_SECRET_KEY") ?? "",
-  uri: Deno.env.get("IYZICO_BASE_URL") ?? "https://sandbox-api.iyzipay.com",
-});
 
 const FREE_CANCEL_HOURS = 4;
 
@@ -117,23 +110,30 @@ Deno.serve(async (req) => {
 
     let refunded = false;
 
-    if (refundEligible && payment?.iyzico_payment_transaction_id) {
-      try {
-        const refundResult: any = await new Promise((resolve, reject) => {
-          iyzipay.refund.create({
-            locale: Iyzipay.LOCALE.TR,
-            conversationId: crypto.randomUUID(),
-            paymentTransactionId: payment.iyzico_payment_transaction_id,
-            price: Number(payment.price).toFixed(2),
-            ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "85.34.78.112",
-          }, (err: unknown, res: unknown) => {
-            if (err) reject(err); else resolve(res);
-          });
+    if (refundEligible && payment?.status === "succeeded") {
+      const { data: studentProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("wallet_balance")
+        .eq("id", booking.student_id)
+        .single();
+
+      const newBalance = Number(studentProfile?.wallet_balance || 0) + Number(payment.price);
+
+      const { error: walletError } = await supabaseAdmin
+        .from("profiles")
+        .update({ wallet_balance: newBalance })
+        .eq("id", booking.student_id);
+
+      if (walletError) {
+        console.error("wallet credit failed", walletError);
+      } else {
+        await supabaseAdmin.from("wallet_transactions").insert({
+          student_id: booking.student_id,
+          amount: payment.price,
+          reason: "booking_cancelled",
+          booking_id: booking.id,
         });
-        refunded = refundResult.status === "success";
-        if (!refunded) console.error("iyzico refund failed", refundResult);
-      } catch (err) {
-        console.error("iyzico refund error", err);
+        refunded = true;
       }
     }
 

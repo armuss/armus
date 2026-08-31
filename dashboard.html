@@ -1914,7 +1914,7 @@
               ].join("");
 
               const earningHtml = isCancelled
-                ? `İptal edildi${booking.refunded ? " · ücret iade edildi" : ""}`
+                ? `İptal edildi${booking.refunded ? " · tutar öğrencinin cüzdanına eklendi" : ""}`
                 : isPast
                   ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
                   : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
@@ -1961,7 +1961,7 @@
           group.querySelectorAll("[data-cancel-booking]").forEach(button => {
             button.addEventListener("click", async () => {
 
-              if (!confirm("Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye iade edilir.")) return;
+              if (!confirm("Bu dersi iptal etmek istediğine emin misin? Ödenmişse tutar öğrencinin cüzdanına eklenir.")) return;
 
               button.disabled = true;
               button.textContent = "İptal ediliyor...";

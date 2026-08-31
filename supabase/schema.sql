@@ -102,6 +102,10 @@ create table pending_payments (
   lesson_date date not null,
   lesson_time text not null,
   price numeric not null,
+  -- how much of `price` was covered from the student's wallet balance
+  -- (see the WALLET section above) rather than charged to the card -
+  -- only actually debited once the booking is confirmed, never upfront
+  wallet_applied numeric not null default 0,
   status text not null default 'pending'
     check (status in ('pending', 'succeeded', 'failed', 'paid_no_booking')),
   booking_id uuid references bookings(id),
@@ -148,6 +152,29 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- === WALLET (CANCELLATION CREDIT) =================================
+-- Cancelling an eligible booking (see cancel-booking) credits this
+-- instead of refunding the original card - wallet_transactions is the
+-- audit trail behind the balance. Service role only; a student can read
+-- their own transaction history but never write it directly.
+
+alter table profiles add column if not exists wallet_balance numeric not null default 0;
+
+create table wallet_transactions (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references profiles(id) on delete cascade,
+  amount numeric not null,
+  reason text not null,
+  booking_id uuid references bookings(id),
+  created_at timestamptz not null default now()
+);
+
+alter table wallet_transactions enable row level security;
+
+create policy "wallet_transactions_select_own" on wallet_transactions
+  for select
+  using (auth.uid() = student_id);
 
 -- === EMAIL VERIFICATION (SIGNUP) ===================================
 -- A 6-digit code emailed via Resend (send-verification-email Edge
