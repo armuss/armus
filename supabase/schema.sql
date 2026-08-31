@@ -67,6 +67,16 @@ create table bookings (
 -- bottom of this file) has already gone out for this booking
 alter table bookings add column if not exists reminder_sent boolean not null default false;
 
+-- soft-cancellation (see cancel-booking Edge Function) - a student
+-- cancelling >= 4 hours before the lesson gets a full iyzico refund, a
+-- teacher/admin cancelling always does, a late student cancellation
+-- does not. No client-facing update policy touches these columns; only
+-- cancel-booking (service role) ever writes them.
+alter table bookings add column if not exists status text not null default 'confirmed' check (status in ('confirmed', 'cancelled'));
+alter table bookings add column if not exists cancelled_at timestamptz;
+alter table bookings add column if not exists cancelled_by text check (cancelled_by in ('student', 'teacher', 'admin'));
+alter table bookings add column if not exists refunded boolean not null default false;
+
 -- === PENDING PAYMENTS ============================================
 -- Sits in front of "bookings": create-payment (Edge Function) writes a
 -- row here and sends the student to iyzico's hosted checkout; only
@@ -80,6 +90,10 @@ create table pending_payments (
   id uuid primary key default gen_random_uuid(),
   conversation_id uuid not null unique,
   iyzico_token text,
+  -- set once the payment succeeds - needed later to refund this exact
+  -- charge if the booking gets cancelled (see cancel-booking)
+  iyzico_payment_id text,
+  iyzico_payment_transaction_id text,
   student_id uuid not null references profiles(id) on delete cascade,
   student_name text not null,
   teacher_id text not null,
@@ -425,12 +439,12 @@ create trigger messages_block_contact_sharing
   for each row execute procedure public.enforce_no_contact_sharing();
 
 -- === ADMIN PANEL EXTRAS ==========================================
--- Booking cancellation from the admin panel, an admin activity log,
--- and homepage testimonials managed from the admin panel.
-
-create policy "bookings_delete_admin"
-  on bookings for delete
-  using (public.is_admin());
+-- An admin activity log and homepage testimonials managed from the
+-- admin panel. Booking cancellation from the admin panel used to be a
+-- direct client-side delete here (bookings_delete_admin) - now that
+-- cancelling can mean an iyzico refund, it goes through the
+-- cancel-booking Edge Function (service role) instead, so that policy
+-- was dropped (see migration_24.sql).
 
 create table admin_actions (
   id uuid primary key default gen_random_uuid(),
@@ -734,6 +748,7 @@ select cron.schedule(
   )
   from bookings b
   where b.reminder_sent = false
+    and b.status = 'confirmed'
     and (b.lesson_date + b.lesson_time::time) between now() + interval '50 minutes' and now() + interval '70 minutes'
   $$
 );

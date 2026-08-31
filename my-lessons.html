@@ -189,6 +189,55 @@
       font-size: 12.5px;
     }
 
+    .lesson-cancel-wrap {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .lesson-cancel-btn {
+      border: 1px solid rgba(220, 90, 90, .4);
+      background: transparent;
+      color: #f0a5a5;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .lesson-cancel-btn:hover {
+      background: rgba(220, 90, 90, .08);
+    }
+
+    .lesson-cancel-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .lesson-cancel-hint {
+      color: #77777b;
+      font-size: 11.5px;
+    }
+
+    .lesson-cancel-badge {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--armus-border-soft);
+      color: #a3a3a6;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .lesson-cancelled {
+      opacity: .6;
+    }
+
     .review-block {
       margin-top: 16px;
       padding-top: 16px;
@@ -669,12 +718,13 @@
 
           const teacher = await armusFindMarketplaceTeacher(booking.teacherId);
           const isPast = booking.date < todayKey;
+          const isCancelled = booking.status === "cancelled";
           const avatarInner = teacher
             ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
             : "?";
 
           const card = document.createElement("div");
-          card.className = "lesson-card" + (isPast ? " lesson-past" : "");
+          card.className = "lesson-card" + (isPast ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
 
           card.innerHTML = `
             <div class="lesson-row">
@@ -691,7 +741,11 @@
                 <div class="lesson-time">${armusFormatTimeRange(booking.time)}</div>
               </div>
             </div>
-            ${(!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
+            ${isCancelled ? `
+              <div class="lesson-cancel-badge">
+                ⊘ İptal edildi${booking.refunded ? " · Ücret iade edildi" : (booking.cancelledBy === "student" ? " · Ücret iade edilmedi" : "")}
+              </div>
+            ` : (!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
               <div class="lesson-join">
                 ${armusCanJoinLessonNow(booking)
                   ? `<a class="join-btn" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>`
@@ -700,10 +754,58 @@
             ` : ""}
           `;
 
+          let disputeBlock = null;
+
+          if (!isCancelled && !isPast) {
+
+            const lessonStart = new Date(`${booking.date}T${booking.time}:00`);
+            const hoursUntil = (lessonStart - new Date()) / 3_600_000;
+            const refundHint = hoursUntil >= 4
+              ? "Ücretin tamamı iade edilir"
+              : "Derse 4 saatten az kaldığı için ücret iade edilmez";
+
+            const cancelWrap = document.createElement("div");
+            cancelWrap.className = "lesson-cancel-wrap";
+            cancelWrap.innerHTML = `
+              <button type="button" class="lesson-cancel-btn">Dersi İptal Et</button>
+              <span class="lesson-cancel-hint">${refundHint}</span>
+            `;
+
+            cancelWrap.querySelector(".lesson-cancel-btn").addEventListener("click", async () => {
+
+              if (!confirm(`${booking.teacherName} ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)} dersini iptal etmek istediğine emin misin?`)) return;
+
+              const btn = cancelWrap.querySelector(".lesson-cancel-btn");
+              btn.disabled = true;
+              btn.textContent = "İptal ediliyor...";
+
+              const result = await armusCancelBooking(booking.id);
+
+              if (!result.ok) {
+                alert(result.error);
+                btn.disabled = false;
+                btn.textContent = "Dersi İptal Et";
+                return;
+              }
+
+              cancelWrap.outerHTML = `
+                <div class="lesson-cancel-badge">
+                  ⊘ İptal edildi${result.refunded ? " · Ücret iade edildi" : " · Ücret iade edilmedi"}
+                </div>
+              `;
+              if (disputeBlock) disputeBlock.remove();
+            });
+
+            card.appendChild(cancelWrap);
+          }
+
           if (isPast) {
             card.appendChild(await buildReviewBlock(booking));
           }
-          card.appendChild(buildDisputeBlock(booking));
+          if (!isCancelled) {
+            disputeBlock = buildDisputeBlock(booking);
+            card.appendChild(disputeBlock);
+          }
 
           list.appendChild(card);
         }

@@ -456,6 +456,11 @@
       font-weight: 800;
     }
 
+    .tag-cancelled {
+      color: #f0a5a5;
+      background: rgba(220, 90, 90, .1);
+    }
+
     .booking-earning {
       font-size: 11px;
       color: #8e8e91;
@@ -830,6 +835,24 @@
       color: #6e6e72;
       font-size: 11px;
       font-weight: 400;
+    }
+
+    .cancel-btn-sm {
+      display: inline-block;
+      border: 1px solid rgba(220, 90, 90, .4);
+      border-radius: 8px;
+      padding: 4px 11px;
+      background: transparent;
+      color: #f0a5a5;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .cancel-btn-sm:disabled {
+      opacity: .5;
+      cursor: not-allowed;
     }
 
     /* ---- achievement badges ---- */
@@ -1499,6 +1522,10 @@
         armusGetTeacherNotes(user.id),
         armusGetConversations(),
       ]);
+      // a cancelled booking never counts toward earnings, "today", or the
+      // calendar - it still shows (with a cancelled tag) in the grouped
+      // list below, which keeps using incomingBookings directly
+      const activeBookings = incomingBookings.filter(b => b.status !== "cancelled");
       const incomingList = document.getElementById("incomingBookings");
       const incomingEmpty = document.getElementById("incomingEmpty");
 
@@ -1531,7 +1558,7 @@
       let bkWeekStart = bkStartOfWeek(new Date());
 
       const bookingsByDateKey = new Map();
-      incomingBookings.forEach(b => {
+      activeBookings.forEach(b => {
         if (!bookingsByDateKey.has(b.date)) bookingsByDateKey.set(b.date, []);
         bookingsByDateKey.get(b.date).push(b);
       });
@@ -1541,7 +1568,7 @@
       const firstBookingIdByStudent = new Map();
       {
         const byStudent = new Map();
-        incomingBookings.forEach(b => {
+        activeBookings.forEach(b => {
           if (!byStudent.has(b.studentId)) byStudent.set(b.studentId, []);
           byStudent.get(b.studentId).push(b);
         });
@@ -1664,7 +1691,7 @@
         return { rate: 15, range: "500+ saat" };
       }
 
-      const completedBookings = incomingBookings.filter(armusIsBookingPast);
+      const completedBookings = activeBookings.filter(armusIsBookingPast);
       const totalHours = Math.round((completedBookings.length * 50 / 60) * 10) / 10;
       const tier = commissionForHours(totalHours);
 
@@ -1713,7 +1740,7 @@
       // ---- "today" widget ----
 
       const todayKey = new Date().toISOString().slice(0, 10);
-      const todayBookings = incomingBookings.filter(b => b.date === todayKey);
+      const todayBookings = activeBookings.filter(b => b.date === todayKey);
 
       if (todayBookings.length) {
         document.getElementById("todayCard").style.display = "block";
@@ -1874,6 +1901,7 @@
             </div>
             ${studentBookings.map(booking => {
 
+              const isCancelled = booking.status === "cancelled";
               const isPast = armusIsBookingPast(booking);
               const review = reviewByBookingId[booking.id];
               const net = Math.round(booking.price * (1 - tier.rate / 100));
@@ -1881,24 +1909,27 @@
               const tags = [
                 firstBookingIdByStudent.has(booking.id) ? '<span class="booking-tag tag-first">🟢 İlk Ders</span>' : "",
                 booking.type === "trial" ? '<span class="booking-tag tag-trial">🔵 Deneme Dersi</span>' : '<span class="booking-tag tag-lesson">🟣 Ders</span>',
-                isPast ? '<span class="booking-tag tag-done">✓ Tamamlandı</span>' : '<span class="booking-tag tag-upcoming">🕒 Yaklaşıyor</span>',
+                isCancelled ? '<span class="booking-tag tag-cancelled">⊘ İptal edildi</span>' : (isPast ? '<span class="booking-tag tag-done">✓ Tamamlandı</span>' : '<span class="booking-tag tag-upcoming">🕒 Yaklaşıyor</span>'),
                 review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
               ].join("");
 
-              const earningHtml = isPast
-                ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
-                : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
+              const earningHtml = isCancelled
+                ? `İptal edildi${booking.refunded ? " · ücret iade edildi" : ""}`
+                : isPast
+                  ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
+                  : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
 
               return `
               <div class="booking-row">
                 <div>
                   <strong>${booking.studentName}</strong>
                   <div class="booking-tags">${tags}</div>
-                  <div class="booking-earning${isPast ? "" : " pending"}">${earningHtml}</div>
+                  <div class="booking-earning${isPast || isCancelled ? "" : " pending"}">${earningHtml}</div>
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>` : ""}
+                  ${(!isCancelled && !isPast) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">Dersi İptal Et</button>` : ""}
                 </div>
               </div>
               `;
@@ -1925,6 +1956,27 @@
             status.textContent = result === false ? "Kaydedilemedi ✕" : "Kaydedildi ✓";
             status.classList.add("visible");
             setTimeout(() => status.classList.remove("visible"), 2000);
+          });
+
+          group.querySelectorAll("[data-cancel-booking]").forEach(button => {
+            button.addEventListener("click", async () => {
+
+              if (!confirm("Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye iade edilir.")) return;
+
+              button.disabled = true;
+              button.textContent = "İptal ediliyor...";
+
+              const result = await armusCancelBooking(button.dataset.cancelBooking);
+
+              if (!result.ok) {
+                alert(result.error);
+                button.disabled = false;
+                button.textContent = "Dersi İptal Et";
+                return;
+              }
+
+              window.location.reload();
+            });
           });
 
           incomingList.appendChild(group);

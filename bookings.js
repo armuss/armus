@@ -74,8 +74,29 @@ function armusMapBookingRow(row) {
     dateLabel: armusFormatDateLabel(row.lesson_date),
     time: row.lesson_time,
     price: row.price,
+    status: row.status || "confirmed",
+    cancelledBy: row.cancelled_by,
+    refunded: row.refunded,
     createdAt: row.created_at,
   };
+}
+
+// Cancels a booking via the cancel-booking Edge Function (which also
+// issues an iyzico refund when the canceller is eligible for one - see
+// that function's file header for the exact policy). Returns
+// { ok: true, refunded, refundEligible } on success, or
+// { ok: false, error } on failure.
+async function armusCancelBooking(bookingId) {
+
+  const { data, error } = await armusSupabase.functions.invoke("cancel-booking", {
+    body: { booking_id: bookingId },
+  });
+
+  if (error || !data || !data.ok) {
+    return { ok: false, error: (data && data.error) || "Rezervasyon iptal edilemedi." };
+  }
+
+  return { ok: true, refunded: data.refunded, refundEligible: data.refundEligible };
 }
 
 const ARMUS_LESSON_MINUTES = 50;
