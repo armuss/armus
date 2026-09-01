@@ -442,6 +442,13 @@
 
     (async function () {
 
+      // Temporarily disabled - wallet is on hold for now. See
+      // ARMUS_WALLET_ENABLED in auth.js.
+      if (typeof ARMUS_WALLET_ENABLED !== "undefined" && !ARMUS_WALLET_ENABLED) {
+        window.location.href = "student-dashboard.html";
+        return;
+      }
+
       const session = await armusGetSession();
 
       if (!session) {

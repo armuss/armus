@@ -4,6 +4,13 @@
  * loaded before this file.
  */
 
+// Temporarily disabled - wallet balance/top-up is on hold for now. The
+// wallet_balance column and wallet_transactions history keep working
+// server-side underneath this (e.g. a cancellation still credits the
+// balance), it's just not shown anywhere in the UI while this is false.
+// Flip back to true to bring the nav badge back.
+const ARMUS_WALLET_ENABLED = false;
+
 async function armusSignUp({ name, email, password, role, city }) {
   return armusSupabase.auth.signUp({
     email,
@@ -103,7 +110,7 @@ async function armusRenderNavAuth() {
     // Ekle" / "İşlem Geçmişi"), always shown so there's a way to add money
     // even at a zero balance. Styled inline since this nav is shared across
     // every page and most pages don't otherwise have a wallet-badge class.
-    const walletBadge = session.role === "student"
+    const walletBadge = (ARMUS_WALLET_ENABLED && session.role === "student")
       ? `<div style="position:relative;display:inline-block;">
           <button type="button" id="armusWalletTrigger" title="Cüzdan bakiyen" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--armus-border);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--armus-gold-text);white-space:nowrap;background:none;cursor:pointer;font-family:inherit;">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">

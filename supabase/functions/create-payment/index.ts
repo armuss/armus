@@ -112,7 +112,11 @@ Deno.serve(async (req) => {
     const firstName = nameParts[0] || "ARMUS";
     const lastName = nameParts.slice(1).join(" ") || "Kullanıcı";
 
-    const walletBalance = Number(profile.wallet_balance || 0);
+    // Temporarily disabled - wallet is on hold for now, so checkout never
+    // applies the student's balance, even though it's still sitting there
+    // in profiles.wallet_balance. Change back to
+    // `Number(profile.wallet_balance || 0)` to re-enable.
+    const walletBalance = 0;
     const walletApplied = Math.max(0, Math.min(walletBalance, numericPrice));
     const remainingPrice = Math.round((numericPrice - walletApplied) * 100) / 100;
 
