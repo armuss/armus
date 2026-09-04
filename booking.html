@@ -863,7 +863,10 @@
         });
       }
 
-      const walletBalance = Number((session && session.wallet_balance) || 0);
+      // Temporarily disabled - wallet is on hold for now, so checkout
+      // always charges the full price to the card, even if the student
+      // has a balance. See ARMUS_WALLET_ENABLED in auth.js.
+      const walletBalance = 0;
       let cardAmount = teacher.price;
 
       function showConfirm() {
