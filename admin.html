@@ -1661,7 +1661,7 @@
           const isPast = armusIsBookingPast(b);
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
-            ? `İptal edildi${b.refunded ? " · cüzdana eklendi" : ""}`
+            ? `İptal edildi${b.refunded ? " · ders hakkı eklendi" : ""}`
             : isPast
               ? "—"
               : `<button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button>`;
@@ -1681,7 +1681,7 @@
 
       body.querySelectorAll("[data-cancel-booking]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse tutar öğrencinin cüzdanına eklenir.")) return;
+          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.")) return;
           button.disabled = true;
           button.textContent = "İptal ediliyor...";
           const bookingId = button.dataset.cancelBooking;
@@ -1693,7 +1693,7 @@
               cancelled.refunded = result.refunded;
             }
             await armusLogAdminAction("booking_cancel", "booking", bookingId,
-              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - cüzdana eklendi" : ""}` : bookingId);
+              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - ders hakkı eklendi" : ""}` : bookingId);
             renderAllFromState();
           } else {
             button.disabled = false;

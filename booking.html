@@ -582,13 +582,9 @@
         <span>Ücret</span>
         <strong id="confirmPrice"></strong>
       </div>
-      <div class="confirm-row" id="confirmWalletRow" style="display: none;">
-        <span>Cüzdanından</span>
-        <strong id="confirmWalletApplied" style="color: var(--armus-gold-text);"></strong>
-      </div>
-      <div class="confirm-row" id="confirmCardRow" style="display: none;">
-        <span>Kartla ödenecek</span>
-        <strong id="confirmCardAmount"></strong>
+      <div class="confirm-row" id="confirmCreditRow" style="display: none;">
+        <span>Ders hakkınla</span>
+        <strong id="confirmCreditApplied" style="color: var(--armus-gold-text);">Ücretsiz</strong>
       </div>
 
       <div class="payer-fields" id="payerFields">
@@ -863,11 +859,23 @@
         });
       }
 
-      // Temporarily disabled - wallet is on hold for now, so checkout
-      // always charges the full price to the card, even if the student
-      // has a balance. See ARMUS_WALLET_ENABLED in auth.js.
-      const walletBalance = 0;
-      let cardAmount = teacher.price;
+      // A lesson credit (from a cancellation, see cancel-booking) covers
+      // this booking fully if it's tied to this same teacher, or if it's
+      // any credit at all and this is a trial lesson - see migration_28.sql
+      // and create-payment, which re-checks this server-side regardless of
+      // what's computed here.
+      const { data: availableCredits } = await armusSupabase
+        .from("lesson_credits")
+        .select("*")
+        .eq("student_id", session.id)
+        .eq("status", "available");
+
+      const creditApplies = !!(availableCredits && availableCredits.length > 0 && (
+        availableCredits.some((c) => c.teacher_id === teacher.id) ||
+        bookingType === "trial"
+      ));
+
+      let cardAmount = creditApplies ? 0 : teacher.price;
 
       function showConfirm() {
 
@@ -876,19 +884,10 @@
         document.getElementById("confirmTime").textContent = armusFormatTimeRange(selectedTime);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
 
-        const walletApplied = Math.min(walletBalance, teacher.price);
-        cardAmount = Math.round((teacher.price - walletApplied) * 100) / 100;
-
-        if (walletApplied > 0) {
-          document.getElementById("confirmWalletRow").style.display = "flex";
-          document.getElementById("confirmWalletApplied").textContent = `-₺${walletApplied}`;
-          document.getElementById("confirmCardRow").style.display = "flex";
-          document.getElementById("confirmCardAmount").textContent = `₺${cardAmount}`;
-        }
-
-        if (cardAmount <= 0) {
+        if (creditApplies) {
+          document.getElementById("confirmCreditRow").style.display = "flex";
           document.getElementById("payerFields").style.display = "none";
-          document.getElementById("confirmNote").textContent = "Kart bilgisi gerekmiyor, cüzdanından ödenecek";
+          document.getElementById("confirmNote").textContent = "Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak";
           confirmBtn.textContent = "Rezervasyonu Tamamla";
         }
 

@@ -196,6 +196,43 @@ create table wallet_topups (
 
 alter table wallet_topups enable row level security;
 
+-- NOTE: the whole wallet feature above (balance, top-ups, spending it at
+-- checkout) is on hold for now - see ARMUS_WALLET_ENABLED in auth.js. The
+-- tables and columns stay as-is (nothing is lost), they're just not read
+-- from or written to anywhere in the app at the moment. Cancellation
+-- refunds now grant a lesson_credits row (below) instead.
+
+-- === LESSON CREDITS =================================================
+-- Replaces "cancel = money back" with "cancel = a lesson owed back".
+-- cancel-booking grants one when a cancellation is refund-eligible (see
+-- its own comment for exactly which cancellations qualify), tied to the
+-- teacher of the cancelled lesson:
+--   - booking a new lesson (trial or regular) with that SAME teacher:
+--     the credit covers it fully, no charge at all
+--   - booking with a DIFFERENT teacher: the credit only covers a trial
+--     lesson with them, not a full-price lesson
+-- create-payment looks up available credits and applies one automatically
+-- when the booking qualifies; there is no card refund and no cash value -
+-- an unused credit is only ever a lesson, never money.
+
+create table lesson_credits (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references profiles(id) on delete cascade,
+  teacher_id text not null,
+  teacher_name text not null,
+  status text not null default 'available' check (status in ('available', 'used')),
+  source_booking_id uuid references bookings(id) on delete set null,
+  used_booking_id uuid references bookings(id) on delete set null,
+  created_at timestamptz not null default now(),
+  used_at timestamptz
+);
+
+alter table lesson_credits enable row level security;
+
+create policy "lesson_credits_select_own" on lesson_credits
+  for select
+  using (auth.uid() = student_id);
+
 -- === EMAIL VERIFICATION (SIGNUP) ===================================
 -- A 6-digit code emailed via Resend (send-verification-email Edge
 -- Function) right after signup; verify-email-code checks it and flips

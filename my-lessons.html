@@ -743,7 +743,7 @@
             </div>
             ${isCancelled ? `
               <div class="lesson-cancel-badge">
-                ⊘ İptal edildi${booking.refunded ? " · Tutar cüzdanına eklendi" : (booking.cancelledBy === "student" ? " · Ücret iade edilmedi" : "")}
+                ⊘ İptal edildi${booking.refunded ? " · Ders hakkın eklendi" : (booking.cancelledBy === "student" ? " · Ders hakkı eklenmedi" : "")}
               </div>
             ` : (!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
               <div class="lesson-join">
@@ -761,8 +761,8 @@
             const lessonStart = new Date(`${booking.date}T${booking.time}:00`);
             const hoursUntil = (lessonStart - new Date()) / 3_600_000;
             const refundHint = hoursUntil >= 4
-              ? "Ücretin tamamı cüzdanına eklenir"
-              : "Derse 4 saatten az kaldığı için ücret eklenmez";
+              ? "İptal edersen bu öğretmenle (veya bir deneme dersi için başka biriyle) kullanabileceğin bir ders hakkı kazanırsın"
+              : "Derse 4 saatten az kaldığı için ders hakkı kazanılmaz";
 
             const cancelWrap = document.createElement("div");
             cancelWrap.className = "lesson-cancel-wrap";
@@ -790,7 +790,7 @@
 
               cancelWrap.outerHTML = `
                 <div class="lesson-cancel-badge">
-                  ⊘ İptal edildi${result.refunded ? " · Tutar cüzdanına eklendi" : " · Ücret iade edilmedi"}
+                  ⊘ İptal edildi${result.refunded ? " · Ders hakkın eklendi" : " · Ders hakkı eklenmedi"}
                 </div>
               `;
               if (disputeBlock) disputeBlock.remove();

@@ -1,19 +1,22 @@
-// ARMUS - cancels a booking and, when eligible, credits the student's
-// ARMUS wallet balance for what they paid (nothing goes back to the
-// card - see migration_25.sql). Called by the student (my-lessons.html),
+// ARMUS - cancels a booking and, when eligible, grants the student one
+// lesson credit tied to that lesson's teacher (see migration_28.sql) -
+// not money, a lesson owed back. Called by the student (my-lessons.html),
 // the teacher (dashboard.html), or an admin (admin.html) - all three go
 // through this one function so a credit is never skipped just because
 // cancellation happened from a different panel.
 //
 // Policy:
-//   - admin cancels: always a full wallet credit (platform-side decision)
-//   - teacher cancels: always a full wallet credit (not the student's fault)
-//   - student cancels >= 4 hours before the lesson: full wallet credit
+//   - admin cancels: always a full credit (platform-side decision)
+//   - teacher cancels: always a full credit (not the student's fault)
+//   - student cancels >= 4 hours before the lesson: full credit
 //   - student cancels < 4 hours before the lesson: no credit, but the
 //     booking is still cancelled (frees the slot either way)
 // A booking with no successful payment on file (pre-payment-system
-// bookings, or a payment that never completed) simply has nothing to
-// credit - it still gets cancelled normally.
+// bookings, a payment that never completed, or a lesson that was itself
+// booked for free with a credit) simply has nothing to credit - it still
+// gets cancelled normally. That last case matters: it's what stops a
+// student from farming free lessons by repeatedly cancelling a
+// credit-covered booking.
 //
 // No secrets needed beyond the auto-injected SUPABASE_* ones.
 
@@ -111,28 +114,16 @@ Deno.serve(async (req) => {
     let refunded = false;
 
     if (refundEligible && payment?.status === "succeeded") {
-      const { data: studentProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("id", booking.student_id)
-        .single();
+      const { error: creditError } = await supabaseAdmin.from("lesson_credits").insert({
+        student_id: booking.student_id,
+        teacher_id: booking.teacher_id,
+        teacher_name: booking.teacher_name,
+        source_booking_id: booking.id,
+      });
 
-      const newBalance = Number(studentProfile?.wallet_balance || 0) + Number(payment.price);
-
-      const { error: walletError } = await supabaseAdmin
-        .from("profiles")
-        .update({ wallet_balance: newBalance })
-        .eq("id", booking.student_id);
-
-      if (walletError) {
-        console.error("wallet credit failed", walletError);
+      if (creditError) {
+        console.error("lesson credit grant failed", creditError);
       } else {
-        await supabaseAdmin.from("wallet_transactions").insert({
-          student_id: booking.student_id,
-          amount: payment.price,
-          reason: "booking_cancelled",
-          booking_id: booking.id,
-        });
         refunded = true;
       }
     }
