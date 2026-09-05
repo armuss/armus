@@ -1,32 +1,37 @@
 /*
  * ARMUS — shared theme tokens.
- * Linked by every page so the gold/silver accent palette stays
- * consistent instead of each page inventing its own greys.
+ * Linked by every page so the gold/cream accent palette stays
+ * consistent instead of each page inventing its own colors.
  */
 
 :root {
-  --armus-gold-1: #f3dfa8;
-  --armus-gold-2: #d4af6a;
-  --armus-gold-3: #93711f;
-  --armus-gold-text: #e7c789;
+  --armus-gold-1: #f8d878;
+  --armus-gold-2: #f0b93a;
+  --armus-gold-3: #c98f1e;
+  --armus-gold-text: #a9740f;
   --armus-gold-gradient: linear-gradient(135deg, var(--armus-gold-1) 0%, var(--armus-gold-2) 55%, var(--armus-gold-3) 100%);
   --armus-on-gold: #1c1408;
 
-  --armus-silver-1: #f0f1f4;
-  --armus-silver-2: #b7bac3;
-  --armus-silver-3: #55575f;
+  --armus-silver-1: #faf8f2;
+  --armus-silver-2: #cdc6b0;
+  --armus-silver-3: #6f6858;
   --armus-silver-gradient: linear-gradient(145deg, var(--armus-silver-1) 0%, var(--armus-silver-2) 55%, var(--armus-silver-3) 100%);
-  --armus-silver-border: rgba(196, 199, 209, 0.35);
-  --armus-silver-border-strong: rgba(196, 199, 209, 0.7);
+  --armus-silver-border: rgba(111, 104, 88, 0.25);
+  --armus-silver-border-strong: rgba(111, 104, 88, 0.45);
 
-  --armus-bg: #171310;
-  --armus-panel: #1e180f;
-  --armus-panel-2: #241d13;
-  --armus-border: #3c331f;
-  --armus-border-soft: #2f2819;
+  --armus-bg: #f7f1e3;
+  --armus-panel: #ffffff;
+  --armus-panel-2: #fbf6e8;
+  --armus-border: #e6dcc2;
+  --armus-border-soft: #efe8d5;
+
+  /* text tones — new this pass, for the light background these all sit on */
+  --armus-ink: #1c1710;
+  --armus-muted: #6b6353;
+  --armus-faint: #9c927a;
 
   --armus-bg-glow:
-    radial-gradient(circle at 15% 8%, rgba(212, 175, 106, 0.22), transparent 45%),
-    radial-gradient(circle at 88% 15%, rgba(183, 186, 195, 0.16), transparent 48%),
-    radial-gradient(circle at 50% 105%, rgba(212, 175, 106, 0.14), transparent 58%);
+    radial-gradient(circle at 15% 8%, rgba(240, 185, 58, 0.10), transparent 45%),
+    radial-gradient(circle at 88% 15%, rgba(111, 104, 88, 0.06), transparent 48%),
+    radial-gradient(circle at 50% 105%, rgba(240, 185, 58, 0.08), transparent 58%);
 }
