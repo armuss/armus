@@ -62,9 +62,11 @@ export default function Register() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Logo size={30} />
-          <Text style={styles.title}>Hesap oluştur</Text>
-          <Text style={styles.subtitle}>Hedefine uygun öğretmeni bulmaya başla.</Text>
+          <View style={styles.brandBlock}>
+            <Logo size={32} />
+            <Text style={styles.title}>Hesap oluştur</Text>
+            <Text style={styles.subtitle}>Hedefine uygun öğretmeni bulmaya başla.</Text>
+          </View>
 
           <View style={styles.roleRow}>
             <Pressable
@@ -174,12 +176,17 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 40,
   },
+  brandBlock: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   title: {
     fontFamily: fonts.display,
     fontSize: 28,
     color: colors.ink,
     marginTop: 28,
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: fonts.body,
@@ -187,6 +194,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 8,
     marginBottom: 24,
+    textAlign: 'center',
   },
   roleRow: {
     flexDirection: 'row',

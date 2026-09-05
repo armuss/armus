@@ -44,10 +44,14 @@ body {
   background-clip: text;
   color: transparent;
 }
+.nav .brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 .nav nav {
   display: flex;
   gap: 34px;
-  margin: auto;
 }
 .nav nav a,
 .footer a {
@@ -58,6 +62,7 @@ body {
 .nav-actions {
   display: flex;
   gap: 10px;
+  margin-left: auto;
 }
 .btn {
   display: inline-block;

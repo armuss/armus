@@ -181,7 +181,7 @@ async function armusRenderNavAuth() {
   } else {
 
     el.innerHTML = `
-      <a class="btn" href="login.html">Giriş Yap</a>
+      <a class="btn btn-dark" href="login.html">Giriş Yap</a>
       <a class="btn btn-light" href="register.html">Kayıt Ol</a>
     `;
   }

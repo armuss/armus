@@ -18,9 +18,12 @@ export default function Home() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Logo size={22} />
-          <View style={styles.avatarDot}>
-            <Text style={styles.avatarInitial}>{(firstName[0] || '?').toUpperCase()}</Text>
+          <View style={styles.headerSide} />
+          <Logo size={24} />
+          <View style={styles.headerSide}>
+            <View style={styles.avatarDot}>
+              <Text style={styles.avatarInitial}>{(firstName[0] || '?').toUpperCase()}</Text>
+            </View>
           </View>
         </View>
 
@@ -73,6 +76,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
+  },
+  headerSide: {
+    width: 36,
+    alignItems: 'flex-end',
   },
   avatarDot: {
     width: 36,

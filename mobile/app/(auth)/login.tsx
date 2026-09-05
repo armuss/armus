@@ -42,9 +42,11 @@ export default function Login() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Logo size={30} />
-          <Text style={styles.title}>Tekrar hoş geldin</Text>
-          <Text style={styles.subtitle}>Öğretmeninle devam etmek için giriş yap.</Text>
+          <View style={styles.brandBlock}>
+            <Logo size={32} />
+            <Text style={styles.title}>Tekrar hoş geldin</Text>
+            <Text style={styles.subtitle}>Öğretmeninle devam etmek için giriş yap.</Text>
+          </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>E-posta</Text>
@@ -101,12 +103,17 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 40,
   },
+  brandBlock: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   title: {
     fontFamily: fonts.display,
     fontSize: 28,
     color: colors.ink,
     marginTop: 28,
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: fonts.body,
@@ -114,6 +121,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 8,
     marginBottom: 32,
+    textAlign: 'center',
   },
   field: {
     marginBottom: 18,
