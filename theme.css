@@ -5,12 +5,12 @@
  */
 
 :root {
-  --armus-gold-1: #f8d878;
-  --armus-gold-2: #f0b93a;
-  --armus-gold-3: #c98f1e;
-  --armus-gold-text: #a9740f;
+  --armus-gold-1: #ffdd55;
+  --armus-gold-2: #f7c331;
+  --armus-gold-3: #e0a916;
+  --armus-gold-text: #93690a;
   --armus-gold-gradient: linear-gradient(135deg, var(--armus-gold-1) 0%, var(--armus-gold-2) 55%, var(--armus-gold-3) 100%);
-  --armus-on-gold: #1c1408;
+  --armus-on-gold: #0a0a0a;
 
   --armus-silver-1: #f7f7f5;
   --armus-silver-2: #c9c8c2;
@@ -19,18 +19,18 @@
   --armus-silver-border: rgba(110, 109, 102, 0.25);
   --armus-silver-border-strong: rgba(110, 109, 102, 0.45);
 
-  /* neutral light-grey surface (not cream) - the gold family above stays
-     the only warm color on the page */
-  --armus-bg: #f1f1ef;
+  /* fully white page background, per the EnglishMaster reference - the
+     gold family above is the only accent color */
+  --armus-bg: #ffffff;
   --armus-panel: #ffffff;
-  --armus-panel-2: #f6f6f4;
-  --armus-border: #e1e1dd;
-  --armus-border-soft: #ebebe8;
+  --armus-panel-2: #f5f5f5;
+  --armus-border: #e2e2e2;
+  --armus-border-soft: #ececec;
 
   /* text tones — for the light background these all sit on */
-  --armus-ink: #1c1c1a;
-  --armus-muted: #65655f;
-  --armus-faint: #97968e;
+  --armus-ink: #0a0a0a;
+  --armus-muted: #5f5f5f;
+  --armus-faint: #8f8f8f;
 
   /* flat background on purpose - no visible gradient/glow */
   --armus-bg-glow: none;
