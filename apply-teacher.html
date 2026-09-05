@@ -23,7 +23,7 @@
       font-family: "Inter", sans-serif;
       background-color: var(--armus-bg);
       background-image: var(--armus-bg-glow);
-      color: #f4f4f2;
+      color: var(--armus-ink);
       line-height: 1.6;
       min-height: 100vh;
     }
@@ -72,7 +72,7 @@
       border-radius: 12px;
       padding: 11px 18px;
       background: transparent;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 13px;
       cursor: pointer;
@@ -106,7 +106,7 @@
     }
 
     .gate p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       margin-bottom: 26px;
     }
@@ -122,7 +122,7 @@
     }
 
     .eyebrow {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 13px;
       margin-bottom: 8px;
     }
@@ -149,7 +149,7 @@
       align-items: center;
       gap: 7px;
       font-size: 11px;
-      color: #6e6e72;
+      color: var(--armus-muted);
       padding: 6px 10px 6px 6px;
       border-radius: 999px;
       border: 1px solid var(--armus-border);
@@ -159,7 +159,8 @@
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: #1c1c1f;
+      background: var(--armus-ink);
+      color: var(--armus-silver-1);
       border: 1px solid var(--armus-border);
       display: flex;
       align-items: center;
@@ -169,7 +170,7 @@
     }
 
     .tracker-step.active {
-      color: #f4f4f2;
+      color: var(--armus-ink);
       border-color: var(--armus-gold-2);
     }
 
@@ -207,7 +208,7 @@
     }
 
     .step-hint {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 12.5px;
       margin-bottom: 22px;
       line-height: 1.6;
@@ -220,7 +221,7 @@
     .field label {
       display: block;
       font-size: 12px;
-      color: #a3a3a6;
+      color: var(--armus-muted);
       margin-bottom: 7px;
     }
 
@@ -229,11 +230,11 @@
     .field select,
     .field textarea {
       width: 100%;
-      background: var(--armus-bg);
+      background: var(--armus-panel);
       border: 1px solid var(--armus-border);
       border-radius: 12px;
       padding: 13px 14px;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 14px;
       outline: none;
@@ -257,7 +258,7 @@
 
     .availability-grid th {
       font-size: 11px;
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-weight: 600;
       padding: 6px 4px;
     }
@@ -271,7 +272,7 @@
       text-align: right;
       padding-right: 10px;
       font-size: 11.5px;
-      color: #8e8e91;
+      color: var(--armus-muted);
       white-space: nowrap;
     }
 
@@ -293,7 +294,7 @@
     .word-count {
       margin-top: 8px;
       font-size: 12px;
-      color: #77777b;
+      color: var(--armus-faint);
       text-align: right;
     }
 
@@ -313,7 +314,7 @@
       align-items: center;
       gap: 9px;
       font-size: 13px;
-      color: #c3c3c5;
+      color: var(--armus-muted);
       margin-bottom: 18px;
       cursor: pointer;
     }
@@ -331,7 +332,7 @@
     }
 
     .field input:disabled {
-      color: #77777b;
+      color: var(--armus-faint);
       cursor: not-allowed;
     }
 
@@ -358,14 +359,14 @@
       border: 1px solid var(--armus-border);
       border-radius: 12px;
       background: transparent;
-      color: #a3a3a6;
+      color: var(--armus-muted);
       font-size: 16px;
       cursor: pointer;
     }
 
     .remove-language-btn:hover {
       border-color: rgba(220, 90, 90, .5);
-      color: #f0a5a5;
+      color: #b3261e;
     }
 
     .add-language-btn {
@@ -397,13 +398,13 @@
     }
 
     .upload-box .upload-label {
-      color: #c3c3c5;
+      color: var(--armus-muted);
       font-size: 13px;
       font-weight: 600;
     }
 
     .upload-box .upload-note {
-      color: #6e6e72;
+      color: var(--armus-muted);
       font-size: 11px;
       margin-top: 6px;
     }
@@ -418,7 +419,7 @@
       border: 1px solid var(--armus-border);
       border-radius: 12px;
       font-size: 12px;
-      color: #c3c3c5;
+      color: var(--armus-muted);
     }
 
     .upload-preview img {
@@ -455,20 +456,20 @@
 
     .photo-preview-info .label {
       font-size: 12px;
-      color: #c3c3c5;
+      color: var(--armus-muted);
       font-weight: 600;
       margin-bottom: 4px;
     }
 
     .photo-preview-info .note {
       font-size: 11.5px;
-      color: #77777b;
+      color: var(--armus-faint);
       line-height: 1.6;
     }
 
     .upload-error {
       display: none;
-      color: #f0a5a5;
+      color: #b3261e;
       font-size: 12px;
       margin-top: 8px;
     }
@@ -485,7 +486,7 @@
       display: none;
       background: rgba(220, 90, 90, .1);
       border: 1px solid rgba(220, 90, 90, .35);
-      color: #f0a5a5;
+      color: #b3261e;
       border-radius: 12px;
       padding: 12px 14px;
       font-size: 12px;
@@ -520,7 +521,7 @@
     }
 
     .success p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       max-width: 400px;
       margin: 0 auto 26px;

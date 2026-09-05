@@ -23,7 +23,7 @@
       font-family: "Inter", sans-serif;
       background-color: var(--armus-bg);
       background-image: var(--armus-bg-glow);
-      color: #f4f4f2;
+      color: var(--armus-ink);
       min-height: 100vh;
     }
 
@@ -67,12 +67,12 @@
     .nav-links {
       display: flex;
       gap: 30px;
-      color: #a8a8aa;
+      color: var(--armus-muted);
       font-size: 14px;
     }
 
     .nav-links a:hover {
-      color: white;
+      color: var(--armus-ink);
     }
 
     .nav-buttons {
@@ -87,7 +87,7 @@
       border-radius: 12px;
       padding: 11px 18px;
       background: transparent;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       cursor: pointer;
       text-decoration: none;
@@ -95,12 +95,12 @@
 
     .nav-greeting {
       font-size: 13px;
-      color: #c7c7c7;
+      color: var(--armus-muted);
       margin-right: 4px;
     }
 
     .nav-greeting small {
-      color: #8f8f8f;
+      color: var(--armus-faint);
     }
 
     .btn-light {
@@ -122,7 +122,7 @@
 
     .page-head p {
       margin-top: 8px;
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 13.5px;
     }
 
@@ -131,7 +131,7 @@
       align-items: center;
       gap: 6px;
       margin-top: 4px !important;
-      color: #77777a !important;
+      color: var(--armus-muted) !important;
       font-size: 12px !important;
     }
 
@@ -170,14 +170,14 @@
       background: transparent;
       border: none;
       outline: none;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 14.5px;
       padding: 10px 14px;
     }
 
     .search-box input::placeholder {
-      color: #66666a;
+      color: var(--armus-faint);
     }
 
     /* TOP FILTER BAR (Preply-style dropdown pills, ARMUS theme) */
@@ -204,7 +204,7 @@
       border: 1px solid var(--armus-border);
       border-radius: 999px;
       padding: 9px 15px;
-      color: #d8d8da;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 12.5px;
       cursor: pointer;
@@ -234,7 +234,7 @@
       border: 1px solid var(--armus-border);
       border-radius: 14px;
       padding: 16px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, .45);
+      box-shadow: 0 20px 45px rgba(35, 26, 10, .16);
     }
 
     .filter-dropdown.open .filter-panel {
@@ -247,7 +247,7 @@
       gap: 9px;
       margin: 9px 0;
       font-size: 13px;
-      color: #c3c3c5;
+      color: var(--armus-ink);
       cursor: pointer;
     }
 
@@ -257,7 +257,7 @@
 
     .filter-price-label {
       font-size: 12px;
-      color: #c3c3c5;
+      color: var(--armus-muted);
       margin-bottom: 8px;
     }
 
@@ -280,13 +280,13 @@
 
     .price-slider-wrap input[type="range"]::-webkit-slider-runnable-track {
       height: 4px;
-      background: #303034;
+      background: var(--armus-border);
       border-radius: 2px;
     }
 
     .price-slider-wrap input[type="range"]::-moz-range-track {
       height: 4px;
-      background: #303034;
+      background: var(--armus-border);
       border-radius: 2px;
     }
 
@@ -320,7 +320,7 @@
       border-radius: 999px;
       padding: 9px 15px;
       font-size: 12.5px;
-      color: #d8d8da;
+      color: var(--armus-ink);
       cursor: pointer;
     }
 
@@ -334,12 +334,12 @@
       align-items: center;
       gap: 8px;
       font-size: 12.5px;
-      color: #8e8e91;
+      color: var(--armus-muted);
     }
 
     .sort-wrap select {
       background: var(--armus-panel);
-      color: white;
+      color: var(--armus-ink);
       border: 1px solid var(--armus-border);
       border-radius: 999px;
       padding: 9px 14px;
@@ -358,7 +358,7 @@
     }
 
     .results-count {
-      color: #89898c;
+      color: var(--armus-muted);
       font-size: 13px;
     }
 
@@ -383,7 +383,7 @@
     }
 
     .teacher-card:hover {
-      border-color: #6b5a34;
+      border-color: var(--armus-gold-2);
     }
 
     .avatar {
@@ -431,7 +431,7 @@
     .fav-btn {
       background: transparent;
       border: none;
-      color: #6b6b6f;
+      color: var(--armus-muted);
       font-size: 21px;
       cursor: pointer;
       line-height: 1;
@@ -444,13 +444,13 @@
     }
 
     .teacher-role {
-      color: #a5a5a9;
+      color: var(--armus-muted);
       font-size: 14.5px;
       margin-top: 6px;
     }
 
     .stats-line {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 12.5px;
       margin-top: 9px;
     }
@@ -464,7 +464,7 @@
 
     .tag {
       font-size: 11.5px;
-      color: #c8c8ca;
+      color: var(--armus-muted);
       border: 1px solid var(--armus-border);
       padding: 7px 12px;
       border-radius: 999px;
@@ -474,7 +474,7 @@
       margin-top: 16px;
       font-size: 13.5px;
       line-height: 1.6;
-      color: #a3a3a7;
+      color: var(--armus-muted);
       max-width: 60ch;
     }
 
@@ -506,7 +506,7 @@
     }
 
     .price span {
-      color: #77777b;
+      color: var(--armus-faint);
       font-size: 12.5px;
       font-weight: 400;
     }
@@ -529,7 +529,7 @@
 
     .msg-link {
       font-size: 12.5px;
-      color: #999;
+      color: var(--armus-muted);
       text-decoration: none;
     }
 
@@ -541,7 +541,7 @@
       display: none;
       padding: 50px;
       text-align: center;
-      color: #777;
+      color: var(--armus-muted);
       border: 1px dashed var(--armus-border);
       border-radius: 20px;
     }

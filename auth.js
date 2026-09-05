@@ -107,9 +107,9 @@ async function armusRenderNavAuth() {
       : '<a class="btn" href="student-dashboard.html">Panelim</a>';
 
     // students only - a clickable trigger that opens a tiny menu ("Para
-    // Ekle" / "İşlem Geçmişi"), always shown so there's a way to add money
-    // even at a zero balance. Styled inline since this nav is shared across
-    // every page and most pages don't otherwise have a wallet-badge class.
+    // Ekle" / "İşlem Geçmişi"). Currently unused while ARMUS_WALLET_ENABLED
+    // is false (see top of file) - cancellations grant a lesson credit
+    // (below) instead of wallet money for now.
     const walletBadge = (ARMUS_WALLET_ENABLED && session.role === "student")
       ? `<div style="position:relative;display:inline-block;">
           <button type="button" id="armusWalletTrigger" title="Cüzdan bakiyen" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--armus-border);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--armus-gold-text);white-space:nowrap;background:none;cursor:pointer;font-family:inherit;">
@@ -127,9 +127,36 @@ async function armusRenderNavAuth() {
         </div>`
       : "";
 
+    // students only - a plain badge (not clickable, nothing to spend it
+    // on directly from here) showing how many free lessons a cancellation
+    // has earned them. Hover shows which teacher(s) they're tied to.
+    let creditBadge = "";
+    if (session.role === "student") {
+      const { data: credits } = await armusSupabase
+        .from("lesson_credits")
+        .select("teacher_name")
+        .eq("student_id", session.id)
+        .eq("status", "available");
+
+      if (credits && credits.length > 0) {
+        const teacherList = credits.map((c) => c.teacher_name).join(", ");
+        creditBadge = `<span title="Kullanılabilir ders hakkın: ${teacherList}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--armus-border);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--armus-gold-text);white-space:nowrap;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+              <path d="M20 12v9H4v-9"></path>
+              <path d="M2 7h20v5H2z"></path>
+              <path d="M12 22V7"></path>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+            </svg>
+            ${credits.length} ders hakkın var
+          </span>`;
+      }
+    }
+
     el.innerHTML = `
       ${dashboardLink}
       ${walletBadge}
+      ${creditBadge}
       <span class="nav-greeting">Merhaba, ${firstName} <small>(${roleLabel})</small></span>
       <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
     `;

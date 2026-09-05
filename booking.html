@@ -23,7 +23,7 @@
       font-family: "Inter", sans-serif;
       background-color: var(--armus-bg);
       background-image: var(--armus-bg-glow);
-      color: #f4f4f2;
+      color: var(--armus-ink);
       line-height: 1.6;
     }
 
@@ -65,12 +65,12 @@
     }
 
     .back {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 13px;
     }
 
     .back:hover {
-      color: white;
+      color: var(--armus-ink);
     }
 
     /* NOT FOUND */
@@ -88,7 +88,7 @@
     }
 
     .not-found p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       margin-bottom: 26px;
     }
@@ -118,7 +118,7 @@
     }
 
     .login-gate p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       margin-bottom: 26px;
     }
@@ -136,7 +136,7 @@
     }
 
     .eyebrow {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 13px;
       margin-bottom: 10px;
     }
@@ -186,7 +186,7 @@
     }
 
     .teacher-summary-role {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 12px;
       margin-top: 3px;
     }
@@ -201,7 +201,7 @@
 
     .teacher-summary-price span {
       display: block;
-      color: #77777b;
+      color: var(--armus-faint);
       font-size: 11px;
       font-weight: 400;
       margin-top: 2px;
@@ -226,13 +226,13 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #1c1c1f;
+      background: var(--armus-ink);
       border: 1px solid var(--armus-border);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 11px;
-      color: #b6b6b8;
+      color: var(--armus-silver-1);
     }
 
     /* DATES */
@@ -254,11 +254,11 @@
       text-align: center;
       cursor: pointer;
       font-size: 12px;
-      color: #c7c7c9;
+      color: var(--armus-ink);
     }
 
     .date-pill .day-name {
-      color: #77777b;
+      color: var(--armus-faint);
       font-size: 10px;
       margin-bottom: 6px;
       display: block;
@@ -271,7 +271,7 @@
     }
 
     .date-pill:hover {
-      border-color: #6b5a34;
+      border-color: var(--armus-gold-2);
     }
 
     .date-pill.selected {
@@ -281,7 +281,7 @@
     }
 
     .date-pill.selected .day-name {
-      color: #555;
+      color: var(--armus-on-gold);
     }
 
     /* TIME SLOTS */
@@ -300,11 +300,11 @@
       text-align: center;
       cursor: pointer;
       font-size: 13px;
-      color: #dcdcdc;
+      color: var(--armus-ink);
     }
 
     .slot:hover {
-      border-color: #6b5a34;
+      border-color: var(--armus-gold-2);
     }
 
     .slot.selected {
@@ -321,7 +321,7 @@
     }
 
     .empty-hint {
-      color: #6e6e72;
+      color: var(--armus-muted);
       font-size: 13px;
     }
 
@@ -333,9 +333,9 @@
       border-radius: 12px;
       font-size: 13px;
       line-height: 1.6;
-      background: rgba(240, 165, 165, .08);
-      border: 1px solid rgba(240, 165, 165, .35);
-      color: #f0c5c5;
+      background: rgba(240, 165, 165, .12);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #b3261e;
     }
 
     .confirm-box {
@@ -352,7 +352,7 @@
       padding: 10px 0;
       border-bottom: 1px solid var(--armus-border-soft);
       font-size: 13px;
-      color: #99999c;
+      color: var(--armus-muted);
     }
 
     .confirm-row:last-of-type {
@@ -360,7 +360,7 @@
     }
 
     .confirm-row strong {
-      color: #ddd;
+      color: var(--armus-ink);
     }
 
     .payer-fields {
@@ -372,7 +372,7 @@
 
     .payer-fields label {
       font-size: 11.5px;
-      color: #99999c;
+      color: var(--armus-muted);
       margin-top: 8px;
     }
 
@@ -381,11 +381,11 @@
     }
 
     .payer-fields input {
-      background: rgba(255, 255, 255, .04);
+      background: rgba(20, 15, 5, .03);
       border: 1px solid var(--armus-border-soft);
       border-radius: 10px;
       padding: 11px 13px;
-      color: #f4f4f2;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 13.5px;
     }
@@ -411,7 +411,7 @@
 
     .small-note {
       text-align: center;
-      color: #66666a;
+      color: var(--armus-faint);
       font-size: 10px;
       margin-top: 13px;
     }
@@ -444,7 +444,7 @@
     }
 
     .success p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       margin-bottom: 30px;
     }
@@ -470,7 +470,7 @@
       border-radius: 12px;
       padding: 12px 20px;
       background: transparent;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 13px;
       cursor: pointer;
@@ -560,7 +560,7 @@
     <div class="step" id="timeStep" style="display: none;">
       <div class="step-title">
         <span class="step-number">2</span>
-        Saat seç <span style="color: #77777b; font-weight: 400; font-size: 12px;">(50 dakikalık ders)</span>
+        Saat seç <span style="color: var(--armus-faint); font-weight: 400; font-size: 12px;">(50 dakikalık ders)</span>
       </div>
       <div class="slot-grid" id="slotGrid"></div>
     </div>
@@ -582,13 +582,9 @@
         <span>Ücret</span>
         <strong id="confirmPrice"></strong>
       </div>
-      <div class="confirm-row" id="confirmWalletRow" style="display: none;">
-        <span>Cüzdanından</span>
-        <strong id="confirmWalletApplied" style="color: var(--armus-gold-text);"></strong>
-      </div>
-      <div class="confirm-row" id="confirmCardRow" style="display: none;">
-        <span>Kartla ödenecek</span>
-        <strong id="confirmCardAmount"></strong>
+      <div class="confirm-row" id="confirmCreditRow" style="display: none;">
+        <span>Ders hakkınla</span>
+        <strong id="confirmCreditApplied" style="color: var(--armus-gold-text);">Ücretsiz</strong>
       </div>
 
       <div class="payer-fields" id="payerFields">
@@ -599,7 +595,7 @@
       </div>
 
       <button class="confirm-btn" id="confirmBtn">Ödemeye Geç</button>
-      <div class="small-note" id="confirmError" style="display: none; color: #f0a5a5;"></div>
+      <div class="small-note" id="confirmError" style="display: none; color: #b3261e;"></div>
       <div class="small-note" id="confirmNote">Güvenli ödeme sayfasına yönlendirileceksin</div>
     </div>
 
@@ -863,11 +859,23 @@
         });
       }
 
-      // Temporarily disabled - wallet is on hold for now, so checkout
-      // always charges the full price to the card, even if the student
-      // has a balance. See ARMUS_WALLET_ENABLED in auth.js.
-      const walletBalance = 0;
-      let cardAmount = teacher.price;
+      // A lesson credit (from a cancellation, see cancel-booking) covers
+      // this booking fully if it's tied to this same teacher, or if it's
+      // any credit at all and this is a trial lesson - see migration_28.sql
+      // and create-payment, which re-checks this server-side regardless of
+      // what's computed here.
+      const { data: availableCredits } = await armusSupabase
+        .from("lesson_credits")
+        .select("*")
+        .eq("student_id", session.id)
+        .eq("status", "available");
+
+      const creditApplies = !!(availableCredits && availableCredits.length > 0 && (
+        availableCredits.some((c) => c.teacher_id === teacher.id) ||
+        bookingType === "trial"
+      ));
+
+      let cardAmount = creditApplies ? 0 : teacher.price;
 
       function showConfirm() {
 
@@ -876,19 +884,10 @@
         document.getElementById("confirmTime").textContent = armusFormatTimeRange(selectedTime);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
 
-        const walletApplied = Math.min(walletBalance, teacher.price);
-        cardAmount = Math.round((teacher.price - walletApplied) * 100) / 100;
-
-        if (walletApplied > 0) {
-          document.getElementById("confirmWalletRow").style.display = "flex";
-          document.getElementById("confirmWalletApplied").textContent = `-₺${walletApplied}`;
-          document.getElementById("confirmCardRow").style.display = "flex";
-          document.getElementById("confirmCardAmount").textContent = `₺${cardAmount}`;
-        }
-
-        if (cardAmount <= 0) {
+        if (creditApplies) {
+          document.getElementById("confirmCreditRow").style.display = "flex";
           document.getElementById("payerFields").style.display = "none";
-          document.getElementById("confirmNote").textContent = "Kart bilgisi gerekmiyor, cüzdanından ödenecek";
+          document.getElementById("confirmNote").textContent = "Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak";
           confirmBtn.textContent = "Rezervasyonu Tamamla";
         }
 

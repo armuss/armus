@@ -23,7 +23,7 @@
       font-family: "Inter", sans-serif;
       background-color: var(--armus-bg);
       background-image: var(--armus-bg-glow);
-      color: #f4f4f2;
+      color: var(--armus-ink);
       min-height: 100vh;
     }
 
@@ -61,7 +61,7 @@
     }
 
     .gate p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       margin-bottom: 22px;
       max-width: 360px;
@@ -110,7 +110,7 @@
       font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.5px;
-      color: #8e8e91;
+      color: var(--armus-muted);
       padding: 0 10px 20px;
     }
 
@@ -122,7 +122,7 @@
       text-align: left;
       background: transparent;
       border: none;
-      color: #b8b8bb;
+      color: var(--armus-muted);
       font-family: inherit;
       font-size: 13.5px;
       padding: 11px 12px;
@@ -164,7 +164,7 @@
       width: 100%;
       background: transparent;
       border: 1px solid var(--armus-border);
-      color: #b8b8bb;
+      color: var(--armus-muted);
       font-family: inherit;
       font-size: 12.5px;
       padding: 10px 12px;
@@ -195,7 +195,7 @@
 
     h3 {
       font-size: 14px;
-      color: #d8d8da;
+      color: var(--armus-ink);
       margin: 30px 0 12px;
     }
 
@@ -204,7 +204,7 @@
     }
 
     .section-hint {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 12.5px;
       line-height: 1.7;
       margin-bottom: 20px;
@@ -234,7 +234,7 @@
     }
 
     .stat-card span {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 11.5px;
     }
 
@@ -257,7 +257,7 @@
     }
 
     th {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.4px;
@@ -269,7 +269,7 @@
     }
 
     .empty-note {
-      color: #6e6e72;
+      color: var(--armus-muted);
       font-size: 13px;
       padding: 16px 0;
     }
@@ -317,7 +317,7 @@
     }
 
     .app-email {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 12px;
       margin-top: 2px;
     }
@@ -329,7 +329,7 @@
       border-radius: 999px;
       padding: 3px 9px;
       border: 1px solid var(--armus-border);
-      color: #b6b6b8;
+      color: var(--armus-muted);
     }
 
     .app-badge.pending {
@@ -339,17 +339,17 @@
 
     .app-badge.approved {
       border-color: #4caf7d;
-      color: #8fd6ae;
+      color: #1f7a4d;
     }
 
     .app-badge.rejected {
       border-color: rgba(220, 90, 90, .5);
-      color: #f0a5a5;
+      color: #b3261e;
     }
 
     .app-badge.none {
       border-color: var(--armus-border);
-      color: #77777b;
+      color: var(--armus-faint);
     }
 
     .app-actions {
@@ -366,7 +366,7 @@
       border-radius: 9px;
       padding: 8px 13px;
       background: transparent;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 12px;
       cursor: pointer;
@@ -382,7 +382,7 @@
 
     .btn-reject {
       border-color: rgba(220, 90, 90, .5);
-      color: #f0a5a5;
+      color: #b3261e;
     }
 
     .app-details {
@@ -399,12 +399,12 @@
       font-size: 10.5px;
       text-transform: uppercase;
       letter-spacing: .5px;
-      color: #77777b;
+      color: var(--armus-faint);
       margin-bottom: 5px;
     }
 
     .app-details p {
-      color: #c3c3c5;
+      color: var(--armus-muted);
       line-height: 1.7;
     }
 
@@ -469,7 +469,7 @@
     }
 
     .avail-day .day-label {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-weight: 700;
       margin-bottom: 4px;
     }
@@ -480,7 +480,7 @@
     }
 
     .avail-day .none {
-      color: #55555c;
+      color: var(--armus-muted);
     }
 
     /* ---- search / toolbar / row actions ---- */
@@ -492,14 +492,14 @@
       border: 1px solid var(--armus-border);
       border-radius: 10px;
       padding: 10px 14px;
-      color: #f4f4f2;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 13px;
       margin-bottom: 18px;
     }
 
     .admin-search::placeholder {
-      color: #6e6e72;
+      color: var(--armus-muted);
     }
 
     .panel-toolbar {
@@ -567,7 +567,7 @@
     .detail-head h3 {
       margin: 0;
       font-size: 18px;
-      color: #f4f4f2;
+      color: var(--armus-ink);
     }
 
     /* ---- live pulse feed ---- */
@@ -589,7 +589,7 @@
       padding: 10px 0;
       border-bottom: 1px solid var(--armus-border-soft);
       font-size: 13px;
-      color: #d8d8da;
+      color: var(--armus-ink);
     }
 
     .pulse-item:last-child {
@@ -597,14 +597,14 @@
     }
 
     .pulse-time {
-      color: #6e6e72;
+      color: var(--armus-muted);
       font-size: 11px;
       flex-shrink: 0;
       white-space: nowrap;
     }
 
     .pulse-empty {
-      color: #6e6e72;
+      color: var(--armus-muted);
       font-size: 13px;
       padding: 16px 0;
     }
@@ -627,7 +627,7 @@
     }
 
     .testimonial-preview .tp-quote {
-      color: #aaa;
+      color: var(--armus-muted);
       font-size: 12.5px;
       line-height: 1.6;
       margin-bottom: 12px;
@@ -641,7 +641,7 @@
     }
 
     .testimonial-preview .tp-location {
-      color: #777;
+      color: var(--armus-muted);
       font-size: 10.5px;
     }
 
@@ -649,7 +649,7 @@
 
     .app-badge.dispute-open {
       border-color: rgba(220, 90, 90, .5);
-      color: #f0a5a5;
+      color: #b3261e;
     }
 
     .app-badge.dispute-in_progress {
@@ -659,7 +659,7 @@
 
     .app-badge.dispute-resolved {
       border-color: #4caf7d;
-      color: #8fd6ae;
+      color: #1f7a4d;
     }
 
     /* ---- keyboard hint chips ---- */
@@ -672,7 +672,7 @@
       padding: 1px 6px;
       font-family: inherit;
       font-size: 11px;
-      color: #d8d8da;
+      color: var(--armus-ink);
     }
 
     .app-card.kbd-focus {
@@ -690,7 +690,7 @@
       margin-bottom: 20px;
       font-size: 13.5px;
       line-height: 1.7;
-      color: #e6e6e4;
+      color: var(--armus-ink);
     }
 
     /* ---- milestone confetti ---- */
@@ -732,7 +732,7 @@
       font-weight: 800;
       text-anchor: middle;
       dominant-baseline: central;
-      fill: #f4f4f2;
+      fill: var(--armus-ink);
     }
 
     /* ---- demand heatmap ---- */
@@ -751,14 +751,14 @@
 
     .heatmap-grid .hm-label {
       font-size: 10.5px;
-      color: #8e8e91;
+      color: var(--armus-muted);
       display: flex;
       align-items: center;
     }
 
     .heatmap-grid .hm-head {
       font-size: 9.5px;
-      color: #6e6e72;
+      color: var(--armus-muted);
       text-align: center;
       padding-bottom: 4px;
     }
@@ -819,7 +819,7 @@
     }
 
     .flag-row-label span {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 12px;
     }
 
@@ -888,7 +888,7 @@
       background: transparent;
       border: none;
       border-bottom: 1px solid var(--armus-border-soft);
-      color: #f4f4f2;
+      color: var(--armus-ink);
       font-family: inherit;
       font-size: 15px;
       padding: 16px 18px;
@@ -918,7 +918,7 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: .4px;
-      color: #8e8e91;
+      color: var(--armus-muted);
       border: 1px solid var(--armus-border);
       border-radius: 5px;
       padding: 2px 6px;
@@ -926,12 +926,12 @@
     }
 
     .palette-item .pi-sub {
-      color: #8e8e91;
+      color: var(--armus-muted);
       font-size: 11.5px;
     }
 
     .palette-empty {
-      color: #6e6e72;
+      color: var(--armus-muted);
       font-size: 13px;
       padding: 16px 12px;
     }
@@ -940,7 +940,7 @@
       border-top: 1px solid var(--armus-border-soft);
       padding: 8px 14px;
       font-size: 11px;
-      color: #6e6e72;
+      color: var(--armus-muted);
     }
 
     @media (max-width: 860px) {
@@ -1052,7 +1052,7 @@
         <div class="stat-grid" id="overviewStats"></div>
         <h3>Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
-        <h3>Canlı Akış <span style="color:#4caf7d;font-size:10px;vertical-align:middle;">● CANLI</span></h3>
+        <h3>Canlı Akış <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;">● CANLI</span></h3>
         <p class="section-hint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
         <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
@@ -1065,7 +1065,7 @@
         <p class="section-hint" style="margin-top: -12px;">Klavye: bekleyen başvurular arasında <kbd>j</kbd>/<kbd>k</kbd> ile gezin, <kbd>a</kbd> onayla, <kbd>r</kbd> reddet. Her yerden <kbd>Ctrl</kbd>+<kbd>K</kbd> ile hızlı ara.</p>
 
         <div id="atRiskSection" style="display: none;">
-          <h3 style="color: #f0a5a5;">⚠️ Riskli öğretmenler</h3>
+          <h3 style="color: #b3261e;">⚠️ Riskli öğretmenler</h3>
           <p class="section-hint">Rezervasyonu duran, uzun süredir hiç ders almamış ya da son değerlendirmeleri düşen onaylı öğretmenler - erken müdahale için.</p>
           <div id="atRiskList"></div>
         </div>
@@ -1187,8 +1187,8 @@
           </div>
           <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;"></textarea>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-            <label style="font-size:12.5px;color:#b8b8bb;">Puan:
-              <select id="newTRating" style="margin-left:6px;background:var(--armus-panel);color:#f4f4f2;border:1px solid var(--armus-border);border-radius:8px;padding:6px 8px;font-family:inherit;">
+            <label style="font-size:12.5px;color:var(--armus-muted);">Puan:
+              <select id="newTRating" style="margin-left:6px;background:var(--armus-panel);color:var(--armus-ink);border:1px solid var(--armus-border);border-radius:8px;padding:6px 8px;font-family:inherit;">
                 <option value="5">5</option>
                 <option value="4">4</option>
                 <option value="3">3</option>
@@ -1200,7 +1200,7 @@
           <button class="btn btn-approve" id="addTestimonialBtn">Ekle</button>
 
           <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--armus-border-soft);">
-            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: #77777b; margin-bottom: 12px;">Canlı önizleme - ana sayfada böyle görünecek</h4>
+            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--armus-faint); margin-bottom: 12px;">Canlı önizleme - ana sayfada böyle görünecek</h4>
             <div id="testimonialPreview" class="testimonial-preview"></div>
           </div>
         </div>
@@ -1266,12 +1266,12 @@
         </p>
         <div class="app-card">
           <textarea class="admin-search" id="announcementMessage" placeholder="Örn: Bugün bakım çalışması var, dersler etkilenmeyecek." style="min-height: 70px; resize: vertical; margin-bottom: 12px;"></textarea>
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #b8b8bb; margin-bottom: 16px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--armus-muted); margin-bottom: 16px;">
             <input type="checkbox" id="announcementActive" style="width: 16px; height: 16px;">
             Aktif (sitede göster)
           </label>
           <button class="btn btn-approve" id="saveAnnouncementBtn">Kaydet</button>
-          <span id="announcementSavedNote" style="margin-left: 10px; color: #8fd6ae; font-size: 12.5px; display: none;">Kaydedildi ✓</span>
+          <span id="announcementSavedNote" style="margin-left: 10px; color: #1f7a4d; font-size: 12.5px; display: none;">Kaydedildi ✓</span>
         </div>
       </div>
 
@@ -1371,7 +1371,7 @@
     function renderAvailabilityGrid(weeklyAvailability) {
 
       if (!Array.isArray(weeklyAvailability)) {
-        return '<p style="color:#77777b;font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
+        return '<p style="color:var(--armus-faint);font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
       }
 
       const days = DAY_COLUMNS.map(([label, dayIndex]) => {
@@ -1661,7 +1661,7 @@
           const isPast = armusIsBookingPast(b);
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
-            ? `İptal edildi${b.refunded ? " · cüzdana eklendi" : ""}`
+            ? `İptal edildi${b.refunded ? " · ders hakkı eklendi" : ""}`
             : isPast
               ? "—"
               : `<button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button>`;
@@ -1681,7 +1681,7 @@
 
       body.querySelectorAll("[data-cancel-booking]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse tutar öğrencinin cüzdanına eklenir.")) return;
+          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.")) return;
           button.disabled = true;
           button.textContent = "İptal ediliyor...";
           const bookingId = button.dataset.cancelBooking;
@@ -1693,7 +1693,7 @@
               cancelled.refunded = result.refunded;
             }
             await armusLogAdminAction("booking_cancel", "booking", bookingId,
-              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - cüzdana eklendi" : ""}` : bookingId);
+              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - ders hakkı eklendi" : ""}` : bookingId);
             renderAllFromState();
           } else {
             button.disabled = false;
@@ -1843,8 +1843,8 @@
         const y = chartHeight - h;
         return `
           <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
-          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:#d8d8da">${count}</text>
-          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:#8e8e91">${months[i].label}</text>
+          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">${count}</text>
+          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
         `;
       }).join("");
 
@@ -2395,7 +2395,7 @@
           <td>${row.completedCount}</td>
           <td>${row.hours}</td>
           <td>₺${row.gross}</td>
-          <td>%${row.tier.rate} <span style="color:#8e8e91;">(${row.tier.range})</span></td>
+          <td>%${row.tier.rate} <span style="color:var(--armus-muted);">(${row.tier.range})</span></td>
           <td>₺${row.commission}</td>
           <td>₺${row.payout}</td>
         `;
@@ -2539,7 +2539,7 @@
     function renderHealthGauge(score) {
       const radius = 18, circumference = 2 * Math.PI * radius;
       const offset = circumference * (1 - score / 100);
-      const color = score >= 75 ? "#8fd6ae" : score >= 45 ? "var(--armus-gold-text)" : "#f0a5a5";
+      const color = score >= 75 ? "#1f7a4d" : score >= 45 ? "var(--armus-gold-text)" : "#b3261e";
       return `
         <svg class="health-gauge" viewBox="0 0 46 46">
           <title>Sağlık skoru: ${score}/100</title>
@@ -2691,7 +2691,7 @@
     function fireConfetti() {
       const layer = document.getElementById("confettiLayer");
       if (!layer) return;
-      const colors = ["#d4af6a", "#f0e6d2", "#8fd6ae", "#f0a5a5", "#b7bac3"];
+      const colors = ["#d4af6a", "#c9424a", "#2e8b7d", "#9c3fb5", "#4a3f2a"];
       for (let i = 0; i < 60; i++) {
         const piece = document.createElement("div");
         piece.className = "confetti-piece";
