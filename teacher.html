@@ -65,12 +65,12 @@
     }
 
     .back {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 13px;
     }
 
     .back:hover {
-      color: white;
+      color: var(--armus-ink);
     }
 
     /* PROFILE HEADER */
@@ -122,7 +122,7 @@
     }
 
     .role {
-      color: #99999c;
+      color: var(--armus-muted);
       margin-top: 8px;
       font-size: 14px;
     }
@@ -132,7 +132,7 @@
       margin-top: 10px;
       background: rgba(76, 175, 125, .12);
       border: 1px solid rgba(76, 175, 125, .5);
-      color: #8fd6ae;
+      color: #1f7a4d;
       font-size: 11px;
       font-weight: 700;
       border-radius: 999px;
@@ -145,7 +145,7 @@
     }
 
     .rating span {
-      color: #777;
+      color: var(--armus-muted);
       margin-left: 8px;
     }
 
@@ -160,7 +160,7 @@
       border: 1px solid var(--armus-silver-border);
       border-radius: 999px;
       padding: 6px 11px;
-      color: #c7c7c9;
+      color: var(--armus-muted);
       font-size: 11px;
     }
 
@@ -188,7 +188,7 @@
 
     .price span {
       font-size: 12px;
-      color: #777;
+      color: var(--armus-muted);
       font-weight: 400;
     }
 
@@ -196,7 +196,7 @@
       background: transparent;
       border: 1px solid var(--armus-border);
       border-radius: 10px;
-      color: #8f8f92;
+      color: var(--armus-muted);
       font-size: 18px;
       line-height: 1;
       cursor: pointer;
@@ -210,7 +210,7 @@
 
     .availability {
       margin-top: 10px;
-      color: #8f8f92;
+      color: var(--armus-muted);
       font-size: 12px;
     }
 
@@ -234,7 +234,7 @@
       border: 1px solid var(--armus-silver-border-strong);
       border-radius: 12px;
       background: transparent;
-      color: white;
+      color: var(--armus-ink);
       font-family: inherit;
       cursor: pointer;
     }
@@ -246,7 +246,7 @@
 
     .small-note {
       text-align: center;
-      color: #66666a;
+      color: var(--armus-faint);
       font-size: 10px;
       margin-top: 13px;
     }
@@ -271,7 +271,7 @@
     }
 
     .description {
-      color: #a1a1a4;
+      color: var(--armus-muted);
       font-size: 14px;
       line-height: 1.9;
     }
@@ -307,7 +307,7 @@
     }
 
     .stat span {
-      color: #777;
+      color: var(--armus-muted);
       font-size: 11px;
     }
 
@@ -338,7 +338,7 @@
 
     .review-text {
       margin-top: 8px;
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 13px;
     }
 
@@ -362,7 +362,7 @@
       justify-content: space-between;
       padding: 10px 0;
       border-bottom: 1px solid var(--armus-border-soft);
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 12px;
     }
 
@@ -371,7 +371,7 @@
     }
 
     .side-item strong {
-      color: #ddd;
+      color: var(--armus-ink);
     }
 
     /* NOT FOUND */
@@ -389,7 +389,7 @@
     }
 
     .not-found p {
-      color: #99999c;
+      color: var(--armus-muted);
       font-size: 14px;
       margin-bottom: 26px;
     }
@@ -841,7 +841,7 @@
           item.className = "side-item";
           item.innerHTML = slots.length
             ? `<span>${label}</span><strong>${hours} saat müsait</strong>`
-            : `<span>${label}</span><strong style="color:#55555c;font-weight:400;">Müsait değil</strong>`;
+            : `<span>${label}</span><strong style="color:var(--armus-muted);font-weight:400;">Müsait değil</strong>`;
 
           schedulePreview.appendChild(item);
         });
