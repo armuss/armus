@@ -35,3 +35,10 @@
   /* flat background on purpose - no visible gradient/glow */
   --armus-bg-glow: none;
 }
+
+/* big display headings + the wordmark use a serif, like the
+   EnglishMaster reference - everything else (nav, body, buttons,
+   card titles) stays on Inter */
+h1, h2, .brand, .logo {
+  font-family: "Playfair Display", Georgia, serif;
+}

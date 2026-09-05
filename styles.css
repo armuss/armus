@@ -35,8 +35,8 @@ body {
   backdrop-filter: blur(16px);
 }
 .brand {
-  font-weight: 800;
-  font-size: 24px;
+  font-weight: 900;
+  font-size: 30px;
   letter-spacing: -1px;
   text-decoration: none;
   background: var(--armus-gold-gradient);
@@ -754,7 +754,7 @@ body {
     font-size: 12px;
   }
   .brand {
-    font-size: 19px;
+    font-size: 24px;
   }
   .hero {
     padding-top: 50px;
