@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hakkımızda | ARMUS</title>
+  <meta name="description" content="ARMUS, Türkçe konuşan öğrencileri doğru İngilizce öğretmenleriyle buluşturan bir platform. Misyonumuzu ve değerlerimizi öğren.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--armus-gold-text);
+      text-decoration: underline;
+    }
+
+    .container {
+      width: min(860px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(860px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .back {
+      color: var(--armus-muted);
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: var(--armus-ink);
+    }
+
+    main.container {
+      padding: 50px 0 100px;
+    }
+
+    .eyebrow {
+      color: var(--armus-muted);
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(30px, 4.5vw, 42px);
+      letter-spacing: -1.2px;
+      line-height: 1.1;
+      max-width: 18ch;
+      margin-bottom: 18px;
+    }
+
+    .intro {
+      color: var(--armus-muted);
+      font-size: 15.5px;
+      max-width: 60ch;
+      margin-bottom: 48px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 56px;
+    }
+
+    .stat-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 16px;
+      padding: 20px 16px;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--armus-gold-text);
+      margin-bottom: 4px;
+    }
+
+    .stat-card span {
+      font-size: 12.5px;
+      color: var(--armus-muted);
+    }
+
+    section {
+      margin-bottom: 52px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: var(--armus-muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 24px;
+      letter-spacing: -0.6px;
+      margin-bottom: 14px;
+    }
+
+    section > p {
+      color: var(--armus-muted);
+      font-size: 15px;
+      max-width: 66ch;
+    }
+
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .value-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .value-card .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      margin-bottom: 14px;
+    }
+
+    .value-card h3 {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .value-card p {
+      color: var(--armus-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .teacher-banner {
+      background: var(--armus-gold-gradient);
+      border-radius: 22px;
+      padding: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .teacher-banner h2 {
+      color: var(--armus-on-gold);
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .teacher-banner p {
+      color: var(--armus-on-gold);
+      opacity: 0.75;
+      font-size: 13.5px;
+      margin: 0;
+    }
+
+    .teacher-banner .btn {
+      flex-shrink: 0;
+      display: inline-block;
+      background: var(--armus-on-gold);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13.5px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+      .stat-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .value-grid {
+        grid-template-columns: 1fr;
+      }
+      .teacher-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="index.html" class="back">← Ana sayfa</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="eyebrow">HAKKIMIZDA</div>
+    <h1>İngilizce öğrenmenin daha iyi bir yolunu kuruyoruz.</h1>
+    <p class="intro">
+      ARMUS, Türkçe konuşan öğrencileri doğru İngilizce öğretmeniyle
+      buluşturan bir platform. Kalabalık sınıflar ya da tek tip müfredat
+      yerine, senin hedefine, seviyene ve bütçene göre seçtiğin bir
+      öğretmenle birebir ilerliyorsun.
+    </p>
+
+    <div class="stat-grid">
+      <div class="stat-card"><strong>10.000+</strong><span>aktif öğrenci</span></div>
+      <div class="stat-card"><strong>500+</strong><span>onaylı öğretmen</span></div>
+      <div class="stat-card"><strong>%96</strong><span>öğretmenle pratiğin faydalı bulunma oranı</span></div>
+      <div class="stat-card"><strong>81</strong><span>ilden öğrenci ve öğretmen</span></div>
+    </div>
+
+    <section>
+      <div class="section-label">Misyonumuz</div>
+      <h2>Herkes için ulaşılabilir, kişisel İngilizce eğitimi.</h2>
+      <p>
+        İyi bir öğretmenle çalışmak İngilizce öğrenmenin en hızlı yolu -
+        ama Türkiye'de doğru öğretmeni bulmak genelde tesadüfe kalıyor.
+        ARMUS'u, öğrencilerin hedefine göre öğretmen seçebildiği, ilk
+        dersten önce deneme dersiyle uyumu test edebildiği ve istediği
+        zaman ders alabildiği bir platform olarak kurduk.
+      </p>
+    </section>
+
+    <section>
+      <div class="section-label">Değerlerimiz</div>
+      <h2>Bizi biz yapan üç şey.</h2>
+      <div class="value-grid">
+        <div class="value-card">
+          <div class="icon">🎯</div>
+          <h3>Kişiselleştirilmiş eşleşme</h3>
+          <p>Seviyene, hedefine ve bütçene uygun öğretmeni bulman için filtreler ve deneme dersi sunuyoruz - rastgele bir sınıfa değil, doğru kişiyle eşleşiyorsun.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">🤝</div>
+          <h3>Şeffaf fiyatlandırma</h3>
+          <p>Öğretmenler kendi fiyatını belirler, komisyon oranı verdiği ders saatine göre şeffafça düşer. Öğrenci tarafında gizli ücret yok.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">📈</div>
+          <h3>Kanıtlanmış ilerleme</h3>
+          <p>Ders geçmişi, kelime kasan ve konuşma güven takibiyle ilerlemeni gerçekten görebiliyorsun - sadece "ders aldım" değil, ne kadar geliştiğini de.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="teacher-banner">
+      <div>
+        <h2>İngilizce öğretiyor musun?</h2>
+        <p>Kendi fiyatını belirle, kendi programını oluştur ve ARMUS'ta yeni öğrenciler bul.</p>
+      </div>
+      <a class="btn" href="register.html?role=teacher">Öğretmen Ol →</a>
+    </div>
+
+  </main>
+
+</body>
+</html>
