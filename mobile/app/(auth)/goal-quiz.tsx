@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
+import Logo from '../../components/Logo';
 import { colors, fonts, goldGradient, radius } from '../../lib/theme';
 
 type CountryOption = { value: string; label: string; flag: string };
@@ -101,10 +102,10 @@ const LANGUAGE_OPTIONS_ALL = [...LANGUAGE_OPTIONS_BASE, 'Almanca', 'Fransızca',
 const DAY_OPTIONS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
 const TIME_OPTIONS = [
-  { value: 'morning', label: 'Sabah', icon: '☀️' },
-  { value: 'afternoon', label: 'Öğleden sonra', icon: '🌤️' },
-  { value: 'evening', label: 'Akşam', icon: '🌇' },
-  { value: 'night', label: 'Gece', icon: '🌙' },
+  { value: 'morning', label: 'Sabah' },
+  { value: 'afternoon', label: 'Öğleden sonra' },
+  { value: 'evening', label: 'Akşam' },
+  { value: 'night', label: 'Gece' },
 ];
 
 const BUDGET_OPTIONS = ['₺400 – ₺600', '₺600 – ₺800', '₺800 – ₺1000', '₺1000+'];
@@ -135,10 +136,10 @@ function recapEntries(a: Answers): string[] {
   return entries;
 }
 
-function Illustration({ emoji }: { emoji: string }) {
+function Illustration() {
   return (
     <View style={styles.illustration}>
-      <Text style={styles.illustrationEmoji}>{emoji}</Text>
+      <Logo size={34} />
     </View>
   );
 }
@@ -287,7 +288,7 @@ export default function GoalQuiz() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {step === 'goal' && (
           <>
-            <Illustration emoji="🎯" />
+            <Illustration />
             <Text style={styles.title}>Hedefin ne?</Text>
             <View style={styles.options}>
               {GOAL_OPTIONS.map((o) => (
@@ -304,7 +305,7 @@ export default function GoalQuiz() {
 
         {step === 'timeline' && (
           <>
-            <Illustration emoji="📈" />
+            <Illustration />
             <Text style={styles.title}>Bu hedefe ne zaman ulaşmak istersin?</Text>
             <View style={styles.options}>
               {TIMELINE_OPTIONS.map((o) => (
@@ -321,7 +322,7 @@ export default function GoalQuiz() {
 
         {step === 'industry' && (
           <>
-            <Illustration emoji="💼" />
+            <Illustration />
             <Text style={styles.title}>Hangi sektörde çalışıyorsun?</Text>
             <Text style={styles.subtitle}>Bu, sana en uygun öğretmeni önermemize yardımcı olur.</Text>
             <View style={styles.options}>
@@ -344,7 +345,7 @@ export default function GoalQuiz() {
 
         {step === 'jobTitle' && (
           <>
-            <Illustration emoji="🪪" />
+            <Illustration />
             <Text style={styles.title}>Ünvanın veya pozisyonun ne?</Text>
             <Text style={styles.subtitle}>Birkaç kelimeyle anlat</Text>
             <TextInput
@@ -360,7 +361,7 @@ export default function GoalQuiz() {
 
         {step === 'skills' && (
           <>
-            <Illustration emoji="🚀" />
+            <Illustration />
             <Text style={styles.title}>Hangi kariyer becerilerini geliştirmek istersin?</Text>
             <View style={styles.chipRow}>
               {SKILL_OPTIONS.map((o) => (
@@ -377,7 +378,7 @@ export default function GoalQuiz() {
 
         {step === 'topics' && (
           <>
-            <Illustration emoji="📖" />
+            <Illustration />
             <Text style={styles.title}>Odaklanmak istediğin başka konular var mı?</Text>
             <View style={styles.chipRow}>
               {(showAllTopics ? TOPIC_OPTIONS_ALL : TOPIC_OPTIONS_BASE).map((o) => (
@@ -399,7 +400,7 @@ export default function GoalQuiz() {
 
         {step === 'level' && (
           <>
-            <Illustration emoji="📘" />
+            <Illustration />
             <Text style={styles.title}>İngilizce seviyen nedir?</Text>
             <View style={styles.options}>
               {LEVEL_OPTIONS.map((o) => (
@@ -416,7 +417,7 @@ export default function GoalQuiz() {
 
         {step === 'teachingStyle' && (
           <>
-            <Illustration emoji="💬" />
+            <Illustration />
             <Text style={styles.title}>Senin için en iyi öğretim tarzı hangisi?</Text>
             <Text style={styles.subtitle}>
               En sevdiğin <Text style={styles.subtitleAccent}>{MAX_STYLES}</Text> özelliği seç.
@@ -436,7 +437,7 @@ export default function GoalQuiz() {
 
         {step === 'tutorCountry' && (
           <>
-            <Illustration emoji="🌍" />
+            <Illustration />
             <Text style={styles.title}>Öğretmenin hangi ülkeden olmasını istersin?</Text>
             <View style={styles.toggleRow}>
               <Text style={styles.toggleLabel}>Sadece anadili İngilizce olanlar</Text>
@@ -467,7 +468,7 @@ export default function GoalQuiz() {
 
         {step === 'otherLanguages' && (
           <>
-            <Illustration emoji="🗣️" />
+            <Illustration />
             <Text style={styles.title}>Öğretmeninin konuşmasını istediğin başka diller var mı?</Text>
             <View style={styles.chipRow}>
               {(showAllLanguages ? LANGUAGE_OPTIONS_ALL : LANGUAGE_OPTIONS_BASE).map((o) => (
@@ -489,7 +490,7 @@ export default function GoalQuiz() {
 
         {step === 'schedule' && (
           <>
-            <Illustration emoji="🗓️" />
+            <Illustration />
             <Text style={styles.title}>Ne zaman ders alabilirsin?</Text>
 
             <Text style={styles.sectionLabel}>Günler</Text>
@@ -504,7 +505,6 @@ export default function GoalQuiz() {
               {TIME_OPTIONS.map((o) => (
                 <Chip
                   key={o.value}
-                  icon={o.icon}
                   label={o.label}
                   selected={answers.times.includes(o.value)}
                   onPress={() => toggleMulti('times', o.value)}
@@ -516,7 +516,7 @@ export default function GoalQuiz() {
 
         {step === 'budget' && (
           <>
-            <Illustration emoji="💰" />
+            <Illustration />
             <Text style={styles.title}>Ders başına bütçen ne kadar?</Text>
             <Text style={styles.subtitle}>50 dakikalık bir ders için</Text>
             <View style={styles.options}>
@@ -534,7 +534,7 @@ export default function GoalQuiz() {
 
         {step === 'futureSubjects' && (
           <>
-            <Illustration emoji="🧭" />
+            <Illustration />
             <Text style={styles.title}>İleride başka bir dil öğrenmeyi düşünür müsün?</Text>
             <Text style={styles.subtitle}>Bu tamamen opsiyonel - şu an sadece ilgini not ediyoruz.</Text>
             <View style={styles.chipRow}>
@@ -557,7 +557,7 @@ export default function GoalQuiz() {
 
         {step === 'extraNotes' && (
           <>
-            <Illustration emoji="✨" />
+            <Illustration />
             <Text style={styles.title}>Sana en uygun öğretmeni bulmamıza yardımcı olacak başka bir şey var mı?</Text>
             <Text style={styles.subtitle}>Eşleşmeni daha da iyileştirmek için bunu kullanacağız.</Text>
 
@@ -648,9 +648,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 28,
-  },
-  illustrationEmoji: {
-    fontSize: 72,
   },
   title: {
     fontFamily: fonts.displayBlack,

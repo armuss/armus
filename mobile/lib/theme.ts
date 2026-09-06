@@ -36,13 +36,13 @@ export const silverGradient = [colors.silver1, colors.silver2, colors.silver3] a
 export const silverGradientLight = ['#fbfbfa', '#eeece7', '#e1ddd6'] as const;
 
 export const fonts = {
-  display: 'PlayfairDisplay_800ExtraBold',
-  displayBlack: 'PlayfairDisplay_900Black',
-  body: 'Inter_400Regular',
-  bodyMedium: 'Inter_500Medium',
-  bodySemibold: 'Inter_600SemiBold',
-  bodyBold: 'Inter_700Bold',
-  bodyExtraBold: 'Inter_800ExtraBold',
+  display: 'Poppins_800ExtraBold',
+  displayBlack: 'Poppins_900Black',
+  body: 'Nunito_400Regular',
+  bodyMedium: 'Nunito_500Medium',
+  bodySemibold: 'Nunito_600SemiBold',
+  bodyBold: 'Nunito_700Bold',
+  bodyExtraBold: 'Nunito_800ExtraBold',
 };
 
 export const radius = {
