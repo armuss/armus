@@ -30,6 +30,10 @@ export const colors = {
 };
 
 export const goldGradient = [colors.gold1, colors.gold2, colors.gold3] as const;
+export const silverGradient = [colors.silver1, colors.silver2, colors.silver3] as const;
+// A lighter silver wash for large surfaces (buttons, cards) where the full
+// silverGradient would get too dark for dark-ink text to stay legible.
+export const silverGradientLight = ['#fbfbfa', '#eeece7', '#e1ddd6'] as const;
 
 export const fonts = {
   display: 'PlayfairDisplay_800ExtraBold',
