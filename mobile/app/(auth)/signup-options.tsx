@@ -1,11 +1,23 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, radius } from '../../lib/theme';
+import { colors, fonts, goldGradient, radius, silverGradientLight } from '../../lib/theme';
 
-function OptionButton({
+function PrimaryOption({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+      <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.option}>
+        <Text style={[styles.optionIcon, { color: colors.onGold }]}>{icon}</Text>
+        <Text style={[styles.optionLabel, { color: colors.onGold }]}>{label}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+function SilverOption({
   icon,
   iconColor,
   label,
@@ -17,9 +29,16 @@ function OptionButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.option, { opacity: pressed ? 0.6 : 1 }]}>
-      <Text style={[styles.optionIcon, iconColor ? { color: iconColor } : null]}>{icon}</Text>
-      <Text style={styles.optionLabel}>{label}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
+      <LinearGradient
+        colors={silverGradientLight}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.option, styles.silverBorder]}
+      >
+        <Text style={[styles.optionIcon, iconColor ? { color: iconColor } : null]}>{icon}</Text>
+        <Text style={styles.optionLabel}>{label}</Text>
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -39,20 +58,17 @@ export default function SignupOptions() {
 
       <View style={styles.content}>
         <Text style={styles.title}>Sana uygun{'\n'}öğretmeni bulmak{'\n'}için kaydol</Text>
-        <Text style={styles.subtitle}>500'den fazla onaylı öğretmene anında eriş</Text>
+        <Text style={styles.subtitle}>
+          <Text style={styles.subtitleAccent}>500'den fazla</Text> onaylı öğretmene anında eriş
+        </Text>
 
         <View style={styles.options}>
-          <OptionButton icon="✉" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
-          <OptionButton
-            icon="G"
-            iconColor="#4285F4"
-            label="Google ile kaydol"
-            onPress={() => comingSoon('Google')}
-          />
+          <PrimaryOption icon="✉" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
+          <SilverOption icon="G" iconColor="#4285F4" label="Google ile kaydol" onPress={() => comingSoon('Google')} />
           {Platform.OS === 'ios' && (
-            <OptionButton icon="" label="Apple ile kaydol" onPress={() => comingSoon('Apple')} />
+            <SilverOption icon="" label="Apple ile kaydol" onPress={() => comingSoon('Apple')} />
           )}
-          <OptionButton
+          <SilverOption
             icon="f"
             iconColor="#1877F2"
             label="Facebook ile kaydol"
@@ -110,17 +126,23 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginBottom: 36,
   },
+  subtitleAccent: {
+    fontFamily: fonts.bodyBold,
+    color: colors.goldText,
+  },
   options: {
     gap: 14,
   },
   option: {
     height: 56,
     borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.ink,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  silverBorder: {
+    borderWidth: 1,
+    borderColor: colors.silver2,
   },
   optionIcon: {
     fontSize: 19,
@@ -156,7 +178,7 @@ const styles = StyleSheet.create({
   loginLink: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.goldText,
     textAlign: 'center',
     textDecorationLine: 'underline',
     paddingVertical: 24,
