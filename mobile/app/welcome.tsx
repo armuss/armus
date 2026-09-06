@@ -32,14 +32,12 @@ const SLIDES = [
     title: 'Önce dene, sonra karar ver.',
     subtitle: 'İlk dersten önce deneme dersiyle uyumu test et — gizli ücret yok.',
     kind: 'icon' as const,
-    icon: '🤝',
   },
   {
     key: 'progress',
     title: 'Gelişimini gerçekten gör.',
     subtitle: 'Ders geçmişi ve konuşma güveniyle ilerlemeni adım adım takip et.',
     kind: 'icon' as const,
-    icon: '📈',
   },
 ];
 
@@ -99,7 +97,7 @@ export default function Welcome() {
                 <PhotoStack />
               ) : (
                 <View style={styles.iconCircle}>
-                  <Text style={styles.iconText}>{slide.icon}</Text>
+                  <Logo size={30} />
                 </View>
               )}
             </View>
@@ -169,9 +167,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panel2,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconText: {
-    fontSize: 60,
   },
   title: {
     fontFamily: fonts.displayBlack,
