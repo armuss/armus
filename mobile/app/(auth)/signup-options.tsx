@@ -64,13 +64,12 @@ export default function SignupOptions() {
 
         <View style={styles.options}>
           <PrimaryOption icon="✉" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
-          <SilverOption icon="G" iconColor="#4285F4" label="Google ile kaydol" onPress={() => comingSoon('Google')} />
+          <SilverOption icon="G" label="Google ile kaydol" onPress={() => comingSoon('Google')} />
           {Platform.OS === 'ios' && (
             <SilverOption icon="" label="Apple ile kaydol" onPress={() => comingSoon('Apple')} />
           )}
           <SilverOption
             icon="f"
-            iconColor="#1877F2"
             label="Facebook ile kaydol"
             onPress={() => comingSoon('Facebook')}
           />
