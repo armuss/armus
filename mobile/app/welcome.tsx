@@ -73,7 +73,7 @@ export default function Welcome() {
     setActiveIndex(index);
   }
 
-  async function goTo(path: '/(auth)/register' | '/(auth)/login') {
+  async function goTo(path: '/(auth)/signup-options' | '/(auth)/login') {
     await markOnboardingSeen();
     router.replace(path);
   }
@@ -116,7 +116,7 @@ export default function Welcome() {
       </View>
 
       <View style={styles.footer}>
-        <Button label="Başla" onPress={() => goTo('/(auth)/register')} />
+        <Button label="Başla" onPress={() => goTo('/(auth)/signup-options')} />
         <Text style={styles.signInRow}>
           Zaten hesabın var mı?{' '}
           <Text style={styles.signInLink} onPress={() => goTo('/(auth)/login')}>

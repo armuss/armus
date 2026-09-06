@@ -83,7 +83,7 @@ export default function Login() {
 
           <Text style={styles.switchRow}>
             Hesabın yok mu?{' '}
-            <Link href="/(auth)/register" style={styles.switchLink}>
+            <Link href="/(auth)/signup-options" style={styles.switchLink}>
               Kayıt ol
             </Link>
           </Text>
