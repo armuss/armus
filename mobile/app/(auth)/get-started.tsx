@@ -47,7 +47,7 @@ export default function GetStarted() {
           Hedefine, seviyene ve öğrenme tarzına uygun bir öğretmenle, sana özel bir ders programıyla ilerle.
         </Text>
 
-        <Button label="Öğretmenini bul →" onPress={() => router.push('/(auth)/signup-options')} />
+        <Button label="Öğretmenini bul →" onPress={() => router.push('/(auth)/goal-quiz')} />
 
         <Pressable onPress={() => router.push('/(auth)/signup-options')} hitSlop={10}>
           <Text style={styles.link}>500+ öğretmeni incele</Text>
