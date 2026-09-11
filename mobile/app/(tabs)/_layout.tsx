@@ -39,19 +39,15 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Ana Sayfa', tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="teachers"
-        options={{ title: 'Öğretmenler', tabBarIcon: ({ focused }) => <TabIcon emoji="🎓" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="lessons"
-        options={{ title: 'Derslerim', tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
+        options={{ title: 'Öğretmenler', tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} /> }}
       />
       <Tabs.Screen
         name="messages"
         options={{ title: 'Mesajlar', tabBarIcon: ({ focused }) => <TabIcon emoji="💬" focused={focused} /> }}
+      />
+      <Tabs.Screen
+        name="lessons"
+        options={{ title: 'Derslerim', tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
       />
       <Tabs.Screen
         name="profile"
