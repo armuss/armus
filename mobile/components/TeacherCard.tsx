@@ -9,7 +9,13 @@ export default function TeacherCard({ teacher, onPress }: { teacher: Teacher; on
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, { opacity: pressed ? 0.9 : 1 }]}>
       <View style={styles.topRow}>
-        <Image source={{ uri: teacher.photo }} style={styles.photo} />
+        {teacher.photo ? (
+          <Image source={{ uri: teacher.photo }} style={styles.photo} />
+        ) : (
+          <View style={[styles.photo, styles.photoFallback]}>
+            <Text style={styles.photoFallbackText}>{teacher.initials}</Text>
+          </View>
+        )}
         <View style={styles.info}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{teacher.name}</Text>
@@ -18,8 +24,8 @@ export default function TeacherCard({ teacher, onPress }: { teacher: Teacher; on
             </View>
           </View>
           <View style={styles.ratingRow}>
-            <Text style={styles.ratingText}>★ {teacher.rating.toFixed(1)}</Text>
-            <Text style={styles.reviewCount}>({teacher.reviewCount} yorum)</Text>
+            <Text style={styles.ratingText}>{teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : 'Yeni'}</Text>
+            {teacher.reviewCount > 0 && <Text style={styles.reviewCount}>({teacher.reviewCount} yorum)</Text>}
           </View>
           <View style={styles.priceRow}>
             <Text style={styles.price}>₺{teacher.price}</Text>
@@ -28,9 +34,11 @@ export default function TeacherCard({ teacher, onPress }: { teacher: Teacher; on
         </View>
       </View>
 
-      <View style={styles.levelBadge}>
-        <Text style={styles.levelBadgeText}>{teacher.level} Seviye</Text>
-      </View>
+      {!!teacher.level && (
+        <View style={styles.levelBadge}>
+          <Text style={styles.levelBadgeText}>{teacher.level} Seviye</Text>
+        </View>
+      )}
 
       <Text style={styles.bio} numberOfLines={2}>
         {teacher.about[0]}
@@ -76,6 +84,15 @@ const styles = StyleSheet.create({
     height: 74,
     borderRadius: radius.md,
     backgroundColor: colors.panel2,
+  },
+  photoFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoFallbackText: {
+    fontFamily: fonts.bodyExtraBold,
+    fontSize: 20,
+    color: colors.muted,
   },
   info: {
     flex: 1,

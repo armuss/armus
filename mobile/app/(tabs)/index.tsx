@@ -1,21 +1,38 @@
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import TeacherCard from '../../components/TeacherCard';
-import { TEACHERS } from '../../lib/teachers-data';
+import { getMarketplaceTeachers } from '../../lib/teachers';
+import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 
 const SPECIALTY_OPTIONS = ['Tümü', 'IELTS', 'TOEFL', 'YDS', 'Konuşma', 'İş İngilizcesi'];
 type PriceSort = 'none' | 'asc' | 'desc';
 
 export default function Home() {
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [specialtyIndex, setSpecialtyIndex] = useState(0);
   const [priceSort, setPriceSort] = useState<PriceSort>('none');
 
   const specialty = SPECIALTY_OPTIONS[specialtyIndex];
+
+  const load = useCallback(async () => {
+    const list = await getMarketplaceTeachers();
+    setTeachers(list);
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   function cycleSpecialty() {
     setSpecialtyIndex((i) => (i + 1) % SPECIALTY_OPTIONS.length);
@@ -27,7 +44,7 @@ export default function Home() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = TEACHERS.filter((t) => {
+    let list = teachers.filter((t) => {
       const matchesQuery = !q || [t.name, t.role, ...t.tags].some((f) => f.toLowerCase().includes(q));
       const matchesSpecialty = specialty === 'Tümü' || t.tags.includes(specialty);
       return matchesQuery && matchesSpecialty;
@@ -36,7 +53,15 @@ export default function Home() {
       list = [...list].sort((a, b) => (priceSort === 'asc' ? a.price - b.price : b.price - a.price));
     }
     return list;
-  }, [query, specialty, priceSort]);
+  }, [teachers, query, specialty, priceSort]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.screen, styles.centered]} edges={['top']}>
+        <ActivityIndicator color={colors.gold3} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -45,6 +70,16 @@ export default function Home() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              load();
+            }}
+            tintColor={colors.gold3}
+          />
+        }
         ListHeaderComponent={
           <View style={styles.headerBlock}>
             <Text style={styles.eyebrow}>İNGİLİZCE</Text>
@@ -89,6 +124,10 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContent: {
     paddingHorizontal: 20,

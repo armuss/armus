@@ -1,16 +1,40 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
-import { TEACHERS } from '../../lib/teachers-data';
+import { findMarketplaceTeacher } from '../../lib/teachers';
+import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 
 export default function TeacherDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const teacher = TEACHERS.find((t) => t.id === id);
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [loading, setLoading] = useState(true);
   const [noticeVisible, setNoticeVisible] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    findMarketplaceTeacher(id).then((t) => {
+      if (active) {
+        setTeacher(t);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.screen, styles.centered]}>
+        <ActivityIndicator color={colors.gold3} />
+      </SafeAreaView>
+    );
+  }
 
   if (!teacher) {
     return (
@@ -27,7 +51,13 @@ export default function TeacherDetail() {
           <Text style={styles.backText}>← Geri</Text>
         </Pressable>
 
-        <Image source={{ uri: teacher.photo }} style={styles.photo} />
+        {teacher.photo ? (
+          <Image source={{ uri: teacher.photo }} style={styles.photo} />
+        ) : (
+          <View style={[styles.photo, styles.photoFallback]}>
+            <Text style={styles.photoFallbackText}>{teacher.initials}</Text>
+          </View>
+        )}
 
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
@@ -35,13 +65,13 @@ export default function TeacherDetail() {
             <Text style={styles.role}>{teacher.role}</Text>
           </View>
           <View style={styles.ratingBlock}>
-            <Text style={styles.ratingValue}>★ {teacher.rating.toFixed(1)}</Text>
-            <Text style={styles.ratingCount}>{teacher.reviewCount} değerlendirme</Text>
+            <Text style={styles.ratingValue}>{teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : 'Yeni'}</Text>
+            {teacher.reviewCount > 0 && <Text style={styles.ratingCount}>{teacher.reviewCount} değerlendirme</Text>}
           </View>
         </View>
 
         <View style={styles.tagRow}>
-          {teacher.tags.map((tag) => (
+          {teacher.tags.concat(teacher.level ? [`${teacher.level} Seviye`] : []).map((tag) => (
             <View key={tag} style={styles.tag}>
               <Text style={styles.tagText}>{tag}</Text>
             </View>
@@ -113,6 +143,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -138,6 +172,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.panel2,
     marginBottom: 16,
+  },
+  photoFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoFallbackText: {
+    fontFamily: fonts.displayBlack,
+    fontSize: 40,
+    color: colors.muted,
   },
   headerRow: {
     flexDirection: 'row',

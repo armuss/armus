@@ -14,10 +14,10 @@ export default function GetStarted() {
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <Image source={{ uri: featured.photo }} style={styles.heroPhoto} />
+          <Image source={{ uri: featured.photo! }} style={styles.heroPhoto} />
 
           <View style={styles.learnerBubble}>
-            <Image source={{ uri: learner.photo }} style={styles.learnerPhoto} />
+            <Image source={{ uri: learner.photo! }} style={styles.learnerPhoto} />
             <View style={styles.onlineDot} />
             <View style={styles.learnerTag}>
               <Text style={styles.learnerTagText}>Öğrenci</Text>
@@ -25,7 +25,7 @@ export default function GetStarted() {
           </View>
 
           <View style={styles.teacherCard}>
-            <Image source={{ uri: featured.photo }} style={styles.teacherThumb} />
+            <Image source={{ uri: featured.photo! }} style={styles.teacherThumb} />
             <View style={{ flex: 1 }}>
               <View style={styles.teacherCardTop}>
                 <Text style={styles.teacherName}>{featured.name}</Text>
@@ -34,7 +34,7 @@ export default function GetStarted() {
                 </View>
               </View>
               <Text style={styles.teacherMeta}>
-                {featured.completedLessons} ders · ★ {featured.rating.toFixed(1)} · {featured.reviewCount} yorum
+                {featured.completedLessons} ders · ★ {featured.rating!.toFixed(1)} · {featured.reviewCount} yorum
               </Text>
             </View>
           </View>

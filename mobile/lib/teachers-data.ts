@@ -7,11 +7,11 @@
 export type Teacher = {
   id: string;
   initials: string;
-  photo: string;
+  photo: string | null;
   name: string;
   role: string;
   price: number;
-  rating: number;
+  rating: number | null;
   reviewCount: number;
   tags: string[];
   level: string;
@@ -24,6 +24,8 @@ export type Teacher = {
   levelRange: string;
   specialties: string[];
   reviews: { name: string; stars: number; text: string }[];
+  /** Only set for real, self-registered teachers — used to link to messaging. */
+  isRegistered?: boolean;
 };
 
 export const TEACHERS: Teacher[] = [

@@ -48,7 +48,7 @@ function PhotoStack() {
       {photos.map((t, i) => (
         <Image
           key={t.id}
-          source={{ uri: t.photo }}
+          source={{ uri: t.photo! }}
           style={[
             styles.photoCard,
             {
