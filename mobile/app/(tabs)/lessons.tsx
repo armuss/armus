@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { getBookingsForStudent, type Booking } from '../../lib/bookings';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -73,8 +74,13 @@ export default function Lessons() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>Henüz dersin yok</Text>
-              <Text style={styles.emptyText}>Bir öğretmen seçip deneme dersi alarak başla.</Text>
+              <Text style={styles.emptyTitle}>Ders programın burada görünecek</Text>
+              <Text style={styles.emptyText}>
+                Ders programın başarıya giden yol - başlamak için bir deneme dersi ayarla.
+              </Text>
+              <View style={styles.emptyBtn}>
+                <Button label="Öğretmen bul" onPress={() => router.push('/(tabs)')} />
+              </View>
             </View>
           }
         />
@@ -155,20 +161,23 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   empty: {
-    alignItems: 'center',
-    marginTop: 60,
-    paddingHorizontal: 30,
+    alignItems: 'flex-start',
+    marginTop: 20,
   },
   emptyTitle: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 16,
+    fontFamily: fonts.displayBlack,
+    fontSize: 22,
     color: colors.ink,
-    marginBottom: 6,
+    marginBottom: 10,
   },
   emptyText: {
     fontFamily: fonts.body,
-    fontSize: 13.5,
+    fontSize: 14,
     color: colors.muted,
-    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 22,
+  },
+  emptyBtn: {
+    width: '100%',
   },
 });

@@ -110,7 +110,7 @@ const TIME_OPTIONS = [
 
 const BUDGET_OPTIONS = ['₺400 – ₺600', '₺600 – ₺800', '₺800 – ₺1000', '₺1000+'];
 
-const FUTURE_SUBJECT_OPTIONS_BASE = ['İspanyolca', 'Almanca', 'Fransızca', 'Arapça'];
+const FUTURE_SUBJECT_OPTIONS_BASE = ['Hayır', 'İspanyolca', 'Almanca', 'Fransızca', 'Arapça'];
 const FUTURE_SUBJECT_OPTIONS_ALL = [...FUTURE_SUBJECT_OPTIONS_BASE, 'İtalyanca', 'Japonca', 'Rusça'];
 
 const GOAL_MATCH_PHRASES: Record<string, string> = {
