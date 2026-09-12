@@ -4,15 +4,31 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
+import { useAuth } from '../../lib/auth';
+import { getOrCreateConversation } from '../../lib/messages';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 
 export default function TeacherDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { profile } = useAuth();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [noticeVisible, setNoticeVisible] = useState(false);
+  const [messaging, setMessaging] = useState(false);
+
+  async function handleMessage() {
+    if (!teacher || !profile || messaging) return;
+    setMessaging(true);
+    const conversation = await getOrCreateConversation(profile.id, profile.role, teacher.id);
+    setMessaging(false);
+    if (!conversation) return;
+    router.push({
+      pathname: '/chat/[id]',
+      params: { id: conversation.id, otherName: teacher.name, otherPhoto: teacher.photo ?? '' },
+    });
+  }
 
   useEffect(() => {
     let active = true;
@@ -69,6 +85,12 @@ export default function TeacherDetail() {
             {teacher.reviewCount > 0 && <Text style={styles.ratingCount}>{teacher.reviewCount} değerlendirme</Text>}
           </View>
         </View>
+
+        {teacher.isRegistered && profile && (
+          <Pressable onPress={handleMessage} disabled={messaging} style={styles.msgLink}>
+            <Text style={styles.msgLinkText}>{messaging ? 'Açılıyor…' : '✉ Mesaj Gönder'}</Text>
+          </Pressable>
+        )}
 
         <View style={styles.tagRow}>
           {teacher.tags.concat(teacher.level ? [`${teacher.level} Seviye`] : []).map((tag) => (
@@ -210,6 +232,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 11.5,
     color: colors.muted,
+  },
+  msgLink: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+  },
+  msgLinkText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13.5,
+    color: colors.goldText,
   },
   tagRow: {
     flexDirection: 'row',

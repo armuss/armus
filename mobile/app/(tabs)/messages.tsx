@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
@@ -38,7 +38,15 @@ export default function Messages() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={styles.row}>
+            <Pressable
+              style={({ pressed }) => [styles.row, { opacity: pressed ? 0.9 : 1 }]}
+              onPress={() =>
+                router.push({
+                  pathname: '/chat/[id]',
+                  params: { id: item.id, otherName: item.otherName, otherPhoto: item.otherPhoto ?? '' },
+                })
+              }
+            >
               {item.otherPhoto ? (
                 <Image source={{ uri: item.otherPhoto }} style={styles.avatar} />
               ) : (
@@ -59,7 +67,7 @@ export default function Messages() {
                   {item.lastMessageText || 'Henüz mesaj yok'}
                 </Text>
               </View>
-            </View>
+            </Pressable>
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
