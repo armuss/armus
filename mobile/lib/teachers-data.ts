@@ -26,6 +26,9 @@ export type Teacher = {
   reviews: { name: string; stars: number; text: string }[];
   /** Only set for real, self-registered teachers — used to link to messaging. */
   isRegistered?: boolean;
+  /** Only set for real teachers who've configured a weekly availability grid. */
+  weeklyAvailability?: string[][] | null;
+  availabilityDates?: Record<string, string[]> | null;
 };
 
 export const TEACHERS: Teacher[] = [

@@ -15,7 +15,6 @@ export default function TeacherDetail() {
   const { profile } = useAuth();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
-  const [noticeVisible, setNoticeVisible] = useState(false);
   const [messaging, setMessaging] = useState(false);
 
   async function handleMessage() {
@@ -140,11 +139,6 @@ export default function TeacherDetail() {
           </View>
         ))}
 
-        {noticeVisible && (
-          <Text style={styles.notice}>
-            Rezervasyon ve ödeme yakında uygulama içinden yapılabilecek — şu an için siteden devam edebilirsin.
-          </Text>
-        )}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -153,7 +147,14 @@ export default function TeacherDetail() {
           <Text style={styles.priceUnit}>/ ders</Text>
         </View>
         <View style={{ flex: 1, marginLeft: 16 }}>
-          <Button label="Deneme Dersi Al" onPress={() => setNoticeVisible(true)} />
+          <Button
+            label="Deneme Dersi Al"
+            onPress={() =>
+              profile
+                ? router.push({ pathname: '/booking/[id]', params: { id: teacher.id, type: 'trial' } })
+                : router.push('/(auth)/login')
+            }
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -327,15 +328,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
     lineHeight: 19,
-  },
-  notice: {
-    fontFamily: fonts.body,
-    fontSize: 12.5,
-    color: colors.goldText,
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.md,
-    padding: 12,
-    marginTop: 20,
   },
   footer: {
     flexDirection: 'row',

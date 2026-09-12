@@ -66,6 +66,9 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[])
     specialties: [profile.subject_taught || 'Genel İngilizce'],
     reviews,
     isRegistered: true,
+    weeklyAvailability: Array.isArray(profile.weekly_availability) ? profile.weekly_availability : null,
+    availabilityDates:
+      profile.availability_dates && typeof profile.availability_dates === 'object' ? profile.availability_dates : null,
   };
 }
 
