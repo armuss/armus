@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
@@ -15,9 +16,13 @@ export default function Profile() {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarInitial}>{(profile?.name?.[0] || '?').toUpperCase()}</Text>
-        </View>
+        {profile?.photo_url ? (
+          <Image source={{ uri: profile.photo_url }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarInitial}>{(profile?.name?.[0] || '?').toUpperCase()}</Text>
+          </View>
+        )}
         <Text style={styles.name}>{profile?.name}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
 
@@ -32,7 +37,10 @@ export default function Profile() {
           </View>
         </View>
 
-        <View style={{ marginTop: 24, width: '100%' }}>
+        <View style={{ marginTop: 16, width: '100%' }}>
+          <Button label="Profili Düzenle" variant="outline" onPress={() => router.push('/profile/edit')} />
+        </View>
+        <View style={{ marginTop: 12, width: '100%' }}>
           <Button label="Çıkış Yap" variant="outline" onPress={signOut} />
         </View>
       </View>
