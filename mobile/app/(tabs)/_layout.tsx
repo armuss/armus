@@ -12,7 +12,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
 }
 
 export default function TabsLayout() {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -23,6 +23,8 @@ export default function TabsLayout() {
   }
 
   if (!session) return <Redirect href="/(auth)/login" />;
+
+  const isTeacher = profile?.role === 'teacher';
 
   return (
     <Tabs
@@ -43,8 +45,31 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Öğretmenler',
-          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'search' : 'search-outline'} focused={focused} />,
+          title: isTeacher ? 'Bugün' : 'Öğretmenler',
+          tabBarIcon: ({ focused }) =>
+            isTeacher ? (
+              <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
+            ) : (
+              <TabIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="students"
+        options={{
+          title: 'Öğrencilerim',
+          href: isTeacher ? undefined : null,
+          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'people' : 'people-outline'} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="availability"
+        options={{
+          title: 'Programım',
+          href: isTeacher ? undefined : null,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -60,6 +85,7 @@ export default function TabsLayout() {
         name="lessons"
         options={{
           title: 'Derslerim',
+          href: isTeacher ? null : undefined,
           tabBarIcon: ({ focused }) => (
             <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} />
           ),

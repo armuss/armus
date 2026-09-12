@@ -111,6 +111,18 @@ export async function getBookingsForStudent(studentId: string): Promise<Booking[
   return data.map(mapBookingRow);
 }
 
+export async function getBookingsForTeacher(teacherId: string): Promise<Booking[]> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('teacher_id', teacherId)
+    .order('lesson_date', { ascending: true })
+    .order('lesson_time', { ascending: true });
+
+  if (error || !data) return [];
+  return data.map(mapBookingRow);
+}
+
 // A single booking by id - RLS already restricts this to the student, the
 // teacher, or an admin, so a non-participant just gets null back, same as
 // a booking that doesn't exist at all.
