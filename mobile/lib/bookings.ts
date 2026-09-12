@@ -110,3 +110,36 @@ export async function getBookingsForStudent(studentId: string): Promise<Booking[
   if (error || !data) return [];
   return data.map(mapBookingRow);
 }
+
+// A single booking by id - RLS already restricts this to the student, the
+// teacher, or an admin, so a non-participant just gets null back, same as
+// a booking that doesn't exist at all.
+export async function getBookingById(bookingId: string): Promise<Booking | null> {
+  const { data, error } = await supabase.from('bookings').select('*').eq('id', bookingId).maybeSingle();
+
+  if (error || !data) return null;
+  return mapBookingRow(data);
+}
+
+// A stable, hard-to-guess Jitsi Meet room name derived from the booking id
+// - both participants compute the same name independently.
+export function roomNameForBooking(bookingId: string) {
+  return 'armus-lesson-' + String(bookingId).replace(/-/g, '');
+}
+
+const JOIN_EARLY_MINUTES = 15;
+const JOIN_LATE_GRACE_MINUTES = 15;
+
+export function lessonWindow(booking: Booking) {
+  const start = new Date(`${booking.date}T${booking.time}:00`);
+  const end = new Date(start.getTime() + LESSON_MINUTES * 60000);
+  const joinsFrom = new Date(start.getTime() - JOIN_EARLY_MINUTES * 60000);
+  const joinsUntil = new Date(end.getTime() + JOIN_LATE_GRACE_MINUTES * 60000);
+  return { start, end, joinsFrom, joinsUntil };
+}
+
+export function canJoinLessonNow(booking: Booking) {
+  const { joinsFrom, joinsUntil } = lessonWindow(booking);
+  const now = new Date();
+  return now >= joinsFrom && now <= joinsUntil;
+}
