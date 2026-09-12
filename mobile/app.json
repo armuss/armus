@@ -10,10 +10,15 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.armus.app"
+      "bundleIdentifier": "com.armus.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Canlı ders odasına girmek için kameranı kullanmamız gerekiyor.",
+        "NSMicrophoneUsageDescription": "Canlı ders odasında konuşabilmen için mikrofonunu kullanmamız gerekiyor."
+      }
     },
     "android": {
       "package": "com.armus.app",
+      "permissions": ["CAMERA", "RECORD_AUDIO"],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",

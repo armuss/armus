@@ -1,12 +1,17 @@
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
-import { getBookingsForStudent, type Booking } from '../../lib/bookings';
+import { canJoinLessonNow, getBookingsForStudent, type Booking } from '../../lib/bookings';
 import { colors, fonts, radius } from '../../lib/theme';
+
+function isPastBooking(booking: Booking) {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  return booking.date < todayKey;
+}
 
 export default function Lessons() {
   const { profile } = useAuth();
@@ -52,26 +57,38 @@ export default function Lessons() {
               tintColor={colors.gold3}
             />
           }
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.teacherName}>{item.teacherName}</Text>
-                <View style={[styles.statusPill, item.status === 'cancelled' && styles.statusPillCancelled]}>
-                  <Text
-                    style={[styles.statusText, item.status === 'cancelled' && styles.statusTextCancelled]}
-                  >
-                    {item.status === 'cancelled' ? 'İptal edildi' : 'Onaylı'}
-                  </Text>
+          renderItem={({ item }) => {
+            const isCancelled = item.status === 'cancelled';
+            const isPast = isPastBooking(item);
+            const joinable = !isCancelled && !isPast && canJoinLessonNow(item);
+            const showHint = !isCancelled && !isPast && !joinable && item.date === new Date().toISOString().slice(0, 10);
+
+            return (
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.teacherName}>{item.teacherName}</Text>
+                  <View style={[styles.statusPill, isCancelled && styles.statusPillCancelled]}>
+                    <Text style={[styles.statusText, isCancelled && styles.statusTextCancelled]}>
+                      {isCancelled ? 'İptal edildi' : 'Onaylı'}
+                    </Text>
+                  </View>
                 </View>
+                <Text style={styles.type}>{item.type}</Text>
+                <View style={styles.metaRow}>
+                  <Text style={styles.meta}>{item.dateLabel}</Text>
+                  <Text style={styles.meta}>{item.time}</Text>
+                  <Text style={styles.meta}>₺{item.price}</Text>
+                </View>
+
+                {joinable && (
+                  <Pressable style={styles.joinBtn} onPress={() => router.push(`/class/${item.id}`)}>
+                    <Text style={styles.joinBtnText}>🎥 Derse Katıl</Text>
+                  </Pressable>
+                )}
+                {showHint && <Text style={styles.joinHint}>Ders saatinde bu kart üzerinden odaya katılabileceksin.</Text>}
               </View>
-              <Text style={styles.type}>{item.type}</Text>
-              <View style={styles.metaRow}>
-                <Text style={styles.meta}>{item.dateLabel}</Text>
-                <Text style={styles.meta}>{item.time}</Text>
-                <Text style={styles.meta}>₺{item.price}</Text>
-              </View>
-            </View>
-          )}
+            );
+          }}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>Ders programın burada görünecek</Text>
@@ -159,6 +176,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 12.5,
     color: colors.ink,
+  },
+  joinBtn: {
+    marginTop: 14,
+    backgroundColor: colors.gold3,
+    borderRadius: radius.md,
+    paddingVertical: 11,
+    alignItems: 'center',
+  },
+  joinBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13.5,
+    color: colors.onGold,
+  },
+  joinHint: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.faint,
+    marginTop: 12,
   },
   empty: {
     alignItems: 'flex-start',
