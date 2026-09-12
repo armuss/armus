@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
+import { shortDisplayName } from '../../lib/displayName';
 import { getConversations, type Conversation } from '../../lib/messages';
 import { colors, fonts, radius } from '../../lib/theme';
 
@@ -12,6 +13,11 @@ export default function Messages() {
   const { profile } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // The other participant in any conversation here is a teacher exactly
+  // when the viewer is a student (conversations are always
+  // student<->teacher) - so their full name never shows, only "Ahmet Y.".
+  const displayName = (name: string) => (profile?.role === 'student' ? shortDisplayName(name) : name);
 
   useFocusEffect(
     useCallback(() => {
@@ -43,7 +49,7 @@ export default function Messages() {
               onPress={() =>
                 router.push({
                   pathname: '/chat/[id]',
-                  params: { id: item.id, otherName: item.otherName, otherPhoto: item.otherPhoto ?? '' },
+                  params: { id: item.id, otherName: displayName(item.otherName), otherPhoto: item.otherPhoto ?? '' },
                 })
               }
             >
@@ -56,7 +62,7 @@ export default function Messages() {
               )}
               <View style={{ flex: 1 }}>
                 <View style={styles.rowTop}>
-                  <Text style={styles.name}>{item.otherName}</Text>
+                  <Text style={styles.name}>{displayName(item.otherName)}</Text>
                   {item.unreadCount > 0 && (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>{item.unreadCount}</Text>

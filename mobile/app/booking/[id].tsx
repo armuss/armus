@@ -16,6 +16,7 @@ import WebView from 'react-native-webview';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { DAY_NAMES, MONTH_NAMES, formatTimeRange, slotsForDate, type Slot } from '../../lib/bookings';
+import { shortDisplayName } from '../../lib/displayName';
 import { createPayment, hasCoveringCredit } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
@@ -183,7 +184,7 @@ export default function Booking() {
         </View>
         <Text style={styles.successTitle}>Rezervasyon tamamlandı!</Text>
         <Text style={styles.successSubtitle}>
-          {teacher.name} ile {selectedDateInfo?.label} · {selectedTime ? formatTimeRange(selectedTime) : ''}
+          {shortDisplayName(teacher.name)} ile {selectedDateInfo?.label} · {selectedTime ? formatTimeRange(selectedTime) : ''}
         </Text>
         {creditApplied && <Text style={styles.creditNote}>Ders hakkınla ödeme yapılmadan tamamlandı.</Text>}
         <View style={{ width: '100%', marginTop: 28 }}>
@@ -224,7 +225,7 @@ export default function Booking() {
             </View>
           )}
           <View style={{ flex: 1 }}>
-            <Text style={styles.teacherName}>{teacher.name}</Text>
+            <Text style={styles.teacherName}>{shortDisplayName(teacher.name)}</Text>
             <Text style={styles.teacherRole}>{teacher.role}</Text>
           </View>
           <Text style={styles.price}>₺{teacher.price}</Text>
@@ -290,7 +291,7 @@ export default function Booking() {
             <Text style={styles.sectionTitle}>Özet</Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Öğretmen</Text>
-              <Text style={styles.summaryValue}>{teacher.name}</Text>
+              <Text style={styles.summaryValue}>{shortDisplayName(teacher.name)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tarih</Text>

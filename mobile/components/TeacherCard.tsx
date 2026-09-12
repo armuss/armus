@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { shortDisplayName } from '../lib/displayName';
 import { colors, fonts, radius } from '../lib/theme';
 import type { Teacher } from '../lib/teachers-data';
 
@@ -18,7 +19,7 @@ export default function TeacherCard({ teacher, onPress }: { teacher: Teacher; on
         )}
         <View style={styles.info}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>{teacher.name}</Text>
+            <Text style={styles.name}>{shortDisplayName(teacher.name)}</Text>
             <View style={styles.verifiedBadge}>
               <Text style={styles.verifiedCheck}>✓</Text>
             </View>

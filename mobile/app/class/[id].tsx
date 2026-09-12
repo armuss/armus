@@ -7,6 +7,7 @@ import WebView from 'react-native-webview';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { canJoinLessonNow, formatTimeRange, getBookingById, lessonWindow, roomNameForBooking, type Booking } from '../../lib/bookings';
+import { shortDisplayName } from '../../lib/displayName';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { colors, fonts, radius } from '../../lib/theme';
 
@@ -152,10 +153,12 @@ export default function Class() {
   }
 
   if (phase === 'tooEarly' && booking) {
+    const isStudent = profile?.id === booking.studentId;
+    const otherName = isStudent ? shortDisplayName(booking.teacherName) : booking.studentName;
     return (
       <Gate
         title="Henüz erken"
-        subtitle={`${booking.teacherName} ile ${booking.dateLabel}, ${formatTimeRange(booking.time)} — ${minutesUntil} dakika sonra katılabileceksin.`}
+        subtitle={`${otherName} ile ${booking.dateLabel}, ${formatTimeRange(booking.time)} — ${minutesUntil} dakika sonra katılabileceksin.`}
         buttonLabel="Derslerime dön"
         onPress={() => router.replace('/(tabs)/lessons')}
       />
@@ -208,11 +211,14 @@ export default function Class() {
     profile?.name || 'ARMUS'
   )}%22`;
 
+  const isStudent = profile?.id === booking.studentId;
+  const otherName = isStudent ? shortDisplayName(booking.teacherName) : booking.studentName;
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {booking.teacherName} ile ders · {formatTimeRange(booking.time)}
+          {otherName} ile ders · {formatTimeRange(booking.time)}
         </Text>
         <Pressable onPress={handleLeave} style={styles.leaveBtn}>
           <Text style={styles.leaveBtnText}>Ayrıl</Text>

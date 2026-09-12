@@ -573,6 +573,15 @@
     let activeConversationId = null;
     let activeConversationHasBooking = false;
 
+    // The other participant in any conversation here is a teacher exactly
+    // when the logged-in user is a student (conversations are always
+    // student<->teacher) - so their full name never shows, only "Ahmet Y.",
+    // the same as everywhere else a teacher's identity would otherwise be
+    // exposed to a student.
+    function otherPartyDisplayName(name) {
+      return currentSession && currentSession.role === "student" ? armusShortDisplayName(name) : name;
+    }
+
     function showChatWarning(message) {
       const box = document.getElementById("chatWarning");
       box.textContent = message;
@@ -614,7 +623,7 @@
         item.innerHTML = `
           <div class="convo-avatar">${avatarInner}</div>
           <div class="convo-info">
-            <div class="convo-name">${c.otherName}${c.unreadCount > 0 ? '<span class="unread-dot"></span>' : ""}</div>
+            <div class="convo-name">${otherPartyDisplayName(c.otherName)}${c.unreadCount > 0 ? '<span class="unread-dot"></span>' : ""}</div>
             <div class="convo-preview">${c.lastMessage ? (c.lastMessage.body || attachmentPreviewLabel(c.lastMessage.attachment_type)) : "Henüz mesaj yok"}</div>
           </div>
         `;
@@ -632,7 +641,7 @@
       const header = document.getElementById("threadHeader");
       header.style.display = "flex";
       const avatarInner = otherPhoto ? `<img src="${otherPhoto}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;">` : "";
-      header.innerHTML = `${avatarInner}<span>${otherName}</span>`;
+      header.innerHTML = `${avatarInner}<span>${otherPartyDisplayName(otherName)}</span>`;
 
       document.getElementById("threadForm").style.display = "flex";
 

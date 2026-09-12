@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
+import { shortDisplayName } from '../../lib/displayName';
 import { getOrCreateConversation } from '../../lib/messages';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
@@ -25,7 +26,7 @@ export default function TeacherDetail() {
     if (!conversation) return;
     router.push({
       pathname: '/chat/[id]',
-      params: { id: conversation.id, otherName: teacher.name, otherPhoto: teacher.photo ?? '' },
+      params: { id: conversation.id, otherName: shortDisplayName(teacher.name), otherPhoto: teacher.photo ?? '' },
     });
   }
 
@@ -76,7 +77,7 @@ export default function TeacherDetail() {
 
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{teacher.name}</Text>
+            <Text style={styles.name}>{shortDisplayName(teacher.name)}</Text>
             <Text style={styles.role}>{teacher.role}</Text>
           </View>
           <View style={styles.ratingBlock}>
