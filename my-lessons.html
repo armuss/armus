@@ -610,13 +610,13 @@
         const wrap = document.createElement("div");
         wrap.className = "review-block";
 
-        const existing = await armusGetReviewForBooking(booking.id);
+        const existing = await armusGetReviewForBooking(booking.id).catch(() => null);
 
         if (existing) {
 
           wrap.innerHTML = `
             <div class="submitted-review">
-              <span class="stars">${"★".repeat(existing.stars)}${"☆".repeat(5 - existing.stars)} Değerlendirdin</span>
+              <span class="stars">${"★".repeat(existing.stars)}${"☆".repeat(5 - existing.stars)} ${armusT("myLessons.reviewed", "Değerlendirdin")}</span>
               ${existing.text ? `<p>${existing.text}</p>` : ""}
             </div>
           `;
@@ -627,13 +627,13 @@
         let selectedStars = 0;
 
         wrap.innerHTML = `
-          <button type="button" class="review-prompt-btn">★ Bu dersi değerlendir</button>
+          <button type="button" class="review-prompt-btn">${armusT("myLessons.reviewPromptBtn", "★ Bu dersi değerlendir")}</button>
           <div class="review-form">
             <div class="star-picker">
               ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
             </div>
-            <textarea placeholder="${armusShortDisplayName(booking.teacherName)} ile dersin nasıldı?"></textarea>
-            <button type="button" class="review-submit-btn">Gönder</button>
+            <textarea placeholder="${armusT("myLessons.reviewPlaceholder", "{name} ile dersin nasıldı?").replace("{name}", armusShortDisplayName(booking.teacherName))}"></textarea>
+            <button type="button" class="review-submit-btn">${armusT("contact.submit", "Gönder")}</button>
           </div>
         `;
 
@@ -658,7 +658,7 @@
         submitBtn.addEventListener("click", async () => {
 
           if (selectedStars === 0) {
-            alert("Lütfen bir puan seç.");
+            alert(armusT("myLessons.starAlert", "Lütfen bir puan seç."));
             return;
           }
 
@@ -672,7 +672,7 @@
           });
 
           if (result === false) {
-            alert("Değerlendirme kaydedilemedi.");
+            alert(armusT("myLessons.reviewFailedAlert", "Değerlendirme kaydedilemedi."));
             return;
           }
 
@@ -683,17 +683,25 @@
         return wrap;
       }
 
-      const ownDisputes = await armusGetOwnDisputes(session.id);
+      const ownDisputes = await armusGetOwnDisputes(session.id).catch(() => []);
       const disputeByBooking = new Map(ownDisputes.filter(d => d.booking_id).map(d => [d.booking_id, d]));
 
-      const DISPUTE_SUBJECTS = [
-        "Öğretmen derse gelmedi",
-        "Ders kalitesiyle ilgili bir sorun",
-        "İletişim / uygunsuz davranış",
-        "Ödeme ile ilgili bir sorun",
-        "Diğer",
-      ];
-      const DISPUTE_STATUS_LABELS = { open: "Bildirdin, inceleniyor", in_progress: "İnceleniyor", resolved: "Çözüldü" };
+      function disputeSubjects() {
+        return [
+          armusT("myLessons.disputeSubject1", "Öğretmen derse gelmedi"),
+          armusT("myLessons.disputeSubject2", "Ders kalitesiyle ilgili bir sorun"),
+          armusT("myLessons.disputeSubject3", "İletişim / uygunsuz davranış"),
+          armusT("myLessons.disputeSubject4", "Ödeme ile ilgili bir sorun"),
+          armusT("myLessons.disputeSubject5", "Diğer"),
+        ];
+      }
+      function disputeStatusLabels() {
+        return {
+          open: armusT("myLessons.disputeStatusOpen", "Bildirdin, inceleniyor"),
+          in_progress: armusT("myLessons.disputeStatusInProgress", "İnceleniyor"),
+          resolved: armusT("myLessons.disputeStatusResolved", "Çözüldü"),
+        };
+      }
 
       function buildDisputeBlock(booking) {
 
@@ -705,7 +713,7 @@
         if (existing) {
           wrap.innerHTML = `
             <div class="submitted-dispute">
-              <span class="dispute-status">⚑ ${DISPUTE_STATUS_LABELS[existing.status] || existing.status}</span>
+              <span class="dispute-status">⚑ ${disputeStatusLabels()[existing.status] || existing.status}</span>
               <p>${existing.subject}</p>
             </div>
           `;
@@ -713,13 +721,13 @@
         }
 
         wrap.innerHTML = `
-          <button type="button" class="dispute-prompt-btn">⚑ Bir sorun bildir</button>
+          <button type="button" class="dispute-prompt-btn">${armusT("myLessons.reportPromptBtn", "⚑ Bir sorun bildir")}</button>
           <div class="dispute-form">
             <select>
-              ${DISPUTE_SUBJECTS.map(s => `<option value="${s}">${s}</option>`).join("")}
+              ${disputeSubjects().map(s => `<option value="${s}">${s}</option>`).join("")}
             </select>
-            <textarea placeholder="Ne oldu, kısaca anlat..."></textarea>
-            <button type="button" class="dispute-submit-btn">Gönder</button>
+            <textarea placeholder="${armusT("myLessons.disputePlaceholder", "Ne oldu, kısaca anlat...")}"></textarea>
+            <button type="button" class="dispute-submit-btn">${armusT("contact.submit", "Gönder")}</button>
           </div>
         `;
 
@@ -738,7 +746,7 @@
 
           const description = textarea.value.trim();
           if (!description) {
-            alert("Lütfen ne olduğunu kısaca yaz.");
+            alert(armusT("myLessons.disputeAlert", "Lütfen ne olduğunu kısaca yaz."));
             return;
           }
 
@@ -755,7 +763,7 @@
           });
 
           if (!created) {
-            alert("Bildirilemedi. Lütfen tekrar dene.");
+            alert(armusT("myLessons.disputeFailedAlert", "Bildirilemedi. Lütfen tekrar dene."));
             submitBtn.disabled = false;
             return;
           }
@@ -767,110 +775,124 @@
         return wrap;
       }
 
-      if (bookings.length === 0) {
+      async function renderLessons() {
 
-        empty.style.display = "block";
+        list.innerHTML = "";
 
-      } else {
+        if (bookings.length === 0) {
 
-        const todayKey = new Date().toISOString().slice(0, 10);
+          empty.style.display = "block";
 
-        for (const booking of bookings) {
+        } else {
 
-          const teacher = await armusFindMarketplaceTeacher(booking.teacherId);
-          const isPast = booking.date < todayKey;
-          const isCancelled = booking.status === "cancelled";
-          const avatarInner = teacher
-            ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
-            : "?";
+          empty.style.display = "none";
 
-          const card = document.createElement("div");
-          card.className = "lesson-card" + (isPast ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
+          const todayKey = new Date().toISOString().slice(0, 10);
 
-          card.innerHTML = `
-            <div class="lesson-row">
-              <div class="avatar">${avatarInner}</div>
-              <div class="lesson-info">
-                <div class="lesson-teacher">
-                  ${armusShortDisplayName(booking.teacherName)}
-                  <span class="lesson-type">${booking.type === "trial" ? "Deneme Dersi" : "Ders"}</span>
+          for (const booking of bookings) {
+
+            const teacher = await armusFindMarketplaceTeacher(booking.teacherId).catch(() => null);
+            const isPast = booking.date < todayKey;
+            const isCancelled = booking.status === "cancelled";
+            const avatarInner = teacher
+              ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
+              : "?";
+
+            const card = document.createElement("div");
+            card.className = "lesson-card" + (isPast ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
+
+            card.innerHTML = `
+              <div class="lesson-row">
+                <div class="avatar">${avatarInner}</div>
+                <div class="lesson-info">
+                  <div class="lesson-teacher">
+                    ${armusShortDisplayName(booking.teacherName)}
+                    <span class="lesson-type">${booking.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</span>
+                  </div>
+                  <div class="lesson-meta">₺${booking.price} ${armusT("booking.perLesson", "/ 50 dakika")}${isPast ? armusT("myLessons.pastSuffix", " · geçti") : ""}</div>
                 </div>
-                <div class="lesson-meta">₺${booking.price} / 50 dakika${isPast ? " · geçti" : ""}</div>
+                <div class="lesson-when">
+                  <div class="lesson-date">${booking.dateLabel}</div>
+                  <div class="lesson-time">${armusFormatTimeRange(booking.time)}</div>
+                </div>
               </div>
-              <div class="lesson-when">
-                <div class="lesson-date">${booking.dateLabel}</div>
-                <div class="lesson-time">${armusFormatTimeRange(booking.time)}</div>
-              </div>
-            </div>
-            ${isCancelled ? `
-              <div class="lesson-cancel-badge">
-                ⊘ İptal edildi${booking.refunded ? " · Ders hakkın eklendi" : (booking.cancelledBy === "student" ? " · Ders hakkı eklenmedi" : "")}
-              </div>
-            ` : (!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
-              <div class="lesson-join">
-                ${armusCanJoinLessonNow(booking)
-                  ? `<a class="join-btn" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>`
-                  : `<span class="join-hint">Ders saatinde bu kart üzerinden odaya katılabileceksin.</span>`}
-              </div>
-            ` : ""}
-          `;
-
-          let disputeBlock = null;
-
-          if (!isCancelled && !isPast) {
-
-            const lessonStart = new Date(`${booking.date}T${booking.time}:00`);
-            const hoursUntil = (lessonStart - new Date()) / 3_600_000;
-            const refundHint = hoursUntil >= 4
-              ? "İptal edersen bu öğretmenle (veya bir deneme dersi için başka biriyle) kullanabileceğin bir ders hakkı kazanırsın"
-              : "Derse 4 saatten az kaldığı için ders hakkı kazanılmaz";
-
-            const cancelWrap = document.createElement("div");
-            cancelWrap.className = "lesson-cancel-wrap";
-            cancelWrap.innerHTML = `
-              <button type="button" class="lesson-cancel-btn">Dersi İptal Et</button>
-              <span class="lesson-cancel-hint">${refundHint}</span>
+              ${isCancelled ? `
+                <div class="lesson-cancel-badge">
+                  ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}
+                </div>
+              ` : (!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
+                <div class="lesson-join">
+                  ${armusCanJoinLessonNow(booking)
+                    ? `<a class="join-btn" href="class.html?booking=${booking.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`
+                    : `<span class="join-hint">${armusT("myLessons.joinHint", "Ders saatinde bu kart üzerinden odaya katılabileceksin.")}</span>`}
+                </div>
+              ` : ""}
             `;
 
-            cancelWrap.querySelector(".lesson-cancel-btn").addEventListener("click", async () => {
+            let disputeBlock = null;
 
-              if (!confirm(`${armusShortDisplayName(booking.teacherName)} ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)} dersini iptal etmek istediğine emin misin?`)) return;
+            if (!isCancelled && !isPast) {
 
-              const btn = cancelWrap.querySelector(".lesson-cancel-btn");
-              btn.disabled = true;
-              btn.textContent = "İptal ediliyor...";
+              const lessonStart = new Date(`${booking.date}T${booking.time}:00`);
+              const hoursUntil = (lessonStart - new Date()) / 3_600_000;
+              const refundHint = hoursUntil >= 4
+                ? armusT("myLessons.refundHintYes", "İptal edersen bu öğretmenle (veya bir deneme dersi için başka biriyle) kullanabileceğin bir ders hakkı kazanırsın")
+                : armusT("myLessons.refundHintNo", "Derse 4 saatten az kaldığı için ders hakkı kazanılmaz");
 
-              const result = await armusCancelBooking(booking.id);
-
-              if (!result.ok) {
-                alert(result.error);
-                btn.disabled = false;
-                btn.textContent = "Dersi İptal Et";
-                return;
-              }
-
-              cancelWrap.outerHTML = `
-                <div class="lesson-cancel-badge">
-                  ⊘ İptal edildi${result.refunded ? " · Ders hakkın eklendi" : " · Ders hakkı eklenmedi"}
-                </div>
+              const cancelWrap = document.createElement("div");
+              cancelWrap.className = "lesson-cancel-wrap";
+              cancelWrap.innerHTML = `
+                <button type="button" class="lesson-cancel-btn">${armusT("myLessons.cancelBtn", "Dersi İptal Et")}</button>
+                <span class="lesson-cancel-hint">${refundHint}</span>
               `;
-              if (disputeBlock) disputeBlock.remove();
-            });
 
-            card.appendChild(cancelWrap);
-          }
+              cancelWrap.querySelector(".lesson-cancel-btn").addEventListener("click", async () => {
 
-          if (isPast) {
-            card.appendChild(await buildReviewBlock(booking));
-          }
-          if (!isCancelled) {
-            disputeBlock = buildDisputeBlock(booking);
-            card.appendChild(disputeBlock);
-          }
+                const confirmMsg = armusT("myLessons.cancelConfirm", "{name} ile {date}, {time} dersini iptal etmek istediğine emin misin?")
+                  .replace("{name}", armusShortDisplayName(booking.teacherName))
+                  .replace("{date}", booking.dateLabel)
+                  .replace("{time}", armusFormatTimeRange(booking.time));
+                if (!confirm(confirmMsg)) return;
 
-          list.appendChild(card);
+                const btn = cancelWrap.querySelector(".lesson-cancel-btn");
+                btn.disabled = true;
+                btn.textContent = armusT("myLessons.cancelling", "İptal ediliyor...");
+
+                const result = await armusCancelBooking(booking.id);
+
+                if (!result.ok) {
+                  alert(result.error);
+                  btn.disabled = false;
+                  btn.textContent = armusT("myLessons.cancelBtn", "Dersi İptal Et");
+                  return;
+                }
+
+                cancelWrap.outerHTML = `
+                  <div class="lesson-cancel-badge">
+                    ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${result.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi")}
+                  </div>
+                `;
+                if (disputeBlock) disputeBlock.remove();
+              });
+
+              card.appendChild(cancelWrap);
+            }
+
+            if (isPast) {
+              card.appendChild(await buildReviewBlock(booking));
+            }
+            if (!isCancelled) {
+              disputeBlock = buildDisputeBlock(booking);
+              card.appendChild(disputeBlock);
+            }
+
+            list.appendChild(card);
+          }
         }
       }
+
+      await renderLessons();
+      document.addEventListener("armus:langchange", renderLessons);
     }
 
     })();
