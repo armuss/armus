@@ -522,11 +522,34 @@
     }
 
     .flashcard-section {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: var(--armus-bg);
+      overflow-y: auto;
+      padding: 24px 20px 60px;
+    }
+
+    .flashcard-section-inner {
+      width: min(560px, 100%);
+      margin: 0 auto;
+    }
+
+    .flashcard-close-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 22px;
       background: var(--armus-panel);
-      margin-bottom: 24px;
+      color: var(--armus-ink);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      margin-bottom: 20px;
     }
 
     .flashcard-nav {
@@ -1230,38 +1253,43 @@
         const entry = hasEntries ? vocabEntries[flashcardIndex] : null;
 
         document.getElementById("flashcardSection").innerHTML = `
-          ${hasEntries ? `
-            <div class="flashcard-nav">
-              <button type="button" id="flashcardPrevBtn" ${vocabEntries.length < 2 ? "disabled" : ""}>‹</button>
-              <span class="flashcard-count">${flashcardIndex + 1} / ${vocabEntries.length}</span>
-              <button type="button" id="flashcardNextBtn" ${vocabEntries.length < 2 ? "disabled" : ""}>›</button>
-            </div>
-          ` : ""}
-          <div class="flashcard-stage">
-            <div class="flashcard ${flashcardFlipped ? "flipped" : ""}" id="flashcardEl">
-              <div class="flashcard-face flashcard-front">
-                ${hasEntries ? `
-                  <span class="flashcard-label">Kelime</span>
-                  <div class="flashcard-word">${entry.term}</div>
-                  <span class="flashcard-hint">Çevirmek için karta tıkla</span>
-                ` : `
-                  <div class="flashcard-empty">Henüz kartın yok.<br>Aşağıdan ilk kelimeni ekle 👇</div>
-                `}
+          <div class="flashcard-section-inner">
+            <button type="button" class="flashcard-close-btn" id="flashcardCloseBtn" aria-label="Kapat">✕</button>
+            ${hasEntries ? `
+              <div class="flashcard-nav">
+                <button type="button" id="flashcardPrevBtn" ${vocabEntries.length < 2 ? "disabled" : ""}>‹</button>
+                <span class="flashcard-count">${flashcardIndex + 1} / ${vocabEntries.length}</span>
+                <button type="button" id="flashcardNextBtn" ${vocabEntries.length < 2 ? "disabled" : ""}>›</button>
               </div>
-              <div class="flashcard-face flashcard-back">
-                ${hasEntries ? `
-                  <span class="flashcard-label">Anlamı</span>
-                  <div class="flashcard-word">${entry.meaning}</div>
-                ` : ""}
+            ` : ""}
+            <div class="flashcard-stage">
+              <div class="flashcard ${flashcardFlipped ? "flipped" : ""}" id="flashcardEl">
+                <div class="flashcard-face flashcard-front">
+                  ${hasEntries ? `
+                    <span class="flashcard-label">Kelime</span>
+                    <div class="flashcard-word">${entry.term}</div>
+                    <span class="flashcard-hint">Çevirmek için karta tıkla</span>
+                  ` : `
+                    <div class="flashcard-empty">Henüz kartın yok.<br>Aşağıdan ilk kelimeni ekle 👇</div>
+                  `}
+                </div>
+                <div class="flashcard-face flashcard-back">
+                  ${hasEntries ? `
+                    <span class="flashcard-label">Anlamı</span>
+                    <div class="flashcard-word">${entry.meaning}</div>
+                  ` : ""}
+                </div>
               </div>
             </div>
+            <form class="flashcard-add-form" id="flashcardAddForm">
+              <input type="text" id="flashcardWordInput" placeholder="Kelime" required maxlength="80">
+              <input type="text" id="flashcardMeaningInput" placeholder="Anlamı" required maxlength="120">
+              <button type="submit">Kart Oluştur</button>
+            </form>
           </div>
-          <form class="flashcard-add-form" id="flashcardAddForm">
-            <input type="text" id="flashcardWordInput" placeholder="Kelime" required maxlength="80">
-            <input type="text" id="flashcardMeaningInput" placeholder="Anlamı" required maxlength="120">
-            <button type="submit">Kart Oluştur</button>
-          </form>
         `;
+
+        document.getElementById("flashcardCloseBtn").addEventListener("click", closeFlashcardSection);
 
         if (hasEntries) {
           document.getElementById("flashcardEl").addEventListener("click", () => {
@@ -1300,11 +1328,15 @@
         });
       }
 
+      function closeFlashcardSection() {
+        document.getElementById("flashcardSection").style.display = "none";
+        document.body.style.overflow = "";
+      }
+
       document.getElementById("flashcardToggleBtn").addEventListener("click", () => {
-        const section = document.getElementById("flashcardSection");
-        const opening = section.style.display === "none";
-        section.style.display = opening ? "block" : "none";
-        if (opening) renderFlashcardSection();
+        document.getElementById("flashcardSection").style.display = "block";
+        document.body.style.overflow = "hidden";
+        renderFlashcardSection();
       });
 
       // ---- badges ----
