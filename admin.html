@@ -2359,13 +2359,21 @@
       return { rate: 15, range: "500+ saat" };
     }
 
-    function computeEarnings(teachers, bookings) {
+    function computeEarnings(teachers, bookings, credits) {
       return teachers
         .filter(t => t.status === "approved")
         .map(teacher => {
-          const completed = bookings.filter(b => b.teacherId === teacher.id && b.status !== "cancelled" && armusIsBookingPast(b));
+          const teacherBookings = bookings.filter(b => b.teacherId === teacher.id && b.status !== "cancelled");
+          const completed = teacherBookings.filter(armusIsBookingPast);
           const hours = Math.round((completed.length * 50 / 60) * 10) / 10;
-          const gross = completed.reduce((sum, b) => sum + (b.price || 0), 0);
+          // an unconverted trial's price stays with ARMUS, not the
+          // teacher's gross, until the student buys a package with them
+          // (see armusTrialCountsAsEarned)
+          const teacherCredits = (credits || []).filter(c => c.teacher_id === teacher.id);
+          const gross = completed.reduce(
+            (sum, b) => sum + (armusTrialCountsAsEarned(b, teacherBookings, teacherCredits) ? (b.price || 0) : 0),
+            0
+          );
           const tier = commissionForHours(hours);
           const commission = Math.round(gross * (tier.rate / 100));
           return {
@@ -2904,6 +2912,7 @@
     let armusAdminLogs = [];
     let armusAdminTestimonials = [];
     let armusAdminDisputes = [];
+    let armusAdminCredits = [];
     let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "" };
 
     function matchesSearch(value, term) {
@@ -2940,7 +2949,7 @@
       renderTestimonialsPanel(armusAdminTestimonials);
       renderDisputesPanel(filteredDisputes);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
-      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings));
+      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
       renderCityBreakdown(computeCityBreakdown(armusAdminProfiles));
       checkMilestones(armusAdminProfiles);
@@ -2988,13 +2997,14 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, creditsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
         armusSupabase.from("admin_actions").select("*"),
         armusAdminGetAllTestimonials(),
         armusAdminGetAllDisputes(),
+        armusSupabase.from("lesson_credits").select("*"),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -3003,6 +3013,10 @@
       armusAdminLogs = logsRes.data || [];
       armusAdminTestimonials = testimonialsRes || [];
       armusAdminDisputes = disputesRes || [];
+      // every teacher's lesson_credits (migration_30.sql admin policy) -
+      // used by computeEarnings to tell whether a trial converted into a
+      // real package purchase yet (see armusTrialCountsAsEarned)
+      armusAdminCredits = creditsRes.data || [];
 
       renderAllFromState();
     }
