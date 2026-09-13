@@ -397,6 +397,25 @@ const ARMUS_I18N_EN = {
   "studentDash.allMessages": "All Messages →",
   "studentDash.recommended": "Recommended For You",
 
+  // admin.html - internal staff tool, not visitor-facing. Sidebar nav
+  // labels only; the many data tables/charts/panels stay Turkish since
+  // the ARMUS team operating this page reads Turkish anyway.
+  "admin.tag": "ADMIN PANEL",
+  "admin.navOverview": "Overview",
+  "admin.navTeachers": "Teachers",
+  "admin.navChanges": "Profile Changes",
+  "admin.navBookings": "Bookings",
+  "admin.navStudents": "Students",
+  "admin.navLog": "Activity Log",
+  "admin.navTestimonials": "Homepage Reviews",
+  "admin.navDisputes": "Disputes",
+  "admin.navReviews": "Reviews",
+  "admin.navEarnings": "Earnings",
+  "admin.navAnnouncement": "Site Announcement",
+  "admin.navDemand": "Demand Map",
+  "admin.navCities": "Cities",
+  "admin.navFlags": "Display Settings",
+
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",

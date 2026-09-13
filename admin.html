@@ -173,6 +173,53 @@
       cursor: pointer;
     }
 
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .lang-toggle {
+      flex: 1;
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     /* ---- main ---- */
 
     main {
@@ -1023,25 +1070,31 @@
 
     <div class="sidebar">
       <div class="logo">ARMUS</div>
-      <span class="tag">ADMIN PANELİ</span>
+      <span class="tag" data-i18n="admin.tag">ADMIN PANELİ</span>
 
-      <button class="nav-btn active" data-panel="overview">Genel Bakış</button>
-      <button class="nav-btn" data-panel="teachers">Öğretmenler</button>
-      <button class="nav-btn" data-panel="changes">Profil Değişiklikleri <span class="nav-badge" id="changesBadge"></span></button>
-      <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
-      <button class="nav-btn" data-panel="students">Öğrenciler</button>
-      <button class="nav-btn" data-panel="log">Etkinlik Günlüğü</button>
-      <button class="nav-btn" data-panel="testimonials">Anasayfa Yorumları</button>
-      <button class="nav-btn" data-panel="disputes">Anlaşmazlıklar <span class="nav-badge" id="disputesBadge"></span></button>
-      <button class="nav-btn" data-panel="reviews">İncelemeler <span class="nav-badge" id="reviewsBadge"></span></button>
-      <button class="nav-btn" data-panel="earnings">Kazançlar</button>
-      <button class="nav-btn" data-panel="announcement">Site Duyurusu</button>
-      <button class="nav-btn" data-panel="demand">Talep Haritası</button>
-      <button class="nav-btn" data-panel="cities">Şehirler</button>
-      <button class="nav-btn" data-panel="flags">Görünüm Ayarları</button>
+      <button class="nav-btn active" data-panel="overview" data-i18n="admin.navOverview">Genel Bakış</button>
+      <button class="nav-btn" data-panel="teachers" data-i18n="admin.navTeachers">Öğretmenler</button>
+      <button class="nav-btn" data-panel="changes"><span data-i18n="admin.navChanges">Profil Değişiklikleri</span> <span class="nav-badge" id="changesBadge"></span></button>
+      <button class="nav-btn" data-panel="bookings" data-i18n="admin.navBookings">Rezervasyonlar</button>
+      <button class="nav-btn" data-panel="students" data-i18n="admin.navStudents">Öğrenciler</button>
+      <button class="nav-btn" data-panel="log" data-i18n="admin.navLog">Etkinlik Günlüğü</button>
+      <button class="nav-btn" data-panel="testimonials" data-i18n="admin.navTestimonials">Anasayfa Yorumları</button>
+      <button class="nav-btn" data-panel="disputes"><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
+      <button class="nav-btn" data-panel="reviews"><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
+      <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
+      <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
+      <button class="nav-btn" data-panel="demand" data-i18n="admin.navDemand">Talep Haritası</button>
+      <button class="nav-btn" data-panel="cities" data-i18n="admin.navCities">Şehirler</button>
+      <button class="nav-btn" data-panel="flags" data-i18n="admin.navFlags">Görünüm Ayarları</button>
 
       <div class="sidebar-bottom">
-        <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <button class="logout-btn" id="logoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
       </div>
     </div>
 
@@ -1331,6 +1384,7 @@
 
   </div>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
