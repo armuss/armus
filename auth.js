@@ -247,10 +247,16 @@ async function armusRenderNavAuth() {
   } else {
 
     el.innerHTML = `
-      <a class="btn" href="login.html">Giriş Yap</a>
-      <a class="btn btn-light" href="register.html">Kayıt Ol</a>
+      <a class="btn" href="login.html" data-i18n="nav.login">Giriş Yap</a>
+      <a class="btn btn-light" href="register.html" data-i18n="nav.register">Kayıt Ol</a>
     `;
   }
+
+  // this just replaced #navAuthButtons's whole innerHTML, wiping out
+  // whatever i18n.js had translated there (e.g. the Giriş Yap/Kayıt Ol
+  // links above) - re-apply so the current language sticks. Harmless
+  // no-op on a page that never loaded i18n.js.
+  if (typeof armusApplyTranslations === "function") armusApplyTranslations();
 }
 
 document.addEventListener("DOMContentLoaded", armusRenderNavAuth);

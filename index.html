@@ -19,30 +19,36 @@
   <header class="nav shell">
     <a class="brand" href="#">ARMUS</a>
     <nav>
-      <a href="teachers.html">Öğretmenler</a>
-      <a href="#how">Nasıl Çalışır?</a>
-      <a href="hakkimizda.html">Hakkımızda</a>
+      <a href="teachers.html" data-i18n="nav.teachers">Öğretmenler</a>
+      <a href="#how" data-i18n="nav.how">Nasıl Çalışır?</a>
+      <a href="hakkimizda.html" data-i18n="nav.about">Hakkımızda</a>
     </nav>
+    <div class="nav-utility">
+      <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+      <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </a>
+    </div>
     <div class="nav-actions" id="navAuthButtons">
-      <a class="btn btn-dark" href="login.html">Giriş Yap</a>
-      <a class="btn btn-light" href="register.html">Kayıt Ol</a>
+      <a class="btn btn-dark" href="login.html" data-i18n="nav.login">Giriş Yap</a>
+      <a class="btn btn-light" href="register.html" data-i18n="nav.register">Kayıt Ol</a>
     </div>
   </header>
 
   <main>
     <section class="hero shell">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="dot"></span> Türkiye'nin İngilizce öğrenme platformu</div>
-        <h1>İngilizce öğrenmenin<br><span>daha iyi bir yolu.</span></h1>
-        <p>Sana uygun İngilizce öğretmenini bul. Hedefine, seviyene ve bütçene göre dersini seç.</p>
+        <div class="eyebrow" data-i18n="index.eyebrow"><span class="dot"></span> Türkiye'nin İngilizce öğrenme platformu</div>
+        <h1><span data-i18n="index.hero.title1">İngilizce öğrenmenin</span><br><span data-i18n="index.hero.title2">daha iyi bir yolu.</span></h1>
+        <p data-i18n="index.hero.subtitle">Sana uygun İngilizce öğretmenini bul. Hedefine, seviyene ve bütçene göre dersini seç.</p>
         <div class="hero-actions">
-          <a class="btn btn-light hero-cta" href="teachers.html">Öğretmen Bul <span>→</span></a>
+          <a class="btn btn-light hero-cta" href="teachers.html"><span data-i18n="index.hero.cta">Öğretmen Bul</span> <span>→</span></a>
         </div>
         <div class="social-proof">
           <div class="avatars">
             <span>ZA</span><span>MK</span><span>ET</span><span>DK</span>
           </div>
-          <div><strong>10.000+</strong><br><span>öğrenci ARMUS ile İngilizce öğreniyor</span></div>
+          <div><strong>10.000+</strong><br><span data-i18n="index.hero.social">öğrenci ARMUS ile İngilizce öğreniyor</span></div>
         </div>
       </div>
 
@@ -54,7 +60,7 @@
             <h3>David K.</h3><small class="role-label">IELTS &amp; YDS Uzmanı</small>
             <div class="tags"><span>IELTS</span><span>YDS</span><span>Konuşma</span></div>
             <strong class="price">₺650 <small>/ ders</small></strong>
-            <button type="button">Deneme Dersi Al</button>
+            <button type="button" data-i18n="index.trial">Deneme Dersi Al</button>
           </div>
         </article>
 
@@ -65,7 +71,7 @@
             <h3>Sarah M.</h3><small class="role-label">IELTS &amp; Speaking Uzmanı</small>
             <div class="tags"><span>IELTS</span><span>Konuşma</span><span>İş İngilizcesi</span></div>
             <strong class="price">₺800 <small>/ ders</small></strong>
-            <button type="button">Deneme Dersi Al</button>
+            <button type="button" data-i18n="index.trial">Deneme Dersi Al</button>
           </div>
         </article>
 
@@ -76,7 +82,7 @@
             <h3>Emily L.</h3><small class="role-label">English Speaking Teacher</small>
             <div class="tags"><span>Konuşma</span><span>Başlangıç</span></div>
             <strong class="price">₺500 <small>/ ders</small></strong>
-            <button type="button">Deneme Dersi Al</button>
+            <button type="button" data-i18n="index.trial">Deneme Dersi Al</button>
           </div>
         </article>
 
@@ -87,14 +93,14 @@
             <h3>Michael J.</h3><small class="role-label">TOEFL Uzmanı</small>
             <div class="tags"><span>TOEFL</span><span>Konuşma</span><span>İleri</span></div>
             <strong class="price">₺900 <small>/ ders</small></strong>
-            <button type="button" tabindex="-1">Deneme Dersi Al</button>
+            <button type="button" tabindex="-1" data-i18n="index.trial">Deneme Dersi Al</button>
           </div>
         </article>
       </div>
     </section>
 
     <section class="proof shell" data-flag-id="flagProof">
-      <h2 class="reveal">Binlerce öğrenci, yüzlerce öğretmen.<br>Kişisel ve kanıtlanmış ilerleme.</h2>
+      <h2 class="reveal" data-i18n="index.proof.title">Binlerce öğrenci, yüzlerce öğretmen.<br>Kişisel ve kanıtlanmış ilerleme.</h2>
       <div class="proof-carousel reveal">
         <div class="proof-stage">
           <div class="proof-slide-photo active"><img src="https://i.pravatar.cc/500?img=47" alt=""></div>
@@ -104,16 +110,16 @@
         <div class="proof-text-wrap">
           <div class="proof-text-stack">
             <div class="proof-fact active">
-              <p>Öğrencilerin %96'sı gerçek bir öğretmenle pratik yapmanın ilerlemeleri için çok önemli olduğunu söylüyor.</p>
-              <small>ARMUS öğrenci anketi</small>
+              <p data-i18n="index.proof.fact1">Öğrencilerin %96'sı gerçek bir öğretmenle pratik yapmanın ilerlemeleri için çok önemli olduğunu söylüyor.</p>
+              <small data-i18n="index.proof.fact1.source">ARMUS öğrenci anketi</small>
             </div>
             <div class="proof-fact">
-              <p>Öğrencilerin %94'ü haftada sadece iki ders ile akıcılığını geliştirdi.</p>
-              <small>ARMUS öğrenci anketi</small>
+              <p data-i18n="index.proof.fact2">Öğrencilerin %94'ü haftada sadece iki ders ile akıcılığını geliştirdi.</p>
+              <small data-i18n="index.proof.fact2.source">ARMUS öğrenci anketi</small>
             </div>
             <div class="proof-fact">
-              <p>“ARMUS sayesinde kendime güvenim arttı, bunu gerçekten başarabileceğimi fark ettim.”</p>
-              <small>— Bir ARMUS öğrencisi</small>
+              <p data-i18n="index.proof.fact3">“ARMUS sayesinde kendime güvenim arttı, bunu gerçekten başarabileceğimi fark ettim.”</p>
+              <small data-i18n="index.proof.fact3.source">— Bir ARMUS öğrencisi</small>
             </div>
           </div>
           <div class="proof-dots">
@@ -126,13 +132,13 @@
     </section>
 
     <section id="how" class="how shell">
-      <div class="section-label reveal">NASIL ÇALIŞIR?</div>
-      <h2 class="reveal">İngilizce öğrenmeye<br>3 adımda başla.</h2>
+      <div class="section-label reveal" data-i18n="index.how.label">NASIL ÇALIŞIR?</div>
+      <h2 class="reveal" data-i18n="index.how.title">İngilizce öğrenmeye<br>3 adımda başla.</h2>
       <div class="steps">
         <article class="reveal step-card">
           <span class="step-badge b1">1</span>
-          <h3>Öğretmenini bul.</h3>
-          <p>Seni motive edecek, zorlayacak ve hedeflerine ulaştıracak bir öğretmenle eşleştiriyoruz — ilk dersten akıcılığa kadar.</p>
+          <h3 data-i18n="index.how.step1.title">Öğretmenini bul.</h3>
+          <p data-i18n="index.how.step1.text">Seni motive edecek, zorlayacak ve hedeflerine ulaştıracak bir öğretmenle eşleştiriyoruz — ilk dersten akıcılığa kadar.</p>
           <div class="step-visual visual-1">
             <div class="mini-teacher-card top">
               <img src="https://i.pravatar.cc/100?img=47" alt="">
@@ -148,8 +154,8 @@
 
         <article class="reveal step-card">
           <span class="step-badge b2">2</span>
-          <h3>Derse başla.</h3>
-          <p>Öğretmenin her dersi senin hedeflerine göre kişiselleştirir, böylece ilerleme daha ilk dersten kişisel hissettirir.</p>
+          <h3 data-i18n="index.how.step2.title">Derse başla.</h3>
+          <p data-i18n="index.how.step2.text">Öğretmenin her dersi senin hedeflerine göre kişiselleştirir, böylece ilerleme daha ilk dersten kişisel hissettirir.</p>
           <div class="step-visual visual-2">
             <img class="v2-back" src="https://i.pravatar.cc/300?img=13" alt="">
             <img class="v2-front" src="https://i.pravatar.cc/200?img=25" alt="">
@@ -158,8 +164,8 @@
 
         <article class="reveal step-card">
           <span class="step-badge b3">3</span>
-          <h3>Her hafta ilerle.</h3>
-          <p>Kaç ders almak istediğini sen seç ve düzenli pratikle kalıcı özgüven kazan.</p>
+          <h3 data-i18n="index.how.step3.title">Her hafta ilerle.</h3>
+          <p data-i18n="index.how.step3.text">Kaç ders almak istediğini sen seç ve düzenli pratikle kalıcı özgüven kazan.</p>
           <div class="step-visual visual-3">
             <img class="v3-s s1" src="https://i.pravatar.cc/200?img=52" alt="">
             <img class="v3-s s2" src="https://i.pravatar.cc/200?img=52" alt="">
@@ -171,8 +177,8 @@
 
     <section class="promise-banner" data-flag-id="flagPromiseBanner">
       <div class="shell reveal">
-        <h2>Seveceğin dersler. Garantili.</h2>
-        <p>Memnun kalmazsan başka bir öğretmeni ücretsiz dene.</p>
+        <h2 data-i18n="index.promise.title">Seveceğin dersler. Garantili.</h2>
+        <p data-i18n="index.promise.text">Memnun kalmazsan başka bir öğretmeni ücretsiz dene.</p>
       </div>
     </section>
 
@@ -181,33 +187,33 @@
         <img src="https://i.pravatar.cc/600?img=13" alt="">
       </div>
       <div class="tcta-panel reveal">
-        <div class="section-label">ÖĞRETMENLER İÇİN</div>
-        <h2>İngilizce öğretiyor musun?</h2>
-        <p>ARMUS'ta kendi fiyatını belirle, kendi programını oluştur ve öğrencilerini bul.</p>
+        <div class="section-label" data-i18n="index.teacherCta.label">ÖĞRETMENLER İÇİN</div>
+        <h2 data-i18n="index.teacherCta.title">İngilizce öğretiyor musun?</h2>
+        <p data-i18n="index.teacherCta.text">ARMUS'ta kendi fiyatını belirle, kendi programını oluştur ve öğrencilerini bul.</p>
         <ul class="tcta-points">
-          <li>Yeni öğrenciler bul</li>
-          <li>İşini büyüt</li>
-          <li>Güvenle ödeme al</li>
+          <li data-i18n="index.teacherCta.point1">Yeni öğrenciler bul</li>
+          <li data-i18n="index.teacherCta.point2">İşini büyüt</li>
+          <li data-i18n="index.teacherCta.point3">Güvenle ödeme al</li>
         </ul>
-        <a class="btn btn-light btn-lg" href="register.html?role=teacher">ARMUS'ta Öğretmen Ol →</a>
-        <a class="tcta-link" href="#how">Platformumuz nasıl çalışıyor</a>
+        <a class="btn btn-light btn-lg" href="register.html?role=teacher" data-i18n="index.teacherCta.cta">ARMUS'ta Öğretmen Ol →</a>
+        <a class="tcta-link" href="#how" data-i18n="index.teacherCta.link">Platformumuz nasıl çalışıyor</a>
       </div>
     </section>
 
     <section id="commission" class="commission-section shell reveal" data-flag-id="flagCommission">
-      <div class="section-label">KOMİSYON ORANLARI</div>
-      <h2>Daha çok ders ver,<br>daha az komisyon öde.</h2>
+      <div class="section-label" data-i18n="index.commission.label">KOMİSYON ORANLARI</div>
+      <h2 data-i18n="index.commission.title">Daha çok ders ver,<br>daha az komisyon öde.</h2>
       <div class="commission-row">
-        <div><b>%15</b><span>500+ saat</span></div>
-        <div><b>%20</b><span>300–500 saat</span></div>
-        <div><b>%25</b><span>200–300 saat</span></div>
-        <div><b>%28</b><span>100–200 saat</span></div>
-        <div><b>%30</b><span>0–100 saat</span></div>
+        <div><b>%15</b><span data-i18n="index.commission.tier1">500+ saat</span></div>
+        <div><b>%20</b><span data-i18n="index.commission.tier2">300–500 saat</span></div>
+        <div><b>%25</b><span data-i18n="index.commission.tier3">200–300 saat</span></div>
+        <div><b>%28</b><span data-i18n="index.commission.tier4">100–200 saat</span></div>
+        <div><b>%30</b><span data-i18n="index.commission.tier5">0–100 saat</span></div>
       </div>
     </section>
 
     <section class="testimonials shell" data-flag-id="flagTestimonials">
-      <div class="section-label reveal">ÖĞRENCİLERİMİZ NE DİYOR?</div>
+      <div class="section-label reveal" data-i18n="index.testimonials.label">ÖĞRENCİLERİMİZ NE DİYOR?</div>
       <div class="testimonial-grid" id="testimonialGrid">
         <article class="reveal"><div class="stars">★★★★★</div><p>“ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.”</p><strong>Zeynep A.</strong><small>İstanbul</small></article>
         <article class="reveal"><div class="stars">★★★★★</div><p>“Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.”</p><strong>Mehmet K.</strong><small>Ankara</small></article>
@@ -218,14 +224,15 @@
   </main>
 
   <footer class="footer shell">
-    <div class="footer-brand"><a class="brand" href="index.html">ARMUS</a><p>İngilizce öğrenmenin daha iyi bir yolu.</p><div class="socials">◎ 𝕏 in ▶</div></div>
-    <div><h4>Öğrenciler</h4><a href="teachers.html">Öğretmenler</a><a href="teachers.html">Deneme Dersi</a><a href="#how">Nasıl Çalışır?</a><a href="sss.html">Yardım Merkezi</a></div>
-    <div><h4>Öğretmenler</h4><a href="register.html?role=teacher">Öğretmen Ol</a><a href="#commission">Komisyon Oranları</a><a href="apply-teacher.html">Öğretmen Rehberi</a><a href="sss.html">SSS</a></div>
-    <div><h4>Hakkımızda</h4><a href="hakkimizda.html">Hakkımızda</a><a href="iletisim.html">Kariyer</a><a href="iletisim.html">İletişim</a><a href="gizlilik-politikasi.html">Gizlilik Politikası</a><a href="kullanim-sartlari.html">Kullanım Şartları</a></div>
-    <div><h4>Bültenimize Katılın</h4><p id="newsletterMsg">Yeni özellikler ve fırsatlardan haberdar olun.</p><form class="newsletter" id="newsletterForm"><input type="email" id="newsletterEmail" placeholder="E-posta adresiniz" required><button type="submit">↗</button></form></div>
-    <div class="copyright">© 2026 ARMUS. Tüm hakları saklıdır.</div>
+    <div class="footer-brand"><a class="brand" href="index.html">ARMUS</a><p data-i18n="index.footer.tagline">İngilizce öğrenmenin daha iyi bir yolu.</p><div class="socials">◎ 𝕏 in ▶</div></div>
+    <div><h4 data-i18n="index.footer.students">Öğrenciler</h4><a href="teachers.html" data-i18n="index.footer.findTeachers">Öğretmenler</a><a href="teachers.html" data-i18n="index.footer.trial">Deneme Dersi</a><a href="#how" data-i18n="index.footer.how">Nasıl Çalışır?</a><a href="sss.html" data-i18n="index.footer.help">Yardım Merkezi</a></div>
+    <div><h4 data-i18n="index.footer.teachers">Öğretmenler</h4><a href="register.html?role=teacher" data-i18n="index.footer.becomeTeacher">Öğretmen Ol</a><a href="#commission" data-i18n="index.footer.commission">Komisyon Oranları</a><a href="apply-teacher.html" data-i18n="index.footer.teacherGuide">Öğretmen Rehberi</a><a href="sss.html" data-i18n="index.footer.faq">SSS</a></div>
+    <div><h4 data-i18n="index.footer.about">Hakkımızda</h4><a href="hakkimizda.html" data-i18n="index.footer.aboutUs">Hakkımızda</a><a href="iletisim.html" data-i18n="index.footer.career">Kariyer</a><a href="iletisim.html" data-i18n="index.footer.contact">İletişim</a><a href="gizlilik-politikasi.html" data-i18n="index.footer.privacy">Gizlilik Politikası</a><a href="kullanim-sartlari.html" data-i18n="index.footer.terms">Kullanım Şartları</a></div>
+    <div><h4 data-i18n="index.footer.newsletter">Bültenimize Katılın</h4><p id="newsletterMsg" data-i18n="index.footer.newsletterText">Yeni özellikler ve fırsatlardan haberdar olun.</p><form class="newsletter" id="newsletterForm"><input type="email" id="newsletterEmail" placeholder="E-posta adresiniz" required><button type="submit">↗</button></form></div>
+    <div class="copyright" data-i18n="index.footer.copyright">© 2026 ARMUS. Tüm hakları saklıdır.</div>
   </footer>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
   <script src="supabase-config.js"></script>
