@@ -22,11 +22,11 @@ async function armusGetVocabEntries(studentId) {
 }
 
 // Returns the new entry on success, or false if saving failed.
-async function armusAddVocabEntry(studentId, term, meaning) {
+async function armusAddVocabEntry(studentId, term, meaning, category) {
 
   const { data, error } = await armusSupabase
     .from("vocab_entries")
-    .insert({ student_id: studentId, term, meaning })
+    .insert({ student_id: studentId, term, meaning, category: category || "Genel" })
     .select()
     .single();
 
@@ -39,57 +39,19 @@ async function armusDeleteVocabEntry(id) {
   return !error;
 }
 
-// remembered=true pushes the entry further out on the review schedule
-// (needs the *current* review_count, hence the fetch-then-write);
-// remembered=false keeps it due again right away (review_count resets
-// to 0, no fetch needed).
-async function armusReviewVocabEntry(id, remembered) {
-
-  if (!remembered) {
-    const { data, error } = await armusSupabase
-      .from("vocab_entries")
-      .update({ review_count: 0, last_reviewed_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) return false;
-    return data;
-  }
-
-  const { data: current, error: fetchError } = await armusSupabase
-    .from("vocab_entries")
-    .select("review_count")
-    .eq("id", id)
-    .single();
-
-  if (fetchError) return false;
+// Student-controlled "I know this one" toggle - no schedule, no due
+// dates, just a flag they can flip either way to declutter their deck.
+async function armusSetVocabMastered(id, mastered) {
 
   const { data, error } = await armusSupabase
     .from("vocab_entries")
-    .update({ review_count: current.review_count + 1, last_reviewed_at: new Date().toISOString() })
+    .update({ mastered })
     .eq("id", id)
     .select()
     .single();
 
   if (error) return false;
   return data;
-}
-
-// A leveled schedule, not true spaced repetition: review_count 0 is due
-// immediately, and each successful review pushes the next due date
-// further out (0 -> 2 -> 5 -> 10 -> 20 -> 40 days, then holds at 40).
-const ARMUS_VOCAB_REVIEW_INTERVALS_DAYS = [0, 2, 5, 10, 20, 40];
-
-function armusIsVocabDue(entry) {
-
-  if (!entry.last_reviewed_at) return true;
-
-  const idx = Math.min(entry.review_count, ARMUS_VOCAB_REVIEW_INTERVALS_DAYS.length - 1);
-  const intervalDays = ARMUS_VOCAB_REVIEW_INTERVALS_DAYS[idx];
-  const dueAt = new Date(entry.last_reviewed_at).getTime() + intervalDays * 86400000;
-
-  return Date.now() >= dueAt;
 }
 
 // ---- speaking confidence check-ins -----------------------------------
