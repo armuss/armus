@@ -431,7 +431,7 @@
     .pending-change-box {
       margin-top: 16px;
       padding: 16px;
-      background: rgba(212, 175, 106, .06);
+      background: rgba(246, 198, 73, .06);
       border: 1px solid var(--armus-gold-2);
       border-radius: 14px;
     }
@@ -2596,7 +2596,7 @@
       const rows = grid.map((row, r) => {
         const cells = row.map(count => {
           const intensity = count / max;
-          const style = count === 0 ? "" : `style="background:rgba(212,175,106,${(0.15 + intensity * 0.75).toFixed(2)})"`;
+          const style = count === 0 ? "" : `style="background:rgba(246, 198, 73,${(0.15 + intensity * 0.75).toFixed(2)})"`;
           return `<div class="hm-cell" ${style} title="${dayLabels[r]}: ${count} rezervasyon"></div>`;
         }).join("");
         return `<div class="hm-label">${dayLabels[r]}</div>${cells}`;
@@ -2700,7 +2700,7 @@
     function fireConfetti() {
       const layer = document.getElementById("confettiLayer");
       if (!layer) return;
-      const colors = ["#d4af6a", "#c9424a", "#2e8b7d", "#9c3fb5", "#4a3f2a"];
+      const colors = ["#f6c649", "#c9424a", "#2e8b7d", "#9c3fb5", "#4a3f2a"];
       for (let i = 0; i < 60; i++) {
         const piece = document.createElement("div");
         piece.className = "confetti-piece";

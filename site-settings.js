@@ -47,7 +47,7 @@ async function armusRenderAnnouncementBanner() {
   bar.id = "armusAnnouncementBar";
   bar.style.cssText = [
     "position:sticky", "top:0", "z-index:999",
-    "background:var(--armus-gold-gradient,#d4af6a)",
+    "background:var(--armus-gold-gradient,#f6c649)",
     "color:var(--armus-on-gold,#1c1c1e)",
     "font-family:'Inter',sans-serif", "font-size:13.5px", "font-weight:600",
     "padding:11px 46px 11px 16px", "text-align:center", "line-height:1.5",
