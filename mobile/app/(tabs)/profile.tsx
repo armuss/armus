@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { colors, fonts, radius } from '../../lib/theme';
+
+const SITE_URL = 'https://armus.vercel.app';
 
 export default function Profile() {
   const { profile, signOut } = useAuth();
@@ -42,6 +44,16 @@ export default function Profile() {
         </View>
         <View style={{ marginTop: 12, width: '100%' }}>
           <Button label="Çıkış Yap" variant="outline" onPress={signOut} />
+        </View>
+
+        <View style={styles.legalRow}>
+          <Pressable onPress={() => Linking.openURL(`${SITE_URL}/gizlilik-politikasi.html`)}>
+            <Text style={styles.legalLink}>Gizlilik Politikası</Text>
+          </Pressable>
+          <Text style={styles.legalDot}>·</Text>
+          <Pressable onPress={() => Linking.openURL(`${SITE_URL}/kullanim-sartlari.html`)}>
+            <Text style={styles.legalLink}>Kullanım Şartları</Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>
@@ -120,5 +132,22 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemibold,
     fontSize: 13.5,
     color: colors.ink,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 28,
+  },
+  legalLink: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12.5,
+    color: colors.muted,
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    fontFamily: fonts.body,
+    fontSize: 12.5,
+    color: colors.faint,
   },
 });
