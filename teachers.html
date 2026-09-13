@@ -156,32 +156,80 @@
 
     /* SEARCH */
 
-    .search-box {
+    /* TOP FILTER ROW 1 - Preply-style labeled boxes */
+
+    .filter-box-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 6;
+    }
+
+    .filter-box {
       display: flex;
-      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 8px;
-      margin-bottom: 14px;
+      border-radius: 14px;
+      padding: 11px 16px;
+      min-width: 0;
     }
 
-    .search-box input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--armus-ink);
+    button.filter-box {
+      width: 100%;
       font-family: inherit;
-      font-size: 14.5px;
-      padding: 10px 14px;
+      cursor: pointer;
+      text-align: left;
     }
 
-    .search-box input::placeholder {
+    button.filter-box:hover {
+      border-color: var(--armus-silver-1);
+    }
+
+    .filter-box-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .filter-box-label {
+      font-size: 11px;
+      color: var(--armus-muted);
+    }
+
+    .filter-box-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--armus-ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .filter-box .chev {
+      font-size: 10px;
       color: var(--armus-faint);
+      flex-shrink: 0;
     }
 
-    /* TOP FILTER BAR (Preply-style dropdown pills, ARMUS theme) */
+    @media (max-width: 820px) {
+      .filter-box-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .filter-box-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* TOP FILTER ROW 2 - Preply-style dropdown pills + search, ARMUS theme */
 
     .filter-bar {
       display: flex;
@@ -191,6 +239,39 @@
       margin-bottom: 22px;
       position: relative;
       z-index: 5;
+    }
+
+    .filter-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 9px 16px;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .filter-search .search-icon {
+      font-size: 13px;
+      opacity: .6;
+      flex-shrink: 0;
+    }
+
+    .filter-search input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .filter-search input::placeholder {
+      color: var(--armus-faint);
     }
 
     .filter-dropdown {
@@ -217,6 +298,14 @@
 
     .filter-pill.active-filter {
       border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .filter-box.active-filter {
+      border-color: var(--armus-gold-2);
+    }
+
+    .filter-box.active-filter .filter-box-value {
       color: var(--armus-gold-text);
     }
 
@@ -330,7 +419,6 @@
     }
 
     .sort-wrap {
-      margin-left: auto;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -641,29 +729,40 @@
       <p id="loadingNote" class="loading-note">Diğer öğretmenler yükleniyor…</p>
     </div>
 
-    <div class="search-box">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="İsim, uzmanlık veya konu ara..."
-      >
-    </div>
+    <div class="filter-box-row">
 
-    <div class="filter-bar">
+      <div class="filter-box filter-box-static">
+        <span class="filter-box-text">
+          <span class="filter-box-label">Ne öğrenmek istiyorum</span>
+          <span class="filter-box-value">İngilizce</span>
+        </span>
+      </div>
 
-      <div class="filter-dropdown" data-dropdown="type">
-        <button type="button" class="filter-pill">Ders Türü <span class="chev">▾</span></button>
+      <div class="filter-dropdown" data-dropdown="price">
+        <button type="button" class="filter-trigger filter-box">
+          <span class="filter-box-text">
+            <span class="filter-box-label">Ders ücreti</span>
+            <span class="filter-box-value" id="priceRangeLabel"></span>
+          </span>
+          <span class="chev">▾</span>
+        </button>
         <div class="filter-panel">
-          <label class="filter-option"><input type="checkbox" value="Konuşma" class="filter"> Konuşma</label>
-          <label class="filter-option"><input type="checkbox" value="IELTS" class="filter"> IELTS</label>
-          <label class="filter-option"><input type="checkbox" value="TOEFL" class="filter"> TOEFL</label>
-          <label class="filter-option"><input type="checkbox" value="YDS" class="filter"> YDS</label>
-          <label class="filter-option"><input type="checkbox" value="İş İngilizcesi" class="filter"> İş İngilizcesi</label>
+          <div class="filter-price-label">Fiyat aralığı</div>
+          <div class="price-slider-wrap">
+            <input type="range" id="priceMin" min="0" max="1000" step="50" value="0">
+            <input type="range" id="priceMax" min="0" max="1000" step="50" value="1000">
+          </div>
         </div>
       </div>
 
       <div class="filter-dropdown" data-dropdown="level">
-        <button type="button" class="filter-pill">Seviye <span class="chev">▾</span></button>
+        <button type="button" class="filter-trigger filter-box">
+          <span class="filter-box-text">
+            <span class="filter-box-label">Seviye</span>
+            <span class="filter-box-value" id="levelBoxValue">Tümü</span>
+          </span>
+          <span class="chev">▾</span>
+        </button>
         <div class="filter-panel">
           <label class="filter-option"><input type="checkbox" value="Başlangıç" class="level-filter"> Başlangıç</label>
           <label class="filter-option"><input type="checkbox" value="Orta" class="level-filter"> Orta</label>
@@ -672,7 +771,13 @@
       </div>
 
       <div class="filter-dropdown" data-dropdown="lang">
-        <button type="button" class="filter-pill">Diller <span class="chev">▾</span></button>
+        <button type="button" class="filter-trigger filter-box">
+          <span class="filter-box-text">
+            <span class="filter-box-label">Diller</span>
+            <span class="filter-box-value" id="langBoxValue">Tümü</span>
+          </span>
+          <span class="chev">▾</span>
+        </button>
         <div class="filter-panel">
           <label class="filter-option"><input type="checkbox" value="İngilizce" class="lang-filter"> İngilizce</label>
           <label class="filter-option"><input type="checkbox" value="Türkçe" class="lang-filter"> Türkçe</label>
@@ -682,14 +787,18 @@
         </div>
       </div>
 
-      <div class="filter-dropdown" data-dropdown="price">
-        <button type="button" class="filter-pill">Fiyat <span id="priceRangeLabel"></span> <span class="chev">▾</span></button>
+    </div>
+
+    <div class="filter-bar">
+
+      <div class="filter-dropdown" data-dropdown="type">
+        <button type="button" class="filter-trigger filter-pill">Ders Türü <span class="chev">▾</span></button>
         <div class="filter-panel">
-          <div class="filter-price-label">Fiyat aralığı</div>
-          <div class="price-slider-wrap">
-            <input type="range" id="priceMin" min="0" max="1000" step="50" value="0">
-            <input type="range" id="priceMax" min="0" max="1000" step="50" value="1000">
-          </div>
+          <label class="filter-option"><input type="checkbox" value="Konuşma" class="filter"> Konuşma</label>
+          <label class="filter-option"><input type="checkbox" value="IELTS" class="filter"> IELTS</label>
+          <label class="filter-option"><input type="checkbox" value="TOEFL" class="filter"> TOEFL</label>
+          <label class="filter-option"><input type="checkbox" value="YDS" class="filter"> YDS</label>
+          <label class="filter-option"><input type="checkbox" value="İş İngilizcesi" class="filter"> İş İngilizcesi</label>
         </div>
       </div>
 
@@ -707,6 +816,15 @@
         </select>
       </div>
 
+      <div class="filter-search">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="İsim, uzmanlık veya konu ara..."
+        >
+      </div>
+
     </div>
 
 
@@ -721,6 +839,7 @@
 
   <script src="teachers-data.js"></script>
   <script src="favorites.js"></script>
+  <script src="auth.js"></script>
   <script>
 
     // Everything in this block only needs teachers-data.js and favorites.js
@@ -734,8 +853,8 @@
     // ---- dropdown filter pills open/close ----
 
     document.querySelectorAll(".filter-dropdown").forEach(dropdown => {
-      const pill = dropdown.querySelector(".filter-pill");
-      pill.addEventListener("click", event => {
+      const trigger = dropdown.querySelector(".filter-trigger");
+      trigger.addEventListener("click", event => {
         event.stopPropagation();
         const wasOpen = dropdown.classList.contains("open");
         document.querySelectorAll(".filter-dropdown.open").forEach(d => d.classList.remove("open"));
@@ -833,6 +952,8 @@
     const priceMin = document.getElementById("priceMin");
     const priceMax = document.getElementById("priceMax");
     const priceRangeLabel = document.getElementById("priceRangeLabel");
+    const levelBoxValue = document.getElementById("levelBoxValue");
+    const langBoxValue = document.getElementById("langBoxValue");
     const sortSelect = document.getElementById("sortSelect");
     const count = document.getElementById("resultsCount");
     const empty = document.getElementById("emptyState");
@@ -942,14 +1063,18 @@
       count.textContent =
         `${visibleCards.length} öğretmen bulundu`;
 
-      // reflect active state on the filter pills themselves
-      document.querySelector('[data-dropdown="type"] .filter-pill')
+      // reflect the picked values on the row-1 boxes themselves
+      levelBoxValue.textContent = selectedLevels.length ? selectedLevels.join(", ") : "Tümü";
+      langBoxValue.textContent = selectedLangs.length ? selectedLangs.join(", ") : "Tümü";
+
+      // reflect active state on the filter triggers themselves
+      document.querySelector('[data-dropdown="type"] .filter-trigger')
         .classList.toggle("active-filter", selectedTags.length > 0);
-      document.querySelector('[data-dropdown="level"] .filter-pill')
+      document.querySelector('[data-dropdown="level"] .filter-trigger')
         .classList.toggle("active-filter", selectedLevels.length > 0);
-      document.querySelector('[data-dropdown="lang"] .filter-pill')
+      document.querySelector('[data-dropdown="lang"] .filter-trigger')
         .classList.toggle("active-filter", selectedLangs.length > 0);
-      document.querySelector('[data-dropdown="price"] .filter-pill')
+      document.querySelector('[data-dropdown="price"] .filter-trigger')
         .classList.toggle("active-filter", minPrice > 0 || maxPrice < 1000);
 
       empty.style.display =
@@ -994,7 +1119,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="site-settings.js"></script>
-  <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
   <script src="marketplace.js"></script>
