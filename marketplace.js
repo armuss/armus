@@ -30,6 +30,7 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
     name: armusFormatReviewerName(r.studentName),
     stars: r.stars,
     text: r.text,
+    date: r.createdAt,
   }));
   const rating = rawReviews.length
     ? Math.round((rawReviews.reduce((sum, r) => sum + r.stars, 0) / rawReviews.length) * 10) / 10
@@ -87,6 +88,7 @@ async function armusEnrichDemoTeacherReviews(teacher) {
     name: armusFormatReviewerName(r.studentName),
     stars: r.stars,
     text: r.text,
+    date: r.createdAt,
   }));
 
   return { ...teacher, reviews: liveReviews.concat(teacher.reviews) };

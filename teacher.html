@@ -74,34 +74,60 @@
       color: var(--armus-ink);
     }
 
-    /* PROFILE HEADER */
+    /* HERO MEDIA (video if the teacher has one, else a big photo) */
 
-    .profile-header {
-      padding: 65px 0 28px;
-      border-bottom: 1px solid var(--armus-border-soft);
+    .hero-media {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--armus-silver-gradient);
+      border: 1px solid var(--armus-border);
+      margin-top: 30px;
     }
 
-    .profile-main {
+    .hero-media video,
+    .hero-media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-media.fallback {
       display: flex;
-      gap: 25px;
+      align-items: center;
+      justify-content: center;
+      font-size: 54px;
+      font-weight: 800;
+      color: #1c1c1e;
     }
 
-    .avatar {
-      width: 120px;
-      height: 160px;
+    /* NAME ROW */
+
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .mini-avatar {
+      width: 52px;
+      height: 52px;
       flex-shrink: 0;
-      border-radius: 20px;
+      border-radius: 50%;
       background: var(--armus-silver-gradient);
       color: #1c1c1e;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 30px;
+      font-size: 16px;
       font-weight: 800;
       overflow: hidden;
     }
 
-    .avatar img {
+    .mini-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -113,24 +139,24 @@
       gap: 6px;
       color: var(--armus-gold-text);
       font-size: 11px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     h1 {
-      font-size: 40px;
-      letter-spacing: -2px;
+      font-size: 32px;
+      letter-spacing: -1.3px;
       line-height: 1.1;
     }
 
     .role {
       color: var(--armus-muted);
-      margin-top: 8px;
+      margin-top: 4px;
       font-size: 14px;
     }
 
     .online-badge {
       display: inline-block;
-      margin-top: 10px;
+      margin-left: auto;
       background: rgba(76, 175, 125, .12);
       border: 1px solid rgba(76, 175, 125, .5);
       color: #1f7a4d;
@@ -138,10 +164,11 @@
       font-weight: 700;
       border-radius: 999px;
       padding: 4px 11px;
+      white-space: nowrap;
     }
 
     .rating {
-      margin-top: 15px;
+      margin-top: 16px;
       font-size: 13px;
     }
 
@@ -154,7 +181,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 20px;
+      margin-top: 16px;
     }
 
     .tag {
@@ -163,6 +190,113 @@
       padding: 6px 11px;
       color: var(--armus-muted);
       font-size: 11px;
+    }
+
+    /* INFO BLOCKS (experience, rating - Preply's icon+text rows) */
+
+    .info-block {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .info-block-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    .info-block-title {
+      font-weight: 700;
+      font-size: 14.5px;
+      margin-bottom: 3px;
+    }
+
+    .info-block-text {
+      color: var(--armus-muted);
+      font-size: 13px;
+    }
+
+    /* SHOW MORE (about text / reviews) */
+
+    .show-more-btn {
+      display: inline-block;
+      margin-top: 10px;
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* I SPEAK */
+
+    .speak-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .speak-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .speak-pill-level {
+      background: var(--armus-panel-2);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--armus-muted);
+    }
+
+    /* REVIEWS SUMMARY + GRID */
+
+    .reviews-summary {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .reviews-summary-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .reviews-summary-star {
+      color: var(--armus-gold-text);
+    }
+
+    .reviews-summary-count {
+      color: var(--armus-muted);
+      font-size: 13px;
+    }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
 
     /* BOOKING CARD */
@@ -179,9 +313,6 @@
     }
 
     .price {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       font-size: 27px;
       font-weight: 800;
       color: var(--armus-gold-text);
@@ -193,31 +324,31 @@
       font-weight: 400;
     }
 
-    .fav-btn {
-      background: transparent;
-      border: 1px solid var(--armus-border);
-      border-radius: 10px;
-      color: var(--armus-muted);
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 8px 11px;
+    .booking-stats {
+      display: flex;
+      gap: 22px;
+      margin-top: 14px;
     }
 
-    .fav-btn.active {
-      color: var(--armus-gold-text);
-      border-color: var(--armus-gold-2);
+    .booking-stats strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .booking-stats span {
+      color: var(--armus-muted);
+      font-size: 11px;
     }
 
     .availability {
-      margin-top: 10px;
+      margin-top: 12px;
       color: var(--armus-muted);
       font-size: 12px;
     }
 
     .primary {
       width: 100%;
-      margin-top: 22px;
+      margin-top: 18px;
       padding: 14px;
       border: none;
       border-radius: 12px;
@@ -226,6 +357,33 @@
       font-family: inherit;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    .icon-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .icon-row button {
+      background: transparent;
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      color: var(--armus-muted);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 11px 0;
+    }
+
+    .icon-row button:hover {
+      border-color: var(--armus-silver-1);
+    }
+
+    .icon-row button.active {
+      color: var(--armus-gold-text);
+      border-color: var(--armus-gold-2);
     }
 
     .secondary {
@@ -277,56 +435,34 @@
       line-height: 1.9;
     }
 
-    #introVideo {
-      display: block;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      border-radius: 18px;
-      background: #000;
-      border: 1px solid var(--armus-border);
-    }
-
-    /* STATS */
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-
-    .stat {
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 18px;
-      background: var(--armus-panel-2);
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 21px;
-    }
-
-    .stat span {
-      color: var(--armus-muted);
-      font-size: 11px;
-    }
-
     /* REVIEWS */
 
     .review {
-      border-top: 1px solid var(--armus-border-soft);
-      padding: 20px 0;
-    }
-
-    .review:first-of-type {
-      border-top: none;
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px;
     }
 
     .review-top {
       display: flex;
-      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       font-size: 12px;
+    }
+
+    .review-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--armus-muted);
+      flex-shrink: 0;
     }
 
     .review-name {
@@ -335,6 +471,7 @@
 
     .stars {
       color: var(--armus-gold-text);
+      margin-top: 8px;
     }
 
     .review-text {
@@ -409,10 +546,6 @@
 
     @media (max-width: 800px) {
 
-      .profile-main {
-        flex-direction: column;
-      }
-
       .booking-card {
         position: static;
       }
@@ -421,7 +554,7 @@
         grid-template-columns: 1fr;
       }
 
-      .stats {
+      .reviews-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -458,94 +591,78 @@
 
     <div id="profileRoot">
 
-      <!-- PROFILE HEADER -->
-
-      <div class="profile-header">
-
-        <div class="profile-main">
-
-          <div class="avatar" id="avatar"></div>
-
-          <div>
-
-            <div class="verified">
-              ✓ ARMUS tarafından doğrulandı
-            </div>
-
-            <h1 id="teacherName"></h1>
-
-            <span class="online-badge" id="onlineBadge" style="display: none;">● Şu an müsait</span>
-
-            <div class="role" id="teacherRole"></div>
-
-            <div class="rating">
-              <span id="ratingValue"></span>
-              <span id="reviewCountLabel"></span>
-            </div>
-
-            <div class="tags" id="headerTags"></div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
       <!-- CONTENT -->
 
       <div class="content">
 
         <div>
 
-          <!-- STATS -->
-          <!-- shown right after the header for every teacher, so this
-               area always has content instead of sitting empty when
-               there's no intro video -->
+          <!-- HERO (video if the teacher has one, else a big photo) -->
+
+          <div class="hero-media" id="heroMedia"></div>
+
+          <!-- NAME ROW -->
+
+          <div class="name-row">
+            <div class="mini-avatar" id="avatar"></div>
+            <div>
+              <h1 id="teacherName"></h1>
+              <div class="role" id="teacherRole"></div>
+            </div>
+            <span class="online-badge" id="onlineBadge" style="display: none;">● Şu an müsait</span>
+          </div>
+
+          <div class="verified">
+            ✓ ARMUS tarafından doğrulandı
+          </div>
+
+          <div class="rating">
+            <span id="ratingValue"></span>
+            <span id="reviewCountLabel"></span>
+          </div>
+
+          <div class="tags" id="headerTags"></div>
+
+
+          <!-- INFO BLOCKS (real numbers only - experience/lessons taught,
+               and a rating-based badge; no fabricated "Top X%" or
+               certificate claims ARMUS doesn't actually track) -->
 
           <section>
 
-            <h2 id="statsTitle">Hakkında</h2>
-
-            <div class="stats">
-
-              <div class="stat">
-                <strong id="statExperience"></strong>
-                <span>Yıl deneyim</span>
+            <div class="info-block">
+              <span class="info-block-icon">🎓</span>
+              <div>
+                <div class="info-block-title">Deneyimli Öğretmen</div>
+                <div class="info-block-text" id="experienceText"></div>
               </div>
+            </div>
 
-              <div class="stat">
-                <strong id="statLessons"></strong>
-                <span>Tamamlanan ders</span>
+            <div class="info-block" id="highRatedBlock" style="display: none;">
+              <span class="info-block-icon">⭐</span>
+              <div>
+                <div class="info-block-title">Yüksek Puanlı Öğretmen</div>
+                <div class="info-block-text">ARMUS öğrencilerinden ortalama <strong id="highRatedValue"></strong> puan aldı.</div>
               </div>
-
-              <div class="stat" id="statStudentsBox" style="display: none;">
-                <strong id="statStudents"></strong>
-                <span>Öğrenci</span>
-              </div>
-
-              <div class="stat">
-                <strong id="statReviews"></strong>
-                <span>Öğrenci yorumu</span>
-              </div>
-
             </div>
 
           </section>
 
-
-          <!-- VIDEO -->
-
-          <section id="videoSection" style="display: none;">
-            <h2>Tanıtım Videosu</h2>
-            <video id="introVideo" controls playsinline></video>
-          </section>
 
           <!-- ABOUT -->
 
           <section>
             <h2>Hakkımda</h2>
             <div class="description" id="aboutText"></div>
+            <button type="button" class="show-more-btn" id="aboutShowMoreBtn" style="display: none;">Devamını oku</button>
+          </section>
+
+
+          <!-- I SPEAK -->
+
+          <section id="speakSection" style="display: none;">
+            <h2>Konuştuğu diller</h2>
+            <div class="speak-pills" id="speakPills"></div>
           </section>
 
 
@@ -553,7 +670,13 @@
 
           <section>
             <h2>Öğrenci yorumları</h2>
-            <div id="reviewsList"></div>
+
+            <div class="reviews-summary" id="reviewsSummary" style="display: none;">
+              <div class="reviews-summary-score"><strong id="avgRatingBig"></strong> <span class="reviews-summary-star">★</span></div>
+              <div class="reviews-summary-count" id="reviewsSummaryCount"></div>
+            </div>
+
+            <div class="reviews-grid" id="reviewsList"></div>
           </section>
 
         </div>
@@ -569,7 +692,17 @@
 
             <div class="price">
               <span id="priceValue"></span> <span>/ 50 dakika</span>
-              <button type="button" id="favBtn" class="fav-btn" aria-label="Favorilere ekle">♥</button>
+            </div>
+
+            <div class="booking-stats">
+              <div>
+                <strong id="cardRating"></strong>
+                <span id="cardReviewLabel"></span>
+              </div>
+              <div>
+                <strong id="cardLessons"></strong>
+                <span>ders</span>
+              </div>
             </div>
 
             <div class="availability" id="availability"></div>
@@ -580,17 +713,29 @@
               Deneme Dersi Al
             </button>
 
+            <div class="icon-row">
+              <button
+                type="button"
+                id="messageBtn"
+                style="display: none;"
+                aria-label="Mesaj gönder"
+                title="Mesaj gönder">💬</button>
+              <button
+                type="button"
+                id="favBtn"
+                aria-label="Favorilere ekle"
+                title="Favorilere ekle">♡</button>
+              <button
+                type="button"
+                id="shareBtn"
+                aria-label="Profili paylaş"
+                title="Profili paylaş">↗</button>
+            </div>
+
             <button
               class="secondary"
               onclick="bookLesson()">
               Ders Rezervasyonu Yap
-            </button>
-
-            <button
-              class="secondary"
-              id="messageBtn"
-              style="display: none;">
-              Mesaj Gönder
             </button>
 
             <div class="small-note">
@@ -681,10 +826,16 @@
         ? `<img src="${teacher.photo}" alt="">`
         : teacher.initials;
 
+      const heroMedia = document.getElementById("heroMedia");
       if (teacher.video) {
-        document.getElementById("videoSection").style.display = "block";
-        document.getElementById("introVideo").src = teacher.video;
+        heroMedia.innerHTML = `<video src="${teacher.video}" controls playsinline></video>`;
+      } else if (teacher.photo) {
+        heroMedia.innerHTML = `<img src="${teacher.photo}" alt="">`;
+      } else {
+        heroMedia.classList.add("fallback");
+        heroMedia.textContent = teacher.initials;
       }
+
       document.getElementById("teacherName").textContent = armusShortDisplayName(teacher.name);
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("onlineBadge").style.display = teacher.isOnline ? "inline-block" : "none";
@@ -712,11 +863,38 @@
       document.getElementById("availability").textContent =
         `● ${teacher.availability}`;
 
+      document.getElementById("cardRating").textContent =
+        teacher.rating ? `★ ${teacher.rating}` : "Yeni";
+      document.getElementById("cardReviewLabel").textContent =
+        teacher.reviewCount > 0 ? `${teacher.reviewCount} değerlendirme` : "değerlendirme yok";
+      document.getElementById("cardLessons").textContent =
+        teacher.completedLessons;
+
       const favBtn = document.getElementById("favBtn");
-      favBtn.classList.toggle("active", armusIsFavorite(teacher.id));
+      function renderFavBtn(active) {
+        favBtn.classList.toggle("active", active);
+        favBtn.textContent = active ? "♥" : "♡";
+      }
+      renderFavBtn(armusIsFavorite(teacher.id));
       favBtn.addEventListener("click", () => {
-        const nowFavorited = armusToggleFavorite(teacher.id);
-        favBtn.classList.toggle("active", nowFavorited);
+        renderFavBtn(armusToggleFavorite(teacher.id));
+      });
+
+      // no native Web Share support on desktop Chrome/Firefox - falls back
+      // to copying the profile link to the clipboard instead
+      const shareBtn = document.getElementById("shareBtn");
+      shareBtn.addEventListener("click", async () => {
+        if (navigator.share) {
+          try { await navigator.share({ title: document.title, url: window.location.href }); }
+          catch (e) {}
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          const original = shareBtn.textContent;
+          shareBtn.textContent = "✓";
+          setTimeout(() => { shareBtn.textContent = original; }, 1500);
+        } catch (e) {}
       });
 
       // messaging only makes sense for real (self-registered) teachers -
@@ -747,25 +925,73 @@
       }
 
       const aboutText = document.getElementById("aboutText");
-      teacher.about.forEach(paragraph => {
+      const aboutShowMoreBtn = document.getElementById("aboutShowMoreBtn");
+
+      teacher.about.forEach((paragraph, i) => {
         const p = document.createElement("p");
         p.textContent = paragraph;
         p.style.marginBottom = "14px";
+        if (i > 0) p.style.display = "none";
         aboutText.appendChild(p);
       });
 
-      document.getElementById("statsTitle").textContent =
-        `${teacher.name.split(" ")[0]} hakkında`;
-      document.getElementById("statExperience").textContent =
-        teacher.experience.replace(" Yıl deneyim", "");
-      document.getElementById("statLessons").textContent =
-        teacher.completedLessons;
-      document.getElementById("statReviews").textContent =
-        teacher.reviewCount;
+      if (teacher.about.length > 1) {
+        aboutShowMoreBtn.style.display = "inline-block";
+        aboutShowMoreBtn.addEventListener("click", () => {
+          const expanded = aboutShowMoreBtn.dataset.expanded === "true";
+          aboutText.querySelectorAll("p").forEach((p, i) => {
+            if (i > 0) p.style.display = expanded ? "none" : "block";
+          });
+          aboutShowMoreBtn.textContent = expanded ? "Devamını oku" : "Daha az göster";
+          aboutShowMoreBtn.dataset.expanded = expanded ? "false" : "true";
+        });
+      }
 
-      if (teacher.students !== undefined) {
-        document.getElementById("statStudentsBox").style.display = "block";
-        document.getElementById("statStudents").textContent = teacher.students;
+      // real numbers only - no fabricated "Top X%"/certificate badges
+      document.getElementById("experienceText").textContent =
+        `${teacher.experience}, ${teacher.completedLessons} tamamlanmış ders` +
+        (teacher.students !== undefined ? `, ${teacher.students} öğrenci` : "");
+
+      if (teacher.rating && teacher.rating >= 4.8) {
+        document.getElementById("highRatedBlock").style.display = "flex";
+        document.getElementById("highRatedValue").textContent = teacher.rating;
+      }
+
+      // "İngilizce (Native), Türkçe (Orta)" (real teachers) or
+      // "English / Türkçe" (demo teachers) - handles either shape
+      const speakPills = document.getElementById("speakPills");
+      const languageParts = (teacher.languages.includes(",")
+        ? teacher.languages.split(",")
+        : teacher.languages.split("/")
+      ).map(s => s.trim()).filter(Boolean);
+
+      languageParts.forEach(part => {
+        const match = part.match(/^(.+?)\s*\((.+)\)$/);
+        const pill = document.createElement("div");
+        pill.className = "speak-pill";
+        if (match) {
+          pill.innerHTML = `${match[1]} <span class="speak-pill-level"></span>`;
+          pill.querySelector(".speak-pill-level").textContent = match[2];
+        } else {
+          pill.textContent = part;
+        }
+        speakPills.appendChild(pill);
+      });
+
+      if (languageParts.length) {
+        document.getElementById("speakSection").style.display = "block";
+      }
+
+      function formatReviewDate(iso) {
+        const d = new Date(iso);
+        return `${d.getDate()} ${ARMUS_MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+      }
+
+      if (teacher.reviewCount > 0) {
+        document.getElementById("reviewsSummary").style.display = "flex";
+        document.getElementById("avgRatingBig").textContent = teacher.rating;
+        document.getElementById("reviewsSummaryCount").textContent =
+          `${teacher.reviewCount} öğrenci yorumuna dayanıyor`;
       }
 
       const reviewsList = document.getElementById("reviewsList");
@@ -783,22 +1009,37 @@
         const top = document.createElement("div");
         top.className = "review-top";
 
+        const avatar = document.createElement("div");
+        avatar.className = "review-avatar";
+        avatar.textContent = (review.name.trim()[0] || "?").toUpperCase();
+
+        const nameWrap = document.createElement("div");
+
         const name = document.createElement("div");
         name.className = "review-name";
         name.textContent = review.name;
+        nameWrap.appendChild(name);
+
+        if (review.date) {
+          const date = document.createElement("div");
+          date.style.cssText = "color:var(--armus-faint);font-size:10.5px;margin-top:1px;";
+          date.textContent = formatReviewDate(review.date);
+          nameWrap.appendChild(date);
+        }
+
+        top.appendChild(avatar);
+        top.appendChild(nameWrap);
 
         const stars = document.createElement("div");
         stars.className = "stars";
         stars.textContent = "★".repeat(review.stars);
-
-        top.appendChild(name);
-        top.appendChild(stars);
 
         const text = document.createElement("p");
         text.className = "review-text";
         text.textContent = review.text;
 
         div.appendChild(top);
+        div.appendChild(stars);
         div.appendChild(text);
         reviewsList.appendChild(div);
       });
