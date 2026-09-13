@@ -112,8 +112,63 @@
       color: var(--armus-faint);
     }
 
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 14px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     @media (max-width: 800px) {
       .nav-links {
+        display: none;
+      }
+
+      .nav-utility {
+        gap: 6px;
+        margin-right: 8px;
+      }
+
+      .help-btn {
         display: none;
       }
     }
@@ -711,14 +766,21 @@
       <a href="index.html" class="logo">ARMUS</a>
 
       <div class="nav-links">
-        <a href="teachers.html">Öğretmenler</a>
-        <a href="index.html#how">Nasıl Çalışır?</a>
-        <a href="hakkimizda.html">Hakkımızda</a>
+        <a href="teachers.html" data-i18n="nav.teachers">Öğretmenler</a>
+        <a href="index.html#how" data-i18n="nav.how">Nasıl Çalışır?</a>
+        <a href="hakkimizda.html" data-i18n="nav.about">Hakkımızda</a>
+      </div>
+
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
       </div>
 
       <div class="nav-buttons" id="navAuthButtons">
-        <a class="btn" href="login.html">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html">Kayıt Ol</a>
+        <a class="btn" href="login.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html" data-i18n="nav.register">Kayıt Ol</a>
       </div>
 
     </div>
@@ -962,6 +1024,7 @@
   </main>
 
 
+  <script src="i18n.js"></script>
   <script src="teachers-data.js"></script>
   <script src="favorites.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
