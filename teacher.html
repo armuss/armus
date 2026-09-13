@@ -1238,11 +1238,15 @@
 
       document.getElementById("priceValue").textContent =
         `₺${teacher.price}`;
-      document.getElementById("availability").textContent =
-        `● ${teacher.availability}`;
+      function renderAvailabilityStatus() {
+        document.getElementById("availability").textContent =
+          `● ${armusTranslateAvailabilityStatus(teacher.availability)}`;
+      }
+      renderAvailabilityStatus();
+      document.addEventListener("armus:langchange", renderAvailabilityStatus);
 
       document.getElementById("cardRating").textContent =
-        teacher.rating ? `★ ${teacher.rating}` : "Yeni";
+        teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
       document.getElementById("cardReviewLabel").textContent =
         teacher.reviewCount > 0 ? `${teacher.reviewCount} değerlendirme` : "değerlendirme yok";
       document.getElementById("cardLessons").textContent =

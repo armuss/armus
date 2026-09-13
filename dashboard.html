@@ -1298,73 +1298,73 @@
           </div>
           <div class="stat">
             <strong id="statHours">0</strong>
-            <span>Başarılı ders saati</span>
+            <span data-i18n="teacherDash.statHours">Başarılı ders saati</span>
           </div>
           <div class="stat">
             <strong id="statEarnings">₺0</strong>
-            <span>Bu ay kazanç</span>
+            <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
           </div>
           <div class="stat">
             <strong id="statRating">—</strong>
-            <span>Ortalama puan</span>
+            <span data-i18n="teacherDash.statRating">Ortalama puan</span>
           </div>
         </div>
 
-        <h3>Komisyon oranın</h3>
+        <h3 data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</h3>
         <div class="commission-box">
           <div>
             <strong id="commissionRate">%30</strong>
             <span id="commissionRange">0–100 saat arası</span>
           </div>
           <div style="text-align: right;">
-            <span>Daha çok ders ver, komisyonun düşsün.</span>
+            <span data-i18n="teacherDash.commissionHint">Daha çok ders ver, komisyonun düşsün.</span>
           </div>
         </div>
 
-        <h3>Aylık kazanç hedefin</h3>
+        <h3 data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</h3>
         <div class="goal-box">
           <div class="goal-box-top">
-            <span id="goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
+            <span id="goalCaptionTop" data-i18n="teacherDash.goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
             <div class="goal-inputs">
-              <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000">
-              <button type="button" id="saveGoalBtn">Kaydet</button>
+              <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder">
+              <button type="button" id="saveGoalBtn" data-i18n="teacherDash.save">Kaydet</button>
             </div>
           </div>
           <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
           <div class="goal-caption" id="goalCaption"></div>
         </div>
 
-        <h3>Kazanç simülatörü</h3>
+        <h3 data-i18n="teacherDash.simulatorHeading">Kazanç simülatörü</h3>
         <div class="simulator-box">
-          <p class="section-hint" style="margin-bottom: 0;">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
+          <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
           <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
           <div class="section-hint" id="simulatorLabel" style="margin: 0;">Şu anki tempoda devam</div>
           <div class="simulator-result">
-            <div><strong id="simHours">0</strong><span>toplam saat</span></div>
-            <div><strong id="simRate">%30</strong><span>komisyon dilimi</span></div>
-            <div><strong id="simEarnings">₺0</strong><span>tahmini aylık net</span></div>
+            <div><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
+            <div><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
+            <div><strong id="simEarnings">₺0</strong><span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span></div>
           </div>
         </div>
 
-        <h3>Mesajlara yanıt hızın</h3>
+        <h3 data-i18n="teacherDash.responseTimeHeading">Mesajlara yanıt hızın</h3>
         <div class="response-card">
           <div>
             <strong id="responseTimeValue">—</strong>
-            <p>Öğrencilerin mesajlarına ortalama yanıt süren. Ne kadar hızlı yanıt verirsen o kadar çok rezervasyon alma ihtimalin artar.</p>
+            <p data-i18n="teacherDash.responseTimeText">Öğrencilerin mesajlarına ortalama yanıt süren. Ne kadar hızlı yanıt verirsen o kadar çok rezervasyon alma ihtimalin artar.</p>
           </div>
         </div>
       </div>
 
       <div class="panel" id="panel-bookings">
-        <h2>Gelen Rezervasyonlar</h2>
-        <p class="section-hint">Öğrencilere göre gruplandı. Her öğrenci için sadece senin görebildiğin özel bir not tutabilirsin.</p>
+        <h2 data-i18n="teacherDash.navBookings">Gelen Rezervasyonlar</h2>
+        <p class="section-hint" data-i18n="teacherDash.bookingsHint">Öğrencilere göre gruplandı. Her öğrenci için sadece senin görebildiğin özel bir not tutabilirsin.</p>
 
         <div class="week-wrap">
           <div class="cal-week-header">
-            <button type="button" class="cal-nav" id="bkPrevBtn" aria-label="Önceki hafta">←</button>
+            <button type="button" class="cal-nav" id="bkPrevBtn" aria-label="Önceki hafta" data-i18n-title="teacherDash.prevWeek">←</button>
             <div class="cal-month-label" id="bkWeekLabel"></div>
-            <button type="button" class="cal-nav cal-nav-today" id="bkTodayBtn">Bugün</button>
-            <button type="button" class="cal-nav" id="bkNextBtn" aria-label="Sonraki hafta">→</button>
+            <button type="button" class="cal-nav cal-nav-today" id="bkTodayBtn" data-i18n="teacherDash.today">Bugün</button>
+            <button type="button" class="cal-nav" id="bkNextBtn" aria-label="Sonraki hafta" data-i18n-title="teacherDash.nextWeek">→</button>
           </div>
           <div class="week-header">
             <div class="week-header-gutter"></div>
@@ -1376,7 +1376,7 @@
         </div>
 
         <div id="incomingBookings"></div>
-        <div class="empty-state" id="incomingEmpty">
+        <div class="empty-state" id="incomingEmpty" data-i18n="teacherDash.noBookingsYet">
           Henüz rezervasyon yok. Profilin Öğretmenler listesinde
           görünüyor — bir öğrenci seni bulup ders aldığında burada
           listelenecek.
@@ -1384,8 +1384,8 @@
       </div>
 
       <div class="panel" id="panel-availability">
-        <h2>Haftalık Uygunluk</h2>
-        <p class="section-hint">
+        <h2 data-i18n="teacherDash.navAvailability">Haftalık Uygunluk</h2>
+        <p class="section-hint" data-i18n="teacherDash.availabilityHint">
           Boş bir alana tıklayıp aşağı sürükleyerek o gün için uygunluk ekle. Bir
           bloğun üst veya alt kenarından tutup büyütüp küçültebilir, gövdesinden
           tutup taşıyabilir, üzerine gelip × ile silebilirsin. Bu düzen belirli bir
@@ -1403,14 +1403,14 @@
           </div>
         </div>
 
-        <button type="button" class="save-btn" id="saveAvailabilityBtn">Kaydet</button>
-        <span class="save-status" id="availabilitySaveStatus">Kaydedildi ✓</span>
+        <button type="button" class="save-btn" id="saveAvailabilityBtn" data-i18n="teacherDash.save">Kaydet</button>
+        <span class="save-status" id="availabilitySaveStatus" data-i18n="teacherDash.saved">Kaydedildi ✓</span>
       </div>
 
       <div class="panel" id="panel-profile">
-        <h2>Profilini Düzenle</h2>
+        <h2 data-i18n="teacherDash.editProfile">Profilini Düzenle</h2>
 
-        <div class="availability-note" id="profilePendingNote" style="display: none;">
+        <div class="availability-note" id="profilePendingNote" style="display: none;" data-i18n="teacherDash.pendingNote">
           Yeni profil bilgilerini gönderdin, ARMUS ekibi onayladığında
           herkese görünecek. Aşağıdaki form gönderdiğin (henüz
           onaylanmamış) bilgileri gösteriyor.
@@ -1419,38 +1419,38 @@
         <form id="profileForm" novalidate>
 
           <div class="field">
-            <label for="title">Uzmanlık başlığı</label>
-            <input type="text" id="title" placeholder="örn. Konuşma & IELTS Uzmanı">
+            <label for="title" data-i18n="teacherDash.titleLabel">Uzmanlık başlığı</label>
+            <input type="text" id="title" placeholder="örn. Konuşma & IELTS Uzmanı" data-i18n-placeholder="teacherDash.titlePlaceholder">
           </div>
 
           <div class="field">
-            <label for="price">Ders ücreti (₺ / 50 dakika)</label>
+            <label for="price" data-i18n="teacherDash.priceLabel">Ders ücreti (₺ / 50 dakika)</label>
             <input type="number" id="price" min="0" step="1">
           </div>
 
           <div class="field">
-            <label for="availability">Uygunluk durumu</label>
+            <label for="availability" data-i18n="teacherDash.availabilityLabel">Uygunluk durumu</label>
             <select id="availability">
-              <option value="Şu anda ders almaya uygun">Şu anda ders almaya uygun</option>
-              <option value="Bu hafta sınırlı uygunluk">Bu hafta sınırlı uygunluk</option>
-              <option value="Şu anda müsait değilim">Şu anda müsait değilim</option>
+              <option value="Şu anda ders almaya uygun" data-i18n="teacherStatus.available">Şu anda ders almaya uygun</option>
+              <option value="Bu hafta sınırlı uygunluk" data-i18n="teacherStatus.limited">Bu hafta sınırlı uygunluk</option>
+              <option value="Şu anda müsait değilim" data-i18n="teacherStatus.unavailable">Şu anda müsait değilim</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="bio">Hakkımda</label>
-            <textarea id="bio" placeholder="Kendinden ve öğretim tarzından bahset..."></textarea>
+            <label for="bio" data-i18n="teacherDash.bioLabel">Hakkımda</label>
+            <textarea id="bio" placeholder="Kendinden ve öğretim tarzından bahset..." data-i18n-placeholder="teacherDash.bioPlaceholder"></textarea>
           </div>
 
-          <button type="submit" class="save-btn">Kaydet</button>
-          <span class="save-status" id="saveStatus">Kaydedildi ✓</span>
+          <button type="submit" class="save-btn" data-i18n="teacherDash.save">Kaydet</button>
+          <span class="save-status" id="saveStatus" data-i18n="teacherDash.saved">Kaydedildi ✓</span>
 
         </form>
 
         <div class="danger-zone">
-          <h3>Tehlikeli Bölge</h3>
-          <p>Hesabını sildiğinde profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
-          <button type="button" class="danger-btn" id="deleteAccountBtn">Hesabımı Sil</button>
+          <h3 data-i18n="teacherDash.dangerZone">Tehlikeli Bölge</h3>
+          <p data-i18n="teacherDash.dangerZoneText">Hesabını sildiğinde profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+          <button type="button" class="danger-btn" id="deleteAccountBtn" data-i18n="teacherDash.deleteAccount">Hesabımı Sil</button>
         </div>
       </div>
 
@@ -1479,10 +1479,10 @@
       gate.style.display = "flex";
     }
 
-    const LOGIN_BTN = '<a class="btn" href="login.html">Giriş Yap</a>';
-    const REGISTER_BTN = '<a class="btn btn-light" href="register.html?role=teacher">Öğretmen Olarak Kayıt Ol</a>';
-    const APPLY_BTN = '<a class="btn btn-light" href="apply-teacher.html">Başvuruyu Tamamla</a>';
-    const REAPPLY_BTN = '<a class="btn btn-light" href="apply-teacher.html">Tekrar Başvur</a>';
+    const LOGIN_BTN = () => `<a class="btn" href="login.html">${armusT("nav.login", "Giriş Yap")}</a>`;
+    const REGISTER_BTN = () => `<a class="btn btn-light" href="register.html?role=teacher">${armusT("teacherDash.registerAsTeacher", "Öğretmen Olarak Kayıt Ol")}</a>`;
+    const APPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher.html">${armusT("teacherDash.completeApplication", "Başvuruyu Tamamla")}</a>`;
+    const REAPPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher.html">${armusT("teacherDash.reapply", "Tekrar Başvur")}</a>`;
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await armusSignOut();
@@ -1491,17 +1491,17 @@
 
     document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
 
-      if (!confirm("Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.")) return;
+      if (!confirm(armusT("teacherDash.deleteConfirm", "Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz."))) return;
 
       const btn = document.getElementById("deleteAccountBtn");
       btn.disabled = true;
-      btn.textContent = "Siliniyor...";
+      btn.textContent = armusT("teacherDash.deleting", "Siliniyor...");
 
       const result = await armusDeleteOwnAccount();
 
       if (!result.ok) {
         btn.disabled = false;
-        btn.textContent = "Hesabımı Sil";
+        btn.textContent = armusT("teacherDash.deleteAccount", "Hesabımı Sil");
         alert(result.error);
         return;
       }
@@ -1525,17 +1525,17 @@
     if (!session) {
 
       showGate(
-        "Bu panel öğretmenler için",
-        "Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın.",
-        LOGIN_BTN + REGISTER_BTN
+        armusT("teacherDash.gateTitle", "Bu panel öğretmenler için"),
+        armusT("teacherDash.gateText", "Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın."),
+        LOGIN_BTN() + REGISTER_BTN()
       );
 
     } else if (session.role !== "teacher") {
 
       showGate(
-        "Bu panel öğretmenler için",
-        "Şu an bir öğrenci hesabıyla giriş yaptın. Öğretmen olarak kayıt olursan kendi panelini görebilirsin.",
-        REGISTER_BTN
+        armusT("teacherDash.gateTitle", "Bu panel öğretmenler için"),
+        armusT("teacherDash.gateStudentText", "Şu an bir öğrenci hesabıyla giriş yaptın. Öğretmen olarak kayıt olursan kendi panelini görebilirsin."),
+        REGISTER_BTN()
       );
 
     } else {
@@ -1545,25 +1545,25 @@
       if (!user.status) {
 
         showGate(
-          "Başvurunu tamamlamalısın",
-          "Panelini görebilmen için önce öğretmen başvuru formunu doldurman gerekiyor.",
-          APPLY_BTN
+          armusT("teacherDash.gateApplyTitle", "Başvurunu tamamlamalısın"),
+          armusT("teacherDash.gateApplyText", "Panelini görebilmen için önce öğretmen başvuru formunu doldurman gerekiyor."),
+          APPLY_BTN()
         );
 
       } else if (user.status === "pending") {
 
         showGate(
-          "Başvurun inceleniyor",
-          "ARMUS ekibi profilini ve belgelerini inceliyor. Onaylandığında profilin Öğretmenler sayfasında yayına girecek ve bu panel açılacak.",
+          armusT("teacherDash.gatePendingTitle", "Başvurun inceleniyor"),
+          armusT("teacherDash.gatePendingText", "ARMUS ekibi profilini ve belgelerini inceliyor. Onaylandığında profilin Öğretmenler sayfasında yayına girecek ve bu panel açılacak."),
           ""
         );
 
       } else if (user.status === "rejected") {
 
         showGate(
-          "Başvurun onaylanmadı",
-          "Başvurunu gözden geçirip tekrar gönderebilirsin.",
-          REAPPLY_BTN
+          armusT("teacherDash.gateRejectedTitle", "Başvurun onaylanmadı"),
+          armusT("teacherDash.gateRejectedText", "Başvurunu gözden geçirip tekrar gönderebilirsin."),
+          REAPPLY_BTN()
         );
 
       } else {
@@ -1661,11 +1661,8 @@
 
       const BK_HOUR_PX = 44;
       const BK_PX_PER_MIN = BK_HOUR_PX / 60;
-      const BK_MONTH_NAMES = [
-        "Oca", "Şub", "Mar", "Nis", "May", "Haz",
-        "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
-      ];
-      const BK_DOW_LABELS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+      function bkMonthNames() { return armusMonthNames(); }
+      function bkDowLabels() { return armusDayNames().slice(1).concat(armusDayNames()[0]); }
 
       function bkTimeToMinutes(time) {
         const [h, m] = time.split(":").map(Number);
@@ -1718,10 +1715,12 @@
 
         const startD = weekDates[0];
         const endD = weekDates[6];
+        const bkMonths = bkMonthNames();
+        const bkDows = bkDowLabels();
         document.getElementById("bkWeekLabel").textContent =
           startD.getMonth() === endD.getMonth()
-            ? `${startD.getDate()}–${endD.getDate()} ${BK_MONTH_NAMES[endD.getMonth()]} ${endD.getFullYear()}`
-            : `${startD.getDate()} ${BK_MONTH_NAMES[startD.getMonth()]} – ${endD.getDate()} ${BK_MONTH_NAMES[endD.getMonth()]} ${endD.getFullYear()}`;
+            ? `${startD.getDate()}–${endD.getDate()} ${bkMonths[endD.getMonth()]} ${endD.getFullYear()}`
+            : `${startD.getDate()} ${bkMonths[startD.getMonth()]} – ${endD.getDate()} ${bkMonths[endD.getMonth()]} ${endD.getFullYear()}`;
 
         const todayKeyNow = new Date().toISOString().slice(0, 10);
 
@@ -1731,7 +1730,7 @@
           const key = d.toISOString().slice(0, 10);
           const col = document.createElement("div");
           col.className = "week-header-day" + (key === todayKeyNow ? " bk-today" : "");
-          col.innerHTML = `${BK_DOW_LABELS[i]}<span class="bk-daynum">${d.getDate()}</span>`;
+          col.innerHTML = `${bkDows[i]}<span class="bk-daynum">${d.getDate()}</span>`;
           headerEl.appendChild(col);
         });
 
@@ -1777,7 +1776,7 @@
             el.style.height = ((endMin - startMin) * BK_PX_PER_MIN) + "px";
             el.style.left = `calc(${colIndex} * (100% / 7) + 2px)`;
             el.style.width = "calc((100% / 7) - 4px)";
-            el.title = `${booking.studentName} — ${booking.type === "trial" ? "Deneme Dersi" : "Ders"} — ₺${booking.price}`;
+            el.title = `${booking.studentName} — ${booking.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")} — ₺${booking.price}`;
             el.innerHTML = `
               <div class="tl-block-label">${isPast ? "✓ " : ""}${booking.studentName}</div>
               <div class="bk-block-time">${armusFormatTimeRange(booking.time)}</div>
@@ -1804,15 +1803,16 @@
 
       renderBookingsCalendar();
       document.getElementById("bkTimelineScroll").scrollTop = 7 * BK_HOUR_PX;
+      document.addEventListener("armus:langchange", renderBookingsCalendar);
 
       // ---- overview stats (real, computed from bookings/reviews) ----
 
       function commissionForHours(hours) {
-        if (hours < 100) return { rate: 30, range: "0–100 saat arası" };
-        if (hours < 200) return { rate: 28, range: "100–200 saat arası" };
-        if (hours < 300) return { rate: 25, range: "200–300 saat arası" };
-        if (hours < 500) return { rate: 20, range: "300–500 saat arası" };
-        return { rate: 15, range: "500+ saat" };
+        if (hours < 100) return { rate: 30, range: armusT("teacherDash.commissionRange0", "0–100 saat arası") };
+        if (hours < 200) return { rate: 28, range: armusT("teacherDash.commissionRange100", "100–200 saat arası") };
+        if (hours < 300) return { rate: 25, range: armusT("teacherDash.commissionRange200", "200–300 saat arası") };
+        if (hours < 500) return { rate: 20, range: armusT("teacherDash.commissionRange300", "300–500 saat arası") };
+        return { rate: 15, range: armusT("teacherDash.commissionRange500", "500+ saat") };
       }
 
       const completedBookings = activeBookings.filter(armusIsBookingPast);
@@ -1841,7 +1841,11 @@
       document.getElementById("statEarnings").textContent = `₺${netThisMonth}`;
       document.getElementById("statRating").textContent = avgRating;
       document.getElementById("commissionRate").textContent = `%${tier.rate}`;
-      document.getElementById("commissionRange").textContent = tier.range;
+      function renderCommissionRange() {
+        document.getElementById("commissionRange").textContent = commissionForHours(totalHours).range;
+      }
+      renderCommissionRange();
+      document.addEventListener("armus:langchange", renderCommissionRange);
 
       // ---- weekly narrative digest ----
 
@@ -1852,57 +1856,74 @@
       const lessonsLastWeek = completedBookings.filter(b => b.date >= twoWeeksAgoKey && b.date < weekAgoKey).length;
       const recentReviews = teacherReviews.filter(r => (r.created_at || "").slice(0, 10) >= weekAgoKey);
 
-      const digestParts = [
-        lessonsThisWeek > 0
-          ? `bu hafta <strong>${lessonsThisWeek}</strong> ders tamamladın`
-          : `bu hafta henüz tamamlanan ders yok`,
-      ];
-      if (lessonsLastWeek > 0) {
-        const diff = lessonsThisWeek - lessonsLastWeek;
-        digestParts.push(diff >= 0 ? `geçen haftaya göre <strong>${diff}</strong> ders daha fazla` : `geçen haftaya göre <strong>${Math.abs(diff)}</strong> ders daha az`);
+      function renderDigest() {
+        const digestParts = [
+          lessonsThisWeek > 0
+            ? armusT("teacherDash.digestLessonsThisWeek", "bu hafta <strong>{n}</strong> ders tamamladın").replace("{n}", lessonsThisWeek)
+            : armusT("teacherDash.digestNoLessonsThisWeek", "bu hafta henüz tamamlanan ders yok"),
+        ];
+        if (lessonsLastWeek > 0) {
+          const diff = lessonsThisWeek - lessonsLastWeek;
+          digestParts.push(diff >= 0
+            ? armusT("teacherDash.digestMoreThanLastWeek", "geçen haftaya göre <strong>{n}</strong> ders daha fazla").replace("{n}", diff)
+            : armusT("teacherDash.digestFewerThanLastWeek", "geçen haftaya göre <strong>{n}</strong> ders daha az").replace("{n}", Math.abs(diff)));
+        }
+        if (recentReviews.length) {
+          digestParts.push(armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
+        }
+        const firstName = user.name.split(" ")[0];
+        document.getElementById("digestCard").innerHTML =
+          armusT("teacherDash.digestGreeting", "👋 Merhaba {name}, ").replace("{name}", firstName) + digestParts.join(", ") + ".";
       }
-      if (recentReviews.length) {
-        digestParts.push(`<strong>${recentReviews.length}</strong> yeni değerlendirme aldın`);
-      }
-      const firstName = user.name.split(" ")[0];
-      document.getElementById("digestCard").innerHTML = `👋 Merhaba ${firstName}, ` + digestParts.join(", ") + ".";
+      renderDigest();
+      document.addEventListener("armus:langchange", renderDigest);
 
       // ---- "today" widget ----
 
       const todayKey = new Date().toISOString().slice(0, 10);
       const todayBookings = activeBookings.filter(b => b.date === todayKey);
 
-      if (todayBookings.length) {
-        document.getElementById("todayCard").style.display = "block";
-        document.getElementById("todayList").innerHTML = todayBookings.map(b => `
-          <div class="today-row">
-            <span>${b.studentName} · ${b.type === "trial" ? "Deneme Dersi" : "Ders"}</span>
-            <span class="today-when">
-              ${armusFormatTimeRange(b.time)}
-              ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">🎥 Katıl</a>` : ""}
-            </span>
-          </div>
-        `).join("");
+      function renderTodayList() {
+        if (todayBookings.length) {
+          document.getElementById("todayCard").style.display = "block";
+          document.getElementById("todayList").innerHTML = todayBookings.map(b => `
+            <div class="today-row">
+              <span>${b.studentName} · ${b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")}</span>
+              <span class="today-when">
+                ${armusFormatTimeRange(b.time)}
+                ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">${armusT("teacherDash.joinShort", "🎥 Katıl")}</a>` : ""}
+              </span>
+            </div>
+          `).join("");
+        }
       }
+      renderTodayList();
+      document.addEventListener("armus:langchange", renderTodayList);
 
       // ---- achievement badges ----
 
-      const ARMUS_TEACHER_BADGES = [
-        { test: () => completedBookings.length >= 1, icon: "🎉", label: "İlk Ders" },
-        { test: () => completedBookings.length >= 10, icon: "🔟", label: "10 Ders Tamamlandı" },
-        { test: () => completedBookings.length >= 50, icon: "🏆", label: "50 Ders Tamamlandı" },
-        { test: () => completedBookings.length >= 100, icon: "💯", label: "100 Ders Tamamlandı" },
-        {
-          test: () => teacherReviews.length >= 5 && teacherReviews.slice(-5).every(r => r.stars === 5),
-          icon: "⭐", label: "5 Yıldız Serisi",
-        },
-        { test: () => teacherReviews.length >= 1 && avgRating !== "—" && Number(avgRating) >= 4.8, icon: "💎", label: "Üstün Puan" },
-      ];
+      function teacherBadges() {
+        return [
+          { test: () => completedBookings.length >= 1, icon: "🎉", label: armusT("teacherDash.badgeFirstLesson", "İlk Ders") },
+          { test: () => completedBookings.length >= 10, icon: "🔟", label: armusT("teacherDash.badge10Lessons", "10 Ders Tamamlandı") },
+          { test: () => completedBookings.length >= 50, icon: "🏆", label: armusT("teacherDash.badge50Lessons", "50 Ders Tamamlandı") },
+          { test: () => completedBookings.length >= 100, icon: "💯", label: armusT("teacherDash.badge100Lessons", "100 Ders Tamamlandı") },
+          {
+            test: () => teacherReviews.length >= 5 && teacherReviews.slice(-5).every(r => r.stars === 5),
+            icon: "⭐", label: armusT("teacherDash.badge5StarStreak", "5 Yıldız Serisi"),
+          },
+          { test: () => teacherReviews.length >= 1 && avgRating !== "—" && Number(avgRating) >= 4.8, icon: "💎", label: armusT("teacherDash.badgeTopRated", "Üstün Puan") },
+        ];
+      }
 
-      const earnedBadges = ARMUS_TEACHER_BADGES.filter(b => b.test());
-      document.getElementById("badgeRow").innerHTML = earnedBadges.map(b => `
-        <span class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</span>
-      `).join("");
+      function renderTeacherBadges() {
+        const earnedBadges = teacherBadges().filter(b => b.test());
+        document.getElementById("badgeRow").innerHTML = earnedBadges.map(b => `
+          <span class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</span>
+        `).join("");
+      }
+      renderTeacherBadges();
+      document.addEventListener("armus:langchange", renderTeacherBadges);
 
       // ---- monthly income goal ----
 
@@ -1914,14 +1935,15 @@
       function renderGoal() {
         if (!incomeGoal) {
           goalFill.style.width = "0%";
-          goalCaption.textContent = "Henüz bir hedef belirlemedin.";
+          goalCaption.textContent = armusT("teacherDash.noGoalSet", "Henüz bir hedef belirlemedin.");
           return;
         }
         const pct = Math.min(100, Math.round((netThisMonth / incomeGoal) * 100));
         goalFill.style.width = `${pct}%`;
         goalCaption.textContent = `₺${netThisMonth} / ₺${incomeGoal} (%${pct})` +
-          (netThisMonth >= incomeGoal ? " — hedefine ulaştın! 🎉" : "");
+          (netThisMonth >= incomeGoal ? armusT("teacherDash.goalReached", " — hedefine ulaştın! 🎉") : "");
       }
+      document.addEventListener("armus:langchange", renderGoal);
 
       goalInput.value = incomeGoal || "";
       renderGoal();
@@ -1959,8 +1981,8 @@
         const projectedNet = Math.round(projectedGross * (1 - projectedTier.rate / 100));
 
         simulatorLabel.textContent = extraPerWeek === 0
-          ? "Şu anki tempoda devam"
-          : `Haftada +${extraPerWeek} ders daha`;
+          ? armusT("teacherDash.simCurrentPace", "Şu anki tempoda devam")
+          : armusT("teacherDash.simExtraLessons", "Haftada +{n} ders daha").replace("{n}", extraPerWeek);
         document.getElementById("simHours").textContent = projectedTotalHours;
         document.getElementById("simRate").textContent = `%${projectedTier.rate}`;
         document.getElementById("simEarnings").textContent = `₺${Math.round(projectedNet)}`;
@@ -1968,6 +1990,7 @@
 
       simulatorSlider.addEventListener("input", renderSimulator);
       renderSimulator();
+      document.addEventListener("armus:langchange", renderSimulator);
 
       // ---- response time (from existing conversations, no schema change) ----
 
@@ -1988,18 +2011,22 @@
         }
       });
 
-      if (responseGaps.length) {
-        const avgMs = responseGaps.reduce((a, b) => a + b, 0) / responseGaps.length;
-        const avgMinutes = avgMs / 60000;
-        const display = avgMinutes < 60
-          ? `${Math.round(avgMinutes)} dk`
-          : avgMinutes < 1440
-            ? `${(avgMinutes / 60).toFixed(1)} sa`
-            : `${(avgMinutes / 1440).toFixed(1)} gün`;
-        document.getElementById("responseTimeValue").textContent = display;
-      } else {
-        document.getElementById("responseTimeValue").textContent = "—";
+      function renderResponseTime() {
+        if (responseGaps.length) {
+          const avgMs = responseGaps.reduce((a, b) => a + b, 0) / responseGaps.length;
+          const avgMinutes = avgMs / 60000;
+          const display = avgMinutes < 60
+            ? armusT("teacherDash.responseMinutes", "{n} dk").replace("{n}", Math.round(avgMinutes))
+            : avgMinutes < 1440
+              ? armusT("teacherDash.responseHours", "{n} sa").replace("{n}", (avgMinutes / 60).toFixed(1))
+              : armusT("teacherDash.responseDays", "{n} gün").replace("{n}", (avgMinutes / 1440).toFixed(1));
+          document.getElementById("responseTimeValue").textContent = display;
+        } else {
+          document.getElementById("responseTimeValue").textContent = "—";
+        }
       }
+      renderResponseTime();
+      document.addEventListener("armus:langchange", renderResponseTime);
 
       // ---- bookings grouped by student, with private notes ----
 
@@ -2027,7 +2054,7 @@
           group.innerHTML = `
             <div class="student-group-head">
               <strong>${studentBookings[0].studentName}</strong>
-              <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? "Notu Gör/Düzenle" : "Not Ekle"}</button>
+              <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? armusT("teacherDash.viewEditNote", "Notu Gör/Düzenle") : armusT("teacherDash.addNote", "Not Ekle")}</button>
             </div>
             ${studentBookings.map(booking => {
 
@@ -2037,21 +2064,21 @@
               const net = Math.round(booking.price * (1 - tier.rate / 100));
 
               const tags = [
-                firstBookingIdByStudent.has(booking.id) ? '<span class="booking-tag tag-first">🟢 İlk Ders</span>' : "",
-                booking.type === "trial" ? '<span class="booking-tag tag-trial">🔵 Deneme Dersi</span>' : '<span class="booking-tag tag-lesson">🟣 Ders</span>',
-                isCancelled ? '<span class="booking-tag tag-cancelled">⊘ İptal edildi</span>' : (isPast ? '<span class="booking-tag tag-done">✓ Tamamlandı</span>' : '<span class="booking-tag tag-upcoming">🕒 Yaklaşıyor</span>'),
+                firstBookingIdByStudent.has(booking.id) ? `<span class="booking-tag tag-first">${armusT("teacherDash.tagFirstLesson", "🟢 İlk Ders")}</span>` : "",
+                booking.type === "trial" ? `<span class="booking-tag tag-trial">${armusT("teacherDash.tagTrial", "🔵 Deneme Dersi")}</span>` : `<span class="booking-tag tag-lesson">${armusT("teacherDash.tagLesson", "🟣 Ders")}</span>`,
+                isCancelled ? `<span class="booking-tag tag-cancelled">${armusT("teacherDash.tagCancelled", "⊘ İptal edildi")}</span>` : (isPast ? `<span class="booking-tag tag-done">${armusT("teacherDash.tagCompleted", "✓ Tamamlandı")}</span>` : `<span class="booking-tag tag-upcoming">${armusT("teacherDash.tagUpcoming", "🕒 Yaklaşıyor")}</span>`),
                 review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
               ].join("");
 
               const countsAsEarned = armusTrialCountsAsEarned(booking, activeBookings, teacherCredits);
 
               const earningHtml = isCancelled
-                ? `İptal edildi${booking.refunded ? " · öğrenciye ders hakkı eklendi" : ""}`
+                ? `${armusT("teacherDash.earningCancelled", "İptal edildi")}${booking.refunded ? armusT("teacherDash.earningCancelledCredit", " · öğrenciye ders hakkı eklendi") : ""}`
                 : !countsAsEarned
-                  ? `ARMUS'ta kalıyor <span style="opacity:.7;">(öğrenci bir paket alırsa kazancına döner)</span>`
+                  ? `${armusT("teacherDash.earningStaysOnArmus", "ARMUS'ta kalıyor")} <span style="opacity:.7;">${armusT("teacherDash.earningStaysOnArmusHint", "(öğrenci bir paket alırsa kazancına döner)")}</span>`
                   : isPast
-                    ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
-                    : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
+                    ? `${armusT("teacherDash.earningEarned", "Kazandın:")} <strong>₺${net}</strong> <span style="opacity:.7;">${armusT("teacherDash.earningEarnedHint", "(₺{price} - %{rate} komisyon)").replace("{price}", booking.price).replace("{rate}", tier.rate)}</span>`
+                    : `${armusT("teacherDash.earningPending", "Bekleniyor:")} <strong>₺${booking.price}</strong> <span style="opacity:.7;">${armusT("teacherDash.earningPendingHint", "(ders sonrası hesabına geçer)")}</span>`;
 
               return `
               <div class="booking-row">
@@ -2062,16 +2089,16 @@
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
-                  ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">🎥 Derse Katıl</a>` : ""}
-                  ${(!isCancelled && !isPast) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">Dersi İptal Et</button>` : ""}
+                  ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
+                  ${(!isCancelled && !isPast) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
                 </div>
               </div>
               `;
             }).join("")}
             <div class="note-box" data-note-box>
-              <textarea placeholder="Bu öğrenci hakkında sadece senin görebileceğin bir not yaz...">${existingNote ? existingNote.note : ""}</textarea>
-              <button type="button" class="btn" data-save-note>Notu Kaydet</button>
-              <span class="save-status" data-note-status>Kaydedildi ✓</span>
+              <textarea placeholder="${armusT("teacherDash.notePlaceholder", "Bu öğrenci hakkında sadece senin görebileceğin bir not yaz...")}">${existingNote ? existingNote.note : ""}</textarea>
+              <button type="button" class="btn" data-save-note>${armusT("teacherDash.saveNote", "Notu Kaydet")}</button>
+              <span class="save-status" data-note-status>${armusT("teacherDash.saved", "Kaydedildi ✓")}</span>
             </div>
           `;
 
@@ -2087,7 +2114,7 @@
             button.disabled = true;
             const result = await armusSaveTeacherNote(user.id, studentId, textarea.value.trim());
             button.disabled = false;
-            status.textContent = result === false ? "Kaydedilemedi ✕" : "Kaydedildi ✓";
+            status.textContent = result === false ? armusT("teacherDash.saveFailed", "Kaydedilemedi ✕") : armusT("teacherDash.saved", "Kaydedildi ✓");
             status.classList.add("visible");
             setTimeout(() => status.classList.remove("visible"), 2000);
           });
@@ -2095,17 +2122,17 @@
           group.querySelectorAll("[data-cancel-booking]").forEach(button => {
             button.addEventListener("click", async () => {
 
-              if (!confirm("Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.")) return;
+              if (!confirm(armusT("teacherDash.cancelBookingConfirm", "Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir."))) return;
 
               button.disabled = true;
-              button.textContent = "İptal ediliyor...";
+              button.textContent = armusT("teacherDash.cancelling", "İptal ediliyor...");
 
               const result = await armusCancelBooking(button.dataset.cancelBooking);
 
               if (!result.ok) {
                 alert(result.error);
                 button.disabled = false;
-                button.textContent = "Dersi İptal Et";
+                button.textContent = armusT("teacherDash.cancelLesson", "Dersi İptal Et");
                 return;
               }
 
@@ -2134,11 +2161,11 @@
         const status = document.getElementById("saveStatus");
 
         if (result === false) {
-          status.textContent = "Gönderilemedi ✕";
+          status.textContent = armusT("teacherDash.submitFailed", "Gönderilemedi ✕");
         } else {
           user.pending_changes = newPendingChanges;
           renderPendingNotes();
-          status.textContent = "Onay için gönderildi ✓";
+          status.textContent = armusT("teacherDash.submittedForApproval", "Onay için gönderildi ✓");
         }
 
         status.classList.add("visible");
@@ -2160,10 +2187,14 @@
       // draggable blocks: a block "14:00-17:00" expands to
       // ["14:00","14:30",...,"16:30"] on save.
 
-      const DAY_COLUMNS = [
-        ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
-        ["Cum", 5], ["Cmt", 6], ["Paz", 0],
-      ];
+      function dayColumns() {
+        const names = armusDayNames();
+        return [
+          [names[1], 1], [names[2], 2], [names[3], 3], [names[4], 4],
+          [names[5], 5], [names[6], 6], [names[0], 0],
+        ];
+      }
+      let DAY_COLUMNS = dayColumns();
 
       const HOUR_PX = 44;
       const PX_PER_MIN = HOUR_PX / 60;
@@ -2234,13 +2265,15 @@
 
       function renderWeekHeader() {
 
+        DAY_COLUMNS = dayColumns();
+
         const el = document.getElementById("weekHeaderDays");
         el.innerHTML = "";
 
         DAY_COLUMNS.forEach(([label, dayIdx]) => {
           const col = document.createElement("div");
           col.className = "week-header-day";
-          col.innerHTML = `${label} <button type="button" class="wk-clear" data-day="${dayIdx}" title="Bu günü temizle">✕</button>`;
+          col.innerHTML = `${label} <button type="button" class="wk-clear" data-day="${dayIdx}" title="${armusT("teacherDash.weekLabelClear", "Bu günü temizle")}">✕</button>`;
           el.appendChild(col);
         });
 
@@ -2293,7 +2326,7 @@
             el.innerHTML = `
               <div class="tl-handle tl-handle-top"></div>
               <div class="tl-block-label">${minutesToTimeLabel(block.start)}–${minutesToTimeLabel(block.end)}</div>
-              <button type="button" class="tl-delete" data-day="${dayIdx}" data-index="${blockIndex}" title="Sil">×</button>
+              <button type="button" class="tl-delete" data-day="${dayIdx}" data-index="${blockIndex}" title="${armusT("teacherDash.delete", "Sil")}">×</button>
               <div class="tl-handle tl-handle-bottom"></div>
             `;
             wrap.appendChild(el);
@@ -2424,10 +2457,10 @@
         const status = document.getElementById("availabilitySaveStatus");
 
         if (result === false) {
-          status.textContent = "Kaydedilemedi ✕";
+          status.textContent = armusT("teacherDash.saveFailed", "Kaydedilemedi ✕");
         } else {
           user.availability_dates = cleaned;
-          status.textContent = "Kaydedildi ✓";
+          status.textContent = armusT("teacherDash.saved", "Kaydedildi ✓");
         }
 
         status.classList.add("visible");
@@ -2437,6 +2470,10 @@
       renderWeekHeader();
       renderTimeline();
       document.getElementById("timelineScroll").scrollTop = 7 * HOUR_PX;
+      document.addEventListener("armus:langchange", () => {
+        renderWeekHeader();
+        renderTimeline();
+      });
     }
 
   </script>
