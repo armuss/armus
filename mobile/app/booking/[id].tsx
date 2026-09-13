@@ -88,6 +88,18 @@ export default function Booking() {
     setError('');
   }
 
+  // A trial that just completed is the moment to offer a real weekly
+  // package with this same teacher instead of the plain success screen -
+  // matches booking a regular lesson, which still shows the checkmark.
+  function finishBooking(creditApplied: boolean) {
+    if (type === 'trial' && teacher) {
+      router.replace({ pathname: '/package/[teacherId]', params: { teacherId: teacher.id } });
+      return;
+    }
+    setCreditApplied(creditApplied);
+    setPhase('success');
+  }
+
   async function handleConfirm() {
     if (!teacher || !profile || !selectedDate || !selectedTime || submitting) return;
 
@@ -123,8 +135,7 @@ export default function Booking() {
     }
 
     if (result.bookedDirectly) {
-      setCreditApplied(result.creditApplied);
-      setPhase('success');
+      finishBooking(result.creditApplied);
       return;
     }
 
@@ -163,7 +174,7 @@ export default function Booking() {
           renderLoading={() => <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
             if (navState.url.includes('payment=success')) {
-              setPhase('success');
+              finishBooking(false);
             } else if (navState.url.includes('payment=failed')) {
               setPhase('picking');
               setError('Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı — istersen tekrar deneyebilirsin.');
