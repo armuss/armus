@@ -292,14 +292,14 @@
       border-color: transparent;
     }
 
-    .word-count {
+    .char-count {
       margin-top: 8px;
       font-size: 12px;
       color: var(--armus-faint);
       text-align: right;
     }
 
-    .word-count.done {
+    .char-count.done {
       color: var(--armus-gold-text);
       font-weight: 600;
     }
@@ -716,12 +716,12 @@
       <div class="step-title">Açıklama</div>
       <div class="step-hint">
         Kendinden, deneyiminden ve öğretim tarzından bahset. Bu metin profilinde
-        görünecek. En az 400 kelime yazmalısın.
+        görünecek. En az 400 karakter yazmalısın.
       </div>
 
       <div class="field">
         <textarea id="description" placeholder="Merhaba! Ben..." style="min-height: 260px;"></textarea>
-        <div class="word-count" id="wordCount">0 / 400 kelime</div>
+        <div class="char-count" id="charCount">0 / 400 karakter</div>
       </div>
     </section>
 
@@ -941,25 +941,24 @@
         return weeklyAvailability;
       }
 
-      // ---- description word count ----
+      // ---- description character count ----
 
-      const MIN_DESCRIPTION_WORDS = 400;
+      const MIN_DESCRIPTION_CHARS = 400;
       const descriptionInput = document.getElementById("description");
-      const wordCount = document.getElementById("wordCount");
+      const charCount = document.getElementById("charCount");
 
-      function countWords(text) {
-        const trimmed = text.trim();
-        return trimmed ? trimmed.split(/\s+/).length : 0;
+      function countChars(text) {
+        return text.trim().length;
       }
 
-      function updateWordCount() {
-        const words = countWords(descriptionInput.value);
-        wordCount.textContent = `${words} / ${MIN_DESCRIPTION_WORDS} kelime`;
-        wordCount.classList.toggle("done", words >= MIN_DESCRIPTION_WORDS);
+      function updateCharCount() {
+        const chars = countChars(descriptionInput.value);
+        charCount.textContent = `${chars} / ${MIN_DESCRIPTION_CHARS} karakter`;
+        charCount.classList.toggle("done", chars >= MIN_DESCRIPTION_CHARS);
       }
 
-      descriptionInput.addEventListener("input", updateWordCount);
-      updateWordCount();
+      descriptionInput.addEventListener("input", updateCharCount);
+      updateCharCount();
 
       const tracker = document.getElementById("tracker");
       STEP_LABELS.forEach((label, i) => {
@@ -1244,9 +1243,9 @@
         }
 
         if (step === 5) {
-          const words = countWords(document.getElementById("description").value);
-          if (words < MIN_DESCRIPTION_WORDS) {
-            showStepError(`En az ${MIN_DESCRIPTION_WORDS} kelime yazmalısın (şu an ${words} kelime).`);
+          const chars = countChars(document.getElementById("description").value);
+          if (chars < MIN_DESCRIPTION_CHARS) {
+            showStepError(`En az ${MIN_DESCRIPTION_CHARS} karakter yazmalısın (şu an ${chars} karakter).`);
             return false;
           }
         }
