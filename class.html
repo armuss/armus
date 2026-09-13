@@ -436,7 +436,11 @@
       const bookingId = new URLSearchParams(window.location.search).get("booking");
 
       if (!bookingId) {
-        showGate("Ders odası bulunamadı", "Geçerli bir ders bağlantısıyla buraya gelmelisin.", '<a class="btn btn-light" href="my-lessons.html">Derslerime dön</a>');
+        showGate(
+          armusT("class.gateNoBookingTitle", "Ders odası bulunamadı"),
+          armusT("class.gateNoBookingText", "Geçerli bir ders bağlantısıyla buraya gelmelisin."),
+          `<a class="btn btn-light" href="my-lessons.html">${armusT("class.backToLessonsPlain", "Derslerime dön")}</a>`
+        );
         return;
       }
 
@@ -444,9 +448,9 @@
 
       if (!session) {
         showGate(
-          "Giriş yapmalısın",
-          "Bu ders odasına girmek için hesabınla giriş yapmalısın.",
-          `<a class="btn btn-light" href="login.html?next=${encodeURIComponent(window.location.href)}">Giriş Yap</a>`
+          armusT("class.gateLoginTitle", "Giriş yapmalısın"),
+          armusT("class.gateLoginText", "Bu ders odasına girmek için hesabınla giriş yapmalısın."),
+          `<a class="btn btn-light" href="login.html?next=${encodeURIComponent(window.location.href)}">${armusT("nav.login", "Giriş Yap")}</a>`
         );
         return;
       }
@@ -458,9 +462,9 @@
       // without telling a snooper which one it is.
       if (!booking) {
         showGate(
-          "Bu derse erişimin yok",
-          "Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin.",
-          '<a class="btn btn-light" href="my-lessons.html">Derslerime dön</a>'
+          armusT("class.gateNoAccessTitle", "Bu derse erişimin yok"),
+          armusT("class.gateNoAccessText", "Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin."),
+          `<a class="btn btn-light" href="my-lessons.html">${armusT("class.backToLessonsPlain", "Derslerime dön")}</a>`
         );
         return;
       }
@@ -473,9 +477,9 @@
 
       if (booking.status === "cancelled") {
         showGate(
-          "Bu ders iptal edildi",
-          "Bu ders artık gerçekleşmeyecek.",
-          `<a class="btn btn-light" href="${backHref}">← Geri dön</a>`
+          armusT("class.gateCancelledTitle", "Bu ders iptal edildi"),
+          armusT("class.gateCancelledText", "Bu ders artık gerçekleşmeyecek."),
+          `<a class="btn btn-light" href="${backHref}">${armusT("class.goBack", "← Geri dön")}</a>`
         );
         return;
       }
@@ -486,8 +490,10 @@
       if (now < joinsFrom) {
         const minutesUntil = Math.ceil((joinsFrom - now) / 60000);
         document.getElementById("minutesUntil").textContent = minutesUntil;
-        document.getElementById("tooEarlyMeta").innerHTML =
-          `<strong>${isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName}</strong> ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`;
+        const tooEarlyName = isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName;
+        document.getElementById("tooEarlyMeta").innerHTML = (typeof armusGetLang === "function" && armusGetLang() === "en")
+          ? `${armusT("class.tooEarlyMetaWith", "with")} <strong>${tooEarlyName}</strong> · ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`
+          : `<strong>${tooEarlyName}</strong> ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`;
         tooEarly.style.display = "flex";
         return;
       }
@@ -497,8 +503,10 @@
         return;
       }
 
-      document.getElementById("lessonWith").textContent =
-        (isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName) + " ile ders · " + armusFormatTimeRange(booking.time);
+      const lessonWithName = isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName;
+      document.getElementById("lessonWith").textContent = (typeof armusGetLang === "function" && armusGetLang() === "en")
+        ? `${armusT("class.lessonWith", "Lesson with")} ${lessonWithName} · ${armusFormatTimeRange(booking.time)}`
+        : `${lessonWithName} ile ders · ${armusFormatTimeRange(booking.time)}`;
 
       room.style.display = "flex";
 
@@ -528,12 +536,17 @@
         const pct = Math.min(100, Math.max(0, ((nowTick - start) / (end - start)) * 100));
         progressFill.style.width = pct + "%";
 
+        const isEn = typeof armusGetLang === "function" && armusGetLang() === "en";
         if (nowTick > end) {
           progressFill.classList.add("overtime");
-          progressLabel.textContent = `Ders bitti · +${formatClock(nowTick - end)} ek süre`;
+          progressLabel.textContent = isEn
+            ? `${armusT("class.lessonEnded", "Ders bitti")} · +${formatClock(nowTick - end)} ${armusT("class.overtime", "ek süre")}`
+            : `Ders bitti · +${formatClock(nowTick - end)} ek süre`;
         } else {
           progressFill.classList.remove("overtime");
-          progressLabel.textContent = `${formatClock(nowTick - start)} geçti · ${formatClock(end - nowTick)} kaldı`;
+          progressLabel.textContent = isEn
+            ? `${formatClock(nowTick - start)} ${armusT("class.elapsed", "geçti")} · ${formatClock(end - nowTick)} ${armusT("class.remaining", "kaldı")}`
+            : `${formatClock(nowTick - start)} geçti · ${formatClock(end - nowTick)} kaldı`;
         }
       }
 
@@ -609,13 +622,13 @@
           const existingReview = await armusGetReviewForBooking(booking.id);
           if (existingReview) { finishAndLeave(); return; }
 
-          postClassTitle.textContent = "Bu ders nasıldı?";
+          postClassTitle.textContent = armusT("class.postClassReviewTitle", "Bu ders nasıldı?");
           let stars = 0;
           postClassBody.innerHTML = `
             <div class="post-class-stars" id="postClassStars">
               ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
             </div>
-            <textarea id="postClassComment" placeholder="İstersen kısa bir not bırak (opsiyonel)"></textarea>
+            <textarea id="postClassComment" placeholder="${armusT("class.postClassCommentPlaceholder", "İstersen kısa bir not bırak (opsiyonel)")}"></textarea>
           `;
 
           const starEls = postClassBody.querySelectorAll("[data-star]");
@@ -645,9 +658,11 @@
           const notes = await armusGetTeacherNotes(session.id);
           const existing = notes[booking.studentId];
 
-          postClassTitle.textContent = `${booking.studentName} için not`;
+          postClassTitle.textContent = (typeof armusGetLang === "function" && armusGetLang() === "en")
+            ? `${armusT("class.postClassNoteFor", "Note for")} ${booking.studentName}`
+            : `${booking.studentName} için not`;
           postClassBody.innerHTML = `
-            <textarea id="postClassNote" placeholder="Bu öğrenci hakkında kısa bir not (sadece sen görürsün)">${existing ? existing.note : ""}</textarea>
+            <textarea id="postClassNote" placeholder="${armusT("class.postClassNotePlaceholder", "Bu öğrenci hakkında kısa bir not (sadece sen görürsün)")}">${existing ? existing.note : ""}</textarea>
           `;
 
           postClassSave.onclick = async () => {
