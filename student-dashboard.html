@@ -503,109 +503,143 @@
       max-width: 300px;
     }
 
-    /* vocabulary vault */
+    /* flashcards */
 
-    .vocab-card {
+    .flashcard-toggle-btn {
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 22px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+      cursor: pointer;
+      margin-bottom: 24px;
+    }
+
+    .flashcard-section {
       border: 1px solid var(--armus-border);
       border-radius: 16px;
-      padding: 18px 22px;
+      padding: 22px;
       background: var(--armus-panel);
       margin-bottom: 24px;
     }
 
-    .vocab-top {
+    .flashcard-nav {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 18px;
     }
 
-    .vocab-stat {
-      font-size: 12px;
-      color: var(--armus-muted);
-    }
-
-    .vocab-stat strong {
-      color: var(--armus-gold-text);
-      font-size: 15px;
-    }
-
-    .vocab-review-btn {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 18px;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      font-family: inherit;
-      font-weight: 700;
-      font-size: 12.5px;
+    .flashcard-nav button {
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel-2);
+      color: var(--armus-ink);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 16px;
+      line-height: 1;
       cursor: pointer;
     }
 
-    .vocab-review-btn:disabled {
-      opacity: .4;
+    .flashcard-nav button:disabled {
+      opacity: .35;
       cursor: default;
     }
 
-    .vocab-flash {
-      display: none;
+    .flashcard-count {
+      font-size: 12.5px;
+      color: var(--armus-muted);
+    }
+
+    .flashcard-stage {
+      perspective: 1400px;
+      margin-bottom: 20px;
+    }
+
+    .flashcard {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      min-height: 260px;
+      margin: 0 auto;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform .6s cubic-bezier(.4, .2, .2, 1);
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 20px;
+      border: 1px solid var(--armus-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      padding: 20px 0 4px;
-      border-top: 1px solid var(--armus-border-soft);
+      padding: 30px;
+    }
+
+    .flashcard-front {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .flashcard-back {
+      background: var(--armus-panel-2);
+      color: var(--armus-ink);
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: .7;
+      margin-bottom: 12px;
+    }
+
+    .flashcard-word {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      word-break: break-word;
+    }
+
+    .flashcard-hint {
+      font-size: 11px;
+      opacity: .7;
       margin-top: 14px;
     }
 
-    .vocab-flash-hint {
-      color: var(--armus-muted);
-      font-size: 11px;
-      margin-bottom: 10px;
+    .flashcard-empty {
+      font-size: 14px;
+      color: var(--armus-on-gold);
+      opacity: .9;
+      line-height: 1.6;
     }
 
-    .vocab-flash-term {
-      font-size: 22px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-
-    .vocab-flash-meaning {
-      font-size: 15px;
-      color: var(--armus-gold-text);
-      min-height: 22px;
-      margin-bottom: 16px;
-    }
-
-    .vocab-flash-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .vocab-flash-actions button {
-      border: 1px solid var(--armus-border);
-      background: transparent;
-      color: var(--armus-ink);
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-family: inherit;
-      font-size: 12.5px;
-      cursor: pointer;
-    }
-
-    .vocab-flash-actions .know-btn {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .vocab-add-form {
+    .flashcard-add-form {
       display: flex;
       gap: 8px;
-      margin-top: 14px;
       flex-wrap: wrap;
     }
 
-    .vocab-add-form input {
+    .flashcard-add-form input {
       flex: 1;
       min-width: 120px;
       background: var(--armus-bg);
@@ -617,7 +651,7 @@
       font-size: 13px;
     }
 
-    .vocab-add-form button {
+    .flashcard-add-form button {
       border: 1px solid var(--armus-border);
       border-radius: 10px;
       padding: 9px 16px;
@@ -871,8 +905,8 @@
       <div class="confidence-card" id="confidenceCard"></div>
     </div>
 
-    <h2>Kelime Kasan</h2>
-    <div class="vocab-card" id="vocabCard"></div>
+    <button type="button" class="flashcard-toggle-btn" id="flashcardToggleBtn">📇 Flaş Kart</button>
+    <div class="flashcard-section" id="flashcardSection" style="display:none;"></div>
 
     <h2>Rozetlerin</h2>
     <div class="badge-row" id="badgeRow"></div>
@@ -1185,108 +1219,93 @@
         renderConfidenceTrend();
       }
 
-      // ---- vocabulary vault ----
+      // ---- flashcards ----
 
-      function updateVocabCounts() {
-        const dueCount = vocabEntries.filter(armusIsVocabDue).length;
-        const totalEl = document.getElementById("vocabTotalCount");
-        const dueEl = document.getElementById("vocabDueLine");
-        if (totalEl) totalEl.textContent = vocabEntries.length;
-        if (dueEl) {
-          dueEl.innerHTML = dueCount > 0
-            ? `<strong>${dueCount}</strong> tekrar bugün seni bekliyor`
-            : "Bugün için tekrar yok 🎉";
-        }
-        const reviewBtn = document.getElementById("vocabReviewBtn");
-        if (reviewBtn) reviewBtn.disabled = dueCount === 0;
-      }
+      let flashcardIndex = 0;
+      let flashcardFlipped = false;
 
-      let vocabReviewQueue = [];
+      function renderFlashcardSection() {
 
-      function showNextFlashcard() {
+        const hasEntries = vocabEntries.length > 0;
+        const entry = hasEntries ? vocabEntries[flashcardIndex] : null;
 
-        const flash = document.getElementById("vocabFlash");
-
-        if (vocabReviewQueue.length === 0) {
-          flash.style.display = "block";
-          flash.innerHTML = `<div class="vocab-flash-hint">Bugünlük tekrar tamamlandı! 🎉</div>`;
-          return;
-        }
-
-        const entry = vocabReviewQueue[0];
-        flash.style.display = "block";
-        flash.innerHTML = `
-          <div class="vocab-flash-hint">Anlamı görmek için kelimeye tıkla</div>
-          <div class="vocab-flash-term" id="vocabFlashTerm">${entry.term}</div>
-          <div class="vocab-flash-meaning" id="vocabFlashMeaning" style="visibility:hidden;">${entry.meaning}</div>
-          <div class="vocab-flash-actions">
-            <button type="button" class="know-btn" id="vocabKnowBtn">Biliyorum ✓</button>
-            <button type="button" id="vocabAgainBtn">Tekrar Göster</button>
-          </div>
-        `;
-
-        document.getElementById("vocabFlashTerm").addEventListener("click", () => {
-          document.getElementById("vocabFlashMeaning").style.visibility = "visible";
-        });
-
-        document.getElementById("vocabKnowBtn").addEventListener("click", async () => {
-          await armusReviewVocabEntry(entry.id, true);
-          entry.review_count += 1;
-          entry.last_reviewed_at = new Date().toISOString();
-          vocabReviewQueue.shift();
-          showNextFlashcard();
-          updateVocabCounts();
-        });
-
-        document.getElementById("vocabAgainBtn").addEventListener("click", async () => {
-          await armusReviewVocabEntry(entry.id, false);
-          entry.review_count = 0;
-          entry.last_reviewed_at = new Date().toISOString();
-          vocabReviewQueue.shift();
-          showNextFlashcard();
-          updateVocabCounts();
-        });
-      }
-
-      function renderVocabCard() {
-
-        const dueCount = vocabEntries.filter(armusIsVocabDue).length;
-
-        document.getElementById("vocabCard").innerHTML = `
-          <div class="vocab-top">
-            <div>
-              <div class="vocab-stat"><strong id="vocabTotalCount">${vocabEntries.length}</strong> kelime kayıtlı</div>
-              <div class="vocab-stat" id="vocabDueLine">${dueCount > 0 ? `<strong>${dueCount}</strong> tekrar bugün seni bekliyor` : "Bugün için tekrar yok 🎉"}</div>
+        document.getElementById("flashcardSection").innerHTML = `
+          ${hasEntries ? `
+            <div class="flashcard-nav">
+              <button type="button" id="flashcardPrevBtn" ${vocabEntries.length < 2 ? "disabled" : ""}>‹</button>
+              <span class="flashcard-count">${flashcardIndex + 1} / ${vocabEntries.length}</span>
+              <button type="button" id="flashcardNextBtn" ${vocabEntries.length < 2 ? "disabled" : ""}>›</button>
             </div>
-            <button type="button" class="vocab-review-btn" id="vocabReviewBtn" ${dueCount === 0 ? "disabled" : ""}>Şimdi Tekrar Et</button>
+          ` : ""}
+          <div class="flashcard-stage">
+            <div class="flashcard ${flashcardFlipped ? "flipped" : ""}" id="flashcardEl">
+              <div class="flashcard-face flashcard-front">
+                ${hasEntries ? `
+                  <span class="flashcard-label">Kelime</span>
+                  <div class="flashcard-word">${entry.term}</div>
+                  <span class="flashcard-hint">Çevirmek için karta tıkla</span>
+                ` : `
+                  <div class="flashcard-empty">Henüz kartın yok.<br>Aşağıdan ilk kelimeni ekle 👇</div>
+                `}
+              </div>
+              <div class="flashcard-face flashcard-back">
+                ${hasEntries ? `
+                  <span class="flashcard-label">Anlamı</span>
+                  <div class="flashcard-word">${entry.meaning}</div>
+                ` : ""}
+              </div>
+            </div>
           </div>
-          <div class="vocab-flash" id="vocabFlash"></div>
-          <form class="vocab-add-form" id="vocabAddForm">
-            <input type="text" id="vocabTermInput" placeholder="Yeni kelime/ifade" required maxlength="80">
-            <input type="text" id="vocabMeaningInput" placeholder="Anlamı" required maxlength="120">
-            <button type="submit">Ekle</button>
+          <form class="flashcard-add-form" id="flashcardAddForm">
+            <input type="text" id="flashcardWordInput" placeholder="Kelime" required maxlength="80">
+            <input type="text" id="flashcardMeaningInput" placeholder="Anlamı" required maxlength="120">
+            <button type="submit">Kart Oluştur</button>
           </form>
         `;
 
-        document.getElementById("vocabReviewBtn").addEventListener("click", () => {
-          vocabReviewQueue = vocabEntries.filter(armusIsVocabDue);
-          showNextFlashcard();
-        });
+        if (hasEntries) {
+          document.getElementById("flashcardEl").addEventListener("click", () => {
+            flashcardFlipped = !flashcardFlipped;
+            document.getElementById("flashcardEl").classList.toggle("flipped", flashcardFlipped);
+          });
 
-        document.getElementById("vocabAddForm").addEventListener("submit", async event => {
+          const prevBtn = document.getElementById("flashcardPrevBtn");
+          const nextBtn = document.getElementById("flashcardNextBtn");
+
+          if (prevBtn) prevBtn.addEventListener("click", () => {
+            flashcardIndex = (flashcardIndex - 1 + vocabEntries.length) % vocabEntries.length;
+            flashcardFlipped = false;
+            renderFlashcardSection();
+          });
+
+          if (nextBtn) nextBtn.addEventListener("click", () => {
+            flashcardIndex = (flashcardIndex + 1) % vocabEntries.length;
+            flashcardFlipped = false;
+            renderFlashcardSection();
+          });
+        }
+
+        document.getElementById("flashcardAddForm").addEventListener("submit", async event => {
           event.preventDefault();
-          const term = document.getElementById("vocabTermInput").value.trim();
-          const meaning = document.getElementById("vocabMeaningInput").value.trim();
+          const term = document.getElementById("flashcardWordInput").value.trim();
+          const meaning = document.getElementById("flashcardMeaningInput").value.trim();
           if (!term || !meaning) return;
           const entry = await armusAddVocabEntry(session.id, term, meaning);
           if (entry) {
             vocabEntries.unshift(entry);
-            renderVocabCard();
+            flashcardIndex = 0;
+            flashcardFlipped = false;
+            renderFlashcardSection();
           }
         });
       }
 
-      renderVocabCard();
+      document.getElementById("flashcardToggleBtn").addEventListener("click", () => {
+        const section = document.getElementById("flashcardSection");
+        const opening = section.style.display === "none";
+        section.style.display = opening ? "block" : "none";
+        if (opening) renderFlashcardSection();
+      });
 
       // ---- badges ----
 
