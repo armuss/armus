@@ -40,6 +40,38 @@ async function armusSignOut() {
   await armusSupabase.auth.signOut();
 }
 
+// Sends a password-reset email (if that address has an account - Supabase
+// doesn't reveal either way, so neither do we). The link in that email
+// brings the user back to sifre-sifirla.html with a recovery session,
+// where armusUpdatePassword actually sets the new password.
+async function armusRequestPasswordReset(email) {
+  return armusSupabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/sifre-sifirla.html`,
+  });
+}
+
+async function armusUpdatePassword(newPassword) {
+  return armusSupabase.auth.updateUser({ password: newPassword });
+}
+
+// Permanently deletes the logged-in user's own account via the
+// delete-account Edge Function (also used by the mobile app) - hard
+// deletes auth.users, which cascades through profiles and everything
+// referencing it (bookings, payments, reviews, messages, ...) per
+// schema.sql. Signs the browser out locally too since the account (and
+// its session) no longer exists server-side either way.
+async function armusDeleteOwnAccount() {
+
+  const { data, error } = await armusSupabase.functions.invoke("delete-account");
+
+  if (error || !data || !data.ok) {
+    return { ok: false, error: (data && data.error) || "Hesap silinemedi. Lütfen tekrar dene." };
+  }
+
+  await armusSupabase.auth.signOut();
+  return { ok: true };
+}
+
 // Returns the current user's full profile row (auth + application data
 // merged), or null if nobody is logged in.
 async function armusGetSession() {
@@ -172,11 +204,32 @@ async function armusRenderNavAuth() {
       ${creditBadge}
       <span class="nav-greeting">Merhaba, ${firstName} <small>(${roleLabel})</small></span>
       <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
+      <button type="button" id="armusDeleteAccountBtn" style="background:none;border:none;color:var(--armus-faint);font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit;">Hesabımı Sil</button>
     `;
 
     document.getElementById("armusLogoutBtn").addEventListener("click", async () => {
       await armusSignOut();
       window.location.reload();
+    });
+
+    document.getElementById("armusDeleteAccountBtn").addEventListener("click", async () => {
+
+      if (!confirm("Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.")) return;
+
+      const btn = document.getElementById("armusDeleteAccountBtn");
+      btn.disabled = true;
+      btn.textContent = "Siliniyor...";
+
+      const result = await armusDeleteOwnAccount();
+
+      if (!result.ok) {
+        btn.disabled = false;
+        btn.textContent = "Hesabımı Sil";
+        alert(result.error);
+        return;
+      }
+
+      window.location.href = "index.html";
     });
 
     const walletTrigger = document.getElementById("armusWalletTrigger");

@@ -19,6 +19,7 @@ type AuthState = {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  deleteAccount: () => Promise<{ ok: true } | { ok: false; error: string }>;
 };
 
 const AuthContext = createContext<AuthState>({
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthState>({
   loading: true,
   signOut: async () => {},
   refreshProfile: async () => {},
+  deleteAccount: async () => ({ ok: false, error: 'Giriş yapmalısın.' }),
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -72,6 +74,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         refreshProfile: async () => {
           if (session) await loadProfile(session.user.id);
+        },
+        deleteAccount: async () => {
+          const { data, error } = await supabase.functions.invoke('delete-account');
+          if (error || !data?.ok) {
+            return { ok: false, error: (data && data.error) || 'Hesap silinemedi. Lütfen tekrar dene.' };
+          }
+          await supabase.auth.signOut();
+          return { ok: true };
         },
       }}
     >

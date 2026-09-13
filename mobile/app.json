@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.armus.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Canlı ders odasına girmek için kameranı kullanmamız gerekiyor.",
         "NSMicrophoneUsageDescription": "Canlı ders odasında konuşabilmen için mikrofonunu kullanmamız gerekiyor."
@@ -18,6 +19,7 @@
     },
     "android": {
       "package": "com.armus.app",
+      "versionCode": 1,
       "permissions": ["CAMERA", "RECORD_AUDIO"],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",

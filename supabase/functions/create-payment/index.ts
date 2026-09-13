@@ -1,9 +1,11 @@
-// ARMUS - starts an iyzico Checkout Form payment for a booking, first
-// checking whether an available lesson credit (see migration_28.sql,
-// granted by cancel-booking) covers it for free.
+// ARMUS - starts an iyzico Checkout Form payment for a booking OR a
+// lesson package, first checking (bookings only) whether an available
+// lesson credit (see migration_28.sql, granted by cancel-booking) covers
+// it for free.
 //
 // Called from booking.html (armusSupabase.functions.invoke("create-payment", ...))
-// right when the student clicks "Onayla". Two outcomes:
+// right when the student clicks "Onayla", or from the app's package-offer
+// screen after a trial lesson. Two outcomes for a booking:
 //   - an available credit covers this booking (same teacher as the
 //     credit, or any teacher if this is a trial lesson): the booking is
 //     created directly, right here, with no iyzico step at all and no
@@ -19,6 +21,13 @@
 // free lessons by cancelling a credit-covered booking to get another
 // credit (cancel-booking only grants one when there's a real payment on
 // file for the booking being cancelled).
+//
+// type: "package" (migration_29.sql) always goes to card - it's what a
+// student buys after a trial to lock in weekly lessons with that same
+// teacher. It's a single charge, not a real recurring subscription (no
+// iyzico subscription API involved); payment-callback grants `quantity`
+// lesson_credits for that teacher once the charge succeeds, consumed by
+// this same function's credit-check above on each future booking.
 //
 // (The wallet feature - balance/top-up applied at checkout - is on hold
 // for now, see ARMUS_WALLET_ENABLED in auth.js; it's not used here.)
@@ -89,18 +98,26 @@ Deno.serve(async (req) => {
     if (!profile) return jsonResponse({ error: "Profil bulunamadı." }, 400);
 
     const body = await req.json().catch(() => ({}));
-    const { teacherId, teacherName, type, date, time, price, phone, identityNumber } = body;
+    const { teacherId, teacherName, type, date, time, price, phone, identityNumber, quantity } = body;
 
-    if (!teacherId || !teacherName || !type || !date || !time || !price) {
-      return jsonResponse({ error: "Eksik rezervasyon bilgisi." }, 400);
-    }
-    if (type !== "trial" && type !== "lesson") {
+    if (type !== "trial" && type !== "lesson" && type !== "package") {
       return jsonResponse({ error: "Geçersiz ders tipi." }, 400);
+    }
+    if (!teacherId || !teacherName || !price) {
+      return jsonResponse({ error: "Eksik bilgi." }, 400);
+    }
+    if (type !== "package" && (!date || !time)) {
+      return jsonResponse({ error: "Eksik rezervasyon bilgisi." }, 400);
     }
 
     const numericPrice = Number(price);
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
       return jsonResponse({ error: "Geçersiz fiyat." }, 400);
+    }
+
+    const numericQuantity = Number(quantity);
+    if (type === "package" && (!Number.isInteger(numericQuantity) || numericQuantity <= 0)) {
+      return jsonResponse({ error: "Geçersiz ders sayısı." }, 400);
     }
 
     // service-role: pending_payments has no client-facing RLS policies at
@@ -118,13 +135,17 @@ Deno.serve(async (req) => {
 
     // does an available lesson credit cover this booking? Same teacher as
     // the credit covers any lesson type; a credit from a different teacher
-    // only covers a trial lesson (see migration_28.sql).
-    const { data: credits } = await supabaseAdmin
-      .from("lesson_credits")
-      .select("*")
-      .eq("student_id", user.id)
-      .eq("status", "available")
-      .order("created_at", { ascending: true });
+    // only covers a trial lesson (see migration_28.sql). Packages are
+    // always a real charge - never covered by an existing credit, since
+    // buying a package is what CREATES credits, not what consumes them.
+    const { data: credits } = type !== "package"
+      ? await supabaseAdmin
+          .from("lesson_credits")
+          .select("*")
+          .eq("student_id", user.id)
+          .eq("status", "available")
+          .order("created_at", { ascending: true })
+      : { data: null };
 
     let appliedCredit = (credits || []).find((c: any) => c.teacher_id === teacherId) || null;
     if (!appliedCredit && type === "trial" && credits && credits.length > 0) {
@@ -183,8 +204,9 @@ Deno.serve(async (req) => {
         teacher_id: teacherId,
         teacher_name: teacherName,
         type,
-        lesson_date: date,
-        lesson_time: time,
+        lesson_date: type === "package" ? null : date,
+        lesson_time: type === "package" ? null : time,
+        quantity: type === "package" ? numericQuantity : null,
         price: numericPrice,
         status: "pending",
       })
@@ -235,7 +257,9 @@ Deno.serve(async (req) => {
       basketItems: [
         {
           id: pending.id,
-          name: `${type === "trial" ? "Deneme Dersi" : "Ders"} - ${teacherName}`,
+          name: type === "package"
+            ? `${numericQuantity} Ders Paketi - ${teacherName}`
+            : `${type === "trial" ? "Deneme Dersi" : "Ders"} - ${teacherName}`,
           category1: "Eğitim",
           itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
           price: numericPrice.toFixed(2),

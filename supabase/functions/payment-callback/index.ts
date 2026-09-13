@@ -1,8 +1,9 @@
 // ARMUS - iyzico redirects the buyer's browser here once they finish (or
 // abandon) the Checkout Form. This is the ONLY place a real booking row
-// ever gets created from a paid booking - it re-checks the payment status
-// with iyzico itself (never trusts the redirect alone, which anyone could
-// forge) before writing anything.
+// (or, for a package purchase - migration_29.sql - a batch of
+// lesson_credits) ever gets created from a paid charge - it re-checks the
+// payment status with iyzico itself (never trusts the redirect alone,
+// which anyone could forge) before writing anything.
 //
 // Deploy: Supabase Dashboard -> Edge Functions -> Create a new function,
 // name it "payment-callback", paste this file in, Deploy. Then copy its
@@ -56,14 +57,22 @@ Deno.serve(async (req) => {
 
   if (!pending) return redirectTo("booking.html?payment=failed");
 
-  const query =
-    `teacher=${encodeURIComponent(pending.teacher_id)}&type=${encodeURIComponent(pending.type)}` +
-    `&date=${encodeURIComponent(pending.lesson_date)}&time=${encodeURIComponent(pending.lesson_time)}`;
+  const isPackage = pending.type === "package";
+
+  const query = isPackage
+    ? `teacher=${encodeURIComponent(pending.teacher_id)}&type=package&quantity=${encodeURIComponent(pending.quantity)}`
+    : `teacher=${encodeURIComponent(pending.teacher_id)}&type=${encodeURIComponent(pending.type)}` +
+      `&date=${encodeURIComponent(pending.lesson_date)}&time=${encodeURIComponent(pending.lesson_time)}`;
+
+  const successPath = isPackage ? `teacher.html?payment=success&${query}` : `booking.html?payment=success&${query}`;
+  const failedPath = isPackage ? `teacher.html?payment=failed&${query}` : `booking.html?payment=failed&${query}`;
+  const errorPath = isPackage ? `teacher.html?payment=error&${query}` : `booking.html?payment=error&${query}`;
 
   // iyzico can call this more than once for the same token - if we
-  // already turned this into a booking, don't create a second one
-  if (pending.status === "succeeded" && pending.booking_id) {
-    return redirectTo(`booking.html?payment=success&${query}`);
+  // already fulfilled this payment (booking created, or credits granted
+  // for a package), don't do it a second time
+  if (pending.status === "succeeded" && (pending.booking_id || isPackage)) {
+    return redirectTo(successPath);
   }
 
   let result: any;
@@ -75,12 +84,51 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("iyzico retrieve failed", err);
-    return redirectTo(`booking.html?payment=failed&${query}`);
+    return redirectTo(failedPath);
   }
 
   if (result.status !== "success" || result.paymentStatus !== "SUCCESS") {
     await supabaseAdmin.from("pending_payments").update({ status: "failed" }).eq("id", pending.id);
-    return redirectTo(`booking.html?payment=failed&${query}`);
+    return redirectTo(failedPath);
+  }
+
+  // stored so cancel-booking can refund this exact charge later
+  const transactionId = Array.isArray(result.itemTransactions) && result.itemTransactions[0]
+    ? result.itemTransactions[0].paymentTransactionId
+    : null;
+
+  if (isPackage) {
+
+    const quantity = Number(pending.quantity) || 0;
+    const creditRows = Array.from({ length: quantity }, () => ({
+      student_id: pending.student_id,
+      teacher_id: pending.teacher_id,
+      teacher_name: pending.teacher_name,
+      status: "available",
+    }));
+
+    const { error: creditsError } = await supabaseAdmin.from("lesson_credits").insert(creditRows);
+
+    if (creditsError) {
+      // money was taken but the credits failed to write - flag it as its
+      // own state rather than silently losing the payment, so it's
+      // findable (pending_payments.status = 'paid_no_booking') instead of
+      // just looking identical to a normal failure
+      console.error("lesson_credits insert failed after successful package payment", creditsError);
+      await supabaseAdmin.from("pending_payments").update({ status: "paid_no_booking" }).eq("id", pending.id);
+      return redirectTo(errorPath);
+    }
+
+    await supabaseAdmin
+      .from("pending_payments")
+      .update({
+        status: "succeeded",
+        iyzico_payment_id: result.paymentId ?? null,
+        iyzico_payment_transaction_id: transactionId,
+      })
+      .eq("id", pending.id);
+
+    return redirectTo(successPath);
   }
 
   const { data: booking, error: bookingError } = await supabaseAdmin
@@ -105,13 +153,8 @@ Deno.serve(async (req) => {
     // just looking identical to a normal failure
     console.error("booking insert failed after successful payment", bookingError);
     await supabaseAdmin.from("pending_payments").update({ status: "paid_no_booking" }).eq("id", pending.id);
-    return redirectTo(`booking.html?payment=error&${query}`);
+    return redirectTo(errorPath);
   }
-
-  // stored so cancel-booking can refund this exact charge later
-  const transactionId = Array.isArray(result.itemTransactions) && result.itemTransactions[0]
-    ? result.itemTransactions[0].paymentTransactionId
-    : null;
 
   await supabaseAdmin
     .from("pending_payments")
@@ -147,5 +190,5 @@ Deno.serve(async (req) => {
     });
   }
 
-  return redirectTo(`booking.html?payment=success&${query}`);
+  return redirectTo(successPath);
 });

@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Giriş Yap | ARMUS</title>
@@ -119,6 +120,21 @@
       border-color: var(--armus-gold-2);
     }
 
+    .forgot-row {
+      text-align: right;
+      margin: -6px 0 18px;
+    }
+
+    .forgot-row a {
+      font-size: 12.5px;
+      color: var(--armus-muted);
+      text-decoration: underline;
+    }
+
+    .forgot-row a:hover {
+      color: var(--armus-ink);
+    }
+
     .form-error {
       display: none;
       background: rgba(220, 90, 90, .1);
@@ -156,12 +172,6 @@
       font-weight: 600;
     }
 
-    .small-note {
-      text-align: center;
-      color: var(--armus-faint);
-      font-size: 10px;
-      margin-top: 20px;
-    }
   </style>
 </head>
 
@@ -193,16 +203,16 @@
         <input type="password" id="password" autocomplete="current-password" placeholder="Şifren">
       </div>
 
+      <div class="forgot-row">
+        <a href="sifre-sifirla.html">Şifremi unuttum</a>
+      </div>
+
       <button type="submit" class="submit-btn">Giriş Yap</button>
 
     </form>
 
     <div class="switch-note">
       Hesabın yok mu? <a href="register.html" id="switchToRegister">Kayıt ol</a>
-    </div>
-
-    <div class="small-note">
-      Bu bir prototip; hesaplar sadece bu tarayıcıda saklanır.
     </div>
 
   </main>

@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Öğretmen Paneli | ARMUS</title>
@@ -366,6 +367,41 @@
 
     .save-status.visible {
       opacity: 1;
+    }
+
+    .danger-zone {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--armus-border-soft);
+    }
+
+    .danger-zone h3 {
+      font-size: 15px;
+      color: #b3261e;
+      margin-bottom: 8px;
+    }
+
+    .danger-zone p {
+      font-size: 13px;
+      color: var(--armus-muted);
+      margin-bottom: 14px;
+      max-width: 440px;
+    }
+
+    .danger-btn {
+      padding: 12px 20px;
+      border: 1px solid rgba(179, 38, 30, .35);
+      border-radius: 12px;
+      background: rgba(179, 38, 30, .06);
+      color: #b3261e;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13.5px;
+      cursor: pointer;
+    }
+
+    .danger-btn:hover {
+      background: rgba(179, 38, 30, .12);
     }
 
     .empty-state {
@@ -1358,6 +1394,12 @@
           <span class="save-status" id="saveStatus">Kaydedildi ✓</span>
 
         </form>
+
+        <div class="danger-zone">
+          <h3>Tehlikeli Bölge</h3>
+          <p>Hesabını sildiğinde profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+          <button type="button" class="danger-btn" id="deleteAccountBtn">Hesabımı Sil</button>
+        </div>
       </div>
 
     </main>
@@ -1391,6 +1433,26 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await armusSignOut();
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
+
+      if (!confirm("Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.")) return;
+
+      const btn = document.getElementById("deleteAccountBtn");
+      btn.disabled = true;
+      btn.textContent = "Siliniyor...";
+
+      const result = await armusDeleteOwnAccount();
+
+      if (!result.ok) {
+        btn.disabled = false;
+        btn.textContent = "Hesabımı Sil";
+        alert(result.error);
+        return;
+      }
+
       window.location.href = "index.html";
     });
 
@@ -1516,12 +1578,17 @@
         }
       });
 
-      const [incomingBookings, teacherReviews, teacherNotes, conversations] = await Promise.all([
+      const [incomingBookings, teacherReviews, teacherNotes, conversations, teacherCreditsRes] = await Promise.all([
         armusGetBookingsForTeacher(user.id),
         armusGetReviewsForTeacher(user.id),
         armusGetTeacherNotes(user.id),
         armusGetConversations(),
+        armusSupabase.from("lesson_credits").select("*").eq("teacher_id", user.id),
       ]);
+      // credits students have bought as a package with THIS teacher (see
+      // armusTrialCountsAsEarned) - used to tell whether a trial
+      // converted into real earnings yet
+      const teacherCredits = teacherCreditsRes.data || [];
       // a cancelled booking never counts toward earnings, "today", or the
       // calendar - it still shows (with a cancelled tag) in the grouped
       // list below, which keeps using incomingBookings directly
@@ -1695,11 +1762,17 @@
       const totalHours = Math.round((completedBookings.length * 50 / 60) * 10) / 10;
       const tier = commissionForHours(totalHours);
 
+      // an unconverted trial's price doesn't count as earnings yet - see
+      // armusTrialCountsAsEarned
+      function earnablePrice(b) {
+        return armusTrialCountsAsEarned(b, activeBookings, teacherCredits) ? (b.price || 0) : 0;
+      }
+
       const now = new Date();
       const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const grossThisMonth = completedBookings
         .filter(b => b.date.startsWith(thisMonthKey))
-        .reduce((sum, b) => sum + (b.price || 0), 0);
+        .reduce((sum, b) => sum + earnablePrice(b), 0);
       const netThisMonth = Math.round(grossThisMonth * (1 - tier.rate / 100));
 
       const avgRating = teacherReviews.length
@@ -1813,7 +1886,7 @@
       const weeksElapsedThisMonth = Math.max(1, now.getDate() / 7);
       const currentWeeklyPace = lessonsThisWeek || (completedBookings.filter(b => b.date.startsWith(thisMonthKey)).length / weeksElapsedThisMonth);
       const avgPrice = completedBookings.length
-        ? completedBookings.reduce((sum, b) => sum + (b.price || 0), 0) / completedBookings.length
+        ? completedBookings.reduce((sum, b) => sum + earnablePrice(b), 0) / completedBookings.length
         : (user.price || 500);
 
       const simulatorSlider = document.getElementById("simulatorSlider");
@@ -1913,18 +1986,22 @@
                 review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
               ].join("");
 
+              const countsAsEarned = armusTrialCountsAsEarned(booking, activeBookings, teacherCredits);
+
               const earningHtml = isCancelled
                 ? `İptal edildi${booking.refunded ? " · öğrenciye ders hakkı eklendi" : ""}`
-                : isPast
-                  ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
-                  : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
+                : !countsAsEarned
+                  ? `ARMUS'ta kalıyor <span style="opacity:.7;">(öğrenci bir paket alırsa kazancına döner)</span>`
+                  : isPast
+                    ? `Kazandın: <strong>₺${net}</strong> <span style="opacity:.7;">(₺${booking.price} - %${tier.rate} komisyon)</span>`
+                    : `Bekleniyor: <strong>₺${booking.price}</strong> <span style="opacity:.7;">(ders sonrası hesabına geçer)</span>`;
 
               return `
               <div class="booking-row">
                 <div>
                   <strong>${booking.studentName}</strong>
                   <div class="booking-tags">${tags}</div>
-                  <div class="booking-earning${isPast || isCancelled ? "" : " pending"}">${earningHtml}</div>
+                  <div class="booking-earning${(isPast && countsAsEarned) || isCancelled ? "" : " pending"}">${earningHtml}</div>
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>

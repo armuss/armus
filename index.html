@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ARMUS — İngilizce öğrenmenin daha iyi bir yolu.</title>
   <meta name="description" content="Türkçe konuşan öğrenciler için doğru İngilizce öğretmenini bul." />
@@ -221,7 +222,7 @@
     <div><h4>Öğrenciler</h4><a href="teachers.html">Öğretmenler</a><a href="teachers.html">Deneme Dersi</a><a href="#how">Nasıl Çalışır?</a><a href="sss.html">Yardım Merkezi</a></div>
     <div><h4>Öğretmenler</h4><a href="register.html?role=teacher">Öğretmen Ol</a><a href="#commission">Komisyon Oranları</a><a href="apply-teacher.html">Öğretmen Rehberi</a><a href="sss.html">SSS</a></div>
     <div><h4>Hakkımızda</h4><a href="hakkimizda.html">Hakkımızda</a><a href="iletisim.html">Kariyer</a><a href="iletisim.html">İletişim</a><a href="gizlilik-politikasi.html">Gizlilik Politikası</a><a href="kullanim-sartlari.html">Kullanım Şartları</a></div>
-    <div><h4>Bültenimize Katılın</h4><p>Yeni özellikler ve fırsatlardan haberdar olun.</p><div class="newsletter"><input placeholder="E-posta adresiniz"><button>↗</button></div></div>
+    <div><h4>Bültenimize Katılın</h4><p id="newsletterMsg">Yeni özellikler ve fırsatlardan haberdar olun.</p><form class="newsletter" id="newsletterForm"><input type="email" id="newsletterEmail" placeholder="E-posta adresiniz" required><button type="submit">↗</button></form></div>
     <div class="copyright">© 2026 ARMUS. Tüm hakları saklıdır.</div>
   </footer>
 
@@ -284,5 +285,28 @@
   </script>
 
   <script>armusRenderAnnouncementBanner();</script>
+
+  <script>
+    document.getElementById("newsletterForm").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const input = document.getElementById("newsletterEmail");
+      const msg = document.getElementById("newsletterMsg");
+      const email = input.value.trim().toLowerCase();
+      if (!email) return;
+
+      const { error } = await armusSupabase.from("newsletter_subscribers").insert({ email });
+
+      // A duplicate email (already subscribed) still reads as success to
+      // the visitor - it's not something they need to know or fix.
+      if (error && error.code !== "23505") {
+        msg.textContent = "Bir şeyler ters gitti, lütfen tekrar dene.";
+        return;
+      }
+
+      input.value = "";
+      msg.textContent = "Teşekkürler! Listeye eklendin. ✓";
+    });
+  </script>
 </body>
 </html>

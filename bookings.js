@@ -81,6 +81,39 @@ function armusMapBookingRow(row) {
   };
 }
 
+// A trial only counts as real earnings for the teacher once the student
+// has "converted" - either a real (non-trial) lesson booking with this
+// same teacher, or a package purchase with them (a lesson_credits row -
+// migration_28.sql - with no source_booking_id, meaning it came from
+// buying a package - migration_29.sql - rather than a cancellation
+// refund, which always sets source_booking_id). Until then the trial fee
+// stays with ARMUS (see PROJECT_SUMMARY.md's trial-lesson design) - this
+// only affects how much of the booking's price counts as the teacher's
+// earnings, never the booking itself.
+//
+// allBookings: every booking for this teacher (mapped rows, camelCase).
+// credits: this teacher's own lesson_credits rows (raw, snake_case) -
+// requires the lesson_credits_select_teacher policy (migration_30.sql).
+function armusTrialCountsAsEarned(booking, allBookings, credits) {
+
+  if (booking.type !== "trial") return true;
+
+  const hasRealLesson = (allBookings || []).some(b =>
+    b.id !== booking.id &&
+    b.studentId === booking.studentId &&
+    b.teacherId === booking.teacherId &&
+    b.type === "lesson" &&
+    b.status !== "cancelled"
+  );
+  if (hasRealLesson) return true;
+
+  return (credits || []).some(c =>
+    c.student_id === booking.studentId &&
+    c.teacher_id === booking.teacherId &&
+    !c.source_booking_id
+  );
+}
+
 // Cancels a booking via the cancel-booking Edge Function (which also
 // issues an iyzico refund when the canceller is eligible for one - see
 // that function's file header for the exact policy). Returns

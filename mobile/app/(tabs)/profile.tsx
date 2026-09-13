@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
@@ -9,7 +10,32 @@ import { colors, fonts, radius } from '../../lib/theme';
 const SITE_URL = 'https://armus.vercel.app';
 
 export default function Profile() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, deleteAccount } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      'Hesabını silmek istediğine emin misin?',
+      'Bu işlem geri alınamaz. Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Hesabımı Sil',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            const result = await deleteAccount();
+            setDeleting(false);
+            if (!result.ok) {
+              Alert.alert('Bir şeyler ters gitti', result.error);
+              return;
+            }
+            router.replace('/welcome');
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -45,6 +71,14 @@ export default function Profile() {
         <View style={{ marginTop: 12, width: '100%' }}>
           <Button label="Çıkış Yap" variant="outline" onPress={signOut} />
         </View>
+
+        <Pressable
+          onPress={deleting ? undefined : confirmDeleteAccount}
+          style={styles.deleteRow}
+          disabled={deleting}
+        >
+          <Text style={styles.deleteText}>{deleting ? 'Siliniyor…' : 'Hesabımı Sil'}</Text>
+        </Pressable>
 
         <View style={styles.legalRow}>
           <Pressable onPress={() => Linking.openURL(`${SITE_URL}/gizlilik-politikasi.html`)}>
@@ -133,11 +167,20 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color: colors.ink,
   },
+  deleteRow: {
+    marginTop: 20,
+    padding: 6,
+  },
+  deleteText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12.5,
+    color: colors.error,
+  },
   legalRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 28,
+    marginTop: 16,
   },
   legalLink: {
     fontFamily: fonts.bodyMedium,

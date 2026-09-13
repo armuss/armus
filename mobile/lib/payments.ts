@@ -1,15 +1,25 @@
 import { supabase } from './supabase';
 
-export type CreatePaymentParams = {
-  teacherId: string;
-  teacherName: string;
-  type: 'trial' | 'lesson';
-  date: string;
-  time: string;
-  price: number;
-  phone: string;
-  identityNumber: string;
-};
+export type CreatePaymentParams =
+  | {
+      teacherId: string;
+      teacherName: string;
+      type: 'trial' | 'lesson';
+      date: string;
+      time: string;
+      price: number;
+      phone: string;
+      identityNumber: string;
+    }
+  | {
+      teacherId: string;
+      teacherName: string;
+      type: 'package';
+      quantity: number;
+      price: number;
+      phone: string;
+      identityNumber: string;
+    };
 
 export type CreatePaymentResult =
   | { ok: true; bookedDirectly: true; creditApplied: boolean }
