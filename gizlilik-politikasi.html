@@ -195,40 +195,40 @@
 
   <main class="container">
 
-    <div class="eyebrow">YASAL</div>
-    <h1>Gizlilik Politikası</h1>
-    <div class="updated">Son güncelleme: 15.08.2026</div>
+    <div class="eyebrow" data-i18n="privacy.eyebrow">YASAL</div>
+    <h1 data-i18n="privacy.title">Gizlilik Politikası</h1>
+    <div class="updated" data-i18n="privacy.updated">Son güncelleme: 15.08.2026</div>
 
-    <p>
+    <p data-i18n="privacy.intro">
       Bu Gizlilik Politikası, ARMUS'u ("biz", "platform") kullanırken hangi
       kişisel verilerini topladığımızı, bunları neden ve nasıl işlediğimizi
       ve haklarını açıklar. ARMUS, Türkiye'de İngilizce öğrenmek isteyen
       öğrencileri İngilizce öğretmenleriyle buluşturan bir platformdur.
     </p>
 
-    <h2>1. Hangi verileri topluyoruz?</h2>
-    <p>Hesabına ve kullanımına bağlı olarak şu bilgileri toplayabiliriz:</p>
+    <h2 data-i18n="privacy.s1Title">1. Hangi verileri topluyoruz?</h2>
+    <p data-i18n="privacy.s1Intro">Hesabına ve kullanımına bağlı olarak şu bilgileri toplayabiliriz:</p>
     <ul>
-      <li>Ad, soyad, e-posta adresi ve şifre (hesap oluşturma sırasında)</li>
-      <li>Öğretmenler için: ülke, öğretilen konu, konuşulan diller, telefon
+      <li data-i18n="privacy.s1Li1">Ad, soyad, e-posta adresi ve şifre (hesap oluşturma sırasında)</li>
+      <li data-i18n="privacy.s1Li2">Öğretmenler için: ülke, öğretilen konu, konuşulan diller, telefon
         numarası, fotoğraf, sertifika ve eğitim bilgileri, tanıtım videosu</li>
-      <li>Ders geçmişi, rezervasyon bilgileri ve öğrenci değerlendirmeleri</li>
-      <li>Ödeme sistemi devreye girdiğinde: fatura ve ödeme bilgileri
+      <li data-i18n="privacy.s1Li3">Ders geçmişi, rezervasyon bilgileri ve öğrenci değerlendirmeleri</li>
+      <li data-i18n="privacy.s1Li4">Ödeme sistemi devreye girdiğinde: fatura ve ödeme bilgileri
         (kart numaraları doğrudan bizde saklanmaz, ödeme sağlayıcı
         üzerinden işlenir)</li>
     </ul>
 
-    <h2>2. Verilerini neden işliyoruz?</h2>
+    <h2 data-i18n="privacy.s2Title">2. Verilerini neden işliyoruz?</h2>
     <ul>
-      <li>Hesabını oluşturmak ve platformu kullanmanı sağlamak</li>
-      <li>Öğretmen başvurularını incelemek ve onaylamak</li>
-      <li>Rezervasyon, ders ve değerlendirme sistemlerinin çalışmasını sağlamak</li>
-      <li>Dolandırıcılık ve kötüye kullanımı önlemek</li>
-      <li>Yasal yükümlülüklerimizi yerine getirmek</li>
+      <li data-i18n="privacy.s2Li1">Hesabını oluşturmak ve platformu kullanmanı sağlamak</li>
+      <li data-i18n="privacy.s2Li2">Öğretmen başvurularını incelemek ve onaylamak</li>
+      <li data-i18n="privacy.s2Li3">Rezervasyon, ders ve değerlendirme sistemlerinin çalışmasını sağlamak</li>
+      <li data-i18n="privacy.s2Li4">Dolandırıcılık ve kötüye kullanımı önlemek</li>
+      <li data-i18n="privacy.s2Li5">Yasal yükümlülüklerimizi yerine getirmek</li>
     </ul>
 
-    <h2>3. Verilerini kimlerle paylaşıyoruz?</h2>
-    <p>
+    <h2 data-i18n="privacy.s3Title">3. Verilerini kimlerle paylaşıyoruz?</h2>
+    <p data-i18n="privacy.s3Text">
       Verilerini, hizmeti sağlamak için gerekli olmadıkça üçüncü taraflarla
       paylaşmayız. Örneğin bir öğretmenin profili, ders almayı düşünen
       öğrencilerin görebileceği şekilde herkese açık gösterilir (ad, fotoğraf,
@@ -237,17 +237,17 @@
       hizmeti sunmak için gerekli ölçüde veri paylaşılır.
     </p>
 
-    <h2>4. Verilerini nerede saklıyoruz?</h2>
-    <p>
-      ARMUS şu anda erken aşama bir prototiptir. Bu aşamada bazı veriler
-      (örneğin öğretmen başvuru belgeleri ve fotoğraflar) tarayıcının
-      yerel depolama alanında (localStorage) tutulur ve sunucularımıza
-      aktarılmaz. Platform büyüdükçe tüm veriler güvenli, gerçek bir
-      veritabanına taşınacak ve bu politika buna göre güncellenecektir.
+    <h2 data-i18n="privacy.s4Title">4. Verilerini nerede saklıyoruz?</h2>
+    <p data-i18n="privacy.s4Text">
+      Verilerin, Supabase altyapısı üzerinde barındırılan güvenli bir
+      veritabanında saklanır ve satır düzeyinde erişim kurallarıyla
+      (Row Level Security) korunur - yani her kullanıcı yalnızca kendi
+      verisine ve platformun izin verdiği ölçüde başkalarının herkese
+      açık bilgilerine (örneğin bir öğretmenin profili) erişebilir.
     </p>
 
-    <h2>5. Haklarların (KVKK)</h2>
-    <p>
+    <h2 data-i18n="privacy.s5Title">5. Haklarların (KVKK)</h2>
+    <p data-i18n="privacy.s5Text">
       6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında;
       verilerinin işlenip işlenmediğini öğrenme, işlenmişse buna ilişkin
       bilgi talep etme, verilerinin silinmesini veya düzeltilmesini isteme
@@ -255,13 +255,13 @@
       geçebilirsin.
     </p>
 
-    <h2>6. Bize ulaşmak</h2>
-    <p>
+    <h2 data-i18n="privacy.s6Title">6. Bize ulaşmak</h2>
+    <p data-i18n="privacy.s6Text">
       Gizlilik politikasıyla ilgili sorular için
       <a href="iletisim.html">iletişim sayfamızdan</a> bize ulaşabilirsin.
     </p>
 
-    <div class="note">
+    <div class="note" data-i18n="privacy.note">
       ARMUS şu anda geliştirme aşamasındadır. Bu belge, platform büyüdükçe
       ve gerçek bir veritabanı/ödeme altyapısına geçtikçe güncellenecektir.
     </div>
