@@ -368,6 +368,41 @@
       opacity: 1;
     }
 
+    .danger-zone {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--armus-border-soft);
+    }
+
+    .danger-zone h3 {
+      font-size: 15px;
+      color: #b3261e;
+      margin-bottom: 8px;
+    }
+
+    .danger-zone p {
+      font-size: 13px;
+      color: var(--armus-muted);
+      margin-bottom: 14px;
+      max-width: 440px;
+    }
+
+    .danger-btn {
+      padding: 12px 20px;
+      border: 1px solid rgba(179, 38, 30, .35);
+      border-radius: 12px;
+      background: rgba(179, 38, 30, .06);
+      color: #b3261e;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13.5px;
+      cursor: pointer;
+    }
+
+    .danger-btn:hover {
+      background: rgba(179, 38, 30, .12);
+    }
+
     .empty-state {
       display: none;
       padding: 22px;
@@ -1358,6 +1393,12 @@
           <span class="save-status" id="saveStatus">Kaydedildi ✓</span>
 
         </form>
+
+        <div class="danger-zone">
+          <h3>Tehlikeli Bölge</h3>
+          <p>Hesabını sildiğinde profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+          <button type="button" class="danger-btn" id="deleteAccountBtn">Hesabımı Sil</button>
+        </div>
       </div>
 
     </main>
@@ -1391,6 +1432,26 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await armusSignOut();
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
+
+      if (!confirm("Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.")) return;
+
+      const btn = document.getElementById("deleteAccountBtn");
+      btn.disabled = true;
+      btn.textContent = "Siliniyor...";
+
+      const result = await armusDeleteOwnAccount();
+
+      if (!result.ok) {
+        btn.disabled = false;
+        btn.textContent = "Hesabımı Sil";
+        alert(result.error);
+        return;
+      }
+
       window.location.href = "index.html";
     });
 

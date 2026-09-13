@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /student-dashboard.html
+Disallow: /booking.html
+Disallow: /class.html
+Disallow: /mesajlar.html
+Disallow: /my-lessons.html
+Disallow: /wallet.html
+Disallow: /sifre-sifirla.html
+
+Sitemap: https://armus.vercel.app/sitemap.xml

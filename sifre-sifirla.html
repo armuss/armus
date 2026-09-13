@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Şifremi Unuttum | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(440px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(440px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .back {
+      color: var(--armus-muted);
+      font-size: 13px;
+    }
+
+    .back:hover {
+      color: var(--armus-ink);
+    }
+
+    main.container {
+      padding: 55px 0 90px;
+    }
+
+    .eyebrow {
+      color: var(--armus-muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 30px;
+      letter-spacing: -1.2px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--armus-muted);
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--armus-muted);
+      margin-bottom: 7px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .form-error {
+      display: none;
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #b3261e;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .form-success {
+      display: none;
+      background: rgba(90, 180, 120, .12);
+      border: 1px solid rgba(90, 180, 120, .35);
+      color: #1e7a45;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      opacity: .6;
+      cursor: default;
+    }
+
+    .switch-note {
+      text-align: center;
+      color: var(--armus-muted);
+      font-size: 13px;
+      margin-top: 22px;
+    }
+
+    .switch-note a {
+      color: var(--armus-gold-text);
+      font-weight: 600;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">ARMUS</a>
+      <a href="login.html" class="back">← Giriş sayfası</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- STEP 1: ask for the account's email -->
+    <div id="requestStep">
+      <div class="eyebrow">HESABINA GERİ DÖN</div>
+      <h1>Şifreni sıfırla</h1>
+      <p class="subtitle">E-postanı yaz, sana bir sıfırlama bağlantısı gönderelim.</p>
+
+      <div class="form-error" id="requestError"></div>
+      <div class="form-success" id="requestSuccess">
+        Eğer bu e-posta ARMUS'ta kayıtlıysa, birkaç dakika içinde sıfırlama bağlantısı içeren bir e-posta alacaksın.
+      </div>
+
+      <form id="requestForm" novalidate>
+        <div class="field">
+          <label for="email">E-posta</label>
+          <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com">
+        </div>
+        <button type="submit" class="submit-btn" id="requestBtn">Sıfırlama Bağlantısı Gönder</button>
+      </form>
+
+      <div class="switch-note">
+        Şifreni hatırladın mı? <a href="login.html">Giriş yap</a>
+      </div>
+    </div>
+
+    <!-- STEP 2: shown once the email link lands the user back here with a
+         recovery session (see the PASSWORD_RECOVERY listener below) -->
+    <div id="updateStep" hidden>
+      <div class="eyebrow">SON ADIM</div>
+      <h1>Yeni şifre belirle</h1>
+      <p class="subtitle">Hesabın için yeni bir şifre seç.</p>
+
+      <div class="form-error" id="updateError"></div>
+      <div class="form-success" id="updateSuccess">
+        Şifren güncellendi. Giriş sayfasına yönlendiriliyorsun...
+      </div>
+
+      <form id="updateForm" novalidate>
+        <div class="field">
+          <label for="newPassword">Yeni şifre</label>
+          <input type="password" id="newPassword" autocomplete="new-password" placeholder="En az 6 karakter">
+        </div>
+        <div class="field">
+          <label for="newPasswordAgain">Yeni şifre (tekrar)</label>
+          <input type="password" id="newPasswordAgain" autocomplete="new-password" placeholder="Şifreni tekrar yaz">
+        </div>
+        <button type="submit" class="submit-btn" id="updateBtn">Şifreyi Güncelle</button>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+
+    const requestStep = document.getElementById("requestStep");
+    const updateStep = document.getElementById("updateStep");
+
+    const requestForm = document.getElementById("requestForm");
+    const requestError = document.getElementById("requestError");
+    const requestSuccess = document.getElementById("requestSuccess");
+    const requestBtn = document.getElementById("requestBtn");
+
+    requestForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      requestError.style.display = "none";
+      requestSuccess.style.display = "none";
+
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      if (!email) {
+        requestError.textContent = "Lütfen e-postanı yaz.";
+        requestError.style.display = "block";
+        return;
+      }
+
+      requestBtn.disabled = true;
+      requestBtn.textContent = "Gönderiliyor...";
+
+      await armusRequestPasswordReset(email);
+
+      // Same message whether or not the email is registered, on purpose -
+      // otherwise this form could be used to check which emails have an
+      // ARMUS account.
+      requestForm.style.display = "none";
+      requestSuccess.style.display = "block";
+    });
+
+    const updateForm = document.getElementById("updateForm");
+    const updateError = document.getElementById("updateError");
+    const updateSuccess = document.getElementById("updateSuccess");
+    const updateBtn = document.getElementById("updateBtn");
+
+    updateForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      updateError.style.display = "none";
+
+      const password = document.getElementById("newPassword").value;
+      const again = document.getElementById("newPasswordAgain").value;
+
+      if (password.length < 6) {
+        updateError.textContent = "Şifre en az 6 karakter olmalı.";
+        updateError.style.display = "block";
+        return;
+      }
+      if (password !== again) {
+        updateError.textContent = "Şifreler eşleşmiyor.";
+        updateError.style.display = "block";
+        return;
+      }
+
+      updateBtn.disabled = true;
+      updateBtn.textContent = "Güncelleniyor...";
+
+      const { error } = await armusUpdatePassword(password);
+
+      if (error) {
+        updateBtn.disabled = false;
+        updateBtn.textContent = "Şifreyi Güncelle";
+        updateError.textContent = "Bağlantının süresi dolmuş olabilir. Lütfen tekrar dene.";
+        updateError.style.display = "block";
+        return;
+      }
+
+      updateForm.style.display = "none";
+      updateSuccess.style.display = "block";
+
+      await armusSignOut();
+      setTimeout(() => { window.location.href = "login.html"; }, 2500);
+    });
+
+    // Supabase fires this once the recovery link in the email has
+    // established a session on this page - that's the cue to swap from
+    // "request a link" to "set a new password", never on a plain visit.
+    armusSupabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        requestStep.hidden = true;
+        updateStep.hidden = false;
+      }
+    });
+
+  </script>
+</body>
+</html>
