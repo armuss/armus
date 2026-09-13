@@ -1,10 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
-import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, goldGradient, radius, silverGradientLight } from '../../lib/theme';
+import { colors, fonts, goldGradient, radius } from '../../lib/theme';
 
 function PrimaryOption({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
@@ -17,39 +16,7 @@ function PrimaryOption({ icon, label, onPress }: { icon: string; label: string; 
   );
 }
 
-function SilverOption({
-  icon,
-  iconColor,
-  label,
-  onPress,
-}: {
-  icon: string;
-  iconColor?: string;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-      <LinearGradient
-        colors={silverGradientLight}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.option, styles.silverBorder]}
-      >
-        <Text style={[styles.optionIcon, iconColor ? { color: iconColor } : null]}>{icon}</Text>
-        <Text style={styles.optionLabel}>{label}</Text>
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
 export default function SignupOptions() {
-  const [notice, setNotice] = useState('');
-
-  function comingSoon(provider: string) {
-    setNotice(`${provider} ile kayıt yakında geliyor — şimdilik e-posta ile devam edebilirsin.`);
-  }
-
   return (
     <SafeAreaView style={styles.screen}>
       <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
@@ -64,18 +31,7 @@ export default function SignupOptions() {
 
         <View style={styles.options}>
           <PrimaryOption icon="✉" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
-          <SilverOption icon="G" label="Google ile kaydol" onPress={() => comingSoon('Google')} />
-          {Platform.OS === 'ios' && (
-            <SilverOption icon="" label="Apple ile kaydol" onPress={() => comingSoon('Apple')} />
-          )}
-          <SilverOption
-            icon="f"
-            label="Facebook ile kaydol"
-            onPress={() => comingSoon('Facebook')}
-          />
         </View>
-
-        {!!notice && <Text style={styles.notice}>{notice}</Text>}
 
         <Text style={styles.legal}>
           Kaydol'a tıklayarak, ARMUS'un Hizmet Koşullarını ve Gizlilik Politikasını kabul etmiş sayılırsın.
@@ -139,10 +95,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  silverBorder: {
-    borderWidth: 1,
-    borderColor: colors.silver2,
-  },
   optionIcon: {
     fontSize: 19,
     fontWeight: '700',
@@ -155,16 +107,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyBold,
     fontSize: 15.5,
     color: colors.ink,
-  },
-  notice: {
-    fontFamily: fonts.body,
-    fontSize: 12.5,
-    color: colors.goldText,
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.md,
-    padding: 12,
-    marginTop: 20,
-    textAlign: 'center',
   },
   legal: {
     fontFamily: fonts.body,
