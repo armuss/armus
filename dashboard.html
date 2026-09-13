@@ -183,6 +183,52 @@
       cursor: pointer;
     }
 
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      flex: 1;
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     /* ---- main ---- */
 
     main {
@@ -1200,16 +1246,22 @@
 
     <div class="sidebar">
       <div class="logo">ARMUS</div>
-      <span class="tag">ÖĞRETMEN PANELİ</span>
+      <span class="tag" data-i18n="teacherDash.tag">ÖĞRETMEN PANELİ</span>
 
-      <button class="nav-btn active" data-panel="overview">Genel Bakış</button>
-      <button class="nav-btn" data-panel="bookings">Rezervasyonlar</button>
-      <button class="nav-btn" data-panel="availability">Uygunluk</button>
-      <button class="nav-btn" data-panel="profile">Profil</button>
-      <a class="nav-btn" href="mesajlar.html">Mesajlar</a>
+      <button class="nav-btn active" data-panel="overview" data-i18n="teacherDash.navOverview">Genel Bakış</button>
+      <button class="nav-btn" data-panel="bookings" data-i18n="teacherDash.navBookings">Rezervasyonlar</button>
+      <button class="nav-btn" data-panel="availability" data-i18n="teacherDash.navAvailability">Uygunluk</button>
+      <button class="nav-btn" data-panel="profile" data-i18n="teacherDash.navProfile">Profil</button>
+      <a class="nav-btn" href="mesajlar.html" data-i18n="nav.messages">Mesajlar</a>
 
       <div class="sidebar-bottom">
-        <button class="logout-btn" id="logoutBtn">Çıkış Yap</button>
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <button class="logout-btn" id="logoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
       </div>
     </div>
 
@@ -1228,12 +1280,12 @@
       </div>
 
       <div class="panel active" id="panel-overview">
-        <h2>Genel Bakış</h2>
+        <h2 data-i18n="teacherDash.navOverview">Genel Bakış</h2>
 
         <div class="digest-card" id="digestCard"></div>
 
         <div class="today-card" id="todayCard">
-          <h4>Bugün</h4>
+          <h4 data-i18n="teacherDash.today">Bugün</h4>
           <div id="todayList"></div>
         </div>
 
@@ -1242,7 +1294,7 @@
         <div class="stats">
           <div class="stat">
             <strong id="statLessons">0</strong>
-            <span>Tamamlanan ders</span>
+            <span data-i18n="teacherDash.statLessons">Tamamlanan ders</span>
           </div>
           <div class="stat">
             <strong id="statHours">0</strong>
@@ -1406,6 +1458,7 @@
 
   </div>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="site-settings.js"></script>
@@ -1563,9 +1616,13 @@
 
       function renderOnlineToggle() {
         onlineToggle.classList.toggle("on", isOnline);
-        onlineToggleLabel.textContent = isOnline ? "Şu an müsaitim" : "Şu an müsait değilim";
+        onlineToggleLabel.textContent = armusT(
+          isOnline ? "teacherDash.availableNow" : "teacherDash.notAvailable",
+          isOnline ? "Şu an müsaitim" : "Şu an müsait değilim"
+        );
       }
       renderOnlineToggle();
+      document.addEventListener("armus:langchange", renderOnlineToggle);
 
       onlineToggle.addEventListener("click", async () => {
         const next = !isOnline;

@@ -25,6 +25,8 @@ const ARMUS_I18N_EN = {
   "nav.register": "Sign Up",
   "nav.help": "Help",
   "nav.backHome": "← Back home",
+  "nav.messages": "Messages",
+  "nav.logout": "Log Out",
 
   // index.html
   "index.eyebrow": "Turkey's English learning platform",
@@ -366,6 +368,18 @@ const ARMUS_I18N_EN = {
   "messages.attachTitle": "Send a photo/video",
   "messages.micTitle": "Send a voice message",
   "messages.inputPlaceholder": "Write a message...",
+
+  // dashboard.html (teacher dashboard) - sidebar nav, top-level labels
+  // only; the dense stats/digest/booking-list panels stay Turkish
+  "teacherDash.tag": "TEACHER PANEL",
+  "teacherDash.navOverview": "Overview",
+  "teacherDash.navBookings": "Bookings",
+  "teacherDash.navAvailability": "Availability",
+  "teacherDash.navProfile": "Profile",
+  "teacherDash.notAvailable": "Not available right now",
+  "teacherDash.availableNow": "Available right now",
+  "teacherDash.today": "Today",
+  "teacherDash.statLessons": "Completed lessons",
 
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
