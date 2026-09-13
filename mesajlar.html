@@ -106,6 +106,51 @@
       color: var(--armus-faint);
     }
 
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     /* GATE */
 
     .gate {
@@ -501,6 +546,14 @@
       .thread {
         height: 60vh;
       }
+
+      .nav-utility {
+        gap: 6px;
+      }
+
+      .help-btn {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -510,24 +563,30 @@
   <nav>
     <div class="nav-inner">
       <span class="logo">ARMUS</span>
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
+      </div>
       <div class="nav-buttons" id="navAuthButtons"></div>
     </div>
   </nav>
 
   <div class="container">
     <div class="gate" id="gate">
-      <h1>Mesajlarını görmek için giriş yap</h1>
-      <p>Öğretmenlerinle veya öğrencilerinle yazışabilmek için önce bir hesabın olması gerekiyor.</p>
+      <h1 data-i18n="messages.gateTitle">Mesajlarını görmek için giriş yap</h1>
+      <p data-i18n="messages.gateText">Öğretmenlerinle veya öğrencilerinle yazışabilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=mesajlar.html">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=mesajlar.html">Kayıt Ol</a>
+        <a class="btn" href="login.html?next=mesajlar.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=mesajlar.html" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
 
   <main class="container" id="pageRoot">
 
-    <h1>Mesajlar</h1>
+    <h1 data-i18n="messages.title">Mesajlar</h1>
 
     <div class="chat-shell">
       <div class="convo-list" id="convoList"></div>
@@ -535,30 +594,31 @@
       <div class="thread">
         <div class="thread-header" id="threadHeader" style="display: none;"></div>
         <div class="thread-body" id="threadBody">
-          <div class="thread-placeholder">Yazışmalarını görmek için soldan bir kişi seç.</div>
+          <div class="thread-placeholder" data-i18n="messages.threadPlaceholder">Yazışmalarını görmek için soldan bir kişi seç.</div>
         </div>
         <div class="chat-warning" id="chatWarning"></div>
         <div class="recording-indicator" id="recordingIndicator">
           <span class="recording-dot"></span>
           <span id="recordingTimer">0:00</span>
-          <button type="button" id="cancelRecordingBtn">İptal</button>
+          <button type="button" id="cancelRecordingBtn" data-i18n="class.cancel">İptal</button>
         </div>
         <form class="thread-input" id="threadForm" style="display: none;">
           <input type="file" id="attachInput" accept="image/*,video/*" hidden>
-          <button type="button" class="icon-btn" id="attachBtn" title="Fotoğraf/video gönder">
+          <button type="button" class="icon-btn" id="attachBtn" title="Fotoğraf/video gönder" data-i18n-title="messages.attachTitle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.8"></circle><polyline points="21 15 15 9 5 19"></polyline></svg>
           </button>
-          <button type="button" class="icon-btn" id="micBtn" title="Sesli mesaj gönder">
+          <button type="button" class="icon-btn" id="micBtn" title="Sesli mesaj gönder" data-i18n-title="messages.micTitle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
           </button>
-          <textarea id="messageInput" placeholder="Bir mesaj yaz..."></textarea>
-          <button type="submit">Gönder</button>
+          <textarea id="messageInput" placeholder="Bir mesaj yaz..." data-i18n-placeholder="messages.inputPlaceholder"></textarea>
+          <button type="submit" data-i18n="contact.submit">Gönder</button>
         </form>
       </div>
     </div>
 
   </main>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="site-settings.js"></script>

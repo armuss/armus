@@ -103,6 +103,51 @@
       color: var(--armus-muted);
     }
 
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     /* GATE */
 
     .gate {
@@ -349,36 +394,42 @@
   <nav>
     <div class="nav-inner">
       <span class="logo">ARMUS</span>
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
+      </div>
       <div class="nav-buttons" id="navAuthButtons"></div>
     </div>
   </nav>
 
   <div class="container">
     <div class="gate" id="gate">
-      <h1>Cüzdanını görmek için giriş yap</h1>
-      <p>Cüzdan bakiyeni görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <h1 data-i18n="wallet.gateTitle">Cüzdanını görmek için giriş yap</h1>
+      <p data-i18n="wallet.gateText">Cüzdan bakiyeni görebilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=wallet.html">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=wallet.html">Kayıt Ol</a>
+        <a class="btn" href="login.html?next=wallet.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=wallet.html" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
 
   <main class="container" id="pageRoot">
 
-    <div class="eyebrow">CÜZDANIM</div>
-    <h1>Cüzdanım</h1>
+    <div class="eyebrow" data-i18n="wallet.eyebrow">CÜZDANIM</div>
+    <h1 data-i18n="wallet.title">Cüzdanım</h1>
 
     <div class="topup-banner" id="topupBanner"></div>
 
     <div class="balance-card">
-      <div class="balance-label">MEVCUT BAKİYE</div>
+      <div class="balance-label" data-i18n="wallet.balanceLabel">MEVCUT BAKİYE</div>
       <div class="balance-value" id="balanceValue">₺0</div>
-      <div class="balance-note">Bu bakiye sadece ders rezervasyonlarında kullanılabilir, nakde çevrilemez.</div>
+      <div class="balance-note" data-i18n="wallet.balanceNote">Bu bakiye sadece ders rezervasyonlarında kullanılabilir, nakde çevrilemez.</div>
     </div>
 
     <div class="section">
-      <h2>Para Ekle</h2>
+      <h2 data-i18n="wallet.topupTitle">Para Ekle</h2>
 
       <div class="topup-error" id="topupError"></div>
 
@@ -391,31 +442,32 @@
         </div>
 
         <div class="field">
-          <label for="customAmount">Ya da tutar gir</label>
-          <input type="number" id="customAmount" placeholder="Örn. 300" min="50">
+          <label for="customAmount" data-i18n="wallet.customAmountLabel">Ya da tutar gir</label>
+          <input type="number" id="customAmount" placeholder="Örn. 300" min="50" data-i18n-placeholder="wallet.customAmountPlaceholder">
         </div>
 
         <div class="field">
-          <label for="topupPhone">Telefon numarası</label>
+          <label for="topupPhone" data-i18n="wallet.phoneLabel">Telefon numarası</label>
           <input type="text" id="topupPhone" placeholder="+90 5xx xxx xx xx">
         </div>
 
         <div class="field">
-          <label for="topupIdentity">T.C. kimlik numarası</label>
+          <label for="topupIdentity" data-i18n="wallet.identityLabel">T.C. kimlik numarası</label>
           <input type="text" id="topupIdentity" placeholder="11 haneli" maxlength="11" inputmode="numeric">
         </div>
 
-        <button type="submit" class="topup-submit-btn" id="topupSubmitBtn">Öde ve Ekle</button>
+        <button type="submit" class="topup-submit-btn" id="topupSubmitBtn" data-i18n="wallet.topupSubmit">Öde ve Ekle</button>
       </form>
     </div>
 
     <div class="section" id="history">
-      <h2>İşlem Geçmişi</h2>
+      <h2 data-i18n="wallet.historyTitle">İşlem Geçmişi</h2>
       <div id="historyList"></div>
     </div>
 
   </main>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>

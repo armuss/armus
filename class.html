@@ -355,24 +355,24 @@
 
   <div class="state-screen" id="tooEarly">
     <a href="index.html" class="logo">ARMUS</a>
-    <h1>Ders zamanı henüz gelmedi</h1>
-    <p>Bu odaya dersin başlamasına <strong id="minutesUntil"></strong> dakika kala girebilirsin.</p>
+    <h1 data-i18n="class.tooEarlyTitle">Ders zamanı henüz gelmedi</h1>
+    <p data-i18n="class.tooEarlyText">Bu odaya dersin başlamasına <strong id="minutesUntil"></strong> dakika kala girebilirsin.</p>
     <div class="lesson-meta" id="tooEarlyMeta"></div>
-    <a class="btn" id="tooEarlyBack" href="my-lessons.html">← Derslerime dön</a>
+    <a class="btn" id="tooEarlyBack" href="my-lessons.html" data-i18n="class.backToLessons">← Derslerime dön</a>
   </div>
 
   <div class="state-screen" id="tooLate">
     <a href="index.html" class="logo">ARMUS</a>
-    <h1>Bu ders sona erdi</h1>
-    <p>Bu dersin oda süresi doldu. Yeni bir ders için tekrar rezervasyon yapabilirsin.</p>
-    <a class="btn btn-light" id="tooLateBack" href="my-lessons.html">← Derslerime dön</a>
+    <h1 data-i18n="class.tooLateTitle">Bu ders sona erdi</h1>
+    <p data-i18n="class.tooLateText">Bu dersin oda süresi doldu. Yeni bir ders için tekrar rezervasyon yapabilirsin.</p>
+    <a class="btn btn-light" id="tooLateBack" href="my-lessons.html" data-i18n="class.backToLessons">← Derslerime dön</a>
   </div>
 
   <div class="room" id="room">
     <div class="room-bar">
       <a href="index.html" class="logo">ARMUS</a>
       <span class="lesson-with" id="lessonWith"></span>
-      <button type="button" class="btn" id="leaveBtn">Ayrıl</button>
+      <button type="button" class="btn" id="leaveBtn" data-i18n="class.leave">Ayrıl</button>
     </div>
     <div class="lesson-progress" id="lessonProgress">
       <div class="lesson-progress-track">
@@ -383,16 +383,16 @@
     <div class="room-body">
       <div id="jitsiContainer"></div>
       <div class="vocab-pin" id="vocabPin">
-        <button type="button" class="vocab-pin-btn" id="vocabPinBtn">+ Kelime Ekle</button>
+        <button type="button" class="vocab-pin-btn" id="vocabPinBtn" data-i18n="class.addWord">+ Kelime Ekle</button>
         <form class="vocab-pin-form" id="vocabPinForm" hidden>
-          <input type="text" id="vocabTermInput" placeholder="Kelime" required>
-          <input type="text" id="vocabMeaningInput" placeholder="Anlamı" required>
+          <input type="text" id="vocabTermInput" placeholder="Kelime" required data-i18n-placeholder="class.wordPlaceholder">
+          <input type="text" id="vocabMeaningInput" placeholder="Anlamı" required data-i18n-placeholder="class.meaningPlaceholder">
           <div class="vocab-pin-actions">
-            <button type="submit" class="btn btn-light">Ekle</button>
-            <button type="button" class="btn" id="vocabPinCancel">İptal</button>
+            <button type="submit" class="btn btn-light" data-i18n="class.add">Ekle</button>
+            <button type="button" class="btn" id="vocabPinCancel" data-i18n="class.cancel">İptal</button>
           </div>
         </form>
-        <div class="vocab-pin-toast" id="vocabPinToast" hidden>✓ Kelime kaydedildi</div>
+        <div class="vocab-pin-toast" id="vocabPinToast" hidden data-i18n="class.wordSaved">✓ Kelime kaydedildi</div>
       </div>
     </div>
   </div>
@@ -402,12 +402,13 @@
       <h2 id="postClassTitle"></h2>
       <div id="postClassBody"></div>
       <div class="post-class-actions">
-        <button type="button" class="btn" id="postClassSkip">Atla</button>
-        <button type="button" class="btn btn-light" id="postClassSave">Kaydet ve Çık</button>
+        <button type="button" class="btn" id="postClassSkip" data-i18n="class.skip">Atla</button>
+        <button type="button" class="btn btn-light" id="postClassSave" data-i18n="class.saveAndExit">Kaydet ve Çık</button>
       </div>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>

@@ -316,6 +316,57 @@ const ARMUS_I18N_EN = {
   "booking.paymentFailed": "Payment wasn't completed, or was cancelled. No booking was created - you can try again if you'd like.",
   "booking.paymentError": "Your payment went through, but something went wrong creating the booking. Please contact us and we'll sort out your payment.",
 
+  // my-lessons.html (top-level shell only - individual lesson cards,
+  // review/dispute forms stay Turkish for now, see note in the code)
+  "myLessons.gateTitle": "Log in to see your lessons",
+  "myLessons.gateText": "You need an account before you can see your bookings.",
+  "myLessons.eyebrow": "MY LESSONS",
+  "myLessons.title": "Your bookings",
+  "myLessons.emptyText": "You don't have any lessons yet.",
+  "myLessons.emptyCta": "Find a teacher →",
+
+  // wallet.html (currently disabled/unreachable in production - top-level shell only)
+  "wallet.gateTitle": "Log in to see your wallet",
+  "wallet.gateText": "You need an account before you can see your wallet balance.",
+  "wallet.eyebrow": "MY WALLET",
+  "wallet.title": "My Wallet",
+  "wallet.balanceLabel": "CURRENT BALANCE",
+  "wallet.balanceNote": "This balance can only be used for lesson bookings and can't be cashed out.",
+  "wallet.topupTitle": "Add Money",
+  "wallet.customAmountLabel": "Or enter an amount",
+  "wallet.customAmountPlaceholder": "e.g. 300",
+  "wallet.phoneLabel": "Phone number",
+  "wallet.identityLabel": "National ID number",
+  "wallet.topupSubmit": "Pay and Add",
+  "wallet.historyTitle": "Transaction History",
+
+  // class.html (static state screens only - the live-lesson room bar has
+  // no toggle of its own, but already-chosen language still applies)
+  "class.tooEarlyTitle": "It's not time for your lesson yet",
+  "class.tooEarlyText": "You can enter this room <strong id=\"minutesUntil\"></strong> minutes before your lesson starts.",
+  "class.backToLessons": "← Back to my lessons",
+  "class.tooLateTitle": "This lesson has ended",
+  "class.tooLateText": "This lesson's room time has run out. You can book a new lesson to get a new room.",
+  "class.leave": "Leave",
+  "class.addWord": "+ Add Word",
+  "class.wordPlaceholder": "Word",
+  "class.meaningPlaceholder": "Meaning",
+  "class.add": "Add",
+  "class.cancel": "Cancel",
+  "class.wordSaved": "✓ Word saved",
+  "class.skip": "Skip",
+  "class.saveAndExit": "Save and Exit",
+
+  // mesajlar.html (top-level shell only - conversation list and chat
+  // bubbles stay Turkish for now, see note in the code)
+  "messages.gateTitle": "Log in to see your messages",
+  "messages.gateText": "You need an account before you can message your teachers or students.",
+  "messages.title": "Messages",
+  "messages.threadPlaceholder": "Pick someone on the left to see your conversation.",
+  "messages.attachTitle": "Send a photo/video",
+  "messages.micTitle": "Send a voice message",
+  "messages.inputPlaceholder": "Write a message...",
+
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",
@@ -356,6 +407,16 @@ function armusApplyTranslations() {
     const value = ARMUS_I18N_EN[key];
 
     el.setAttribute("placeholder", (lang === "en" && value !== undefined) ? value : el.dataset.trPlaceholder);
+  });
+
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+
+    if (el.dataset.trTitle === undefined) el.dataset.trTitle = el.getAttribute("title") || "";
+
+    const key = el.dataset.i18nTitle;
+    const value = ARMUS_I18N_EN[key];
+
+    el.setAttribute("title", (lang === "en" && value !== undefined) ? value : el.dataset.trTitle);
   });
 
   document.querySelectorAll("[data-lang-toggle]").forEach(el => {
