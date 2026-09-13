@@ -1,9 +1,9 @@
-import { Link, router, useLocalSearchParams } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,11 +17,13 @@ import Logo from '../../components/Logo';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 
-type Role = 'student' | 'teacher';
+// Teacher applications only go through the website's full form (photo,
+// certificate, video, availability...) - the app only ever creates
+// student accounts. An existing teacher account (approved via the site)
+// still logs in and uses the app's teacher screens just fine.
+const TEACHER_APPLY_URL = 'https://armus.vercel.app/apply-teacher.html';
 
 export default function Register() {
-  const params = useLocalSearchParams<{ role?: string }>();
-  const [role, setRole] = useState<Role>(params.role === 'teacher' ? 'teacher' : 'student');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [city, setCity] = useState('');
@@ -48,7 +50,7 @@ export default function Register() {
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, role, city: city || null } },
+      options: { data: { name, role: 'student', city: city || null } },
     });
     setLoading(false);
     if (signUpError) {
@@ -66,21 +68,6 @@ export default function Register() {
             <Logo size={32} />
             <Text style={styles.title}>Hesap oluştur</Text>
             <Text style={styles.subtitle}>Hedefine uygun öğretmeni bulmaya başla.</Text>
-          </View>
-
-          <View style={styles.roleRow}>
-            <Pressable
-              onPress={() => setRole('student')}
-              style={[styles.roleOption, role === 'student' && styles.roleOptionActive]}
-            >
-              <Text style={[styles.roleText, role === 'student' && styles.roleTextActive]}>Öğrenci olarak</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setRole('teacher')}
-              style={[styles.roleOption, role === 'teacher' && styles.roleOptionActive]}
-            >
-              <Text style={[styles.roleText, role === 'teacher' && styles.roleTextActive]}>Öğretmen olarak</Text>
-            </Pressable>
           </View>
 
           <View style={styles.field}>
@@ -160,6 +147,13 @@ export default function Register() {
               Giriş yap
             </Link>
           </Text>
+
+          <Text style={styles.teacherNote}>
+            Öğretmen olarak katılmak mı istiyorsun?{' '}
+            <Text style={styles.switchLink} onPress={() => Linking.openURL(TEACHER_APPLY_URL)}>
+              Web sitemizden başvur
+            </Text>
+          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -195,32 +189,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
     textAlign: 'center',
-  },
-  roleRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 24,
-  },
-  roleOption: {
-    flex: 1,
-    height: 46,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  roleOptionActive: {
-    borderColor: colors.gold3,
-    backgroundColor: '#fff8e6',
-  },
-  roleText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13.5,
-    color: colors.muted,
-  },
-  roleTextActive: {
-    color: colors.goldText,
   },
   field: {
     marginBottom: 18,
@@ -263,5 +231,12 @@ const styles = StyleSheet.create({
   switchLink: {
     fontFamily: fonts.bodyBold,
     color: colors.goldText,
+  },
+  teacherNote: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: 14,
   },
 });

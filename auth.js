@@ -11,6 +11,19 @@
 // Flip back to true to bring the nav badge back.
 const ARMUS_WALLET_ENABLED = false;
 
+// A teacher's full real name is never shown to a student anywhere in the
+// UI - only "Ahmet Y." - so a student can't take that name off ARMUS and
+// look the teacher up (or contact them) elsewhere, bypassing the platform
+// entirely. The stored value (profiles.name, bookings.teacher_name, etc.)
+// stays the real full name for admin/support purposes; this only affects
+// what gets rendered. Never applied to a student's own name shown to
+// their teacher - that's not what this protects against.
+function armusShortDisplayName(fullName) {
+  const parts = String(fullName || "").trim().split(/\s+/);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 async function armusSignUp({ name, email, password, role, city }) {
   return armusSupabase.auth.signUp({
     email,
@@ -139,7 +152,7 @@ async function armusRenderNavAuth() {
         .eq("status", "available");
 
       if (credits && credits.length > 0) {
-        const teacherList = credits.map((c) => c.teacher_name).join(", ");
+        const teacherList = credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", ");
         creditBadge = `<span title="Kullanılabilir ders hakkın: ${teacherList}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--armus-border);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--armus-gold-text);white-space:nowrap;">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
               <path d="M20 12v9H4v-9"></path>

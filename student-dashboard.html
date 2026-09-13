@@ -1035,7 +1035,7 @@
             <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
             <div>
               <div class="hero-eyebrow">Sıradaki Dersin</div>
-              <div class="hero-lesson-name">${next.teacherName}</div>
+              <div class="hero-lesson-name">${armusShortDisplayName(next.teacherName)}</div>
               <div class="hero-lesson-meta">${whenLabel} · ${armusFormatTimeRange(next.time)} · ${next.type === "trial" ? "Deneme Dersi" : "Ders"}</div>
             </div>
             <div class="hero-lesson-right">
@@ -1164,7 +1164,7 @@
       if (pendingCheckinBooking) {
 
         confidenceCard.innerHTML = `
-          <div class="confidence-prompt-q">${pendingCheckinBooking.teacherName} ile olan dersin nasıldı? Ne kadar rahat konuştun?</div>
+          <div class="confidence-prompt-q">${armusShortDisplayName(pendingCheckinBooking.teacherName)} ile olan dersin nasıldı? Ne kadar rahat konuştun?</div>
           <div class="confidence-scale">
             ${["😟", "🙁", "😐", "🙂", "😄"].map((emoji, i) => `<button type="button" class="confidence-btn" data-score="${i + 1}">${emoji}</button>`).join("")}
           </div>
@@ -1310,7 +1310,7 @@
             <div class="mini-lesson-row">
               <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
               <div>
-                <div class="mini-lesson-name">${b.teacherName}</div>
+                <div class="mini-lesson-name">${armusShortDisplayName(b.teacherName)}</div>
                 <div class="mini-lesson-meta">${b.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${b.price}</div>
               </div>
               <div class="mini-lesson-when">
@@ -1374,7 +1374,7 @@
         document.getElementById("favRow").innerHTML = favoriteTeachers.map(t => `
           <a class="fav-chip" href="teacher.html?id=${t.id}">
             <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
-            ${t.name}
+            ${armusShortDisplayName(t.name)}
           </a>
         `).join("");
       }

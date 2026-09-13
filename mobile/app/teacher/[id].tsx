@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
+import { shortDisplayName } from '../../lib/displayName';
+import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
@@ -16,6 +18,16 @@ export default function TeacherDetail() {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [messaging, setMessaging] = useState(false);
+  const [isFav, setIsFav] = useState(false);
+
+  useEffect(() => {
+    checkIsFavorite(id).then(setIsFav);
+  }, [id]);
+
+  async function handleToggleFavorite() {
+    const next = await toggleFavorite(id);
+    setIsFav(next);
+  }
 
   async function handleMessage() {
     if (!teacher || !profile || messaging) return;
@@ -25,7 +37,7 @@ export default function TeacherDetail() {
     if (!conversation) return;
     router.push({
       pathname: '/chat/[id]',
-      params: { id: conversation.id, otherName: teacher.name, otherPhoto: teacher.photo ?? '' },
+      params: { id: conversation.id, otherName: shortDisplayName(teacher.name), otherPhoto: teacher.photo ?? '' },
     });
   }
 
@@ -62,9 +74,14 @@ export default function TeacherDetail() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Geri</Text>
-        </Pressable>
+        <View style={styles.topBar}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backText}>← Geri</Text>
+          </Pressable>
+          <Pressable onPress={handleToggleFavorite} hitSlop={10}>
+            <Text style={[styles.favIcon, isFav && styles.favIconActive]}>{isFav ? '♥' : '♡'}</Text>
+          </Pressable>
+        </View>
 
         {teacher.photo ? (
           <Image source={{ uri: teacher.photo }} style={styles.photo} />
@@ -76,7 +93,7 @@ export default function TeacherDetail() {
 
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{teacher.name}</Text>
+            <Text style={styles.name}>{shortDisplayName(teacher.name)}</Text>
             <Text style={styles.role}>{teacher.role}</Text>
           </View>
           <View style={styles.ratingBlock}>
@@ -181,13 +198,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 60,
   },
-  backBtn: {
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
+  backBtn: {},
   backText: {
     fontFamily: fonts.bodySemibold,
     fontSize: 13.5,
     color: colors.muted,
+  },
+  favIcon: {
+    fontSize: 22,
+    color: colors.faint,
+  },
+  favIconActive: {
+    color: colors.error,
   },
   photo: {
     width: '100%',

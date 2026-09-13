@@ -674,7 +674,7 @@
     } else {
 
       document.getElementById("pageTitle").textContent =
-        `${teacher.name} | ARMUS`;
+        `${armusShortDisplayName(teacher.name)} | ARMUS`;
 
       document.getElementById("avatar").innerHTML = teacher.photo
         ? `<img src="${teacher.photo}" alt="">`
@@ -684,7 +684,7 @@
         document.getElementById("videoSection").style.display = "block";
         document.getElementById("introVideo").src = teacher.video;
       }
-      document.getElementById("teacherName").textContent = teacher.name;
+      document.getElementById("teacherName").textContent = armusShortDisplayName(teacher.name);
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("onlineBadge").style.display = teacher.isOnline ? "inline-block" : "none";
 

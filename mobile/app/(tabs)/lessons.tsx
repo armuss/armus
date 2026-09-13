@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { canJoinLessonNow, getBookingsForStudent, type Booking } from '../../lib/bookings';
+import { shortDisplayName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
 
 function isPastBooking(booking: Booking) {
@@ -66,7 +67,7 @@ export default function Lessons() {
             return (
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.teacherName}>{item.teacherName}</Text>
+                  <Text style={styles.teacherName}>{shortDisplayName(item.teacherName)}</Text>
                   <View style={[styles.statusPill, isCancelled && styles.statusPillCancelled]}>
                     <Text style={[styles.statusText, isCancelled && styles.statusTextCancelled]}>
                       {isCancelled ? 'İptal edildi' : 'Onaylı'}

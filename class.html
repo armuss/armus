@@ -485,7 +485,7 @@
         const minutesUntil = Math.ceil((joinsFrom - now) / 60000);
         document.getElementById("minutesUntil").textContent = minutesUntil;
         document.getElementById("tooEarlyMeta").innerHTML =
-          `<strong>${isStudent ? booking.teacherName : booking.studentName}</strong> ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`;
+          `<strong>${isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName}</strong> ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`;
         tooEarly.style.display = "flex";
         return;
       }
@@ -496,7 +496,7 @@
       }
 
       document.getElementById("lessonWith").textContent =
-        (isStudent ? booking.teacherName : booking.studentName) + " ile ders · " + armusFormatTimeRange(booking.time);
+        (isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName) + " ile ders · " + armusFormatTimeRange(booking.time);
 
       room.style.display = "flex";
 

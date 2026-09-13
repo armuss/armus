@@ -10,6 +10,7 @@ export type Profile = {
   role: 'student' | 'teacher';
   is_admin: boolean;
   city: string | null;
+  photo_url: string | null;
 };
 
 type AuthState = {

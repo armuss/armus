@@ -571,7 +571,7 @@
             <div class="star-picker">
               ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
             </div>
-            <textarea placeholder="${booking.teacherName} ile dersin nasıldı?"></textarea>
+            <textarea placeholder="${armusShortDisplayName(booking.teacherName)} ile dersin nasıldı?"></textarea>
             <button type="button" class="review-submit-btn">Gönder</button>
           </div>
         `;
@@ -731,7 +731,7 @@
               <div class="avatar">${avatarInner}</div>
               <div class="lesson-info">
                 <div class="lesson-teacher">
-                  ${booking.teacherName}
+                  ${armusShortDisplayName(booking.teacherName)}
                   <span class="lesson-type">${booking.type === "trial" ? "Deneme Dersi" : "Ders"}</span>
                 </div>
                 <div class="lesson-meta">₺${booking.price} / 50 dakika${isPast ? " · geçti" : ""}</div>
@@ -773,7 +773,7 @@
 
             cancelWrap.querySelector(".lesson-cancel-btn").addEventListener("click", async () => {
 
-              if (!confirm(`${booking.teacherName} ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)} dersini iptal etmek istediğine emin misin?`)) return;
+              if (!confirm(`${armusShortDisplayName(booking.teacherName)} ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)} dersini iptal etmek istediğine emin misin?`)) return;
 
               const btn = cancelWrap.querySelector(".lesson-cancel-btn");
               btn.disabled = true;

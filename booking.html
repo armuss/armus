@@ -677,7 +677,7 @@
       const isTrial = bookingType === "trial";
 
       document.getElementById("pageTitle").textContent =
-        `${isTrial ? "Deneme Dersi" : "Rezervasyon"} | ${teacher.name}`;
+        `${isTrial ? "Deneme Dersi" : "Rezervasyon"} | ${armusShortDisplayName(teacher.name)}`;
       document.getElementById("flowLabel").textContent =
         isTrial ? "DENEME DERSİ" : "REZERVASYON";
       document.getElementById("flowTitle").textContent =
@@ -688,7 +688,7 @@
       document.getElementById("avatar").innerHTML = teacher.photo
         ? `<img src="${teacher.photo}" alt="">`
         : teacher.initials;
-      document.getElementById("teacherName").textContent = teacher.name;
+      document.getElementById("teacherName").textContent = armusShortDisplayName(teacher.name);
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("priceValue").textContent = `₺${teacher.price}`;
 
@@ -723,7 +723,7 @@
         const paidDate = params.get("date");
         const paidTime = params.get("time");
 
-        document.getElementById("successTeacher").textContent = teacher.name;
+        document.getElementById("successTeacher").textContent = armusShortDisplayName(teacher.name);
         if (paidDate) {
           const d = new Date(`${paidDate}T00:00:00`);
           document.getElementById("successDate").textContent =
@@ -879,7 +879,7 @@
 
       function showConfirm() {
 
-        document.getElementById("confirmTeacher").textContent = teacher.name;
+        document.getElementById("confirmTeacher").textContent = armusShortDisplayName(teacher.name);
         document.getElementById("confirmDate").textContent = selectedDateLabel;
         document.getElementById("confirmTime").textContent = armusFormatTimeRange(selectedTime);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
@@ -946,7 +946,7 @@
         }
 
         if (data.bookedDirectly) {
-          document.getElementById("successTeacher").textContent = teacher.name;
+          document.getElementById("successTeacher").textContent = armusShortDisplayName(teacher.name);
           document.getElementById("successDate").textContent = selectedDateLabel;
           document.getElementById("successTime").textContent = armusFormatTimeRange(selectedTime);
           bookingRoot.style.display = "none";
