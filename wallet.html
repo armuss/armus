@@ -481,17 +481,25 @@
       "Oca", "Şub", "Mar", "Nis", "May", "Haz",
       "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
     ];
+    const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MONTH_NAMES_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     function formatDate(iso) {
       const d = new Date(iso);
-      return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}, ${DAY_NAMES[d.getDay()]}`;
+      const isEn = typeof armusGetLang === "function" && armusGetLang() === "en";
+      const months = isEn ? MONTH_NAMES_EN : MONTH_NAMES;
+      const days = isEn ? DAY_NAMES_EN : DAY_NAMES;
+      return isEn ? `${months[d.getMonth()]} ${d.getDate()}, ${days[d.getDay()]}` : `${d.getDate()} ${months[d.getMonth()]}, ${days[d.getDay()]}`;
     }
 
-    const REASON_LABELS = {
-      topup: "Cüzdana Yükleme",
-      booking_payment: "Ders Ödemesi",
-      booking_cancelled: "Ders İptali (iade)",
-    };
+    function reasonLabels() {
+      return {
+        topup: armusT("wallet.reasonTopup", "Cüzdana Yükleme"),
+        booking_payment: armusT("wallet.reasonBookingPayment", "Ders Ödemesi"),
+        booking_cancelled: armusT("wallet.reasonBookingCancelled", "Ders İptali (iade)"),
+      };
+    }
+
 
     (async function () {
 
@@ -518,11 +526,11 @@
       const banner = document.getElementById("topupBanner");
 
       if (topupStatus === "success") {
-        banner.textContent = "Bakiyen eklendi! ✓";
+        banner.textContent = armusT("wallet.topupSuccess", "Bakiyen eklendi! ✓");
         banner.className = "topup-banner success";
         banner.style.display = "block";
       } else if (topupStatus === "failed") {
-        banner.textContent = "Ödeme tamamlanmadı ya da iptal edildi. Bakiyene bir şey eklenmedi.";
+        banner.textContent = armusT("wallet.topupFailedBanner", "Ödeme tamamlanmadı ya da iptal edildi. Bakiyene bir şey eklenmedi.");
         banner.className = "topup-banner failed";
         banner.style.display = "block";
       }
@@ -541,22 +549,26 @@
 
       const historyList = document.getElementById("historyList");
 
-      if (!transactions || transactions.length === 0) {
-        historyList.innerHTML = '<div class="history-empty">Henüz bir işlem yok.</div>';
-      } else {
-        historyList.innerHTML = transactions.map(t => {
-          const isPositive = Number(t.amount) > 0;
-          return `
-            <div class="history-row">
-              <div>
-                <div class="history-reason">${REASON_LABELS[t.reason] || t.reason}</div>
-                <div class="history-date">${formatDate(t.created_at)}</div>
+      function renderHistory() {
+        if (!transactions || transactions.length === 0) {
+          historyList.innerHTML = `<div class="history-empty">${armusT("wallet.historyEmpty", "Henüz bir işlem yok.")}</div>`;
+        } else {
+          historyList.innerHTML = transactions.map(t => {
+            const isPositive = Number(t.amount) > 0;
+            return `
+              <div class="history-row">
+                <div>
+                  <div class="history-reason">${reasonLabels()[t.reason] || t.reason}</div>
+                  <div class="history-date">${formatDate(t.created_at)}</div>
+                </div>
+                <div class="history-amount ${isPositive ? "positive" : "negative"}">${isPositive ? "+" : ""}₺${t.amount}</div>
               </div>
-              <div class="history-amount ${isPositive ? "positive" : "negative"}">${isPositive ? "+" : ""}₺${t.amount}</div>
-            </div>
-          `;
-        }).join("");
+            `;
+          }).join("");
+        }
       }
+      renderHistory();
+      document.addEventListener("armus:langchange", renderHistory);
 
       // ---- top-up form ----
 
@@ -592,33 +604,33 @@
         const identityNumber = document.getElementById("topupIdentity").value.trim();
 
         if (!amount || amount < 50) {
-          topupError.textContent = "Lütfen en az ₺50 gir.";
+          topupError.textContent = armusT("wallet.minAmount", "Lütfen en az ₺50 gir.");
           topupError.style.display = "block";
           return;
         }
         if (phone.replace(/\D/g, "").length < 10) {
-          topupError.textContent = "Lütfen geçerli bir telefon numarası gir.";
+          topupError.textContent = armusT("wallet.invalidPhone", "Lütfen geçerli bir telefon numarası gir.");
           topupError.style.display = "block";
           return;
         }
         if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
-          topupError.textContent = "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).";
+          topupError.textContent = armusT("wallet.invalidIdentity", "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).");
           topupError.style.display = "block";
           return;
         }
 
         topupSubmitBtn.disabled = true;
-        topupSubmitBtn.textContent = "Yönlendiriliyor...";
+        topupSubmitBtn.textContent = armusT("wallet.redirecting", "Yönlendiriliyor...");
 
         const { data, error } = await armusSupabase.functions.invoke("create-wallet-topup", {
           body: { amount, phone, identityNumber },
         });
 
         if (error || !data || !data.paymentPageUrl) {
-          topupError.textContent = (data && data.error) || "İşlem başlatılamadı. Lütfen tekrar dene.";
+          topupError.textContent = (data && data.error) || armusT("wallet.topupFailed", "İşlem başlatılamadı. Lütfen tekrar dene.");
           topupError.style.display = "block";
           topupSubmitBtn.disabled = false;
-          topupSubmitBtn.textContent = "Öde ve Ekle";
+          topupSubmitBtn.textContent = armusT("wallet.topupSubmit", "Öde ve Ekle");
           return;
         }
 
