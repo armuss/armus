@@ -181,6 +181,57 @@
     [hidden] {
       display: none !important;
     }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
   </style>
 </head>
 
@@ -189,7 +240,15 @@
   <nav>
     <div class="nav-inner">
       <a href="index.html" class="logo">ARMUS</a>
-      <a href="login.html" class="back">← Giriş sayfası</a>
+      <div class="nav-right">
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <a href="login.html" class="back" data-i18n="nav.backLogin">← Giriş sayfası</a>
+      </div>
     </div>
   </nav>
 
@@ -197,55 +256,56 @@
 
     <!-- STEP 1: ask for the account's email -->
     <div id="requestStep">
-      <div class="eyebrow">HESABINA GERİ DÖN</div>
-      <h1>Şifreni sıfırla</h1>
-      <p class="subtitle">E-postanı yaz, sana bir sıfırlama bağlantısı gönderelim.</p>
+      <div class="eyebrow" data-i18n="resetPw.eyebrow">HESABINA GERİ DÖN</div>
+      <h1 data-i18n="resetPw.title">Şifreni sıfırla</h1>
+      <p class="subtitle" data-i18n="resetPw.subtitle">E-postanı yaz, sana bir sıfırlama bağlantısı gönderelim.</p>
 
       <div class="form-error" id="requestError"></div>
-      <div class="form-success" id="requestSuccess">
+      <div class="form-success" id="requestSuccess" data-i18n="resetPw.requestSuccess">
         Eğer bu e-posta ARMUS'ta kayıtlıysa, birkaç dakika içinde sıfırlama bağlantısı içeren bir e-posta alacaksın.
       </div>
 
       <form id="requestForm" novalidate>
         <div class="field">
-          <label for="email">E-posta</label>
-          <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com">
+          <label for="email" data-i18n="resetPw.emailLabel">E-posta</label>
+          <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com" data-i18n-placeholder="resetPw.emailPlaceholder">
         </div>
-        <button type="submit" class="submit-btn" id="requestBtn">Sıfırlama Bağlantısı Gönder</button>
+        <button type="submit" class="submit-btn" id="requestBtn" data-i18n="resetPw.requestBtn">Sıfırlama Bağlantısı Gönder</button>
       </form>
 
       <div class="switch-note">
-        Şifreni hatırladın mı? <a href="login.html">Giriş yap</a>
+        <span data-i18n="resetPw.rememberedText">Şifreni hatırladın mı?</span> <a href="login.html" data-i18n="resetPw.rememberedLink">Giriş yap</a>
       </div>
     </div>
 
     <!-- STEP 2: shown once the email link lands the user back here with a
          recovery session (see the PASSWORD_RECOVERY listener below) -->
     <div id="updateStep" hidden>
-      <div class="eyebrow">SON ADIM</div>
-      <h1>Yeni şifre belirle</h1>
-      <p class="subtitle">Hesabın için yeni bir şifre seç.</p>
+      <div class="eyebrow" data-i18n="resetPw.step2Eyebrow">SON ADIM</div>
+      <h1 data-i18n="resetPw.step2Title">Yeni şifre belirle</h1>
+      <p class="subtitle" data-i18n="resetPw.step2Subtitle">Hesabın için yeni bir şifre seç.</p>
 
       <div class="form-error" id="updateError"></div>
-      <div class="form-success" id="updateSuccess">
+      <div class="form-success" id="updateSuccess" data-i18n="resetPw.updateSuccess">
         Şifren güncellendi. Giriş sayfasına yönlendiriliyorsun...
       </div>
 
       <form id="updateForm" novalidate>
         <div class="field">
-          <label for="newPassword">Yeni şifre</label>
-          <input type="password" id="newPassword" autocomplete="new-password" placeholder="En az 6 karakter">
+          <label for="newPassword" data-i18n="resetPw.newPasswordLabel">Yeni şifre</label>
+          <input type="password" id="newPassword" autocomplete="new-password" placeholder="En az 6 karakter" data-i18n-placeholder="resetPw.newPasswordPlaceholder">
         </div>
         <div class="field">
-          <label for="newPasswordAgain">Yeni şifre (tekrar)</label>
-          <input type="password" id="newPasswordAgain" autocomplete="new-password" placeholder="Şifreni tekrar yaz">
+          <label for="newPasswordAgain" data-i18n="resetPw.newPasswordAgainLabel">Yeni şifre (tekrar)</label>
+          <input type="password" id="newPasswordAgain" autocomplete="new-password" placeholder="Şifreni tekrar yaz" data-i18n-placeholder="resetPw.newPasswordAgainPlaceholder">
         </div>
-        <button type="submit" class="submit-btn" id="updateBtn">Şifreyi Güncelle</button>
+        <button type="submit" class="submit-btn" id="updateBtn" data-i18n="resetPw.updateBtn">Şifreyi Güncelle</button>
       </form>
     </div>
 
   </main>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
   <script src="supabase-config.js"></script>
@@ -307,6 +367,7 @@
         return;
       }
 
+      const originalBtnLabel = updateBtn.textContent;
       updateBtn.disabled = true;
       updateBtn.textContent = "Güncelleniyor...";
 
@@ -314,7 +375,7 @@
 
       if (error) {
         updateBtn.disabled = false;
-        updateBtn.textContent = "Şifreyi Güncelle";
+        updateBtn.textContent = originalBtnLabel;
         updateError.textContent = "Bağlantının süresi dolmuş olabilir. Lütfen tekrar dene.";
         updateError.style.display = "block";
         return;

@@ -251,6 +251,33 @@ const ARMUS_I18N_EN = {
   "faq.ctaText": "Couldn't find the answer you were looking for?",
   "faq.ctaBtn": "Contact us",
 
+  // 404.html
+  "notFound.title": "We couldn't find this page",
+  "notFound.text": "The page you're looking for may have moved, or never existed. You can head back to the homepage and continue from there.",
+  "notFound.home": "Back to Homepage",
+  "notFound.teachers": "See Teachers",
+
+  // sifre-sifirla.html
+  "nav.backLogin": "← Back to login",
+  "resetPw.eyebrow": "GET BACK TO YOUR ACCOUNT",
+  "resetPw.title": "Reset your password",
+  "resetPw.subtitle": "Enter your email and we'll send you a reset link.",
+  "resetPw.requestSuccess": "If this email is registered with ARMUS, you'll get an email with a reset link within a few minutes.",
+  "resetPw.emailLabel": "Email",
+  "resetPw.emailPlaceholder": "you@example.com",
+  "resetPw.requestBtn": "Send Reset Link",
+  "resetPw.rememberedText": "Remembered your password?",
+  "resetPw.rememberedLink": "Log in",
+  "resetPw.step2Eyebrow": "LAST STEP",
+  "resetPw.step2Title": "Set a new password",
+  "resetPw.step2Subtitle": "Choose a new password for your account.",
+  "resetPw.updateSuccess": "Your password was updated. Redirecting you to the login page...",
+  "resetPw.newPasswordLabel": "New password",
+  "resetPw.newPasswordPlaceholder": "At least 6 characters",
+  "resetPw.newPasswordAgainLabel": "New password (again)",
+  "resetPw.newPasswordAgainPlaceholder": "Re-type your new password",
+  "resetPw.updateBtn": "Update Password",
+
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",
