@@ -1134,8 +1134,9 @@
           days.push(d);
         }
 
+        const calMonths = armusMonthNames();
         calRangeLabel.textContent =
-          `${days[0].getDate()} ${ARMUS_MONTH_NAMES[days[0].getMonth()]} – ${days[6].getDate()} ${ARMUS_MONTH_NAMES[days[6].getMonth()]}`;
+          `${days[0].getDate()} ${calMonths[days[0].getMonth()]} – ${days[6].getDate()} ${calMonths[days[6].getMonth()]}`;
         calPrevBtn.disabled = calWeekOffset === 0;
 
         days.forEach(date => {
@@ -1188,6 +1189,7 @@
       });
 
       renderCalWeek();
+      document.addEventListener("armus:langchange", renderCalWeek);
 
       document.getElementById("priceValue").textContent =
         `₺${teacher.price}`;
@@ -1320,7 +1322,7 @@
 
       function formatReviewDate(iso) {
         const d = new Date(iso);
-        return `${d.getDate()} ${ARMUS_MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+        return `${d.getDate()} ${armusMonthNames()[d.getMonth()]} ${d.getFullYear()}`;
       }
 
       if (teacher.reviewCount > 0) {

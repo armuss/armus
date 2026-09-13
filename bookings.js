@@ -71,11 +71,30 @@ const ARMUS_MONTH_NAMES = [
   "Oca", "Şub", "Mar", "Nis", "May", "Haz",
   "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
 ];
+const ARMUS_DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ARMUS_MONTH_NAMES_EN = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
 
-// "2026-08-10" -> "10 Ağustos, Pzt"
+// Language-aware day/month name arrays - reads the current toggle state
+// (i18n.js), so every date display built from these follows the site's
+// language without needing its own translation dictionary entries.
+function armusDayNames() {
+  return (typeof armusGetLang === "function" && armusGetLang() === "en") ? ARMUS_DAY_NAMES_EN : ARMUS_DAY_NAMES;
+}
+function armusMonthNames() {
+  return (typeof armusGetLang === "function" && armusGetLang() === "en") ? ARMUS_MONTH_NAMES_EN : ARMUS_MONTH_NAMES;
+}
+
+// "2026-08-10" -> "10 Ağustos, Pzt" (or "Aug 10, Mon" in English)
 function armusFormatDateLabel(dateKey) {
   const date = new Date(dateKey + "T00:00:00");
-  return `${date.getDate()} ${ARMUS_MONTH_NAMES[date.getMonth()]}, ${ARMUS_DAY_NAMES[date.getDay()]}`;
+  const months = armusMonthNames();
+  const days = armusDayNames();
+  return (typeof armusGetLang === "function" && armusGetLang() === "en")
+    ? `${months[date.getMonth()]} ${date.getDate()}, ${days[date.getDay()]}`
+    : `${date.getDate()} ${months[date.getMonth()]}, ${days[date.getDay()]}`;
 }
 
 // booking rows come back with snake_case columns; expose the same

@@ -278,6 +278,44 @@ const ARMUS_I18N_EN = {
   "resetPw.newPasswordAgainPlaceholder": "Re-type your new password",
   "resetPw.updateBtn": "Update Password",
 
+  // booking.html (static shell only - dynamic slot/date/price text stays as rendered by JS)
+  "nav.backTeachers": "← Back to teachers",
+  "booking.notFoundTitle": "Teacher not found",
+  "booking.notFoundText": "The teacher you're trying to book doesn't exist.",
+  "booking.notFoundLink": "← Back to teachers",
+  "booking.gateTitle": "You need to log in to book",
+  "booking.gateText": "You need an account before you can pick a lesson time.",
+  "booking.gateLogin": "Log In",
+  "booking.gateRegister": "Sign Up",
+  "booking.perLesson": "/ 50 minutes",
+  "booking.step1Title": "Pick a date",
+  "booking.step2Title": "Pick a time",
+  "booking.step2Note": "(50-minute lesson)",
+  "booking.confirmTeacher": "Teacher",
+  "booking.confirmDate": "Date",
+  "booking.confirmTime": "Time",
+  "booking.confirmPrice": "Price",
+  "booking.confirmCreditRow": "With your lesson credit",
+  "booking.confirmCreditApplied": "Free",
+  "booking.payerPhoneLabel": "Phone number",
+  "booking.payerIdentityLabel": "National ID number",
+  "booking.confirmNote": "You'll be redirected to a secure payment page",
+  "booking.successText": "Your spot is reserved, no teacher approval needed.",
+  "booking.successMyLessons": "See my lessons",
+  "booking.successOtherTeachers": "Browse other teachers",
+  "booking.pageTitleTrial": "Trial Lesson",
+  "booking.pageTitleRegular": "Booking",
+  "booking.flowLabelTrial": "TRIAL LESSON",
+  "booking.flowLabelRegular": "BOOKING",
+  "booking.flowTitleTrial": "Pick a time for your trial lesson",
+  "booking.flowTitleRegular": "Pick a lesson time",
+  "booking.successTitleTrial": "Your trial lesson is booked",
+  "booking.successTitleRegular": "Your booking is confirmed",
+  "booking.confirmBtnTrial": "Pay for Trial Lesson",
+  "booking.confirmBtnRegular": "Proceed to Payment",
+  "booking.paymentFailed": "Payment wasn't completed, or was cancelled. No booking was created - you can try again if you'd like.",
+  "booking.paymentError": "Your payment went through, but something went wrong creating the booking. Please contact us and we'll sort out your payment.",
+
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",
@@ -286,6 +324,14 @@ const ARMUS_I18N_EN = {
 
 function armusGetLang() {
   try { return localStorage.getItem("armusLang") || "tr"; } catch (e) { return "tr"; }
+}
+
+// For text a page sets dynamically via JS (e.g. after fetching data),
+// where a static data-i18n attribute would just get clobbered on the
+// next render. Falls back to the Turkish text if there's no EN entry.
+function armusT(key, trFallback) {
+  const value = ARMUS_I18N_EN[key];
+  return (armusGetLang() === "en" && value !== undefined) ? value : trFallback;
 }
 
 function armusApplyTranslations() {
@@ -322,6 +368,10 @@ function armusApplyTranslations() {
 function armusSetLang(lang) {
   try { localStorage.setItem("armusLang", lang); } catch (e) {}
   armusApplyTranslations();
+  // Lets a page re-render any dynamically-set text (e.g. a string built
+  // from teacher/booking data after a fetch) that data-i18n can't reach
+  // because JS overwrites it after the fact.
+  document.dispatchEvent(new CustomEvent("armus:langchange"));
 }
 
 document.addEventListener("DOMContentLoaded", () => {

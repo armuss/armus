@@ -74,6 +74,57 @@
       color: var(--armus-ink);
     }
 
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     /* NOT FOUND */
 
     .not-found {
@@ -505,27 +556,35 @@
   <nav>
     <div class="nav-inner">
       <a href="index.html" class="logo">ARMUS</a>
-      <a href="teachers.html" class="back" id="backLink">← Öğretmenlere dön</a>
+      <div class="nav-right">
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <a href="teachers.html" class="back" id="backLink" data-i18n="nav.backTeachers">← Öğretmenlere dön</a>
+      </div>
     </div>
   </nav>
 
   <!-- NOT FOUND -->
   <div class="container">
     <div class="not-found" id="notFound">
-      <h1>Öğretmen bulunamadı</h1>
-      <p>Rezervasyon yapmak istediğin öğretmen mevcut değil.</p>
-      <a href="teachers.html">← Öğretmenlere dön</a>
+      <h1 data-i18n="booking.notFoundTitle">Öğretmen bulunamadı</h1>
+      <p data-i18n="booking.notFoundText">Rezervasyon yapmak istediğin öğretmen mevcut değil.</p>
+      <a href="teachers.html" data-i18n="booking.notFoundLink">← Öğretmenlere dön</a>
     </div>
   </div>
 
   <!-- LOGIN GATE -->
   <div class="container">
     <div class="login-gate" id="loginGate">
-      <h1>Rezervasyon için giriş yapmalısın</h1>
-      <p>Ders saatini seçebilmen için önce bir hesabın olması gerekiyor.</p>
+      <h1 data-i18n="booking.gateTitle">Rezervasyon için giriş yapmalısın</h1>
+      <p data-i18n="booking.gateText">Ders saatini seçebilmen için önce bir hesabın olması gerekiyor.</p>
       <div class="login-gate-actions">
-        <a class="btn" id="gateLoginLink">Giriş Yap</a>
-        <a class="btn btn-light" id="gateRegisterLink">Kayıt Ol</a>
+        <a class="btn" id="gateLoginLink" data-i18n="booking.gateLogin">Giriş Yap</a>
+        <a class="btn btn-light" id="gateRegisterLink" data-i18n="booking.gateRegister">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -546,14 +605,14 @@
       </div>
       <div class="teacher-summary-price">
         <span id="priceValue"></span>
-        <span>/ 50 dakika</span>
+        <span data-i18n="booking.perLesson">/ 50 dakika</span>
       </div>
     </div>
 
     <div class="step">
       <div class="step-title">
         <span class="step-number">1</span>
-        Tarih seç
+        <span data-i18n="booking.step1Title">Tarih seç</span>
       </div>
       <div class="date-row" id="dateRow"></div>
     </div>
@@ -561,43 +620,43 @@
     <div class="step" id="timeStep" style="display: none;">
       <div class="step-title">
         <span class="step-number">2</span>
-        Saat seç <span style="color: var(--armus-faint); font-weight: 400; font-size: 12px;">(50 dakikalık ders)</span>
+        <span data-i18n="booking.step2Title">Saat seç</span> <span style="color: var(--armus-faint); font-weight: 400; font-size: 12px;" data-i18n="booking.step2Note">(50 dakikalık ders)</span>
       </div>
       <div class="slot-grid" id="slotGrid"></div>
     </div>
 
     <div class="confirm-box" id="confirmBox" style="display: none;">
       <div class="confirm-row">
-        <span>Öğretmen</span>
+        <span data-i18n="booking.confirmTeacher">Öğretmen</span>
         <strong id="confirmTeacher"></strong>
       </div>
       <div class="confirm-row">
-        <span>Tarih</span>
+        <span data-i18n="booking.confirmDate">Tarih</span>
         <strong id="confirmDate"></strong>
       </div>
       <div class="confirm-row">
-        <span>Saat</span>
+        <span data-i18n="booking.confirmTime">Saat</span>
         <strong id="confirmTime"></strong>
       </div>
       <div class="confirm-row">
-        <span>Ücret</span>
+        <span data-i18n="booking.confirmPrice">Ücret</span>
         <strong id="confirmPrice"></strong>
       </div>
       <div class="confirm-row" id="confirmCreditRow" style="display: none;">
-        <span>Ders hakkınla</span>
-        <strong id="confirmCreditApplied" style="color: var(--armus-gold-text);">Ücretsiz</strong>
+        <span data-i18n="booking.confirmCreditRow">Ders hakkınla</span>
+        <strong id="confirmCreditApplied" style="color: var(--armus-gold-text);" data-i18n="booking.confirmCreditApplied">Ücretsiz</strong>
       </div>
 
       <div class="payer-fields" id="payerFields">
-        <label for="payerPhone">Telefon numarası</label>
+        <label for="payerPhone" data-i18n="booking.payerPhoneLabel">Telefon numarası</label>
         <input type="text" id="payerPhone" placeholder="+90 5xx xxx xx xx">
-        <label for="payerIdentity">T.C. kimlik numarası</label>
+        <label for="payerIdentity" data-i18n="booking.payerIdentityLabel">T.C. kimlik numarası</label>
         <input type="text" id="payerIdentity" placeholder="11 haneli" maxlength="11" inputmode="numeric">
       </div>
 
       <button class="confirm-btn" id="confirmBtn">Ödemeye Geç</button>
       <div class="small-note" id="confirmError" style="display: none; color: #b3261e;"></div>
-      <div class="small-note" id="confirmNote">Güvenli ödeme sayfasına yönlendirileceksin</div>
+      <div class="small-note" id="confirmNote" data-i18n="booking.confirmNote">Güvenli ödeme sayfasına yönlendirileceksin</div>
     </div>
 
   </main>
@@ -607,30 +666,31 @@
     <div class="success" id="successView">
       <div class="success-icon">✓</div>
       <h1 id="successTitle">Rezervasyonun alındı</h1>
-      <p>Öğretmenin onayına gerek kalmadan yerin ayrıldı.</p>
+      <p data-i18n="booking.successText">Öğretmenin onayına gerek kalmadan yerin ayrıldı.</p>
 
       <div class="success-details">
         <div class="confirm-row">
-          <span>Öğretmen</span>
+          <span data-i18n="booking.confirmTeacher">Öğretmen</span>
           <strong id="successTeacher"></strong>
         </div>
         <div class="confirm-row">
-          <span>Tarih</span>
+          <span data-i18n="booking.confirmDate">Tarih</span>
           <strong id="successDate"></strong>
         </div>
         <div class="confirm-row">
-          <span>Saat</span>
+          <span data-i18n="booking.confirmTime">Saat</span>
           <strong id="successTime"></strong>
         </div>
       </div>
 
       <div class="success-actions">
-        <a class="btn" href="my-lessons.html">Derslerimi gör</a>
-        <a class="btn btn-light" href="teachers.html">Diğer öğretmenlere bak</a>
+        <a class="btn" href="my-lessons.html" data-i18n="booking.successMyLessons">Derslerimi gör</a>
+        <a class="btn btn-light" href="teachers.html" data-i18n="booking.successOtherTeachers">Diğer öğretmenlere bak</a>
       </div>
     </div>
   </main>
 
+  <script src="i18n.js"></script>
   <script src="teachers-data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
@@ -688,14 +748,22 @@
 
       const isTrial = bookingType === "trial";
 
-      document.getElementById("pageTitle").textContent =
-        `${isTrial ? "Deneme Dersi" : "Rezervasyon"} | ${armusShortDisplayName(teacher.name)}`;
-      document.getElementById("flowLabel").textContent =
-        isTrial ? "DENEME DERSİ" : "REZERVASYON";
-      document.getElementById("flowTitle").textContent =
-        isTrial ? "Deneme dersi için zaman seç" : "Ders zamanını seç";
-      document.getElementById("successTitle").textContent =
-        isTrial ? "Deneme dersin alındı" : "Rezervasyonun alındı";
+      // These get set from JS (not data-i18n) since they depend on
+      // isTrial/teacher.name - re-run on a language toggle too, since
+      // armusApplyTranslations() alone can't reach text it didn't set.
+      function renderBookingText() {
+        const pageTitleTr = isTrial ? "Deneme Dersi" : "Rezervasyon";
+        document.getElementById("pageTitle").textContent =
+          `${armusT(isTrial ? "booking.pageTitleTrial" : "booking.pageTitleRegular", pageTitleTr)} | ${armusShortDisplayName(teacher.name)}`;
+        document.getElementById("flowLabel").textContent =
+          armusT(isTrial ? "booking.flowLabelTrial" : "booking.flowLabelRegular", isTrial ? "DENEME DERSİ" : "REZERVASYON");
+        document.getElementById("flowTitle").textContent =
+          armusT(isTrial ? "booking.flowTitleTrial" : "booking.flowTitleRegular", isTrial ? "Deneme dersi için zaman seç" : "Ders zamanını seç");
+        document.getElementById("successTitle").textContent =
+          armusT(isTrial ? "booking.successTitleTrial" : "booking.successTitleRegular", isTrial ? "Deneme dersin alındı" : "Rezervasyonun alındı");
+      }
+      renderBookingText();
+      document.addEventListener("armus:langchange", renderBookingText);
 
       document.getElementById("avatar").innerHTML = teacher.photo
         ? `<img src="${teacher.photo}" alt="">`
@@ -705,15 +773,21 @@
       document.getElementById("priceValue").textContent = `₺${teacher.price}`;
 
       const confirmBtn = document.getElementById("confirmBtn");
-      confirmBtn.textContent = isTrial ? "Deneme Dersi İçin Öde" : "Ödemeye Geç";
+      function renderConfirmBtn() {
+        confirmBtn.textContent = armusT(
+          isTrial ? "booking.confirmBtnTrial" : "booking.confirmBtnRegular",
+          isTrial ? "Deneme Dersi İçin Öde" : "Ödemeye Geç"
+        );
+      }
+      renderConfirmBtn();
+      document.addEventListener("armus:langchange", renderConfirmBtn);
 
       // ---- deterministic mock availability ----
 
-      const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
-      const MONTH_NAMES = [
-        "Oca", "Şub", "Mar", "Nis", "May", "Haz",
-        "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
-      ];
+      // From bookings.js - language-aware, so this picks up the site's
+      // current EN/TR toggle state at page load.
+      const DAY_NAMES = armusDayNames();
+      const MONTH_NAMES = armusMonthNames();
 
       // ---- returning from iyzico's checkout (payment-callback redirected
       // here) - show a receipt or a failure notice instead of the picker,
@@ -728,9 +802,7 @@
 
         document.getElementById("successTeacher").textContent = armusShortDisplayName(teacher.name);
         if (paidDate) {
-          const d = new Date(`${paidDate}T00:00:00`);
-          document.getElementById("successDate").textContent =
-            `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}, ${DAY_NAMES[d.getDay()]}`;
+          document.getElementById("successDate").textContent = armusFormatDateLabel(paidDate);
         }
         if (paidTime) {
           document.getElementById("successTime").textContent = armusFormatTimeRange(paidTime);
@@ -744,12 +816,16 @@
       const paymentNotice = document.getElementById("paymentNotice");
 
       if (paymentStatus === "failed") {
-        paymentNotice.textContent =
-          "Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı - istersen tekrar deneyebilirsin.";
+        paymentNotice.textContent = armusT(
+          "booking.paymentFailed",
+          "Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı - istersen tekrar deneyebilirsin."
+        );
         paymentNotice.style.display = "block";
       } else if (paymentStatus === "error") {
-        paymentNotice.textContent =
-          "Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle ilgileneceğiz.";
+        paymentNotice.textContent = armusT(
+          "booking.paymentError",
+          "Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle ilgileneceğiz."
+        );
         paymentNotice.style.display = "block";
       }
 
@@ -790,8 +866,7 @@
           pill.classList.add("selected");
 
           selectedDate = dateKey;
-          selectedDateLabel =
-            `${date.getDate()} ${MONTH_NAMES[date.getMonth()]}, ${DAY_NAMES[date.getDay()]}`;
+          selectedDateLabel = armusFormatDateLabel(dateKey);
           selectedTime = null;
 
           confirmBox.style.display = "none";
