@@ -207,13 +207,6 @@
       font-weight: 600;
     }
 
-    .small-note {
-      text-align: center;
-      color: var(--armus-faint);
-      font-size: 10px;
-      margin-top: 20px;
-    }
-
     .verify-note {
       text-align: center;
       color: var(--armus-muted);
@@ -233,6 +226,57 @@
       pointer-events: none;
       color: var(--armus-faint);
     }
+  
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
   </style>
 </head>
 
@@ -241,7 +285,15 @@
   <nav>
     <div class="nav-inner">
       <a href="index.html" class="logo">ARMUS</a>
-      <a href="index.html" class="back">← Ana sayfa</a>
+      <div class="nav-right">
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <a href="index.html" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
+      </div>
     </div>
   </nav>
 
@@ -249,14 +301,14 @@
 
     <div id="registerStep">
 
-    <div class="eyebrow">ARMUS'A KATIL</div>
-    <h1>Hesap oluştur</h1>
+    <div class="eyebrow" data-i18n="register.eyebrow">ARMUS'A KATIL</div>
+    <h1 data-i18n="register.title">Hesap oluştur</h1>
 
     <p class="role-note" id="roleNote"></p>
 
     <div class="role-toggle" id="roleToggle" style="display:none">
-      <div class="role-option active" data-role="student">Öğrenci olarak</div>
-      <div class="role-option" data-role="teacher">Öğretmen olarak</div>
+      <div class="role-option active" data-role="student" data-i18n="register.roleStudent">Öğrenci olarak</div>
+      <div class="role-option" data-role="teacher" data-i18n="register.roleTeacher">Öğretmen olarak</div>
     </div>
 
     <div class="form-error" id="formError"></div>
@@ -265,19 +317,19 @@
     <form id="registerForm" novalidate>
 
       <div class="field">
-        <label for="name">Ad Soyad</label>
-        <input type="text" id="name" autocomplete="name" placeholder="Adın Soyadın">
+        <label for="name" data-i18n="register.nameLabel">Ad Soyad</label>
+        <input type="text" id="name" autocomplete="name" placeholder="Adın Soyadın" data-i18n-placeholder="register.namePlaceholder">
       </div>
 
       <div class="field">
-        <label for="email">E-posta</label>
-        <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com">
+        <label for="email" data-i18n="register.emailLabel">E-posta</label>
+        <input type="email" id="email" autocomplete="email" placeholder="ornek@eposta.com" data-i18n-placeholder="register.emailPlaceholder">
       </div>
 
       <div class="field">
-        <label for="city">Şehir <small style="color:var(--armus-muted);font-weight:400;">(opsiyonel)</small></label>
+        <label for="city"><span data-i18n="register.cityLabel">Şehir</span> <small style="color:var(--armus-muted);font-weight:400;" data-i18n="register.cityOptional">(opsiyonel)</small></label>
         <select id="city">
-          <option value="">Seçmek istemiyorum</option>
+          <option value="" data-i18n="register.cityNone">Seçmek istemiyorum</option>
           <option>Adana</option><option>Adıyaman</option><option>Afyonkarahisar</option><option>Ağrı</option>
           <option>Aksaray</option><option>Amasya</option><option>Ankara</option><option>Antalya</option>
           <option>Ardahan</option><option>Artvin</option><option>Aydın</option><option>Balıkesir</option>
@@ -303,25 +355,21 @@
       </div>
 
       <div class="field">
-        <label for="password">Şifre</label>
-        <input type="password" id="password" autocomplete="new-password" placeholder="En az 6 karakter">
+        <label for="password" data-i18n="register.passwordLabel">Şifre</label>
+        <input type="password" id="password" autocomplete="new-password" placeholder="En az 6 karakter" data-i18n-placeholder="register.passwordPlaceholder">
       </div>
 
       <div class="field">
-        <label for="password2">Şifre (tekrar)</label>
-        <input type="password" id="password2" autocomplete="new-password" placeholder="Şifreni tekrar yaz">
+        <label for="password2" data-i18n="register.password2Label">Şifre (tekrar)</label>
+        <input type="password" id="password2" autocomplete="new-password" placeholder="Şifreni tekrar yaz" data-i18n-placeholder="register.password2Placeholder">
       </div>
 
-      <button type="submit" class="submit-btn" id="submitBtn">Hesap Oluştur</button>
+      <button type="submit" class="submit-btn" id="submitBtn" data-i18n="register.submit">Hesap Oluştur</button>
 
     </form>
 
     <div class="switch-note">
-      Zaten hesabın var mı? <a href="login.html" id="switchToLogin">Giriş yap</a>
-    </div>
-
-    <div class="small-note">
-      Bu bir prototip; hesaplar sadece bu tarayıcıda saklanır.
+      <span data-i18n="register.switchText">Zaten hesabın var mı?</span> <a href="login.html" id="switchToLogin" data-i18n="register.switchLink">Giriş yap</a>
     </div>
 
     </div>
@@ -329,28 +377,29 @@
     <!-- VERIFY -->
     <div id="verifyStep" style="display: none;">
 
-      <div class="eyebrow">SON ADIM</div>
-      <h1>E-postanı doğrula</h1>
+      <div class="eyebrow" data-i18n="register.verifyEyebrow">SON ADIM</div>
+      <h1 data-i18n="register.verifyTitle">E-postanı doğrula</h1>
       <p class="verify-note" id="verifyNote"></p>
 
       <div class="form-error" id="verifyError"></div>
 
       <form id="verifyForm" novalidate>
         <div class="field">
-          <label for="verifyCode">Doğrulama kodu</label>
-          <input type="text" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="6 haneli kod" autocomplete="one-time-code">
+          <label for="verifyCode" data-i18n="register.verifyCodeLabel">Doğrulama kodu</label>
+          <input type="text" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="6 haneli kod" autocomplete="one-time-code" data-i18n-placeholder="register.verifyCodePlaceholder">
         </div>
-        <button type="submit" class="submit-btn" id="verifySubmitBtn">Doğrula</button>
+        <button type="submit" class="submit-btn" id="verifySubmitBtn" data-i18n="register.verifySubmit">Doğrula</button>
       </form>
 
       <div class="switch-note">
-        Kod gelmedi mi? <a href="#" id="resendCodeLink">Kodu tekrar gönder</a>
+        <span data-i18n="register.resendText">Kod gelmedi mi?</span> <a href="#" id="resendCodeLink" data-i18n="register.resendLink">Kodu tekrar gönder</a>
       </div>
 
     </div>
 
   </main>
 
+  <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
   <script src="supabase-config.js"></script>

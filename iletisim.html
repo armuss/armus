@@ -196,6 +196,57 @@
         grid-template-columns: 1fr;
       }
     }
+  
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
   </style>
 </head>
 
@@ -204,49 +255,57 @@
   <nav>
     <div class="nav-inner">
       <a href="index.html" class="logo">ARMUS</a>
-      <a href="index.html" class="back">← Ana sayfa</a>
+      <div class="nav-right">
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <a href="index.html" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
+      </div>
     </div>
   </nav>
 
   <main class="container">
 
-    <div class="eyebrow">İLETİŞİM</div>
-    <h1>Bize ulaş</h1>
-    <p class="intro">
+    <div class="eyebrow" data-i18n="contact.eyebrow">İLETİŞİM</div>
+    <h1 data-i18n="contact.title">Bize ulaş</h1>
+    <p class="intro" data-i18n="contact.intro">
       Sorun, önerin veya bir şikayetin mi var? Aşağıdaki bilgilerden veya
       formdan bize ulaşabilirsin, en kısa sürede dönüş yaparız.
     </p>
 
     <div class="contact-grid">
       <div class="contact-card">
-        <div class="label">E-posta</div>
+        <div class="label" data-i18n="contact.emailLabel">E-posta</div>
         <div class="value"><a href="mailto:armus.support@gmail.com">armus.support@gmail.com</a></div>
       </div>
       <div class="contact-card">
-        <div class="label">Destek saatleri</div>
-        <div class="value">Hafta içi 09:00 – 18:00</div>
+        <div class="label" data-i18n="contact.hoursLabel">Destek saatleri</div>
+        <div class="value" data-i18n="contact.hoursValue">Hafta içi 09:00 – 18:00</div>
       </div>
     </div>
 
     <form id="contactForm">
-      <label for="name">Ad Soyad</label>
+      <label for="name" data-i18n="contact.nameLabel">Ad Soyad</label>
       <input type="text" id="name" required>
 
-      <label for="email">E-posta</label>
+      <label for="email" data-i18n="contact.emailFieldLabel">E-posta</label>
       <input type="email" id="email" required>
 
-      <label for="message">Mesajın</label>
+      <label for="message" data-i18n="contact.messageLabel">Mesajın</label>
       <textarea id="message" required></textarea>
 
-      <button type="submit" class="submit-btn">Gönder</button>
-      <div class="form-note">
+      <button type="submit" class="submit-btn" data-i18n="contact.submit">Gönder</button>
+      <div class="form-note" data-i18n="contact.formNote">
         ARMUS şu anda prototip aşamasında olduğu için bu form mesajını
         sunucuya iletmez; canlıya geçtiğimizde bu alan gerçek destek
         sistemimize bağlanacak.
       </div>
     </form>
 
-    <div class="sent-msg" id="sentMsg">
+    <div class="sent-msg" id="sentMsg" data-i18n="contact.sentMsg">
       Mesajın alındı, teşekkürler! (Prototip modunda gerçekten gönderilmedi.)
     </div>
 
@@ -260,5 +319,6 @@
     });
   </script>
 
+  <script src="i18n.js"></script>
 </body>
 </html>
