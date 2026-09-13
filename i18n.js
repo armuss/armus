@@ -161,8 +161,7 @@ const ARMUS_I18N_EN = {
   "contact.emailFieldLabel": "Email",
   "contact.messageLabel": "Your message",
   "contact.submit": "Send",
-  "contact.formNote": "ARMUS is currently in prototype phase, so this form doesn't send your message to a server; once we go live this will connect to our real support system.",
-  "contact.sentMsg": "Your message was received, thanks! (Not actually sent in prototype mode.)",
+  "contact.sentMsg": "Your message was received, thanks! We'll get back to you as soon as we can.",
 
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
