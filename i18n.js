@@ -416,6 +416,9 @@ const ARMUS_I18N_EN = {
   "admin.navCities": "Cities",
   "admin.navFlags": "Display Settings",
 
+  // teacher.html (profile page) - calendar expand button
+  "teacherProfile.viewFullSchedule": "View full schedule",
+
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",

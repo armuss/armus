@@ -383,6 +383,26 @@
       font-size: 13px;
     }
 
+    .cal-expand-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      background: none;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .cal-expand-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
     /* INFO BLOCKS (experience, rating - Preply's icon+text rows) */
 
     .info-block {
@@ -849,6 +869,7 @@
               <button type="button" id="calNextBtn" aria-label="Sonraki hafta">›</button>
             </div>
             <div class="cal-week" id="calWeek"></div>
+            <button type="button" class="cal-expand-btn" id="calExpandBtn" style="display: none;" data-i18n="teacherProfile.viewFullSchedule">Tüm programı gör</button>
           </section>
 
 
@@ -859,7 +880,9 @@
           <section>
 
             <div class="info-block">
-              <span class="info-block-icon">🎓</span>
+              <span class="info-block-icon" style="color: var(--armus-gold-text);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.4 2.7 3 6 3s6-1.6 6-3v-5"></path><path d="M22 10v6"></path></svg>
+              </span>
               <div>
                 <div class="info-block-title">Deneyimli Öğretmen</div>
                 <div class="info-block-text" id="experienceText"></div>
@@ -867,7 +890,9 @@
             </div>
 
             <div class="info-block" id="highRatedBlock" style="display: none;">
-              <span class="info-block-icon">⭐</span>
+              <span class="info-block-icon" style="color: var(--armus-gold-text);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </span>
               <div>
                 <div class="info-block-title">Yüksek Puanlı Öğretmen</div>
                 <div class="info-block-text">ARMUS öğrencilerinden ortalama <strong id="highRatedValue"></strong> puan aldı.</div>
@@ -1111,7 +1136,13 @@
       const calRangeLabel = document.getElementById("calRangeLabel");
       const calPrevBtn = document.getElementById("calPrevBtn");
       const calNextBtn = document.getElementById("calNextBtn");
+      const calExpandBtn = document.getElementById("calExpandBtn");
       const CAL_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+      // Preply-style peek: only show a handful of slots per day at first,
+      // with a button below the whole grid to reveal the rest - a
+      // popular teacher's fully-open availability can otherwise render
+      // dozens of stacked time buttons and push the whole page down.
+      const CAL_SLOT_PEEK = 4;
 
       function calToDateKey(date) {
         return date.toISOString().slice(0, 10);
@@ -1119,6 +1150,7 @@
 
       const calToday = new Date();
       let calWeekOffset = 0;
+      let calExpanded = false;
 
       function renderCalWeek() {
 
@@ -1139,10 +1171,14 @@
           `${days[0].getDate()} ${calMonths[days[0].getMonth()]} – ${days[6].getDate()} ${calMonths[days[6].getMonth()]}`;
         calPrevBtn.disabled = calWeekOffset === 0;
 
+        let anyHidden = false;
+
         days.forEach(date => {
 
           const dateKey = calToDateKey(date);
-          const slots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes).filter(s => s.available);
+          const allSlots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes).filter(s => s.available);
+          const slots = calExpanded ? allSlots : allSlots.slice(0, CAL_SLOT_PEEK);
+          if (allSlots.length > slots.length) anyHidden = true;
 
           const col = document.createElement("div");
 
@@ -1175,16 +1211,25 @@
 
           calWeek.appendChild(col);
         });
+
+        calExpandBtn.style.display = (!calExpanded && anyHidden) ? "block" : "none";
       }
 
       calPrevBtn.addEventListener("click", () => {
         if (calWeekOffset === 0) return;
         calWeekOffset--;
+        calExpanded = false;
         renderCalWeek();
       });
 
       calNextBtn.addEventListener("click", () => {
         calWeekOffset++;
+        calExpanded = false;
+        renderCalWeek();
+      });
+
+      calExpandBtn.addEventListener("click", () => {
+        calExpanded = true;
         renderCalWeek();
       });
 
