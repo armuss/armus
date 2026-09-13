@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import TeacherCard from '../../components/TeacherCard';
 import { useAuth } from '../../lib/auth';
 import { canJoinLessonNow, getBookingsForTeacher, type Booking } from '../../lib/bookings';
+import { getFavorites, toggleFavorite } from '../../lib/favorites';
 import { getMarketplaceTeachers } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -136,12 +137,15 @@ function StudentBrowse() {
   const [query, setQuery] = useState('');
   const [specialtyIndex, setSpecialtyIndex] = useState(0);
   const [priceSort, setPriceSort] = useState<PriceSort>('none');
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
   const specialty = SPECIALTY_OPTIONS[specialtyIndex];
 
   const load = useCallback(async () => {
-    const list = await getMarketplaceTeachers();
+    const [list, favorites] = await Promise.all([getMarketplaceTeachers(), getFavorites()]);
     setTeachers(list);
+    setFavoriteIds(favorites);
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -160,18 +164,24 @@ function StudentBrowse() {
     setPriceSort((s) => (s === 'none' ? 'asc' : s === 'asc' ? 'desc' : 'none'));
   }
 
+  async function handleToggleFavorite(teacherId: string) {
+    const nowFavorited = await toggleFavorite(teacherId);
+    setFavoriteIds((prev) => (nowFavorited ? [...prev, teacherId] : prev.filter((id) => id !== teacherId)));
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = teachers.filter((t) => {
       const matchesQuery = !q || [t.name, t.role, ...t.tags].some((f) => f.toLowerCase().includes(q));
       const matchesSpecialty = specialty === 'Tümü' || t.tags.includes(specialty);
-      return matchesQuery && matchesSpecialty;
+      const matchesFavorite = !favoritesOnly || favoriteIds.includes(t.id);
+      return matchesQuery && matchesSpecialty && matchesFavorite;
     });
     if (priceSort !== 'none') {
       list = [...list].sort((a, b) => (priceSort === 'asc' ? a.price - b.price : b.price - a.price));
     }
     return list;
-  }, [teachers, query, specialty, priceSort]);
+  }, [teachers, query, specialty, priceSort, favoritesOnly, favoriteIds]);
 
   if (loading) {
     return (
@@ -224,15 +234,32 @@ function StudentBrowse() {
                   Uzmanlık{specialty !== 'Tümü' ? `: ${specialty}` : ''}
                 </Text>
               </Pressable>
+              <Pressable
+                onPress={() => setFavoritesOnly((v) => !v)}
+                style={[styles.filterChip, favoritesOnly && styles.filterChipActive]}
+              >
+                <Text style={[styles.filterChipText, favoritesOnly && styles.filterChipTextActive]}>
+                  {favoritesOnly ? '♥' : '♡'} Favorilerim
+                </Text>
+              </Pressable>
             </View>
 
             <Text style={styles.resultCount}>{filtered.length} öğretmen bulundu</Text>
           </View>
         }
         renderItem={({ item }) => (
-          <TeacherCard teacher={item} onPress={() => router.push(`/teacher/${item.id}`)} />
+          <TeacherCard
+            teacher={item}
+            onPress={() => router.push(`/teacher/${item.id}`)}
+            isFavorite={favoriteIds.includes(item.id)}
+            onToggleFavorite={() => handleToggleFavorite(item.id)}
+          />
         )}
-        ListEmptyComponent={<Text style={styles.empty}>Aramanla eşleşen öğretmen bulunamadı.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            {favoritesOnly ? 'Henüz favori öğretmenin yok — kalp ikonuna dokunarak ekleyebilirsin.' : 'Aramanla eşleşen öğretmen bulunamadı.'}
+          </Text>
+        }
       />
     </SafeAreaView>
   );

@@ -4,11 +4,24 @@ import { shortDisplayName } from '../lib/displayName';
 import { colors, fonts, radius } from '../lib/theme';
 import type { Teacher } from '../lib/teachers-data';
 
-export default function TeacherCard({ teacher, onPress }: { teacher: Teacher; onPress?: () => void }) {
+type Props = {
+  teacher: Teacher;
+  onPress?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+};
+
+export default function TeacherCard({ teacher, onPress, isFavorite, onToggleFavorite }: Props) {
   const isPopular = teacher.reviewCount > 100;
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, { opacity: pressed ? 0.9 : 1 }]}>
+      {onToggleFavorite && (
+        <Pressable onPress={onToggleFavorite} hitSlop={10} style={styles.favBtn}>
+          <Text style={[styles.favIcon, isFavorite && styles.favIconActive]}>{isFavorite ? '♥' : '♡'}</Text>
+        </Pressable>
+      )}
+
       <View style={styles.topRow}>
         {teacher.photo ? (
           <Image source={{ uri: teacher.photo }} style={styles.photo} />
@@ -76,9 +89,23 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     padding: 14,
   },
+  favBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
+  favIcon: {
+    fontSize: 22,
+    color: colors.faint,
+  },
+  favIconActive: {
+    color: colors.error,
+  },
   topRow: {
     flexDirection: 'row',
     gap: 12,
+    paddingRight: 24,
   },
   photo: {
     width: 74,
