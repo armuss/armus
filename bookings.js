@@ -32,6 +32,24 @@ async function armusGetBookingsForTeacher(teacherId) {
   return data.map(armusMapBookingRow);
 }
 
+// Every non-cancelled booking's date+time for a teacher, with no student
+// identity attached - bookings_select_participant (schema.sql) only lets
+// a signed-in student see their *own* bookings, so a prospective student
+// browsing a teacher's calendar can never see that someone else already
+// took a slot via a plain client query. Goes through the
+// get-teacher-busy-times Edge Function (service role) instead, which
+// deliberately returns only { date, time } pairs - used by
+// armusSlotsForDate to grey out already-taken slots.
+async function armusGetTeacherBusyTimes(teacherId) {
+
+  const { data, error } = await armusSupabase.functions.invoke("get-teacher-busy-times", {
+    body: { teacherId },
+  });
+
+  if (error || !data || !data.busy) return [];
+  return data.busy;
+}
+
 // A single booking by id - RLS (bookings_select_participant) already
 // makes sure only the student, the teacher, or an admin can ever get a
 // row back, so a non-participant querying someone else's booking id
@@ -205,9 +223,21 @@ function armusHashCode(str) {
 // times are actually open.
 //
 // dayOfWeek: 0 (Sunday) - 6 (Saturday), i.e. Date.prototype.getDay().
-function armusSlotsForDate(teacher, dateKey, dayOfWeek) {
+// busyTimes: { date, time }[] - this teacher's already-taken slots (see
+// armusGetTeacherBusyTimes) - a time already booked by anyone is never
+// offered again, regardless of what the teacher's own weekly/per-date
+// availability says about it. A plain armusMapBookingRow[] also works
+// here (it carries the same date/time fields, plus a status this
+// function skips cancelled rows on if present).
+function armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes) {
 
   const ALL_SLOTS = armusAllTimeSlots();
+
+  const takenTimes = new Set(
+    (busyTimes || [])
+      .filter(b => b.date === dateKey && b.status !== "cancelled")
+      .map(b => b.time)
+  );
 
   // the dashboard.html weekly timeline (a recurring day-of-week pattern,
   // not tied to a specific date) wins when the teacher has set anything
@@ -216,16 +246,16 @@ function armusSlotsForDate(teacher, dateKey, dayOfWeek) {
   // finally to a deterministic mock for demo teachers with neither.
   if (teacher.availabilityDates && Object.keys(teacher.availabilityDates).length) {
     const daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
-    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
   }
 
   if (teacher.weeklyAvailability) {
     const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
-    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
   }
 
   return ALL_SLOTS.map(time => {
     const n = armusHashCode(teacher.id + dateKey + time);
-    return { time, available: n % 3 !== 0 };
+    return { time, available: n % 3 !== 0 && !takenTimes.has(time) };
   });
 }

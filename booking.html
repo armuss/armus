@@ -657,8 +657,11 @@
 
     (async function() {
 
-    const teacher = await armusFindMarketplaceTeacher(teacherId);
-    const session = await armusGetSession();
+    const [teacher, session, busyTimes] = await Promise.all([
+      armusFindMarketplaceTeacher(teacherId),
+      armusGetSession(),
+      armusGetTeacherBusyTimes(teacherId).catch(() => []),
+    ]);
 
     if (!teacher) {
 
@@ -803,7 +806,7 @@
         slotStep.style.display = "block";
         slotGrid.innerHTML = "";
 
-        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek);
+        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes);
 
         if (!slots.some(s => s.available)) {
           slotGrid.innerHTML =

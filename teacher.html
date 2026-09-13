@@ -928,6 +928,11 @@
 
     } else {
 
+      // needed before the calendar preview can tell which slots are
+      // already taken by another student - fetched once up front so the
+      // per-day render loop is never itself async
+      const busyTimes = await armusGetTeacherBusyTimes(teacher.id).catch(() => []);
+
       document.getElementById("pageTitle").textContent =
         `${armusShortDisplayName(teacher.name)} | ARMUS`;
 
@@ -1010,7 +1015,7 @@
         days.forEach(date => {
 
           const dateKey = calToDateKey(date);
-          const slots = armusSlotsForDate(teacher, dateKey, date.getDay()).filter(s => s.available);
+          const slots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes).filter(s => s.available);
 
           const col = document.createElement("div");
 
