@@ -1104,7 +1104,7 @@
     <div class="rec-grid" id="recGrid"></div>
 
     <div id="favSection" style="display:none;">
-      <h2>Favori Öğretmenlerin</h2>
+      <h2 data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</h2>
       <div class="fav-row" id="favRow"></div>
     </div>
 
@@ -1172,14 +1172,16 @@
       return streak;
     }
 
-    const STUDENT_BADGES = [
-      { icon: "🎉", label: "İlk Dersin", test: s => s.completed >= 1 },
-      { icon: "📚", label: "5 Ders Tamamladın", test: s => s.completed >= 5 },
-      { icon: "🏆", label: "10 Ders Tamamladın", test: s => s.completed >= 10 },
-      { icon: "💎", label: "25 Ders Tamamladın", test: s => s.completed >= 25 },
-      { icon: "🔥", label: "Kararlı Öğrenci", test: s => s.streak >= 3 },
-      { icon: "🌍", label: "Çok Yönlü Öğrenci", test: s => s.teacherCount >= 3 },
-    ];
+    function studentBadges() {
+      return [
+        { icon: "🎉", label: armusT("studentDash.badgeFirstLesson", "İlk Dersin"), test: s => s.completed >= 1 },
+        { icon: "📚", label: armusT("studentDash.badge5Lessons", "5 Ders Tamamladın"), test: s => s.completed >= 5 },
+        { icon: "🏆", label: armusT("studentDash.badge10Lessons", "10 Ders Tamamladın"), test: s => s.completed >= 10 },
+        { icon: "💎", label: armusT("studentDash.badge25Lessons", "25 Ders Tamamladın"), test: s => s.completed >= 25 },
+        { icon: "🔥", label: armusT("studentDash.badgeStreak", "Kararlı Öğrenci"), test: s => s.streak >= 3 },
+        { icon: "🌍", label: armusT("studentDash.badgeVersatile", "Çok Yönlü Öğrenci"), test: s => s.teacherCount >= 3 },
+      ];
+    }
 
     (async function() {
 
@@ -1206,7 +1208,10 @@
       pageRoot.style.display = "block";
 
       document.getElementById("greetAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
-      document.getElementById("greetName").textContent = `Merhaba, ${session.name.split(" ")[0]} 👋`;
+      function renderGreetName() {
+        document.getElementById("greetName").textContent = armusT("studentDash.greeting", "Merhaba, {name} 👋").replace("{name}", session.name.split(" ")[0]);
+      }
+      renderGreetName();
 
       const [allBookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
         armusGetBookingsForStudent(session.id),
@@ -1239,66 +1244,75 @@
 
       const heroSlot = document.getElementById("heroSlot");
 
-      if (upcomingBookings.length > 0) {
+      function renderHero() {
 
-        const next = upcomingBookings[0];
-        const teacher = teacherById.get(next.teacherId) || null;
-        const canJoin = armusCanJoinLessonNow(next);
-        const diffDays = Math.round(
-          (new Date(next.date + "T00:00:00") - new Date(todayKey + "T00:00:00")) / 86400000
-        );
-        const whenLabel = diffDays === 0 ? "Bugün" : diffDays === 1 ? "Yarın" : `${diffDays} gün sonra`;
+        if (upcomingBookings.length > 0) {
 
-        heroSlot.innerHTML = `
-          <div class="hero-lesson">
-            <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
-            <div>
-              <div class="hero-eyebrow">Sıradaki Dersin</div>
-              <div class="hero-lesson-name">${armusShortDisplayName(next.teacherName)}</div>
-              <div class="hero-lesson-meta">${whenLabel} · ${armusFormatTimeRange(next.time)} · ${next.type === "trial" ? "Deneme Dersi" : "Ders"}</div>
+          const next = upcomingBookings[0];
+          const teacher = teacherById.get(next.teacherId) || null;
+          const canJoin = armusCanJoinLessonNow(next);
+          const diffDays = Math.round(
+            (new Date(next.date + "T00:00:00") - new Date(todayKey + "T00:00:00")) / 86400000
+          );
+          const whenLabel = diffDays === 0 ? armusT("studentDash.today", "Bugün")
+            : diffDays === 1 ? armusT("studentDash.tomorrow", "Yarın")
+            : armusT("studentDash.daysLater", "{days} gün sonra").replace("{days}", diffDays);
+
+          heroSlot.innerHTML = `
+            <div class="hero-lesson">
+              <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
+              <div>
+                <div class="hero-eyebrow">${armusT("studentDash.nextLesson", "Sıradaki Dersin")}</div>
+                <div class="hero-lesson-name">${armusShortDisplayName(next.teacherName)}</div>
+                <div class="hero-lesson-meta">${whenLabel} · ${armusFormatTimeRange(next.time)} · ${next.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</div>
+              </div>
+              <div class="hero-lesson-right">
+                ${canJoin
+                  ? `<a class="join-btn" href="class.html?booking=${next.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`
+                  : `<span class="join-hint">${armusT("studentDash.joinHintCard", "Ders saatinde bu karttan katılabileceksin.")}</span>`}
+              </div>
             </div>
-            <div class="hero-lesson-right">
-              ${canJoin
-                ? `<a class="join-btn" href="class.html?booking=${next.id}">🎥 Derse Katıl</a>`
-                : `<span class="join-hint">Ders saatinde bu karttan katılabileceksin.</span>`}
+          `;
+
+        } else if (bookings.length === 0) {
+
+          heroSlot.innerHTML = `
+            <div class="onboarding-hero">
+              <h1>${armusT("studentDash.onboardTitle", "İngilizce yolculuğun burada başlıyor")}</h1>
+              <p>${armusT("studentDash.onboardText", "Henüz hiç dersin yok. Sana uygun bir öğretmen bul, ilk dersini planla ve öğrenmeye başla.")}</p>
+              <div class="onboarding-steps">
+                <div class="onboarding-step"><div class="step-num">1</div>${armusT("studentDash.onboardStep1", "Sana uygun bir öğretmen seç")}</div>
+                <div class="onboarding-step"><div class="step-num">2</div>${armusT("studentDash.onboardStep2", "Uygun bir saat rezerve et")}</div>
+                <div class="onboarding-step"><div class="step-num">3</div>${armusT("studentDash.onboardStep3", "Ders saatinde odaya katıl")}</div>
+              </div>
+              <a class="btn btn-light" href="teachers.html">${armusT("studentDash.findTeacherCta", "Öğretmen Bul →")}</a>
             </div>
-          </div>
-        `;
+          `;
 
-      } else if (bookings.length === 0) {
+        } else {
 
-        heroSlot.innerHTML = `
-          <div class="onboarding-hero">
-            <h1>İngilizce yolculuğun burada başlıyor</h1>
-            <p>Henüz hiç dersin yok. Sana uygun bir öğretmen bul, ilk dersini planla ve öğrenmeye başla.</p>
-            <div class="onboarding-steps">
-              <div class="onboarding-step"><div class="step-num">1</div>Sana uygun bir öğretmen seç</div>
-              <div class="onboarding-step"><div class="step-num">2</div>Uygun bir saat rezerve et</div>
-              <div class="onboarding-step"><div class="step-num">3</div>Ders saatinde odaya katıl</div>
+          heroSlot.innerHTML = `
+            <div class="onboarding-hero">
+              <h1>${armusT("studentDash.noUpcomingTitle", "Sırada ders yok")}</h1>
+              <p>${armusT("studentDash.noUpcomingText", "Öğrenmeye devam etmek için yeni bir ders planla.")}</p>
+              <a class="btn btn-light" href="teachers.html">${armusT("studentDash.planNewLessonCta", "Yeni Ders Planla →")}</a>
             </div>
-            <a class="btn btn-light" href="teachers.html">Öğretmen Bul →</a>
-          </div>
-        `;
-
-      } else {
-
-        heroSlot.innerHTML = `
-          <div class="onboarding-hero">
-            <h1>Sırada ders yok</h1>
-            <p>Öğrenmeye devam etmek için yeni bir ders planla.</p>
-            <a class="btn btn-light" href="teachers.html">Yeni Ders Planla →</a>
-          </div>
-        `;
+          `;
+        }
       }
+      renderHero();
 
       // ---- stats ----
 
-      document.getElementById("statsRow").innerHTML = `
-        <div class="stat"><strong>${stats.completed}</strong><span>TAMAMLANAN DERS</span></div>
-        <div class="stat"><strong>${stats.hours}</strong><span>ÖĞRENME SAATİ</span></div>
-        <div class="stat"><strong>${stats.teacherCount}</strong><span>FARKLI ÖĞRETMEN</span></div>
-        <div class="stat"><strong>${stats.streak}</strong><span>HAFTALIK SERİ</span></div>
-      `;
+      function renderStats() {
+        document.getElementById("statsRow").innerHTML = `
+          <div class="stat"><strong>${stats.completed}</strong><span>${armusT("studentDash.statCompleted", "TAMAMLANAN DERS")}</span></div>
+          <div class="stat"><strong>${stats.hours}</strong><span>${armusT("studentDash.statHours", "ÖĞRENME SAATİ")}</span></div>
+          <div class="stat"><strong>${stats.teacherCount}</strong><span>${armusT("studentDash.statTeachers", "FARKLI ÖĞRETMEN")}</span></div>
+          <div class="stat"><strong>${stats.streak}</strong><span>${armusT("studentDash.statStreak", "HAFTALIK SERİ")}</span></div>
+        `;
+      }
+      renderStats();
 
       // ---- weekly goal ----
 
@@ -1312,7 +1326,8 @@
 
       function renderGoal(currentGoal) {
         goalInput.value = currentGoal;
-        goalCaption.textContent = `${thisWeekCount} / ${currentGoal} ders bu hafta`;
+        goalCaption.textContent = armusT("studentDash.goalCaption", "{count} / {goal} ders bu hafta")
+          .replace("{count}", thisWeekCount).replace("{goal}", currentGoal);
         goalFill.style.width = Math.min(100, Math.round((thisWeekCount / currentGoal) * 100)) + "%";
       }
       renderGoal(goal);
@@ -1322,10 +1337,10 @@
         const status = document.getElementById("goalSaveStatus");
         const result = await armusUpdateOwnProfile({ weekly_lesson_goal: value });
         if (result === false) {
-          status.textContent = "Kaydedilemedi";
+          status.textContent = armusT("studentDash.goalSaveFailed", "Kaydedilemedi");
         } else {
           renderGoal(value);
-          status.textContent = "Kaydedildi ✓";
+          status.textContent = armusT("studentDash.goalSaved", "Kaydedildi ✓");
         }
         status.classList.add("visible");
         setTimeout(() => { status.textContent = ""; }, 2500);
@@ -1356,15 +1371,16 @@
 
         const recent = confidenceCheckins.slice(-10);
         const avg = Math.round((recent.reduce((sum, c) => sum + c.score, 0) / recent.length) * 10) / 10;
-        let trendText = `Son ${recent.length} ders sonrası ortalama güvenin: ${avg} / 5.`;
+        let trendText = armusT("studentDash.confidenceTrendText", "Son {n} ders sonrası ortalama güvenin: {avg} / 5.")
+          .replace("{n}", recent.length).replace("{avg}", avg);
 
         if (recent.length >= 4) {
           const half = Math.floor(recent.length / 2);
           const firstAvg = recent.slice(0, half).reduce((sum, c) => sum + c.score, 0) / half;
           const secondAvg = recent.slice(-half).reduce((sum, c) => sum + c.score, 0) / half;
-          if (secondAvg - firstAvg >= 0.4) trendText += " Güvenin yükseliyor 📈";
-          else if (firstAvg - secondAvg >= 0.4) trendText += " Son zamanlarda biraz düşüş var, bu gayet normal.";
-          else trendText += " İstikrarlı gidiyorsun.";
+          if (secondAvg - firstAvg >= 0.4) trendText += armusT("studentDash.confidenceRising", " Güvenin yükseliyor 📈");
+          else if (firstAvg - secondAvg >= 0.4) trendText += armusT("studentDash.confidenceDip", " Son zamanlarda biraz düşüş var, bu gayet normal.");
+          else trendText += armusT("studentDash.confidenceStable", " İstikrarlı gidiyorsun.");
         }
 
         confidenceCard.innerHTML = `
@@ -1383,7 +1399,7 @@
       if (pendingCheckinBooking) {
 
         confidenceCard.innerHTML = `
-          <div class="confidence-prompt-q">${armusShortDisplayName(pendingCheckinBooking.teacherName)} ile olan dersin nasıldı? Ne kadar rahat konuştun?</div>
+          <div class="confidence-prompt-q">${armusT("studentDash.confidencePromptQ", "{name} ile olan dersin nasıldı? Ne kadar rahat konuştun?").replace("{name}", armusShortDisplayName(pendingCheckinBooking.teacherName))}</div>
           <div class="confidence-scale">
             ${["😟", "🙁", "😐", "🙂", "😄"].map((emoji, i) => `<button type="button" class="confidence-btn" data-score="${i + 1}">${emoji}</button>`).join("")}
           </div>
@@ -1392,7 +1408,7 @@
         confidenceCard.querySelectorAll(".confidence-btn").forEach(btn => {
           btn.addEventListener("click", async () => {
             const score = Number(btn.dataset.score);
-            confidenceCard.innerHTML = `<div class="confidence-trend-text">Kaydediliyor...</div>`;
+            confidenceCard.innerHTML = `<div class="confidence-trend-text">${armusT("studentDash.saving", "Kaydediliyor...")}</div>`;
             const result = await armusAddConfidenceCheckin(session.id, pendingCheckinBooking.id, score);
             if (result) confidenceCheckins.push(result);
             renderConfidenceTrend();
@@ -1412,6 +1428,10 @@
 
       function flashcardCategories() {
         return [...new Set(vocabEntries.map(e => e.category || "Genel"))].sort();
+      }
+
+      function flashcardCategoryLabel(c) {
+        return c === "Genel" ? armusT("studentDash.flashcardCategoryGeneral", "Genel") : c;
       }
 
       function flashcardDeck() {
@@ -1434,16 +1454,16 @@
 
         document.getElementById("flashcardSection").innerHTML = `
           <div class="flashcard-section-inner">
-            <button type="button" class="flashcard-close-btn" id="flashcardCloseBtn" aria-label="Kapat">✕</button>
+            <button type="button" class="flashcard-close-btn" id="flashcardCloseBtn" aria-label="${armusT("studentDash.flashcardCloseAria", "Kapat")}">✕</button>
 
             ${vocabEntries.length > 0 ? `
               <div class="flashcard-chips">
-                <button type="button" class="flashcard-chip ${flashcardCategory === "Tümü" ? "active" : ""}" data-category="Tümü">Tümü</button>
-                ${categories.map(c => `<button type="button" class="flashcard-chip ${flashcardCategory === c ? "active" : ""}" data-category="${c}">${c}</button>`).join("")}
+                <button type="button" class="flashcard-chip ${flashcardCategory === "Tümü" ? "active" : ""}" data-category="Tümü">${armusT("studentDash.flashcardAll", "Tümü")}</button>
+                ${categories.map(c => `<button type="button" class="flashcard-chip ${flashcardCategory === c ? "active" : ""}" data-category="${c}">${flashcardCategoryLabel(c)}</button>`).join("")}
               </div>
               <div class="flashcard-filter-row">
-                <label><input type="checkbox" id="flashcardHideMasteredCheckbox" ${flashcardHideMastered ? "checked" : ""}> Sadece öğrenilmeyenler</label>
-                <span class="flashcard-progress"><strong>${masteredCount}</strong> / ${vocabEntries.length} öğrenildi</span>
+                <label><input type="checkbox" id="flashcardHideMasteredCheckbox" ${flashcardHideMastered ? "checked" : ""}> ${armusT("studentDash.flashcardHideMastered", "Sadece öğrenilmeyenler")}</label>
+                <span class="flashcard-progress"><strong>${masteredCount}</strong> ${armusT("studentDash.flashcardMasteredCount", "/ {total} öğrenildi").replace("{total}", vocabEntries.length)}</span>
               </div>
             ` : ""}
 
@@ -1452,7 +1472,7 @@
                 <button type="button" id="flashcardPrevBtn" ${deck.length < 2 ? "disabled" : ""}>‹</button>
                 <span class="flashcard-count">${flashcardIndex + 1} / ${deck.length}</span>
                 <button type="button" id="flashcardNextBtn" ${deck.length < 2 ? "disabled" : ""}>›</button>
-                <button type="button" class="flashcard-shuffle-btn" id="flashcardShuffleBtn" ${deck.length < 2 ? "disabled" : ""} title="Karıştır">🔀</button>
+                <button type="button" class="flashcard-shuffle-btn" id="flashcardShuffleBtn" ${deck.length < 2 ? "disabled" : ""} title="${armusT("studentDash.flashcardShuffleTitle", "Karıştır")}">🔀</button>
               </div>
             ` : ""}
 
@@ -1460,20 +1480,20 @@
               <div class="flashcard ${flashcardFlipped ? "flipped" : ""}" id="flashcardEl">
                 <div class="flashcard-face flashcard-front">
                   ${hasEntries ? `
-                    ${entry.mastered ? `<span class="flashcard-mastered-pill">✓ Öğrenildi</span>` : ""}
-                    <span class="flashcard-tag">${entry.category || "Genel"}</span>
-                    <span class="flashcard-label">Kelime</span>
+                    ${entry.mastered ? `<span class="flashcard-mastered-pill">${armusT("studentDash.flashcardMasteredPill", "✓ Öğrenildi")}</span>` : ""}
+                    <span class="flashcard-tag">${flashcardCategoryLabel(entry.category || "Genel")}</span>
+                    <span class="flashcard-label">${armusT("studentDash.flashcardWordLabel", "Kelime")}</span>
                     <div class="flashcard-word">${entry.term}</div>
-                    <span class="flashcard-hint">Çevirmek için karta tıkla</span>
+                    <span class="flashcard-hint">${armusT("studentDash.flashcardClickToFlip", "Çevirmek için karta tıkla")}</span>
                   ` : `
                     <div class="flashcard-empty">${vocabEntries.length === 0
-                      ? "Henüz kartın yok.<br>Aşağıdan ilk kelimeni ekle 👇"
-                      : "Bu filtreye uyan kart yok."}</div>
+                      ? armusT("studentDash.flashcardEmptyNoCards", "Henüz kartın yok.<br>Aşağıdan ilk kelimeni ekle 👇")
+                      : armusT("studentDash.flashcardEmptyFiltered", "Bu filtreye uyan kart yok.")}</div>
                   `}
                 </div>
                 <div class="flashcard-face flashcard-back">
                   ${hasEntries ? `
-                    <span class="flashcard-label">Anlamı</span>
+                    <span class="flashcard-label">${armusT("studentDash.flashcardMeaningLabel", "Anlamı")}</span>
                     <div class="flashcard-word">${entry.meaning}</div>
                   ` : ""}
                 </div>
@@ -1482,17 +1502,17 @@
 
             ${hasEntries ? `
               <div class="flashcard-actions">
-                <button type="button" class="flashcard-mastered-btn ${entry.mastered ? "on" : ""}" id="flashcardMasteredBtn">${entry.mastered ? "↺ Tekrar Öğreniyorum" : "✓ Öğrendim"}</button>
-                <button type="button" class="flashcard-delete-btn" id="flashcardDeleteBtn">🗑 Sil</button>
+                <button type="button" class="flashcard-mastered-btn ${entry.mastered ? "on" : ""}" id="flashcardMasteredBtn">${entry.mastered ? armusT("studentDash.flashcardRelearn", "↺ Tekrar Öğreniyorum") : armusT("studentDash.flashcardLearned", "✓ Öğrendim")}</button>
+                <button type="button" class="flashcard-delete-btn" id="flashcardDeleteBtn">${armusT("studentDash.flashcardDelete", "🗑 Sil")}</button>
               </div>
             ` : ""}
 
             <form class="flashcard-add-form" id="flashcardAddForm">
-              <input type="text" id="flashcardWordInput" placeholder="Kelime" required maxlength="80">
-              <input type="text" id="flashcardMeaningInput" placeholder="Anlamı" required maxlength="120">
-              <input type="text" id="flashcardCategoryInput" placeholder="Kategori (örn. Seyahat)" maxlength="30" list="flashcardCategoryList">
+              <input type="text" id="flashcardWordInput" placeholder="${armusT("studentDash.flashcardWordPlaceholder", "Kelime")}" required maxlength="80">
+              <input type="text" id="flashcardMeaningInput" placeholder="${armusT("studentDash.flashcardMeaningPlaceholder", "Anlamı")}" required maxlength="120">
+              <input type="text" id="flashcardCategoryInput" placeholder="${armusT("studentDash.flashcardCategoryPlaceholder", "Kategori (örn. Seyahat)")}" maxlength="30" list="flashcardCategoryList">
               <datalist id="flashcardCategoryList">${categories.map(c => `<option value="${c}">`).join("")}</datalist>
-              <button type="submit">Kart Oluştur</button>
+              <button type="submit">${armusT("studentDash.flashcardCreateBtn", "Kart Oluştur")}</button>
             </form>
           </div>
         `;
@@ -1554,7 +1574,7 @@
           });
 
           document.getElementById("flashcardDeleteBtn").addEventListener("click", async () => {
-            if (!confirm(`"${entry.term}" kartını silmek istediğine emin misin?`)) return;
+            if (!confirm(armusT("studentDash.flashcardDeleteConfirm", '"{term}" kartını silmek istediğine emin misin?').replace("{term}", entry.term))) return;
             const ok = await armusDeleteVocabEntry(entry.id);
             if (ok) {
               const idx = vocabEntries.findIndex(e => e.id === entry.id);
@@ -1622,62 +1642,71 @@
 
       // ---- badges ----
 
-      const earned = STUDENT_BADGES.filter(b => b.test(stats));
-      const badgeRow = document.getElementById("badgeRow");
-      badgeRow.innerHTML = earned.length
-        ? earned.map(b => `<div class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</div>`).join("")
-        : `<div class="badge-empty">İlk dersini tamamladığında burada rozetler görünmeye başlayacak.</div>`;
+      function renderBadges() {
+        const earned = studentBadges().filter(b => b.test(stats));
+        const badgeRow = document.getElementById("badgeRow");
+        badgeRow.innerHTML = earned.length
+          ? earned.map(b => `<div class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</div>`).join("")
+          : `<div class="badge-empty">${armusT("studentDash.badgeEmpty", "İlk dersini tamamladığında burada rozetler görünmeye başlayacak.")}</div>`;
+      }
+      renderBadges();
 
       // ---- upcoming lessons (condensed) ----
 
       const upcomingList = document.getElementById("upcomingList");
       const upcomingToShow = upcomingBookings.slice(0, 3);
 
-      if (upcomingToShow.length === 0) {
-        upcomingList.innerHTML = `<div class="empty-hint">Yaklaşan bir dersin yok.</div>`;
-      } else {
-        upcomingList.innerHTML = upcomingToShow.map(b => {
-          const teacher = teacherById.get(b.teacherId) || null;
-          const canJoin = armusCanJoinLessonNow(b);
-          return `
-            <div class="mini-lesson-row">
-              <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
-              <div>
-                <div class="mini-lesson-name">${armusShortDisplayName(b.teacherName)}</div>
-                <div class="mini-lesson-meta">${b.type === "trial" ? "Deneme Dersi" : "Ders"} · ₺${b.price}</div>
+      function renderUpcoming() {
+        if (upcomingToShow.length === 0) {
+          upcomingList.innerHTML = `<div class="empty-hint">${armusT("studentDash.noUpcoming", "Yaklaşan bir dersin yok.")}</div>`;
+        } else {
+          upcomingList.innerHTML = upcomingToShow.map(b => {
+            const teacher = teacherById.get(b.teacherId) || null;
+            const canJoin = armusCanJoinLessonNow(b);
+            return `
+              <div class="mini-lesson-row">
+                <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
+                <div>
+                  <div class="mini-lesson-name">${armusShortDisplayName(b.teacherName)}</div>
+                  <div class="mini-lesson-meta">${b.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")} · ₺${b.price}</div>
+                </div>
+                <div class="mini-lesson-when">
+                  <div class="mini-lesson-date">${b.dateLabel}</div>
+                  <div class="mini-lesson-time">${armusFormatTimeRange(b.time)}</div>
+                </div>
+                ${canJoin ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">${armusT("studentDash.joinShort", "Katıl")}</a>` : ""}
               </div>
-              <div class="mini-lesson-when">
-                <div class="mini-lesson-date">${b.dateLabel}</div>
-                <div class="mini-lesson-time">${armusFormatTimeRange(b.time)}</div>
-              </div>
-              ${canJoin ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">Katıl</a>` : ""}
-            </div>
-          `;
-        }).join("");
+            `;
+          }).join("");
+        }
       }
+      renderUpcoming();
 
       // ---- messages preview ----
 
       const msgList = document.getElementById("msgList");
       const convosToShow = conversations.slice(0, 3);
 
-      if (convosToShow.length === 0) {
-        msgList.innerHTML = `<div class="empty-hint">Henüz bir mesajlaşman yok.</div>`;
-      } else {
-        msgList.innerHTML = convosToShow.map(c => {
-          const snippet = c.lastMessage ? c.lastMessage.body : "Henüz mesaj yok";
-          return `
-            <a class="msg-row" href="mesajlar.html?teacher=${c.otherId}" style="display:flex;">
-              <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
-              <div>
-                <div class="msg-name">${c.otherName}</div>
-                <div class="msg-snippet">${snippet}</div>
-              </div>
-              ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
-            </a>
-          `;
-        }).join("");
+      function renderMessagesPreview() {
+        if (convosToShow.length === 0) {
+          msgList.innerHTML = `<div class="empty-hint">${armusT("studentDash.noConvos", "Henüz bir mesajlaşman yok.")}</div>`;
+        } else {
+          msgList.innerHTML = convosToShow.map(c => {
+            const snippet = c.lastMessage ? c.lastMessage.body : armusT("messages.noMessageYet", "Henüz mesaj yok");
+            return `
+              <a class="msg-row" href="mesajlar.html?teacher=${c.otherId}" style="display:flex;">
+                <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
+                <div>
+                  <div class="msg-name">${c.otherName}</div>
+                  <div class="msg-snippet">${snippet}</div>
+                </div>
+                ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
+              </a>
+            `;
+          }).join("");
+        }
       }
+      renderMessagesPreview();
 
       // ---- recommended teachers ----
 
@@ -1688,14 +1717,17 @@
       const notYetBooked = ranked.filter(t => !bookedTeacherIds.has(t.id));
       const recommended = (notYetBooked.length >= 3 ? notYetBooked : ranked).slice(0, 3);
 
-      document.getElementById("recGrid").innerHTML = recommended.map(t => `
-        <div class="rec-card">
-          <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
-          <div class="rec-name">${t.name}</div>
-          <div class="rec-meta">${t.rating ? "★ " + t.rating : "Yeni Öğretmen"} · ₺${t.price}</div>
-          <a class="rec-cta" href="teacher.html?id=${t.id}">Profili Gör</a>
-        </div>
-      `).join("");
+      function renderRecommended() {
+        document.getElementById("recGrid").innerHTML = recommended.map(t => `
+          <div class="rec-card">
+            <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
+            <div class="rec-name">${t.name}</div>
+            <div class="rec-meta">${t.rating ? "★ " + t.rating : armusT("studentDash.newTeacher", "Yeni Öğretmen")} · ₺${t.price}</div>
+            <a class="rec-cta" href="teacher.html?id=${t.id}">${armusT("studentDash.viewProfile", "Profili Gör")}</a>
+          </div>
+        `).join("");
+      }
+      renderRecommended();
 
       // ---- favorite teachers ----
 
@@ -1711,6 +1743,19 @@
           </a>
         `).join("");
       }
+
+      document.addEventListener("armus:langchange", () => {
+        renderGreetName();
+        renderHero();
+        renderStats();
+        renderGoal(Number(goalInput.value) || goal);
+        if (!pendingCheckinBooking) renderConfidenceTrend();
+        if (document.getElementById("flashcardSection").style.display !== "none") renderFlashcardSection();
+        renderBadges();
+        renderUpcoming();
+        renderMessagesPreview();
+        renderRecommended();
+      });
 
     })();
 
