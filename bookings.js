@@ -190,3 +190,42 @@ function armusAllTimeSlots() {
   }
   return slots;
 }
+
+function armusHashCode(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+// Every half-hour slot for one calendar date, each marked available or
+// not for this teacher - shared by booking.html's picker and the
+// calendar preview on teacher.html so they never disagree about which
+// times are actually open.
+//
+// dayOfWeek: 0 (Sunday) - 6 (Saturday), i.e. Date.prototype.getDay().
+function armusSlotsForDate(teacher, dateKey, dayOfWeek) {
+
+  const ALL_SLOTS = armusAllTimeSlots();
+
+  // the dashboard.html weekly timeline (a recurring day-of-week pattern,
+  // not tied to a specific date) wins when the teacher has set anything
+  // at all; otherwise fall back to their older weekly_availability
+  // pattern (set once during the apply-teacher.html signup wizard), and
+  // finally to a deterministic mock for demo teachers with neither.
+  if (teacher.availabilityDates && Object.keys(teacher.availabilityDates).length) {
+    const daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
+    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+  }
+
+  if (teacher.weeklyAvailability) {
+    const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
+    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
+  }
+
+  return ALL_SLOTS.map(time => {
+    const n = armusHashCode(teacher.id + dateKey + time);
+    return { time, available: n % 3 !== 0 };
+  });
+}

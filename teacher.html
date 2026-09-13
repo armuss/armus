@@ -192,6 +192,95 @@
       font-size: 11px;
     }
 
+    /* BOOKING CALENDAR PREVIEW (pick a slot right here, same picker as
+       booking.html - see armusSlotsForDate in bookings.js) */
+
+    .calendar-note {
+      color: var(--armus-muted);
+      font-size: 12.5px;
+      margin-bottom: 16px;
+    }
+
+    .date-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .date-pill {
+      flex-shrink: 0;
+      min-width: 60px;
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel);
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--armus-ink);
+    }
+
+    .date-pill .day-name {
+      color: var(--armus-faint);
+      font-size: 10px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .date-pill .day-num {
+      font-size: 15px;
+      font-weight: 700;
+      display: block;
+    }
+
+    .date-pill:hover {
+      border-color: var(--armus-gold-2);
+    }
+
+    .date-pill.selected {
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+      color: var(--armus-on-gold);
+    }
+
+    .date-pill.selected .day-name {
+      color: var(--armus-on-gold);
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .slot {
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel);
+      text-align: center;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: var(--armus-ink);
+    }
+
+    .slot:hover {
+      border-color: var(--armus-gold-2);
+    }
+
+    .slot.unavailable {
+      opacity: 0.35;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    .empty-hint {
+      color: var(--armus-muted);
+      font-size: 13px;
+    }
+
     /* INFO BLOCKS (experience, rating - Preply's icon+text rows) */
 
     .info-block {
@@ -624,6 +713,19 @@
           <div class="tags" id="headerTags"></div>
 
 
+          <!-- BOOKING CALENDAR PREVIEW - pick a slot right here; clicking
+               one takes the student straight to booking.html with that
+               date/time already selected, same picker/availability logic
+               (armusSlotsForDate) as the dedicated booking flow. -->
+
+          <section>
+            <h2>Deneme dersi için zaman seç</h2>
+            <p class="calendar-note">Saatler kendi saat dilimine göre gösteriliyor.</p>
+            <div class="date-row" id="teacherDateRow"></div>
+            <div class="slot-grid" id="teacherSlotGrid"></div>
+          </section>
+
+
           <!-- INFO BLOCKS (real numbers only - experience/lessons taught,
                and a rating-based badge; no fabricated "Top X%" or
                certificate claims ARMUS doesn't actually track) -->
@@ -857,6 +959,73 @@
         span.textContent = tag;
         headerTags.appendChild(span);
       });
+
+      // ---- booking calendar preview - pick a slot right here, then
+      // continue on booking.html with that date/time already chosen
+      // (same armusSlotsForDate availability logic as booking.html) ----
+
+      const teacherDateRow = document.getElementById("teacherDateRow");
+      const teacherSlotGrid = document.getElementById("teacherSlotGrid");
+      const CAL_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+
+      function calToDateKey(date) {
+        return date.toISOString().slice(0, 10);
+      }
+
+      function renderTeacherSlots(dateKey, dayOfWeek) {
+
+        teacherSlotGrid.innerHTML = "";
+
+        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek);
+
+        if (!slots.some(s => s.available)) {
+          teacherSlotGrid.innerHTML =
+            '<div class="empty-hint">Bu tarihte boş saat yok, başka bir gün dene.</div>';
+          return;
+        }
+
+        slots.forEach(slot => {
+
+          const div = document.createElement("div");
+          div.className = "slot" + (slot.available ? "" : " unavailable");
+          div.textContent = armusFormatTimeRange(slot.time);
+
+          if (slot.available) {
+            div.addEventListener("click", () => {
+              window.location.href =
+                `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial&date=${dateKey}&time=${slot.time}`;
+            });
+          }
+
+          teacherSlotGrid.appendChild(div);
+        });
+      }
+
+      const calToday = new Date();
+
+      for (let i = 0; i < 10; i++) {
+
+        const date = new Date(calToday);
+        date.setDate(calToday.getDate() + i);
+        const dateKey = calToDateKey(date);
+
+        const pill = document.createElement("div");
+        pill.className = "date-pill" + (i === 0 ? " selected" : "");
+        pill.innerHTML = `
+          <span class="day-name">${CAL_DAY_NAMES[date.getDay()]}</span>
+          <span class="day-num">${date.getDate()}</span>
+        `;
+
+        pill.addEventListener("click", () => {
+          document.querySelectorAll("#teacherDateRow .date-pill").forEach(p => p.classList.remove("selected"));
+          pill.classList.add("selected");
+          renderTeacherSlots(dateKey, date.getDay());
+        });
+
+        teacherDateRow.appendChild(pill);
+      }
+
+      renderTeacherSlots(calToDateKey(calToday), calToday.getDay());
 
       document.getElementById("priceValue").textContent =
         `₺${teacher.price}`;

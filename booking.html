@@ -645,6 +645,12 @@
     const teacherId = params.get("teacher");
     const bookingType = params.get("type") === "trial" ? "trial" : "lesson";
 
+    // came here from the calendar preview on teacher.html, which already
+    // picked a date/time - skip straight to that slot instead of making
+    // the student pick it again
+    const preselectedDate = params.get("date");
+    const preselectedTime = params.get("time");
+
     const bookingRoot = document.getElementById("bookingRoot");
     const notFound = document.getElementById("notFound");
     const loginGate = document.getElementById("loginGate");
@@ -663,7 +669,9 @@
 
       bookingRoot.style.display = "none";
 
-      const returnUrl = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=${bookingType}`;
+      const returnUrl = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=${bookingType}` +
+        (preselectedDate ? `&date=${encodeURIComponent(preselectedDate)}` : "") +
+        (preselectedTime ? `&time=${encodeURIComponent(preselectedTime)}` : "");
       document.getElementById("gateLoginLink").href =
         `login.html?next=${encodeURIComponent(returnUrl)}`;
       document.getElementById("gateRegisterLink").href =
@@ -698,20 +706,11 @@
 
       // ---- deterministic mock availability ----
 
-      function hashCode(str) {
-        let h = 0;
-        for (let i = 0; i < str.length; i++) {
-          h = (h * 31 + str.charCodeAt(i)) | 0;
-        }
-        return Math.abs(h);
-      }
-
       const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
       const MONTH_NAMES = [
         "Oca", "Şub", "Mar", "Nis", "May", "Haz",
         "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
       ];
-      const ALL_SLOTS = armusAllTimeSlots();
 
       // ---- returning from iyzico's checkout (payment-callback redirected
       // here) - show a receipt or a failure notice instead of the picker,
@@ -753,30 +752,6 @@
 
       function toDateKey(date) {
         return date.toISOString().slice(0, 10);
-      }
-
-      function slotsForDate(dateKey, dayOfWeek) {
-
-        // the dashboard.html weekly timeline (a recurring day-of-week
-        // pattern, not tied to a specific date) wins when the teacher
-        // has set anything at all; otherwise fall back to their older
-        // weekly_availability pattern (set once during the
-        // apply-teacher.html signup wizard), and finally to a
-        // deterministic mock for demo teachers with neither.
-        if (teacher.availabilityDates && Object.keys(teacher.availabilityDates).length) {
-          const daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
-          return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
-        }
-
-        if (teacher.weeklyAvailability) {
-          const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
-          return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) }));
-        }
-
-        return ALL_SLOTS.map(time => {
-          const n = hashCode(teacher.id + dateKey + time);
-          return { time, available: n % 3 !== 0 };
-        });
       }
 
       const dateRow = document.getElementById("dateRow");
@@ -828,7 +803,7 @@
         slotStep.style.display = "block";
         slotGrid.innerHTML = "";
 
-        const slots = slotsForDate(dateKey, dayOfWeek);
+        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek);
 
         if (!slots.some(s => s.available)) {
           slotGrid.innerHTML =
@@ -840,6 +815,7 @@
 
           const div = document.createElement("div");
           div.className = "slot" + (slot.available ? "" : " unavailable");
+          div.dataset.time = slot.time;
           div.textContent = armusFormatTimeRange(slot.time);
 
           if (slot.available) {
@@ -894,6 +870,17 @@
 
         confirmBox.style.display = "block";
         confirmBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      if (preselectedDate) {
+        const pill = dateRow.querySelector(`[data-date="${preselectedDate}"]`);
+        if (pill) {
+          pill.click();
+          if (preselectedTime) {
+            const slotEl = slotGrid.querySelector(`[data-time="${preselectedTime}"]:not(.unavailable)`);
+            if (slotEl) slotEl.click();
+          }
+        }
       }
 
       confirmBtn.addEventListener("click", async () => {
