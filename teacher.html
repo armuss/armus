@@ -65,13 +65,57 @@
       color: transparent;
     }
 
-    .back {
+    .nav-links {
+      display: flex;
+      gap: 30px;
       color: var(--armus-muted);
-      font-size: 13px;
+      font-size: 14px;
     }
 
-    .back:hover {
+    .nav-links a:hover {
       color: var(--armus-ink);
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+    }
+
+    .nav-greeting {
+      font-size: 13px;
+      color: var(--armus-muted);
+      margin-right: 4px;
+    }
+
+    .nav-greeting small {
+      color: var(--armus-faint);
+    }
+
+    @media (max-width: 800px) {
+      .nav-links {
+        display: none;
+      }
     }
 
     /* HERO MEDIA (video if the teacher has one, else a big photo) */
@@ -454,19 +498,25 @@
     .icon-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 9px;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .icon-row button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: transparent;
       border: 1px solid var(--armus-border);
-      border-radius: 10px;
+      border-radius: 12px;
       color: var(--armus-muted);
-      font-size: 16px;
-      line-height: 1;
       cursor: pointer;
-      padding: 11px 0;
+      padding: 16px 0;
+    }
+
+    .icon-row button svg {
+      width: 22px;
+      height: 22px;
     }
 
     .icon-row button:hover {
@@ -660,9 +710,16 @@
 
       <a href="index.html" class="logo">ARMUS</a>
 
-      <a href="teachers.html" class="back">
-        ← Öğretmenlere dön
-      </a>
+      <div class="nav-links">
+        <a href="teachers.html">Öğretmenler</a>
+        <a href="index.html#how">Nasıl Çalışır?</a>
+        <a href="hakkimizda.html">Hakkımızda</a>
+      </div>
+
+      <div class="nav-buttons" id="navAuthButtons">
+        <a class="btn" href="login.html">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html">Kayıt Ol</a>
+      </div>
 
     </div>
   </nav>
@@ -828,17 +885,23 @@
                 id="messageBtn"
                 style="display: none;"
                 aria-label="Mesaj gönder"
-                title="Mesaj gönder">💬</button>
+                title="Mesaj gönder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-4.8 7.6 8.5 8.5 0 0 1-8.7-.5L3 20l1.4-4.5a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5h.3a8.48 8.48 0 0 1 8 8v.3z"></path></svg>
+              </button>
               <button
                 type="button"
                 id="favBtn"
                 aria-label="Favorilere ekle"
-                title="Favorilere ekle">♡</button>
+                title="Favorilere ekle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+              </button>
               <button
                 type="button"
                 id="shareBtn"
                 aria-label="Profili paylaş"
-                title="Profili paylaş">↗</button>
+                title="Profili paylaş">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+              </button>
             </div>
 
             <button
@@ -1075,10 +1138,13 @@
       document.getElementById("cardLessons").textContent =
         teacher.completedLessons;
 
+      const HEART_OUTLINE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>';
+      const HEART_FILLED_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>';
+
       const favBtn = document.getElementById("favBtn");
       function renderFavBtn(active) {
         favBtn.classList.toggle("active", active);
-        favBtn.textContent = active ? "♥" : "♡";
+        favBtn.innerHTML = active ? HEART_FILLED_SVG : HEART_OUTLINE_SVG;
       }
       renderFavBtn(armusIsFavorite(teacher.id));
       favBtn.addEventListener("click", () => {
@@ -1087,6 +1153,8 @@
 
       // no native Web Share support on desktop Chrome/Firefox - falls back
       // to copying the profile link to the clipboard instead
+      const CHECK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
       const shareBtn = document.getElementById("shareBtn");
       shareBtn.addEventListener("click", async () => {
         if (navigator.share) {
@@ -1096,9 +1164,9 @@
         }
         try {
           await navigator.clipboard.writeText(window.location.href);
-          const original = shareBtn.textContent;
-          shareBtn.textContent = "✓";
-          setTimeout(() => { shareBtn.textContent = original; }, 1500);
+          const original = shareBtn.innerHTML;
+          shareBtn.innerHTML = CHECK_ICON_SVG;
+          setTimeout(() => { shareBtn.innerHTML = original; }, 1500);
         } catch (e) {}
       });
 
