@@ -201,83 +201,86 @@
       margin-bottom: 16px;
     }
 
-    .date-row {
+    .cal-nav {
       display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 6px;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
     }
 
-    .date-pill {
+    .cal-nav button {
+      width: 30px;
+      height: 30px;
       flex-shrink: 0;
-      min-width: 60px;
-      padding: 10px 8px;
-      border-radius: 14px;
+      border-radius: 50%;
       border: 1px solid var(--armus-border);
       background: var(--armus-panel);
-      text-align: center;
-      cursor: pointer;
-      font-size: 12px;
       color: var(--armus-ink);
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
     }
 
-    .date-pill .day-name {
-      color: var(--armus-faint);
-      font-size: 10px;
-      margin-bottom: 6px;
-      display: block;
+    .cal-nav button:disabled {
+      opacity: .35;
+      cursor: default;
     }
 
-    .date-pill .day-num {
+    .cal-range-label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .cal-week {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(78px, 1fr));
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .cal-day-header {
+      text-align: center;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid var(--armus-border);
+    }
+
+    .cal-day-name {
+      font-size: 11px;
+      color: var(--armus-muted);
+    }
+
+    .cal-day-num {
       font-size: 15px;
       font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .cal-slot-btn {
       display: block;
-    }
-
-    .date-pill:hover {
-      border-color: var(--armus-gold-2);
-    }
-
-    .date-pill.selected {
-      background: var(--armus-gold-gradient);
-      border-color: transparent;
-      color: var(--armus-on-gold);
-    }
-
-    .date-pill.selected .day-name {
-      color: var(--armus-on-gold);
-    }
-
-    .slot-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .slot {
-      padding: 10px 6px;
-      border-radius: 12px;
-      border: 1px solid var(--armus-border);
-      background: var(--armus-panel);
+      width: 100%;
       text-align: center;
-      cursor: pointer;
-      font-size: 12.5px;
+      padding: 7px 4px;
+      margin-bottom: 8px;
+      border: none;
+      border-radius: 8px;
+      background: none;
       color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
-    .slot:hover {
-      border-color: var(--armus-gold-2);
+    .cal-slot-btn:hover {
+      color: var(--armus-gold-text);
+      background: var(--armus-panel-2);
     }
 
-    .slot.unavailable {
-      opacity: 0.35;
-      cursor: not-allowed;
-      text-decoration: line-through;
-    }
-
-    .empty-hint {
-      color: var(--armus-muted);
+    .cal-day-empty {
+      text-align: center;
+      color: var(--armus-faint);
       font-size: 13px;
     }
 
@@ -721,8 +724,12 @@
           <section>
             <h2>Deneme dersi için zaman seç</h2>
             <p class="calendar-note">Saatler kendi saat dilimine göre gösteriliyor.</p>
-            <div class="date-row" id="teacherDateRow"></div>
-            <div class="slot-grid" id="teacherSlotGrid"></div>
+            <div class="cal-nav">
+              <button type="button" id="calPrevBtn" aria-label="Önceki hafta">‹</button>
+              <span class="cal-range-label" id="calRangeLabel"></span>
+              <button type="button" id="calNextBtn" aria-label="Sonraki hafta">›</button>
+            </div>
+            <div class="cal-week" id="calWeek"></div>
           </section>
 
 
@@ -962,70 +969,94 @@
 
       // ---- booking calendar preview - pick a slot right here, then
       // continue on booking.html with that date/time already chosen
-      // (same armusSlotsForDate availability logic as booking.html) ----
+      // (same armusSlotsForDate availability logic as booking.html).
+      // Shows a week at a time (like booking.html's own picker, just laid
+      // out as 7 columns instead of one day at a time) with prev/next
+      // buttons to page further out - calWeekOffset 0 is the week
+      // starting today, 1 is the week after that, and so on; it never
+      // goes negative, there's nothing to book in the past.
 
-      const teacherDateRow = document.getElementById("teacherDateRow");
-      const teacherSlotGrid = document.getElementById("teacherSlotGrid");
+      const calWeek = document.getElementById("calWeek");
+      const calRangeLabel = document.getElementById("calRangeLabel");
+      const calPrevBtn = document.getElementById("calPrevBtn");
+      const calNextBtn = document.getElementById("calNextBtn");
       const CAL_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
       function calToDateKey(date) {
         return date.toISOString().slice(0, 10);
       }
 
-      function renderTeacherSlots(dateKey, dayOfWeek) {
+      const calToday = new Date();
+      let calWeekOffset = 0;
 
-        teacherSlotGrid.innerHTML = "";
+      function renderCalWeek() {
 
-        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek);
+        calWeek.innerHTML = "";
 
-        if (!slots.some(s => s.available)) {
-          teacherSlotGrid.innerHTML =
-            '<div class="empty-hint">Bu tarihte boş saat yok, başka bir gün dene.</div>';
-          return;
+        const start = new Date(calToday);
+        start.setDate(calToday.getDate() + calWeekOffset * 7);
+
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          days.push(d);
         }
 
-        slots.forEach(slot => {
+        calRangeLabel.textContent =
+          `${days[0].getDate()} ${ARMUS_MONTH_NAMES[days[0].getMonth()]} – ${days[6].getDate()} ${ARMUS_MONTH_NAMES[days[6].getMonth()]}`;
+        calPrevBtn.disabled = calWeekOffset === 0;
 
-          const div = document.createElement("div");
-          div.className = "slot" + (slot.available ? "" : " unavailable");
-          div.textContent = armusFormatTimeRange(slot.time);
+        days.forEach(date => {
 
-          if (slot.available) {
-            div.addEventListener("click", () => {
-              window.location.href =
-                `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial&date=${dateKey}&time=${slot.time}`;
+          const dateKey = calToDateKey(date);
+          const slots = armusSlotsForDate(teacher, dateKey, date.getDay()).filter(s => s.available);
+
+          const col = document.createElement("div");
+
+          const header = document.createElement("div");
+          header.className = "cal-day-header";
+          header.innerHTML = `
+            <div class="cal-day-name">${CAL_DAY_NAMES[date.getDay()]}</div>
+            <div class="cal-day-num">${date.getDate()}</div>
+          `;
+          col.appendChild(header);
+
+          if (slots.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "cal-day-empty";
+            empty.textContent = "—";
+            col.appendChild(empty);
+          } else {
+            slots.forEach(slot => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "cal-slot-btn";
+              btn.textContent = slot.time;
+              btn.addEventListener("click", () => {
+                window.location.href =
+                  `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial&date=${dateKey}&time=${slot.time}`;
+              });
+              col.appendChild(btn);
             });
           }
 
-          teacherSlotGrid.appendChild(div);
+          calWeek.appendChild(col);
         });
       }
 
-      const calToday = new Date();
+      calPrevBtn.addEventListener("click", () => {
+        if (calWeekOffset === 0) return;
+        calWeekOffset--;
+        renderCalWeek();
+      });
 
-      for (let i = 0; i < 10; i++) {
+      calNextBtn.addEventListener("click", () => {
+        calWeekOffset++;
+        renderCalWeek();
+      });
 
-        const date = new Date(calToday);
-        date.setDate(calToday.getDate() + i);
-        const dateKey = calToDateKey(date);
-
-        const pill = document.createElement("div");
-        pill.className = "date-pill" + (i === 0 ? " selected" : "");
-        pill.innerHTML = `
-          <span class="day-name">${CAL_DAY_NAMES[date.getDay()]}</span>
-          <span class="day-num">${date.getDate()}</span>
-        `;
-
-        pill.addEventListener("click", () => {
-          document.querySelectorAll("#teacherDateRow .date-pill").forEach(p => p.classList.remove("selected"));
-          pill.classList.add("selected");
-          renderTeacherSlots(dateKey, date.getDay());
-        });
-
-        teacherDateRow.appendChild(pill);
-      }
-
-      renderTeacherSlots(calToDateKey(calToday), calToday.getDay());
+      renderCalWeek();
 
       document.getElementById("priceValue").textContent =
         `₺${teacher.price}`;
