@@ -103,10 +103,57 @@
       color: var(--armus-muted);
     }
 
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
     @media (max-width: 560px) {
       .nav-greeting { display: none; }
       .nav-buttons { gap: 6px; }
       .nav-buttons .btn { padding: 9px 12px; font-size: 12px; }
+      .nav-utility { gap: 6px; }
+      .help-btn { display: none; }
       .logo { font-size: 24px; }
     }
 
@@ -986,17 +1033,23 @@
   <nav>
     <div class="nav-inner">
       <span class="logo">ARMUS</span>
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
+      </div>
       <div class="nav-buttons" id="navAuthButtons"></div>
     </div>
   </nav>
 
   <div class="container">
     <div class="gate" id="gate">
-      <h1>Panelini görmek için giriş yap</h1>
-      <p>Derslerini, ilerlemeni ve önerileri görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <h1 data-i18n="studentDash.gateTitle">Panelini görmek için giriş yap</h1>
+      <p data-i18n="studentDash.gateText">Derslerini, ilerlemeni ve önerileri görebilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=student-dashboard.html">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=student-dashboard.html">Kayıt Ol</a>
+        <a class="btn" href="login.html?next=student-dashboard.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=student-dashboard.html" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -1007,7 +1060,7 @@
       <div class="avatar" id="greetAvatar"></div>
       <div>
         <div class="greet-name" id="greetName"></div>
-        <div class="greet-sub" id="greetSub">Bugün İngilizce öğrenmeye devam etmeye ne dersin?</div>
+        <div class="greet-sub" id="greetSub" data-i18n="studentDash.greetSub">Bugün İngilizce öğrenmeye devam etmeye ne dersin?</div>
       </div>
     </div>
 
@@ -1018,12 +1071,12 @@
     <div class="goal-box">
       <div class="goal-box-top">
         <div>
-          <strong id="goalTitle">Bu Haftaki Hedefin</strong><br>
+          <strong id="goalTitle" data-i18n="studentDash.goalTitle">Bu Haftaki Hedefin</strong><br>
           <span id="goalCaption">0 / 0 ders</span>
         </div>
         <div class="goal-inputs">
           <input type="number" id="goalInput" min="1" max="30" />
-          <button id="goalSaveBtn">Kaydet</button>
+          <button id="goalSaveBtn" data-i18n="studentDash.save">Kaydet</button>
           <span class="save-status" id="goalSaveStatus" style="color:var(--armus-gold-text);font-size:12px;"></span>
         </div>
       </div>
@@ -1031,23 +1084,23 @@
     </div>
 
     <div id="confidenceSection">
-      <h2>Konuşma Güvenin</h2>
+      <h2 data-i18n="studentDash.confidenceTitle">Konuşma Güvenin</h2>
       <div class="confidence-card" id="confidenceCard"></div>
     </div>
 
-    <button type="button" class="flashcard-toggle-btn" id="flashcardToggleBtn">📇 Flaş Kart</button>
+    <button type="button" class="flashcard-toggle-btn" id="flashcardToggleBtn" data-i18n="studentDash.flashcards">📇 Flaş Kart</button>
     <div class="flashcard-section" id="flashcardSection" style="display:none;"></div>
 
-    <h2>Rozetlerin</h2>
+    <h2 data-i18n="studentDash.badges">Rozetlerin</h2>
     <div class="badge-row" id="badgeRow"></div>
 
-    <h2>Yaklaşan Dersler <a class="section-link" href="my-lessons.html">Tümünü Gör →</a></h2>
+    <h2><span data-i18n="studentDash.upcoming">Yaklaşan Dersler</span> <a class="section-link" href="my-lessons.html" data-i18n="studentDash.seeAll">Tümünü Gör →</a></h2>
     <div id="upcomingList"></div>
 
-    <h2>Mesajlar <a class="section-link" href="mesajlar.html">Tüm Mesajlar →</a></h2>
+    <h2><span data-i18n="nav.messages">Mesajlar</span> <a class="section-link" href="mesajlar.html" data-i18n="studentDash.allMessages">Tüm Mesajlar →</a></h2>
     <div id="msgList"></div>
 
-    <h2>Senin İçin Önerilenler</h2>
+    <h2 data-i18n="studentDash.recommended">Senin İçin Önerilenler</h2>
     <div class="rec-grid" id="recGrid"></div>
 
     <div id="favSection" style="display:none;">
@@ -1057,6 +1110,7 @@
 
   </main>
 
+  <script src="i18n.js"></script>
   <script src="teachers-data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>

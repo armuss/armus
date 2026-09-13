@@ -381,6 +381,22 @@ const ARMUS_I18N_EN = {
   "teacherDash.today": "Today",
   "teacherDash.statLessons": "Completed lessons",
 
+  // student-dashboard.html - sidebar/top-level labels only; the stats
+  // row, confidence card, flashcards, lesson list, recommendations etc.
+  // are all built from JS template literals and stay Turkish for now
+  "studentDash.gateTitle": "Log in to see your dashboard",
+  "studentDash.gateText": "You need an account before you can see your lessons, progress and recommendations.",
+  "studentDash.greetSub": "How about continuing to learn English today?",
+  "studentDash.goalTitle": "Your Goal This Week",
+  "studentDash.save": "Save",
+  "studentDash.confidenceTitle": "Your Speaking Confidence",
+  "studentDash.flashcards": "📇 Flashcards",
+  "studentDash.badges": "Your Badges",
+  "studentDash.upcoming": "Upcoming Lessons",
+  "studentDash.seeAll": "See All →",
+  "studentDash.allMessages": "All Messages →",
+  "studentDash.recommended": "Recommended For You",
+
   // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",
