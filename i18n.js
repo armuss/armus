@@ -850,6 +850,14 @@ const ARMUS_I18N_EN = {
   "admin.flagCommissionDesc": "The section showing commission tiers.",
   "admin.flagTestimonialsLabel": "Student testimonials",
   "admin.flagTestimonialsDesc": "The \"What our students say\" section.",
+  "admin.paletteBooking": "Booking",
+  "admin.paletteDispute": "Dispute",
+  "admin.paletteTestimonial": "Testimonial",
+  "admin.paletteNoResults": "No results.",
+  "admin.gateLoginTitle": "Login required",
+  "admin.gateLoginText": "You need to log in with an admin account to access this panel.",
+  "admin.gateNoPermTitle": "No permission",
+  "admin.gateNoPermText": "This account doesn't have admin permission.",
 
   // teacher.html (profile page) - calendar expand button
   "teacherProfile.viewFullSchedule": "View full schedule",

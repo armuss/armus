@@ -2818,7 +2818,7 @@
 
       armusAdminProfiles.forEach(p => {
         items.push({
-          type: p.role === "teacher" ? "Öğretmen" : "Öğrenci",
+          type: p.role === "teacher" ? armusT("admin.roleTeacher", "öğretmen") : armusT("admin.roleStudent", "öğrenci"),
           label: p.name,
           sub: p.email,
           panel: p.role === "teacher" ? "teachers" : "students",
@@ -2827,7 +2827,7 @@
       });
       armusAdminBookings.forEach(b => {
         items.push({
-          type: "Rezervasyon",
+          type: armusT("admin.paletteBooking", "Rezervasyon"),
           label: `${b.studentName} → ${b.teacherName}`,
           sub: `${b.dateLabel} · ${b.time}`,
           panel: "bookings",
@@ -2836,7 +2836,7 @@
       });
       armusAdminDisputes.forEach(d => {
         items.push({
-          type: "Anlaşmazlık",
+          type: armusT("admin.paletteDispute", "Anlaşmazlık"),
           label: d.subject,
           sub: d.reporter_name,
           panel: "disputes",
@@ -2845,7 +2845,7 @@
       });
       armusAdminTestimonials.forEach(t => {
         items.push({
-          type: "Yorum",
+          type: armusT("admin.paletteTestimonial", "Yorum"),
           label: t.name,
           sub: (t.quote || "").slice(0, 40),
           panel: "testimonials",
@@ -2881,7 +2881,7 @@
 
       const container = document.getElementById("paletteResults");
       if (!armusPaletteResults.length) {
-        container.innerHTML = `<div class="palette-empty">Sonuç yok.</div>`;
+        container.innerHTML = `<div class="palette-empty">${armusT("admin.paletteNoResults", "Sonuç yok.")}</div>`;
         return;
       }
       container.innerHTML = armusPaletteResults.map((item, i) => `
@@ -3064,18 +3064,24 @@
     document.getElementById("exportBookingsBtn").addEventListener("click", () => {
       const rows = armusAdminBookings
         .filter(b => matchesSearch(b.studentName, armusAdminSearch.bookings) || matchesSearch(b.teacherName, armusAdminSearch.bookings))
-        .map(b => [b.studentName, b.teacherName, b.type === "trial" ? "Deneme Dersi" : "Ders", b.dateLabel, b.time, b.price]);
-      armusDownloadCsv("rezervasyonlar.csv", ["Öğrenci", "Öğretmen", "Tür", "Tarih", "Saat", "Ücret"], rows);
+        .map(b => [b.studentName, b.teacherName, b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders"), b.dateLabel, b.time, b.price]);
+      armusDownloadCsv("rezervasyonlar.csv", [
+        armusT("admin.colStudent", "Öğrenci"), armusT("admin.colTeacher", "Öğretmen"), armusT("admin.colType", "Tür"),
+        armusT("admin.colDate", "Tarih"), armusT("admin.colTime", "Saat"), armusT("admin.colPrice", "Ücret"),
+      ], rows);
     });
 
     document.getElementById("exportStudentsBtn").addEventListener("click", () => {
       const students = armusAdminProfiles.filter(p => p.role === "student")
         .filter(s => matchesSearch(s.name, armusAdminSearch.students) || matchesSearch(s.email, armusAdminSearch.students));
       const rows = students.map(s => [
-        s.name, s.email, new Date(s.created_at).toLocaleDateString("tr-TR"),
+        s.name, s.email, new Date(s.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR"),
         armusAdminBookings.filter(b => b.studentId === s.id).length,
       ]);
-      armusDownloadCsv("ogrenciler.csv", ["Ad Soyad", "E-posta", "Kayıt tarihi", "Rezervasyon sayısı"], rows);
+      armusDownloadCsv("ogrenciler.csv", [
+        armusT("admin.colFullName", "Ad Soyad"), armusT("admin.colEmail", "E-posta"),
+        armusT("admin.colJoinDate", "Kayıt tarihi"), armusT("admin.colBookingCount", "Rezervasyon sayısı"),
+      ], rows);
     });
 
     async function loadAll() {
@@ -3109,12 +3115,12 @@
       const session = await armusGetSession();
 
       if (!session) {
-        showGate("Giriş gerekiyor", "Bu panele erişmek için admin hesabınla giriş yapmalısın.");
+        showGate(armusT("admin.gateLoginTitle", "Giriş gerekiyor"), armusT("admin.gateLoginText", "Bu panele erişmek için admin hesabınla giriş yapmalısın."));
         return;
       }
 
       if (!session.is_admin) {
-        showGate("Yetkin yok", "Bu hesabın admin yetkisi yok.");
+        showGate(armusT("admin.gateNoPermTitle", "Yetkin yok"), armusT("admin.gateNoPermText", "Bu hesabın admin yetkisi yok."));
         return;
       }
 
@@ -3126,6 +3132,12 @@
       await loadAll();
 
     })();
+
+    document.addEventListener("armus:langchange", () => {
+      renderAllFromState();
+      renderFlagsPanel();
+      updateTestimonialPreview();
+    });
 
   </script>
 
