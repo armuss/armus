@@ -796,11 +796,14 @@
         const paidTime = params.get("time");
 
         document.getElementById("successTeacher").textContent = armusShortDisplayName(teacher.name);
-        if (paidDate) {
+        if (paidDate && paidTime) {
+          // shown in the viewer's own current local time, not the
+          // teacher's - see armusFormatLessonWhen (migration_37.sql)
+          const when = armusFormatLessonWhen({ date: paidDate, time: paidTime, teacherTimezone: teacher.timezone });
+          document.getElementById("successDate").textContent = when.dateLabel;
+          document.getElementById("successTime").textContent = when.timeRange;
+        } else if (paidDate) {
           document.getElementById("successDate").textContent = armusFormatDateLabel(paidDate);
-        }
-        if (paidTime) {
-          document.getElementById("successTime").textContent = armusFormatTimeRange(paidTime);
         }
 
         bookingRoot.style.display = "none";
@@ -820,6 +823,12 @@
         paymentNotice.textContent = armusT(
           "booking.paymentError",
           "Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle ilgileneceğiz."
+        );
+        paymentNotice.style.display = "block";
+      } else if (paymentStatus === "slot_taken") {
+        paymentNotice.textContent = armusT(
+          "booking.paymentSlotTaken",
+          "Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi - aşağıdan başka bir saat seçebilirsin."
         );
         paymentNotice.style.display = "block";
       }
@@ -923,12 +932,18 @@
       // this booking fully if it's tied to this same teacher, or if it's
       // any credit at all and this is a trial lesson - see migration_28.sql
       // and create-payment, which re-checks this server-side regardless of
-      // what's computed here.
-      const { data: availableCredits } = await armusSupabase
-        .from("lesson_credits")
-        .select("*")
-        .eq("student_id", session.id)
-        .eq("status", "available");
+      // what's computed here. Falls back to no credits (not a stuck page)
+      // if this fails - worst case the student just pays full price and
+      // create-payment's own re-check still applies any real credit.
+      let availableCredits = [];
+      try {
+        const result = await armusSupabase
+          .from("lesson_credits")
+          .select("*")
+          .eq("student_id", session.id)
+          .eq("status", "available");
+        availableCredits = result.data || [];
+      } catch (err) {}
 
       const creditApplies = !!(availableCredits && availableCredits.length > 0 && (
         availableCredits.some((c) => c.teacher_id === teacher.id) ||

@@ -24,10 +24,49 @@ const MONTH_NAMES = [
   "Oca", "Şub", "Mar", "Nis", "May", "Haz",
   "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
 ];
+const EN_WEEKDAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function formatDateTimeLabel(dateKey: string, time: string) {
-  const d = new Date(`${dateKey}T00:00:00`);
-  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${DAY_NAMES[d.getDay()]}, ${time}`;
+// lesson_date/lesson_time are plain wall-clock strings with no zone of
+// their own - teacherTimezone (bookings.teacher_timezone, migration_37.sql)
+// says which IANA zone they're wall-clock time IN. This turns them into
+// the real UTC instant, correctly handling DST for any zone - the
+// standard "double conversion" trick: format a UTC guess back in the
+// target zone, see how far off the wall-clock reading is, and shift by
+// that difference.
+function zonedTimeToUtc(dateKey: string, time: string, teacherTimezone: string): Date {
+  const guess = new Date(`${dateKey}T${time}:00Z`);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: teacherTimezone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(guess).map((p) => [p.type, p.value]),
+  );
+  const hour = parts.hour === "24" ? 0 : Number(parts.hour);
+  const asIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    hour, Number(parts.minute), Number(parts.second),
+  );
+  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+}
+
+// The lesson's real UTC instant, formatted back out in ONE SPECIFIC
+// recipient's own timezone (profiles.timezone) - a student in Istanbul
+// and a teacher travelling abroad can each get a correct "starts soon"
+// email in their own local time from the same booking.
+function formatDateTimeLabel(lessonInstant: Date, recipientTimezone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: recipientTimezone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", weekday: "short",
+    }).formatToParts(lessonInstant).map((p) => [p.type, p.value]),
+  );
+  const dayIndex = EN_WEEKDAY_ORDER.indexOf(parts.weekday);
+  const hour = parts.hour === "24" ? "00" : parts.hour;
+  return `${Number(parts.day)} ${MONTH_NAMES[Number(parts.month) - 1]} ${DAY_NAMES[dayIndex] ?? ""}, ${hour}:${parts.minute}`;
 }
 
 function isUuid(value: string) {
@@ -85,18 +124,19 @@ Deno.serve(async (req) => {
     // this isn't an error
     if (!booking) return new Response("skip", { status: 200 });
 
-    const whenLabel = formatDateTimeLabel(booking.lesson_date, booking.lesson_time);
+    const lessonInstant = zonedTimeToUtc(booking.lesson_date, booking.lesson_time, booking.teacher_timezone);
     const joinUrl = `${SITE_URL}/class.html?booking=${booking.id}`;
     const subject = "Dersin yaklaşıyor - ARMUS";
 
     const { data: studentProfile } = await supabaseAdmin
       .from("profiles")
-      .select("email, name")
+      .select("email, name, timezone")
       .eq("id", booking.student_id)
       .maybeSingle();
 
     if (studentProfile?.email) {
-      await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, booking.teacher_name, whenLabel, joinUrl));
+      const studentWhenLabel = formatDateTimeLabel(lessonInstant, studentProfile.timezone);
+      await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, booking.teacher_name, studentWhenLabel, joinUrl));
     }
 
     // teacher_id can be a demo teacher (teachers-data.js, not a real
@@ -104,12 +144,13 @@ Deno.serve(async (req) => {
     if (isUuid(booking.teacher_id)) {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
-        .select("email, name")
+        .select("email, name, timezone")
         .eq("id", booking.teacher_id)
         .maybeSingle();
 
       if (teacherProfile?.email) {
-        await sendEmail(teacherProfile.email, subject, reminderEmailHtml(teacherProfile.name, booking.student_name, whenLabel, joinUrl));
+        const teacherWhenLabel = formatDateTimeLabel(lessonInstant, teacherProfile.timezone);
+        await sendEmail(teacherProfile.email, subject, reminderEmailHtml(teacherProfile.name, booking.student_name, teacherWhenLabel, joinUrl));
       }
     }
 

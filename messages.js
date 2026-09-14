@@ -209,8 +209,11 @@ function armusMessageViolatesContactPolicy(text) {
   return keywords.some(kw => lower.includes(kw));
 }
 
-// Whether the current user already has a booking with otherId - once
-// they do, the contact-sharing restriction lifts (see migration_16.sql).
+// Whether the current user already has a confirmed (non-cancelled)
+// booking with otherId - once they do, the contact-sharing restriction
+// lifts (see migration_16.sql/migration_36.sql). This is just the
+// friendlier first line (an inline reason instead of a generic insert
+// failure) - the DB trigger enforces the real, unbypassable check.
 async function armusHasBookingWithOtherParty(otherId) {
 
   const session = await armusGetSession();
@@ -224,6 +227,7 @@ async function armusHasBookingWithOtherParty(otherId) {
     .select("id")
     .eq("student_id", studentId)
     .eq("teacher_id", teacherId)
+    .eq("status", "confirmed")
     .limit(1);
 
   if (error) return false;

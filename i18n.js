@@ -349,6 +349,7 @@ const ARMUS_I18N_EN = {
   "booking.confirmBtnRegular": "Proceed to Payment",
   "booking.paymentFailed": "Payment wasn't completed, or was cancelled. No booking was created - you can try again if you'd like.",
   "booking.paymentError": "Your payment went through, but something went wrong creating the booking. Please contact us and we'll sort out your payment.",
+  "booking.paymentSlotTaken": "Another student took this time slot while you were completing payment. Your payment was converted into a lesson credit - you can pick a different time below.",
 
   // my-lessons.html (top-level shell only - individual lesson cards,
   // review/dispute forms stay Turkish for now, see note in the code)

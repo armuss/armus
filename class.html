@@ -486,14 +486,17 @@
 
       const { start, end, joinsFrom, joinsUntil } = armusLessonWindow(booking);
       const now = new Date();
+      // shown in the viewer's own current local time, not the teacher's
+      // - see armusFormatLessonWhen (migration_37.sql)
+      const when = armusFormatLessonWhen(booking);
 
       if (now < joinsFrom) {
         const minutesUntil = Math.ceil((joinsFrom - now) / 60000);
         document.getElementById("minutesUntil").textContent = minutesUntil;
         const tooEarlyName = isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName;
         document.getElementById("tooEarlyMeta").innerHTML = (typeof armusGetLang === "function" && armusGetLang() === "en")
-          ? `${armusT("class.tooEarlyMetaWith", "with")} <strong>${tooEarlyName}</strong> · ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`
-          : `<strong>${tooEarlyName}</strong> ile ${booking.dateLabel}, ${armusFormatTimeRange(booking.time)}`;
+          ? `${armusT("class.tooEarlyMetaWith", "with")} <strong>${tooEarlyName}</strong> · ${when.dateLabel}, ${when.timeRange}`
+          : `<strong>${tooEarlyName}</strong> ile ${when.dateLabel}, ${when.timeRange}`;
         tooEarly.style.display = "flex";
         return;
       }
@@ -505,8 +508,8 @@
 
       const lessonWithName = isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName;
       document.getElementById("lessonWith").textContent = (typeof armusGetLang === "function" && armusGetLang() === "en")
-        ? `${armusT("class.lessonWith", "Lesson with")} ${lessonWithName} · ${armusFormatTimeRange(booking.time)}`
-        : `${lessonWithName} ile ders · ${armusFormatTimeRange(booking.time)}`;
+        ? `${armusT("class.lessonWith", "Lesson with")} ${lessonWithName} · ${when.timeRange}`
+        : `${lessonWithName} ile ders · ${when.timeRange}`;
 
       room.style.display = "flex";
 

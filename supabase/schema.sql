@@ -77,6 +77,13 @@ alter table bookings add column if not exists cancelled_at timestamptz;
 alter table bookings add column if not exists cancelled_by text check (cancelled_by in ('student', 'teacher', 'admin'));
 alter table bookings add column if not exists refunded boolean not null default false;
 
+-- stops two different bookings ever existing for the same teacher at
+-- the same date+time - partial so a cancelled row at an old slot never
+-- blocks a later (re-)booking of that same slot (see migration_35.sql)
+create unique index if not exists bookings_teacher_slot_unique
+  on bookings (teacher_id, lesson_date, lesson_time)
+  where status <> 'cancelled';
+
 -- === PENDING PAYMENTS ============================================
 -- Sits in front of "bookings": create-payment (Edge Function) writes a
 -- row here and sends the student to iyzico's hosted checkout; only
@@ -295,7 +302,13 @@ create policy "profiles_select_admin_all"
   using (public.is_admin());
 
 -- once approved, a teacher can no longer write the "live" fields
--- directly - only pending_changes, which an admin must approve
+-- directly - only pending_changes, which an admin must approve. Also
+-- blocks a non-admin from ever writing is_admin, or moving status
+-- anywhere but 'pending' (self-service apply/re-apply) themselves -
+-- profiles_update_own_or_admin otherwise lets a user update any column
+-- on their own row, which without this would let anyone grant
+-- themselves admin access or self-approve a teacher application
+-- (see migration_34.sql).
 create or replace function public.enforce_teacher_profile_lock()
 returns trigger
 language plpgsql
@@ -305,6 +318,14 @@ as $$
 begin
   if public.is_admin() then
     return new;
+  end if;
+
+  if new.is_admin is distinct from old.is_admin then
+    raise exception 'admin_lock: is_admin can only be changed by an admin';
+  end if;
+
+  if new.status is distinct from old.status and new.status is distinct from 'pending' then
+    raise exception 'status_lock: only an admin can approve or reject an application';
   end if;
 
   if old.status = 'approved' and (
@@ -487,6 +508,8 @@ create policy "profiles_select_conversation_partner"
 -- blocks off-platform contact sharing (phone numbers, email addresses,
 -- named outside messaging apps) in chat until the two of them actually
 -- have a booking together - see migration_16.sql for the full reasoning.
+-- A cancelled booking doesn't count (migration_36.sql) - otherwise
+-- booking-then-cancelling would permanently unlock this for free.
 create or replace function public.enforce_no_contact_sharing()
 returns trigger
 language plpgsql
@@ -501,6 +524,7 @@ begin
     join conversations c on c.id = new.conversation_id
     where b.student_id = c.student_id
       and b.teacher_id = c.teacher_id::text
+      and b.status = 'confirmed'
   ) into already_booked;
 
   if already_booked then
@@ -807,6 +831,28 @@ create policy "chat_attachments_select_authenticated"
 
 alter table profiles add column availability_dates jsonb not null default '{}';
 
+-- === TIMEZONES (migration_37.sql) =================================
+-- lesson_date/lesson_time are plain wall-clock strings with no zone of
+-- their own - they mean whatever the TEACHER's calendar grid meant when
+-- they set their availability, in the teacher's own local time.
+--
+-- profiles.timezone: which IANA zone this person is currently in,
+-- auto-detected client-side (Intl.DateTimeFormat().resolvedOptions().timeZone,
+-- see auth.js armusGetSession) and kept fresh on every login/session
+-- check. Used to format lesson-time notifications (send-lesson-reminder)
+-- in each recipient's own current time.
+alter table profiles add column if not exists timezone text not null default 'Europe/Istanbul';
+
+-- bookings.teacher_timezone: a snapshot of the teacher's profiles.timezone
+-- at the moment this booking was created (see create-payment/payment-callback)
+-- - demo teachers (teachers-data.js, no profile row) always get the
+-- default. Snapshotted rather than looked up live so a teacher changing
+-- their timezone later never reinterprets a past booking's already-fixed
+-- wall-clock time. This is what lets cancel-booking and the reminder
+-- cron below compute the real UTC instant of a lesson correctly instead
+-- of assuming everyone is UTC.
+alter table bookings add column if not exists teacher_timezone text not null default 'Europe/Istanbul';
+
 -- === LESSON REMINDER EMAILS =======================================
 -- Runs every 10 minutes: any lesson starting 50-70 minutes from now that
 -- hasn't been reminded about yet gets a call to send-lesson-reminder (one
@@ -833,6 +879,7 @@ select cron.schedule(
   from bookings b
   where b.reminder_sent = false
     and b.status = 'confirmed'
-    and (b.lesson_date + b.lesson_time::time) between now() + interval '50 minutes' and now() + interval '70 minutes'
+    and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone)
+        between now() + interval '50 minutes' and now() + interval '70 minutes'
   $$
 );
