@@ -327,13 +327,13 @@
 
       const email = document.getElementById("email").value.trim().toLowerCase();
       if (!email) {
-        requestError.textContent = "Lütfen e-postanı yaz.";
+        requestError.textContent = armusT("resetPw.emailRequired", "Lütfen e-postanı yaz.");
         requestError.style.display = "block";
         return;
       }
 
       requestBtn.disabled = true;
-      requestBtn.textContent = "Gönderiliyor...";
+      requestBtn.textContent = armusT("resetPw.sending", "Gönderiliyor...");
 
       await armusRequestPasswordReset(email);
 
@@ -357,26 +357,26 @@
       const again = document.getElementById("newPasswordAgain").value;
 
       if (password.length < 6) {
-        updateError.textContent = "Şifre en az 6 karakter olmalı.";
+        updateError.textContent = armusT("resetPw.passwordTooShort", "Şifre en az 6 karakter olmalı.");
         updateError.style.display = "block";
         return;
       }
       if (password !== again) {
-        updateError.textContent = "Şifreler eşleşmiyor.";
+        updateError.textContent = armusT("resetPw.passwordsDontMatch", "Şifreler eşleşmiyor.");
         updateError.style.display = "block";
         return;
       }
 
       const originalBtnLabel = updateBtn.textContent;
       updateBtn.disabled = true;
-      updateBtn.textContent = "Güncelleniyor...";
+      updateBtn.textContent = armusT("resetPw.updating", "Güncelleniyor...");
 
       const { error } = await armusUpdatePassword(password);
 
       if (error) {
         updateBtn.disabled = false;
         updateBtn.textContent = originalBtnLabel;
-        updateError.textContent = "Bağlantının süresi dolmuş olabilir. Lütfen tekrar dene.";
+        updateError.textContent = armusT("resetPw.linkExpired", "Bağlantının süresi dolmuş olabilir. Lütfen tekrar dene.");
         updateError.style.display = "block";
         return;
       }

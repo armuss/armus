@@ -416,9 +416,13 @@
     // link vs. an "Öğretmen Ol" link with ?role=teacher) - not a toggle on
     // this page, so there's no accidental student/teacher mix-up.
     const selectedRole = requestedRole === "teacher" ? "teacher" : "student";
-    document.getElementById("roleNote").textContent = selectedRole === "teacher"
-      ? "Öğretmen olarak kayıt oluyorsun."
-      : "Öğrenci olarak kayıt oluyorsun.";
+    function renderRoleNote() {
+      document.getElementById("roleNote").textContent = selectedRole === "teacher"
+        ? armusT("register.roleNoteTeacher", "Öğretmen olarak kayıt oluyorsun.")
+        : armusT("register.roleNoteStudent", "Öğrenci olarak kayıt oluyorsun.");
+    }
+    renderRoleNote();
+    document.addEventListener("armus:langchange", renderRoleNote);
 
     if (nextParam) {
       document.getElementById("switchToLogin").href =
@@ -449,22 +453,22 @@
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
       if (!name) {
-        showError("Lütfen adını soyadını yaz.");
+        showError(armusT("register.errNameRequired", "Lütfen adını soyadını yaz."));
         return;
       }
 
       if (!emailPattern.test(email)) {
-        showError("Geçerli bir e-posta adresi gir.");
+        showError(armusT("register.errInvalidEmail", "Geçerli bir e-posta adresi gir."));
         return;
       }
 
       if (password.length < 6) {
-        showError("Şifre en az 6 karakter olmalı.");
+        showError(armusT("register.errPasswordTooShort", "Şifre en az 6 karakter olmalı."));
         return;
       }
 
       if (password !== password2) {
-        showError("Şifreler birbiriyle eşleşmiyor.");
+        showError(armusT("register.errPasswordsDontMatch", "Şifreler birbiriyle eşleşmiyor."));
         return;
       }
 
@@ -475,8 +479,8 @@
       if (error) {
         showError(
           error.message.includes("already registered") || error.message.includes("already been registered")
-            ? "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene."
-            : "Hesap oluşturulamadı: " + error.message
+            ? armusT("register.errAlreadyRegistered", "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.")
+            : armusT("register.errAccountCreationFailed", "Hesap oluşturulamadı: {msg}").replace("{msg}", error.message)
         );
         return;
       }
@@ -487,7 +491,8 @@
       // would just bounce them back out, so show a clear next step instead.
       if (!data || !data.session) {
         form.style.display = "none";
-        successBox.innerHTML = "Hesabın oluşturuldu! <strong>" + email + "</strong> adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.";
+        successBox.innerHTML = armusT("register.accountCreatedSuccess", "Hesabın oluşturuldu! <strong>{email}</strong> adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.")
+          .replace("{email}", email);
         successBox.style.display = "block";
         return;
       }
@@ -516,14 +521,14 @@
     function startResendCooldown() {
       let secondsLeft = 45;
       resendCodeLink.classList.add("disabled");
-      const original = "Kodu tekrar gönder";
+      const original = armusT("register.resendLink", "Kodu tekrar gönder");
       const tick = () => {
         if (secondsLeft <= 0) {
           resendCodeLink.textContent = original;
           resendCodeLink.classList.remove("disabled");
           return;
         }
-        resendCodeLink.textContent = `Kodu tekrar gönder (${secondsLeft})`;
+        resendCodeLink.textContent = armusT("register.resendCooldown", "Kodu tekrar gönder ({s})").replace("{s}", secondsLeft);
         secondsLeft -= 1;
         setTimeout(tick, 1000);
       };
@@ -533,12 +538,12 @@
     async function startVerification(email) {
 
       document.getElementById("registerStep").style.display = "none";
-      verifyNote.textContent = `${email} adresine 6 haneli bir kod gönderdik. Kodu aşağıya gir.`;
+      verifyNote.textContent = armusT("register.verifyNote", "{email} adresine 6 haneli bir kod gönderdik. Kodu aşağıya gir.").replace("{email}", email);
       verifyStep.style.display = "block";
 
       const { error } = await armusSupabase.functions.invoke("send-verification-email");
       if (error) {
-        verifyError.textContent = "Kod gönderilemedi. 'Kodu tekrar gönder' ile tekrar dene.";
+        verifyError.textContent = armusT("register.errCodeSendFailed", "Kod gönderilemedi. 'Kodu tekrar gönder' ile tekrar dene.");
         verifyError.style.display = "block";
       } else {
         startResendCooldown();
@@ -558,7 +563,7 @@
       verifySubmitBtn.disabled = false;
 
       if (error || !data || !data.ok) {
-        verifyError.textContent = (data && data.error) || "Kod doğrulanamadı. Tekrar dene.";
+        verifyError.textContent = (data && data.error) || armusT("register.errCodeInvalid", "Kod doğrulanamadı. Tekrar dene.");
         verifyError.style.display = "block";
         return;
       }
@@ -576,7 +581,7 @@
 
       const { error, data } = await armusSupabase.functions.invoke("send-verification-email");
       if (error || (data && data.error)) {
-        verifyError.textContent = (data && data.error) || "Kod gönderilemedi.";
+        verifyError.textContent = (data && data.error) || armusT("register.errCodeResendFailed", "Kod gönderilemedi.");
         verifyError.style.display = "block";
       }
     });

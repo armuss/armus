@@ -310,7 +310,7 @@
       const { error } = await armusSignIn({ email, password });
 
       if (error) {
-        showError("E-posta veya şifre hatalı.");
+        showError(armusT("login.wrongCredentials", "E-posta veya şifre hatalı."));
         return;
       }
 

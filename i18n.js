@@ -88,6 +88,9 @@ const ARMUS_I18N_EN = {
   "index.footer.terms": "Terms of Use",
   "index.footer.newsletter": "Join Our Newsletter",
   "index.footer.newsletterText": "Stay up to date on new features and offers.",
+  "index.footer.newsletterPlaceholder": "Your email address",
+  "index.newsletterError": "Something went wrong, please try again.",
+  "index.newsletterSuccess": "Thanks! You've been added to the list. ✓",
   "index.footer.copyright": "© 2026 ARMUS. All rights reserved.",
 
   // login.html
@@ -101,6 +104,7 @@ const ARMUS_I18N_EN = {
   "login.submit": "Log In",
   "login.switchText": "Don't have an account?",
   "login.switchLink": "Sign up",
+  "login.wrongCredentials": "Wrong email or password.",
 
   // register.html
   "register.eyebrow": "JOIN ARMUS",
@@ -128,6 +132,20 @@ const ARMUS_I18N_EN = {
   "register.verifySubmit": "Verify",
   "register.resendText": "Didn't get a code?",
   "register.resendLink": "Resend code",
+  "register.roleNoteTeacher": "You're registering as a teacher.",
+  "register.roleNoteStudent": "You're registering as a student.",
+  "register.errNameRequired": "Please write your first and last name.",
+  "register.errInvalidEmail": "Enter a valid email address.",
+  "register.errPasswordTooShort": "Password must be at least 6 characters.",
+  "register.errPasswordsDontMatch": "Passwords don't match.",
+  "register.errAlreadyRegistered": "There's already an account with this email. Try logging in instead.",
+  "register.errAccountCreationFailed": "Couldn't create account: {msg}",
+  "register.accountCreatedSuccess": "Your account was created! Click the confirmation link we sent to <strong>{email}</strong> to log in.",
+  "register.resendCooldown": "Resend code ({s})",
+  "register.verifyNote": "We sent a 6-digit code to {email}. Enter it below.",
+  "register.errCodeSendFailed": "Couldn't send the code. Try 'Resend code' again.",
+  "register.errCodeInvalid": "Couldn't verify the code. Try again.",
+  "register.errCodeResendFailed": "Couldn't send the code.",
 
   // hakkimizda.html
   "about.eyebrow": "ABOUT US",
@@ -279,6 +297,12 @@ const ARMUS_I18N_EN = {
   "resetPw.newPasswordAgainLabel": "New password (again)",
   "resetPw.newPasswordAgainPlaceholder": "Re-type your new password",
   "resetPw.updateBtn": "Update Password",
+  "resetPw.emailRequired": "Please write your email.",
+  "resetPw.sending": "Sending...",
+  "resetPw.passwordTooShort": "Password must be at least 6 characters.",
+  "resetPw.passwordsDontMatch": "Passwords don't match.",
+  "resetPw.updating": "Updating...",
+  "resetPw.linkExpired": "The link may have expired. Please try again.",
 
   // booking.html (static shell only - dynamic slot/date/price text stays as rendered by JS)
   "nav.backTeachers": "← Back to teachers",
