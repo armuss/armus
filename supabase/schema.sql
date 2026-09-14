@@ -295,7 +295,13 @@ create policy "profiles_select_admin_all"
   using (public.is_admin());
 
 -- once approved, a teacher can no longer write the "live" fields
--- directly - only pending_changes, which an admin must approve
+-- directly - only pending_changes, which an admin must approve. Also
+-- blocks a non-admin from ever writing is_admin, or moving status
+-- anywhere but 'pending' (self-service apply/re-apply) themselves -
+-- profiles_update_own_or_admin otherwise lets a user update any column
+-- on their own row, which without this would let anyone grant
+-- themselves admin access or self-approve a teacher application
+-- (see migration_34.sql).
 create or replace function public.enforce_teacher_profile_lock()
 returns trigger
 language plpgsql
@@ -305,6 +311,14 @@ as $$
 begin
   if public.is_admin() then
     return new;
+  end if;
+
+  if new.is_admin is distinct from old.is_admin then
+    raise exception 'admin_lock: is_admin can only be changed by an admin';
+  end if;
+
+  if new.status is distinct from old.status and new.status is distinct from 'pending' then
+    raise exception 'status_lock: only an admin can approve or reject an application';
   end if;
 
   if old.status = 'approved' and (
