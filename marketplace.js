@@ -45,24 +45,27 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
     photo: profile.photo_url || null,
     video: profile.video_url || null,
     name: profile.name,
-    role: profile.title || "İngilizce Öğretmeni",
+    role: profile.title || armusT("marketplace.englishTeacher", "İngilizce Öğretmeni"),
     price: profile.price ?? 500,
     rating,
     reviewCount: reviews.length,
-    tags: [profile.subject_taught || "Genel İngilizce", "Yeni Öğretmen"],
+    tags: [
+      profile.subject_taught || armusT("marketplace.generalEnglish", "Genel İngilizce"),
+      armusT("marketplace.newTeacherTag", "Yeni Öğretmen"),
+    ],
     level: "",
     availability: profile.availability || "Şu anda ders almaya uygun",
     about: profile.bio
       ? [profile.bio]
-      : ["Bu öğretmen henüz bir tanıtım yazısı eklemedi."],
-    experience: "Yeni",
+      : [armusT("marketplace.noBioYet", "Bu öğretmen henüz bir tanıtım yazısı eklemedi.")],
+    experience: armusT("marketplace.newExperience", "Yeni"),
     completedLessons: String(completedCount),
     students: studentCount,
     languages: profile.languages && profile.languages.length
       ? profile.languages.map(l => `${l.language} (${l.level})`).join(", ")
       : "English / Türkçe",
     levelRange: "A1 – C2",
-    specialties: [profile.subject_taught || "Genel İngilizce"],
+    specialties: [profile.subject_taught || armusT("marketplace.generalEnglish", "Genel İngilizce")],
     reviews,
     weeklyAvailability: Array.isArray(profile.weekly_availability)
       ? profile.weekly_availability
@@ -81,7 +84,7 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
 // hand-written ones rather than replacing them.
 async function armusEnrichDemoTeacherReviews(teacher) {
 
-  const rawReviews = await armusGetReviewsForTeacher(teacher.id);
+  const rawReviews = await armusGetReviewsForTeacher(teacher.id).catch(() => []);
   if (!rawReviews.length) return teacher;
 
   const liveReviews = rawReviews.map(r => ({

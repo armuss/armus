@@ -944,7 +944,7 @@
           <div class="booking-card">
 
             <div class="price">
-              <span id="priceValue"></span> <span>/ 50 dakika</span>
+              <span id="priceValue"></span> <span data-i18n="teacherProfile.per50Min">/ 50 dakika</span>
             </div>
 
             <div class="booking-stats">
@@ -954,7 +954,7 @@
               </div>
               <div>
                 <strong id="cardLessons"></strong>
-                <span>ders</span>
+                <span data-i18n="teacherProfile.lessonsWord">ders</span>
               </div>
             </div>
 
@@ -962,7 +962,8 @@
 
             <button
               class="primary"
-              onclick="trialLesson()">
+              onclick="trialLesson()"
+              data-i18n="teacherProfile.trialLessonBtn">
               Deneme Dersi Al
             </button>
 
@@ -972,32 +973,36 @@
                 id="messageBtn"
                 style="display: none;"
                 aria-label="Mesaj gönder"
-                title="Mesaj gönder">
+                title="Mesaj gönder"
+                data-i18n-title="teacherProfile.sendMessage">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-4.8 7.6 8.5 8.5 0 0 1-8.7-.5L3 20l1.4-4.5a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5h.3a8.48 8.48 0 0 1 8 8v.3z"></path></svg>
               </button>
               <button
                 type="button"
                 id="favBtn"
                 aria-label="Favorilere ekle"
-                title="Favorilere ekle">
+                title="Favorilere ekle"
+                data-i18n-title="teacherProfile.addToFavorites">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
               </button>
               <button
                 type="button"
                 id="shareBtn"
                 aria-label="Profili paylaş"
-                title="Profili paylaş">
+                title="Profili paylaş"
+                data-i18n-title="teacherProfile.shareProfile">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
               </button>
             </div>
 
             <button
               class="secondary"
-              onclick="bookLesson()">
+              onclick="bookLesson()"
+              data-i18n="teacherProfile.bookLessonBtn">
               Ders Rezervasyonu Yap
             </button>
 
-            <div class="small-note">
+            <div class="small-note" data-i18n="teacherProfile.noChargeYet">
               Henüz ödeme alınmayacak
             </div>
 
@@ -1005,25 +1010,25 @@
 
           <div class="side-box">
 
-            <h3>Ders bilgileri</h3>
+            <h3 data-i18n="teacherProfile.lessonInfo">Ders bilgileri</h3>
 
             <div class="side-item">
-              <span>Ders süresi</span>
-              <strong>50 dk</strong>
+              <span data-i18n="teacherProfile.lessonDuration">Ders süresi</span>
+              <strong data-i18n="teacherProfile.fiftyMin">50 dk</strong>
             </div>
 
             <div class="side-item">
-              <span>Ders formatı</span>
-              <strong>Online</strong>
+              <span data-i18n="teacherProfile.lessonFormat">Ders formatı</span>
+              <strong data-i18n="teacherProfile.online">Online</strong>
             </div>
 
             <div class="side-item">
-              <span>Diller</span>
+              <span data-i18n="teacherProfile.languages">Diller</span>
               <strong id="languages"></strong>
             </div>
 
             <div class="side-item">
-              <span>Seviye</span>
+              <span data-i18n="teacherProfile.level">Seviye</span>
               <strong id="levelRange"></strong>
             </div>
 
@@ -1031,12 +1036,12 @@
 
 
           <div class="side-box">
-            <h3>Uzmanlık alanları</h3>
+            <h3 data-i18n="teacherProfile.specialties">Uzmanlık alanları</h3>
             <div id="specialtiesList"></div>
           </div>
 
           <div class="side-box" id="scheduleBox" style="display: none;">
-            <h3>Haftalık Program</h3>
+            <h3 data-i18n="teacherProfile.weeklySchedule">Haftalık Program</h3>
             <div id="schedulePreview"></div>
           </div>
 
@@ -1105,12 +1110,16 @@
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("onlineBadge").style.display = teacher.isOnline ? "inline-block" : "none";
 
-      document.getElementById("ratingValue").textContent =
-        teacher.rating ? `★ ${teacher.rating}` : "Yeni";
-      document.getElementById("reviewCountLabel").textContent =
-        teacher.reviewCount > 0
-          ? `${teacher.reviewCount} değerlendirme`
-          : "Henüz değerlendirme yok";
+      function renderRatingHeader() {
+        document.getElementById("ratingValue").textContent =
+          teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
+        document.getElementById("reviewCountLabel").textContent =
+          teacher.reviewCount > 0
+            ? armusT("teacherProfile.reviewCount", "{n} değerlendirme").replace("{n}", teacher.reviewCount)
+            : armusT("teacherProfile.noReviewsYet", "Henüz değerlendirme yok");
+      }
+      renderRatingHeader();
+      document.addEventListener("armus:langchange", renderRatingHeader);
 
       const headerTags = document.getElementById("headerTags");
       const displayTags = teacher.level
@@ -1245,10 +1254,17 @@
       renderAvailabilityStatus();
       document.addEventListener("armus:langchange", renderAvailabilityStatus);
 
-      document.getElementById("cardRating").textContent =
-        teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
-      document.getElementById("cardReviewLabel").textContent =
-        teacher.reviewCount > 0 ? `${teacher.reviewCount} değerlendirme` : "değerlendirme yok";
+      function renderCardStats() {
+        document.getElementById("cardRating").textContent =
+          teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
+        document.getElementById("cardReviewLabel").textContent =
+          teacher.reviewCount > 0
+            ? armusT("teacherProfile.reviewCount", "{n} değerlendirme").replace("{n}", teacher.reviewCount)
+            : armusT("teacherProfile.noReviewsShort", "değerlendirme yok");
+      }
+      renderCardStats();
+      document.addEventListener("armus:langchange", renderCardStats);
+
       document.getElementById("cardLessons").textContent =
         teacher.completedLessons;
 
@@ -1329,15 +1345,24 @@
           aboutText.querySelectorAll("p").forEach((p, i) => {
             if (i > 0) p.style.display = expanded ? "none" : "block";
           });
-          aboutShowMoreBtn.textContent = expanded ? "Devamını oku" : "Daha az göster";
+          aboutShowMoreBtn.textContent = expanded
+            ? armusT("teacherProfile.showMore", "Devamını oku")
+            : armusT("teacherProfile.showLess", "Daha az göster");
           aboutShowMoreBtn.dataset.expanded = expanded ? "false" : "true";
         });
       }
 
       // real numbers only - no fabricated "Top X%"/certificate badges
-      document.getElementById("experienceText").textContent =
-        `${teacher.experience}, ${teacher.completedLessons} tamamlanmış ders` +
-        (teacher.students !== undefined ? `, ${teacher.students} öğrenci` : "");
+      function renderExperienceText() {
+        document.getElementById("experienceText").textContent =
+          `${teacher.experience}, ` +
+          armusT("teacherProfile.completedLessons", "{n} tamamlanmış ders").replace("{n}", teacher.completedLessons) +
+          (teacher.students !== undefined
+            ? `, ` + armusT("teacherProfile.studentsCount", "{n} öğrenci").replace("{n}", teacher.students)
+            : "");
+      }
+      renderExperienceText();
+      document.addEventListener("armus:langchange", renderExperienceText);
 
       if (teacher.rating && teacher.rating >= 4.8) {
         document.getElementById("highRatedBlock").style.display = "flex";
@@ -1377,15 +1402,23 @@
       if (teacher.reviewCount > 0) {
         document.getElementById("reviewsSummary").style.display = "flex";
         document.getElementById("avgRatingBig").textContent = teacher.rating;
-        document.getElementById("reviewsSummaryCount").textContent =
-          `${teacher.reviewCount} öğrenci yorumuna dayanıyor`;
+        function renderReviewsSummaryCount() {
+          document.getElementById("reviewsSummaryCount").textContent =
+            armusT("teacherProfile.reviewsBasedOn", "{n} öğrenci yorumuna dayanıyor").replace("{n}", teacher.reviewCount);
+        }
+        renderReviewsSummaryCount();
+        document.addEventListener("armus:langchange", renderReviewsSummaryCount);
       }
 
       const reviewsList = document.getElementById("reviewsList");
 
       if (teacher.reviews.length === 0) {
-        reviewsList.innerHTML =
-          '<p class="description">Bu öğretmen için henüz öğrenci yorumu yok.</p>';
+        function renderNoReviews() {
+          reviewsList.innerHTML =
+            `<p class="description">${armusT("teacherProfile.noReviews", "Bu öğretmen için henüz öğrenci yorumu yok.")}</p>`;
+        }
+        renderNoReviews();
+        document.addEventListener("armus:langchange", renderNoReviews);
       }
 
       teacher.reviews.forEach(review => {
@@ -1453,27 +1486,33 @@
 
       if (Array.isArray(teacher.weeklyAvailability)) {
 
-        // Monday-first display order, [label, getDay() index]
-        const scheduleDays = [
-          ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
-          ["Cum", 5], ["Cmt", 6], ["Paz", 0]
-        ];
-
         const schedulePreview = document.getElementById("schedulePreview");
 
-        scheduleDays.forEach(([label, dayIndex]) => {
+        function renderSchedulePreview() {
+          // Monday-first display order (getDay() index)
+          const dayIndexes = [1, 2, 3, 4, 5, 6, 0];
+          const dayLabels = armusDayNames();
 
-          const slots = teacher.weeklyAvailability[dayIndex] || [];
-          const hours = slots.length * 0.5;
+          schedulePreview.innerHTML = "";
 
-          const item = document.createElement("div");
-          item.className = "side-item";
-          item.innerHTML = slots.length
-            ? `<span>${label}</span><strong>${hours} saat müsait</strong>`
-            : `<span>${label}</span><strong style="color:var(--armus-muted);font-weight:400;">Müsait değil</strong>`;
+          dayIndexes.forEach(dayIndex => {
 
-          schedulePreview.appendChild(item);
-        });
+            const slots = teacher.weeklyAvailability[dayIndex] || [];
+            const hours = slots.length * 0.5;
+            const label = dayLabels[dayIndex];
+
+            const item = document.createElement("div");
+            item.className = "side-item";
+            item.innerHTML = slots.length
+              ? `<span>${label}</span><strong>${armusT("teacherProfile.hoursAvailable", "{n} saat müsait").replace("{n}", hours)}</strong>`
+              : `<span>${label}</span><strong style="color:var(--armus-muted);font-weight:400;">${armusT("teacherProfile.notAvailable", "Müsait değil")}</strong>`;
+
+            schedulePreview.appendChild(item);
+          });
+        }
+
+        renderSchedulePreview();
+        document.addEventListener("armus:langchange", renderSchedulePreview);
 
         document.getElementById("scheduleBox").style.display = "block";
       }
