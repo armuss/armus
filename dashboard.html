@@ -1579,9 +1579,9 @@
 
       shell.style.display = "grid";
 
-      document.getElementById("avatar").innerHTML = user.photo_url
-        ? `<img src="${user.photo_url}" alt="">`
-        : user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
+      document.getElementById("avatar").innerHTML = armusSafeUrl(user.photo_url)
+        ? `<img src="${armusSafeUrl(user.photo_url)}" alt="">`
+        : armusEscapeHtml(user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase());
       document.getElementById("dashName").textContent = user.name;
       document.getElementById("dashEmail").textContent = user.email;
 
@@ -1778,7 +1778,7 @@
             el.style.width = "calc((100% / 7) - 4px)";
             el.title = `${booking.studentName} — ${booking.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")} — ₺${booking.price}`;
             el.innerHTML = `
-              <div class="tl-block-label">${isPast ? "✓ " : ""}${booking.studentName}</div>
+              <div class="tl-block-label">${isPast ? "✓ " : ""}${armusEscapeHtml(booking.studentName)}</div>
               <div class="bk-block-time">${armusFormatTimeRange(booking.time)}</div>
             `;
             wrap.appendChild(el);
@@ -1888,7 +1888,7 @@
           document.getElementById("todayCard").style.display = "block";
           document.getElementById("todayList").innerHTML = todayBookings.map(b => `
             <div class="today-row">
-              <span>${b.studentName} · ${b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")}</span>
+              <span>${armusEscapeHtml(b.studentName)} · ${b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")}</span>
               <span class="today-when">
                 ${armusFormatTimeRange(b.time)}
                 ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">${armusT("teacherDash.joinShort", "🎥 Katıl")}</a>` : ""}
@@ -2053,7 +2053,7 @@
 
           group.innerHTML = `
             <div class="student-group-head">
-              <strong>${studentBookings[0].studentName}</strong>
+              <strong>${armusEscapeHtml(studentBookings[0].studentName)}</strong>
               <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? armusT("teacherDash.viewEditNote", "Notu Gör/Düzenle") : armusT("teacherDash.addNote", "Not Ekle")}</button>
             </div>
             ${studentBookings.map(booking => {
@@ -2083,7 +2083,7 @@
               return `
               <div class="booking-row">
                 <div>
-                  <strong>${booking.studentName}</strong>
+                  <strong>${armusEscapeHtml(booking.studentName)}</strong>
                   <div class="booking-tags">${tags}</div>
                   <div class="booking-earning${(isPast && countsAsEarned) || isCancelled ? "" : " pending"}">${earningHtml}</div>
                 </div>
@@ -2096,7 +2096,7 @@
               `;
             }).join("")}
             <div class="note-box" data-note-box>
-              <textarea placeholder="${armusT("teacherDash.notePlaceholder", "Bu öğrenci hakkında sadece senin görebileceğin bir not yaz...")}">${existingNote ? existingNote.note : ""}</textarea>
+              <textarea placeholder="${armusT("teacherDash.notePlaceholder", "Bu öğrenci hakkında sadece senin görebileceğin bir not yaz...")}">${existingNote ? armusEscapeHtml(existingNote.note) : ""}</textarea>
               <button type="button" class="btn" data-save-note>${armusT("teacherDash.saveNote", "Notu Kaydet")}</button>
               <span class="save-status" data-note-status>${armusT("teacherDash.saved", "Kaydedildi ✓")}</span>
             </div>

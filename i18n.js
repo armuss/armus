@@ -1074,6 +1074,35 @@ function armusGetLang() {
   try { return localStorage.getItem("armusLang") || "tr"; } catch (e) { return "tr"; }
 }
 
+// Escapes a value for safe insertion into an innerHTML template string -
+// anywhere user-submitted free text (a name, bio, dispute description,
+// review comment, ...) gets built into markup via `${...}` instead of
+// set through textContent, this is what stops it from being interpreted
+// as HTML/script by the viewer's browser. null/undefined become "" so a
+// call site can drop its own `|| "—"` fallback around this instead of
+// having to order the two.
+function armusEscapeHtml(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// A profile's photo_url/video_url/certificate_file_url are normally
+// whatever a real Supabase Storage upload returned, but nothing stops a
+// user from writing an arbitrary string into those columns directly
+// (armusUpdateOwnProfile has no field allowlist, and RLS only checks
+// ownership) - a "javascript:" URL there would run in whoever clicks the
+// link's session (an admin reviewing an application, most importantly).
+// Only ever build an href/src from a URL that's passed through this.
+function armusSafeUrl(value) {
+  const url = String(value || "").trim();
+  return /^https?:\/\//i.test(url) ? url : "";
+}
+
 // For text a page sets dynamically via JS (e.g. after fetching data),
 // where a static data-i18n attribute would just get clobbered on the
 // next render. Falls back to the Turkish text if there's no EN entry.

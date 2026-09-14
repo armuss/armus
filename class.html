@@ -493,7 +493,7 @@
       if (now < joinsFrom) {
         const minutesUntil = Math.ceil((joinsFrom - now) / 60000);
         document.getElementById("minutesUntil").textContent = minutesUntil;
-        const tooEarlyName = isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName;
+        const tooEarlyName = armusEscapeHtml(isStudent ? armusShortDisplayName(booking.teacherName) : booking.studentName);
         document.getElementById("tooEarlyMeta").innerHTML = (typeof armusGetLang === "function" && armusGetLang() === "en")
           ? `${armusT("class.tooEarlyMetaWith", "with")} <strong>${tooEarlyName}</strong> · ${when.dateLabel}, ${when.timeRange}`
           : `<strong>${tooEarlyName}</strong> ile ${when.dateLabel}, ${when.timeRange}`;
@@ -665,7 +665,7 @@
             ? `${armusT("class.postClassNoteFor", "Note for")} ${booking.studentName}`
             : `${booking.studentName} için not`;
           postClassBody.innerHTML = `
-            <textarea id="postClassNote" placeholder="${armusT("class.postClassNotePlaceholder", "Bu öğrenci hakkında kısa bir not (sadece sen görürsün)")}">${existing ? existing.note : ""}</textarea>
+            <textarea id="postClassNote" placeholder="${armusT("class.postClassNotePlaceholder", "Bu öğrenci hakkında kısa bir not (sadece sen görürsün)")}">${existing ? armusEscapeHtml(existing.note) : ""}</textarea>
           `;
 
           postClassSave.onclick = async () => {
