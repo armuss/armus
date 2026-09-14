@@ -508,6 +508,8 @@ create policy "profiles_select_conversation_partner"
 -- blocks off-platform contact sharing (phone numbers, email addresses,
 -- named outside messaging apps) in chat until the two of them actually
 -- have a booking together - see migration_16.sql for the full reasoning.
+-- A cancelled booking doesn't count (migration_36.sql) - otherwise
+-- booking-then-cancelling would permanently unlock this for free.
 create or replace function public.enforce_no_contact_sharing()
 returns trigger
 language plpgsql
@@ -522,6 +524,7 @@ begin
     join conversations c on c.id = new.conversation_id
     where b.student_id = c.student_id
       and b.teacher_id = c.teacher_id::text
+      and b.status = 'confirmed'
   ) into already_booked;
 
   if already_booked then
