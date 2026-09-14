@@ -1961,11 +1961,11 @@
       empty.style.display = "none";
 
       const actionLabels = {
-        profile_approve: "Başvuru onaylandı",
-        profile_reject: "Başvuru reddedildi",
-        change_approve: "Profil değişikliği onaylandı",
-        change_reject: "Profil değişikliği reddedildi",
-        booking_cancel: "Rezervasyon iptal edildi",
+        profile_approve: armusT("admin.logApplicationApproved", "Başvuru onaylandı"),
+        profile_reject: armusT("admin.logApplicationRejected", "Başvuru reddedildi"),
+        change_approve: armusT("admin.logChangeApproved", "Profil değişikliği onaylandı"),
+        change_reject: armusT("admin.logChangeRejected", "Profil değişikliği reddedildi"),
+        booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
       };
 
       logs
@@ -1977,7 +1977,7 @@
             <td>${log.admin_name}</td>
             <td>${actionLabels[log.action] || log.action}</td>
             <td>${log.target_label || log.target_id || "—"}</td>
-            <td>${new Date(log.created_at).toLocaleString("tr-TR")}</td>
+            <td>${new Date(log.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           `;
           body.appendChild(tr);
         });
@@ -2008,17 +2008,17 @@
             <div>
               <div class="app-name">${t.name}${t.location ? ` · ${t.location}` : ""}</div>
               <div class="app-email">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
-              <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? "Yayında" : "Gizli"}</span>
+              <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? armusT("admin.published", "Yayında") : armusT("admin.hidden", "Gizli")}</span>
             </div>
             <div class="app-actions">
               <button class="btn" data-move-up="${t.id}" ${idx === 0 ? "disabled" : ""}>↑</button>
               <button class="btn" data-move-down="${t.id}" ${idx === sorted.length - 1 ? "disabled" : ""}>↓</button>
-              <button class="btn" data-toggle-pub="${t.id}">${t.is_published ? "Gizle" : "Yayınla"}</button>
-              <button class="btn btn-reject" data-delete-testimonial="${t.id}">Sil</button>
+              <button class="btn" data-toggle-pub="${t.id}">${t.is_published ? armusT("admin.hide", "Gizle") : armusT("admin.publish", "Yayınla")}</button>
+              <button class="btn btn-reject" data-delete-testimonial="${t.id}">${armusT("admin.delete", "Sil")}</button>
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Yorum</h4><p>${t.quote}</p></div>
+            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${t.quote}</p></div>
           </div>
         `;
         list.appendChild(card);
@@ -2065,7 +2065,7 @@
       });
       list.querySelectorAll("[data-delete-testimonial]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu yorumu silmek istediğine emin misin?")) return;
+          if (!confirm(armusT("admin.confirmDeleteTestimonial", "Bu yorumu silmek istediğine emin misin?"))) return;
           const id = button.dataset.deleteTestimonial;
           button.disabled = true;
           const ok = await armusAdminDeleteTestimonial(id);
@@ -2087,7 +2087,7 @@
       const rating = Number(document.getElementById("newTRating").value);
 
       if (!name || !quote) {
-        alert("İsim ve yorum metni gerekli.");
+        alert(armusT("admin.nameQuoteRequired", "İsim ve yorum metni gerekli."));
         return;
       }
 
@@ -2110,7 +2110,7 @@
         document.getElementById("newTQuote").value = "";
         renderAllFromState();
       } else {
-        alert("Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir.");
+        alert(armusT("admin.testimonialAddFailed", "Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir."));
       }
     });
 
@@ -2126,13 +2126,17 @@
         return;
       }
       bar.style.display = "flex";
-      document.getElementById("bulkSelectedCount").textContent = `${count} başvuru seçildi`;
+      document.getElementById("bulkSelectedCount").textContent =
+        armusT("admin.bulkSelectedCount", "{n} başvuru seçildi").replace("{n}", count);
     }
 
     async function armusRunBulkAction(newStatus) {
       const ids = Array.from(armusBulkSelected);
       if (!ids.length) return;
-      if (!confirm(`${ids.length} başvuruyu ${newStatus === "approved" ? "onaylamak" : "reddetmek"} istediğine emin misin?`)) return;
+      const confirmMsg = newStatus === "approved"
+        ? armusT("admin.confirmBulkApprove", "{n} başvuruyu onaylamak istediğine emin misin?")
+        : armusT("admin.confirmBulkReject", "{n} başvuruyu reddetmek istediğine emin misin?");
+      if (!confirm(confirmMsg.replace("{n}", ids.length))) return;
 
       document.getElementById("bulkApproveBtn").disabled = true;
       document.getElementById("bulkRejectBtn").disabled = true;
@@ -2182,11 +2186,11 @@
           const reasons = [];
 
           if (teacherBookings.length === 0 && accountAgeDays >= 14) {
-            reasons.push(`Onaylı ama ${accountAgeDays} gündür hiç rezervasyon almadı`);
+            reasons.push(armusT("admin.riskNoBookings", "Onaylı ama {n} gündür hiç rezervasyon almadı").replace("{n}", accountAgeDays));
           } else if (teacherBookings.length) {
             const daysSinceLast = daysSince(teacherBookings[0].date);
             if (daysSinceLast >= 30) {
-              reasons.push(`${daysSinceLast} gündür yeni rezervasyon yok`);
+              reasons.push(armusT("admin.riskNoRecentBookings", "{n} gündür yeni rezervasyon yok").replace("{n}", daysSinceLast));
             }
           }
 
@@ -2194,7 +2198,7 @@
             const recent = teacherReviews.slice(-3);
             const avg = recent.reduce((sum, r) => sum + r.stars, 0) / recent.length;
             if (avg < 3.5) {
-              reasons.push(`Son değerlendirmeler düşük (ort. ${avg.toFixed(1)}★)`);
+              reasons.push(armusT("admin.riskLowRatings", "Son değerlendirmeler düşük (ort. {avg}★)").replace("{avg}", avg.toFixed(1)));
             }
           }
 
@@ -2222,11 +2226,11 @@
               <div class="app-email">${teacher.email}</div>
             </div>
             <div class="app-actions">
-              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Mesaj Gönder</a>
+              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Risk sebepleri</h4><p>${reasons.join(" · ")}</p></div>
+            <div class="app-full"><h4>${armusT("admin.riskReasons", "Risk sebepleri")}</h4><p>${reasons.join(" · ")}</p></div>
           </div>
         </div>
       `).join("");
@@ -2235,9 +2239,9 @@
     // ---- testimonial live preview ----
 
     function updateTestimonialPreview() {
-      const name = document.getElementById("newTName").value.trim() || "İsim Soyisim";
+      const name = document.getElementById("newTName").value.trim() || armusT("admin.placeholderFullName", "İsim Soyisim");
       const location = document.getElementById("newTLocation").value.trim();
-      const quote = document.getElementById("newTQuote").value.trim() || "Yorum metni burada görünecek...";
+      const quote = document.getElementById("newTQuote").value.trim() || armusT("admin.placeholderQuote", "Yorum metni burada görünecek...");
       const rating = Number(document.getElementById("newTRating").value) || 5;
 
       document.getElementById("testimonialPreview").innerHTML = `
@@ -2256,7 +2260,13 @@
     // ---- disputes ----
     // Requires the disputes table from migration_8.sql
 
-    const DISPUTE_STATUS_LABELS = { open: "Açık", in_progress: "İşlemde", resolved: "Çözüldü" };
+    function disputeStatusLabels() {
+      return {
+        open: armusT("admin.disputeOpen", "Açık"),
+        in_progress: armusT("admin.disputeInProgress", "İşlemde"),
+        resolved: armusT("admin.disputeResolved", "Çözüldü"),
+      };
+    }
 
     function renderDisputesPanel(disputes) {
       const list = document.getElementById("disputesList");
@@ -2278,6 +2288,8 @@
       }
       empty.style.display = "none";
 
+      const statusLabels = disputeStatusLabels();
+
       disputes.forEach(d => {
         const card = document.createElement("div");
         card.className = "app-card";
@@ -2286,20 +2298,20 @@
           <div class="app-top">
             <div>
               <div class="app-name">${d.subject}</div>
-              <div class="app-email">${d.reporter_name} (${d.reporter_role === "teacher" ? "öğretmen" : "öğrenci"})${d.other_party_name ? ` · ${d.other_party_name} ile ilgili` : ""}</div>
-              <span class="app-badge dispute-${d.status}">${DISPUTE_STATUS_LABELS[d.status] || d.status}</span>
+              <div class="app-email">${d.reporter_name} (${d.reporter_role === "teacher" ? armusT("admin.roleTeacher", "öğretmen") : armusT("admin.roleStudent", "öğrenci")})${d.other_party_name ? ` · ${armusT("admin.regarding", "{name} ile ilgili").replace("{name}", d.other_party_name)}` : ""}</div>
+              <span class="app-badge dispute-${d.status}">${statusLabels[d.status] || d.status}</span>
             </div>
             <div class="app-actions">
-              ${d.status !== "in_progress" ? `<button class="btn" data-dispute-status="${d.id}" data-new-status="in_progress">İşleme Al</button>` : ""}
-              ${d.status !== "resolved" ? `<button class="btn btn-approve" data-dispute-status="${d.id}" data-new-status="resolved">Çözüldü İşaretle</button>` : ""}
+              ${d.status !== "in_progress" ? `<button class="btn" data-dispute-status="${d.id}" data-new-status="in_progress">${armusT("admin.takeOn", "İşleme Al")}</button>` : ""}
+              ${d.status !== "resolved" ? `<button class="btn btn-approve" data-dispute-status="${d.id}" data-new-status="resolved">${armusT("admin.markResolved", "Çözüldü İşaretle")}</button>` : ""}
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Açıklama</h4><p>${d.description}</p></div>
+            <div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p>${d.description}</p></div>
             <div class="app-full">
-              <h4>Admin notu</h4>
+              <h4>${armusT("admin.adminNote", "Admin notu")}</h4>
               <textarea class="admin-search" data-dispute-notes="${d.id}" style="min-height: 50px; resize: vertical; margin-bottom: 8px;">${d.admin_notes || ""}</textarea>
-              <button class="btn" data-save-notes="${d.id}">Notu Kaydet</button>
+              <button class="btn" data-save-notes="${d.id}">${armusT("admin.saveNote", "Notu Kaydet")}</button>
             </div>
           </div>
         `;
@@ -2336,8 +2348,8 @@
           button.disabled = false;
           if (updated) {
             armusAdminDisputes = armusAdminDisputes.map(x => x.id === id ? updated : x);
-            button.textContent = "Kaydedildi ✓";
-            setTimeout(() => { button.textContent = "Notu Kaydet"; }, 1500);
+            button.textContent = armusT("admin.savedNote", "Kaydedildi ✓");
+            setTimeout(() => { button.textContent = armusT("admin.saveNote", "Notu Kaydet"); }, 1500);
           }
         });
       });
