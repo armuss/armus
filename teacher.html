@@ -812,9 +812,9 @@
     <!-- NOT FOUND (shown when ?teacher= is missing/unknown) -->
 
     <div class="not-found" id="notFound">
-      <h1>Öğretmen bulunamadı</h1>
-      <p>Aradığın öğretmen profili mevcut değil ya da kaldırılmış olabilir.</p>
-      <a href="teachers.html">← Öğretmenlere dön</a>
+      <h1 data-i18n="teacherProfile.notFoundTitle">Öğretmen bulunamadı</h1>
+      <p data-i18n="teacherProfile.notFoundText">Aradığın öğretmen profili mevcut değil ya da kaldırılmış olabilir.</p>
+      <a href="teachers.html" data-i18n="teacherProfile.backToTeachers">← Öğretmenlere dön</a>
     </div>
 
 
@@ -840,10 +840,10 @@
               <h1 id="teacherName"></h1>
               <div class="role" id="teacherRole"></div>
             </div>
-            <span class="online-badge" id="onlineBadge" style="display: none;">● Şu an müsait</span>
+            <span class="online-badge" id="onlineBadge" style="display: none;" data-i18n="teacherProfile.onlineNow">● Şu an müsait</span>
           </div>
 
-          <div class="verified">
+          <div class="verified" data-i18n="teacherProfile.armusVerified">
             ✓ ARMUS tarafından doğrulandı
           </div>
 
@@ -861,12 +861,12 @@
                (armusSlotsForDate) as the dedicated booking flow. -->
 
           <section>
-            <h2>Deneme dersi için zaman seç</h2>
-            <p class="calendar-note">Saatler kendi saat dilimine göre gösteriliyor.</p>
+            <h2 data-i18n="teacherProfile.pickTrialTime">Deneme dersi için zaman seç</h2>
+            <p class="calendar-note" data-i18n="teacherProfile.calendarNote">Saatler kendi saat dilimine göre gösteriliyor.</p>
             <div class="cal-nav">
-              <button type="button" id="calPrevBtn" aria-label="Önceki hafta">‹</button>
+              <button type="button" id="calPrevBtn" aria-label="Önceki hafta" title="Önceki hafta" data-i18n-title="teacherDash.prevWeek">‹</button>
               <span class="cal-range-label" id="calRangeLabel"></span>
-              <button type="button" id="calNextBtn" aria-label="Sonraki hafta">›</button>
+              <button type="button" id="calNextBtn" aria-label="Sonraki hafta" title="Sonraki hafta" data-i18n-title="teacherDash.nextWeek">›</button>
             </div>
             <div class="cal-week" id="calWeek"></div>
             <button type="button" class="cal-expand-btn" id="calExpandBtn" style="display: none;" data-i18n="teacherProfile.viewFullSchedule">Tüm programı gör</button>
@@ -884,7 +884,7 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.4 2.7 3 6 3s6-1.6 6-3v-5"></path><path d="M22 10v6"></path></svg>
               </span>
               <div>
-                <div class="info-block-title">Deneyimli Öğretmen</div>
+                <div class="info-block-title" data-i18n="teacherProfile.experiencedTeacher">Deneyimli Öğretmen</div>
                 <div class="info-block-text" id="experienceText"></div>
               </div>
             </div>
@@ -894,8 +894,8 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
               </span>
               <div>
-                <div class="info-block-title">Yüksek Puanlı Öğretmen</div>
-                <div class="info-block-text">ARMUS öğrencilerinden ortalama <strong id="highRatedValue"></strong> puan aldı.</div>
+                <div class="info-block-title" data-i18n="teacherProfile.highlyRatedTeacher">Yüksek Puanlı Öğretmen</div>
+                <div class="info-block-text"><span data-i18n="teacherProfile.highRatedTextBefore">ARMUS öğrencilerinden ortalama</span> <strong id="highRatedValue"></strong> <span data-i18n="teacherProfile.highRatedTextAfter">puan aldı.</span></div>
               </div>
             </div>
 
@@ -905,7 +905,7 @@
           <!-- ABOUT -->
 
           <section>
-            <h2>Hakkımda</h2>
+            <h2 data-i18n="teacherProfile.aboutMe">Hakkımda</h2>
             <div class="description" id="aboutText"></div>
             <button type="button" class="show-more-btn" id="aboutShowMoreBtn" style="display: none;">Devamını oku</button>
           </section>
@@ -914,7 +914,7 @@
           <!-- I SPEAK -->
 
           <section id="speakSection" style="display: none;">
-            <h2>Konuştuğu diller</h2>
+            <h2 data-i18n="teacherProfile.languagesSpoken">Konuştuğu diller</h2>
             <div class="speak-pills" id="speakPills"></div>
           </section>
 
@@ -922,7 +922,7 @@
           <!-- REVIEWS -->
 
           <section>
-            <h2>Öğrenci yorumları</h2>
+            <h2 data-i18n="teacherProfile.studentReviews">Öğrenci yorumları</h2>
 
             <div class="reviews-summary" id="reviewsSummary" style="display: none;">
               <div class="reviews-summary-score"><strong id="avgRatingBig"></strong> <span class="reviews-summary-star">★</span></div>
