@@ -2668,7 +2668,7 @@
       empty.style.display = "none";
 
       const max = Math.max(1, ...grid.map(row => Math.max(...row)));
-      const dayLabels = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+      const dayLabels = dayColumns().map(([label]) => label);
 
       const head = `<div class="hm-head"></div>` +
         Array.from({ length: 12 }, (_, i) => `<div class="hm-head">${String(i * 2).padStart(2, "0")}</div>`).join("");
@@ -2677,7 +2677,7 @@
         const cells = row.map(count => {
           const intensity = count / max;
           const style = count === 0 ? "" : `style="background:rgba(246, 198, 73,${(0.15 + intensity * 0.75).toFixed(2)})"`;
-          return `<div class="hm-cell" ${style} title="${dayLabels[r]}: ${count} rezervasyon"></div>`;
+          return `<div class="hm-cell" ${style} title="${dayLabels[r]}: ${armusT("admin.bookingsCount", "{n} rezervasyon").replace("{n}", count)}"></div>`;
         }).join("");
         return `<div class="hm-label">${dayLabels[r]}</div>${cells}`;
       }).join("");
@@ -2725,13 +2725,15 @@
     // Reuses the site_settings table from migration_8.sql under a new
     // key, so no further schema change is needed.
 
-    const ARMUS_FEATURE_FLAGS = [
-      { key: "flagProof", label: "Kanıt / istatistik bölümü", desc: "Ana sayfadaki dönen fotoğraf ve istatistik kartları." },
-      { key: "flagPromiseBanner", label: "Altın söz bandı", desc: "\"Seveceğin dersler. Garantili.\" bandı." },
-      { key: "flagTeacherCta", label: "Öğretmen ol bölümü", desc: "\"İngilizce öğretiyor musun?\" bölümü." },
-      { key: "flagCommission", label: "Komisyon oranları", desc: "Komisyon dilimlerini gösteren bölüm." },
-      { key: "flagTestimonials", label: "Öğrenci yorumları", desc: "\"Öğrencilerimiz ne diyor?\" bölümü." },
-    ];
+    function featureFlagsList() {
+      return [
+        { key: "flagProof", label: armusT("admin.flagProofLabel", "Kanıt / istatistik bölümü"), desc: armusT("admin.flagProofDesc", "Ana sayfadaki dönen fotoğraf ve istatistik kartları.") },
+        { key: "flagPromiseBanner", label: armusT("admin.flagPromiseLabel", "Altın söz bandı"), desc: armusT("admin.flagPromiseDesc", "\"Seveceğin dersler. Garantili.\" bandı.") },
+        { key: "flagTeacherCta", label: armusT("admin.flagTeacherCtaLabel", "Öğretmen ol bölümü"), desc: armusT("admin.flagTeacherCtaDesc", "\"İngilizce öğretiyor musun?\" bölümü.") },
+        { key: "flagCommission", label: armusT("admin.flagCommissionLabel", "Komisyon oranları"), desc: armusT("admin.flagCommissionDesc", "Komisyon dilimlerini gösteren bölüm.") },
+        { key: "flagTestimonials", label: armusT("admin.flagTestimonialsLabel", "Öğrenci yorumları"), desc: armusT("admin.flagTestimonialsDesc", "\"Öğrencilerimiz ne diyor?\" bölümü.") },
+      ];
+    }
 
     let armusFeatureFlags = {};
 
@@ -2744,7 +2746,7 @@
     function renderFlagsPanel() {
       const card = document.getElementById("flagsCard");
 
-      card.innerHTML = ARMUS_FEATURE_FLAGS.map(f => {
+      card.innerHTML = featureFlagsList().map(f => {
         const on = armusFeatureFlags[f.key] !== false;
         return `
           <div class="flag-row">
@@ -2767,7 +2769,7 @@
             renderFlagsPanel();
           } else {
             armusFeatureFlags = previous;
-            alert("Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir.");
+            alert(armusT("admin.settingsSaveFailed", "Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir."));
           }
         });
       });

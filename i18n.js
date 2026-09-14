@@ -839,6 +839,17 @@ const ARMUS_I18N_EN = {
   "admin.digestGoodMorning": "👋 Good morning! ",
   "admin.digestOpenDisputes": "⚑ <strong>{n}</strong> unresolved disputes need a look.",
   "admin.healthScoreTitle": "Health score: {n}/100",
+  "admin.bookingsCount": "{n} bookings",
+  "admin.flagProofLabel": "Proof / stats section",
+  "admin.flagProofDesc": "The rotating photo and stat cards on the homepage.",
+  "admin.flagPromiseLabel": "Golden promise banner",
+  "admin.flagPromiseDesc": "The \"Lessons you'll love. Guaranteed.\" banner.",
+  "admin.flagTeacherCtaLabel": "Become a teacher section",
+  "admin.flagTeacherCtaDesc": "The \"Do you teach English?\" section.",
+  "admin.flagCommissionLabel": "Commission rates",
+  "admin.flagCommissionDesc": "The section showing commission tiers.",
+  "admin.flagTestimonialsLabel": "Student testimonials",
+  "admin.flagTestimonialsDesc": "The \"What our students say\" section.",
 
   // teacher.html (profile page) - calendar expand button
   "teacherProfile.viewFullSchedule": "View full schedule",
