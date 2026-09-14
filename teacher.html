@@ -1340,15 +1340,22 @@
 
       if (teacher.about.length > 1) {
         aboutShowMoreBtn.style.display = "inline-block";
+        aboutShowMoreBtn.dataset.expanded = "false";
+        function renderAboutShowMoreBtn() {
+          const expanded = aboutShowMoreBtn.dataset.expanded === "true";
+          aboutShowMoreBtn.textContent = expanded
+            ? armusT("teacherProfile.showLess", "Daha az göster")
+            : armusT("teacherProfile.showMore", "Devamını oku");
+        }
+        renderAboutShowMoreBtn();
+        document.addEventListener("armus:langchange", renderAboutShowMoreBtn);
         aboutShowMoreBtn.addEventListener("click", () => {
           const expanded = aboutShowMoreBtn.dataset.expanded === "true";
           aboutText.querySelectorAll("p").forEach((p, i) => {
             if (i > 0) p.style.display = expanded ? "none" : "block";
           });
-          aboutShowMoreBtn.textContent = expanded
-            ? armusT("teacherProfile.showMore", "Devamını oku")
-            : armusT("teacherProfile.showLess", "Daha az göster");
           aboutShowMoreBtn.dataset.expanded = expanded ? "false" : "true";
+          renderAboutShowMoreBtn();
         });
       }
 
