@@ -822,6 +822,12 @@
           "Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle ilgileneceğiz."
         );
         paymentNotice.style.display = "block";
+      } else if (paymentStatus === "slot_taken") {
+        paymentNotice.textContent = armusT(
+          "booking.paymentSlotTaken",
+          "Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi - aşağıdan başka bir saat seçebilirsin."
+        );
+        paymentNotice.style.display = "block";
       }
 
       function toDateKey(date) {

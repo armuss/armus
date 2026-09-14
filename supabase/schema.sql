@@ -77,6 +77,13 @@ alter table bookings add column if not exists cancelled_at timestamptz;
 alter table bookings add column if not exists cancelled_by text check (cancelled_by in ('student', 'teacher', 'admin'));
 alter table bookings add column if not exists refunded boolean not null default false;
 
+-- stops two different bookings ever existing for the same teacher at
+-- the same date+time - partial so a cancelled row at an old slot never
+-- blocks a later (re-)booking of that same slot (see migration_35.sql)
+create unique index if not exists bookings_teacher_slot_unique
+  on bookings (teacher_id, lesson_date, lesson_time)
+  where status <> 'cancelled';
+
 -- === PENDING PAYMENTS ============================================
 -- Sits in front of "bookings": create-payment (Edge Function) writes a
 -- row here and sends the student to iyzico's hosted checkout; only

@@ -98,21 +98,16 @@ Deno.serve(async (req) => {
     if (!profile) return jsonResponse({ error: "Profil bulunamadı." }, 400);
 
     const body = await req.json().catch(() => ({}));
-    const { teacherId, teacherName, type, date, time, price, phone, identityNumber, quantity } = body;
+    const { teacherId, teacherName, type, date, time, phone, identityNumber, quantity } = body;
 
     if (type !== "trial" && type !== "lesson" && type !== "package") {
       return jsonResponse({ error: "Geçersiz ders tipi." }, 400);
     }
-    if (!teacherId || !teacherName || !price) {
+    if (!teacherId || !teacherName) {
       return jsonResponse({ error: "Eksik bilgi." }, 400);
     }
     if (type !== "package" && (!date || !time)) {
       return jsonResponse({ error: "Eksik rezervasyon bilgisi." }, 400);
-    }
-
-    const numericPrice = Number(price);
-    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
-      return jsonResponse({ error: "Geçersiz fiyat." }, 400);
     }
 
     const numericQuantity = Number(quantity);
@@ -127,6 +122,47 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // The client used to just send `price` and this function trusted it
+    // outright - anyone could tamper with the request and pay whatever
+    // they wanted for any lesson. Price is now always resolved here,
+    // server-side, from the teacher's real rate - the client-submitted
+    // price (if any) is ignored entirely.
+    //
+    // Demo teachers (teachers-data.js) aren't real profiles rows, so
+    // there's nothing in the database to look their price up from -
+    // this mirrors that file's fixed prices. Keep the two in sync if a
+    // demo teacher's price ever changes.
+    const DEMO_TEACHER_PRICES: Record<string, number> = {
+      sarah: 800,
+      david: 650,
+      emily: 500,
+      michael: 900,
+      anna: 550,
+      james: 700,
+    };
+
+    let pricePerLesson: number;
+
+    if (Object.prototype.hasOwnProperty.call(DEMO_TEACHER_PRICES, teacherId)) {
+      pricePerLesson = DEMO_TEACHER_PRICES[teacherId];
+    } else {
+      const { data: teacherProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("price, status")
+        .eq("id", teacherId)
+        .maybeSingle();
+
+      if (!teacherProfile || teacherProfile.status !== "approved" || !(Number(teacherProfile.price) > 0)) {
+        return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
+      }
+      pricePerLesson = Number(teacherProfile.price);
+    }
+
+    const numericPrice = type === "package" ? pricePerLesson * numericQuantity : pricePerLesson;
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+      return jsonResponse({ error: "Geçersiz fiyat." }, 400);
+    }
 
     const conversationId = crypto.randomUUID();
     const nameParts = (profile.name || "ARMUS Kullanıcısı").trim().split(/\s+/);
@@ -173,6 +209,13 @@ Deno.serve(async (req) => {
         .single();
 
       if (bookingError || !booking) {
+        // 23505 = unique_violation - someone else booked this exact
+        // teacher/date/time first (bookings_teacher_slot_unique, see
+        // migration_35.sql). Nothing was charged on this path (it's
+        // credit-covered), so it's safe to just ask them to pick again.
+        if (bookingError?.code === "23505") {
+          return jsonResponse({ error: "Bu saat başka bir öğrenci tarafından alındı. Lütfen başka bir saat seç." }, 409);
+        }
         console.error("credit-covered booking insert failed", bookingError);
         return jsonResponse({ error: "Rezervasyon oluşturulamadı." }, 500);
       }

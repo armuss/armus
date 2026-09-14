@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
   const successPath = isPackage ? `teacher.html?payment=success&${query}` : `booking.html?payment=success&${query}`;
   const failedPath = isPackage ? `teacher.html?payment=failed&${query}` : `booking.html?payment=failed&${query}`;
   const errorPath = isPackage ? `teacher.html?payment=error&${query}` : `booking.html?payment=error&${query}`;
+  const slotTakenPath = `booking.html?payment=slot_taken&${query}`;
 
   // iyzico can call this more than once for the same token - if we
   // already fulfilled this payment (booking created, or credits granted
@@ -147,6 +148,25 @@ Deno.serve(async (req) => {
     .single();
 
   if (bookingError || !booking) {
+
+    // 23505 = unique_violation - someone else grabbed this exact
+    // teacher/date/time in the window between this student picking it
+    // and iyzico confirming their charge (bookings_teacher_slot_unique,
+    // see migration_35.sql). The charge already succeeded, so rather
+    // than leaving this student's money in the manual paid_no_booking
+    // follow-up below, grant them a lesson credit right away - same
+    // mechanism cancel-booking uses - so they can immediately rebook a
+    // different time with nothing lost.
+    if (bookingError?.code === "23505" && !isPackage) {
+      await supabaseAdmin.from("lesson_credits").insert({
+        student_id: pending.student_id,
+        teacher_id: pending.teacher_id,
+        teacher_name: pending.teacher_name,
+      });
+      await supabaseAdmin.from("pending_payments").update({ status: "paid_no_booking" }).eq("id", pending.id);
+      return redirectTo(slotTakenPath);
+    }
+
     // money was taken but the booking row failed to write - flag it as
     // its own state rather than silently losing the payment, so it's
     // findable (pending_payments.status = 'paid_no_booking') instead of
