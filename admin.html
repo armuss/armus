@@ -1444,7 +1444,7 @@
     }
 
     function initials(name) {
-      return name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+      return armusEscapeHtml(name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase());
     }
 
     function renderTeacherCard(user) {
@@ -1454,8 +1454,8 @@
       card.dataset.teacherId = user.id;
       card.dataset.id = user.id;
 
-      const avatarInner = user.photo_url
-        ? `<img src="${user.photo_url}" alt="">`
+      const avatarInner = armusSafeUrl(user.photo_url)
+        ? `<img src="${armusSafeUrl(user.photo_url)}" alt="">`
         : initials(user.name);
 
       const badgeLabel = {
@@ -1492,8 +1492,8 @@
           ${bulkCheckbox}
           <div class="app-avatar">${avatarInner}</div>
           <div>
-            <div class="app-name">${user.name}</div>
-            <div class="app-email">${user.email}</div>
+            <div class="app-name">${armusEscapeHtml(user.name)}</div>
+            <div class="app-email">${armusEscapeHtml(user.email)}</div>
             <span class="app-badge ${user.status || "none"}">${badgeLabel}</span>
           </div>
           ${healthGauge}
@@ -1504,32 +1504,32 @@
         <div class="app-details">
           <div>
             <h4>${armusT("admin.locationSubject", "Konum / Konu")}</h4>
-            <p>${user.country || "—"} · ${user.subject_taught || "—"}</p>
+            <p>${armusEscapeHtml(user.country) || "—"} · ${armusEscapeHtml(user.subject_taught) || "—"}</p>
           </div>
           <div>
             <h4>${armusT("admin.priceAvailability", "Ücret / Uygunluk")}</h4>
-            <p>₺${user.price ?? "—"} / 50 dk · ${user.availability || "—"}</p>
+            <p>₺${user.price ?? "—"} / 50 dk · ${armusEscapeHtml(user.availability) || "—"}</p>
           </div>
 
           <div>
             <h4>${armusT("teacherProfile.languages", "Diller")}</h4>
             <p>
               ${user.languages && user.languages.length
-                ? user.languages.map(l => `${l.language} (${l.level})`).join(", ")
+                ? user.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ")
                 : "—"}
             </p>
           </div>
           <div>
             <h4>${armusT("admin.phone", "Telefon")}</h4>
-            <p>${user.phone || "—"}</p>
+            <p>${armusEscapeHtml(user.phone) || "—"}</p>
           </div>
 
           <div>
             <h4>${armusT("admin.certificate", "Sertifika")}</h4>
             <p>
               ${user.has_certificate
-                ? `${user.certificate_name || "—"} (${user.certificate_years || "—"})` +
-                  (user.certificate_file_url ? ` · <a href="${user.certificate_file_url}" target="_blank" rel="noopener">${user.certificate_file_name || armusT("admin.file", "dosya")}</a>` : "")
+                ? `${armusEscapeHtml(user.certificate_name) || "—"} (${armusEscapeHtml(user.certificate_years) || "—"})` +
+                  (armusSafeUrl(user.certificate_file_url) ? ` · <a href="${armusSafeUrl(user.certificate_file_url)}" target="_blank" rel="noopener">${armusEscapeHtml(user.certificate_file_name) || armusT("admin.file", "dosya")}</a>` : "")
                 : armusT("admin.notSpecified", "Belirtilmedi")}
             </p>
           </div>
@@ -1537,14 +1537,14 @@
             <h4>${armusT("admin.education", "Eğitim")}</h4>
             <p>
               ${user.has_education
-                ? `${user.university || "—"} · ${user.degree_type || "—"} (${user.graduation_year || "—"})<br>${user.specialization || ""}`
+                ? `${armusEscapeHtml(user.university) || "—"} · ${armusEscapeHtml(user.degree_type) || "—"} (${armusEscapeHtml(user.graduation_year) || "—"})<br>${armusEscapeHtml(user.specialization) || ""}`
                 : armusT("admin.notSpecified", "Belirtilmedi")}
             </p>
           </div>
 
           <div class="app-full">
             <h4>${armusT("admin.description", "Açıklama")}</h4>
-            <p>${user.bio || "—"}</p>
+            <p>${armusEscapeHtml(user.bio) || "—"}</p>
           </div>
 
           <div class="app-full">
@@ -1552,10 +1552,10 @@
             ${renderAvailabilityGrid(user.weekly_availability)}
           </div>
 
-          ${user.video_url ? `
+          ${armusSafeUrl(user.video_url) ? `
             <div class="app-full app-video">
               <h4>${armusT("admin.introVideo", "Tanıtım videosu")}</h4>
-              <video controls playsinline src="${user.video_url}"></video>
+              <video controls playsinline src="${armusSafeUrl(user.video_url)}"></video>
             </div>
           ` : ""}
         </div>
@@ -1628,16 +1628,16 @@
       let rows = "";
 
       if (pc.title !== undefined) {
-        rows += `<div><h4>${armusT("admin.specialtyTitle", "Uzmanlık başlığı")}</h4><p>${user.title || "—"} → <strong>${pc.title}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.specialtyTitle", "Uzmanlık başlığı")}</h4><p>${armusEscapeHtml(user.title) || "—"} → <strong>${armusEscapeHtml(pc.title)}</strong></p></div>`;
       }
       if (pc.price !== undefined) {
         rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
       }
       if (pc.availability !== undefined) {
-        rows += `<div><h4>${armusT("admin.availabilityStatus", "Uygunluk durumu")}</h4><p>${user.availability || "—"} → <strong>${pc.availability}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.availabilityStatus", "Uygunluk durumu")}</h4><p>${armusEscapeHtml(user.availability) || "—"} → <strong>${armusEscapeHtml(pc.availability)}</strong></p></div>`;
       }
       if (pc.bio !== undefined) {
-        rows += `<div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p><strong>${pc.bio}</strong></p></div>`;
+        rows += `<div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p><strong>${armusEscapeHtml(pc.bio)}</strong></p></div>`;
       }
       if (Array.isArray(pc.weekly_availability)) {
         rows += `<div class="app-full"><h4>${armusT("admin.newWeeklyAvailability", "Yeni haftalık uygunluk")}</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
@@ -1728,8 +1728,8 @@
           const tr = document.createElement("tr");
           tr.dataset.id = b.id;
           tr.innerHTML = `
-            <td>${b.studentName}</td>
-            <td>${b.teacherName}</td>
+            <td>${armusEscapeHtml(b.studentName)}</td>
+            <td>${armusEscapeHtml(b.teacherName)}</td>
             <td>${b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders")}</td>
             <td>${b.dateLabel}</td>
             <td>${b.time}</td>
@@ -1781,8 +1781,8 @@
         const tr = document.createElement("tr");
         tr.dataset.id = s.id;
         tr.innerHTML = `
-          <td>${s.name}</td>
-          <td>${s.email}</td>
+          <td>${armusEscapeHtml(s.name)}</td>
+          <td>${armusEscapeHtml(s.email)}</td>
           <td>${new Date(s.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           <td>${count}</td>
           <td class="row-actions">
@@ -1815,7 +1815,7 @@
       const rows = studentBookings.length
         ? studentBookings.map(b => `
             <tr>
-              <td>${b.teacherName}</td>
+              <td>${armusEscapeHtml(b.teacherName)}</td>
               <td>${b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders")}</td>
               <td>${b.dateLabel}</td>
               <td>${b.time}</td>
@@ -1826,7 +1826,7 @@
 
       document.getElementById("detailBody").innerHTML = `
         <div class="app-details" style="margin-bottom:20px;">
-          <div><h4>${armusT("admin.colEmail", "E-posta")}</h4><p>${student.email}</p></div>
+          <div><h4>${armusT("admin.colEmail", "E-posta")}</h4><p>${armusEscapeHtml(student.email)}</p></div>
           <div><h4>${armusT("admin.colJoinDate", "Kayıt tarihi")}</h4><p>${new Date(student.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</p></div>
         </div>
         <h3 style="margin-top:0;">${armusT("admin.bookingHistory", "Rezervasyon geçmişi")}</h3>
@@ -1974,9 +1974,9 @@
         .forEach(log => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${log.admin_name}</td>
-            <td>${actionLabels[log.action] || log.action}</td>
-            <td>${log.target_label || log.target_id || "—"}</td>
+            <td>${armusEscapeHtml(log.admin_name)}</td>
+            <td>${actionLabels[log.action] || armusEscapeHtml(log.action)}</td>
+            <td>${armusEscapeHtml(log.target_label) || armusEscapeHtml(log.target_id) || "—"}</td>
             <td>${new Date(log.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           `;
           body.appendChild(tr);
@@ -2006,7 +2006,7 @@
         card.innerHTML = `
           <div class="app-top">
             <div>
-              <div class="app-name">${t.name}${t.location ? ` · ${t.location}` : ""}</div>
+              <div class="app-name">${armusEscapeHtml(t.name)}${t.location ? ` · ${armusEscapeHtml(t.location)}` : ""}</div>
               <div class="app-email">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
               <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? armusT("admin.published", "Yayında") : armusT("admin.hidden", "Gizli")}</span>
             </div>
@@ -2018,7 +2018,7 @@
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${t.quote}</p></div>
+            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${armusEscapeHtml(t.quote)}</p></div>
           </div>
         `;
         list.appendChild(card);
@@ -2222,8 +2222,8 @@
         <div class="app-card" style="border-color: rgba(220,90,90,.4);">
           <div class="app-top">
             <div>
-              <div class="app-name">${teacher.name}</div>
-              <div class="app-email">${teacher.email}</div>
+              <div class="app-name">${armusEscapeHtml(teacher.name)}</div>
+              <div class="app-email">${armusEscapeHtml(teacher.email)}</div>
             </div>
             <div class="app-actions">
               <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
@@ -2246,9 +2246,9 @@
 
       document.getElementById("testimonialPreview").innerHTML = `
         <div class="tp-stars">${"★".repeat(rating)}${"☆".repeat(5 - rating)}</div>
-        <div class="tp-quote">“${quote}”</div>
-        <span class="tp-name">${name}</span>
-        ${location ? `<span class="tp-location">${location}</span>` : ""}
+        <div class="tp-quote">“${armusEscapeHtml(quote)}”</div>
+        <span class="tp-name">${armusEscapeHtml(name)}</span>
+        ${location ? `<span class="tp-location">${armusEscapeHtml(location)}</span>` : ""}
       `;
     }
 
@@ -2297,8 +2297,8 @@
         card.innerHTML = `
           <div class="app-top">
             <div>
-              <div class="app-name">${d.subject}</div>
-              <div class="app-email">${d.reporter_name} (${d.reporter_role === "teacher" ? armusT("admin.roleTeacher", "öğretmen") : armusT("admin.roleStudent", "öğrenci")})${d.other_party_name ? ` · ${armusT("admin.regarding", "{name} ile ilgili").replace("{name}", d.other_party_name)}` : ""}</div>
+              <div class="app-name">${armusEscapeHtml(d.subject)}</div>
+              <div class="app-email">${armusEscapeHtml(d.reporter_name)} (${d.reporter_role === "teacher" ? armusT("admin.roleTeacher", "öğretmen") : armusT("admin.roleStudent", "öğrenci")})${d.other_party_name ? ` · ${armusT("admin.regarding", "{name} ile ilgili").replace("{name}", armusEscapeHtml(d.other_party_name))}` : ""}</div>
               <span class="app-badge dispute-${d.status}">${statusLabels[d.status] || d.status}</span>
             </div>
             <div class="app-actions">
@@ -2307,10 +2307,10 @@
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p>${d.description}</p></div>
+            <div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p>${armusEscapeHtml(d.description)}</p></div>
             <div class="app-full">
               <h4>${armusT("admin.adminNote", "Admin notu")}</h4>
-              <textarea class="admin-search" data-dispute-notes="${d.id}" style="min-height: 50px; resize: vertical; margin-bottom: 8px;">${d.admin_notes || ""}</textarea>
+              <textarea class="admin-search" data-dispute-notes="${d.id}" style="min-height: 50px; resize: vertical; margin-bottom: 8px;">${armusEscapeHtml(d.admin_notes)}</textarea>
               <button class="btn" data-save-notes="${d.id}">${armusT("admin.saveNote", "Notu Kaydet")}</button>
             </div>
           </div>
@@ -2406,13 +2406,13 @@
         <div class="app-card">
           <div class="app-top">
             <div>
-              <div class="app-name">${r.student_name}</div>
-              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · ${armusT("admin.teacherColon", "öğretmen:")} ${teacher ? teacher.name : r.teacher_id}</div>
+              <div class="app-name">${armusEscapeHtml(r.student_name)}</div>
+              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · ${armusT("admin.teacherColon", "öğretmen:")} ${armusEscapeHtml(teacher ? teacher.name : r.teacher_id)}</div>
             </div>
             ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("admin.messageTeacher", "Öğretmene Mesaj")}</a></div>` : ""}
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${r.comment || "—"}</p></div>
+            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${armusEscapeHtml(r.comment) || "—"}</p></div>
           </div>
         </div>
       `;
@@ -2471,7 +2471,7 @@
       rows.forEach(row => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${row.teacher.name}</td>
+          <td>${armusEscapeHtml(row.teacher.name)}</td>
           <td>${row.completedCount}</td>
           <td>${row.hours}</td>
           <td>₺${row.gross}</td>
@@ -2515,18 +2515,18 @@
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, payload => {
           const b = payload.new;
           pushPulseEvent(armusT("admin.pulseNewBooking", "📅 Yeni rezervasyon: <strong>{student}</strong> → {teacher}")
-            .replace("{student}", b.student_name).replace("{teacher}", b.teacher_name));
+            .replace("{student}", armusEscapeHtml(b.student_name)).replace("{teacher}", armusEscapeHtml(b.teacher_name)));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, payload => {
           const p = payload.new;
           const roleLabel = p.role === "teacher" ? armusT("admin.pulseTeacherApplicant", "öğretmen adayı") : armusT("admin.roleStudent", "öğrenci");
           pushPulseEvent(armusT("admin.pulseNewSignup", "👤 Yeni kayıt: <strong>{name}</strong> ({role})")
-            .replace("{name}", p.name).replace("{role}", roleLabel));
+            .replace("{name}", armusEscapeHtml(p.name)).replace("{role}", roleLabel));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "reviews" }, payload => {
           const r = payload.new;
           pushPulseEvent(armusT("admin.pulseNewReview", "⭐ Yeni değerlendirme: <strong>{student}</strong> {stars}")
-            .replace("{student}", r.student_name).replace("{stars}", "★".repeat(r.stars)));
+            .replace("{student}", armusEscapeHtml(r.student_name)).replace("{stars}", "★".repeat(r.stars)));
         })
         .subscribe();
       renderPulse();
@@ -2587,7 +2587,7 @@
       ];
       if (topTeacherEntry) {
         parts.push(armusT("admin.digestTopTeacher", "bu hafta en çok ders veren öğretmen <strong>{name}</strong> ({n} ders)")
-          .replace("{name}", topTeacherEntry[0]).replace("{n}", topTeacherEntry[1]));
+          .replace("{name}", armusEscapeHtml(topTeacherEntry[0])).replace("{n}", topTeacherEntry[1]));
       }
 
       let text = armusT("admin.digestGoodMorning", "👋 Günaydın! ") + parts.join(", ") + ".";
@@ -2714,7 +2714,7 @@
       const max = entries[0][1];
       list.innerHTML = entries.map(([city, count]) => `
         <div class="city-bar-row">
-          <span>${city}</span>
+          <span>${armusEscapeHtml(city)}</span>
           <div class="city-bar-track"><div class="city-bar-fill" style="width:${Math.round((count / max) * 100)}%"></div></div>
           <span>${count}</span>
         </div>
@@ -2887,7 +2887,7 @@
       container.innerHTML = armusPaletteResults.map((item, i) => `
         <div class="palette-item ${i === 0 ? "active" : ""}" data-index="${i}">
           <span class="pi-type">${item.type}</span>
-          <span>${item.label}${item.sub ? ` <span class="pi-sub">· ${item.sub}</span>` : ""}</span>
+          <span>${armusEscapeHtml(item.label)}${item.sub ? ` <span class="pi-sub">· ${armusEscapeHtml(item.sub)}</span>` : ""}</span>
         </div>
       `).join("");
 

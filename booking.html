@@ -765,9 +765,9 @@
       renderBookingText();
       document.addEventListener("armus:langchange", renderBookingText);
 
-      document.getElementById("avatar").innerHTML = teacher.photo
-        ? `<img src="${teacher.photo}" alt="">`
-        : teacher.initials;
+      document.getElementById("avatar").innerHTML = armusSafeUrl(teacher.photo)
+        ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`
+        : armusEscapeHtml(teacher.initials);
       document.getElementById("teacherName").textContent = armusShortDisplayName(teacher.name);
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("priceValue").textContent = `₺${teacher.price}`;

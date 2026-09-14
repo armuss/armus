@@ -654,7 +654,7 @@
     }
 
     function initials(name) {
-      return name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+      return escapeHtml(name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase());
     }
 
     function formatTime(iso) {
@@ -678,15 +678,15 @@
 
         const item = document.createElement("div");
         item.className = "convo-item" + (c.id === activeId ? " active" : "");
-        const avatarInner = c.otherPhoto
-          ? `<img src="${c.otherPhoto}" alt="">`
+        const avatarInner = armusSafeUrl(c.otherPhoto)
+          ? `<img src="${armusSafeUrl(c.otherPhoto)}" alt="">`
           : initials(c.otherName);
 
         item.innerHTML = `
           <div class="convo-avatar">${avatarInner}</div>
           <div class="convo-info">
-            <div class="convo-name">${otherPartyDisplayName(c.otherName)}${c.unreadCount > 0 ? '<span class="unread-dot"></span>' : ""}</div>
-            <div class="convo-preview">${c.lastMessage ? (c.lastMessage.body || attachmentPreviewLabel(c.lastMessage.attachment_type)) : armusT("messages.noMessageYet", "Henüz mesaj yok")}</div>
+            <div class="convo-name">${escapeHtml(otherPartyDisplayName(c.otherName))}${c.unreadCount > 0 ? '<span class="unread-dot"></span>' : ""}</div>
+            <div class="convo-preview">${c.lastMessage ? escapeHtml(c.lastMessage.body || attachmentPreviewLabel(c.lastMessage.attachment_type)) : armusT("messages.noMessageYet", "Henüz mesaj yok")}</div>
           </div>
         `;
 
@@ -702,8 +702,8 @@
 
       const header = document.getElementById("threadHeader");
       header.style.display = "flex";
-      const avatarInner = otherPhoto ? `<img src="${otherPhoto}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;">` : "";
-      header.innerHTML = `${avatarInner}<span>${otherPartyDisplayName(otherName)}</span>`;
+      const avatarInner = armusSafeUrl(otherPhoto) ? `<img src="${armusSafeUrl(otherPhoto)}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;">` : "";
+      header.innerHTML = `${avatarInner}<span>${escapeHtml(otherPartyDisplayName(otherName))}</span>`;
 
       document.getElementById("threadForm").style.display = "flex";
 
@@ -756,12 +756,13 @@
 
       let html = "";
 
-      if (message.attachment_type === "image") {
-        html += `<div class="msg-attachment"><a href="${message.attachment_url}" target="_blank" rel="noopener"><img src="${message.attachment_url}" alt=""></a></div>`;
-      } else if (message.attachment_type === "video") {
-        html += `<div class="msg-attachment"><video src="${message.attachment_url}" controls></video></div>`;
-      } else if (message.attachment_type === "audio") {
-        html += `<div class="msg-attachment"><audio src="${message.attachment_url}" controls></audio></div>`;
+      const attachmentUrl = armusSafeUrl(message.attachment_url);
+      if (attachmentUrl && message.attachment_type === "image") {
+        html += `<div class="msg-attachment"><a href="${attachmentUrl}" target="_blank" rel="noopener"><img src="${attachmentUrl}" alt=""></a></div>`;
+      } else if (attachmentUrl && message.attachment_type === "video") {
+        html += `<div class="msg-attachment"><video src="${attachmentUrl}" controls></video></div>`;
+      } else if (attachmentUrl && message.attachment_type === "audio") {
+        html += `<div class="msg-attachment"><audio src="${attachmentUrl}" controls></audio></div>`;
       }
 
       if (message.body) html += escapeHtml(message.body);

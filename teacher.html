@@ -1092,15 +1092,15 @@
       document.getElementById("pageTitle").textContent =
         `${armusShortDisplayName(teacher.name)} | ARMUS`;
 
-      document.getElementById("avatar").innerHTML = teacher.photo
-        ? `<img src="${teacher.photo}" alt="">`
-        : teacher.initials;
+      document.getElementById("avatar").innerHTML = armusSafeUrl(teacher.photo)
+        ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`
+        : armusEscapeHtml(teacher.initials);
 
       const heroMedia = document.getElementById("heroMedia");
-      if (teacher.video) {
-        heroMedia.innerHTML = `<video src="${teacher.video}" controls playsinline></video>`;
-      } else if (teacher.photo) {
-        heroMedia.innerHTML = `<img src="${teacher.photo}" alt="">`;
+      if (armusSafeUrl(teacher.video)) {
+        heroMedia.innerHTML = `<video src="${armusSafeUrl(teacher.video)}" controls playsinline></video>`;
+      } else if (armusSafeUrl(teacher.photo)) {
+        heroMedia.innerHTML = `<img src="${armusSafeUrl(teacher.photo)}" alt="">`;
       } else {
         heroMedia.classList.add("fallback");
         heroMedia.textContent = teacher.initials;

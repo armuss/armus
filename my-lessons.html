@@ -617,7 +617,7 @@
           wrap.innerHTML = `
             <div class="submitted-review">
               <span class="stars">${"★".repeat(existing.stars)}${"☆".repeat(5 - existing.stars)} ${armusT("myLessons.reviewed", "Değerlendirdin")}</span>
-              ${existing.text ? `<p>${existing.text}</p>` : ""}
+              ${existing.text ? `<p>${armusEscapeHtml(existing.text)}</p>` : ""}
             </div>
           `;
 
@@ -632,7 +632,7 @@
             <div class="star-picker">
               ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
             </div>
-            <textarea placeholder="${armusT("myLessons.reviewPlaceholder", "{name} ile dersin nasıldı?").replace("{name}", armusShortDisplayName(booking.teacherName))}"></textarea>
+            <textarea placeholder="${armusEscapeHtml(armusT("myLessons.reviewPlaceholder", "{name} ile dersin nasıldı?").replace("{name}", armusShortDisplayName(booking.teacherName)))}"></textarea>
             <button type="button" class="review-submit-btn">${armusT("contact.submit", "Gönder")}</button>
           </div>
         `;
@@ -714,7 +714,7 @@
           wrap.innerHTML = `
             <div class="submitted-dispute">
               <span class="dispute-status">⚑ ${disputeStatusLabels()[existing.status] || existing.status}</span>
-              <p>${existing.subject}</p>
+              <p>${armusEscapeHtml(existing.subject)}</p>
             </div>
           `;
           return wrap;
@@ -795,7 +795,7 @@
             const isPast = booking.date < todayKey;
             const isCancelled = booking.status === "cancelled";
             const avatarInner = teacher
-              ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
+              ? (armusSafeUrl(teacher.photo) ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">` : armusEscapeHtml(teacher.initials))
               : "?";
             // shown in the viewer's own current local time, not the
             // teacher's - see armusFormatLessonWhen (migration_37.sql)
@@ -809,7 +809,7 @@
                 <div class="avatar">${avatarInner}</div>
                 <div class="lesson-info">
                   <div class="lesson-teacher">
-                    ${armusShortDisplayName(booking.teacherName)}
+                    ${armusEscapeHtml(armusShortDisplayName(booking.teacherName))}
                     <span class="lesson-type">${booking.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</span>
                   </div>
                   <div class="lesson-meta">₺${booking.price} ${armusT("booking.perLesson", "/ 50 dakika")}${isPast ? armusT("myLessons.pastSuffix", " · geçti") : ""}</div>

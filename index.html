@@ -271,9 +271,9 @@
       grid.innerHTML = testimonials.map(t => `
         <article class="reveal in-view">
           <div class="stars">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
-          <p>“${t.quote}”</p>
-          <strong>${t.name}</strong>
-          <small>${t.location || ""}</small>
+          <p>“${armusEscapeHtml(t.quote)}”</p>
+          <strong>${armusEscapeHtml(t.name)}</strong>
+          <small>${armusEscapeHtml(t.location) || ""}</small>
         </article>
       `).join("");
     })();

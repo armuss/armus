@@ -1128,17 +1128,17 @@
     const pageRoot = document.getElementById("pageRoot");
 
     function initialsOf(name) {
-      return (name || "?")
+      return armusEscapeHtml((name || "?")
         .split(" ")
         .map(part => part[0])
         .filter(Boolean)
         .slice(0, 2)
         .join("")
-        .toUpperCase() || "?";
+        .toUpperCase() || "?");
     }
 
     function avatarInnerFor(photoUrl, name) {
-      return photoUrl ? `<img src="${photoUrl}" alt="">` : initialsOf(name);
+      return armusSafeUrl(photoUrl) ? `<img src="${armusSafeUrl(photoUrl)}" alt="">` : initialsOf(name);
     }
 
     // Monday (yyyy-mm-dd) of the week dateStr falls in.
@@ -1263,7 +1263,7 @@
               <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
               <div>
                 <div class="hero-eyebrow">${armusT("studentDash.nextLesson", "Sıradaki Dersin")}</div>
-                <div class="hero-lesson-name">${armusShortDisplayName(next.teacherName)}</div>
+                <div class="hero-lesson-name">${armusEscapeHtml(armusShortDisplayName(next.teacherName))}</div>
                 <div class="hero-lesson-meta">${whenLabel} · ${armusFormatTimeRange(next.time)} · ${next.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</div>
               </div>
               <div class="hero-lesson-right">
@@ -1399,7 +1399,7 @@
       if (pendingCheckinBooking) {
 
         confidenceCard.innerHTML = `
-          <div class="confidence-prompt-q">${armusT("studentDash.confidencePromptQ", "{name} ile olan dersin nasıldı? Ne kadar rahat konuştun?").replace("{name}", armusShortDisplayName(pendingCheckinBooking.teacherName))}</div>
+          <div class="confidence-prompt-q">${armusT("studentDash.confidencePromptQ", "{name} ile olan dersin nasıldı? Ne kadar rahat konuştun?").replace("{name}", armusEscapeHtml(armusShortDisplayName(pendingCheckinBooking.teacherName)))}</div>
           <div class="confidence-scale">
             ${["😟", "🙁", "😐", "🙂", "😄"].map((emoji, i) => `<button type="button" class="confidence-btn" data-score="${i + 1}">${emoji}</button>`).join("")}
           </div>
@@ -1667,7 +1667,7 @@
               <div class="mini-lesson-row">
                 <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
                 <div>
-                  <div class="mini-lesson-name">${armusShortDisplayName(b.teacherName)}</div>
+                  <div class="mini-lesson-name">${armusEscapeHtml(armusShortDisplayName(b.teacherName))}</div>
                   <div class="mini-lesson-meta">${b.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")} · ₺${b.price}</div>
                 </div>
                 <div class="mini-lesson-when">
@@ -1692,12 +1692,12 @@
           msgList.innerHTML = `<div class="empty-hint">${armusT("studentDash.noConvos", "Henüz bir mesajlaşman yok.")}</div>`;
         } else {
           msgList.innerHTML = convosToShow.map(c => {
-            const snippet = c.lastMessage ? c.lastMessage.body : armusT("messages.noMessageYet", "Henüz mesaj yok");
+            const snippet = c.lastMessage ? armusEscapeHtml(c.lastMessage.body) : armusT("messages.noMessageYet", "Henüz mesaj yok");
             return `
               <a class="msg-row" href="mesajlar.html?teacher=${c.otherId}" style="display:flex;">
                 <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
                 <div>
-                  <div class="msg-name">${c.otherName}</div>
+                  <div class="msg-name">${armusEscapeHtml(c.otherName)}</div>
                   <div class="msg-snippet">${snippet}</div>
                 </div>
                 ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
@@ -1721,7 +1721,7 @@
         document.getElementById("recGrid").innerHTML = recommended.map(t => `
           <div class="rec-card">
             <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
-            <div class="rec-name">${t.name}</div>
+            <div class="rec-name">${armusEscapeHtml(t.name)}</div>
             <div class="rec-meta">${t.rating ? "★ " + t.rating : armusT("studentDash.newTeacher", "Yeni Öğretmen")} · ₺${t.price}</div>
             <a class="rec-cta" href="teacher.html?id=${t.id}">${armusT("studentDash.viewProfile", "Profili Gör")}</a>
           </div>
@@ -1739,7 +1739,7 @@
         document.getElementById("favRow").innerHTML = favoriteTeachers.map(t => `
           <a class="fav-chip" href="teacher.html?id=${t.id}">
             <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
-            ${armusShortDisplayName(t.name)}
+            ${armusEscapeHtml(armusShortDisplayName(t.name))}
           </a>
         `).join("");
       }

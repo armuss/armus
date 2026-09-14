@@ -939,9 +939,9 @@
       const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
       const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
       const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
-      const avatarInner = teacher.photo
-        ? `<img src="${teacher.photo}" alt="">`
-        : teacher.initials;
+      const avatarInner = armusSafeUrl(teacher.photo)
+        ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`
+        : armusEscapeHtml(teacher.initials);
 
       const article = document.createElement("article");
       article.className = "teacher-card";
@@ -973,16 +973,16 @@
 
         <div class="card-mid">
           <div class="card-mid-top">
-            <a href="${teacherLink}" class="teacher-name">${armusShortDisplayName(teacher.name)}</a>
+            <a href="${teacherLink}" class="teacher-name">${armusEscapeHtml(armusShortDisplayName(teacher.name))}</a>
             <div class="rating">${ratingLabel}</div>
             <button type="button" class="fav-btn" data-fav="${teacher.id}" aria-label="${armusT("teacherProfile.addToFavorites", "Favorilere ekle")}">♥</button>
           </div>
-          <div class="teacher-role">${teacher.role}</div>
+          <div class="teacher-role">${armusEscapeHtml(teacher.role)}</div>
           <div class="stats-line">${studentsLabel}</div>
           <div class="tags">
-            ${teacher.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}
+            ${teacher.tags.map(tag => `<span class="tag">${armusEscapeHtml(tag)}</span>`).join("")}
           </div>
-          ${aboutSnippet ? `<div class="card-desc">${aboutSnippet} <a href="${teacherLink}">${armusT("teacherProfile.showMore", "Devamını oku")}</a></div>` : ""}
+          ${aboutSnippet ? `<div class="card-desc">${armusEscapeHtml(aboutSnippet)} <a href="${teacherLink}">${armusT("teacherProfile.showMore", "Devamını oku")}</a></div>` : ""}
         </div>
 
         <div class="card-side">
