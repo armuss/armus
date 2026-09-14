@@ -858,6 +858,8 @@ const ARMUS_I18N_EN = {
   "admin.gateLoginText": "You need to log in with an admin account to access this panel.",
   "admin.gateNoPermTitle": "No permission",
   "admin.gateNoPermText": "This account doesn't have admin permission.",
+  "admin.gateLoginBtn": "Log In",
+  "admin.bulkSelectedCountZero": "0 applications selected",
 
   // teacher.html (profile page) - calendar expand button
   "teacherProfile.viewFullSchedule": "View full schedule",
