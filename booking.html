@@ -784,11 +784,6 @@
 
       // ---- deterministic mock availability ----
 
-      // From bookings.js - language-aware, so this picks up the site's
-      // current EN/TR toggle state at page load.
-      const DAY_NAMES = armusDayNames();
-      const MONTH_NAMES = armusMonthNames();
-
       // ---- returning from iyzico's checkout (payment-callback redirected
       // here) - show a receipt or a failure notice instead of the picker,
       // nothing in this page's own JS state survived the round trip ----
@@ -844,37 +839,47 @@
 
       const today = new Date();
 
-      for (let i = 0; i < 10; i++) {
+      function renderDateRow() {
+        const dayNames = armusDayNames();
+        dateRow.innerHTML = "";
 
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        const dateKey = toDateKey(date);
+        for (let i = 0; i < 10; i++) {
 
-        const pill = document.createElement("div");
-        pill.className = "date-pill";
-        pill.dataset.date = dateKey;
-        pill.innerHTML = `
-          <span class="day-name">${DAY_NAMES[date.getDay()]}</span>
-          <span class="day-num">${date.getDate()}</span>
-        `;
+          const date = new Date(today);
+          date.setDate(today.getDate() + i);
+          const dateKey = toDateKey(date);
 
-        pill.addEventListener("click", () => {
+          const pill = document.createElement("div");
+          pill.className = "date-pill" + (dateKey === selectedDate ? " selected" : "");
+          pill.dataset.date = dateKey;
+          pill.innerHTML = `
+            <span class="day-name">${dayNames[date.getDay()]}</span>
+            <span class="day-num">${date.getDate()}</span>
+          `;
 
-          document.querySelectorAll(".date-pill").forEach(p =>
-            p.classList.remove("selected")
-          );
-          pill.classList.add("selected");
+          pill.addEventListener("click", () => {
 
-          selectedDate = dateKey;
-          selectedDateLabel = armusFormatDateLabel(dateKey);
-          selectedTime = null;
+            document.querySelectorAll(".date-pill").forEach(p =>
+              p.classList.remove("selected")
+            );
+            pill.classList.add("selected");
 
-          confirmBox.style.display = "none";
-          renderSlots(dateKey, date.getDay());
-        });
+            selectedDate = dateKey;
+            selectedDateLabel = armusFormatDateLabel(dateKey);
+            selectedTime = null;
 
-        dateRow.appendChild(pill);
+            confirmBox.style.display = "none";
+            renderSlots(dateKey, date.getDay());
+          });
+
+          dateRow.appendChild(pill);
+        }
       }
+      renderDateRow();
+      document.addEventListener("armus:langchange", () => {
+        renderDateRow();
+        if (selectedDate) selectedDateLabel = armusFormatDateLabel(selectedDate);
+      });
 
       function renderSlots(dateKey, dayOfWeek) {
 
@@ -885,7 +890,7 @@
 
         if (!slots.some(s => s.available)) {
           slotGrid.innerHTML =
-            '<div class="empty-hint">Bu tarihte boş saat yok, başka bir gün dene.</div>';
+            `<div class="empty-hint">${armusT("booking.noSlotsThisDate", "Bu tarihte boş saat yok, başka bir gün dene.")}</div>`;
           return;
         }
 
@@ -942,8 +947,9 @@
         if (creditApplies) {
           document.getElementById("confirmCreditRow").style.display = "flex";
           document.getElementById("payerFields").style.display = "none";
-          document.getElementById("confirmNote").textContent = "Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak";
-          confirmBtn.textContent = "Rezervasyonu Tamamla";
+          document.getElementById("confirmNote").textContent =
+            armusT("booking.creditConfirmNote", "Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak");
+          confirmBtn.textContent = armusT("booking.completeBookingBtn", "Rezervasyonu Tamamla");
         }
 
         confirmBox.style.display = "block";
@@ -974,12 +980,12 @@
 
         if (needsCard) {
           if (phone.replace(/\D/g, "").length < 10) {
-            confirmError.textContent = "Lütfen geçerli bir telefon numarası gir.";
+            confirmError.textContent = armusT("booking.invalidPhone", "Lütfen geçerli bir telefon numarası gir.");
             confirmError.style.display = "block";
             return;
           }
           if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
-            confirmError.textContent = "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).";
+            confirmError.textContent = armusT("booking.invalidIdentity", "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).");
             confirmError.style.display = "block";
             return;
           }
@@ -987,7 +993,9 @@
 
         const originalBtnText = confirmBtn.textContent;
         confirmBtn.disabled = true;
-        confirmBtn.textContent = needsCard ? "Yönlendiriliyor..." : "Tamamlanıyor...";
+        confirmBtn.textContent = needsCard
+          ? armusT("booking.redirecting", "Yönlendiriliyor...")
+          : armusT("booking.completing", "Tamamlanıyor...");
 
         const { data, error } = await armusSupabase.functions.invoke("create-payment", {
           body: {
@@ -1004,7 +1012,7 @@
 
         if (error || !data || (!data.paymentPageUrl && !data.bookedDirectly)) {
           confirmError.textContent =
-            (data && data.error) || "İşlem başlatılamadı. Lütfen tekrar dene.";
+            (data && data.error) || armusT("booking.genericError", "İşlem başlatılamadı. Lütfen tekrar dene.");
           confirmError.style.display = "block";
           confirmBtn.disabled = false;
           confirmBtn.textContent = originalBtnText;
