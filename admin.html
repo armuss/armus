@@ -2407,12 +2407,12 @@
           <div class="app-top">
             <div>
               <div class="app-name">${r.student_name}</div>
-              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · öğretmen: ${teacher ? teacher.name : r.teacher_id}</div>
+              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · ${armusT("admin.teacherColon", "öğretmen:")} ${teacher ? teacher.name : r.teacher_id}</div>
             </div>
-            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Öğretmene Mesaj</a></div>` : ""}
+            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("admin.messageTeacher", "Öğretmene Mesaj")}</a></div>` : ""}
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Yorum</h4><p>${r.comment || "—"}</p></div>
+            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${r.comment || "—"}</p></div>
           </div>
         </div>
       `;
@@ -2424,11 +2424,11 @@
     // applied here across every teacher at once.
 
     function commissionForHours(hours) {
-      if (hours < 100) return { rate: 30, range: "0–100 saat" };
-      if (hours < 200) return { rate: 28, range: "100–200 saat" };
-      if (hours < 300) return { rate: 25, range: "200–300 saat" };
-      if (hours < 500) return { rate: 20, range: "300–500 saat" };
-      return { rate: 15, range: "500+ saat" };
+      if (hours < 100) return { rate: 30, range: armusT("admin.hoursRange0", "0–100 saat") };
+      if (hours < 200) return { rate: 28, range: armusT("admin.hoursRange100", "100–200 saat") };
+      if (hours < 300) return { rate: 25, range: armusT("admin.hoursRange200", "200–300 saat") };
+      if (hours < 500) return { rate: 20, range: armusT("admin.hoursRange300", "300–500 saat") };
+      return { rate: 15, range: armusT("admin.hoursRange500", "500+ saat") };
     }
 
     function computeEarnings(teachers, bookings, credits) {
@@ -2499,12 +2499,12 @@
       const el = document.getElementById("livePulse");
       if (!el) return;
       if (!armusPulseEvents.length) {
-        el.innerHTML = `<div class="pulse-empty">Henüz canlı bir olay yok. Yeni bir rezervasyon, kayıt ya da değerlendirme geldiğinde burada anında görünecek.</div>`;
+        el.innerHTML = `<div class="pulse-empty">${armusT("admin.pulseEmpty", "Henüz canlı bir olay yok. Yeni bir rezervasyon, kayıt ya da değerlendirme geldiğinde burada anında görünecek.")}</div>`;
         return;
       }
       el.innerHTML = armusPulseEvents.map(e => `
         <div class="pulse-item">
-          <span class="pulse-time">${e.time.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
+          <span class="pulse-time">${e.time.toLocaleTimeString(armusGetLang() === "en" ? "en-US" : "tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
           <span>${e.html}</span>
         </div>
       `).join("");
@@ -2514,15 +2514,19 @@
       armusSupabase.channel("admin-pulse")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, payload => {
           const b = payload.new;
-          pushPulseEvent(`📅 Yeni rezervasyon: <strong>${b.student_name}</strong> → ${b.teacher_name}`);
+          pushPulseEvent(armusT("admin.pulseNewBooking", "📅 Yeni rezervasyon: <strong>{student}</strong> → {teacher}")
+            .replace("{student}", b.student_name).replace("{teacher}", b.teacher_name));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, payload => {
           const p = payload.new;
-          pushPulseEvent(`👤 Yeni kayıt: <strong>${p.name}</strong> (${p.role === "teacher" ? "öğretmen adayı" : "öğrenci"})`);
+          const roleLabel = p.role === "teacher" ? armusT("admin.pulseTeacherApplicant", "öğretmen adayı") : armusT("admin.roleStudent", "öğrenci");
+          pushPulseEvent(armusT("admin.pulseNewSignup", "👤 Yeni kayıt: <strong>{name}</strong> ({role})")
+            .replace("{name}", p.name).replace("{role}", roleLabel));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "reviews" }, payload => {
           const r = payload.new;
-          pushPulseEvent(`⭐ Yeni değerlendirme: <strong>${r.student_name}</strong> ${"★".repeat(r.stars)}`);
+          pushPulseEvent(armusT("admin.pulseNewReview", "⭐ Yeni değerlendirme: <strong>{student}</strong> {stars}")
+            .replace("{student}", r.student_name).replace("{stars}", "★".repeat(r.stars)));
         })
         .subscribe();
       renderPulse();
@@ -2549,7 +2553,7 @@
         note.style.display = "inline";
         setTimeout(() => { note.style.display = "none"; }, 2000);
       } else {
-        alert("Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir.");
+        alert(armusT("admin.settingsSaveFailed", "Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir."));
       }
     });
 
@@ -2574,16 +2578,21 @@
       const openDisputes = (disputes || []).filter(d => d.status !== "resolved").length;
 
       const parts = [
-        newToday > 0 ? `bugün <strong>${newToday}</strong> yeni kayıt oldu` : `bugün henüz yeni kayıt olmadı`,
-        bookingsToday > 0 ? `<strong>${bookingsToday}</strong> rezervasyon yapıldı` : `henüz rezervasyon yapılmadı`,
+        newToday > 0
+          ? armusT("admin.digestNewSignups", "bugün <strong>{n}</strong> yeni kayıt oldu").replace("{n}", newToday)
+          : armusT("admin.digestNoNewSignups", "bugün henüz yeni kayıt olmadı"),
+        bookingsToday > 0
+          ? armusT("admin.digestBookingsToday", "<strong>{n}</strong> rezervasyon yapıldı").replace("{n}", bookingsToday)
+          : armusT("admin.digestNoBookingsToday", "henüz rezervasyon yapılmadı"),
       ];
       if (topTeacherEntry) {
-        parts.push(`bu hafta en çok ders veren öğretmen <strong>${topTeacherEntry[0]}</strong> (${topTeacherEntry[1]} ders)`);
+        parts.push(armusT("admin.digestTopTeacher", "bu hafta en çok ders veren öğretmen <strong>{name}</strong> ({n} ders)")
+          .replace("{name}", topTeacherEntry[0]).replace("{n}", topTeacherEntry[1]));
       }
 
-      let text = "👋 Günaydın! " + parts.join(", ") + ".";
+      let text = armusT("admin.digestGoodMorning", "👋 Günaydın! ") + parts.join(", ") + ".";
       if (openDisputes > 0) {
-        text += ` ⚑ <strong>${openDisputes}</strong> çözülmemiş anlaşmazlık var, göz atmalısın.`;
+        text += " " + armusT("admin.digestOpenDisputes", "⚑ <strong>{n}</strong> çözülmemiş anlaşmazlık var, göz atmalısın.").replace("{n}", openDisputes);
       }
 
       el.innerHTML = text;
@@ -2622,7 +2631,7 @@
       const color = score >= 75 ? "#1f7a4d" : score >= 45 ? "var(--armus-gold-text)" : "#b3261e";
       return `
         <svg class="health-gauge" viewBox="0 0 46 46">
-          <title>Sağlık skoru: ${score}/100</title>
+          <title>${armusT("admin.healthScoreTitle", "Sağlık skoru: {n}/100").replace("{n}", score)}</title>
           <circle cx="23" cy="23" r="${radius}" fill="none" style="stroke:var(--armus-border-soft)" stroke-width="4"></circle>
           <circle cx="23" cy="23" r="${radius}" fill="none" style="stroke:${color}" stroke-width="4" stroke-linecap="round"
             stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
