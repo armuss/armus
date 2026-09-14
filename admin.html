@@ -1063,7 +1063,7 @@
     <a href="index.html" class="logo">ARMUS</a>
     <h1 id="gateTitle"></h1>
     <p id="gateText"></p>
-    <a class="gate-btn" href="login.html?next=admin.html" id="gateLink">Giriş yap</a>
+    <a class="gate-btn" href="login.html?next=admin.html" id="gateLink" data-i18n="admin.gateLoginBtn">Giriş yap</a>
   </div>
 
   <div class="shell" id="shell">
@@ -1101,111 +1101,111 @@
     <main>
 
       <div class="panel active" id="panel-overview">
-        <h2>Genel Bakış</h2>
+        <h2 data-i18n="admin.overviewHeading">Genel Bakış</h2>
         <div class="digest-card" id="digestCard"></div>
         <div class="stat-grid" id="overviewStats"></div>
-        <h3>Son 6 ay - rezervasyon trendi</h3>
+        <h3 data-i18n="admin.trendHeading">Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
-        <h3>Canlı Akış <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;">● CANLI</span></h3>
-        <p class="section-hint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
+        <h3><span data-i18n="admin.pulseHeading">Canlı Akış</span> <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;" data-i18n="admin.pulseLive">● CANLI</span></h3>
+        <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
         <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
       </div>
 
       <div class="panel" id="panel-teachers">
-        <h2>Öğretmenler</h2>
+        <h2 data-i18n="admin.navTeachers">Öğretmenler</h2>
 
-        <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara...">
-        <p class="section-hint" style="margin-top: -12px;">Klavye: bekleyen başvurular arasında <kbd>j</kbd>/<kbd>k</kbd> ile gezin, <kbd>a</kbd> onayla, <kbd>r</kbd> reddet. Her yerden <kbd>Ctrl</kbd>+<kbd>K</kbd> ile hızlı ara.</p>
+        <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara..." data-i18n-placeholder="admin.searchNameEmail">
+        <p class="section-hint" style="margin-top: -12px;" data-i18n="admin.keyboardHint">Klavye: bekleyen başvurular arasında <kbd>j</kbd>/<kbd>k</kbd> ile gezin, <kbd>a</kbd> onayla, <kbd>r</kbd> reddet. Her yerden <kbd>Ctrl</kbd>+<kbd>K</kbd> ile hızlı ara.</p>
 
         <div id="atRiskSection" style="display: none;">
-          <h3 style="color: #b3261e;">⚠️ Riskli öğretmenler</h3>
-          <p class="section-hint">Rezervasyonu duran, uzun süredir hiç ders almamış ya da son değerlendirmeleri düşen onaylı öğretmenler - erken müdahale için.</p>
+          <h3 style="color: #b3261e;" data-i18n="admin.atRiskHeading">⚠️ Riskli öğretmenler</h3>
+          <p class="section-hint" data-i18n="admin.atRiskHint">Rezervasyonu duran, uzun süredir hiç ders almamış ya da son değerlendirmeleri düşen onaylı öğretmenler - erken müdahale için.</p>
           <div id="atRiskList"></div>
         </div>
 
         <div class="panel-toolbar" id="bulkActionsBar" style="display: none;">
-          <span class="section-hint" style="margin: 0;" id="bulkSelectedCount">0 başvuru seçildi</span>
+          <span class="section-hint" style="margin: 0;" id="bulkSelectedCount" data-i18n="admin.bulkSelectedCountZero">0 başvuru seçildi</span>
           <div class="row-actions">
-            <button class="btn btn-approve" id="bulkApproveBtn">Seçilenleri Onayla</button>
-            <button class="btn btn-reject" id="bulkRejectBtn">Seçilenleri Reddet</button>
+            <button class="btn btn-approve" id="bulkApproveBtn" data-i18n="admin.bulkApprove">Seçilenleri Onayla</button>
+            <button class="btn btn-reject" id="bulkRejectBtn" data-i18n="admin.bulkReject">Seçilenleri Reddet</button>
           </div>
         </div>
 
-        <h3>Bekleyen başvurular</h3>
+        <h3 data-i18n="admin.pendingHeading">Bekleyen başvurular</h3>
         <div id="pendingList"></div>
-        <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
+        <div class="empty-note" id="pendingEmpty" style="display: none;" data-i18n="admin.pendingEmpty">Bekleyen başvuru yok.</div>
 
-        <h3>Onaylanmış öğretmenler</h3>
+        <h3 data-i18n="admin.approvedHeading">Onaylanmış öğretmenler</h3>
         <div id="approvedList"></div>
-        <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
+        <div class="empty-note" id="approvedEmpty" style="display: none;" data-i18n="admin.approvedEmpty">Henüz onaylanmış öğretmen yok.</div>
 
-        <h3>Reddedilen başvurular</h3>
+        <h3 data-i18n="admin.rejectedHeading">Reddedilen başvurular</h3>
         <div id="rejectedList"></div>
-        <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+        <div class="empty-note" id="rejectedEmpty" style="display: none;" data-i18n="admin.rejectedEmpty">Reddedilen başvuru yok.</div>
 
-        <h3>Henüz başvurmamış öğretmen hesapları</h3>
+        <h3 data-i18n="admin.noAppHeading">Henüz başvurmamış öğretmen hesapları</h3>
         <div id="noAppList"></div>
-        <div class="empty-note" id="noAppEmpty" style="display: none;">Yok.</div>
+        <div class="empty-note" id="noAppEmpty" style="display: none;" data-i18n="admin.noAppEmpty">Yok.</div>
       </div>
 
       <div class="panel" id="panel-changes">
-        <h2>Profil Değişiklikleri</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navChanges">Profil Değişiklikleri</h2>
+        <p class="section-hint" data-i18n="admin.changesHint">
           Onaylı öğretmenlerin profil veya uygunluk değişikliği isteklerini
           buradan tek yerden görüp onaylayabilir ya da reddedebilirsin.
         </p>
         <div id="changesList"></div>
-        <div class="empty-note" id="changesEmpty" style="display: none;">Bekleyen profil değişikliği yok.</div>
+        <div class="empty-note" id="changesEmpty" style="display: none;" data-i18n="admin.changesEmpty">Bekleyen profil değişikliği yok.</div>
       </div>
 
       <div class="panel" id="panel-bookings">
-        <h2>Rezervasyonlar</h2>
+        <h2 data-i18n="admin.navBookings">Rezervasyonlar</h2>
         <div class="panel-toolbar">
-          <input type="text" class="admin-search" id="searchBookings" placeholder="Öğrenci veya öğretmen ara...">
-          <button class="btn" id="exportBookingsBtn">Excel'e Aktar (CSV)</button>
+          <input type="text" class="admin-search" id="searchBookings" placeholder="Öğrenci veya öğretmen ara..." data-i18n-placeholder="admin.searchStudentTeacher">
+          <button class="btn" id="exportBookingsBtn" data-i18n="admin.exportCsv">Excel'e Aktar (CSV)</button>
         </div>
         <table id="bookingsTable">
           <thead>
             <tr>
-              <th>Öğrenci</th>
-              <th>Öğretmen</th>
-              <th>Tür</th>
-              <th>Tarih</th>
-              <th>Saat</th>
-              <th>Ücret</th>
+              <th data-i18n="admin.colStudent">Öğrenci</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colType">Tür</th>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colTime">Saat</th>
+              <th data-i18n="admin.colPrice">Ücret</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="bookingsBody"></tbody>
         </table>
-        <div class="empty-note" id="bookingsEmpty" style="display: none;">Henüz rezervasyon yok.</div>
+        <div class="empty-note" id="bookingsEmpty" style="display: none;" data-i18n="admin.bookingsEmpty">Henüz rezervasyon yok.</div>
       </div>
 
       <div class="panel" id="panel-students">
-        <h2>Öğrenciler</h2>
+        <h2 data-i18n="admin.navStudents">Öğrenciler</h2>
         <div class="panel-toolbar">
-          <input type="text" class="admin-search" id="searchStudents" placeholder="İsim veya e-posta ara...">
-          <button class="btn" id="exportStudentsBtn">Excel'e Aktar (CSV)</button>
+          <input type="text" class="admin-search" id="searchStudents" placeholder="İsim veya e-posta ara..." data-i18n-placeholder="admin.searchNameEmail">
+          <button class="btn" id="exportStudentsBtn" data-i18n="admin.exportCsv">Excel'e Aktar (CSV)</button>
         </div>
         <table id="studentsTable">
           <thead>
             <tr>
-              <th>Ad Soyad</th>
-              <th>E-posta</th>
-              <th>Kayıt tarihi</th>
-              <th>Rezervasyon sayısı</th>
+              <th data-i18n="admin.colFullName">Ad Soyad</th>
+              <th data-i18n="admin.colEmail">E-posta</th>
+              <th data-i18n="admin.colJoinDate">Kayıt tarihi</th>
+              <th data-i18n="admin.colBookingCount">Rezervasyon sayısı</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="studentsBody"></tbody>
         </table>
-        <div class="empty-note" id="studentsEmpty" style="display: none;">Henüz öğrenci yok.</div>
+        <div class="empty-note" id="studentsEmpty" style="display: none;" data-i18n="admin.studentsEmpty">Henüz öğrenci yok.</div>
       </div>
 
       <div class="panel" id="panel-log">
-        <h2>Etkinlik Günlüğü</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navLog">Etkinlik Günlüğü</h2>
+        <p class="section-hint" data-i18n="admin.logHint">
           Onay/red ve iptal gibi admin işlemlerinin geçmişi. (Bu panel
           admin_actions tablosu Supabase'de oluşturulduktan sonra dolmaya
           başlar - o ana kadar boş görünmesi normal.)
@@ -1213,20 +1213,20 @@
         <table id="logTable">
           <thead>
             <tr>
-              <th>Admin</th>
-              <th>İşlem</th>
-              <th>Hedef</th>
-              <th>Zaman</th>
+              <th data-i18n="admin.colAdmin">Admin</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+              <th data-i18n="admin.colTarget">Hedef</th>
+              <th data-i18n="admin.colTime2">Zaman</th>
             </tr>
           </thead>
           <tbody id="logBody"></tbody>
         </table>
-        <div class="empty-note" id="logEmpty" style="display: none;">Henüz kayıtlı işlem yok.</div>
+        <div class="empty-note" id="logEmpty" style="display: none;" data-i18n="admin.logEmpty">Henüz kayıtlı işlem yok.</div>
       </div>
 
       <div class="panel" id="panel-testimonials">
-        <h2>Anasayfa Yorumları</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navTestimonials">Anasayfa Yorumları</h2>
+        <p class="section-hint" data-i18n="admin.testimonialsHint">
           Ana sayfadaki "Öğrencilerimiz ne diyor?" bölümünde gösterilen
           yorumları buradan yönetebilirsin. En az bir "Yayında" yorum
           olduğunda ana sayfa bunları otomatik gösterir; hiçbiri yayında
@@ -1234,14 +1234,14 @@
         </p>
 
         <div class="app-card">
-          <h3 style="margin-top:0;">Yeni yorum ekle</h3>
+          <h3 style="margin-top:0;" data-i18n="admin.addTestimonialHeading">Yeni yorum ekle</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-            <input type="text" class="admin-search" id="newTName" placeholder="İsim (örn. Zeynep A.)" style="margin-bottom:0;">
-            <input type="text" class="admin-search" id="newTLocation" placeholder="Şehir / rol (örn. İstanbul)" style="margin-bottom:0;">
+            <input type="text" class="admin-search" id="newTName" placeholder="İsim (örn. Zeynep A.)" style="margin-bottom:0;" data-i18n-placeholder="admin.testimonialNamePlaceholder">
+            <input type="text" class="admin-search" id="newTLocation" placeholder="Şehir / rol (örn. İstanbul)" style="margin-bottom:0;" data-i18n-placeholder="admin.testimonialLocationPlaceholder">
           </div>
-          <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;"></textarea>
+          <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;" data-i18n-placeholder="admin.testimonialQuotePlaceholder"></textarea>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-            <label style="font-size:12.5px;color:var(--armus-muted);">Puan:
+            <label style="font-size:12.5px;color:var(--armus-muted);"><span data-i18n="admin.ratingLabel">Puan:</span>
               <select id="newTRating" style="margin-left:6px;background:var(--armus-panel);color:var(--armus-ink);border:1px solid var(--armus-border);border-radius:8px;padding:6px 8px;font-family:inherit;">
                 <option value="5">5</option>
                 <option value="4">4</option>
@@ -1251,45 +1251,45 @@
               </select>
             </label>
           </div>
-          <button class="btn btn-approve" id="addTestimonialBtn">Ekle</button>
+          <button class="btn btn-approve" id="addTestimonialBtn" data-i18n="admin.addBtn">Ekle</button>
 
           <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--armus-border-soft);">
-            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--armus-faint); margin-bottom: 12px;">Canlı önizleme - ana sayfada böyle görünecek</h4>
+            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--armus-faint); margin-bottom: 12px;" data-i18n="admin.livePreviewHeading">Canlı önizleme - ana sayfada böyle görünecek</h4>
             <div id="testimonialPreview" class="testimonial-preview"></div>
           </div>
         </div>
 
-        <h3>Mevcut yorumlar</h3>
+        <h3 data-i18n="admin.currentTestimonialsHeading">Mevcut yorumlar</h3>
         <div id="testimonialsList"></div>
-        <div class="empty-note" id="testimonialsEmpty" style="display: none;">Henüz eklenmiş yorum yok.</div>
+        <div class="empty-note" id="testimonialsEmpty" style="display: none;" data-i18n="admin.testimonialsEmpty">Henüz eklenmiş yorum yok.</div>
       </div>
 
       <div class="panel" id="panel-disputes">
-        <h2>Anlaşmazlıklar</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navDisputes">Anlaşmazlıklar</h2>
+        <p class="section-hint" data-i18n="admin.disputesHint">
           Öğrenci ya da öğretmenlerin bir rezervasyonla ilgili bildirdiği
           sorunlar burada listelenir. (Bu panel disputes tablosu
           Supabase'de oluşturulduktan sonra dolmaya başlar.)
         </p>
-        <input type="text" class="admin-search" id="searchDisputes" placeholder="İsim veya konu ara...">
+        <input type="text" class="admin-search" id="searchDisputes" placeholder="İsim veya konu ara..." data-i18n-placeholder="admin.searchNameTopic">
         <div id="disputesList"></div>
-        <div class="empty-note" id="disputesEmpty" style="display: none;">Bildirilmiş bir sorun yok.</div>
+        <div class="empty-note" id="disputesEmpty" style="display: none;" data-i18n="admin.disputesEmpty">Bildirilmiş bir sorun yok.</div>
       </div>
 
       <div class="panel" id="panel-reviews">
-        <h2>İncelemeler</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navReviews">İncelemeler</h2>
+        <p class="section-hint" data-i18n="admin.reviewsHint">
           Düşük puanlı ya da olumsuz kelimeler içeren değerlendirmeler
           burada otomatik olarak işaretlenir, böylece hepsini tek tek
           okumana gerek kalmaz.
         </p>
         <div id="flaggedReviewsList"></div>
-        <div class="empty-note" id="flaggedReviewsEmpty" style="display: none;">İşaretlenecek bir değerlendirme yok.</div>
+        <div class="empty-note" id="flaggedReviewsEmpty" style="display: none;" data-i18n="admin.flaggedReviewsEmpty">İşaretlenecek bir değerlendirme yok.</div>
       </div>
 
       <div class="panel" id="panel-earnings">
-        <h2>Kazançlar / Komisyon</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.earningsHeading">Kazançlar / Komisyon</h2>
+        <p class="section-hint" data-i18n="admin.earningsHint">
           Her öğretmenin tamamlanan derslerden elde ettiği ciro, komisyon
           dilimi ve ARMUS'un aldığı komisyon. Dilimler ana sayfadaki
           komisyon oranlarıyla aynıdır.
@@ -1297,63 +1297,63 @@
         <table id="earningsTable">
           <thead>
             <tr>
-              <th>Öğretmen</th>
-              <th>Tamamlanan ders</th>
-              <th>Toplam saat</th>
-              <th>Ciro</th>
-              <th>Komisyon dilimi</th>
-              <th>ARMUS komisyonu</th>
-              <th>Öğretmen payı</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colCompletedLessons">Tamamlanan ders</th>
+              <th data-i18n="admin.colTotalHours">Toplam saat</th>
+              <th data-i18n="admin.colRevenue">Ciro</th>
+              <th data-i18n="admin.colCommissionTier">Komisyon dilimi</th>
+              <th data-i18n="admin.colArmusCommission">ARMUS komisyonu</th>
+              <th data-i18n="admin.colTeacherShare">Öğretmen payı</th>
             </tr>
           </thead>
           <tbody id="earningsBody"></tbody>
         </table>
-        <div class="empty-note" id="earningsEmpty" style="display: none;">Henüz tamamlanan ders yok.</div>
+        <div class="empty-note" id="earningsEmpty" style="display: none;" data-i18n="admin.earningsEmpty">Henüz tamamlanan ders yok.</div>
       </div>
 
       <div class="panel" id="panel-announcement">
-        <h2>Site Duyurusu</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navAnnouncement">Site Duyurusu</h2>
+        <p class="section-hint" data-i18n="admin.announcementHint">
           Buraya yazdığın mesaj, aktif ettiğinde sitenin üstünde herkese
           (öğrenci, öğretmen, ziyaretçi) sabit bir şerit olarak gösterilir.
           Kapatma butonuna basan kullanıcılar aynı mesajı bir daha görmez.
         </p>
         <div class="app-card">
-          <textarea class="admin-search" id="announcementMessage" placeholder="Örn: Bugün bakım çalışması var, dersler etkilenmeyecek." style="min-height: 70px; resize: vertical; margin-bottom: 12px;"></textarea>
+          <textarea class="admin-search" id="announcementMessage" placeholder="Örn: Bugün bakım çalışması var, dersler etkilenmeyecek." style="min-height: 70px; resize: vertical; margin-bottom: 12px;" data-i18n-placeholder="admin.announcementPlaceholder"></textarea>
           <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--armus-muted); margin-bottom: 16px;">
             <input type="checkbox" id="announcementActive" style="width: 16px; height: 16px;">
-            Aktif (sitede göster)
+            <span data-i18n="admin.announcementActiveLabel">Aktif (sitede göster)</span>
           </label>
-          <button class="btn btn-approve" id="saveAnnouncementBtn">Kaydet</button>
-          <span id="announcementSavedNote" style="margin-left: 10px; color: #1f7a4d; font-size: 12.5px; display: none;">Kaydedildi ✓</span>
+          <button class="btn btn-approve" id="saveAnnouncementBtn" data-i18n="admin.saveBtn">Kaydet</button>
+          <span id="announcementSavedNote" style="margin-left: 10px; color: #1f7a4d; font-size: 12.5px; display: none;" data-i18n="admin.savedNote">Kaydedildi ✓</span>
         </div>
       </div>
 
       <div class="panel" id="panel-demand">
-        <h2>Talep Haritası</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navDemand">Talep Haritası</h2>
+        <p class="section-hint" data-i18n="admin.demandHint">
           Rezervasyonların hangi gün ve saatlerde yoğunlaştığını gösterir -
           koyu hücreler yoğun talebi işaret eder. Yeni öğretmen ararken
           hangi saatlere öncelik vermen gerektiğini buradan görebilirsin.
         </p>
         <div id="demandHeatmap" class="heatmap-wrap"></div>
-        <div class="empty-note" id="demandEmpty" style="display: none;">Henüz ısı haritası için yeterli rezervasyon yok.</div>
+        <div class="empty-note" id="demandEmpty" style="display: none;" data-i18n="admin.demandEmpty">Henüz ısı haritası için yeterli rezervasyon yok.</div>
       </div>
 
       <div class="panel" id="panel-cities">
-        <h2>Şehirlere Göre Dağılım</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.citiesHeading">Şehirlere Göre Dağılım</h2>
+        <p class="section-hint" data-i18n="admin.citiesHint">
           Öğrenci ve öğretmenlerin bildirdiği şehirlere göre dağılım. Yeni
           kayıtlarda toplanan şehir bilgisine göre dolar - eski hesaplarda
           şehir bilgisi olmayabilir.
         </p>
         <div id="cityList" class="city-bars"></div>
-        <div class="empty-note" id="cityEmpty" style="display: none;">Henüz şehir bilgisi olan kayıt yok.</div>
+        <div class="empty-note" id="cityEmpty" style="display: none;" data-i18n="admin.cityEmpty">Henüz şehir bilgisi olan kayıt yok.</div>
       </div>
 
       <div class="panel" id="panel-flags">
-        <h2>Görünüm Ayarları</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navFlags">Görünüm Ayarları</h2>
+        <p class="section-hint" data-i18n="admin.flagsHint">
           Ana sayfadaki bazı bölümleri kod değişikliği yapmadan buradan
           geçici olarak kapatabilirsin. Değişiklik hemen etkili olur.
         </p>
@@ -1365,7 +1365,7 @@
         <div class="detail-panel">
           <div class="detail-head">
             <h3 id="detailTitle"></h3>
-            <button class="btn" id="detailCloseBtn">Kapat ✕</button>
+            <button class="btn" id="detailCloseBtn" data-i18n="admin.closeBtn">Kapat ✕</button>
           </div>
           <div id="detailBody"></div>
         </div>
@@ -1374,9 +1374,9 @@
       <!-- COMMAND PALETTE (Ctrl/Cmd+K quick search) -->
       <div class="palette-overlay" id="paletteOverlay">
         <div class="palette-box">
-          <input type="text" id="paletteInput" placeholder="Öğretmen, öğrenci, rezervasyon, anlaşmazlık ara..." autocomplete="off">
+          <input type="text" id="paletteInput" placeholder="Öğretmen, öğrenci, rezervasyon, anlaşmazlık ara..." autocomplete="off" data-i18n-placeholder="admin.paletteSearchPlaceholder">
           <div id="paletteResults" class="palette-results"></div>
-          <div class="palette-hint">↑↓ gezin · Enter git · Esc kapat</div>
+          <div class="palette-hint" data-i18n="admin.paletteHint">↑↓ gezin · Enter git · Esc kapat</div>
         </div>
       </div>
 
@@ -1418,18 +1418,21 @@
       });
     });
 
-    const DAY_COLUMNS = [
-      ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
-      ["Cum", 5], ["Cmt", 6], ["Paz", 0]
-    ];
+    function dayColumns() {
+      const labels = armusDayNames();
+      return [
+        [labels[1], 1], [labels[2], 2], [labels[3], 3], [labels[4], 4],
+        [labels[5], 5], [labels[6], 6], [labels[0], 0]
+      ];
+    }
 
     function renderAvailabilityGrid(weeklyAvailability) {
 
       if (!Array.isArray(weeklyAvailability)) {
-        return '<p style="color:var(--armus-faint);font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
+        return `<p style="color:var(--armus-faint);font-size:12px;margin-top:6px;">${armusT("admin.noAvailabilitySet", "Henüz uygunluk saati ayarlamadı.")}</p>`;
       }
 
-      const days = DAY_COLUMNS.map(([label, dayIndex]) => {
+      const days = dayColumns().map(([label, dayIndex]) => {
         const slots = (weeklyAvailability[dayIndex] || []).slice().sort();
         const inner = slots.length
           ? slots.map(s => `<div class="slot">${armusFormatTimeRange(s)}</div>`).join("")
@@ -1456,21 +1459,23 @@
         : initials(user.name);
 
       const badgeLabel = {
-        pending: "İnceleniyor", approved: "Onaylandı", rejected: "Reddedildi"
-      }[user.status] || "Başvurmadı";
+        pending: armusT("admin.statusPending", "İnceleniyor"),
+        approved: armusT("admin.statusApproved", "Onaylandı"),
+        rejected: armusT("admin.statusRejected", "Reddedildi"),
+      }[user.status] || armusT("admin.statusNotApplied", "Başvurmadı");
 
       let actions = "";
       if (user.status === "pending") {
         actions = `
-          <button class="btn btn-approve" data-action="approve">Onayla</button>
-          <button class="btn btn-reject" data-action="reject">Reddet</button>
+          <button class="btn btn-approve" data-action="approve">${armusT("admin.approve", "Onayla")}</button>
+          <button class="btn btn-reject" data-action="reject">${armusT("admin.reject", "Reddet")}</button>
         `;
       } else if (user.status === "approved") {
-        actions = `<button class="btn btn-reject" data-action="reject">Onayı kaldır</button>`;
+        actions = `<button class="btn btn-reject" data-action="reject">${armusT("admin.removeApproval", "Onayı kaldır")}</button>`;
       } else if (user.status === "rejected") {
-        actions = `<button class="btn btn-approve" data-action="approve">Onayla</button>`;
+        actions = `<button class="btn btn-approve" data-action="approve">${armusT("admin.approve", "Onayla")}</button>`;
       }
-      actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">Mesaj Gönder</a>`;
+      actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
 
       const hasApplication = Boolean(user.status);
 
@@ -1498,16 +1503,16 @@
         ${hasApplication ? `
         <div class="app-details">
           <div>
-            <h4>Konum / Konu</h4>
+            <h4>${armusT("admin.locationSubject", "Konum / Konu")}</h4>
             <p>${user.country || "—"} · ${user.subject_taught || "—"}</p>
           </div>
           <div>
-            <h4>Ücret / Uygunluk</h4>
+            <h4>${armusT("admin.priceAvailability", "Ücret / Uygunluk")}</h4>
             <p>₺${user.price ?? "—"} / 50 dk · ${user.availability || "—"}</p>
           </div>
 
           <div>
-            <h4>Diller</h4>
+            <h4>${armusT("teacherProfile.languages", "Diller")}</h4>
             <p>
               ${user.languages && user.languages.length
                 ? user.languages.map(l => `${l.language} (${l.level})`).join(", ")
@@ -1515,41 +1520,41 @@
             </p>
           </div>
           <div>
-            <h4>Telefon</h4>
+            <h4>${armusT("admin.phone", "Telefon")}</h4>
             <p>${user.phone || "—"}</p>
           </div>
 
           <div>
-            <h4>Sertifika</h4>
+            <h4>${armusT("admin.certificate", "Sertifika")}</h4>
             <p>
               ${user.has_certificate
                 ? `${user.certificate_name || "—"} (${user.certificate_years || "—"})` +
-                  (user.certificate_file_url ? ` · <a href="${user.certificate_file_url}" target="_blank" rel="noopener">${user.certificate_file_name || "dosya"}</a>` : "")
-                : "Belirtilmedi"}
+                  (user.certificate_file_url ? ` · <a href="${user.certificate_file_url}" target="_blank" rel="noopener">${user.certificate_file_name || armusT("admin.file", "dosya")}</a>` : "")
+                : armusT("admin.notSpecified", "Belirtilmedi")}
             </p>
           </div>
           <div>
-            <h4>Eğitim</h4>
+            <h4>${armusT("admin.education", "Eğitim")}</h4>
             <p>
               ${user.has_education
                 ? `${user.university || "—"} · ${user.degree_type || "—"} (${user.graduation_year || "—"})<br>${user.specialization || ""}`
-                : "Belirtilmedi"}
+                : armusT("admin.notSpecified", "Belirtilmedi")}
             </p>
           </div>
 
           <div class="app-full">
-            <h4>Açıklama</h4>
+            <h4>${armusT("admin.description", "Açıklama")}</h4>
             <p>${user.bio || "—"}</p>
           </div>
 
           <div class="app-full">
-            <h4>Haftalık uygunluk</h4>
+            <h4>${armusT("teacherProfile.weeklySchedule", "Haftalık uygunluk")}</h4>
             ${renderAvailabilityGrid(user.weekly_availability)}
           </div>
 
           ${user.video_url ? `
             <div class="app-full app-video">
-              <h4>Tanıtım videosu</h4>
+              <h4>${armusT("admin.introVideo", "Tanıtım videosu")}</h4>
               <video controls playsinline src="${user.video_url}"></video>
             </div>
           ` : ""}
@@ -1623,28 +1628,28 @@
       let rows = "";
 
       if (pc.title !== undefined) {
-        rows += `<div><h4>Uzmanlık başlığı</h4><p>${user.title || "—"} → <strong>${pc.title}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.specialtyTitle", "Uzmanlık başlığı")}</h4><p>${user.title || "—"} → <strong>${pc.title}</strong></p></div>`;
       }
       if (pc.price !== undefined) {
-        rows += `<div><h4>Ücret</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
       }
       if (pc.availability !== undefined) {
-        rows += `<div><h4>Uygunluk durumu</h4><p>${user.availability || "—"} → <strong>${pc.availability}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.availabilityStatus", "Uygunluk durumu")}</h4><p>${user.availability || "—"} → <strong>${pc.availability}</strong></p></div>`;
       }
       if (pc.bio !== undefined) {
-        rows += `<div class="app-full"><h4>Açıklama</h4><p><strong>${pc.bio}</strong></p></div>`;
+        rows += `<div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p><strong>${pc.bio}</strong></p></div>`;
       }
       if (Array.isArray(pc.weekly_availability)) {
-        rows += `<div class="app-full"><h4>Yeni haftalık uygunluk</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
+        rows += `<div class="app-full"><h4>${armusT("admin.newWeeklyAvailability", "Yeni haftalık uygunluk")}</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
       }
 
       return `
         <div class="pending-change-box">
           <div class="pending-change-head">
-            <strong>Bekleyen profil değişikliği</strong>
+            <strong>${armusT("admin.pendingProfileChange", "Bekleyen profil değişikliği")}</strong>
             <div class="app-actions">
-              <button class="btn btn-approve" data-change-action="approve">Değişikliği Onayla</button>
-              <button class="btn btn-reject" data-change-action="reject">Değişikliği Reddet</button>
+              <button class="btn btn-approve" data-change-action="approve">${armusT("admin.approveChange", "Değişikliği Onayla")}</button>
+              <button class="btn btn-reject" data-change-action="reject">${armusT("admin.rejectChange", "Değişikliği Reddet")}</button>
             </div>
           </div>
           <div class="app-details">${rows}</div>
@@ -1716,16 +1721,16 @@
           const isPast = armusIsBookingPast(b);
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
-            ? `İptal edildi${b.refunded ? " · ders hakkı eklendi" : ""}`
+            ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", b.refunded ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi") : "")
             : isPast
               ? "—"
-              : `<button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button>`;
+              : `<button class="btn btn-reject" data-cancel-booking="${b.id}">${armusT("admin.cancelBtn", "İptal Et")}</button>`;
           const tr = document.createElement("tr");
           tr.dataset.id = b.id;
           tr.innerHTML = `
             <td>${b.studentName}</td>
             <td>${b.teacherName}</td>
-            <td>${b.type === "trial" ? "Deneme Dersi" : "Ders"}</td>
+            <td>${b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders")}</td>
             <td>${b.dateLabel}</td>
             <td>${b.time}</td>
             <td>₺${b.price}</td>
@@ -1736,9 +1741,9 @@
 
       body.querySelectorAll("[data-cancel-booking]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.")) return;
+          if (!confirm(armusT("admin.confirmCancelBooking", "Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir."))) return;
           button.disabled = true;
-          button.textContent = "İptal ediliyor...";
+          button.textContent = armusT("admin.cancelling", "İptal ediliyor...");
           const bookingId = button.dataset.cancelBooking;
           const result = await armusCancelBooking(bookingId);
           if (result.ok) {
@@ -1748,11 +1753,11 @@
               cancelled.refunded = result.refunded;
             }
             await armusLogAdminAction("booking_cancel", "booking", bookingId,
-              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - ders hakkı eklendi" : ""}` : bookingId);
+              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? armusT("admin.creditAddedSuffixDash", " - ders hakkı eklendi") : ""}` : bookingId);
             renderAllFromState();
           } else {
             button.disabled = false;
-            button.textContent = "İptal Et";
+            button.textContent = armusT("admin.cancelBtn", "İptal Et");
             alert(result.error);
           }
         });
@@ -1778,11 +1783,11 @@
         tr.innerHTML = `
           <td>${s.name}</td>
           <td>${s.email}</td>
-          <td>${new Date(s.created_at).toLocaleDateString("tr-TR")}</td>
+          <td>${new Date(s.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           <td>${count}</td>
           <td class="row-actions">
-            <button class="btn" data-view-student="${s.id}">Detaylar</button>
-            <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(s.id)}">Mesaj</a>
+            <button class="btn" data-view-student="${s.id}">${armusT("admin.details", "Detaylar")}</button>
+            <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(s.id)}">${armusT("admin.messageBtn", "Mesaj")}</a>
           </td>
         `;
         body.appendChild(tr);
@@ -1811,22 +1816,22 @@
         ? studentBookings.map(b => `
             <tr>
               <td>${b.teacherName}</td>
-              <td>${b.type === "trial" ? "Deneme Dersi" : "Ders"}</td>
+              <td>${b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders")}</td>
               <td>${b.dateLabel}</td>
               <td>${b.time}</td>
               <td>₺${b.price}</td>
             </tr>
           `).join("")
-        : `<tr><td colspan="5" class="empty-note">Henüz rezervasyonu yok.</td></tr>`;
+        : `<tr><td colspan="5" class="empty-note">${armusT("admin.noBookingsYet2", "Henüz rezervasyonu yok.")}</td></tr>`;
 
       document.getElementById("detailBody").innerHTML = `
         <div class="app-details" style="margin-bottom:20px;">
-          <div><h4>E-posta</h4><p>${student.email}</p></div>
-          <div><h4>Kayıt tarihi</h4><p>${new Date(student.created_at).toLocaleDateString("tr-TR")}</p></div>
+          <div><h4>${armusT("admin.colEmail", "E-posta")}</h4><p>${student.email}</p></div>
+          <div><h4>${armusT("admin.colJoinDate", "Kayıt tarihi")}</h4><p>${new Date(student.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</p></div>
         </div>
-        <h3 style="margin-top:0;">Rezervasyon geçmişi</h3>
+        <h3 style="margin-top:0;">${armusT("admin.bookingHistory", "Rezervasyon geçmişi")}</h3>
         <table>
-          <thead><tr><th>Öğretmen</th><th>Tür</th><th>Tarih</th><th>Saat</th><th>Ücret</th></tr></thead>
+          <thead><tr><th>${armusT("admin.colTeacher", "Öğretmen")}</th><th>${armusT("admin.colType", "Tür")}</th><th>${armusT("admin.colDate", "Tarih")}</th><th>${armusT("admin.colTime", "Saat")}</th><th>${armusT("admin.colPrice", "Ücret")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       `;
@@ -1856,14 +1861,14 @@
         : "—";
 
       const stats = [
-        [students.length, "Toplam öğrenci"],
-        [teachers.length, "Toplam öğretmen hesabı"],
-        [approvedTeachers.length, "Onaylı öğretmen"],
-        [pendingTeachers.length, "Bekleyen başvuru"],
-        [bookings.length, "Toplam rezervasyon"],
-        [completedBookings.length, "Tamamlanan ders"],
-        [`₺${grossRevenue}`, "Toplam ciro (tamamlanan dersler)"],
-        [`${avgRating} (${reviews.length})`, "Ortalama puan / değerlendirme"],
+        [students.length, armusT("admin.statTotalStudents", "Toplam öğrenci")],
+        [teachers.length, armusT("admin.statTotalTeacherAccounts", "Toplam öğretmen hesabı")],
+        [approvedTeachers.length, armusT("admin.statApprovedTeachers", "Onaylı öğretmen")],
+        [pendingTeachers.length, armusT("admin.statPendingApplications", "Bekleyen başvuru")],
+        [bookings.length, armusT("admin.statTotalBookings", "Toplam rezervasyon")],
+        [completedBookings.length, armusT("admin.statCompletedLessons", "Tamamlanan ders")],
+        [`₺${grossRevenue}`, armusT("admin.statGrossRevenue", "Toplam ciro (tamamlanan dersler)")],
+        [`${avgRating} (${reviews.length})`, armusT("admin.statAvgRating", "Ortalama puan / değerlendirme")],
       ];
 
       document.getElementById("overviewStats").innerHTML = stats.map(([value, label]) => `
@@ -1883,7 +1888,7 @@
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         months.push({
           key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-          label: d.toLocaleDateString("tr-TR", { month: "short" }),
+          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
         });
       }
 
@@ -1956,11 +1961,11 @@
       empty.style.display = "none";
 
       const actionLabels = {
-        profile_approve: "Başvuru onaylandı",
-        profile_reject: "Başvuru reddedildi",
-        change_approve: "Profil değişikliği onaylandı",
-        change_reject: "Profil değişikliği reddedildi",
-        booking_cancel: "Rezervasyon iptal edildi",
+        profile_approve: armusT("admin.logApplicationApproved", "Başvuru onaylandı"),
+        profile_reject: armusT("admin.logApplicationRejected", "Başvuru reddedildi"),
+        change_approve: armusT("admin.logChangeApproved", "Profil değişikliği onaylandı"),
+        change_reject: armusT("admin.logChangeRejected", "Profil değişikliği reddedildi"),
+        booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
       };
 
       logs
@@ -1972,7 +1977,7 @@
             <td>${log.admin_name}</td>
             <td>${actionLabels[log.action] || log.action}</td>
             <td>${log.target_label || log.target_id || "—"}</td>
-            <td>${new Date(log.created_at).toLocaleString("tr-TR")}</td>
+            <td>${new Date(log.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           `;
           body.appendChild(tr);
         });
@@ -2003,17 +2008,17 @@
             <div>
               <div class="app-name">${t.name}${t.location ? ` · ${t.location}` : ""}</div>
               <div class="app-email">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
-              <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? "Yayında" : "Gizli"}</span>
+              <span class="app-badge ${t.is_published ? "approved" : "none"}">${t.is_published ? armusT("admin.published", "Yayında") : armusT("admin.hidden", "Gizli")}</span>
             </div>
             <div class="app-actions">
               <button class="btn" data-move-up="${t.id}" ${idx === 0 ? "disabled" : ""}>↑</button>
               <button class="btn" data-move-down="${t.id}" ${idx === sorted.length - 1 ? "disabled" : ""}>↓</button>
-              <button class="btn" data-toggle-pub="${t.id}">${t.is_published ? "Gizle" : "Yayınla"}</button>
-              <button class="btn btn-reject" data-delete-testimonial="${t.id}">Sil</button>
+              <button class="btn" data-toggle-pub="${t.id}">${t.is_published ? armusT("admin.hide", "Gizle") : armusT("admin.publish", "Yayınla")}</button>
+              <button class="btn btn-reject" data-delete-testimonial="${t.id}">${armusT("admin.delete", "Sil")}</button>
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Yorum</h4><p>${t.quote}</p></div>
+            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${t.quote}</p></div>
           </div>
         `;
         list.appendChild(card);
@@ -2060,7 +2065,7 @@
       });
       list.querySelectorAll("[data-delete-testimonial]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu yorumu silmek istediğine emin misin?")) return;
+          if (!confirm(armusT("admin.confirmDeleteTestimonial", "Bu yorumu silmek istediğine emin misin?"))) return;
           const id = button.dataset.deleteTestimonial;
           button.disabled = true;
           const ok = await armusAdminDeleteTestimonial(id);
@@ -2082,7 +2087,7 @@
       const rating = Number(document.getElementById("newTRating").value);
 
       if (!name || !quote) {
-        alert("İsim ve yorum metni gerekli.");
+        alert(armusT("admin.nameQuoteRequired", "İsim ve yorum metni gerekli."));
         return;
       }
 
@@ -2105,7 +2110,7 @@
         document.getElementById("newTQuote").value = "";
         renderAllFromState();
       } else {
-        alert("Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir.");
+        alert(armusT("admin.testimonialAddFailed", "Eklenemedi. Testimonials tablosu Supabase'de henüz oluşturulmamış olabilir."));
       }
     });
 
@@ -2121,13 +2126,17 @@
         return;
       }
       bar.style.display = "flex";
-      document.getElementById("bulkSelectedCount").textContent = `${count} başvuru seçildi`;
+      document.getElementById("bulkSelectedCount").textContent =
+        armusT("admin.bulkSelectedCount", "{n} başvuru seçildi").replace("{n}", count);
     }
 
     async function armusRunBulkAction(newStatus) {
       const ids = Array.from(armusBulkSelected);
       if (!ids.length) return;
-      if (!confirm(`${ids.length} başvuruyu ${newStatus === "approved" ? "onaylamak" : "reddetmek"} istediğine emin misin?`)) return;
+      const confirmMsg = newStatus === "approved"
+        ? armusT("admin.confirmBulkApprove", "{n} başvuruyu onaylamak istediğine emin misin?")
+        : armusT("admin.confirmBulkReject", "{n} başvuruyu reddetmek istediğine emin misin?");
+      if (!confirm(confirmMsg.replace("{n}", ids.length))) return;
 
       document.getElementById("bulkApproveBtn").disabled = true;
       document.getElementById("bulkRejectBtn").disabled = true;
@@ -2177,11 +2186,11 @@
           const reasons = [];
 
           if (teacherBookings.length === 0 && accountAgeDays >= 14) {
-            reasons.push(`Onaylı ama ${accountAgeDays} gündür hiç rezervasyon almadı`);
+            reasons.push(armusT("admin.riskNoBookings", "Onaylı ama {n} gündür hiç rezervasyon almadı").replace("{n}", accountAgeDays));
           } else if (teacherBookings.length) {
             const daysSinceLast = daysSince(teacherBookings[0].date);
             if (daysSinceLast >= 30) {
-              reasons.push(`${daysSinceLast} gündür yeni rezervasyon yok`);
+              reasons.push(armusT("admin.riskNoRecentBookings", "{n} gündür yeni rezervasyon yok").replace("{n}", daysSinceLast));
             }
           }
 
@@ -2189,7 +2198,7 @@
             const recent = teacherReviews.slice(-3);
             const avg = recent.reduce((sum, r) => sum + r.stars, 0) / recent.length;
             if (avg < 3.5) {
-              reasons.push(`Son değerlendirmeler düşük (ort. ${avg.toFixed(1)}★)`);
+              reasons.push(armusT("admin.riskLowRatings", "Son değerlendirmeler düşük (ort. {avg}★)").replace("{avg}", avg.toFixed(1)));
             }
           }
 
@@ -2217,11 +2226,11 @@
               <div class="app-email">${teacher.email}</div>
             </div>
             <div class="app-actions">
-              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Mesaj Gönder</a>
+              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Risk sebepleri</h4><p>${reasons.join(" · ")}</p></div>
+            <div class="app-full"><h4>${armusT("admin.riskReasons", "Risk sebepleri")}</h4><p>${reasons.join(" · ")}</p></div>
           </div>
         </div>
       `).join("");
@@ -2230,9 +2239,9 @@
     // ---- testimonial live preview ----
 
     function updateTestimonialPreview() {
-      const name = document.getElementById("newTName").value.trim() || "İsim Soyisim";
+      const name = document.getElementById("newTName").value.trim() || armusT("admin.placeholderFullName", "İsim Soyisim");
       const location = document.getElementById("newTLocation").value.trim();
-      const quote = document.getElementById("newTQuote").value.trim() || "Yorum metni burada görünecek...";
+      const quote = document.getElementById("newTQuote").value.trim() || armusT("admin.placeholderQuote", "Yorum metni burada görünecek...");
       const rating = Number(document.getElementById("newTRating").value) || 5;
 
       document.getElementById("testimonialPreview").innerHTML = `
@@ -2251,7 +2260,13 @@
     // ---- disputes ----
     // Requires the disputes table from migration_8.sql
 
-    const DISPUTE_STATUS_LABELS = { open: "Açık", in_progress: "İşlemde", resolved: "Çözüldü" };
+    function disputeStatusLabels() {
+      return {
+        open: armusT("admin.disputeOpen", "Açık"),
+        in_progress: armusT("admin.disputeInProgress", "İşlemde"),
+        resolved: armusT("admin.disputeResolved", "Çözüldü"),
+      };
+    }
 
     function renderDisputesPanel(disputes) {
       const list = document.getElementById("disputesList");
@@ -2273,6 +2288,8 @@
       }
       empty.style.display = "none";
 
+      const statusLabels = disputeStatusLabels();
+
       disputes.forEach(d => {
         const card = document.createElement("div");
         card.className = "app-card";
@@ -2281,20 +2298,20 @@
           <div class="app-top">
             <div>
               <div class="app-name">${d.subject}</div>
-              <div class="app-email">${d.reporter_name} (${d.reporter_role === "teacher" ? "öğretmen" : "öğrenci"})${d.other_party_name ? ` · ${d.other_party_name} ile ilgili` : ""}</div>
-              <span class="app-badge dispute-${d.status}">${DISPUTE_STATUS_LABELS[d.status] || d.status}</span>
+              <div class="app-email">${d.reporter_name} (${d.reporter_role === "teacher" ? armusT("admin.roleTeacher", "öğretmen") : armusT("admin.roleStudent", "öğrenci")})${d.other_party_name ? ` · ${armusT("admin.regarding", "{name} ile ilgili").replace("{name}", d.other_party_name)}` : ""}</div>
+              <span class="app-badge dispute-${d.status}">${statusLabels[d.status] || d.status}</span>
             </div>
             <div class="app-actions">
-              ${d.status !== "in_progress" ? `<button class="btn" data-dispute-status="${d.id}" data-new-status="in_progress">İşleme Al</button>` : ""}
-              ${d.status !== "resolved" ? `<button class="btn btn-approve" data-dispute-status="${d.id}" data-new-status="resolved">Çözüldü İşaretle</button>` : ""}
+              ${d.status !== "in_progress" ? `<button class="btn" data-dispute-status="${d.id}" data-new-status="in_progress">${armusT("admin.takeOn", "İşleme Al")}</button>` : ""}
+              ${d.status !== "resolved" ? `<button class="btn btn-approve" data-dispute-status="${d.id}" data-new-status="resolved">${armusT("admin.markResolved", "Çözüldü İşaretle")}</button>` : ""}
             </div>
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Açıklama</h4><p>${d.description}</p></div>
+            <div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p>${d.description}</p></div>
             <div class="app-full">
-              <h4>Admin notu</h4>
+              <h4>${armusT("admin.adminNote", "Admin notu")}</h4>
               <textarea class="admin-search" data-dispute-notes="${d.id}" style="min-height: 50px; resize: vertical; margin-bottom: 8px;">${d.admin_notes || ""}</textarea>
-              <button class="btn" data-save-notes="${d.id}">Notu Kaydet</button>
+              <button class="btn" data-save-notes="${d.id}">${armusT("admin.saveNote", "Notu Kaydet")}</button>
             </div>
           </div>
         `;
@@ -2331,8 +2348,8 @@
           button.disabled = false;
           if (updated) {
             armusAdminDisputes = armusAdminDisputes.map(x => x.id === id ? updated : x);
-            button.textContent = "Kaydedildi ✓";
-            setTimeout(() => { button.textContent = "Notu Kaydet"; }, 1500);
+            button.textContent = armusT("admin.savedNote", "Kaydedildi ✓");
+            setTimeout(() => { button.textContent = armusT("admin.saveNote", "Notu Kaydet"); }, 1500);
           }
         });
       });
@@ -2390,12 +2407,12 @@
           <div class="app-top">
             <div>
               <div class="app-name">${r.student_name}</div>
-              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · öğretmen: ${teacher ? teacher.name : r.teacher_id}</div>
+              <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · ${armusT("admin.teacherColon", "öğretmen:")} ${teacher ? teacher.name : r.teacher_id}</div>
             </div>
-            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Öğretmene Mesaj</a></div>` : ""}
+            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("admin.messageTeacher", "Öğretmene Mesaj")}</a></div>` : ""}
           </div>
           <div class="app-details">
-            <div class="app-full"><h4>Yorum</h4><p>${r.comment || "—"}</p></div>
+            <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${r.comment || "—"}</p></div>
           </div>
         </div>
       `;
@@ -2407,11 +2424,11 @@
     // applied here across every teacher at once.
 
     function commissionForHours(hours) {
-      if (hours < 100) return { rate: 30, range: "0–100 saat" };
-      if (hours < 200) return { rate: 28, range: "100–200 saat" };
-      if (hours < 300) return { rate: 25, range: "200–300 saat" };
-      if (hours < 500) return { rate: 20, range: "300–500 saat" };
-      return { rate: 15, range: "500+ saat" };
+      if (hours < 100) return { rate: 30, range: armusT("admin.hoursRange0", "0–100 saat") };
+      if (hours < 200) return { rate: 28, range: armusT("admin.hoursRange100", "100–200 saat") };
+      if (hours < 300) return { rate: 25, range: armusT("admin.hoursRange200", "200–300 saat") };
+      if (hours < 500) return { rate: 20, range: armusT("admin.hoursRange300", "300–500 saat") };
+      return { rate: 15, range: armusT("admin.hoursRange500", "500+ saat") };
     }
 
     function computeEarnings(teachers, bookings, credits) {
@@ -2482,12 +2499,12 @@
       const el = document.getElementById("livePulse");
       if (!el) return;
       if (!armusPulseEvents.length) {
-        el.innerHTML = `<div class="pulse-empty">Henüz canlı bir olay yok. Yeni bir rezervasyon, kayıt ya da değerlendirme geldiğinde burada anında görünecek.</div>`;
+        el.innerHTML = `<div class="pulse-empty">${armusT("admin.pulseEmpty", "Henüz canlı bir olay yok. Yeni bir rezervasyon, kayıt ya da değerlendirme geldiğinde burada anında görünecek.")}</div>`;
         return;
       }
       el.innerHTML = armusPulseEvents.map(e => `
         <div class="pulse-item">
-          <span class="pulse-time">${e.time.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
+          <span class="pulse-time">${e.time.toLocaleTimeString(armusGetLang() === "en" ? "en-US" : "tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
           <span>${e.html}</span>
         </div>
       `).join("");
@@ -2497,15 +2514,19 @@
       armusSupabase.channel("admin-pulse")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, payload => {
           const b = payload.new;
-          pushPulseEvent(`📅 Yeni rezervasyon: <strong>${b.student_name}</strong> → ${b.teacher_name}`);
+          pushPulseEvent(armusT("admin.pulseNewBooking", "📅 Yeni rezervasyon: <strong>{student}</strong> → {teacher}")
+            .replace("{student}", b.student_name).replace("{teacher}", b.teacher_name));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, payload => {
           const p = payload.new;
-          pushPulseEvent(`👤 Yeni kayıt: <strong>${p.name}</strong> (${p.role === "teacher" ? "öğretmen adayı" : "öğrenci"})`);
+          const roleLabel = p.role === "teacher" ? armusT("admin.pulseTeacherApplicant", "öğretmen adayı") : armusT("admin.roleStudent", "öğrenci");
+          pushPulseEvent(armusT("admin.pulseNewSignup", "👤 Yeni kayıt: <strong>{name}</strong> ({role})")
+            .replace("{name}", p.name).replace("{role}", roleLabel));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "reviews" }, payload => {
           const r = payload.new;
-          pushPulseEvent(`⭐ Yeni değerlendirme: <strong>${r.student_name}</strong> ${"★".repeat(r.stars)}`);
+          pushPulseEvent(armusT("admin.pulseNewReview", "⭐ Yeni değerlendirme: <strong>{student}</strong> {stars}")
+            .replace("{student}", r.student_name).replace("{stars}", "★".repeat(r.stars)));
         })
         .subscribe();
       renderPulse();
@@ -2532,7 +2553,7 @@
         note.style.display = "inline";
         setTimeout(() => { note.style.display = "none"; }, 2000);
       } else {
-        alert("Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir.");
+        alert(armusT("admin.settingsSaveFailed", "Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir."));
       }
     });
 
@@ -2557,16 +2578,21 @@
       const openDisputes = (disputes || []).filter(d => d.status !== "resolved").length;
 
       const parts = [
-        newToday > 0 ? `bugün <strong>${newToday}</strong> yeni kayıt oldu` : `bugün henüz yeni kayıt olmadı`,
-        bookingsToday > 0 ? `<strong>${bookingsToday}</strong> rezervasyon yapıldı` : `henüz rezervasyon yapılmadı`,
+        newToday > 0
+          ? armusT("admin.digestNewSignups", "bugün <strong>{n}</strong> yeni kayıt oldu").replace("{n}", newToday)
+          : armusT("admin.digestNoNewSignups", "bugün henüz yeni kayıt olmadı"),
+        bookingsToday > 0
+          ? armusT("admin.digestBookingsToday", "<strong>{n}</strong> rezervasyon yapıldı").replace("{n}", bookingsToday)
+          : armusT("admin.digestNoBookingsToday", "henüz rezervasyon yapılmadı"),
       ];
       if (topTeacherEntry) {
-        parts.push(`bu hafta en çok ders veren öğretmen <strong>${topTeacherEntry[0]}</strong> (${topTeacherEntry[1]} ders)`);
+        parts.push(armusT("admin.digestTopTeacher", "bu hafta en çok ders veren öğretmen <strong>{name}</strong> ({n} ders)")
+          .replace("{name}", topTeacherEntry[0]).replace("{n}", topTeacherEntry[1]));
       }
 
-      let text = "👋 Günaydın! " + parts.join(", ") + ".";
+      let text = armusT("admin.digestGoodMorning", "👋 Günaydın! ") + parts.join(", ") + ".";
       if (openDisputes > 0) {
-        text += ` ⚑ <strong>${openDisputes}</strong> çözülmemiş anlaşmazlık var, göz atmalısın.`;
+        text += " " + armusT("admin.digestOpenDisputes", "⚑ <strong>{n}</strong> çözülmemiş anlaşmazlık var, göz atmalısın.").replace("{n}", openDisputes);
       }
 
       el.innerHTML = text;
@@ -2605,7 +2631,7 @@
       const color = score >= 75 ? "#1f7a4d" : score >= 45 ? "var(--armus-gold-text)" : "#b3261e";
       return `
         <svg class="health-gauge" viewBox="0 0 46 46">
-          <title>Sağlık skoru: ${score}/100</title>
+          <title>${armusT("admin.healthScoreTitle", "Sağlık skoru: {n}/100").replace("{n}", score)}</title>
           <circle cx="23" cy="23" r="${radius}" fill="none" style="stroke:var(--armus-border-soft)" stroke-width="4"></circle>
           <circle cx="23" cy="23" r="${radius}" fill="none" style="stroke:${color}" stroke-width="4" stroke-linecap="round"
             stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
@@ -2642,7 +2668,7 @@
       empty.style.display = "none";
 
       const max = Math.max(1, ...grid.map(row => Math.max(...row)));
-      const dayLabels = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+      const dayLabels = dayColumns().map(([label]) => label);
 
       const head = `<div class="hm-head"></div>` +
         Array.from({ length: 12 }, (_, i) => `<div class="hm-head">${String(i * 2).padStart(2, "0")}</div>`).join("");
@@ -2651,7 +2677,7 @@
         const cells = row.map(count => {
           const intensity = count / max;
           const style = count === 0 ? "" : `style="background:rgba(246, 198, 73,${(0.15 + intensity * 0.75).toFixed(2)})"`;
-          return `<div class="hm-cell" ${style} title="${dayLabels[r]}: ${count} rezervasyon"></div>`;
+          return `<div class="hm-cell" ${style} title="${dayLabels[r]}: ${armusT("admin.bookingsCount", "{n} rezervasyon").replace("{n}", count)}"></div>`;
         }).join("");
         return `<div class="hm-label">${dayLabels[r]}</div>${cells}`;
       }).join("");
@@ -2699,13 +2725,15 @@
     // Reuses the site_settings table from migration_8.sql under a new
     // key, so no further schema change is needed.
 
-    const ARMUS_FEATURE_FLAGS = [
-      { key: "flagProof", label: "Kanıt / istatistik bölümü", desc: "Ana sayfadaki dönen fotoğraf ve istatistik kartları." },
-      { key: "flagPromiseBanner", label: "Altın söz bandı", desc: "\"Seveceğin dersler. Garantili.\" bandı." },
-      { key: "flagTeacherCta", label: "Öğretmen ol bölümü", desc: "\"İngilizce öğretiyor musun?\" bölümü." },
-      { key: "flagCommission", label: "Komisyon oranları", desc: "Komisyon dilimlerini gösteren bölüm." },
-      { key: "flagTestimonials", label: "Öğrenci yorumları", desc: "\"Öğrencilerimiz ne diyor?\" bölümü." },
-    ];
+    function featureFlagsList() {
+      return [
+        { key: "flagProof", label: armusT("admin.flagProofLabel", "Kanıt / istatistik bölümü"), desc: armusT("admin.flagProofDesc", "Ana sayfadaki dönen fotoğraf ve istatistik kartları.") },
+        { key: "flagPromiseBanner", label: armusT("admin.flagPromiseLabel", "Altın söz bandı"), desc: armusT("admin.flagPromiseDesc", "\"Seveceğin dersler. Garantili.\" bandı.") },
+        { key: "flagTeacherCta", label: armusT("admin.flagTeacherCtaLabel", "Öğretmen ol bölümü"), desc: armusT("admin.flagTeacherCtaDesc", "\"İngilizce öğretiyor musun?\" bölümü.") },
+        { key: "flagCommission", label: armusT("admin.flagCommissionLabel", "Komisyon oranları"), desc: armusT("admin.flagCommissionDesc", "Komisyon dilimlerini gösteren bölüm.") },
+        { key: "flagTestimonials", label: armusT("admin.flagTestimonialsLabel", "Öğrenci yorumları"), desc: armusT("admin.flagTestimonialsDesc", "\"Öğrencilerimiz ne diyor?\" bölümü.") },
+      ];
+    }
 
     let armusFeatureFlags = {};
 
@@ -2718,7 +2746,7 @@
     function renderFlagsPanel() {
       const card = document.getElementById("flagsCard");
 
-      card.innerHTML = ARMUS_FEATURE_FLAGS.map(f => {
+      card.innerHTML = featureFlagsList().map(f => {
         const on = armusFeatureFlags[f.key] !== false;
         return `
           <div class="flag-row">
@@ -2741,7 +2769,7 @@
             renderFlagsPanel();
           } else {
             armusFeatureFlags = previous;
-            alert("Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir.");
+            alert(armusT("admin.settingsSaveFailed", "Kaydedilemedi. site_settings tablosu Supabase'de henüz oluşturulmamış olabilir."));
           }
         });
       });
@@ -2790,7 +2818,7 @@
 
       armusAdminProfiles.forEach(p => {
         items.push({
-          type: p.role === "teacher" ? "Öğretmen" : "Öğrenci",
+          type: p.role === "teacher" ? armusT("admin.roleTeacher", "öğretmen") : armusT("admin.roleStudent", "öğrenci"),
           label: p.name,
           sub: p.email,
           panel: p.role === "teacher" ? "teachers" : "students",
@@ -2799,7 +2827,7 @@
       });
       armusAdminBookings.forEach(b => {
         items.push({
-          type: "Rezervasyon",
+          type: armusT("admin.paletteBooking", "Rezervasyon"),
           label: `${b.studentName} → ${b.teacherName}`,
           sub: `${b.dateLabel} · ${b.time}`,
           panel: "bookings",
@@ -2808,7 +2836,7 @@
       });
       armusAdminDisputes.forEach(d => {
         items.push({
-          type: "Anlaşmazlık",
+          type: armusT("admin.paletteDispute", "Anlaşmazlık"),
           label: d.subject,
           sub: d.reporter_name,
           panel: "disputes",
@@ -2817,7 +2845,7 @@
       });
       armusAdminTestimonials.forEach(t => {
         items.push({
-          type: "Yorum",
+          type: armusT("admin.paletteTestimonial", "Yorum"),
           label: t.name,
           sub: (t.quote || "").slice(0, 40),
           panel: "testimonials",
@@ -2853,7 +2881,7 @@
 
       const container = document.getElementById("paletteResults");
       if (!armusPaletteResults.length) {
-        container.innerHTML = `<div class="palette-empty">Sonuç yok.</div>`;
+        container.innerHTML = `<div class="palette-empty">${armusT("admin.paletteNoResults", "Sonuç yok.")}</div>`;
         return;
       }
       container.innerHTML = armusPaletteResults.map((item, i) => `
@@ -3036,18 +3064,24 @@
     document.getElementById("exportBookingsBtn").addEventListener("click", () => {
       const rows = armusAdminBookings
         .filter(b => matchesSearch(b.studentName, armusAdminSearch.bookings) || matchesSearch(b.teacherName, armusAdminSearch.bookings))
-        .map(b => [b.studentName, b.teacherName, b.type === "trial" ? "Deneme Dersi" : "Ders", b.dateLabel, b.time, b.price]);
-      armusDownloadCsv("rezervasyonlar.csv", ["Öğrenci", "Öğretmen", "Tür", "Tarih", "Saat", "Ücret"], rows);
+        .map(b => [b.studentName, b.teacherName, b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders"), b.dateLabel, b.time, b.price]);
+      armusDownloadCsv("rezervasyonlar.csv", [
+        armusT("admin.colStudent", "Öğrenci"), armusT("admin.colTeacher", "Öğretmen"), armusT("admin.colType", "Tür"),
+        armusT("admin.colDate", "Tarih"), armusT("admin.colTime", "Saat"), armusT("admin.colPrice", "Ücret"),
+      ], rows);
     });
 
     document.getElementById("exportStudentsBtn").addEventListener("click", () => {
       const students = armusAdminProfiles.filter(p => p.role === "student")
         .filter(s => matchesSearch(s.name, armusAdminSearch.students) || matchesSearch(s.email, armusAdminSearch.students));
       const rows = students.map(s => [
-        s.name, s.email, new Date(s.created_at).toLocaleDateString("tr-TR"),
+        s.name, s.email, new Date(s.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR"),
         armusAdminBookings.filter(b => b.studentId === s.id).length,
       ]);
-      armusDownloadCsv("ogrenciler.csv", ["Ad Soyad", "E-posta", "Kayıt tarihi", "Rezervasyon sayısı"], rows);
+      armusDownloadCsv("ogrenciler.csv", [
+        armusT("admin.colFullName", "Ad Soyad"), armusT("admin.colEmail", "E-posta"),
+        armusT("admin.colJoinDate", "Kayıt tarihi"), armusT("admin.colBookingCount", "Rezervasyon sayısı"),
+      ], rows);
     });
 
     async function loadAll() {
@@ -3081,12 +3115,12 @@
       const session = await armusGetSession();
 
       if (!session) {
-        showGate("Giriş gerekiyor", "Bu panele erişmek için admin hesabınla giriş yapmalısın.");
+        showGate(armusT("admin.gateLoginTitle", "Giriş gerekiyor"), armusT("admin.gateLoginText", "Bu panele erişmek için admin hesabınla giriş yapmalısın."));
         return;
       }
 
       if (!session.is_admin) {
-        showGate("Yetkin yok", "Bu hesabın admin yetkisi yok.");
+        showGate(armusT("admin.gateNoPermTitle", "Yetkin yok"), armusT("admin.gateNoPermText", "Bu hesabın admin yetkisi yok."));
         return;
       }
 
@@ -3098,6 +3132,12 @@
       await loadAll();
 
     })();
+
+    document.addEventListener("armus:langchange", () => {
+      renderAllFromState();
+      renderFlagsPanel();
+      updateTestimonialPreview();
+    });
 
   </script>
 

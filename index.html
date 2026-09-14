@@ -228,7 +228,7 @@
     <div><h4 data-i18n="index.footer.students">Öğrenciler</h4><a href="teachers.html" data-i18n="index.footer.findTeachers">Öğretmenler</a><a href="teachers.html" data-i18n="index.footer.trial">Deneme Dersi</a><a href="#how" data-i18n="index.footer.how">Nasıl Çalışır?</a><a href="sss.html" data-i18n="index.footer.help">Yardım Merkezi</a></div>
     <div><h4 data-i18n="index.footer.teachers">Öğretmenler</h4><a href="register.html?role=teacher" data-i18n="index.footer.becomeTeacher">Öğretmen Ol</a><a href="#commission" data-i18n="index.footer.commission">Komisyon Oranları</a><a href="apply-teacher.html" data-i18n="index.footer.teacherGuide">Öğretmen Rehberi</a><a href="sss.html" data-i18n="index.footer.faq">SSS</a></div>
     <div><h4 data-i18n="index.footer.about">Hakkımızda</h4><a href="hakkimizda.html" data-i18n="index.footer.aboutUs">Hakkımızda</a><a href="iletisim.html" data-i18n="index.footer.career">Kariyer</a><a href="iletisim.html" data-i18n="index.footer.contact">İletişim</a><a href="gizlilik-politikasi.html" data-i18n="index.footer.privacy">Gizlilik Politikası</a><a href="kullanim-sartlari.html" data-i18n="index.footer.terms">Kullanım Şartları</a></div>
-    <div><h4 data-i18n="index.footer.newsletter">Bültenimize Katılın</h4><p id="newsletterMsg" data-i18n="index.footer.newsletterText">Yeni özellikler ve fırsatlardan haberdar olun.</p><form class="newsletter" id="newsletterForm"><input type="email" id="newsletterEmail" placeholder="E-posta adresiniz" required><button type="submit">↗</button></form></div>
+    <div><h4 data-i18n="index.footer.newsletter">Bültenimize Katılın</h4><p id="newsletterMsg" data-i18n="index.footer.newsletterText">Yeni özellikler ve fırsatlardan haberdar olun.</p><form class="newsletter" id="newsletterForm"><input type="email" id="newsletterEmail" placeholder="E-posta adresiniz" data-i18n-placeholder="index.footer.newsletterPlaceholder" required><button type="submit">↗</button></form></div>
     <div class="copyright" data-i18n="index.footer.copyright">© 2026 ARMUS. Tüm hakları saklıdır.</div>
   </footer>
 
@@ -307,12 +307,12 @@
       // A duplicate email (already subscribed) still reads as success to
       // the visitor - it's not something they need to know or fix.
       if (error && error.code !== "23505") {
-        msg.textContent = "Bir şeyler ters gitti, lütfen tekrar dene.";
+        msg.textContent = armusT("index.newsletterError", "Bir şeyler ters gitti, lütfen tekrar dene.");
         return;
       }
 
       input.value = "";
-      msg.textContent = "Teşekkürler! Listeye eklendin. ✓";
+      msg.textContent = armusT("index.newsletterSuccess", "Teşekkürler! Listeye eklendin. ✓");
     });
   </script>
 </body>

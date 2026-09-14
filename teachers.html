@@ -786,30 +786,30 @@
   <main class="container">
 
     <div class="page-head">
-      <h1>Sana uygun İngilizce öğretmenini bul.</h1>
-      <p id="resultsCount">6 öğretmen bulundu</p>
-      <p id="loadingNote" class="loading-note">Diğer öğretmenler yükleniyor…</p>
+      <h1 data-i18n="teachersPage.heading">Sana uygun İngilizce öğretmenini bul.</h1>
+      <p id="resultsCount" data-i18n="teachersPage.resultsCountInitial">6 öğretmen bulundu</p>
+      <p id="loadingNote" class="loading-note" data-i18n="teachersPage.loadingMore">Diğer öğretmenler yükleniyor…</p>
     </div>
 
     <div class="filter-box-row">
 
       <div class="filter-box filter-box-static">
         <span class="filter-box-text">
-          <span class="filter-box-label">Ne öğrenmek istiyorum</span>
-          <span class="filter-box-value">İngilizce</span>
+          <span class="filter-box-label" data-i18n="teachersPage.whatToLearn">Ne öğrenmek istiyorum</span>
+          <span class="filter-box-value" data-i18n="teachersPage.english">İngilizce</span>
         </span>
       </div>
 
       <div class="filter-dropdown" data-dropdown="price">
         <button type="button" class="filter-trigger filter-box">
           <span class="filter-box-text">
-            <span class="filter-box-label">Ders ücreti</span>
+            <span class="filter-box-label" data-i18n="teachersPage.lessonPrice">Ders ücreti</span>
             <span class="filter-box-value" id="priceRangeLabel"></span>
           </span>
           <span class="chev">▾</span>
         </button>
         <div class="filter-panel">
-          <div class="filter-price-label">Fiyat aralığı</div>
+          <div class="filter-price-label" data-i18n="teachersPage.priceRange">Fiyat aralığı</div>
           <div class="price-slider-wrap">
             <input type="range" id="priceMin" min="0" max="1000" step="50" value="0">
             <input type="range" id="priceMax" min="0" max="1000" step="50" value="1000">
@@ -820,32 +820,32 @@
       <div class="filter-dropdown" data-dropdown="level">
         <button type="button" class="filter-trigger filter-box">
           <span class="filter-box-text">
-            <span class="filter-box-label">Seviye</span>
-            <span class="filter-box-value" id="levelBoxValue">Tümü</span>
+            <span class="filter-box-label" data-i18n="teachersPage.level">Seviye</span>
+            <span class="filter-box-value" id="levelBoxValue" data-i18n="teachersPage.all">Tümü</span>
           </span>
           <span class="chev">▾</span>
         </button>
         <div class="filter-panel">
-          <label class="filter-option"><input type="checkbox" value="Başlangıç" class="level-filter"> Başlangıç</label>
-          <label class="filter-option"><input type="checkbox" value="Orta" class="level-filter"> Orta</label>
-          <label class="filter-option"><input type="checkbox" value="İleri" class="level-filter"> İleri</label>
+          <label class="filter-option"><input type="checkbox" value="Başlangıç" class="level-filter"> <span data-i18n="teachersPage.levelBeginner">Başlangıç</span></label>
+          <label class="filter-option"><input type="checkbox" value="Orta" class="level-filter"> <span data-i18n="teachersPage.levelIntermediate">Orta</span></label>
+          <label class="filter-option"><input type="checkbox" value="İleri" class="level-filter"> <span data-i18n="teachersPage.levelAdvanced">İleri</span></label>
         </div>
       </div>
 
       <div class="filter-dropdown" data-dropdown="lang">
         <button type="button" class="filter-trigger filter-box">
           <span class="filter-box-text">
-            <span class="filter-box-label">Diller</span>
-            <span class="filter-box-value" id="langBoxValue">Tümü</span>
+            <span class="filter-box-label" data-i18n="teachersPage.languages">Diller</span>
+            <span class="filter-box-value" id="langBoxValue" data-i18n="teachersPage.all">Tümü</span>
           </span>
           <span class="chev">▾</span>
         </button>
         <div class="filter-panel">
-          <label class="filter-option"><input type="checkbox" value="İngilizce" class="lang-filter"> İngilizce</label>
-          <label class="filter-option"><input type="checkbox" value="Türkçe" class="lang-filter"> Türkçe</label>
-          <label class="filter-option"><input type="checkbox" value="Almanca" class="lang-filter"> Almanca</label>
-          <label class="filter-option"><input type="checkbox" value="Fransızca" class="lang-filter"> Fransızca</label>
-          <label class="filter-option"><input type="checkbox" value="İspanyolca" class="lang-filter"> İspanyolca</label>
+          <label class="filter-option"><input type="checkbox" value="İngilizce" class="lang-filter"> <span data-i18n="teachersPage.langEnglish">İngilizce</span></label>
+          <label class="filter-option"><input type="checkbox" value="Türkçe" class="lang-filter"> <span data-i18n="teachersPage.langTurkish">Türkçe</span></label>
+          <label class="filter-option"><input type="checkbox" value="Almanca" class="lang-filter"> <span data-i18n="teachersPage.langGerman">Almanca</span></label>
+          <label class="filter-option"><input type="checkbox" value="Fransızca" class="lang-filter"> <span data-i18n="teachersPage.langFrench">Fransızca</span></label>
+          <label class="filter-option"><input type="checkbox" value="İspanyolca" class="lang-filter"> <span data-i18n="teachersPage.langSpanish">İspanyolca</span></label>
         </div>
       </div>
 
@@ -854,27 +854,27 @@
     <div class="filter-bar">
 
       <div class="filter-dropdown" data-dropdown="type">
-        <button type="button" class="filter-trigger filter-pill">Ders Türü <span class="chev">▾</span></button>
+        <button type="button" class="filter-trigger filter-pill"><span data-i18n="teachersPage.lessonType">Ders Türü</span> <span class="chev">▾</span></button>
         <div class="filter-panel">
-          <label class="filter-option"><input type="checkbox" value="Konuşma" class="filter"> Konuşma</label>
+          <label class="filter-option"><input type="checkbox" value="Konuşma" class="filter"> <span data-i18n="teachersPage.typeSpeaking">Konuşma</span></label>
           <label class="filter-option"><input type="checkbox" value="IELTS" class="filter"> IELTS</label>
           <label class="filter-option"><input type="checkbox" value="TOEFL" class="filter"> TOEFL</label>
           <label class="filter-option"><input type="checkbox" value="YDS" class="filter"> YDS</label>
-          <label class="filter-option"><input type="checkbox" value="İş İngilizcesi" class="filter"> İş İngilizcesi</label>
+          <label class="filter-option"><input type="checkbox" value="İş İngilizcesi" class="filter"> <span data-i18n="teachersPage.typeBusinessEnglish">İş İngilizcesi</span></label>
         </div>
       </div>
 
       <label class="fav-toggle">
         <input type="checkbox" id="favoritesOnlyFilter">
-        ★ Favorilerim
+        ★ <span data-i18n="teachersPage.myFavorites">Favorilerim</span>
       </label>
 
       <div class="sort-wrap">
         <select id="sortSelect">
-          <option value="default">Önerilen</option>
-          <option value="priceLow">En düşük fiyat</option>
-          <option value="priceHigh">En yüksek fiyat</option>
-          <option value="rating">En yüksek puan</option>
+          <option value="default" data-i18n="teachersPage.sortRecommended">Önerilen</option>
+          <option value="priceLow" data-i18n="teachersPage.sortPriceLow">En düşük fiyat</option>
+          <option value="priceHigh" data-i18n="teachersPage.sortPriceHigh">En yüksek fiyat</option>
+          <option value="rating" data-i18n="teachersPage.sortRating">En yüksek puan</option>
         </select>
       </div>
 
@@ -884,6 +884,7 @@
           type="text"
           id="searchInput"
           placeholder="İsim, uzmanlık veya konu ara..."
+          data-i18n-placeholder="teachersPage.searchPlaceholder"
         >
       </div>
 
@@ -892,7 +893,7 @@
 
     <div class="teachers" id="teachersGrid"></div>
 
-    <div class="empty" id="emptyState">
+    <div class="empty" id="emptyState" data-i18n="teachersPage.noResults">
       Aramana uygun öğretmen bulunamadı.
     </div>
 
@@ -937,7 +938,7 @@
 
       const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
       const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
-      const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : "Yeni";
+      const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
       const avatarInner = teacher.photo
         ? `<img src="${teacher.photo}" alt="">`
         : teacher.initials;
@@ -953,8 +954,9 @@
       article.dataset.teacherId = teacher.id;
 
       const studentsLabel = teacher.students !== undefined
-        ? `${teacher.students} öğrenci · ${teacher.completedLessons} ders`
-        : `${teacher.completedLessons} ders`;
+        ? armusT("teachersPage.studentsAndLessons", "{s} öğrenci · {l} ders")
+            .replace("{s}", teacher.students).replace("{l}", teacher.completedLessons)
+        : armusT("teachersPage.lessonsOnly", "{l} ders").replace("{l}", teacher.completedLessons);
 
       const aboutText = Array.isArray(teacher.about) ? teacher.about[0] : "";
       const aboutSnippet = aboutText && aboutText.length > 130
@@ -964,7 +966,7 @@
       const isDemoTeacher = typeof TEACHERS !== "undefined" && TEACHERS.some(t => t.id === teacher.id);
       const messageLink = isDemoTeacher
         ? ""
-        : `<a class="msg-link" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">Mesaj Gönder</a>`;
+        : `<a class="msg-link" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
 
       article.innerHTML = `
         <div class="avatar">${avatarInner}</div>
@@ -973,19 +975,19 @@
           <div class="card-mid-top">
             <a href="${teacherLink}" class="teacher-name">${armusShortDisplayName(teacher.name)}</a>
             <div class="rating">${ratingLabel}</div>
-            <button type="button" class="fav-btn" data-fav="${teacher.id}" aria-label="Favorilere ekle">♥</button>
+            <button type="button" class="fav-btn" data-fav="${teacher.id}" aria-label="${armusT("teacherProfile.addToFavorites", "Favorilere ekle")}">♥</button>
           </div>
           <div class="teacher-role">${teacher.role}</div>
           <div class="stats-line">${studentsLabel}</div>
           <div class="tags">
             ${teacher.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}
           </div>
-          ${aboutSnippet ? `<div class="card-desc">${aboutSnippet} <a href="${teacherLink}">Devamını oku</a></div>` : ""}
+          ${aboutSnippet ? `<div class="card-desc">${aboutSnippet} <a href="${teacherLink}">${armusT("teacherProfile.showMore", "Devamını oku")}</a></div>` : ""}
         </div>
 
         <div class="card-side">
-          <div class="price">₺${teacher.price} <span>/ ders</span></div>
-          <a class="trial" href="${bookingLink}">Deneme Dersi Al</a>
+          <div class="price">₺${teacher.price} <span>${armusT("teachersPage.perLesson", "/ ders")}</span></div>
+          <a class="trial" href="${bookingLink}">${armusT("teacherProfile.trialLessonBtn", "Deneme Dersi Al")}</a>
           ${messageLink}
         </div>
       `;
@@ -1005,8 +1007,14 @@
     // Demo teachers need no network call, so they render immediately -
     // real (self-registered) teachers are fetched in the background below
     // and merged in as soon as they arrive, instead of blocking the whole
-    // list on that request.
-    TEACHERS.forEach(renderTeacherCard);
+    // list on that request. Kept in one list (rather than re-derived from
+    // the DOM) so a language toggle can cheaply rebuild every card.
+    const allTeachers = [];
+    function addTeacherCard(teacher) {
+      allTeachers.push(teacher);
+      renderTeacherCard(teacher);
+    }
+    TEACHERS.forEach(addTeacherCard);
 
     const searchInput = document.getElementById("searchInput");
     const filters = document.querySelectorAll(".filter");
@@ -1124,11 +1132,11 @@
 
 
       count.textContent =
-        `${visibleCards.length} öğretmen bulundu`;
+        armusT("teachersPage.resultsCount", "{n} öğretmen bulundu").replace("{n}", visibleCards.length);
 
       // reflect the picked values on the row-1 boxes themselves
-      levelBoxValue.textContent = selectedLevels.length ? selectedLevels.join(", ") : "Tümü";
-      langBoxValue.textContent = selectedLangs.length ? selectedLangs.join(", ") : "Tümü";
+      levelBoxValue.textContent = selectedLevels.length ? selectedLevels.join(", ") : armusT("teachersPage.all", "Tümü");
+      langBoxValue.textContent = selectedLangs.length ? selectedLangs.join(", ") : armusT("teachersPage.all", "Tümü");
 
       // reflect active state on the filter triggers themselves
       document.querySelector('[data-dropdown="type"] .filter-trigger')
@@ -1172,6 +1180,12 @@
 
     updateTeachers();
 
+    document.addEventListener("armus:langchange", () => {
+      document.querySelectorAll(".teacher-card").forEach(card => card.remove());
+      allTeachers.forEach(renderTeacherCard);
+      updateTeachers();
+    });
+
     // real (self-registered) teachers still need a Supabase round trip,
     // so let people know more results may still be on the way instead of
     // assuming the list is done
@@ -1191,7 +1205,7 @@
     // them into the already-visible grid as soon as they arrive instead
     // of making the whole list wait on the network
     armusGetRegisteredTeachers().then(registeredTeachers => {
-      registeredTeachers.forEach(renderTeacherCard);
+      registeredTeachers.forEach(addTeacherCard);
       updateTeachers();
       document.getElementById("loadingNote").classList.remove("visible");
     });
