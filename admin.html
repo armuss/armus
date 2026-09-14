@@ -1101,111 +1101,111 @@
     <main>
 
       <div class="panel active" id="panel-overview">
-        <h2>Genel Bakış</h2>
+        <h2 data-i18n="admin.overviewHeading">Genel Bakış</h2>
         <div class="digest-card" id="digestCard"></div>
         <div class="stat-grid" id="overviewStats"></div>
-        <h3>Son 6 ay - rezervasyon trendi</h3>
+        <h3 data-i18n="admin.trendHeading">Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
-        <h3>Canlı Akış <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;">● CANLI</span></h3>
-        <p class="section-hint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
+        <h3><span data-i18n="admin.pulseHeading">Canlı Akış</span> <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;" data-i18n="admin.pulseLive">● CANLI</span></h3>
+        <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
         <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
       </div>
 
       <div class="panel" id="panel-teachers">
-        <h2>Öğretmenler</h2>
+        <h2 data-i18n="admin.navTeachers">Öğretmenler</h2>
 
-        <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara...">
-        <p class="section-hint" style="margin-top: -12px;">Klavye: bekleyen başvurular arasında <kbd>j</kbd>/<kbd>k</kbd> ile gezin, <kbd>a</kbd> onayla, <kbd>r</kbd> reddet. Her yerden <kbd>Ctrl</kbd>+<kbd>K</kbd> ile hızlı ara.</p>
+        <input type="text" class="admin-search" id="searchTeachers" placeholder="İsim veya e-posta ara..." data-i18n-placeholder="admin.searchNameEmail">
+        <p class="section-hint" style="margin-top: -12px;" data-i18n="admin.keyboardHint">Klavye: bekleyen başvurular arasında <kbd>j</kbd>/<kbd>k</kbd> ile gezin, <kbd>a</kbd> onayla, <kbd>r</kbd> reddet. Her yerden <kbd>Ctrl</kbd>+<kbd>K</kbd> ile hızlı ara.</p>
 
         <div id="atRiskSection" style="display: none;">
-          <h3 style="color: #b3261e;">⚠️ Riskli öğretmenler</h3>
-          <p class="section-hint">Rezervasyonu duran, uzun süredir hiç ders almamış ya da son değerlendirmeleri düşen onaylı öğretmenler - erken müdahale için.</p>
+          <h3 style="color: #b3261e;" data-i18n="admin.atRiskHeading">⚠️ Riskli öğretmenler</h3>
+          <p class="section-hint" data-i18n="admin.atRiskHint">Rezervasyonu duran, uzun süredir hiç ders almamış ya da son değerlendirmeleri düşen onaylı öğretmenler - erken müdahale için.</p>
           <div id="atRiskList"></div>
         </div>
 
         <div class="panel-toolbar" id="bulkActionsBar" style="display: none;">
           <span class="section-hint" style="margin: 0;" id="bulkSelectedCount">0 başvuru seçildi</span>
           <div class="row-actions">
-            <button class="btn btn-approve" id="bulkApproveBtn">Seçilenleri Onayla</button>
-            <button class="btn btn-reject" id="bulkRejectBtn">Seçilenleri Reddet</button>
+            <button class="btn btn-approve" id="bulkApproveBtn" data-i18n="admin.bulkApprove">Seçilenleri Onayla</button>
+            <button class="btn btn-reject" id="bulkRejectBtn" data-i18n="admin.bulkReject">Seçilenleri Reddet</button>
           </div>
         </div>
 
-        <h3>Bekleyen başvurular</h3>
+        <h3 data-i18n="admin.pendingHeading">Bekleyen başvurular</h3>
         <div id="pendingList"></div>
-        <div class="empty-note" id="pendingEmpty" style="display: none;">Bekleyen başvuru yok.</div>
+        <div class="empty-note" id="pendingEmpty" style="display: none;" data-i18n="admin.pendingEmpty">Bekleyen başvuru yok.</div>
 
-        <h3>Onaylanmış öğretmenler</h3>
+        <h3 data-i18n="admin.approvedHeading">Onaylanmış öğretmenler</h3>
         <div id="approvedList"></div>
-        <div class="empty-note" id="approvedEmpty" style="display: none;">Henüz onaylanmış öğretmen yok.</div>
+        <div class="empty-note" id="approvedEmpty" style="display: none;" data-i18n="admin.approvedEmpty">Henüz onaylanmış öğretmen yok.</div>
 
-        <h3>Reddedilen başvurular</h3>
+        <h3 data-i18n="admin.rejectedHeading">Reddedilen başvurular</h3>
         <div id="rejectedList"></div>
-        <div class="empty-note" id="rejectedEmpty" style="display: none;">Reddedilen başvuru yok.</div>
+        <div class="empty-note" id="rejectedEmpty" style="display: none;" data-i18n="admin.rejectedEmpty">Reddedilen başvuru yok.</div>
 
-        <h3>Henüz başvurmamış öğretmen hesapları</h3>
+        <h3 data-i18n="admin.noAppHeading">Henüz başvurmamış öğretmen hesapları</h3>
         <div id="noAppList"></div>
-        <div class="empty-note" id="noAppEmpty" style="display: none;">Yok.</div>
+        <div class="empty-note" id="noAppEmpty" style="display: none;" data-i18n="admin.noAppEmpty">Yok.</div>
       </div>
 
       <div class="panel" id="panel-changes">
-        <h2>Profil Değişiklikleri</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navChanges">Profil Değişiklikleri</h2>
+        <p class="section-hint" data-i18n="admin.changesHint">
           Onaylı öğretmenlerin profil veya uygunluk değişikliği isteklerini
           buradan tek yerden görüp onaylayabilir ya da reddedebilirsin.
         </p>
         <div id="changesList"></div>
-        <div class="empty-note" id="changesEmpty" style="display: none;">Bekleyen profil değişikliği yok.</div>
+        <div class="empty-note" id="changesEmpty" style="display: none;" data-i18n="admin.changesEmpty">Bekleyen profil değişikliği yok.</div>
       </div>
 
       <div class="panel" id="panel-bookings">
-        <h2>Rezervasyonlar</h2>
+        <h2 data-i18n="admin.navBookings">Rezervasyonlar</h2>
         <div class="panel-toolbar">
-          <input type="text" class="admin-search" id="searchBookings" placeholder="Öğrenci veya öğretmen ara...">
-          <button class="btn" id="exportBookingsBtn">Excel'e Aktar (CSV)</button>
+          <input type="text" class="admin-search" id="searchBookings" placeholder="Öğrenci veya öğretmen ara..." data-i18n-placeholder="admin.searchStudentTeacher">
+          <button class="btn" id="exportBookingsBtn" data-i18n="admin.exportCsv">Excel'e Aktar (CSV)</button>
         </div>
         <table id="bookingsTable">
           <thead>
             <tr>
-              <th>Öğrenci</th>
-              <th>Öğretmen</th>
-              <th>Tür</th>
-              <th>Tarih</th>
-              <th>Saat</th>
-              <th>Ücret</th>
+              <th data-i18n="admin.colStudent">Öğrenci</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colType">Tür</th>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colTime">Saat</th>
+              <th data-i18n="admin.colPrice">Ücret</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="bookingsBody"></tbody>
         </table>
-        <div class="empty-note" id="bookingsEmpty" style="display: none;">Henüz rezervasyon yok.</div>
+        <div class="empty-note" id="bookingsEmpty" style="display: none;" data-i18n="admin.bookingsEmpty">Henüz rezervasyon yok.</div>
       </div>
 
       <div class="panel" id="panel-students">
-        <h2>Öğrenciler</h2>
+        <h2 data-i18n="admin.navStudents">Öğrenciler</h2>
         <div class="panel-toolbar">
-          <input type="text" class="admin-search" id="searchStudents" placeholder="İsim veya e-posta ara...">
-          <button class="btn" id="exportStudentsBtn">Excel'e Aktar (CSV)</button>
+          <input type="text" class="admin-search" id="searchStudents" placeholder="İsim veya e-posta ara..." data-i18n-placeholder="admin.searchNameEmail">
+          <button class="btn" id="exportStudentsBtn" data-i18n="admin.exportCsv">Excel'e Aktar (CSV)</button>
         </div>
         <table id="studentsTable">
           <thead>
             <tr>
-              <th>Ad Soyad</th>
-              <th>E-posta</th>
-              <th>Kayıt tarihi</th>
-              <th>Rezervasyon sayısı</th>
+              <th data-i18n="admin.colFullName">Ad Soyad</th>
+              <th data-i18n="admin.colEmail">E-posta</th>
+              <th data-i18n="admin.colJoinDate">Kayıt tarihi</th>
+              <th data-i18n="admin.colBookingCount">Rezervasyon sayısı</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="studentsBody"></tbody>
         </table>
-        <div class="empty-note" id="studentsEmpty" style="display: none;">Henüz öğrenci yok.</div>
+        <div class="empty-note" id="studentsEmpty" style="display: none;" data-i18n="admin.studentsEmpty">Henüz öğrenci yok.</div>
       </div>
 
       <div class="panel" id="panel-log">
-        <h2>Etkinlik Günlüğü</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navLog">Etkinlik Günlüğü</h2>
+        <p class="section-hint" data-i18n="admin.logHint">
           Onay/red ve iptal gibi admin işlemlerinin geçmişi. (Bu panel
           admin_actions tablosu Supabase'de oluşturulduktan sonra dolmaya
           başlar - o ana kadar boş görünmesi normal.)
@@ -1213,20 +1213,20 @@
         <table id="logTable">
           <thead>
             <tr>
-              <th>Admin</th>
-              <th>İşlem</th>
-              <th>Hedef</th>
-              <th>Zaman</th>
+              <th data-i18n="admin.colAdmin">Admin</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+              <th data-i18n="admin.colTarget">Hedef</th>
+              <th data-i18n="admin.colTime2">Zaman</th>
             </tr>
           </thead>
           <tbody id="logBody"></tbody>
         </table>
-        <div class="empty-note" id="logEmpty" style="display: none;">Henüz kayıtlı işlem yok.</div>
+        <div class="empty-note" id="logEmpty" style="display: none;" data-i18n="admin.logEmpty">Henüz kayıtlı işlem yok.</div>
       </div>
 
       <div class="panel" id="panel-testimonials">
-        <h2>Anasayfa Yorumları</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navTestimonials">Anasayfa Yorumları</h2>
+        <p class="section-hint" data-i18n="admin.testimonialsHint">
           Ana sayfadaki "Öğrencilerimiz ne diyor?" bölümünde gösterilen
           yorumları buradan yönetebilirsin. En az bir "Yayında" yorum
           olduğunda ana sayfa bunları otomatik gösterir; hiçbiri yayında
@@ -1234,14 +1234,14 @@
         </p>
 
         <div class="app-card">
-          <h3 style="margin-top:0;">Yeni yorum ekle</h3>
+          <h3 style="margin-top:0;" data-i18n="admin.addTestimonialHeading">Yeni yorum ekle</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-            <input type="text" class="admin-search" id="newTName" placeholder="İsim (örn. Zeynep A.)" style="margin-bottom:0;">
-            <input type="text" class="admin-search" id="newTLocation" placeholder="Şehir / rol (örn. İstanbul)" style="margin-bottom:0;">
+            <input type="text" class="admin-search" id="newTName" placeholder="İsim (örn. Zeynep A.)" style="margin-bottom:0;" data-i18n-placeholder="admin.testimonialNamePlaceholder">
+            <input type="text" class="admin-search" id="newTLocation" placeholder="Şehir / rol (örn. İstanbul)" style="margin-bottom:0;" data-i18n-placeholder="admin.testimonialLocationPlaceholder">
           </div>
-          <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;"></textarea>
+          <textarea class="admin-search" id="newTQuote" placeholder="Yorum metni" style="margin-bottom:12px;min-height:70px;resize:vertical;" data-i18n-placeholder="admin.testimonialQuotePlaceholder"></textarea>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-            <label style="font-size:12.5px;color:var(--armus-muted);">Puan:
+            <label style="font-size:12.5px;color:var(--armus-muted);"><span data-i18n="admin.ratingLabel">Puan:</span>
               <select id="newTRating" style="margin-left:6px;background:var(--armus-panel);color:var(--armus-ink);border:1px solid var(--armus-border);border-radius:8px;padding:6px 8px;font-family:inherit;">
                 <option value="5">5</option>
                 <option value="4">4</option>
@@ -1251,45 +1251,45 @@
               </select>
             </label>
           </div>
-          <button class="btn btn-approve" id="addTestimonialBtn">Ekle</button>
+          <button class="btn btn-approve" id="addTestimonialBtn" data-i18n="admin.addBtn">Ekle</button>
 
           <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--armus-border-soft);">
-            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--armus-faint); margin-bottom: 12px;">Canlı önizleme - ana sayfada böyle görünecek</h4>
+            <h4 style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--armus-faint); margin-bottom: 12px;" data-i18n="admin.livePreviewHeading">Canlı önizleme - ana sayfada böyle görünecek</h4>
             <div id="testimonialPreview" class="testimonial-preview"></div>
           </div>
         </div>
 
-        <h3>Mevcut yorumlar</h3>
+        <h3 data-i18n="admin.currentTestimonialsHeading">Mevcut yorumlar</h3>
         <div id="testimonialsList"></div>
-        <div class="empty-note" id="testimonialsEmpty" style="display: none;">Henüz eklenmiş yorum yok.</div>
+        <div class="empty-note" id="testimonialsEmpty" style="display: none;" data-i18n="admin.testimonialsEmpty">Henüz eklenmiş yorum yok.</div>
       </div>
 
       <div class="panel" id="panel-disputes">
-        <h2>Anlaşmazlıklar</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navDisputes">Anlaşmazlıklar</h2>
+        <p class="section-hint" data-i18n="admin.disputesHint">
           Öğrenci ya da öğretmenlerin bir rezervasyonla ilgili bildirdiği
           sorunlar burada listelenir. (Bu panel disputes tablosu
           Supabase'de oluşturulduktan sonra dolmaya başlar.)
         </p>
-        <input type="text" class="admin-search" id="searchDisputes" placeholder="İsim veya konu ara...">
+        <input type="text" class="admin-search" id="searchDisputes" placeholder="İsim veya konu ara..." data-i18n-placeholder="admin.searchNameTopic">
         <div id="disputesList"></div>
-        <div class="empty-note" id="disputesEmpty" style="display: none;">Bildirilmiş bir sorun yok.</div>
+        <div class="empty-note" id="disputesEmpty" style="display: none;" data-i18n="admin.disputesEmpty">Bildirilmiş bir sorun yok.</div>
       </div>
 
       <div class="panel" id="panel-reviews">
-        <h2>İncelemeler</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navReviews">İncelemeler</h2>
+        <p class="section-hint" data-i18n="admin.reviewsHint">
           Düşük puanlı ya da olumsuz kelimeler içeren değerlendirmeler
           burada otomatik olarak işaretlenir, böylece hepsini tek tek
           okumana gerek kalmaz.
         </p>
         <div id="flaggedReviewsList"></div>
-        <div class="empty-note" id="flaggedReviewsEmpty" style="display: none;">İşaretlenecek bir değerlendirme yok.</div>
+        <div class="empty-note" id="flaggedReviewsEmpty" style="display: none;" data-i18n="admin.flaggedReviewsEmpty">İşaretlenecek bir değerlendirme yok.</div>
       </div>
 
       <div class="panel" id="panel-earnings">
-        <h2>Kazançlar / Komisyon</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.earningsHeading">Kazançlar / Komisyon</h2>
+        <p class="section-hint" data-i18n="admin.earningsHint">
           Her öğretmenin tamamlanan derslerden elde ettiği ciro, komisyon
           dilimi ve ARMUS'un aldığı komisyon. Dilimler ana sayfadaki
           komisyon oranlarıyla aynıdır.
@@ -1297,63 +1297,63 @@
         <table id="earningsTable">
           <thead>
             <tr>
-              <th>Öğretmen</th>
-              <th>Tamamlanan ders</th>
-              <th>Toplam saat</th>
-              <th>Ciro</th>
-              <th>Komisyon dilimi</th>
-              <th>ARMUS komisyonu</th>
-              <th>Öğretmen payı</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colCompletedLessons">Tamamlanan ders</th>
+              <th data-i18n="admin.colTotalHours">Toplam saat</th>
+              <th data-i18n="admin.colRevenue">Ciro</th>
+              <th data-i18n="admin.colCommissionTier">Komisyon dilimi</th>
+              <th data-i18n="admin.colArmusCommission">ARMUS komisyonu</th>
+              <th data-i18n="admin.colTeacherShare">Öğretmen payı</th>
             </tr>
           </thead>
           <tbody id="earningsBody"></tbody>
         </table>
-        <div class="empty-note" id="earningsEmpty" style="display: none;">Henüz tamamlanan ders yok.</div>
+        <div class="empty-note" id="earningsEmpty" style="display: none;" data-i18n="admin.earningsEmpty">Henüz tamamlanan ders yok.</div>
       </div>
 
       <div class="panel" id="panel-announcement">
-        <h2>Site Duyurusu</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navAnnouncement">Site Duyurusu</h2>
+        <p class="section-hint" data-i18n="admin.announcementHint">
           Buraya yazdığın mesaj, aktif ettiğinde sitenin üstünde herkese
           (öğrenci, öğretmen, ziyaretçi) sabit bir şerit olarak gösterilir.
           Kapatma butonuna basan kullanıcılar aynı mesajı bir daha görmez.
         </p>
         <div class="app-card">
-          <textarea class="admin-search" id="announcementMessage" placeholder="Örn: Bugün bakım çalışması var, dersler etkilenmeyecek." style="min-height: 70px; resize: vertical; margin-bottom: 12px;"></textarea>
+          <textarea class="admin-search" id="announcementMessage" placeholder="Örn: Bugün bakım çalışması var, dersler etkilenmeyecek." style="min-height: 70px; resize: vertical; margin-bottom: 12px;" data-i18n-placeholder="admin.announcementPlaceholder"></textarea>
           <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--armus-muted); margin-bottom: 16px;">
             <input type="checkbox" id="announcementActive" style="width: 16px; height: 16px;">
-            Aktif (sitede göster)
+            <span data-i18n="admin.announcementActiveLabel">Aktif (sitede göster)</span>
           </label>
-          <button class="btn btn-approve" id="saveAnnouncementBtn">Kaydet</button>
-          <span id="announcementSavedNote" style="margin-left: 10px; color: #1f7a4d; font-size: 12.5px; display: none;">Kaydedildi ✓</span>
+          <button class="btn btn-approve" id="saveAnnouncementBtn" data-i18n="admin.saveBtn">Kaydet</button>
+          <span id="announcementSavedNote" style="margin-left: 10px; color: #1f7a4d; font-size: 12.5px; display: none;" data-i18n="admin.savedNote">Kaydedildi ✓</span>
         </div>
       </div>
 
       <div class="panel" id="panel-demand">
-        <h2>Talep Haritası</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navDemand">Talep Haritası</h2>
+        <p class="section-hint" data-i18n="admin.demandHint">
           Rezervasyonların hangi gün ve saatlerde yoğunlaştığını gösterir -
           koyu hücreler yoğun talebi işaret eder. Yeni öğretmen ararken
           hangi saatlere öncelik vermen gerektiğini buradan görebilirsin.
         </p>
         <div id="demandHeatmap" class="heatmap-wrap"></div>
-        <div class="empty-note" id="demandEmpty" style="display: none;">Henüz ısı haritası için yeterli rezervasyon yok.</div>
+        <div class="empty-note" id="demandEmpty" style="display: none;" data-i18n="admin.demandEmpty">Henüz ısı haritası için yeterli rezervasyon yok.</div>
       </div>
 
       <div class="panel" id="panel-cities">
-        <h2>Şehirlere Göre Dağılım</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.citiesHeading">Şehirlere Göre Dağılım</h2>
+        <p class="section-hint" data-i18n="admin.citiesHint">
           Öğrenci ve öğretmenlerin bildirdiği şehirlere göre dağılım. Yeni
           kayıtlarda toplanan şehir bilgisine göre dolar - eski hesaplarda
           şehir bilgisi olmayabilir.
         </p>
         <div id="cityList" class="city-bars"></div>
-        <div class="empty-note" id="cityEmpty" style="display: none;">Henüz şehir bilgisi olan kayıt yok.</div>
+        <div class="empty-note" id="cityEmpty" style="display: none;" data-i18n="admin.cityEmpty">Henüz şehir bilgisi olan kayıt yok.</div>
       </div>
 
       <div class="panel" id="panel-flags">
-        <h2>Görünüm Ayarları</h2>
-        <p class="section-hint">
+        <h2 data-i18n="admin.navFlags">Görünüm Ayarları</h2>
+        <p class="section-hint" data-i18n="admin.flagsHint">
           Ana sayfadaki bazı bölümleri kod değişikliği yapmadan buradan
           geçici olarak kapatabilirsin. Değişiklik hemen etkili olur.
         </p>
@@ -1365,7 +1365,7 @@
         <div class="detail-panel">
           <div class="detail-head">
             <h3 id="detailTitle"></h3>
-            <button class="btn" id="detailCloseBtn">Kapat ✕</button>
+            <button class="btn" id="detailCloseBtn" data-i18n="admin.closeBtn">Kapat ✕</button>
           </div>
           <div id="detailBody"></div>
         </div>
@@ -1374,9 +1374,9 @@
       <!-- COMMAND PALETTE (Ctrl/Cmd+K quick search) -->
       <div class="palette-overlay" id="paletteOverlay">
         <div class="palette-box">
-          <input type="text" id="paletteInput" placeholder="Öğretmen, öğrenci, rezervasyon, anlaşmazlık ara..." autocomplete="off">
+          <input type="text" id="paletteInput" placeholder="Öğretmen, öğrenci, rezervasyon, anlaşmazlık ara..." autocomplete="off" data-i18n-placeholder="admin.paletteSearchPlaceholder">
           <div id="paletteResults" class="palette-results"></div>
-          <div class="palette-hint">↑↓ gezin · Enter git · Esc kapat</div>
+          <div class="palette-hint" data-i18n="admin.paletteHint">↑↓ gezin · Enter git · Esc kapat</div>
         </div>
       </div>
 
