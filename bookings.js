@@ -110,12 +110,66 @@ function armusMapBookingRow(row) {
     date: row.lesson_date,
     dateLabel: armusFormatDateLabel(row.lesson_date),
     time: row.lesson_time,
+    teacherTimezone: row.teacher_timezone || "Europe/Istanbul",
     price: row.price,
     status: row.status || "confirmed",
     cancelledBy: row.cancelled_by,
     refunded: row.refunded,
     createdAt: row.created_at,
   };
+}
+
+// lesson_date/lesson_time (and paid/date/time query-string pairs from
+// iyzico's redirect) are plain wall-clock strings with no zone of their
+// own - they mean whatever the TEACHER's calendar grid meant when they
+// set their availability, in the teacher's own local time (see
+// migration_37.sql). This turns one back into the real UTC instant it
+// actually refers to, correctly handling DST for any IANA zone (not just
+// Europe/Istanbul, which has none) - the standard "double conversion"
+// trick: format a UTC guess back in the target zone, see how far off the
+// wall-clock reading is, and shift by that difference.
+function armusZonedTimeToUtc(dateStr, timeStr, timeZone) {
+  const guess = new Date(`${dateStr}T${timeStr}:00Z`);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: timeZone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(guess).map(p => [p.type, p.value])
+  );
+  const hour = parts.hour === "24" ? 0 : Number(parts.hour);
+  const asIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    hour, Number(parts.minute), Number(parts.second)
+  );
+  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+}
+
+// The current viewer's own IANA zone, straight from their browser - used
+// to show a booking's date/time converted into whatever zone the person
+// looking at it is actually in right now, wherever in the world that is.
+function armusViewerTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Istanbul";
+  } catch (err) {
+    return "Europe/Istanbul";
+  }
+}
+
+// A booking's date/time, converted from the teacher's own local time
+// (however that booking's slot was defined) into the CURRENT VIEWER's
+// own local time - what a student or teacher should actually be shown
+// when asked "when is this lesson", regardless of which country either
+// of them is in. Language-aware like armusFormatDateLabel/armusFormatTimeRange.
+function armusFormatLessonWhen(booking) {
+  const start = armusZonedTimeToUtc(booking.date, booking.time, booking.teacherTimezone);
+  const end = new Date(start.getTime() + ARMUS_LESSON_MINUTES * 60000);
+  const lang = (typeof armusGetLang === "function" && armusGetLang() === "en") ? "en-US" : "tr-TR";
+  const dateLabel = start.toLocaleDateString(lang, { day: "numeric", month: "long", weekday: "short" });
+  const startLabel = start.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+  const endLabel = end.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+  return { start, end, dateLabel, timeRange: `${startLabel} – ${endLabel}` };
 }
 
 // A trial only counts as real earnings for the teacher once the student
@@ -201,7 +255,7 @@ const ARMUS_JOIN_EARLY_MINUTES = 15;
 const ARMUS_JOIN_LATE_GRACE_MINUTES = 15;
 
 function armusLessonWindow(booking) {
-  const start = new Date(`${booking.date}T${booking.time}:00`);
+  const start = armusZonedTimeToUtc(booking.date, booking.time, booking.teacherTimezone);
   const end = new Date(start.getTime() + ARMUS_LESSON_MINUTES * 60000);
   const joinsFrom = new Date(start.getTime() - ARMUS_JOIN_EARLY_MINUTES * 60000);
   const joinsUntil = new Date(end.getTime() + ARMUS_JOIN_LATE_GRACE_MINUTES * 60000);

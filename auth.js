@@ -86,7 +86,27 @@ async function armusGetSession() {
     .single();
 
   if (error || !profile) return null;
+
+  armusRefreshOwnTimezone(profile);
   return profile;
+}
+
+// Keeps profiles.timezone (migration_37.sql) pointed at wherever this
+// person actually is right now, not just wherever they were when they
+// signed up - checked on every session load, updated in the background
+// when it's drifted (e.g. they're travelling) so lesson-time
+// notifications (send-lesson-reminder) always land in their real current
+// local time. Best-effort and silent: never blocks or fails the caller's
+// armusGetSession, and updating "timezone" isn't one of the fields
+// enforce_teacher_profile_lock restricts for an approved teacher.
+function armusRefreshOwnTimezone(profile) {
+  try {
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (detected && detected !== profile.timezone) {
+      profile.timezone = detected;
+      armusSupabase.from("profiles").update({ timezone: detected }).eq("id", profile.id).then(() => {});
+    }
+  } catch (err) {}
 }
 
 // Updates the currently logged-in user's own profile row.

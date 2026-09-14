@@ -831,6 +831,28 @@ create policy "chat_attachments_select_authenticated"
 
 alter table profiles add column availability_dates jsonb not null default '{}';
 
+-- === TIMEZONES (migration_37.sql) =================================
+-- lesson_date/lesson_time are plain wall-clock strings with no zone of
+-- their own - they mean whatever the TEACHER's calendar grid meant when
+-- they set their availability, in the teacher's own local time.
+--
+-- profiles.timezone: which IANA zone this person is currently in,
+-- auto-detected client-side (Intl.DateTimeFormat().resolvedOptions().timeZone,
+-- see auth.js armusGetSession) and kept fresh on every login/session
+-- check. Used to format lesson-time notifications (send-lesson-reminder)
+-- in each recipient's own current time.
+alter table profiles add column if not exists timezone text not null default 'Europe/Istanbul';
+
+-- bookings.teacher_timezone: a snapshot of the teacher's profiles.timezone
+-- at the moment this booking was created (see create-payment/payment-callback)
+-- - demo teachers (teachers-data.js, no profile row) always get the
+-- default. Snapshotted rather than looked up live so a teacher changing
+-- their timezone later never reinterprets a past booking's already-fixed
+-- wall-clock time. This is what lets cancel-booking and the reminder
+-- cron below compute the real UTC instant of a lesson correctly instead
+-- of assuming everyone is UTC.
+alter table bookings add column if not exists teacher_timezone text not null default 'Europe/Istanbul';
+
 -- === LESSON REMINDER EMAILS =======================================
 -- Runs every 10 minutes: any lesson starting 50-70 minutes from now that
 -- hasn't been reminded about yet gets a call to send-lesson-reminder (one
@@ -857,6 +879,7 @@ select cron.schedule(
   from bookings b
   where b.reminder_sent = false
     and b.status = 'confirmed'
-    and (b.lesson_date + b.lesson_time::time) between now() + interval '50 minutes' and now() + interval '70 minutes'
+    and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone)
+        between now() + interval '50 minutes' and now() + interval '70 minutes'
   $$
 );

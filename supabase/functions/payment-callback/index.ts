@@ -28,6 +28,12 @@ const iyzipay = new Iyzipay({
 
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.vercel.app").replace(/\/$/, "");
 
+// teacher_id can be a demo teacher (teachers-data.js, not a real
+// Supabase user/profile) - only look one up when it's a real UUID
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 function redirectTo(path: string) {
   return new Response(null, { status: 302, headers: { Location: `${SITE_URL}/${path}` } });
 }
@@ -132,6 +138,21 @@ Deno.serve(async (req) => {
     return redirectTo(successPath);
   }
 
+  // migration_37.sql - which zone lesson_date/lesson_time is wall-clock
+  // time IN, so this booking means the same real instant everywhere else
+  // (cancel-booking, the reminder cron) reads it. Demo teachers have no
+  // profile row to read a real timezone from, so they're always
+  // Europe/Istanbul.
+  let teacherTimezone = "Europe/Istanbul";
+  if (isUuid(pending.teacher_id)) {
+    const { data: teacherProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("timezone")
+      .eq("id", pending.teacher_id)
+      .maybeSingle();
+    teacherTimezone = teacherProfile?.timezone || "Europe/Istanbul";
+  }
+
   const { data: booking, error: bookingError } = await supabaseAdmin
     .from("bookings")
     .insert({
@@ -142,6 +163,7 @@ Deno.serve(async (req) => {
       type: pending.type,
       lesson_date: pending.lesson_date,
       lesson_time: pending.lesson_time,
+      teacher_timezone: teacherTimezone,
       price: pending.price,
     })
     .select()

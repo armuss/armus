@@ -143,13 +143,19 @@ Deno.serve(async (req) => {
     };
 
     let pricePerLesson: number;
+    // migration_37.sql - which zone lesson_date/lesson_time (below) is
+    // wall-clock time IN, so a credit-covered booking's date/time means
+    // the same real instant everywhere else (cancel-booking, reminder
+    // cron) reads it. Demo teachers have no profile row to read a real
+    // timezone from, so they're always Europe/Istanbul.
+    let teacherTimezone = "Europe/Istanbul";
 
     if (Object.prototype.hasOwnProperty.call(DEMO_TEACHER_PRICES, teacherId)) {
       pricePerLesson = DEMO_TEACHER_PRICES[teacherId];
     } else {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
-        .select("price, status")
+        .select("price, status, timezone")
         .eq("id", teacherId)
         .maybeSingle();
 
@@ -157,6 +163,7 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
       }
       pricePerLesson = Number(teacherProfile.price);
+      teacherTimezone = teacherProfile.timezone || "Europe/Istanbul";
     }
 
     const numericPrice = type === "package" ? pricePerLesson * numericQuantity : pricePerLesson;
@@ -203,6 +210,7 @@ Deno.serve(async (req) => {
           type,
           lesson_date: date,
           lesson_time: time,
+          teacher_timezone: teacherTimezone,
           price: numericPrice,
         })
         .select()

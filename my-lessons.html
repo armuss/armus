@@ -797,6 +797,9 @@
             const avatarInner = teacher
               ? (teacher.photo ? `<img src="${teacher.photo}" alt="">` : teacher.initials)
               : "?";
+            // shown in the viewer's own current local time, not the
+            // teacher's - see armusFormatLessonWhen (migration_37.sql)
+            const when = armusFormatLessonWhen(booking);
 
             const card = document.createElement("div");
             card.className = "lesson-card" + (isPast ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
@@ -812,8 +815,8 @@
                   <div class="lesson-meta">₺${booking.price} ${armusT("booking.perLesson", "/ 50 dakika")}${isPast ? armusT("myLessons.pastSuffix", " · geçti") : ""}</div>
                 </div>
                 <div class="lesson-when">
-                  <div class="lesson-date">${booking.dateLabel}</div>
-                  <div class="lesson-time">${armusFormatTimeRange(booking.time)}</div>
+                  <div class="lesson-date">${when.dateLabel}</div>
+                  <div class="lesson-time">${when.timeRange}</div>
                 </div>
               </div>
               ${isCancelled ? `
@@ -833,8 +836,7 @@
 
             if (!isCancelled && !isPast) {
 
-              const lessonStart = new Date(`${booking.date}T${booking.time}:00`);
-              const hoursUntil = (lessonStart - new Date()) / 3_600_000;
+              const hoursUntil = (armusLessonWindow(booking).start - new Date()) / 3_600_000;
               const refundHint = hoursUntil >= 4
                 ? armusT("myLessons.refundHintYes", "İptal edersen bu öğretmenle (veya bir deneme dersi için başka biriyle) kullanabileceğin bir ders hakkı kazanırsın")
                 : armusT("myLessons.refundHintNo", "Derse 4 saatten az kaldığı için ders hakkı kazanılmaz");
@@ -850,8 +852,8 @@
 
                 const confirmMsg = armusT("myLessons.cancelConfirm", "{name} ile {date}, {time} dersini iptal etmek istediğine emin misin?")
                   .replace("{name}", armusShortDisplayName(booking.teacherName))
-                  .replace("{date}", booking.dateLabel)
-                  .replace("{time}", armusFormatTimeRange(booking.time));
+                  .replace("{date}", when.dateLabel)
+                  .replace("{time}", when.timeRange);
                 if (!confirm(confirmMsg)) return;
 
                 const btn = cancelWrap.querySelector(".lesson-cancel-btn");

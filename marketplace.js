@@ -74,6 +74,9 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
       ? profile.availability_dates
       : {},
     isOnline: Boolean(profile.is_online),
+    // migration_37.sql - which IANA zone this teacher's own calendar grid
+    // (weeklyAvailability/availabilityDates) is wall-clock time in.
+    timezone: profile.timezone || "Europe/Istanbul",
   };
 }
 

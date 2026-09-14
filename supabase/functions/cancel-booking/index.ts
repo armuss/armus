@@ -24,6 +24,35 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const FREE_CANCEL_HOURS = 4;
 
+// lesson_date/lesson_time are plain wall-clock strings with no zone of
+// their own - booking.teacher_timezone (migration_37.sql) says which
+// IANA zone they're wall-clock time IN. This turns them into the real
+// UTC instant, correctly handling DST for any zone (not just
+// Europe/Istanbul, which has none) - the standard "double conversion"
+// trick: format a UTC guess back in the target zone, see how far off the
+// wall-clock reading is, and shift by that difference. Without this, the
+// "lesson already passed" check and the 4-hour free-cancellation window
+// below were computed as if lesson_date/lesson_time were UTC, which for
+// an Europe/Istanbul (UTC+3) teacher put both about 3 hours later than
+// the real lesson time.
+function armusZonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
+  const guess = new Date(`${dateStr}T${timeStr}:00Z`);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: timeZone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(guess).map((p) => [p.type, p.value]),
+  );
+  const hour = parts.hour === "24" ? 0 : Number(parts.hour);
+  const asIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    hour, Number(parts.minute), Number(parts.second),
+  );
+  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+}
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -84,7 +113,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Bu rezervasyonu iptal etme yetkin yok." }, 403);
     }
 
-    const lessonStart = new Date(`${booking.lesson_date}T${booking.lesson_time}:00`);
+    const lessonStart = armusZonedTimeToUtc(booking.lesson_date, booking.lesson_time, booking.teacher_timezone);
     if (new Date() > lessonStart) {
       return jsonResponse({ error: "Bu dersin zamanı geçti, iptal edilemez." }, 400);
     }
