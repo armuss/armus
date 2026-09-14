@@ -1418,18 +1418,21 @@
       });
     });
 
-    const DAY_COLUMNS = [
-      ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
-      ["Cum", 5], ["Cmt", 6], ["Paz", 0]
-    ];
+    function dayColumns() {
+      const labels = armusDayNames();
+      return [
+        [labels[1], 1], [labels[2], 2], [labels[3], 3], [labels[4], 4],
+        [labels[5], 5], [labels[6], 6], [labels[0], 0]
+      ];
+    }
 
     function renderAvailabilityGrid(weeklyAvailability) {
 
       if (!Array.isArray(weeklyAvailability)) {
-        return '<p style="color:var(--armus-faint);font-size:12px;margin-top:6px;">Henüz uygunluk saati ayarlamadı.</p>';
+        return `<p style="color:var(--armus-faint);font-size:12px;margin-top:6px;">${armusT("admin.noAvailabilitySet", "Henüz uygunluk saati ayarlamadı.")}</p>`;
       }
 
-      const days = DAY_COLUMNS.map(([label, dayIndex]) => {
+      const days = dayColumns().map(([label, dayIndex]) => {
         const slots = (weeklyAvailability[dayIndex] || []).slice().sort();
         const inner = slots.length
           ? slots.map(s => `<div class="slot">${armusFormatTimeRange(s)}</div>`).join("")
@@ -1456,21 +1459,23 @@
         : initials(user.name);
 
       const badgeLabel = {
-        pending: "İnceleniyor", approved: "Onaylandı", rejected: "Reddedildi"
-      }[user.status] || "Başvurmadı";
+        pending: armusT("admin.statusPending", "İnceleniyor"),
+        approved: armusT("admin.statusApproved", "Onaylandı"),
+        rejected: armusT("admin.statusRejected", "Reddedildi"),
+      }[user.status] || armusT("admin.statusNotApplied", "Başvurmadı");
 
       let actions = "";
       if (user.status === "pending") {
         actions = `
-          <button class="btn btn-approve" data-action="approve">Onayla</button>
-          <button class="btn btn-reject" data-action="reject">Reddet</button>
+          <button class="btn btn-approve" data-action="approve">${armusT("admin.approve", "Onayla")}</button>
+          <button class="btn btn-reject" data-action="reject">${armusT("admin.reject", "Reddet")}</button>
         `;
       } else if (user.status === "approved") {
-        actions = `<button class="btn btn-reject" data-action="reject">Onayı kaldır</button>`;
+        actions = `<button class="btn btn-reject" data-action="reject">${armusT("admin.removeApproval", "Onayı kaldır")}</button>`;
       } else if (user.status === "rejected") {
-        actions = `<button class="btn btn-approve" data-action="approve">Onayla</button>`;
+        actions = `<button class="btn btn-approve" data-action="approve">${armusT("admin.approve", "Onayla")}</button>`;
       }
-      actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">Mesaj Gönder</a>`;
+      actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
 
       const hasApplication = Boolean(user.status);
 
@@ -1498,16 +1503,16 @@
         ${hasApplication ? `
         <div class="app-details">
           <div>
-            <h4>Konum / Konu</h4>
+            <h4>${armusT("admin.locationSubject", "Konum / Konu")}</h4>
             <p>${user.country || "—"} · ${user.subject_taught || "—"}</p>
           </div>
           <div>
-            <h4>Ücret / Uygunluk</h4>
+            <h4>${armusT("admin.priceAvailability", "Ücret / Uygunluk")}</h4>
             <p>₺${user.price ?? "—"} / 50 dk · ${user.availability || "—"}</p>
           </div>
 
           <div>
-            <h4>Diller</h4>
+            <h4>${armusT("teacherProfile.languages", "Diller")}</h4>
             <p>
               ${user.languages && user.languages.length
                 ? user.languages.map(l => `${l.language} (${l.level})`).join(", ")
@@ -1515,41 +1520,41 @@
             </p>
           </div>
           <div>
-            <h4>Telefon</h4>
+            <h4>${armusT("admin.phone", "Telefon")}</h4>
             <p>${user.phone || "—"}</p>
           </div>
 
           <div>
-            <h4>Sertifika</h4>
+            <h4>${armusT("admin.certificate", "Sertifika")}</h4>
             <p>
               ${user.has_certificate
                 ? `${user.certificate_name || "—"} (${user.certificate_years || "—"})` +
-                  (user.certificate_file_url ? ` · <a href="${user.certificate_file_url}" target="_blank" rel="noopener">${user.certificate_file_name || "dosya"}</a>` : "")
-                : "Belirtilmedi"}
+                  (user.certificate_file_url ? ` · <a href="${user.certificate_file_url}" target="_blank" rel="noopener">${user.certificate_file_name || armusT("admin.file", "dosya")}</a>` : "")
+                : armusT("admin.notSpecified", "Belirtilmedi")}
             </p>
           </div>
           <div>
-            <h4>Eğitim</h4>
+            <h4>${armusT("admin.education", "Eğitim")}</h4>
             <p>
               ${user.has_education
                 ? `${user.university || "—"} · ${user.degree_type || "—"} (${user.graduation_year || "—"})<br>${user.specialization || ""}`
-                : "Belirtilmedi"}
+                : armusT("admin.notSpecified", "Belirtilmedi")}
             </p>
           </div>
 
           <div class="app-full">
-            <h4>Açıklama</h4>
+            <h4>${armusT("admin.description", "Açıklama")}</h4>
             <p>${user.bio || "—"}</p>
           </div>
 
           <div class="app-full">
-            <h4>Haftalık uygunluk</h4>
+            <h4>${armusT("teacherProfile.weeklySchedule", "Haftalık uygunluk")}</h4>
             ${renderAvailabilityGrid(user.weekly_availability)}
           </div>
 
           ${user.video_url ? `
             <div class="app-full app-video">
-              <h4>Tanıtım videosu</h4>
+              <h4>${armusT("admin.introVideo", "Tanıtım videosu")}</h4>
               <video controls playsinline src="${user.video_url}"></video>
             </div>
           ` : ""}
@@ -1623,28 +1628,28 @@
       let rows = "";
 
       if (pc.title !== undefined) {
-        rows += `<div><h4>Uzmanlık başlığı</h4><p>${user.title || "—"} → <strong>${pc.title}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.specialtyTitle", "Uzmanlık başlığı")}</h4><p>${user.title || "—"} → <strong>${pc.title}</strong></p></div>`;
       }
       if (pc.price !== undefined) {
-        rows += `<div><h4>Ücret</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
       }
       if (pc.availability !== undefined) {
-        rows += `<div><h4>Uygunluk durumu</h4><p>${user.availability || "—"} → <strong>${pc.availability}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.availabilityStatus", "Uygunluk durumu")}</h4><p>${user.availability || "—"} → <strong>${pc.availability}</strong></p></div>`;
       }
       if (pc.bio !== undefined) {
-        rows += `<div class="app-full"><h4>Açıklama</h4><p><strong>${pc.bio}</strong></p></div>`;
+        rows += `<div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p><strong>${pc.bio}</strong></p></div>`;
       }
       if (Array.isArray(pc.weekly_availability)) {
-        rows += `<div class="app-full"><h4>Yeni haftalık uygunluk</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
+        rows += `<div class="app-full"><h4>${armusT("admin.newWeeklyAvailability", "Yeni haftalık uygunluk")}</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
       }
 
       return `
         <div class="pending-change-box">
           <div class="pending-change-head">
-            <strong>Bekleyen profil değişikliği</strong>
+            <strong>${armusT("admin.pendingProfileChange", "Bekleyen profil değişikliği")}</strong>
             <div class="app-actions">
-              <button class="btn btn-approve" data-change-action="approve">Değişikliği Onayla</button>
-              <button class="btn btn-reject" data-change-action="reject">Değişikliği Reddet</button>
+              <button class="btn btn-approve" data-change-action="approve">${armusT("admin.approveChange", "Değişikliği Onayla")}</button>
+              <button class="btn btn-reject" data-change-action="reject">${armusT("admin.rejectChange", "Değişikliği Reddet")}</button>
             </div>
           </div>
           <div class="app-details">${rows}</div>
@@ -1716,16 +1721,16 @@
           const isPast = armusIsBookingPast(b);
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
-            ? `İptal edildi${b.refunded ? " · ders hakkı eklendi" : ""}`
+            ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", b.refunded ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi") : "")
             : isPast
               ? "—"
-              : `<button class="btn btn-reject" data-cancel-booking="${b.id}">İptal Et</button>`;
+              : `<button class="btn btn-reject" data-cancel-booking="${b.id}">${armusT("admin.cancelBtn", "İptal Et")}</button>`;
           const tr = document.createElement("tr");
           tr.dataset.id = b.id;
           tr.innerHTML = `
             <td>${b.studentName}</td>
             <td>${b.teacherName}</td>
-            <td>${b.type === "trial" ? "Deneme Dersi" : "Ders"}</td>
+            <td>${b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders")}</td>
             <td>${b.dateLabel}</td>
             <td>${b.time}</td>
             <td>₺${b.price}</td>
@@ -1736,9 +1741,9 @@
 
       body.querySelectorAll("[data-cancel-booking]").forEach(button => {
         button.addEventListener("click", async () => {
-          if (!confirm("Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.")) return;
+          if (!confirm(armusT("admin.confirmCancelBooking", "Bu rezervasyonu iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir."))) return;
           button.disabled = true;
-          button.textContent = "İptal ediliyor...";
+          button.textContent = armusT("admin.cancelling", "İptal ediliyor...");
           const bookingId = button.dataset.cancelBooking;
           const result = await armusCancelBooking(bookingId);
           if (result.ok) {
@@ -1748,11 +1753,11 @@
               cancelled.refunded = result.refunded;
             }
             await armusLogAdminAction("booking_cancel", "booking", bookingId,
-              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? " - ders hakkı eklendi" : ""}` : bookingId);
+              cancelled ? `${cancelled.studentName} → ${cancelled.teacherName} (${cancelled.dateLabel})${result.refunded ? armusT("admin.creditAddedSuffixDash", " - ders hakkı eklendi") : ""}` : bookingId);
             renderAllFromState();
           } else {
             button.disabled = false;
-            button.textContent = "İptal Et";
+            button.textContent = armusT("admin.cancelBtn", "İptal Et");
             alert(result.error);
           }
         });
@@ -1778,11 +1783,11 @@
         tr.innerHTML = `
           <td>${s.name}</td>
           <td>${s.email}</td>
-          <td>${new Date(s.created_at).toLocaleDateString("tr-TR")}</td>
+          <td>${new Date(s.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           <td>${count}</td>
           <td class="row-actions">
-            <button class="btn" data-view-student="${s.id}">Detaylar</button>
-            <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(s.id)}">Mesaj</a>
+            <button class="btn" data-view-student="${s.id}">${armusT("admin.details", "Detaylar")}</button>
+            <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(s.id)}">${armusT("admin.messageBtn", "Mesaj")}</a>
           </td>
         `;
         body.appendChild(tr);
@@ -1811,22 +1816,22 @@
         ? studentBookings.map(b => `
             <tr>
               <td>${b.teacherName}</td>
-              <td>${b.type === "trial" ? "Deneme Dersi" : "Ders"}</td>
+              <td>${b.type === "trial" ? armusT("admin.trialLessonType", "Deneme Dersi") : armusT("admin.regularLessonType", "Ders")}</td>
               <td>${b.dateLabel}</td>
               <td>${b.time}</td>
               <td>₺${b.price}</td>
             </tr>
           `).join("")
-        : `<tr><td colspan="5" class="empty-note">Henüz rezervasyonu yok.</td></tr>`;
+        : `<tr><td colspan="5" class="empty-note">${armusT("admin.noBookingsYet2", "Henüz rezervasyonu yok.")}</td></tr>`;
 
       document.getElementById("detailBody").innerHTML = `
         <div class="app-details" style="margin-bottom:20px;">
-          <div><h4>E-posta</h4><p>${student.email}</p></div>
-          <div><h4>Kayıt tarihi</h4><p>${new Date(student.created_at).toLocaleDateString("tr-TR")}</p></div>
+          <div><h4>${armusT("admin.colEmail", "E-posta")}</h4><p>${student.email}</p></div>
+          <div><h4>${armusT("admin.colJoinDate", "Kayıt tarihi")}</h4><p>${new Date(student.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</p></div>
         </div>
-        <h3 style="margin-top:0;">Rezervasyon geçmişi</h3>
+        <h3 style="margin-top:0;">${armusT("admin.bookingHistory", "Rezervasyon geçmişi")}</h3>
         <table>
-          <thead><tr><th>Öğretmen</th><th>Tür</th><th>Tarih</th><th>Saat</th><th>Ücret</th></tr></thead>
+          <thead><tr><th>${armusT("admin.colTeacher", "Öğretmen")}</th><th>${armusT("admin.colType", "Tür")}</th><th>${armusT("admin.colDate", "Tarih")}</th><th>${armusT("admin.colTime", "Saat")}</th><th>${armusT("admin.colPrice", "Ücret")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       `;
@@ -1856,14 +1861,14 @@
         : "—";
 
       const stats = [
-        [students.length, "Toplam öğrenci"],
-        [teachers.length, "Toplam öğretmen hesabı"],
-        [approvedTeachers.length, "Onaylı öğretmen"],
-        [pendingTeachers.length, "Bekleyen başvuru"],
-        [bookings.length, "Toplam rezervasyon"],
-        [completedBookings.length, "Tamamlanan ders"],
-        [`₺${grossRevenue}`, "Toplam ciro (tamamlanan dersler)"],
-        [`${avgRating} (${reviews.length})`, "Ortalama puan / değerlendirme"],
+        [students.length, armusT("admin.statTotalStudents", "Toplam öğrenci")],
+        [teachers.length, armusT("admin.statTotalTeacherAccounts", "Toplam öğretmen hesabı")],
+        [approvedTeachers.length, armusT("admin.statApprovedTeachers", "Onaylı öğretmen")],
+        [pendingTeachers.length, armusT("admin.statPendingApplications", "Bekleyen başvuru")],
+        [bookings.length, armusT("admin.statTotalBookings", "Toplam rezervasyon")],
+        [completedBookings.length, armusT("admin.statCompletedLessons", "Tamamlanan ders")],
+        [`₺${grossRevenue}`, armusT("admin.statGrossRevenue", "Toplam ciro (tamamlanan dersler)")],
+        [`${avgRating} (${reviews.length})`, armusT("admin.statAvgRating", "Ortalama puan / değerlendirme")],
       ];
 
       document.getElementById("overviewStats").innerHTML = stats.map(([value, label]) => `
@@ -1883,7 +1888,7 @@
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         months.push({
           key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-          label: d.toLocaleDateString("tr-TR", { month: "short" }),
+          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
         });
       }
 
