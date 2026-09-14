@@ -929,12 +929,18 @@
       // this booking fully if it's tied to this same teacher, or if it's
       // any credit at all and this is a trial lesson - see migration_28.sql
       // and create-payment, which re-checks this server-side regardless of
-      // what's computed here.
-      const { data: availableCredits } = await armusSupabase
-        .from("lesson_credits")
-        .select("*")
-        .eq("student_id", session.id)
-        .eq("status", "available");
+      // what's computed here. Falls back to no credits (not a stuck page)
+      // if this fails - worst case the student just pays full price and
+      // create-payment's own re-check still applies any real credit.
+      let availableCredits = [];
+      try {
+        const result = await armusSupabase
+          .from("lesson_credits")
+          .select("*")
+          .eq("student_id", session.id)
+          .eq("status", "available");
+        availableCredits = result.data || [];
+      } catch (err) {}
 
       const creditApplies = !!(availableCredits && availableCredits.length > 0 && (
         availableCredits.some((c) => c.teacher_id === teacher.id) ||
