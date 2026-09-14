@@ -608,8 +608,8 @@
 
   <main class="container" id="wizardRoot">
 
-    <div class="eyebrow">ÖĞRETMEN BAŞVURUSU</div>
-    <h1>Profilini tamamla</h1>
+    <div class="eyebrow" data-i18n="applyTeacher.eyebrow">ÖĞRETMEN BAŞVURUSU</div>
+    <h1 data-i18n="applyTeacher.heading">Profilini tamamla</h1>
 
     <div class="tracker" id="tracker"></div>
 
@@ -617,75 +617,75 @@
 
     <!-- STEP 1: ABOUT -->
     <section class="step-panel" data-step="1">
-      <div class="step-title">Hakkında</div>
-      <div class="step-hint">Az sonra bu bilgiler ARMUS ekibi tarafından incelenecek.</div>
+      <div class="step-title" data-i18n="applyTeacher.step1Title">Hakkında</div>
+      <div class="step-hint" data-i18n="applyTeacher.step1Hint">Az sonra bu bilgiler ARMUS ekibi tarafından incelenecek.</div>
 
       <div class="grid-2">
         <div class="field">
-          <label for="firstName">Ad</label>
-          <input type="text" id="firstName" placeholder="Adın">
+          <label for="firstName" data-i18n="applyTeacher.firstName">Ad</label>
+          <input type="text" id="firstName" placeholder="Adın" data-i18n-placeholder="applyTeacher.firstNamePlaceholder">
         </div>
         <div class="field">
-          <label for="lastName">Soyad</label>
-          <input type="text" id="lastName" placeholder="Soyadın">
+          <label for="lastName" data-i18n="applyTeacher.lastName">Soyad</label>
+          <input type="text" id="lastName" placeholder="Soyadın" data-i18n-placeholder="applyTeacher.lastNamePlaceholder">
         </div>
       </div>
 
       <div class="field">
-        <label for="emailDisplay">E-posta</label>
+        <label for="emailDisplay" data-i18n="applyTeacher.email">E-posta</label>
         <input type="text" id="emailDisplay" disabled>
       </div>
 
       <div class="field">
-        <label for="country">Doğum ülkesi</label>
-        <input type="text" id="country" placeholder="örn. Türkiye">
+        <label for="country" data-i18n="applyTeacher.country">Doğum ülkesi</label>
+        <input type="text" id="country" placeholder="örn. Türkiye" data-i18n-placeholder="applyTeacher.countryPlaceholder">
       </div>
 
       <div class="field">
-        <label for="subject">Öğrettiğin konu</label>
+        <label for="subject" data-i18n="applyTeacher.subject">Öğrettiğin konu</label>
         <select id="subject">
-          <option value="Genel İngilizce">Genel İngilizce</option>
-          <option value="Konuşma">Konuşma</option>
+          <option value="Genel İngilizce" data-i18n="marketplace.generalEnglish">Genel İngilizce</option>
+          <option value="Konuşma" data-i18n="teachersPage.typeSpeaking">Konuşma</option>
           <option value="IELTS">IELTS</option>
           <option value="TOEFL">TOEFL</option>
           <option value="YDS">YDS</option>
-          <option value="İş İngilizcesi">İş İngilizcesi</option>
+          <option value="İş İngilizcesi" data-i18n="teachersPage.typeBusinessEnglish">İş İngilizcesi</option>
         </select>
       </div>
 
       <div class="field">
-        <label>Konuştuğun diller</label>
+        <label data-i18n="applyTeacher.languagesSpoken">Konuştuğun diller</label>
         <div id="languagesList"></div>
-        <button type="button" class="add-language-btn" id="addLanguageBtn">+ Başka bir dil ekle</button>
+        <button type="button" class="add-language-btn" id="addLanguageBtn" data-i18n="applyTeacher.addLanguage">+ Başka bir dil ekle</button>
       </div>
 
       <div class="field">
-        <label for="phone">Telefon numarası (opsiyonel)</label>
+        <label for="phone" data-i18n="applyTeacher.phoneOptional">Telefon numarası (opsiyonel)</label>
         <input type="text" id="phone" placeholder="+90 5xx xxx xx xx">
       </div>
 
       <label class="checkbox-row">
         <input type="checkbox" id="ageConfirm">
-        18 yaşından büyük olduğumu onaylıyorum
+        <span data-i18n="applyTeacher.ageConfirm">18 yaşından büyük olduğumu onaylıyorum</span>
       </label>
     </section>
 
     <!-- STEP 2: PHOTO -->
     <section class="step-panel" data-step="2">
-      <div class="step-title">Fotoğraf</div>
-      <div class="step-hint">Yüzünün net göründüğü, tek başına olduğun bir fotoğraf yükle.</div>
+      <div class="step-title" data-i18n="applyTeacher.step2Title">Fotoğraf</div>
+      <div class="step-hint" data-i18n="applyTeacher.step2Hint">Yüzünün net göründüğü, tek başına olduğun bir fotoğraf yükle.</div>
 
       <label class="upload-box" id="photoBox">
         <input type="file" id="photoInput" accept="image/png,image/jpeg">
-        <div class="upload-label">Fotoğraf yükle</div>
-        <div class="upload-note">JPG veya PNG, maks 2MB</div>
+        <div class="upload-label" data-i18n="applyTeacher.uploadPhoto">Fotoğraf yükle</div>
+        <div class="upload-note" data-i18n="applyTeacher.photoUploadNote">JPG veya PNG, maks 2MB</div>
       </label>
 
       <div class="photo-preview" id="photoPreview">
         <img id="photoPreviewImg" alt="">
         <div class="photo-preview-info">
           <div class="label" id="photoPreviewName"></div>
-          <div class="note">Profilinde ve öğretmen kartında böyle görünecek.</div>
+          <div class="note" data-i18n="applyTeacher.photoPreviewNote">Profilinde ve öğretmen kartında böyle görünecek.</div>
         </div>
       </div>
 
@@ -694,30 +694,30 @@
 
     <!-- STEP 3: CERTIFICATION -->
     <section class="step-panel" data-step="3">
-      <div class="step-title">Sertifika</div>
-      <div class="step-hint">Bir öğretim sertifikan varsa ekle, profiline güven katar.</div>
+      <div class="step-title" data-i18n="applyTeacher.step3Title">Sertifika</div>
+      <div class="step-hint" data-i18n="applyTeacher.step3Hint">Bir öğretim sertifikan varsa ekle, profiline güven katar.</div>
 
       <label class="checkbox-row">
         <input type="checkbox" id="noCertificate">
-        Bir öğretim sertifikam yok
+        <span data-i18n="applyTeacher.noCertificate">Bir öğretim sertifikam yok</span>
       </label>
 
       <div id="certificateFields">
 
         <div class="field">
-          <label for="certificateName">Sertifika adı</label>
+          <label for="certificateName" data-i18n="applyTeacher.certificateName">Sertifika adı</label>
           <input type="text" id="certificateName" placeholder="örn. CELTA">
         </div>
 
         <div class="field">
-          <label for="certificateYears">Kaç yıldır geçerli / ne zaman alındı</label>
+          <label for="certificateYears" data-i18n="applyTeacher.certificateYears">Kaç yıldır geçerli / ne zaman alındı</label>
           <input type="text" id="certificateYears" placeholder="örn. 2021">
         </div>
 
         <label class="upload-box" id="certificateBox">
           <input type="file" id="certificateInput" accept="image/png,image/jpeg,application/pdf">
-          <div class="upload-label">Sertifika dosyası yükle</div>
-          <div class="upload-note">PDF, JPG veya PNG, maks 3MB</div>
+          <div class="upload-label" data-i18n="applyTeacher.uploadCertificate">Sertifika dosyası yükle</div>
+          <div class="upload-note" data-i18n="applyTeacher.certificateUploadNote">PDF, JPG veya PNG, maks 3MB</div>
         </label>
 
         <div class="upload-preview" id="certificatePreview">
@@ -731,39 +731,39 @@
 
     <!-- STEP 4: EDUCATION -->
     <section class="step-panel" data-step="4">
-      <div class="step-title">Eğitim</div>
-      <div class="step-hint">Yükseköğrenim bilgini paylaş.</div>
+      <div class="step-title" data-i18n="applyTeacher.step4Title">Eğitim</div>
+      <div class="step-hint" data-i18n="applyTeacher.step4Hint">Yükseköğrenim bilgini paylaş.</div>
 
       <label class="checkbox-row">
         <input type="checkbox" id="noEducation">
-        Bir yükseköğrenim derecem yok
+        <span data-i18n="applyTeacher.noEducation">Bir yükseköğrenim derecem yok</span>
       </label>
 
       <div id="educationFields">
 
         <div class="field">
-          <label for="university">Üniversite</label>
+          <label for="university" data-i18n="applyTeacher.university">Üniversite</label>
           <input type="text" id="university" placeholder="örn. Boğaziçi Üniversitesi">
         </div>
 
         <div class="grid-2">
           <div class="field">
-            <label for="degreeType">Derece türü</label>
+            <label for="degreeType" data-i18n="applyTeacher.degreeType">Derece türü</label>
             <select id="degreeType">
-              <option value="Lisans">Lisans</option>
-              <option value="Yüksek Lisans">Yüksek Lisans</option>
-              <option value="Doktora">Doktora</option>
-              <option value="Ön Lisans">Ön Lisans</option>
+              <option value="Lisans" data-i18n="applyTeacher.degreeBachelor">Lisans</option>
+              <option value="Yüksek Lisans" data-i18n="applyTeacher.degreeMaster">Yüksek Lisans</option>
+              <option value="Doktora" data-i18n="applyTeacher.degreePhd">Doktora</option>
+              <option value="Ön Lisans" data-i18n="applyTeacher.degreeAssociate">Ön Lisans</option>
             </select>
           </div>
           <div class="field">
-            <label for="graduationYear">Mezuniyet yılı</label>
+            <label for="graduationYear" data-i18n="applyTeacher.graduationYear">Mezuniyet yılı</label>
             <input type="text" id="graduationYear" placeholder="örn. 2019">
           </div>
         </div>
 
         <div class="field">
-          <label for="specialization">Bölüm / uzmanlık</label>
+          <label for="specialization" data-i18n="applyTeacher.specialization">Bölüm / uzmanlık</label>
           <input type="text" id="specialization" placeholder="örn. İngiliz Dili ve Edebiyatı">
         </div>
 
@@ -772,8 +772,8 @@
 
     <!-- STEP 5: DESCRIPTION -->
     <section class="step-panel" data-step="5">
-      <div class="step-title">Açıklama</div>
-      <div class="step-hint">
+      <div class="step-title" data-i18n="applyTeacher.step5Title">Açıklama</div>
+      <div class="step-hint" data-i18n="applyTeacher.step5Hint">
         Kendinden, deneyiminden ve öğretim tarzından bahset. Bu metin profilinde
         görünecek. En az 400 karakter yazmalısın.
       </div>
@@ -786,16 +786,16 @@
 
     <!-- STEP 6: VIDEO -->
     <section class="step-panel" data-step="6">
-      <div class="step-title">Tanıtım videosu</div>
-      <div class="step-hint">
+      <div class="step-title" data-i18n="applyTeacher.step6Title">Tanıtım videosu</div>
+      <div class="step-hint" data-i18n="applyTeacher.step6Hint">
         Kısa bir tanıtım videosu yükle; onaylandıktan sonra profilinde oynatılacak.
         Video en az 1 dakika ve yatay (landscape) çekilmiş olmalı.
       </div>
 
       <label class="upload-box" id="videoBox">
         <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime">
-        <div class="upload-label">Video yükle</div>
-        <div class="upload-note">MP4/WEBM, maks 20MB · en az 1 dakika · yatay video</div>
+        <div class="upload-label" data-i18n="applyTeacher.uploadVideo">Video yükle</div>
+        <div class="upload-note" data-i18n="applyTeacher.videoUploadNote">MP4/WEBM, maks 20MB · en az 1 dakika · yatay video</div>
       </label>
 
       <div class="upload-preview" id="videoPreview">
@@ -807,8 +807,8 @@
 
     <!-- STEP 7: AVAILABILITY -->
     <section class="step-panel" data-step="7">
-      <div class="step-title">Uygunluk</div>
-      <div class="step-hint">
+      <div class="step-title" data-i18n="applyTeacher.step7Title">Uygunluk</div>
+      <div class="step-hint" data-i18n="applyTeacher.step7Hint">
         Hangi gün ve saatlerde ders verebileceğini işaretle. Öğrenciler
         rezervasyon yaparken sadece burada işaretlediğin saatleri görecek.
         Bunu daha sonra panelinden istediğin zaman değiştirebilirsin.
@@ -821,18 +821,18 @@
 
     <!-- STEP 8: PRICING -->
     <section class="step-panel" data-step="8">
-      <div class="step-title">Ücret</div>
-      <div class="step-hint">50 dakikalık bir ders için ücretini belirle. Bunu daha sonra panelinden değiştirebilirsin.</div>
+      <div class="step-title" data-i18n="applyTeacher.step8Title">Ücret</div>
+      <div class="step-hint" data-i18n="applyTeacher.step8Hint">50 dakikalık bir ders için ücretini belirle. Bunu daha sonra panelinden değiştirebilirsin.</div>
 
       <div class="field">
-        <label for="price">Ders ücreti (₺)</label>
+        <label for="price" data-i18n="applyTeacher.lessonPrice">Ders ücreti (₺)</label>
         <input type="number" id="price" min="0" step="1" placeholder="örn. 500">
       </div>
     </section>
 
     <div class="step-nav">
-      <button class="btn" id="backBtn">← Geri</button>
-      <button class="btn btn-light" id="nextBtn">İleri →</button>
+      <button class="btn" id="backBtn" data-i18n="applyTeacher.backBtn">← Geri</button>
+      <button class="btn btn-light" id="nextBtn" data-i18n="applyTeacher.nextBtn">İleri →</button>
     </div>
 
   </main>
@@ -840,13 +840,13 @@
   <main class="container">
     <div class="success" id="successView">
       <div class="success-icon">✓</div>
-      <h1>Başvurun alındı</h1>
-      <p>
+      <h1 data-i18n="applyTeacher.successTitle">Başvurun alındı</h1>
+      <p data-i18n="applyTeacher.successText">
         ARMUS ekibi profilini ve belgelerini inceleyecek. Onaylandığında
         profilin Öğretmenler sayfasında yayına girecek ve bildirim
         alacaksın (panelinden de durumunu görebilirsin).
       </p>
-      <a class="btn btn-light" href="dashboard.html">Panelime git</a>
+      <a class="btn btn-light" href="dashboard.html" data-i18n="applyTeacher.goToDashboard">Panelime git</a>
     </div>
   </main>
 
@@ -876,10 +876,18 @@
       wizardRoot.style.display = "block";
 
       const TOTAL_STEPS = 8;
-      const STEP_LABELS = [
-        "Hakkında", "Fotoğraf", "Sertifika", "Eğitim",
-        "Açıklama", "Video", "Uygunluk", "Ücret"
-      ];
+      function stepLabels() {
+        return [
+          armusT("applyTeacher.step1Title", "Hakkında"),
+          armusT("applyTeacher.step2Title", "Fotoğraf"),
+          armusT("applyTeacher.step3Title", "Sertifika"),
+          armusT("applyTeacher.step4Title", "Eğitim"),
+          armusT("applyTeacher.step5Title", "Açıklama"),
+          armusT("applyTeacher.step6Title", "Video"),
+          armusT("applyTeacher.step7Title", "Uygunluk"),
+          armusT("applyTeacher.step8Title", "Ücret"),
+        ];
+      }
 
       let currentStep = 1;
 
@@ -893,8 +901,13 @@
       document.getElementById("emailDisplay").value = session.email;
 
       // ---- languages you speak (repeatable rows) ----
+      // Levels are stored literally (e.g. "Ana dil") since they're saved to
+      // the profile - only the visible <option> text is language-aware.
 
       const LANGUAGE_LEVELS = ["Ana dil", "C2", "C1", "B2", "B1", "A2", "A1"];
+      function languageLevelLabel(level) {
+        return level === "Ana dil" ? armusT("applyTeacher.nativeLevel", "Ana dil") : level;
+      }
       const languagesList = document.getElementById("languagesList");
 
       function addLanguageRow(language = "", level = "Ana dil") {
@@ -902,11 +915,11 @@
         const row = document.createElement("div");
         row.className = "language-row";
         row.innerHTML = `
-          <input type="text" class="language-name" placeholder="Dil (örn. İngilizce)" value="${language}">
+          <input type="text" class="language-name" placeholder="${armusT("applyTeacher.languageNamePlaceholder", "Dil (örn. İngilizce)")}" value="${language}">
           <select class="language-level">
-            ${LANGUAGE_LEVELS.map(l => `<option value="${l}"${l === level ? " selected" : ""}>${l}</option>`).join("")}
+            ${LANGUAGE_LEVELS.map(l => `<option value="${l}"${l === level ? " selected" : ""}>${languageLevelLabel(l)}</option>`).join("")}
           </select>
-          <button type="button" class="remove-language-btn" aria-label="Dili kaldır">×</button>
+          <button type="button" class="remove-language-btn" aria-label="${armusT("applyTeacher.removeLanguage", "Dili kaldır")}">×</button>
         `;
 
         row.querySelector(".remove-language-btn").addEventListener("click", () => {
@@ -917,6 +930,15 @@
 
         languagesList.appendChild(row);
       }
+
+      function relabelLanguageLevels() {
+        languagesList.querySelectorAll(".language-level").forEach(select => {
+          Array.from(select.options).forEach(opt => {
+            opt.textContent = languageLevelLabel(opt.value);
+          });
+        });
+      }
+      document.addEventListener("armus:langchange", relabelLanguageLevels);
 
       addLanguageRow("Türkçe", "Ana dil");
       addLanguageRow("İngilizce", "C1");
@@ -939,32 +961,33 @@
 
       const AVAIL_TIME_SLOTS = armusAllTimeSlots();
 
-      // [label, getDay() index] in Monday-first display order
-      const AVAIL_DAY_COLUMNS = [
-        ["Pzt", 1], ["Sal", 2], ["Çar", 3], ["Per", 4],
-        ["Cum", 5], ["Cmt", 6], ["Paz", 0]
-      ];
+      // getDay() index for each column, Monday-first display order -
+      // labels come from armusDayNames() at render time so they stay
+      // language-aware without needing to rebuild the grid's click state
+      const AVAIL_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-      const weeklyState = AVAIL_DAY_COLUMNS.map(() => []);
+      const weeklyState = AVAIL_DAY_ORDER.map(() => []);
 
       const availabilityGrid = document.getElementById("availabilityGrid");
 
       const availHeadRow = document.createElement("tr");
-      availHeadRow.innerHTML = "<th></th>" + AVAIL_DAY_COLUMNS.map(([label]) => `<th>${label}</th>`).join("");
+      availHeadRow.innerHTML = "<th></th>" + AVAIL_DAY_ORDER.map(() => `<th></th>`).join("");
       availabilityGrid.appendChild(availHeadRow);
+      const availHeadCells = availHeadRow.querySelectorAll("th");
+
+      const availCellButtons = [];
 
       AVAIL_TIME_SLOTS.forEach(time => {
 
         const row = document.createElement("tr");
         row.innerHTML = `<td class="time-label">${armusFormatTimeRange(time)}</td>`;
 
-        AVAIL_DAY_COLUMNS.forEach((_, colIndex) => {
+        AVAIL_DAY_ORDER.forEach((_, colIndex) => {
 
           const cell = document.createElement("td");
           const btn = document.createElement("div");
           btn.className = "avail-cell";
           btn.setAttribute("role", "button");
-          btn.setAttribute("aria-label", `${AVAIL_DAY_COLUMNS[colIndex][0]} ${time}`);
 
           btn.addEventListener("click", () => {
 
@@ -980,12 +1003,26 @@
             btn.classList.toggle("active");
           });
 
+          availCellButtons.push({ btn, colIndex, time });
           cell.appendChild(btn);
           row.appendChild(cell);
         });
 
         availabilityGrid.appendChild(row);
       });
+
+      function renderAvailDayLabels() {
+        const dayLabels = armusDayNames();
+        AVAIL_DAY_ORDER.forEach((dayIndex, colIndex) => {
+          availHeadCells[colIndex + 1].textContent = dayLabels[dayIndex];
+        });
+        availCellButtons.forEach(({ btn, colIndex, time }) => {
+          const dayIndex = AVAIL_DAY_ORDER[colIndex];
+          btn.setAttribute("aria-label", `${dayLabels[dayIndex]} ${time}`);
+        });
+      }
+      renderAvailDayLabels();
+      document.addEventListener("armus:langchange", renderAvailDayLabels);
 
       function hasAnyAvailability() {
         return weeklyState.some(day => day.length > 0);
@@ -995,7 +1032,7 @@
       // array the database and booking.html expect
       function getWeeklyAvailability() {
         const weeklyAvailability = [];
-        AVAIL_DAY_COLUMNS.forEach(([, dayIndex], colIndex) => {
+        AVAIL_DAY_ORDER.forEach((dayIndex, colIndex) => {
           weeklyAvailability[dayIndex] = weeklyState[colIndex];
         });
         return weeklyAvailability;
@@ -1013,15 +1050,23 @@
 
       function updateCharCount() {
         const chars = countChars(descriptionInput.value);
-        charCount.textContent = `${chars} / ${MIN_DESCRIPTION_CHARS} karakter`;
+        charCount.textContent = armusT("applyTeacher.charCount", "{n} / {min} karakter")
+          .replace("{n}", chars).replace("{min}", MIN_DESCRIPTION_CHARS);
         charCount.classList.toggle("done", chars >= MIN_DESCRIPTION_CHARS);
       }
 
       descriptionInput.addEventListener("input", updateCharCount);
       updateCharCount();
+      document.addEventListener("armus:langchange", updateCharCount);
 
       const tracker = document.getElementById("tracker");
-      STEP_LABELS.forEach((label, i) => {
+      function renderTrackerLabels() {
+        const labels = stepLabels();
+        document.querySelectorAll(".tracker-step").forEach((pill, i) => {
+          pill.querySelector(".dot").nextSibling.textContent = ` ${labels[i]}`;
+        });
+      }
+      stepLabels().forEach((label, i) => {
         const step = i + 1;
         const pill = document.createElement("div");
         pill.className = "tracker-step";
@@ -1029,6 +1074,7 @@
         pill.innerHTML = `<span class="dot">${step}</span> ${label}`;
         tracker.appendChild(pill);
       });
+      document.addEventListener("armus:langchange", renderTrackerLabels);
 
       function renderTracker() {
         document.querySelectorAll(".tracker-step").forEach(pill => {
@@ -1037,6 +1083,11 @@
           pill.classList.toggle("done", step < currentStep);
         });
       }
+
+      document.addEventListener("armus:langchange", () => {
+        document.getElementById("nextBtn").textContent =
+          currentStep === TOTAL_STEPS ? armusT("applyTeacher.submitApplication", "Başvuruyu Gönder") : armusT("applyTeacher.nextBtn", "İleri →");
+      });
 
       function showStep(step) {
 
@@ -1048,7 +1099,7 @@
           step === 1 ? "hidden" : "visible";
 
         document.getElementById("nextBtn").textContent =
-          step === TOTAL_STEPS ? "Başvuruyu Gönder" : "İleri →";
+          step === TOTAL_STEPS ? armusT("applyTeacher.submitApplication", "Başvuruyu Gönder") : armusT("applyTeacher.nextBtn", "İleri →");
 
         document.getElementById("stepError").style.display = "none";
 
@@ -1084,7 +1135,7 @@
 
       function validateFileSize(file, maxBytes) {
         if (file.size > maxBytes) {
-          throw new Error(`Dosya çok büyük (maks ${(maxBytes / 1024 / 1024).toFixed(1)}MB).`);
+          throw new Error(armusT("applyTeacher.fileTooBig", "Dosya çok büyük (maks {mb}MB).").replace("{mb}", (maxBytes / 1024 / 1024).toFixed(1)));
         }
       }
 
@@ -1095,7 +1146,7 @@
           .from("teacher-uploads")
           .upload(path, file, { upsert: true, contentType: file.type || undefined })
           .then(({ error }) => {
-            if (error) throw new Error((error.message || "Dosya yüklenemedi.") + ` [${path}]`);
+            if (error) throw new Error((error.message || armusT("applyTeacher.uploadFailed", "Dosya yüklenemedi.")) + ` [${path}]`);
             return armusSupabase.storage.from("teacher-uploads").getPublicUrl(path).data.publicUrl;
           });
       }
@@ -1115,7 +1166,7 @@
 
             const previewUrl = URL.createObjectURL(file);
             const promise = uploadToStorage(file, folder).catch(err => {
-              errorBox.textContent = "Yüklenemedi: " + err.message;
+              errorBox.textContent = armusT("applyTeacher.couldntUpload", "Yüklenemedi: {msg}").replace("{msg}", err.message);
               errorBox.style.display = "block";
               throw err;
             });
@@ -1167,7 +1218,7 @@
 
           video.onerror = () => {
             URL.revokeObjectURL(url);
-            reject(new Error("Video dosyası okunamadı."));
+            reject(new Error(armusT("applyTeacher.videoReadFailed", "Video dosyası okunamadı.")));
           };
 
           video.src = url;
@@ -1185,24 +1236,24 @@
         try {
 
           if (file.size > VIDEO_MAX_BYTES) {
-            throw new Error(`Dosya çok büyük (maks ${(VIDEO_MAX_BYTES / 1024 / 1024).toFixed(0)}MB).`);
+            throw new Error(armusT("applyTeacher.fileTooBig", "Dosya çok büyük (maks {mb}MB).").replace("{mb}", (VIDEO_MAX_BYTES / 1024 / 1024).toFixed(0)));
           }
 
           const meta = await readVideoMetadata(file);
 
           if (meta.duration < VIDEO_MIN_SECONDS) {
             throw new Error(
-              `Video en az 1 dakika olmalı (bu video ${Math.round(meta.duration)} saniye).`
+              armusT("applyTeacher.videoTooShort", "Video en az 1 dakika olmalı (bu video {s} saniye).").replace("{s}", Math.round(meta.duration))
             );
           }
 
           if (meta.width <= meta.height) {
-            throw new Error("Video yatay (landscape) çekilmiş olmalı, dikey video kabul edilmiyor.");
+            throw new Error(armusT("applyTeacher.videoMustBeLandscape", "Video yatay (landscape) çekilmiş olmalı, dikey video kabul edilmiyor."));
           }
 
           const previewUrl = URL.createObjectURL(file);
           const promise = uploadToStorage(file, "video").catch(err => {
-            errorBox.textContent = "Yüklenemedi: " + err.message;
+            errorBox.textContent = armusT("applyTeacher.couldntUpload", "Yüklenemedi: {msg}").replace("{msg}", err.message);
             errorBox.style.display = "block";
             throw err;
           });
@@ -1229,29 +1280,29 @@
 
           if (!document.getElementById("firstName").value.trim() ||
               !document.getElementById("lastName").value.trim()) {
-            showStepError("Adını ve soyadını yaz.");
+            showStepError(armusT("applyTeacher.errNameRequired", "Adını ve soyadını yaz."));
             return false;
           }
 
           if (!document.getElementById("country").value.trim()) {
-            showStepError("Doğum ülkeni yaz.");
+            showStepError(armusT("applyTeacher.errCountryRequired", "Doğum ülkeni yaz."));
             return false;
           }
 
           if (getLanguages().length === 0) {
-            showStepError("En az bir dil ekle.");
+            showStepError(armusT("applyTeacher.errLanguageRequired", "En az bir dil ekle."));
             return false;
           }
 
           if (!document.getElementById("ageConfirm").checked) {
-            showStepError("Devam etmek için 18 yaşından büyük olduğunu onaylamalısın.");
+            showStepError(armusT("applyTeacher.errAgeConfirmRequired", "Devam etmek için 18 yaşından büyük olduğunu onaylamalısın."));
             return false;
           }
         }
 
         if (step === 2) {
           if (!uploads.photo) {
-            showStepError("Devam etmek için bir fotoğraf yükle.");
+            showStepError(armusT("applyTeacher.errPhotoRequired", "Devam etmek için bir fotoğraf yükle."));
             return false;
           }
         }
@@ -1263,17 +1314,17 @@
           if (!skip) {
 
             if (!document.getElementById("certificateName").value.trim()) {
-              showStepError("Sertifika adını yaz, ya da 'sertifikam yok' seçeneğini işaretle.");
+              showStepError(armusT("applyTeacher.errCertificateNameRequired", "Sertifika adını yaz, ya da 'sertifikam yok' seçeneğini işaretle."));
               return false;
             }
 
             if (!document.getElementById("certificateYears").value.trim()) {
-              showStepError("Sertifikanın ne zaman alındığını yaz.");
+              showStepError(armusT("applyTeacher.errCertificateYearsRequired", "Sertifikanın ne zaman alındığını yaz."));
               return false;
             }
 
             if (!uploads.certificate) {
-              showStepError("Sertifika dosyanı yükle, ya da 'sertifikam yok' seçeneğini işaretle.");
+              showStepError(armusT("applyTeacher.errCertificateFileRequired", "Sertifika dosyanı yükle, ya da 'sertifikam yok' seçeneğini işaretle."));
               return false;
             }
           }
@@ -1286,17 +1337,17 @@
           if (!skip) {
 
             if (!document.getElementById("university").value.trim()) {
-              showStepError("Üniversite adını yaz, ya da 'yükseköğrenim derecem yok' seçeneğini işaretle.");
+              showStepError(armusT("applyTeacher.errUniversityRequired", "Üniversite adını yaz, ya da 'yükseköğrenim derecem yok' seçeneğini işaretle."));
               return false;
             }
 
             if (!document.getElementById("graduationYear").value.trim()) {
-              showStepError("Mezuniyet yılını yaz.");
+              showStepError(armusT("applyTeacher.errGraduationYearRequired", "Mezuniyet yılını yaz."));
               return false;
             }
 
             if (!document.getElementById("specialization").value.trim()) {
-              showStepError("Bölümünü / uzmanlığını yaz.");
+              showStepError(armusT("applyTeacher.errSpecializationRequired", "Bölümünü / uzmanlığını yaz."));
               return false;
             }
           }
@@ -1305,21 +1356,22 @@
         if (step === 5) {
           const chars = countChars(document.getElementById("description").value);
           if (chars < MIN_DESCRIPTION_CHARS) {
-            showStepError(`En az ${MIN_DESCRIPTION_CHARS} karakter yazmalısın (şu an ${chars} karakter).`);
+            showStepError(armusT("applyTeacher.errDescriptionTooShort", "En az {min} karakter yazmalısın (şu an {n} karakter).")
+              .replace("{min}", MIN_DESCRIPTION_CHARS).replace("{n}", chars));
             return false;
           }
         }
 
         if (step === 6) {
           if (!uploads.video) {
-            showStepError("Devam etmek için bir tanıtım videosu yükle.");
+            showStepError(armusT("applyTeacher.errVideoRequired", "Devam etmek için bir tanıtım videosu yükle."));
             return false;
           }
         }
 
         if (step === 7) {
           if (!hasAnyAvailability()) {
-            showStepError("Devam etmek için en az bir uygunluk saati işaretle.");
+            showStepError(armusT("applyTeacher.errAvailabilityRequired", "Devam etmek için en az bir uygunluk saati işaretle."));
             return false;
           }
         }
@@ -1327,7 +1379,7 @@
         if (step === 8) {
           const price = Number(document.getElementById("price").value);
           if (!price || price <= 0) {
-            showStepError("Geçerli bir ders ücreti gir.");
+            showStepError(armusT("applyTeacher.errPriceRequired", "Geçerli bir ders ücreti gir."));
             return false;
           }
         }
@@ -1357,12 +1409,12 @@
         // final step - submit application
         const submitBtn = document.getElementById("nextBtn");
         submitBtn.disabled = true;
-        submitBtn.textContent = "Gönderiliyor...";
+        submitBtn.textContent = armusT("applyTeacher.submitting", "Gönderiliyor...");
 
         await submitApplication();
 
         submitBtn.disabled = false;
-        submitBtn.textContent = "Başvuruyu Gönder";
+        submitBtn.textContent = armusT("applyTeacher.submitApplication", "Başvuruyu Gönder");
       });
 
       async function submitApplication() {
@@ -1387,7 +1439,7 @@
             uploads.video ? uploads.video.promise : Promise.resolve(null),
           ]);
         } catch (err) {
-          showStepError("Bir dosya yüklenemedi. İlgili adıma dönüp dosyayı tekrar seç.");
+          showStepError(armusT("applyTeacher.errUploadFailed", "Bir dosya yüklenemedi. İlgili adıma dönüp dosyayı tekrar seç."));
           return;
         }
 
@@ -1420,7 +1472,7 @@
         });
 
         if (result === false) {
-          showStepError("Başvuru kaydedilemedi. Lütfen tekrar dene.");
+          showStepError(armusT("applyTeacher.errSubmitFailed", "Başvuru kaydedilemedi. Lütfen tekrar dene."));
           return;
         }
 
