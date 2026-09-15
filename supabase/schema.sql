@@ -776,6 +776,14 @@ begin
     raise exception 'attendance_report_locked: cannot modify the original report';
   end if;
 
+  -- the comment above promises "nothing else" changes besides
+  -- teacher_explanation/status - resolved_at/resolved_by weren't
+  -- actually held to that: a non-admin update reaching this point could
+  -- still set them to anything (a fabricated past timestamp, someone
+  -- else's profile id posing as the resolving admin) since only the
+  -- columns explicitly listed above were locked (migration_43.sql).
+  new.resolved_at := old.resolved_at;
+  new.resolved_by := old.resolved_by;
   new.explained_at := now();
   return new;
 end;

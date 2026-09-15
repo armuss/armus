@@ -1057,6 +1057,7 @@ const ARMUS_I18N_EN = {
   "class.reportSending": "Sending...",
   "class.reportSent": "Your report was received. The teacher's profile is now temporarily hidden from new students and our team will review it.",
   "class.reportFailed": "Couldn't send the report. Please try again.",
+  "class.reportRetry": "Try again",
   "class.alreadyReported": "You already sent a report for this lesson.",
   "class.close": "Close",
   "class.continueBtn": "Continue",

@@ -879,14 +879,38 @@
 
             postClassBody.querySelector('[data-checkin="yes"]').addEventListener("click", renderReviewStep);
 
+            // armusReportAttendanceIssue can fail (a dropped connection, a
+            // report that snuck in for this booking from another tab,
+            // etc) - silently moving on regardless, as this used to,
+            // meant the student walked away thinking a "the teacher
+            // didn't show up" report was filed when nothing was actually
+            // saved. Both branches below now check the result and let
+            // the student retry instead.
+            function renderCheckinReportFailed(retry) {
+              postClassBody.innerHTML = `
+                <p>${armusT("class.reportFailed", "Bildirim gönderilemedi. Lütfen tekrar dene.")}</p>
+                <div class="post-class-actions">
+                  <button type="button" class="btn" data-skip>${armusT("class.skip", "Atla")}</button>
+                  <button type="button" class="btn btn-light" data-retry>${armusT("class.reportRetry", "Tekrar dene")}</button>
+                </div>
+              `;
+              postClassBody.querySelector("[data-retry]").addEventListener("click", retry);
+              postClassBody.querySelector("[data-skip]").addEventListener("click", finishAndLeave);
+            }
+
             if (noShowReady) {
-              postClassBody.querySelector('[data-checkin="no_show"]').addEventListener("click", async () => {
+              async function submitCheckinNoShow() {
                 postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
-                await armusReportAttendanceIssue({
+                const result = await armusReportAttendanceIssue({
                   bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "no_show",
                 });
+                if (!result) {
+                  renderCheckinReportFailed(submitCheckinNoShow);
+                  return;
+                }
                 finishAndLeave();
-              });
+              }
+              postClassBody.querySelector('[data-checkin="no_show"]').addEventListener("click", submitCheckinNoShow);
             }
 
             postClassBody.querySelector('[data-checkin="late"]').addEventListener("click", () => {
@@ -897,12 +921,20 @@
                   <button type="button" class="btn btn-light" data-continue>${armusT("class.continueBtn", "Devam Et")}</button>
                 </div>
               `;
-              postClassBody.querySelector("[data-continue]").addEventListener("click", async () => {
+              postClassBody.querySelector("[data-continue]").addEventListener("click", () => {
                 const minutes = Number(document.getElementById("checkinLateMinutes").value) || null;
-                await armusReportAttendanceIssue({
-                  bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "late", lateMinutes: minutes,
-                });
-                renderReviewStep();
+                async function submitCheckinLate() {
+                  postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
+                  const result = await armusReportAttendanceIssue({
+                    bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "late", lateMinutes: minutes,
+                  });
+                  if (!result) {
+                    renderCheckinReportFailed(submitCheckinLate);
+                    return;
+                  }
+                  renderReviewStep();
+                }
+                submitCheckinLate();
               });
             });
           }
