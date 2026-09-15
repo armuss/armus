@@ -328,6 +328,14 @@ begin
     raise exception 'status_lock: only an admin can approve or reject an application';
   end if;
 
+  -- wallet_balance (migration_38.sql) should only ever be written by a
+  -- trusted server process (wallet-topup-callback, after a real verified
+  -- charge) - never directly by the client it belongs to. auth.uid() is
+  -- null under a service-role call, which is what this allows through.
+  if new.wallet_balance is distinct from old.wallet_balance and auth.uid() is not null then
+    raise exception 'wallet_locked: wallet_balance can only be changed by a trusted server process';
+  end if;
+
   if old.status = 'approved' and (
     new.title is distinct from old.title
     or new.price is distinct from old.price
