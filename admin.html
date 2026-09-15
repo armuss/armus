@@ -710,6 +710,33 @@
       color: #1f7a4d;
     }
 
+    /* ---- attendance report status badges ---- */
+
+    .app-badge.attendance-open,
+    .app-badge.attendance-explained {
+      border-color: rgba(220, 90, 90, .5);
+      color: #b3261e;
+    }
+
+    .app-badge.attendance-upheld {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .app-badge.attendance-dismissed {
+      border-color: #4caf7d;
+      color: #1f7a4d;
+    }
+
+    .attendance-card-icon {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      vertical-align: -3px;
+      margin-right: 4px;
+      color: #e2574c;
+    }
+
     /* ---- keyboard hint chips ---- */
 
     kbd {
@@ -1079,6 +1106,7 @@
       <button class="nav-btn" data-panel="students" data-i18n="admin.navStudents">Öğrenciler</button>
       <button class="nav-btn" data-panel="log" data-i18n="admin.navLog">Etkinlik Günlüğü</button>
       <button class="nav-btn" data-panel="testimonials" data-i18n="admin.navTestimonials">Anasayfa Yorumları</button>
+      <button class="nav-btn" data-panel="attendance"><span data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</span> <span class="nav-badge" id="attendanceBadge"></span></button>
       <button class="nav-btn" data-panel="disputes"><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
       <button class="nav-btn" data-panel="reviews"><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
       <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
@@ -1264,6 +1292,19 @@
         <div class="empty-note" id="testimonialsEmpty" style="display: none;" data-i18n="admin.testimonialsEmpty">Henüz eklenmiş yorum yok.</div>
       </div>
 
+      <div class="panel" id="panel-attendance">
+        <h2 data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</h2>
+        <p class="section-hint" data-i18n="admin.attendanceHint">
+          Bir öğrencinin bir dersle ilgili "öğretmen gelmedi" ya da "öğretmen
+          geç kaldı" bildirimleri burada listelenir. Bir bildirim geldiği an
+          öğretmenin profili yeni öğrencilerin aramasından otomatik gizlenir;
+          burada "Doğrula" ya da "Reddet" seçerek bunu sonuçlandırman gerekir.
+        </p>
+        <input type="text" class="admin-search" id="searchAttendance" placeholder="İsim ara..." data-i18n-placeholder="admin.searchName">
+        <div id="attendanceList"></div>
+        <div class="empty-note" id="attendanceEmpty" style="display: none;" data-i18n="admin.attendanceEmpty">Devamsızlık bildirimi yok.</div>
+      </div>
+
       <div class="panel" id="panel-disputes">
         <h2 data-i18n="admin.navDisputes">Anlaşmazlıklar</h2>
         <p class="section-hint" data-i18n="admin.disputesHint">
@@ -1392,6 +1433,7 @@
   <script src="reviews.js"></script>
   <script src="testimonials.js"></script>
   <script src="disputes.js"></script>
+  <script src="attendance.js"></script>
   <script src="site-settings.js"></script>
   <script>
 
@@ -2236,6 +2278,110 @@
       `).join("");
     }
 
+    // ---- attendance reports (no-show / late) ----
+
+    const ATTENDANCE_WARNING_SVG = '<svg class="attendance-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+    const ATTENDANCE_CLOCK_SVG = '<svg class="attendance-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+
+    function attendanceStatusLabels() {
+      return {
+        open: armusT("admin.attendanceStatusOpen", "Bekliyor"),
+        explained: armusT("admin.attendanceStatusExplained", "Açıklama geldi"),
+        upheld: armusT("admin.attendanceStatusUpheld", "Doğrulandı"),
+        dismissed: armusT("admin.attendanceStatusDismissed", "Reddedildi"),
+      };
+    }
+
+    function renderAttendancePanel(reports) {
+      const list = document.getElementById("attendanceList");
+      const empty = document.getElementById("attendanceEmpty");
+      const badge = document.getElementById("attendanceBadge");
+      list.innerHTML = "";
+
+      const openCount = reports.filter(r => r.status === "open" || r.status === "explained").length;
+      if (openCount) {
+        badge.textContent = openCount;
+        badge.classList.add("visible");
+      } else {
+        badge.classList.remove("visible");
+      }
+
+      if (!reports.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const statusLabels = attendanceStatusLabels();
+      const profileById = new Map(armusAdminProfiles.map(p => [p.id, p]));
+
+      reports.forEach(r => {
+        const teacher = profileById.get(r.teacherId);
+        const student = profileById.get(r.studentId);
+        const teacherName = teacher ? teacher.name : r.teacherId;
+        const studentName = student ? student.name : r.studentId;
+        const icon = r.type === "no_show" ? ATTENDANCE_WARNING_SVG : ATTENDANCE_CLOCK_SVG;
+        const typeLabel = r.type === "no_show"
+          ? armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
+          : armusT("admin.attendanceTypeLate", "Derse geç kaldı") + (r.lateMinutes ? ` (${r.lateMinutes} dk)` : "");
+        const canResolve = r.status !== "upheld" && r.status !== "dismissed";
+
+        const card = document.createElement("div");
+        card.className = "app-card";
+        card.dataset.id = r.id;
+        card.innerHTML = `
+          <div class="app-top">
+            <div>
+              <div class="app-name">${icon}${armusEscapeHtml(teacherName)} - ${typeLabel}</div>
+              <div class="app-email">${armusT("admin.attendanceReportedBy", "Bildiren:")} ${armusEscapeHtml(studentName)}</div>
+              <span class="app-badge attendance-${r.status}">${statusLabels[r.status] || r.status}</span>
+            </div>
+            <div class="app-actions">
+              ${canResolve ? `
+                <button class="btn btn-approve" data-attendance-status="${r.id}" data-new-status="upheld">${armusT("admin.attendanceUphold", "Doğrula")}</button>
+                <button class="btn btn-reject" data-attendance-status="${r.id}" data-new-status="dismissed">${armusT("admin.attendanceDismiss", "Reddet")}</button>
+              ` : ""}
+              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(r.teacherId)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
+            </div>
+          </div>
+          <div class="app-details">
+            ${r.studentNote ? `<div class="app-full"><h4>${armusT("admin.attendanceStudentNote", "Öğrencinin notu")}</h4><p>${armusEscapeHtml(r.studentNote)}</p></div>` : ""}
+            <div class="app-full">
+              <h4>${armusT("admin.attendanceTeacherExplanation", "Öğretmenin açıklaması")}</h4>
+              <p>${r.teacherExplanation ? armusEscapeHtml(r.teacherExplanation) : armusT("admin.attendanceNoExplanationYet", "Öğretmen henüz açıklama yapmadı.")}</p>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      list.querySelectorAll("[data-attendance-status]").forEach(button => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          const id = button.dataset.attendanceStatus;
+          const newStatus = button.dataset.newStatus;
+          const updated = await armusAdminResolveAttendanceReport(id, newStatus);
+          if (updated) {
+            armusAdminAttendanceReports = armusAdminAttendanceReports.map(x => x.id === id ? updated : x);
+            armusLogAdminAction(
+              newStatus === "upheld" ? "attendance_upheld" : "attendance_dismissed",
+              "attendance_report", id, teacherIdLabel(updated.teacherId)
+            );
+            // hide/ban/escalation state on profiles changed server-side -
+            // a full reload keeps the teachers/at-risk panels in sync too
+            await loadAll();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+    }
+
+    function teacherIdLabel(teacherId) {
+      const teacher = armusAdminProfiles.find(p => p.id === teacherId);
+      return teacher ? teacher.name : teacherId;
+    }
+
     // ---- testimonial live preview ----
 
     function updateTestimonialPreview() {
@@ -2357,6 +2503,11 @@
 
     document.getElementById("searchDisputes").addEventListener("input", e => {
       armusAdminSearch.disputes = e.target.value;
+      renderAllFromState();
+    });
+
+    document.getElementById("searchAttendance").addEventListener("input", e => {
+      armusAdminSearch.attendance = e.target.value;
       renderAllFromState();
     });
 
@@ -2527,6 +2678,15 @@
           const r = payload.new;
           pushPulseEvent(armusT("admin.pulseNewReview", "⭐ Yeni değerlendirme: <strong>{student}</strong> {stars}")
             .replace("{student}", armusEscapeHtml(r.student_name)).replace("{stars}", "★".repeat(r.stars)));
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "attendance_reports" }, payload => {
+          const a = payload.new;
+          const teacher = armusAdminProfiles.find(p => p.id === a.teacher_id);
+          const typeLabel = a.type === "no_show"
+            ? armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
+            : armusT("admin.attendanceTypeLate", "Derse geç kaldı");
+          pushPulseEvent(`${ATTENDANCE_WARNING_SVG} ` + armusT("admin.pulseAttendanceReport", "Devamsızlık bildirimi: <strong>{teacher}</strong> - {type}")
+            .replace("{teacher}", armusEscapeHtml(teacher ? teacher.name : a.teacher_id)).replace("{type}", typeLabel));
         })
         .subscribe();
       renderPulse();
@@ -2995,8 +3155,9 @@
     let armusAdminLogs = [];
     let armusAdminTestimonials = [];
     let armusAdminDisputes = [];
+    let armusAdminAttendanceReports = [];
     let armusAdminCredits = [];
-    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "" };
+    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "" };
 
     function matchesSearch(value, term) {
       return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
@@ -3018,6 +3179,12 @@
       const filteredDisputes = armusAdminDisputes.filter(d =>
         matchesSearch(d.reporter_name, armusAdminSearch.disputes) || matchesSearch(d.subject, armusAdminSearch.disputes)
       );
+      const profileById = new Map(armusAdminProfiles.map(p => [p.id, p]));
+      const filteredAttendanceReports = armusAdminAttendanceReports.filter(r => {
+        const teacherName = (profileById.get(r.teacherId) || {}).name || "";
+        const studentName = (profileById.get(r.studentId) || {}).name || "";
+        return matchesSearch(teacherName, armusAdminSearch.attendance) || matchesSearch(studentName, armusAdminSearch.attendance);
+      });
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
@@ -3031,6 +3198,7 @@
       renderLogPanel(armusAdminLogs);
       renderTestimonialsPanel(armusAdminTestimonials);
       renderDisputesPanel(filteredDisputes);
+      renderAttendancePanel(filteredAttendanceReports);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
@@ -3086,13 +3254,14 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, creditsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
         armusSupabase.from("admin_actions").select("*"),
         armusAdminGetAllTestimonials(),
         armusAdminGetAllDisputes(),
+        armusAdminGetAllAttendanceReports(),
         armusSupabase.from("lesson_credits").select("*"),
       ]);
 
@@ -3102,6 +3271,7 @@
       armusAdminLogs = logsRes.data || [];
       armusAdminTestimonials = testimonialsRes || [];
       armusAdminDisputes = disputesRes || [];
+      armusAdminAttendanceReports = attendanceRes || [];
       // every teacher's lesson_credits (migration_30.sql admin policy) -
       // used by computeEarnings to tell whether a trial converted into a
       // real package purchase yet (see armusTrialCountsAsEarned)

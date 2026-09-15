@@ -1075,7 +1075,13 @@
 
     (async function() {
 
-    const teacher = await armusFindMarketplaceTeacher(teacherId);
+    // needed up front (not just for the "Mesaj Gönder" check further
+    // below) so a hidden teacher (migration_41.sql) still shows normally
+    // to a student who's already booked them, not just to new visitors
+    const viewerSession = await armusGetSession();
+    const viewerId = (viewerSession && viewerSession.role === "student") ? viewerSession.id : null;
+
+    const teacher = await armusFindMarketplaceTeacher(teacherId, viewerId);
 
     if (!teacher) {
 

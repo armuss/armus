@@ -77,7 +77,53 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
     // migration_37.sql - which IANA zone this teacher's own calendar grid
     // (weeklyAvailability/availabilityDates) is wall-clock time in.
     timezone: profile.timezone || "Europe/Istanbul",
+    // migration_41.sql - attendance-report hide/ban state, see
+    // armusFilterVisibleTeachers below.
+    isBanned: Boolean(profile.is_banned),
+    hiddenFromNewStudents: Boolean(profile.hidden_from_new_students),
+    hiddenUntil: profile.hidden_until || null,
   };
+}
+
+// Whether teacherOrProfile is hidden from EVERYONE right now, with no
+// exception - either permanently (banned) or temporarily (the harsher,
+// repeated-violation tier - migration_41.sql). Accepts either a built
+// marketplace teacher object (camelCase) or a raw profiles row
+// (snake_case), since callers reach for this at different points.
+function armusIsTeacherHiddenFromEveryone(t) {
+  if (t.isBanned || t.is_banned) return true;
+  const hiddenUntil = t.hiddenUntil || t.hidden_until;
+  return Boolean(hiddenUntil && new Date(hiddenUntil).getTime() > Date.now());
+}
+
+// Filters `teachers` down to what `viewerId` (a signed-in student's id,
+// or null/undefined for an anonymous visitor, a teacher, or anyone else
+// with no booking history to check) is allowed to see right now. A
+// no-show/late report immediately hides a teacher from anyone who
+// hasn't booked them before - existing students keep seeing them - a
+// banned or repeatedly-confirmed-violation teacher is hidden from
+// EVERYONE, no exception. Demo teachers (teachers-data.js) are never
+// hidden - they have no profile row for any of this to apply to.
+async function armusFilterVisibleTeachers(teachers, viewerId) {
+
+  const hiddenFromNewOnly = teachers.filter(t =>
+    !armusIsTeacherHiddenFromEveryone(t) && t.hiddenFromNewStudents
+  );
+
+  let bookedTeacherIds = new Set();
+  if (viewerId && hiddenFromNewOnly.length) {
+    const { data } = await armusSupabase
+      .from("bookings")
+      .select("teacher_id")
+      .eq("student_id", viewerId);
+    bookedTeacherIds = new Set((data || []).map(b => b.teacher_id));
+  }
+
+  return teachers.filter(t => {
+    if (armusIsTeacherHiddenFromEveryone(t)) return false;
+    if (t.hiddenFromNewStudents) return bookedTeacherIds.has(t.id);
+    return true;
+  });
 }
 
 // Demo teachers (teachers-data.js) have a fixed, hand-written reviews
@@ -111,7 +157,11 @@ async function armusEnrichDemoTeacherReviews(teacher) {
 // individually (once their ids are known from the profiles query)
 // would mean waiting for the profiles query to finish before even
 // starting the reviews/bookings ones, doubling the wait.
-async function armusGetRegisteredTeachers() {
+// viewerId: the signed-in STUDENT's id, or omit/null for anyone else
+// (not signed in, or a teacher account) - passed through to
+// armusFilterVisibleTeachers so a teacher a student has already booked
+// stays visible to them even while hidden from new students (migration_41.sql).
+async function armusGetRegisteredTeachers(viewerId) {
 
   const [profilesRes, reviewsRes, bookingsRes] = await Promise.all([
     armusSupabase
@@ -128,18 +178,27 @@ async function armusGetRegisteredTeachers() {
   const allReviews = (reviewsRes.data || []).map(armusMapReviewRow);
   const allBookings = (bookingsRes.data || []).map(armusMapBookingRow);
 
-  return profilesRes.data.map(profile => armusBuildTeacherFromParts(
+  const teachers = profilesRes.data.map(profile => armusBuildTeacherFromParts(
     profile,
     allReviews.filter(r => r.teacherId === profile.id),
     allBookings.filter(b => b.teacherId === profile.id)
   ));
+
+  return armusFilterVisibleTeachers(teachers, viewerId);
 }
 
-async function armusGetMarketplaceTeachers() {
-  return TEACHERS.concat(await armusGetRegisteredTeachers());
+async function armusGetMarketplaceTeachers(viewerId) {
+  return TEACHERS.concat(await armusGetRegisteredTeachers(viewerId));
 }
 
-async function armusFindMarketplaceTeacher(id) {
+// viewerId: the signed-in STUDENT's id, or omit/null for anyone else -
+// see armusGetRegisteredTeachers. A caller fetching a teacher the
+// viewer already has a real booking with (my-lessons.html) naturally
+// still gets it back, since that's exactly the relationship this checks
+// for; a NEW visitor reaching a hidden teacher's page directly (a stale
+// link, a guessed URL) is turned away the same as everyone else would be
+// in search - hiding a teacher would otherwise be trivial to bypass.
+async function armusFindMarketplaceTeacher(id, viewerId) {
 
   const demoTeacher = TEACHERS.find(t => t.id === id);
   if (demoTeacher) return armusEnrichDemoTeacherReviews(demoTeacher);
@@ -160,5 +219,8 @@ async function armusFindMarketplaceTeacher(id) {
   ]);
 
   if (profileRes.error || !profileRes.data) return null;
-  return armusBuildTeacherFromParts(profileRes.data, rawReviews, bookings);
+
+  const teacher = armusBuildTeacherFromParts(profileRes.data, rawReviews, bookings);
+  const [visible] = await armusFilterVisibleTeachers([teacher], viewerId);
+  return visible || null;
 }

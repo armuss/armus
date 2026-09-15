@@ -1216,7 +1216,7 @@
       const [allBookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
         armusGetBookingsForStudent(session.id),
         armusGetConversations(),
-        armusGetMarketplaceTeachers(),
+        armusGetMarketplaceTeachers(session.id),
         armusGetConfidenceCheckins(session.id),
         armusGetVocabEntries(session.id),
       ]);

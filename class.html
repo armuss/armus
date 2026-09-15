@@ -150,6 +150,20 @@
       border-color: var(--armus-silver-border-strong);
     }
 
+    .room-bar .btn.report-issue-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #f2a154;
+      border-color: rgba(242, 161, 84, .4);
+    }
+
+    .room-bar .btn.report-issue-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
     /* ---- lesson progress timer ---- */
 
     .lesson-progress {
@@ -335,11 +349,60 @@
       flex: 1;
     }
 
-    /* the [hidden] attribute is how these two get toggled in JS - these
-       overrides beat the unconditional display:flex/flex above them */
+    .post-class-modal p {
+      font-size: 13.5px;
+      color: var(--armus-silver-1);
+      margin-bottom: 14px;
+    }
+
+    .attendance-report-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .attendance-report-options button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      justify-content: flex-start;
+      padding: 12px 14px;
+    }
+
+    .attendance-report-options button svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: #f2a154;
+    }
+
+    .post-class-modal input[type="number"] {
+      width: 100%;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13.5px;
+      margin-bottom: 14px;
+    }
+
+    /* the [hidden] attribute is how these get toggled in JS - these
+       overrides beat the unconditional display:flex/inline-block above them.
+       !important on the two button ones since .room-bar .btn.report-issue-btn
+       and .post-class-actions .btn are themselves more specific than a
+       plain [hidden] attribute selector would otherwise win against */
     .post-class-overlay[hidden],
     .vocab-pin-form[hidden] {
       display: none;
+    }
+
+    .report-issue-btn[hidden],
+    .post-class-actions .btn[hidden] {
+      display: none !important;
     }
   </style>
 </head>
@@ -372,6 +435,10 @@
     <div class="room-bar">
       <a href="index.html" class="logo">ARMUS</a>
       <span class="lesson-with" id="lessonWith"></span>
+      <button type="button" class="btn report-issue-btn" id="reportIssueBtn" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span data-i18n="class.reportIssueBtn">Bildir</span>
+      </button>
       <button type="button" class="btn" id="leaveBtn" data-i18n="class.leave">Ayrıl</button>
     </div>
     <div class="lesson-progress" id="lessonProgress">
@@ -408,12 +475,20 @@
     </div>
   </div>
 
+  <div class="post-class-overlay" id="attendanceReportOverlay" hidden>
+    <div class="post-class-modal">
+      <h2 id="attendanceReportTitle" data-i18n="class.reportModalTitle">Öğretmenle ilgili bir şey mi bildireceksin?</h2>
+      <div id="attendanceReportBody"></div>
+    </div>
+  </div>
+
   <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="auth.js"></script>
   <script src="bookings.js"></script>
   <script src="reviews.js"></script>
+  <script src="attendance.js"></script>
   <script src="teacher-notes.js"></script>
   <script src="student-extras.js"></script>
   <script src="https://meet.jit.si/external_api.js"></script>
@@ -521,6 +596,99 @@
         interfaceConfigOverwrite: { MOBILE_APP_PROMO: false },
       });
 
+      // ---- report a no-show / late teacher, right from inside the
+      // room - a student shouldn't have to sit through the whole lesson
+      // (or even wait for the "leave" flow) to flag that the teacher
+      // never joined ----
+
+      const WARNING_TRIANGLE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+      const CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+
+      const attendanceReportOverlay = document.getElementById("attendanceReportOverlay");
+      const attendanceReportBody = document.getElementById("attendanceReportBody");
+
+      function closeAttendanceReportModal() {
+        attendanceReportOverlay.hidden = true;
+      }
+
+      async function submitAttendanceReport(type, lateMinutes) {
+        attendanceReportBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
+        const result = await armusReportAttendanceIssue({
+          bookingId: booking.id,
+          teacherId: booking.teacherId,
+          studentId: session.id,
+          type,
+          lateMinutes,
+        });
+        if (!result) {
+          attendanceReportBody.innerHTML = `
+            <p>${armusT("class.reportFailed", "Bildirim gönderilemedi. Lütfen tekrar dene.")}</p>
+            <div class="post-class-actions"><button type="button" class="btn btn-light" data-close>${armusT("class.close", "Kapat")}</button></div>
+          `;
+          attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
+          return;
+        }
+        attendanceReportBody.innerHTML = `
+          <p>${armusT("class.reportSent", "Bildirimin alındı. Öğretmenin profili yeni öğrencilerden geçici olarak gizlendi ve ekibimiz inceleyecek.")}</p>
+          <div class="post-class-actions"><button type="button" class="btn btn-light" data-close>${armusT("class.close", "Kapat")}</button></div>
+        `;
+        attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
+      }
+
+      async function openAttendanceReportModal() {
+
+        const existing = await armusGetAttendanceReportForBooking(booking.id);
+
+        if (existing) {
+          attendanceReportBody.innerHTML = `
+            <p>${armusT("class.alreadyReported", "Bu ders için zaten bir bildirim göndermiştin.")}</p>
+            <div class="post-class-actions"><button type="button" class="btn btn-light" data-close>${armusT("class.close", "Kapat")}</button></div>
+          `;
+          attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
+          attendanceReportOverlay.hidden = false;
+          return;
+        }
+
+        attendanceReportBody.innerHTML = `
+          <p>${armusT("class.reportModalText", "Öğretmenle ilgili ne bildirmek istiyorsun?")}</p>
+          <div class="attendance-report-options">
+            <button type="button" class="btn btn-light" data-report="no_show">${WARNING_TRIANGLE_SVG}<span>${armusT("class.reportNoShow", "Öğretmen derse hiç gelmedi")}</span></button>
+            <button type="button" class="btn btn-light" data-report="late">${CLOCK_SVG}<span>${armusT("class.reportLate", "Öğretmen geç geldi")}</span></button>
+          </div>
+          <button type="button" class="btn" data-close style="width:100%;">${armusT("class.cancel", "İptal")}</button>
+        `;
+
+        attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
+
+        attendanceReportBody.querySelector('[data-report="no_show"]').addEventListener("click", () => {
+          submitAttendanceReport("no_show");
+        });
+
+        attendanceReportBody.querySelector('[data-report="late"]').addEventListener("click", () => {
+          attendanceReportBody.innerHTML = `
+            <p>${armusT("class.reportLateMinutesText", "Kaç dakika geç kaldı? (opsiyonel)")}</p>
+            <input type="number" min="1" max="180" id="lateMinutesInput" placeholder="${armusT("class.reportLateMinutesPlaceholder", "Örn. 10")}">
+            <div class="post-class-actions">
+              <button type="button" class="btn" data-close>${armusT("class.cancel", "İptal")}</button>
+              <button type="button" class="btn btn-light" data-submit-late>${armusT("class.reportSend", "Gönder")}</button>
+            </div>
+          `;
+          attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
+          attendanceReportBody.querySelector("[data-submit-late]").addEventListener("click", () => {
+            const minutes = Number(document.getElementById("lateMinutesInput").value) || null;
+            submitAttendanceReport("late", minutes);
+          });
+        });
+
+        attendanceReportOverlay.hidden = false;
+      }
+
+      if (isStudent) {
+        const reportIssueBtn = document.getElementById("reportIssueBtn");
+        reportIssueBtn.hidden = false;
+        reportIssueBtn.addEventListener("click", openAttendanceReportModal);
+      }
+
       // ---- lesson progress timer: fills as the lesson runs, flips to
       // an "overtime" color and counts up past the scheduled end ----
 
@@ -625,36 +793,93 @@
           const existingReview = await armusGetReviewForBooking(booking.id);
           if (existingReview) { finishAndLeave(); return; }
 
-          postClassTitle.textContent = armusT("class.postClassReviewTitle", "Bu ders nasıldı?");
-          let stars = 0;
-          postClassBody.innerHTML = `
-            <div class="post-class-stars" id="postClassStars">
-              ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
-            </div>
-            <textarea id="postClassComment" placeholder="${armusT("class.postClassCommentPlaceholder", "İstersen kısa bir not bırak (opsiyonel)")}"></textarea>
-          `;
+          function renderReviewStep() {
 
-          const starEls = postClassBody.querySelectorAll("[data-star]");
-          starEls.forEach(el => {
-            el.addEventListener("click", () => {
-              stars = Number(el.dataset.star);
-              starEls.forEach(s => s.classList.toggle("active", Number(s.dataset.star) <= stars));
-            });
-          });
+            postClassTitle.textContent = armusT("class.postClassReviewTitle", "Bu ders nasıldı?");
+            let stars = 0;
+            postClassBody.innerHTML = `
+              <div class="post-class-stars" id="postClassStars">
+                ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
+              </div>
+              <textarea id="postClassComment" placeholder="${armusT("class.postClassCommentPlaceholder", "İstersen kısa bir not bırak (opsiyonel)")}"></textarea>
+            `;
+            postClassSkip.hidden = false;
+            postClassSave.hidden = false;
 
-          postClassSave.onclick = async () => {
-            if (stars > 0) {
-              await armusAddReview({
-                bookingId: booking.id,
-                teacherId: booking.teacherId,
-                studentId: session.id,
-                studentName: session.name,
-                stars,
-                text: postClassBody.querySelector("#postClassComment").value.trim(),
+            const starEls = postClassBody.querySelectorAll("[data-star]");
+            starEls.forEach(el => {
+              el.addEventListener("click", () => {
+                stars = Number(el.dataset.star);
+                starEls.forEach(s => s.classList.toggle("active", Number(s.dataset.star) <= stars));
               });
-            }
-            finishAndLeave();
-          };
+            });
+
+            postClassSave.onclick = async () => {
+              if (stars > 0) {
+                await armusAddReview({
+                  bookingId: booking.id,
+                  teacherId: booking.teacherId,
+                  studentId: session.id,
+                  studentName: session.name,
+                  stars,
+                  text: postClassBody.querySelector("#postClassComment").value.trim(),
+                });
+              }
+              finishAndLeave();
+            };
+          }
+
+          // asked first, every time (unless already reported from inside
+          // the room) - a student confirming the lesson happened is what
+          // moves on to the star rating; "it didn't" or "it was late"
+          // files the same report the in-room button does, then skips
+          // straight to leaving (nothing to rate for a lesson that never
+          // properly happened)
+          const existingAttendanceReport = await armusGetAttendanceReportForBooking(booking.id);
+
+          if (existingAttendanceReport) {
+            renderReviewStep();
+          } else {
+
+            postClassTitle.textContent = armusT("class.checkinTitle", "Bu ders gerçekleşti mi?");
+            postClassBody.innerHTML = `
+              <p>${armusT("class.checkinText", "{date}, {time} için planlanan ders.").replace("{date}", when.dateLabel).replace("{time}", when.timeRange)}</p>
+              <div class="attendance-report-options">
+                <button type="button" class="btn btn-light" data-checkin="yes">${armusT("class.checkinYes", "Evet, zamanında oldu")}</button>
+                <button type="button" class="btn btn-light" data-checkin="late">${CLOCK_SVG}<span>${armusT("class.checkinLate", "Evet ama öğretmen geç geldi")}</span></button>
+                <button type="button" class="btn btn-light" data-checkin="no_show">${WARNING_TRIANGLE_SVG}<span>${armusT("class.checkinNoShow", "Hayır, öğretmen gelmedi")}</span></button>
+              </div>
+            `;
+            postClassSkip.hidden = true;
+            postClassSave.hidden = true;
+
+            postClassBody.querySelector('[data-checkin="yes"]').addEventListener("click", renderReviewStep);
+
+            postClassBody.querySelector('[data-checkin="no_show"]').addEventListener("click", async () => {
+              postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
+              await armusReportAttendanceIssue({
+                bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "no_show",
+              });
+              finishAndLeave();
+            });
+
+            postClassBody.querySelector('[data-checkin="late"]').addEventListener("click", () => {
+              postClassBody.innerHTML = `
+                <p>${armusT("class.reportLateMinutesText", "Kaç dakika geç kaldı? (opsiyonel)")}</p>
+                <input type="number" min="1" max="180" id="checkinLateMinutes" placeholder="${armusT("class.reportLateMinutesPlaceholder", "Örn. 10")}">
+                <div class="post-class-actions">
+                  <button type="button" class="btn btn-light" data-continue>${armusT("class.continueBtn", "Devam Et")}</button>
+                </div>
+              `;
+              postClassBody.querySelector("[data-continue]").addEventListener("click", async () => {
+                const minutes = Number(document.getElementById("checkinLateMinutes").value) || null;
+                await armusReportAttendanceIssue({
+                  bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "late", lateMinutes: minutes,
+                });
+                renderReviewStep();
+              });
+            });
+          }
 
         } else {
 
