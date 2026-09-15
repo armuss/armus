@@ -4,11 +4,11 @@
 //
 // Deleting the auth.users row is enough on its own: profiles.id
 // references auth.users(id) on delete cascade, and every other table
-// (bookings, pending_payments, reviews, wallet_transactions,
-// lesson_credits, conversations/messages, disputes, teacher_notes,
-// vocab_entries, confidence_checkins, ...) references profiles(id) on
-// delete cascade too - see schema.sql. So this one admin call is the
-// whole feature; no manual table-by-table cleanup needed.
+// (bookings, pending_payments, reviews, lesson_credits,
+// conversations/messages, disputes, teacher_notes, vocab_entries,
+// confidence_checkins, ...) references profiles(id) on delete cascade
+// too - see schema.sql. So this one admin call is the whole feature; no
+// manual table-by-table cleanup needed.
 //
 // Note: this is a hard delete, on purpose - a teacher's past bookings
 // with a student who deletes their account disappear along with them,

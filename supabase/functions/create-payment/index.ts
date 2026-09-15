@@ -29,9 +29,6 @@
 // lesson_credits for that teacher once the charge succeeds, consumed by
 // this same function's credit-check above on each future booking.
 //
-// (The wallet feature - balance/top-up applied at checkout - is on hold
-// for now, see ARMUS_WALLET_ENABLED in auth.js; it's not used here.)
-//
 // Deploy: Supabase Dashboard -> Edge Functions -> Create a new function,
 // name it "create-payment", paste this file in, Deploy.
 //

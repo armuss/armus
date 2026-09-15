@@ -391,30 +391,6 @@ const ARMUS_I18N_EN = {
   "myLessons.cancelConfirm": "Are you sure you want to cancel your lesson with {name} on {date} at {time}?",
 
   // wallet.html (currently disabled/unreachable in production - top-level shell only)
-  "wallet.gateTitle": "Log in to see your wallet",
-  "wallet.gateText": "You need an account before you can see your wallet balance.",
-  "wallet.eyebrow": "MY WALLET",
-  "wallet.title": "My Wallet",
-  "wallet.balanceLabel": "CURRENT BALANCE",
-  "wallet.balanceNote": "This balance can only be used for lesson bookings and can't be cashed out.",
-  "wallet.topupTitle": "Add Money",
-  "wallet.customAmountLabel": "Or enter an amount",
-  "wallet.customAmountPlaceholder": "e.g. 300",
-  "wallet.phoneLabel": "Phone number",
-  "wallet.identityLabel": "National ID number",
-  "wallet.topupSubmit": "Pay and Add",
-  "wallet.historyTitle": "Transaction History",
-  "wallet.reasonTopup": "Wallet Top-up",
-  "wallet.reasonBookingPayment": "Lesson Payment",
-  "wallet.reasonBookingCancelled": "Lesson Cancellation (refund)",
-  "wallet.topupSuccess": "Your balance was topped up! ✓",
-  "wallet.topupFailedBanner": "Payment wasn't completed, or was cancelled. Nothing was added to your balance.",
-  "wallet.historyEmpty": "No transactions yet.",
-  "wallet.minAmount": "Please enter at least ₺50.",
-  "wallet.invalidPhone": "Please enter a valid phone number.",
-  "wallet.invalidIdentity": "Please enter a valid national ID number (11 digits).",
-  "wallet.redirecting": "Redirecting...",
-  "wallet.topupFailed": "Couldn't start the transaction. Please try again.",
 
   // class.html (static state screens only - the live-lesson room bar has
   // no toggle of its own, but already-chosen language still applies)
