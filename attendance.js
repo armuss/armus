@@ -68,11 +68,19 @@ async function armusGetOwnOpenAttendanceReport(teacherId) {
   return armusMapAttendanceReportRow(data);
 }
 
-// The teacher's single most recent report regardless of status -
-// dashboard.html uses this (rather than the open-only version above) to
-// also show an "awaiting review" state once they've already submitted
-// their explanation, not just while it's still untouched.
+// The teacher's own report that most needs their attention right now:
+// any still-open one first (so it can actually be explained - a teacher
+// can end up with more than one open report at once, from different
+// bookings, before an admin gets to either of them, and without this
+// preference dashboard.html would only ever surface whichever one
+// happens to be more recent, silently stranding an older open report
+// nobody could ever explain through the UI), otherwise the single most
+// recent report regardless of status, so an "awaiting review"
+// (explained) or a resolved one still has something to show.
 async function armusGetLatestOwnAttendanceReport(teacherId) {
+
+  const openReport = await armusGetOwnOpenAttendanceReport(teacherId);
+  if (openReport) return openReport;
 
   const { data, error } = await armusSupabase
     .from("attendance_reports")
