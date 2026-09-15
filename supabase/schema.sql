@@ -77,6 +77,14 @@ alter table bookings add column if not exists cancelled_at timestamptz;
 alter table bookings add column if not exists cancelled_by text check (cancelled_by in ('student', 'teacher', 'admin'));
 alter table bookings add column if not exists refunded boolean not null default false;
 
+-- which IANA zone lesson_date/lesson_time (above) is wall-clock time IN -
+-- a snapshot of the teacher's profiles.timezone at booking time (see
+-- create-payment/payment-callback and the TIMEZONES section further
+-- down this file for profiles.timezone itself). Declared here, ahead of
+-- that section, only because reviews_insert_own_student below already
+-- needs it.
+alter table bookings add column if not exists teacher_timezone text not null default 'Europe/Istanbul';
+
 -- stops two different bookings ever existing for the same teacher at
 -- the same date+time - partial so a cancelled row at an old slot never
 -- blocks a later (re-)booking of that same slot (see migration_35.sql)
@@ -317,6 +325,11 @@ create policy "reviews_select_all"
 -- day or earlier counts as "completed" (rather than strictly before
 -- today), so a student can rate a lesson right after leaving the live
 -- classroom (class.html) instead of waiting for the next calendar day.
+-- Compares against "today" in the booking's own teacher_timezone
+-- (migration_37.sql/migration_40.sql), not the database's session
+-- timezone (UTC) - otherwise a lesson already past midnight in the
+-- teacher's own zone could still read as "tomorrow" here and wrongly
+-- block the review.
 create policy "reviews_insert_own_student"
   on reviews for insert
   with check (
@@ -325,7 +338,7 @@ create policy "reviews_insert_own_student"
       select 1 from bookings b
       where b.id = booking_id
         and b.student_id = auth.uid()
-        and b.lesson_date <= current_date
+        and b.lesson_date <= (now() at time zone b.teacher_timezone)::date
     )
   );
 
@@ -790,15 +803,10 @@ alter table profiles add column availability_dates jsonb not null default '{}';
 -- in each recipient's own current time.
 alter table profiles add column if not exists timezone text not null default 'Europe/Istanbul';
 
--- bookings.teacher_timezone: a snapshot of the teacher's profiles.timezone
--- at the moment this booking was created (see create-payment/payment-callback)
--- - demo teachers (teachers-data.js, no profile row) always get the
--- default. Snapshotted rather than looked up live so a teacher changing
--- their timezone later never reinterprets a past booking's already-fixed
--- wall-clock time. This is what lets cancel-booking and the reminder
--- cron below compute the real UTC instant of a lesson correctly instead
--- of assuming everyone is UTC.
-alter table bookings add column if not exists teacher_timezone text not null default 'Europe/Istanbul';
+-- bookings.teacher_timezone (same shape - a snapshot of the teacher's
+-- profiles.timezone at booking time) is declared up in the BOOKINGS
+-- section instead, since reviews_insert_own_student needs it earlier in
+-- this file than this section runs.
 
 -- === LESSON REMINDER EMAILS =======================================
 -- Runs every 10 minutes: any lesson starting 50-70 minutes from now that
