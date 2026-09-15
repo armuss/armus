@@ -791,7 +791,7 @@
 
           for (const booking of bookings) {
 
-            const teacher = await armusFindMarketplaceTeacher(booking.teacherId).catch(() => null);
+            const teacher = await armusFindMarketplaceTeacher(booking.teacherId, session.id).catch(() => null);
             const isPast = booking.date < todayKey;
             const isCancelled = booking.status === "cancelled";
             const avatarInner = teacher

@@ -1203,12 +1203,17 @@
 
     // real (self-registered) teachers need a Supabase round trip - merge
     // them into the already-visible grid as soon as they arrive instead
-    // of making the whole list wait on the network
-    armusGetRegisteredTeachers().then(registeredTeachers => {
-      registeredTeachers.forEach(addTeacherCard);
-      updateTeachers();
-      document.getElementById("loadingNote").classList.remove("visible");
-    });
+    // of making the whole list wait on the network. Only a signed-in
+    // STUDENT's own booking history matters for which hidden teachers
+    // still show up for them (migration_41.sql) - a logged-out visitor
+    // or a teacher account browsing this page has none.
+    armusGetSession().then(session => (session && session.role === "student") ? session.id : null).then(viewerId =>
+      armusGetRegisteredTeachers(viewerId).then(registeredTeachers => {
+        registeredTeachers.forEach(addTeacherCard);
+        updateTeachers();
+        document.getElementById("loadingNote").classList.remove("visible");
+      })
+    );
 
   </script>
 

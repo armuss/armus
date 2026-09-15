@@ -243,6 +243,122 @@
       margin-bottom: 30px;
     }
 
+    /* ---- attendance warning banner + explanation modal ---- */
+
+    .attendance-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(226, 87, 76, .1);
+      border: 1px solid rgba(226, 87, 76, .35);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 22px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .attendance-banner svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      color: #e2574c;
+    }
+
+    .attendance-banner-text {
+      flex: 1;
+    }
+
+    .attendance-banner-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e2574c;
+    }
+
+    .attendance-banner-sub {
+      font-size: 12.5px;
+      color: var(--armus-muted);
+      margin-top: 2px;
+    }
+
+    .attendance-banner-arrow {
+      color: #e2574c;
+    }
+
+    .attendance-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .attendance-modal-overlay[hidden] {
+      display: none;
+    }
+
+    .attendance-modal {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 18px;
+      padding: 28px;
+      width: min(460px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .attendance-modal h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      letter-spacing: -.4px;
+    }
+
+    .attendance-modal p {
+      font-size: 13.5px;
+      color: var(--armus-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .attendance-modal .rules-box {
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 12.5px;
+      color: var(--armus-muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .attendance-modal textarea {
+      width: 100%;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13.5px;
+      min-height: 90px;
+      resize: vertical;
+      margin-bottom: 14px;
+    }
+
+    .attendance-modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .attendance-modal-actions .btn {
+      flex: 1;
+    }
+
     .avatar {
       width: 60px;
       height: 80px;
@@ -1267,6 +1383,15 @@
 
     <main>
 
+      <button type="button" class="attendance-banner" id="attendanceBanner" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <div class="attendance-banner-text">
+          <div class="attendance-banner-title" id="attendanceBannerTitle"></div>
+          <div class="attendance-banner-sub" id="attendanceBannerSub"></div>
+        </div>
+        <svg class="attendance-banner-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+
       <div class="dash-header">
         <div class="avatar" id="avatar"></div>
         <div>
@@ -1458,6 +1583,13 @@
 
   </div>
 
+  <div class="attendance-modal-overlay" id="attendanceModalOverlay" hidden>
+    <div class="attendance-modal">
+      <h2 id="attendanceModalTitle"></h2>
+      <div id="attendanceModalBody"></div>
+    </div>
+  </div>
+
   <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js"></script>
@@ -1467,6 +1599,7 @@
   <script src="reviews.js"></script>
   <script src="messages.js"></script>
   <script src="teacher-notes.js"></script>
+  <script src="attendance.js"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -1575,6 +1708,112 @@
 
     })();
 
+    const WARNING_TRIANGLE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+
+    const ATTENDANCE_RULES_TEXT = () => armusT(
+      "teacherDash.attendanceRulesText",
+      "ARMUS kuralları: bir öğrenci dersine gelmediğini ya da geç kaldığını bildirdiğinde, incelenene kadar profilin yeni öğrencilerin aramasından gizlenir. Ekibimiz durumu değerlendirir. Tekrarlanan, doğrulanmış ihlaller daha ağır sonuçlar doğurur - toplamda 10 gelmeme profilinin tamamen kapatılmasına, bir ayda derslerinin %5'inden fazlasında geç kalman ise profilinin bir ay boyunca herkesten gizlenmesine yol açar."
+    );
+
+    async function openAttendanceModal(user, report) {
+
+      const overlay = document.getElementById("attendanceModalOverlay");
+      const title = document.getElementById("attendanceModalTitle");
+      const body = document.getElementById("attendanceModalBody");
+
+      const typeLabel = report && report.type === "no_show"
+        ? armusT("teacherDash.attendanceTypeNoShow", "derse gelmedin")
+        : armusT("teacherDash.attendanceTypeLate", "derse geç kaldın");
+
+      if (user.is_banned) {
+
+        title.textContent = armusT("teacherDash.attendanceBannedTitle", "Hesabın kapatıldı");
+        body.innerHTML = `
+          <p>${armusT("teacherDash.attendanceBannedText", "Tekrarlanan, doğrulanmış devamsızlık nedeniyle hesabın kalıcı olarak kapatıldı. İtiraz etmek istersen bizimle iletişime geç.")}</p>
+          <div class="attendance-modal-actions"><a class="btn" href="iletisim.html">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a></div>
+        `;
+
+      } else if (report && report.status === "open") {
+
+        title.textContent = armusT("teacherDash.attendanceExplainTitle", "Bir öğrenci bir şey bildirdi");
+        body.innerHTML = `
+          <p>${armusT("teacherDash.attendanceExplainText", "Bir öğrenci {type} bildirdi. Bu yüzden profilin şu anda yeni öğrencilerin aramasından gizli.").replace("{type}", typeLabel)}</p>
+          <div class="rules-box">${ATTENDANCE_RULES_TEXT()}</div>
+          <textarea id="attendanceExplanationInput" placeholder="${armusT("teacherDash.attendanceExplainPlaceholder", "Ne oldu? Kısaca açıkla...")}"></textarea>
+          <div class="attendance-modal-actions">
+            <button type="button" class="btn" id="attendanceModalCancel">${armusT("class.cancel", "İptal")}</button>
+            <button type="button" class="btn btn-light" id="attendanceModalSubmit">${armusT("teacherDash.attendanceSubmitExplanation", "Açıklamayı Gönder")}</button>
+          </div>
+        `;
+
+        document.getElementById("attendanceModalCancel").addEventListener("click", () => { overlay.hidden = true; });
+        document.getElementById("attendanceModalSubmit").addEventListener("click", async () => {
+          const btn = document.getElementById("attendanceModalSubmit");
+          const text = document.getElementById("attendanceExplanationInput").value.trim();
+          if (!text) return;
+          btn.disabled = true;
+          btn.textContent = armusT("teacherDash.attendanceSending", "Gönderiliyor...");
+          const result = await armusSubmitAttendanceExplanation(report.id, text);
+          if (!result) {
+            btn.disabled = false;
+            btn.textContent = armusT("teacherDash.attendanceSubmitExplanation", "Açıklamayı Gönder");
+            alert(armusT("teacherDash.attendanceSubmitFailed", "Gönderilemedi. Lütfen tekrar dene."));
+            return;
+          }
+          overlay.hidden = true;
+          await renderAttendanceBanner(user);
+        });
+
+      } else if (report && report.status === "explained") {
+
+        title.textContent = armusT("teacherDash.attendancePendingTitle", "Açıklaman inceleniyor");
+        body.innerHTML = `
+          <p>${armusT("teacherDash.attendancePendingText", "Açıklamanı gönderdin, ekibimiz inceliyor. Profilin bu süreç tamamlanana kadar yeni öğrencilerin aramasından gizli kalır.")}</p>
+          <div class="rules-box">${armusEscapeHtml(report.teacherExplanation)}</div>
+          <div class="attendance-modal-actions"><button type="button" class="btn" id="attendanceModalCancel">${armusT("class.close", "Kapat")}</button></div>
+        `;
+        document.getElementById("attendanceModalCancel").addEventListener("click", () => { overlay.hidden = true; });
+
+      } else {
+
+        title.textContent = armusT("teacherDash.attendanceHiddenTitle", "Profilin geçici olarak gizli");
+        body.innerHTML = `
+          <p>${armusT("teacherDash.attendanceHiddenText", "Tekrarlanan, doğrulanmış devamsızlık/geç kalma bildirimleri nedeniyle profilin bir süreliğine herkesten (yeni ve mevcut öğrencilerden) gizlendi.")}</p>
+          <div class="rules-box">${ATTENDANCE_RULES_TEXT()}</div>
+          <div class="attendance-modal-actions"><button type="button" class="btn" id="attendanceModalCancel">${armusT("class.close", "Kapat")}</button></div>
+        `;
+        document.getElementById("attendanceModalCancel").addEventListener("click", () => { overlay.hidden = true; });
+      }
+
+      overlay.hidden = false;
+    }
+
+    async function renderAttendanceBanner(user) {
+
+      const banner = document.getElementById("attendanceBanner");
+      const isHiddenUntilActive = user.hidden_until && new Date(user.hidden_until) > new Date();
+
+      if (!user.is_banned && !user.hidden_from_new_students && !isHiddenUntilActive) {
+        banner.hidden = true;
+        return;
+      }
+
+      const report = await armusGetLatestOwnAttendanceReport(user.id);
+
+      document.getElementById("attendanceBannerTitle").textContent = user.is_banned
+        ? armusT("teacherDash.bannerBannedTitle", "Hesabın kapatıldı")
+        : armusT("teacherDash.bannerHiddenTitle", "Profilin yeni öğrencilerden gizli");
+
+      document.getElementById("attendanceBannerSub").textContent = user.is_banned
+        ? armusT("teacherDash.bannerBannedSub", "Detaylar için tıkla")
+        : (report && report.status === "open")
+          ? armusT("teacherDash.bannerOpenSub", "Bir öğrenci bir şey bildirdi - açıklamak için tıkla")
+          : armusT("teacherDash.bannerOtherSub", "Detaylar için tıkla");
+
+      banner.hidden = false;
+      banner.onclick = () => openAttendanceModal(user, report);
+    }
+
     async function renderApprovedDashboard(user) {
 
       shell.style.display = "grid";
@@ -1584,6 +1823,8 @@
         : armusEscapeHtml(user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase());
       document.getElementById("dashName").textContent = user.name;
       document.getElementById("dashEmail").textContent = user.email;
+
+      await renderAttendanceBanner(user);
 
       // fields with a pending (not-yet-approved) change show the
       // proposed value, not the live one, so the teacher can see what

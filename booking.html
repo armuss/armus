@@ -717,9 +717,15 @@
 
     (async function() {
 
-    const [teacher, session, busyTimes] = await Promise.all([
-      armusFindMarketplaceTeacher(teacherId),
-      armusGetSession(),
+    // session is needed before the teacher fetch, not just after it - a
+    // hidden teacher (migration_41.sql) should still be bookable by a
+    // student who's already had a lesson with them, not just blocked
+    // outright the way a new visitor is
+    const session = await armusGetSession();
+    const viewerId = (session && session.role === "student") ? session.id : null;
+
+    const [teacher, busyTimes] = await Promise.all([
+      armusFindMarketplaceTeacher(teacherId, viewerId),
       armusGetTeacherBusyTimes(teacherId).catch(() => []),
     ]);
 
