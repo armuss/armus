@@ -1065,6 +1065,7 @@ const ARMUS_I18N_EN = {
   "class.checkinYes": "Yes, it happened on time",
   "class.checkinLate": "Yes, but the teacher was late",
   "class.checkinNoShow": "No, the teacher never joined",
+  "class.reportNoShowTooSoon": "If the teacher still hasn't joined, try again in a few minutes.",
 
   "teacherDash.bannerHiddenTitle": "Your profile is hidden from new students",
   "teacherDash.bannerBannedTitle": "Your account is closed",

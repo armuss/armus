@@ -689,7 +689,7 @@ create table attendance_reports (
   teacher_id text not null,
   student_id uuid not null references profiles(id) on delete cascade,
   type text not null check (type in ('no_show', 'late')),
-  late_minutes integer,
+  late_minutes integer check (late_minutes is null or late_minutes between 1 and 180),
   student_note text,
   status text not null default 'open' check (status in ('open', 'explained', 'upheld', 'dismissed')),
   teacher_explanation text,
@@ -707,7 +707,17 @@ create policy "attendance_reports_select_participant_or_admin"
 
 -- a student can only report their OWN real booking, and only against the
 -- teacher that booking is actually with - same integrity pattern as
--- reviews_insert_own_student / disputes_insert_own above
+-- reviews_insert_own_student / disputes_insert_own above. Also requires
+-- the booking to still be confirmed (not cancelled) and its lesson to
+-- have actually started already (migration_42.sql) - without this, a
+-- report against a lesson scheduled days in the future, or one already
+-- cancelled, would still immediately hide the teacher.
+--
+-- IMPORTANT: "b.teacher_id = attendance_reports.teacher_id" must stay
+-- explicitly qualified like this - a bare "teacher_id" here resolves to
+-- the innermost "bookings b" row it's already next to (b.teacher_id),
+-- making the comparison a tautology that never actually checks the new
+-- row's own teacher_id at all (migration_42.sql fixed exactly this).
 create policy "attendance_reports_insert_own_student"
   on attendance_reports for insert
   with check (
@@ -716,7 +726,9 @@ create policy "attendance_reports_insert_own_student"
       select 1 from bookings b
       where b.id = booking_id
         and b.student_id = auth.uid()
-        and b.teacher_id = teacher_id
+        and b.status = 'confirmed'
+        and b.teacher_id = attendance_reports.teacher_id
+        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) <= now()
     )
   );
 
@@ -800,7 +812,13 @@ create trigger attendance_reports_after_insert
   after insert on attendance_reports
   for each row execute procedure public.handle_new_attendance_report();
 
--- escalates (or clears) once an admin resolves a report
+-- escalates (or clears) once an admin resolves a report. The "late"
+-- branch measures "this calendar month" in the reported teacher's own
+-- timezone (migration_42.sql), not the database's session timezone, and
+-- only counts lessons that have actually started already as the
+-- denominator - otherwise lessons still scheduled later in the month
+-- would dilute the late percentage and make the threshold harder to
+-- reach than intended.
 create or replace function public.handle_attendance_report_resolution()
 returns trigger
 language plpgsql
@@ -810,7 +828,9 @@ as $$
 declare
   total_no_shows integer;
   recent_no_shows integer;
-  month_start date;
+  report_teacher_tz text;
+  month_start_local timestamptz;
+  month_end_local timestamptz;
   month_lesson_count integer;
   month_late_count integer;
 begin
@@ -859,19 +879,25 @@ begin
 
     elsif new.type = 'late' then
 
-      month_start := date_trunc('month', new.created_at)::date;
+      select b.teacher_timezone into report_teacher_tz
+      from bookings b where b.id = new.booking_id;
+      report_teacher_tz := coalesce(report_teacher_tz, 'Europe/Istanbul');
+
+      month_start_local := date_trunc('month', new.created_at at time zone report_teacher_tz) at time zone report_teacher_tz;
+      month_end_local := month_start_local + interval '1 month';
 
       select count(*) into month_lesson_count
-      from bookings
-      where teacher_id = new.teacher_id
-        and lesson_date >= month_start
-        and lesson_date < month_start + interval '1 month'
-        and status <> 'cancelled';
+      from bookings b
+      where b.teacher_id = new.teacher_id
+        and b.status <> 'cancelled'
+        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) >= month_start_local
+        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) < month_end_local
+        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) <= now();
 
       select count(*) into month_late_count
       from attendance_reports
       where teacher_id = new.teacher_id and type = 'late' and status = 'upheld'
-        and created_at >= month_start and created_at < month_start + interval '1 month';
+        and created_at >= month_start_local and created_at < month_end_local;
 
       if month_lesson_count > 0 and (month_late_count::numeric / month_lesson_count) > 0.05 then
         update profiles

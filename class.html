@@ -50,6 +50,11 @@
       text-decoration: none;
     }
 
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
     .btn-light {
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
@@ -607,6 +612,17 @@
       const attendanceReportOverlay = document.getElementById("attendanceReportOverlay");
       const attendanceReportBody = document.getElementById("attendanceReportBody");
 
+      // a "the teacher never showed up" report hides them immediately,
+      // with no admin pre-check - give it a short grace period after the
+      // scheduled start so a student who reports within seconds of
+      // joining (the teacher might just be a minute behind) can't
+      // instantly hide someone over nothing. "late" has no such gate -
+      // any time after the lesson was due to start, it already is late.
+      const ARMUS_NO_SHOW_GRACE_MINUTES = 10;
+      function noShowReportReady() {
+        return new Date() >= new Date(start.getTime() + ARMUS_NO_SHOW_GRACE_MINUTES * 60000);
+      }
+
       function closeAttendanceReportModal() {
         attendanceReportOverlay.hidden = true;
       }
@@ -649,20 +665,25 @@
           return;
         }
 
+        const noShowReady = noShowReportReady();
+
         attendanceReportBody.innerHTML = `
           <p>${armusT("class.reportModalText", "Öğretmenle ilgili ne bildirmek istiyorsun?")}</p>
           <div class="attendance-report-options">
-            <button type="button" class="btn btn-light" data-report="no_show">${WARNING_TRIANGLE_SVG}<span>${armusT("class.reportNoShow", "Öğretmen derse hiç gelmedi")}</span></button>
+            <button type="button" class="btn btn-light" data-report="no_show" ${noShowReady ? "" : "disabled"}>${WARNING_TRIANGLE_SVG}<span>${armusT("class.reportNoShow", "Öğretmen derse hiç gelmedi")}</span></button>
             <button type="button" class="btn btn-light" data-report="late">${CLOCK_SVG}<span>${armusT("class.reportLate", "Öğretmen geç geldi")}</span></button>
           </div>
+          ${noShowReady ? "" : `<p>${armusT("class.reportNoShowTooSoon", "Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.")}</p>`}
           <button type="button" class="btn" data-close style="width:100%;">${armusT("class.cancel", "İptal")}</button>
         `;
 
         attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
 
-        attendanceReportBody.querySelector('[data-report="no_show"]').addEventListener("click", () => {
-          submitAttendanceReport("no_show");
-        });
+        if (noShowReady) {
+          attendanceReportBody.querySelector('[data-report="no_show"]').addEventListener("click", () => {
+            submitAttendanceReport("no_show");
+          });
+        }
 
         attendanceReportBody.querySelector('[data-report="late"]').addEventListener("click", () => {
           attendanceReportBody.innerHTML = `
@@ -841,27 +862,32 @@
             renderReviewStep();
           } else {
 
+            const noShowReady = noShowReportReady();
+
             postClassTitle.textContent = armusT("class.checkinTitle", "Bu ders gerçekleşti mi?");
             postClassBody.innerHTML = `
               <p>${armusT("class.checkinText", "{date}, {time} için planlanan ders.").replace("{date}", when.dateLabel).replace("{time}", when.timeRange)}</p>
               <div class="attendance-report-options">
                 <button type="button" class="btn btn-light" data-checkin="yes">${armusT("class.checkinYes", "Evet, zamanında oldu")}</button>
                 <button type="button" class="btn btn-light" data-checkin="late">${CLOCK_SVG}<span>${armusT("class.checkinLate", "Evet ama öğretmen geç geldi")}</span></button>
-                <button type="button" class="btn btn-light" data-checkin="no_show">${WARNING_TRIANGLE_SVG}<span>${armusT("class.checkinNoShow", "Hayır, öğretmen gelmedi")}</span></button>
+                <button type="button" class="btn btn-light" data-checkin="no_show" ${noShowReady ? "" : "disabled"}>${WARNING_TRIANGLE_SVG}<span>${armusT("class.checkinNoShow", "Hayır, öğretmen gelmedi")}</span></button>
               </div>
+              ${noShowReady ? "" : `<p>${armusT("class.reportNoShowTooSoon", "Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.")}</p>`}
             `;
             postClassSkip.hidden = true;
             postClassSave.hidden = true;
 
             postClassBody.querySelector('[data-checkin="yes"]').addEventListener("click", renderReviewStep);
 
-            postClassBody.querySelector('[data-checkin="no_show"]').addEventListener("click", async () => {
-              postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
-              await armusReportAttendanceIssue({
-                bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "no_show",
+            if (noShowReady) {
+              postClassBody.querySelector('[data-checkin="no_show"]').addEventListener("click", async () => {
+                postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
+                await armusReportAttendanceIssue({
+                  bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "no_show",
+                });
+                finishAndLeave();
               });
-              finishAndLeave();
-            });
+            }
 
             postClassBody.querySelector('[data-checkin="late"]').addEventListener("click", () => {
               postClassBody.innerHTML = `
