@@ -109,10 +109,6 @@ create table pending_payments (
   lesson_date date not null,
   lesson_time text not null,
   price numeric not null,
-  -- how much of `price` was covered from the student's wallet balance
-  -- (see the WALLET section above) rather than charged to the card -
-  -- only actually debited once the booking is confirmed, never upfront
-  wallet_applied numeric not null default 0,
   status text not null default 'pending'
     check (status in ('pending', 'succeeded', 'failed', 'paid_no_booking')),
   booking_id uuid references bookings(id),
@@ -159,55 +155,6 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
-
--- === WALLET =========================================================
--- profiles.wallet_balance can grow two ways: a cancellation credit (see
--- cancel-booking) or a direct top-up (create-wallet-topup /
--- wallet-topup-callback - a real iyzico charge with no booking attached).
--- It only ever shrinks by spending it on a booking (see create-payment /
--- payment-callback). There is deliberately no way to cash it back out to
--- a card - once money is in the wallet it can only be spent on lessons.
--- wallet_transactions is the audit trail behind the balance - service
--- role only; a student can read their own history but never write it.
-
-alter table profiles add column if not exists wallet_balance numeric not null default 0;
-
-create table wallet_transactions (
-  id uuid primary key default gen_random_uuid(),
-  student_id uuid not null references profiles(id) on delete cascade,
-  amount numeric not null,
-  reason text not null,
-  booking_id uuid references bookings(id),
-  created_at timestamptz not null default now()
-);
-
-alter table wallet_transactions enable row level security;
-
-create policy "wallet_transactions_select_own" on wallet_transactions
-  for select
-  using (auth.uid() = student_id);
-
--- a real iyzico charge whose only purpose is to add money to
--- wallet_balance - wallet-topup-callback only credits it once iyzico
--- confirms the charge actually succeeded, same pending-row-first pattern
--- as pending_payments.
-create table wallet_topups (
-  id uuid primary key default gen_random_uuid(),
-  student_id uuid not null references profiles(id) on delete cascade,
-  amount numeric not null,
-  iyzico_token text,
-  iyzico_payment_id text,
-  status text not null default 'pending' check (status in ('pending', 'succeeded', 'failed')),
-  created_at timestamptz not null default now()
-);
-
-alter table wallet_topups enable row level security;
-
--- NOTE: the whole wallet feature above (balance, top-ups, spending it at
--- checkout) is on hold for now - see ARMUS_WALLET_ENABLED in auth.js. The
--- tables and columns stay as-is (nothing is lost), they're just not read
--- from or written to anywhere in the app at the moment. Cancellation
--- refunds now grant a lesson_credits row (below) instead.
 
 -- === LESSON CREDITS =================================================
 -- Replaces "cancel = money back" with "cancel = a lesson owed back".
@@ -326,14 +273,6 @@ begin
 
   if new.status is distinct from old.status and new.status is distinct from 'pending' then
     raise exception 'status_lock: only an admin can approve or reject an application';
-  end if;
-
-  -- wallet_balance (migration_38.sql) should only ever be written by a
-  -- trusted server process (wallet-topup-callback, after a real verified
-  -- charge) - never directly by the client it belongs to. auth.uid() is
-  -- null under a service-role call, which is what this allows through.
-  if new.wallet_balance is distinct from old.wallet_balance and auth.uid() is not null then
-    raise exception 'wallet_locked: wallet_balance can only be changed by a trusted server process';
   end if;
 
   if old.status = 'approved' and (
