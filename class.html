@@ -596,6 +596,25 @@
           ? `${armusT("class.tooEarlyMetaWith", "with")} <strong>${tooEarlyName}</strong> · ${when.dateLabel}, ${when.timeRange}`
           : `<strong>${tooEarlyName}</strong> ile ${when.dateLabel}, ${when.timeRange}`;
         tooEarly.style.display = "flex";
+
+        // the countdown above was only ever computed once, off the
+        // "now" at page load - a student who opens the room link a
+        // little early (e.g. straight from a reminder email) and just
+        // waits on this screen would be stuck here forever, even long
+        // after the join window actually opened, with no indication
+        // anything had changed. Poll until it opens, then reload so the
+        // whole gate/booking check runs fresh (also re-picks-up a
+        // cancellation made while they were waiting).
+        const earlyCheckInterval = setInterval(() => {
+          const currentNow = new Date();
+          if (currentNow >= joinsFrom) {
+            clearInterval(earlyCheckInterval);
+            window.location.reload();
+            return;
+          }
+          document.getElementById("minutesUntil").textContent = Math.ceil((joinsFrom - currentNow) / 60000);
+        }, 15000);
+
         return;
       }
 
