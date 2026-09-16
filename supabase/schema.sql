@@ -201,6 +201,11 @@ create policy "lesson_credits_select_own" on lesson_credits
   for select
   using (auth.uid() = student_id);
 
+-- lesson_credits_select_teacher/lesson_credits_select_admin (migration_30.sql)
+-- are declared further down, right after public.is_admin() exists to
+-- reference (that function isn't defined until the ROW LEVEL SECURITY
+-- section below) - see the comment there for why they're needed.
+
 -- === EMAIL VERIFICATION (SIGNUP) ===================================
 -- A 6-digit code emailed via Resend (send-verification-email Edge
 -- Function) right after signup; verify-email-code checks it and flips
@@ -264,6 +269,26 @@ set search_path = public
 as $$
   select coalesce((select is_admin from profiles where id = auth.uid()), false);
 $$;
+
+-- migration_30.sql: a teacher (and admins) also need to see lesson_credits
+-- tied to them, to detect when a trial converted into a real package
+-- purchase (armusTrialCountsAsEarned, bookings.js), so the trial's price
+-- can count as real earnings instead of staying with ARMUS by default.
+-- Declared here (rather than back with lesson_credits_select_own above)
+-- because it needs public.is_admin(), just defined above. Applied to the
+-- live database but never folded back into this file - a fresh install
+-- from schema.sql alone left dashboard.html's own credits query
+-- (`lesson_credits.select("*").eq("teacher_id", user.id)`) and admin.html's
+-- (`lesson_credits.select("*")`) silently returning nothing for anyone
+-- but the student, permanently breaking trial-conversion earnings and
+-- the admin credits view.
+create policy "lesson_credits_select_teacher" on lesson_credits
+  for select
+  using (auth.uid()::text = teacher_id);
+
+create policy "lesson_credits_select_admin" on lesson_credits
+  for select
+  using (public.is_admin());
 
 -- profiles: a user can update their own row; an admin can update any row
 -- (needed so admins can approve/reject teacher applications)
@@ -680,6 +705,56 @@ create policy "site_settings_write_admin"
   on site_settings for all
   using (public.is_admin())
   with check (public.is_admin());
+
+-- === NEWSLETTER SIGNUP (migration_31.sql) =========================
+-- Homepage footer form (index.html). Public, unauthenticated
+-- insert-only - anyone can add their email, but nobody but an admin can
+-- read the list back (no scraping other visitors' emails through the
+-- anon key). Applied to the live database but never folded back into
+-- this file - a fresh install from schema.sql alone left index.html's
+-- own insert into this table failing outright (relation does not exist).
+
+create table newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
+alter table newsletter_subscribers enable row level security;
+
+create policy "newsletter_subscribers_insert_anyone" on newsletter_subscribers
+  for insert
+  with check (true);
+
+create policy "newsletter_subscribers_select_admin" on newsletter_subscribers
+  for select
+  using (public.is_admin());
+
+-- === CONTACT FORM (migration_33.sql) ==============================
+-- iletisim.html submissions - a durable backup record of what was sent,
+-- in case the outbound email (send-contact-email Edge Function) ever
+-- fails, mirroring newsletter_subscribers above. Same schema-drift gap:
+-- applied to the live database but never folded back into this file -
+-- send-contact-email's own insert into this table would fail outright
+-- on a fresh install.
+
+create table contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table contact_messages enable row level security;
+
+create policy "contact_messages_insert_anyone" on contact_messages
+  for insert
+  with check (true);
+
+create policy "contact_messages_select_admin" on contact_messages
+  for select
+  using (public.is_admin());
 
 -- === DISPUTE / ISSUE REPORTS ======================================
 -- A student or teacher can report a problem with a specific booking;
