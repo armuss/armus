@@ -760,6 +760,15 @@ body {
   .nav nav {
     display: none;
   }
+  /* .nav nav was what "margin: auto" pushed against to keep
+     .nav-utility/.nav-actions flush against the right edge - with it
+     hidden here, nothing did that anymore, so EN/Giriş Yap/Kayıt Ol
+     just sat left-packed against the logo with a dead gap of empty
+     pill on the right. Giving .nav-utility its own margin-left: auto
+     makes it (and everything after it) claim that space instead. */
+  .nav-utility {
+    margin-left: auto;
+  }
   .hero {
     grid-template-columns: 1fr;
   }
