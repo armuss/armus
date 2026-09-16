@@ -12,12 +12,56 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap"></noscript>
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* homepage-only intro: the mark writes itself big and centered,
+       then flies/shrinks into its real spot in the header - see the
+       script right before </body>. Only .logo-splash/#headerBrandImg
+       exist here; every other page just gets the plain in-place
+       write-on from .logo-img (theme.css). */
+    .logo-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--armus-bg);
+      pointer-events: none;
+    }
+    .logo-splash .logo-img {
+      height: 64px;
+    }
+    header.nav a.brand .logo-img {
+      opacity: 0;
+    }
+    header.nav a.brand .logo-img.armus-brand-ready {
+      opacity: 1;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .logo-splash {
+        display: none;
+      }
+      header.nav a.brand .logo-img {
+        opacity: 1;
+      }
+    }
+  </style>
+  <noscript>
+    <style>
+      .logo-splash { display: none; }
+      header.nav a.brand .logo-img { opacity: 1; }
+    </style>
+  </noscript>
 </head>
 <body>
+  <div class="logo-splash" id="logoSplash">
+    <img src="logo-black.png" alt="ARMUS" class="logo-img" id="splashLogoImg">
+  </div>
+
   <div class="page-glow"></div>
 
   <header class="nav shell">
-    <a class="brand" href="#"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <a class="brand" href="#"><img src="logo-black.png" alt="ARMUS" class="logo-img" id="headerBrandImg"></a>
     <nav>
       <a href="teachers.html" data-i18n="nav.teachers">Öğretmenler</a>
       <a href="#how" data-i18n="nav.how">Nasıl Çalışır?</a>
@@ -314,6 +358,47 @@
       input.value = "";
       msg.textContent = armusT("index.newsletterSuccess", "Teşekkürler! Listeye eklendin. ✓");
     });
+  </script>
+
+  <script>
+    (function () {
+      var splash = document.getElementById("logoSplash");
+      var splashImg = document.getElementById("splashLogoImg");
+      var headerImg = document.getElementById("headerBrandImg");
+      if (!splash || !splashImg || !headerImg) { if (splash) splash.remove(); return; }
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        splash.remove();
+        headerImg.classList.add("armus-brand-ready");
+        return;
+      }
+
+      function fly() {
+        var from = splashImg.getBoundingClientRect();
+        var to = headerImg.getBoundingClientRect();
+        var scale = to.height / from.height;
+        var dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+        var dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+
+        splashImg.style.transition = "transform .7s cubic-bezier(.4, 0, .2, 1)";
+        splash.style.transition = "background-color .45s ease .25s";
+
+        requestAnimationFrame(function () {
+          splashImg.style.transform = "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")";
+          splash.style.backgroundColor = "transparent";
+        });
+
+        splashImg.addEventListener("transitionend", function () {
+          headerImg.classList.add("armus-brand-ready");
+          splash.remove();
+        }, { once: true });
+      }
+
+      // matches .logo-img's own write-on reveal duration (theme.css,
+      // armus-logo-write) so the mark finishes writing itself before
+      // it starts flying to the header
+      setTimeout(fly, 1300);
+    })();
   </script>
 </body>
 </html>

@@ -54,3 +54,35 @@ h1, h2 {
   height: 1em;
   width: auto;
 }
+
+/* plays once whenever a .logo-img mounts (every page load, since the
+   logo sits in the header/sidebar markup itself rather than being
+   inserted later by JS) - a soft-edged left-to-right mask wipe that
+   reads as the word being written, without touching the actual
+   handwriting image underneath. --reveal needs @property to animate
+   smoothly between keyframes (a plain custom property just jumps). */
+@property --armus-logo-reveal {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+.logo-img {
+  --armus-logo-reveal: 0%;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(var(--armus-logo-reveal) - 14%), transparent var(--armus-logo-reveal));
+  mask-image: linear-gradient(to right, #000 calc(var(--armus-logo-reveal) - 14%), transparent var(--armus-logo-reveal));
+  animation: armus-logo-write 1.3s cubic-bezier(.34, 0, .24, 1) forwards;
+}
+
+@keyframes armus-logo-write {
+  from { --armus-logo-reveal: 0%; }
+  to { --armus-logo-reveal: 114%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-img {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
