@@ -1032,7 +1032,7 @@
 
   <nav>
     <div class="nav-inner">
-      <span class="logo">ARMUS</span>
+      <span class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></span>
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
         <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
@@ -1190,7 +1190,7 @@
       if (!session) {
         // logged out: the logo can safely link home (no "click logo while
         // logged in" bounce-back loop to worry about here)
-        document.querySelector(".logo").outerHTML = '<a href="index.html" class="logo">ARMUS</a>';
+        document.querySelector(".logo").outerHTML = '<a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>';
         gate.style.display = "block";
         return;
       }
