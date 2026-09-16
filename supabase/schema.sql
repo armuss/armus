@@ -326,6 +326,21 @@ begin
     raise exception 'profile_locked: approved profile fields can only change through pending_changes + admin approval';
   end if;
 
+  -- pending_changes is itself just a jsonb blob a teacher writes to their
+  -- own row, and admin.html's approval handler spreads its contents
+  -- straight into the profile on approve (minus submitted_at) - without
+  -- this check a non-admin could smuggle keys like is_admin or status into
+  -- it that the review UI never renders, so an admin approving what looks
+  -- like a harmless bio/price edit would silently apply them too
+  if new.pending_changes is distinct from old.pending_changes and new.pending_changes is not null then
+    if exists (
+      select 1 from jsonb_object_keys(new.pending_changes) as k
+      where k not in ('submitted_at', 'title', 'price', 'availability', 'bio', 'weekly_availability')
+    ) then
+      raise exception 'pending_changes_lock: pending_changes may only contain submitted_at, title, price, availability, bio, or weekly_availability';
+    end if;
+  end if;
+
   return new;
 end;
 $$;
