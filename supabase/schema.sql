@@ -117,8 +117,14 @@ create table pending_payments (
   lesson_date date not null,
   lesson_time text not null,
   price numeric not null,
+  -- 'processing' is a short-lived claim state: payment-callback flips a
+  -- row into it atomically (status = 'pending'/'failed' -> 'processing')
+  -- before doing any real work, so a concurrent second callback for the
+  -- same token (iyzico can genuinely call back more than once) can't
+  -- also pass that check and create a second booking / grant a second
+  -- batch of lesson credits for what was really one charge.
   status text not null default 'pending'
-    check (status in ('pending', 'succeeded', 'failed', 'paid_no_booking')),
+    check (status in ('pending', 'processing', 'succeeded', 'failed', 'paid_no_booking')),
   booking_id uuid references bookings(id),
   created_at timestamptz not null default now()
 );
