@@ -405,7 +405,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
 
-  <script src="auth.js?v=4"></script>
+  <script src="auth.js?v=5"></script>
   <script>
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -514,7 +514,7 @@
       if (selectedRole === "teacher") {
         window.location.href = "apply-teacher.html";
       } else {
-        window.location.href = nextParam || "student-dashboard.html";
+        window.location.href = armusSafeNextUrl(nextParam) || "student-dashboard.html";
       }
     }
 

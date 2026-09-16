@@ -1079,7 +1079,16 @@ create table vocab_entries (
   meaning text not null,
   review_count integer not null default 0,
   last_reviewed_at timestamptz,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- migration_32.sql: replaced the due-date review schedule above (kept,
+  -- unused, no data loss) with something the student drives themselves -
+  -- tag a word with a category, mark it known whenever they want. This
+  -- create table was never updated to match, so a fresh install from
+  -- this file alone got a vocab_entries table missing both columns the
+  -- flashcard feature (student-dashboard.html) actually reads/writes,
+  -- breaking every add/edit/mastered-toggle on it.
+  category text not null default 'Genel',
+  mastered boolean not null default false
 );
 
 alter table vocab_entries enable row level security;

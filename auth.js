@@ -17,6 +17,29 @@ function armusShortDisplayName(fullName) {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
+// login.html/register.html redirect to ?next=... after a successful
+// sign-in/sign-up, straight from the URL with no validation - an
+// attacker-crafted link like armus.vercel.app/login.html?next=https://evil.example/phish
+// looks legitimate (the domain really is armus.vercel.app) and passes a
+// glance at the URL, but after the victim genuinely authenticates, this
+// silently bounces them to an attacker-controlled page (classic open
+// redirect, e.g. for a fake "session expired, re-enter your password"
+// page). Legitimate callers do sometimes pass a full absolute URL (e.g.
+// class.html uses window.location.href), so this can't just reject any
+// value with a scheme - it resolves the value and only accepts it if it
+// stays on ARMUS's own origin.
+function armusSafeNextUrl(value) {
+  if (!value) return null;
+  try {
+    const resolved = new URL(value, window.location.origin);
+    if (resolved.origin !== window.location.origin) return null;
+    if (resolved.protocol !== "http:" && resolved.protocol !== "https:") return null;
+    return resolved.href;
+  } catch (err) {
+    return null;
+  }
+}
+
 async function armusSignUp({ name, email, password, role, city }) {
   return armusSupabase.auth.signUp({
     email,

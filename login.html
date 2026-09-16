@@ -282,7 +282,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
 
-  <script src="auth.js?v=4"></script>
+  <script src="auth.js?v=5"></script>
   <script>
 
     const nextParam = new URLSearchParams(window.location.search).get("next");
@@ -326,7 +326,7 @@
         return;
       }
 
-      const next = new URLSearchParams(window.location.search).get("next");
+      const next = armusSafeNextUrl(new URLSearchParams(window.location.search).get("next"));
       window.location.href = next || "student-dashboard.html";
     });
 
