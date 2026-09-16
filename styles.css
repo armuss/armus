@@ -43,7 +43,14 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  margin-right: 40px;
+}
+/* only past the point where .nav nav (Öğretmenler etc) is actually
+   visible again - no reason to burn width on this gap while it's
+   hidden on mobile/tablet */
+@media (min-width: 901px) {
+  .brand {
+    margin-right: 40px;
+  }
 }
 .nav nav {
   display: flex;
@@ -749,31 +756,6 @@ body {
   .nav nav {
     display: none;
   }
-  /* logo + Giriş Yap/Kayıt Ol keep the main row; the language toggle
-     (and help icon, before it hides entirely below) drop to their own
-     row underneath, right-aligned, instead of squeezing in beside
-     everything else - a nav bar this narrow can't fit all of it on
-     one line without text wrapping mid-word. */
-  .nav {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 76px;
-    row-gap: 8px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-  .brand {
-    order: 1;
-  }
-  .nav-actions {
-    order: 2;
-  }
-  .nav-utility {
-    order: 3;
-    flex-basis: 100%;
-    justify-content: flex-end;
-    margin-right: 0;
-  }
   .hero {
     grid-template-columns: 1fr;
   }
@@ -817,17 +799,21 @@ body {
   }
   .nav-utility {
     gap: 6px;
-    margin-right: 8px;
+    margin-right: 6px;
   }
   .help-btn {
     display: none;
+  }
+  .lang-toggle {
+    padding: 6px 10px;
+    font-size: 11px;
   }
   .nav-actions .btn {
     padding: 9px 12px;
     font-size: 12px;
   }
   .brand {
-    font-size: 24px;
+    font-size: 22px;
   }
   .hero {
     padding-top: 50px;
