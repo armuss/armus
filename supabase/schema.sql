@@ -363,6 +363,14 @@ create policy "reviews_select_all"
 -- timezone (UTC) - otherwise a lesson already past midnight in the
 -- teacher's own zone could still read as "tomorrow" here and wrongly
 -- block the review.
+--
+-- IMPORTANT: "b.teacher_id = reviews.teacher_id" is required (migration_44.sql)
+-- - without it, this only ever verified the BOOKING belongs to the
+-- reviewing student and has already happened, never that the teacher_id
+-- being written down is who that booking was actually with. Any student
+-- with even one real completed booking (with ANY teacher) could post a
+-- review naming a completely different, uninvolved teacher - a fake
+-- rating with zero real basis, visible on that teacher's public profile.
 create policy "reviews_insert_own_student"
   on reviews for insert
   with check (
@@ -371,6 +379,7 @@ create policy "reviews_insert_own_student"
       select 1 from bookings b
       where b.id = booking_id
         and b.student_id = auth.uid()
+        and b.teacher_id = reviews.teacher_id
         and b.lesson_date <= (now() at time zone b.teacher_timezone)::date
     )
   );
