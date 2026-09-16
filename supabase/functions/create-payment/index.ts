@@ -197,6 +197,31 @@ Deno.serve(async (req) => {
     // this file's header comment for why that matters)
     if (appliedCredit) {
 
+      // Claim the credit with a conditional update (status must still be
+      // "available") BEFORE creating the booking, instead of trusting the
+      // "credits" SELECT above and updating unconditionally afterwards.
+      // Two of the student's own requests racing (a double-submit, two
+      // open tabs, a retried request) could otherwise both pass that
+      // SELECT while the credit was still "available" in both, both
+      // create a real booking, and only then both write
+      // status: "used" - the second write succeeding too, silently,
+      // since it was never conditioned on the row still being
+      // available. That's a real free lesson: one credit funding two
+      // bookings. This update returning no row means someone else (or
+      // another request from this same one) already won the race, so
+      // this request never gets to create a booking at all.
+      const { data: claimedCredit } = await supabaseAdmin
+        .from("lesson_credits")
+        .update({ status: "used", used_at: new Date().toISOString() })
+        .eq("id", appliedCredit.id)
+        .eq("status", "available")
+        .select()
+        .maybeSingle();
+
+      if (!claimedCredit) {
+        return jsonResponse({ error: "Bu kredi az önce kullanıldı. Lütfen sayfayı yenileyip tekrar dene." }, 409);
+      }
+
       const { data: booking, error: bookingError } = await supabaseAdmin
         .from("bookings")
         .insert({
@@ -214,6 +239,14 @@ Deno.serve(async (req) => {
         .single();
 
       if (bookingError || !booking) {
+
+        // the credit is already claimed at this point but no booking got
+        // created - release it back to available so it isn't wasted
+        await supabaseAdmin
+          .from("lesson_credits")
+          .update({ status: "available", used_at: null })
+          .eq("id", appliedCredit.id);
+
         // 23505 = unique_violation - someone else booked this exact
         // teacher/date/time first (bookings_teacher_slot_unique, see
         // migration_35.sql). Nothing was charged on this path (it's
@@ -227,7 +260,7 @@ Deno.serve(async (req) => {
 
       await supabaseAdmin
         .from("lesson_credits")
-        .update({ status: "used", used_booking_id: booking.id, used_at: new Date().toISOString() })
+        .update({ used_booking_id: booking.id })
         .eq("id", appliedCredit.id);
 
       return jsonResponse({ bookedDirectly: true, creditApplied: true });
