@@ -45,6 +45,14 @@ body {
   color: transparent;
   margin-right: 40px;
 }
+/* only past the point where .nav nav (Öğretmenler etc) is actually
+   visible again - no reason to burn width on this gap while it's
+   hidden on mobile/tablet */
+@media (min-width: 901px) {
+  .brand {
+    margin-right: 40px;
+  }
+}
 .nav nav {
   display: flex;
   gap: 34px;
@@ -817,17 +825,21 @@ body {
   }
   .nav-utility {
     gap: 6px;
-    margin-right: 8px;
+    margin-right: 6px;
   }
   .help-btn {
     display: none;
+  }
+  .lang-toggle {
+    padding: 6px 10px;
+    font-size: 11px;
   }
   .nav-actions .btn {
     padding: 9px 12px;
     font-size: 12px;
   }
   .brand {
-    font-size: 24px;
+    font-size: 22px;
   }
   .hero {
     padding-top: 50px;
