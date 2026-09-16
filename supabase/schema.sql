@@ -1152,16 +1152,27 @@ create policy "teacher_uploads_insert_authenticated"
   to authenticated
   with check (bucket_id = 'teacher-uploads');
 
+-- update/delete used to have NO ownership check at all - any
+-- authenticated account (any student, any other teacher) could
+-- overwrite or delete ANY file in this public bucket, not just their
+-- own. Since teacher-uploads is public and every photo/certificate/video
+-- URL is embedded directly in that teacher's own public profile page
+-- (teacher.html), the exact path to target was never a secret - anyone
+-- who viewed a teacher's page could vandalize or delete their photo,
+-- certificate, or intro video. uploadToStorage (apply-teacher.html)
+-- always writes to a fresh, timestamped path per upload and the app
+-- never calls storage.remove() itself, so restricting these to the
+-- actual owner doesn't affect any real flow - it only closes the hole.
 create policy "teacher_uploads_update_authenticated"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'teacher-uploads')
-  with check (bucket_id = 'teacher-uploads');
+  using (bucket_id = 'teacher-uploads' and auth.uid() = owner)
+  with check (bucket_id = 'teacher-uploads' and auth.uid() = owner);
 
 create policy "teacher_uploads_delete_authenticated"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'teacher-uploads');
+  using (bucket_id = 'teacher-uploads' and auth.uid() = owner);
 
 -- uploads use { upsert: true }, which needs storage to check whether the
 -- object already exists first - that existence check runs as the
@@ -1265,16 +1276,23 @@ create policy "chat_attachments_insert_authenticated"
   to authenticated
   with check (bucket_id = 'chat-attachments');
 
+-- same ownership gap as teacher_uploads_update/delete_authenticated
+-- above - without this, any authenticated user could overwrite or
+-- delete any chat attachment, including ones from a conversation they
+-- were never part of, once they had (or guessed) its path. messages.js's
+-- armusUploadChatAttachment always writes a fresh, timestamped path and
+-- the app never calls storage.remove() itself, so this doesn't affect
+-- any real flow.
 create policy "chat_attachments_update_authenticated"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'chat-attachments')
-  with check (bucket_id = 'chat-attachments');
+  using (bucket_id = 'chat-attachments' and auth.uid() = owner)
+  with check (bucket_id = 'chat-attachments' and auth.uid() = owner);
 
 create policy "chat_attachments_delete_authenticated"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'chat-attachments');
+  using (bucket_id = 'chat-attachments' and auth.uid() = owner);
 
 create policy "chat_attachments_select_authenticated"
   on storage.objects for select
