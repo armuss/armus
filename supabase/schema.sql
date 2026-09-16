@@ -479,13 +479,32 @@ create policy "messages_update_participant"
 -- only the sender can edit a message's body, and only within 2 minutes
 -- of sending it - RLS alone can't express "this column, this
 -- condition, one specific role" cleanly, hence a trigger.
+--
+-- messages_update_participant is deliberately broad (both participants
+-- need to update read_at), so without this trigger locking everything
+-- else, either participant could rewrite ANY column on a message via a
+-- direct API call - most seriously sender_id, letting a participant make
+-- a message look like the OTHER person wrote it, with no time limit and
+-- no trace. attachment_url/attachment_type had the same gap: unlike
+-- body, they weren't held to the sender-only/2-minute rule at all.
 create or replace function public.enforce_message_edit_rules()
 returns trigger
 language plpgsql
 as $$
 begin
 
-  if new.body is distinct from old.body then
+  if new.sender_id is distinct from old.sender_id
+    or new.conversation_id is distinct from old.conversation_id
+    or new.created_at is distinct from old.created_at
+    or new.corrected_of_id is distinct from old.corrected_of_id
+  then
+    raise exception 'message_locked: sender_id, conversation_id, created_at, and corrected_of_id cannot be changed after sending';
+  end if;
+
+  if new.body is distinct from old.body
+    or new.attachment_url is distinct from old.attachment_url
+    or new.attachment_type is distinct from old.attachment_type
+  then
 
     if auth.uid() <> old.sender_id then
       raise exception 'message_edit_denied: only the sender can edit a message';
