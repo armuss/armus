@@ -16,7 +16,7 @@
 // however suits them best (in parallel with the profile itself, or
 // pulled out of an already-fetched full table) instead of always
 // re-querying per teacher.
-function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
+function armusBuildTeacherFromParts(profile, rawReviews, stats) {
 
   const initials = profile.name
     .split(" ")
@@ -36,8 +36,8 @@ function armusBuildTeacherFromParts(profile, rawReviews, bookings) {
     ? Math.round((rawReviews.reduce((sum, r) => sum + r.stars, 0) / rawReviews.length) * 10) / 10
     : null;
 
-  const completedCount = bookings.filter(armusIsBookingPast).length;
-  const studentCount = new Set(bookings.map(b => b.studentId)).size;
+  const completedCount = stats ? stats.completed_count : 0;
+  const studentCount = stats ? stats.student_count : 0;
 
   return {
     id: profile.id,
@@ -163,25 +163,31 @@ async function armusEnrichDemoTeacherReviews(teacher) {
 // stays visible to them even while hidden from new students (migration_41.sql).
 async function armusGetRegisteredTeachers(viewerId) {
 
-  const [profilesRes, reviewsRes, bookingsRes] = await Promise.all([
+  // teacher_marketplace_stats (migration_48.sql) is a security-definer RPC
+  // that returns real per-teacher completed-lesson/student COUNTS only -
+  // a plain bookings.select("*") here would be silently filtered by
+  // bookings_select_participant down to just the viewer's own bookings
+  // (or nothing at all for a logged-out visitor), making these stats
+  // wrong for almost everyone browsing the marketplace.
+  const [profilesRes, reviewsRes, statsRes] = await Promise.all([
     armusSupabase
       .from("profiles")
       .select("*")
       .eq("role", "teacher")
       .eq("status", "approved"),
     armusSupabase.from("reviews").select("*"),
-    armusSupabase.from("bookings").select("*"),
+    armusSupabase.rpc("teacher_marketplace_stats"),
   ]);
 
   if (profilesRes.error || !profilesRes.data) return [];
 
   const allReviews = (reviewsRes.data || []).map(armusMapReviewRow);
-  const allBookings = (bookingsRes.data || []).map(armusMapBookingRow);
+  const statsByTeacherId = new Map((statsRes.data || []).map(s => [s.teacher_id, s]));
 
   const teachers = profilesRes.data.map(profile => armusBuildTeacherFromParts(
     profile,
     allReviews.filter(r => r.teacherId === profile.id),
-    allBookings.filter(b => b.teacherId === profile.id)
+    statsByTeacherId.get(profile.id) || null
   ));
 
   return armusFilterVisibleTeachers(teachers, viewerId);
@@ -203,11 +209,14 @@ async function armusFindMarketplaceTeacher(id, viewerId) {
   const demoTeacher = TEACHERS.find(t => t.id === id);
   if (demoTeacher) return armusEnrichDemoTeacherReviews(demoTeacher);
 
-  // profile, reviews and bookings only depend on id, not on each other,
-  // so fetch all three at once instead of waiting for the profile before
+  // profile, reviews and stats only depend on id, not on each other, so
+  // fetch all three at once instead of waiting for the profile before
   // starting the other two - cuts a full round trip off the teacher
-  // profile page's load time
-  const [profileRes, rawReviews, bookings] = await Promise.all([
+  // profile page's load time. teacher_marketplace_stats (migration_48.sql)
+  // returns real counts bypassing RLS - see armusGetRegisteredTeachers
+  // for why a plain bookings query here would be wrong for nearly every
+  // viewer.
+  const [profileRes, rawReviews, statsRes] = await Promise.all([
     armusSupabase
       .from("profiles")
       .select("*")
@@ -215,12 +224,13 @@ async function armusFindMarketplaceTeacher(id, viewerId) {
       .eq("status", "approved")
       .maybeSingle(),
     armusGetReviewsForTeacher(id),
-    armusGetBookingsForTeacher(id),
+    armusSupabase.rpc("teacher_marketplace_stats"),
   ]);
 
   if (profileRes.error || !profileRes.data) return null;
 
-  const teacher = armusBuildTeacherFromParts(profileRes.data, rawReviews, bookings);
+  const stats = (statsRes.data || []).find(s => s.teacher_id === id) || null;
+  const teacher = armusBuildTeacherFromParts(profileRes.data, rawReviews, stats);
   const [visible] = await armusFilterVisibleTeachers([teacher], viewerId);
   return visible || null;
 }

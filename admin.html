@@ -1429,8 +1429,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=4"></script>
-  <script src="bookings.js?v=4"></script>
-  <script src="reviews.js?v=4"></script>
+  <script src="bookings.js?v=5"></script>
+  <script src="reviews.js?v=5"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="disputes.js?v=4"></script>
   <script src="attendance.js?v=4"></script>
@@ -1959,8 +1959,20 @@
 
     // ---- CSV export (client-side, no server round trip) ----
 
+    // profiles.name/bookings.student_name etc. are set by the user
+    // themselves with no character restriction - a value starting with
+    // =, +, -, or @ opens as a FORMULA in Excel/Sheets/LibreOffice when
+    // this file is opened, not as plain text (CSV/formula injection).
+    // Prefixing a lone straight quote forces spreadsheet apps to treat it
+    // as text while staying invisible in the already-quoted CSV field
+    // itself.
+    function armusCsvSafeCell(value) {
+      const str = String(value ?? "");
+      return /^[=+\-@]/.test(str) ? `'${str}` : str;
+    }
+
     function armusDownloadCsv(filename, headers, rows) {
-      const escape = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const escape = v => `"${armusCsvSafeCell(v).replace(/"/g, '""')}"`;
       const csv = [headers, ...rows].map(row => row.map(escape).join(",")).join("\r\n");
       const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);

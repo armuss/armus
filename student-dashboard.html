@@ -1123,9 +1123,9 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=4"></script>
-  <script src="bookings.js?v=4"></script>
-  <script src="reviews.js?v=4"></script>
-  <script src="marketplace.js?v=4"></script>
+  <script src="bookings.js?v=5"></script>
+  <script src="reviews.js?v=5"></script>
+  <script src="marketplace.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="favorites.js?v=4"></script>
   <script src="student-extras.js?v=4"></script>
@@ -1235,10 +1235,14 @@
       const todayKey = new Date().toISOString().slice(0, 10);
       const teacherById = new Map(marketplaceTeachers.map(t => [t.id, t]));
 
-      const pastBookings = bookings.filter(b => b.date < todayKey);
-      const upcomingBookings = bookings
-        .filter(b => b.date >= todayKey)
-        .filter(b => !(b.date === todayKey && armusLessonWindow(b).joinsUntil < new Date()));
+      // armusIsBookingPast (reviews.js) compares the lesson's real,
+      // timezone-aware end time against now - not booking.date (a
+      // wall-clock date in the TEACHER's own zone) against todayKey (a
+      // date in UTC), which used to disagree by a day around midnight for
+      // most viewers and misfile a just-finished or not-yet-started lesson
+      // into the wrong list.
+      const pastBookings = bookings.filter(armusIsBookingPast);
+      const upcomingBookings = bookings.filter(b => !armusIsBookingPast(b));
 
       const stats = {
         completed: pastBookings.length,
@@ -1271,7 +1275,7 @@
               <div>
                 <div class="hero-eyebrow">${armusT("studentDash.nextLesson", "Sıradaki Dersin")}</div>
                 <div class="hero-lesson-name">${armusEscapeHtml(armusShortDisplayName(next.teacherName))}</div>
-                <div class="hero-lesson-meta">${whenLabel} · ${armusFormatTimeRange(next.time)} · ${next.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</div>
+                <div class="hero-lesson-meta">${whenLabel} · ${armusFormatSlotTimeRangeForViewer(next.date, next.time, next.teacherTimezone)} · ${next.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</div>
               </div>
               <div class="hero-lesson-right">
                 ${canJoin
@@ -1324,7 +1328,12 @@
       // ---- weekly goal ----
 
       const currentWeekKey = weekKeyOf(todayKey);
-      const thisWeekCount = bookings.filter(b => weekKeyOf(b.date) === currentWeekKey).length;
+      // pastBookings only (lessons actually attended, not just booked) -
+      // this used to count ALL of this week's bookings including ones
+      // still upcoming, so booking 3 lessons for later this week already
+      // showed the weekly goal as "3/3 tamamlandı" before attending any
+      // of them, which defeats the point of a lesson-attendance goal.
+      const thisWeekCount = pastBookings.filter(b => weekKeyOf(b.date) === currentWeekKey).length;
       const goal = Math.max(1, Number(session.weekly_lesson_goal) || 3);
 
       const goalInput = document.getElementById("goalInput");
@@ -1679,7 +1688,7 @@
                 </div>
                 <div class="mini-lesson-when">
                   <div class="mini-lesson-date">${b.dateLabel}</div>
-                  <div class="mini-lesson-time">${armusFormatTimeRange(b.time)}</div>
+                  <div class="mini-lesson-time">${armusFormatSlotTimeRangeForViewer(b.date, b.time, b.teacherTimezone)}</div>
                 </div>
                 ${canJoin ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">${armusT("studentDash.joinShort", "Katıl")}</a>` : ""}
               </div>

@@ -225,6 +225,25 @@ async function armusCancelBooking(bookingId) {
 
 const ARMUS_LESSON_MINUTES = 50;
 
+// Same idea as armusFormatLessonWhen, but for a slot that isn't a saved
+// booking yet (booking.html's date/time picker and confirm screen) -
+// dateKey/time are wall-clock in the TEACHER's own local time (however
+// their calendar grid was set, migration_37.sql), teacherTimezone says
+// which zone that is. Returns the same "HH:MM – HH:MM" shape
+// armusFormatTimeRange does, but converted into the CURRENT VIEWER's own
+// local time - without this, a student in a different timezone than the
+// teacher sees raw teacher-local slot times with nothing marking them as
+// such, easy to mistake for their own local time and show up at the
+// wrong real moment.
+function armusFormatSlotTimeRangeForViewer(dateKey, time, teacherTimezone) {
+  const start = armusZonedTimeToUtc(dateKey, time, teacherTimezone);
+  const end = new Date(start.getTime() + ARMUS_LESSON_MINUTES * 60000);
+  const lang = (typeof armusGetLang === "function" && armusGetLang() === "en") ? "en-US" : "tr-TR";
+  const startLabel = start.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+  const endLabel = end.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+  return `${startLabel} – ${endLabel}`;
+}
+
 // "10:00" -> "10:00 – 10:50"
 function armusFormatTimeRange(startTime, durationMinutes = ARMUS_LESSON_MINUTES) {
 

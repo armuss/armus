@@ -1020,9 +1020,23 @@ create policy "teacher_notes_write_own"
 -- rejected valid uploads in practice, so this settles for "any
 -- authenticated ARMUS account" rather than debugging that blind).
 
-insert into storage.buckets (id, name, public)
-values ('teacher-uploads', 'teacher-uploads', true)
-on conflict (id) do nothing;
+-- allowed_mime_types/file_size_limit are enforced by Supabase Storage
+-- itself (not RLS) - without this, the "any authenticated account" write
+-- policies below let anyone upload ANY file type here, including .html
+-- or .svg with embedded <script>, which this public bucket would then
+-- serve back with that same content-type at its own public URL (a
+-- classic unrestricted-file-upload hole: hosting arbitrary
+-- executable/phishing content on ARMUS's own trusted upload flow).
+-- Matches what this field is actually for: photo/certificate/video.
+insert into storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+values (
+  'teacher-uploads', 'teacher-uploads', true,
+  array['image/png', 'image/jpeg', 'application/pdf', 'video/mp4', 'video/webm', 'video/quicktime'],
+  26214400 -- 25MB
+)
+on conflict (id) do update set
+  allowed_mime_types = excluded.allowed_mime_types,
+  file_size_limit = excluded.file_size_limit;
 
 create policy "teacher_uploads_insert_authenticated"
   on storage.objects for insert
@@ -1112,9 +1126,21 @@ create policy "confidence_checkins_all_own"
 -- anyone with the URL (an unguessable path, not browsable), writes
 -- just require being logged in.
 
-insert into storage.buckets (id, name, public)
-values ('chat-attachments', 'chat-attachments', true)
-on conflict (id) do nothing;
+-- allowed_mime_types/file_size_limit - see teacher-uploads above for why:
+-- without this, any authenticated user could upload an .html/.svg file
+-- with embedded script here too, via a direct API call (armusUploadChatAttachment
+-- itself only ever sends image/video/audio, but that's client-side JS,
+-- not an enforced restriction). Matches armusAttachmentTypeForFile
+-- (messages.js).
+insert into storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+values (
+  'chat-attachments', 'chat-attachments', true,
+  array['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime', 'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/ogg'],
+  26214400 -- 25MB
+)
+on conflict (id) do update set
+  allowed_mime_types = excluded.allowed_mime_types,
+  file_size_limit = excluded.file_size_limit;
 
 create policy "chat_attachments_insert_authenticated"
   on storage.objects for insert
@@ -1194,3 +1220,40 @@ select cron.schedule(
         between now() + interval '50 minutes' and now() + interval '70 minutes'
   $$
 );
+
+-- === MARKETPLACE TEACHER STATS (aggregate, RLS-safe) ================
+-- teachers.html/teacher.html show each teacher's "completed lessons" /
+-- "students taught" counts as a trust signal. marketplace.js used to get
+-- these by running a plain `bookings.select("*")` client-side and
+-- counting rows itself - but bookings_select_participant only ever
+-- returns rows the CALLER is a participant in (or an admin), so for
+-- every viewer except that exact teacher looking at their own listing,
+-- this silently returned almost nothing: an anonymous visitor (no
+-- auth.uid() at all) got zero rows for every teacher, and a signed-in
+-- student got counted only the bookings they personally had, not the
+-- teacher's real totals. The public marketplace's core trust signal was
+-- wrong for nearly all traffic.
+--
+-- This aggregates server-side (security definer, bypasses RLS) and
+-- returns only per-teacher COUNTS - no student identity, no individual
+-- booking rows - so it's safe to expose to anyone, same trust boundary
+-- as reviews_select_all.
+create or replace function public.teacher_marketplace_stats()
+returns table (teacher_id text, completed_count bigint, student_count bigint)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select
+    b.teacher_id,
+    count(*) filter (
+      where b.lesson_date < (now() at time zone b.teacher_timezone)::date
+    ) as completed_count,
+    count(distinct b.student_id) as student_count
+  from bookings b
+  where b.status <> 'cancelled'
+  group by b.teacher_id;
+$$;
+
+grant execute on function public.teacher_marketplace_stats() to anon, authenticated;
