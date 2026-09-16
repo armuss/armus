@@ -133,6 +133,31 @@ Deno.serve(async (req) => {
       refundEligible = true;
     }
 
+    // Claim the cancellation with a conditional update (status must
+    // still be "confirmed") BEFORE granting any credit, instead of
+    // trusting the "booking.status === 'cancelled'" check above (done
+    // against a SELECT taken before any of this) and writing
+    // status: "cancelled" unconditionally at the very end. Two calls
+    // racing for the same booking - a double-clicked cancel button, a
+    // retried request after a slow response, the student and an admin
+    // both cancelling within the same instant - could otherwise both
+    // pass that early check while the booking was still "confirmed" in
+    // both, and both go on to grant a lesson credit below: one
+    // cancelled booking silently refunded twice. This update affecting
+    // no row means another request already won the race and this one
+    // stops here, before anything gets credited.
+    const { data: claimedBooking } = await supabaseAdmin
+      .from("bookings")
+      .update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: cancelledBy })
+      .eq("id", booking.id)
+      .eq("status", "confirmed")
+      .select()
+      .maybeSingle();
+
+    if (!claimedBooking) {
+      return jsonResponse({ error: "Bu rezervasyon zaten iptal edilmiş." }, 400);
+    }
+
     const { data: payment } = await supabaseAdmin
       .from("pending_payments")
       .select("*")
@@ -154,18 +179,9 @@ Deno.serve(async (req) => {
         console.error("lesson credit grant failed", creditError);
       } else {
         refunded = true;
+        await supabaseAdmin.from("bookings").update({ refunded: true }).eq("id", booking.id);
       }
     }
-
-    await supabaseAdmin
-      .from("bookings")
-      .update({
-        status: "cancelled",
-        cancelled_at: new Date().toISOString(),
-        cancelled_by: cancelledBy,
-        refunded,
-      })
-      .eq("id", booking.id);
 
     return jsonResponse({ ok: true, refunded, refundEligible });
 
