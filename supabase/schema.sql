@@ -443,9 +443,20 @@ create policy "conversations_select_participant"
   on conversations for select
   using (auth.uid() = student_id or auth.uid() = teacher_id);
 
+-- "a student and a real teacher" (see this table's own header comment)
+-- was never actually checked - only that the caller is one of the two
+-- named parties. Any authenticated user could set teacher_id (or
+-- student_id) to ANY other profile's id, real teacher or not, and the
+-- fabricated conversation would show up as an unsolicited thread in
+-- that other person's inbox (mesajlar.html), including student-to-
+-- student.
 create policy "conversations_insert_participant"
   on conversations for insert
-  with check (auth.uid() = student_id or auth.uid() = teacher_id);
+  with check (
+    (auth.uid() = student_id or auth.uid() = teacher_id)
+    and exists (select 1 from profiles p where p.id = student_id and p.role = 'student')
+    and exists (select 1 from profiles p where p.id = teacher_id and p.role = 'teacher')
+  );
 
 create policy "messages_select_participant"
   on messages for select
