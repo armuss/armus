@@ -113,9 +113,21 @@ create table pending_payments (
   student_name text not null,
   teacher_id text not null,
   teacher_name text not null,
-  type text not null check (type in ('trial', 'lesson')),
-  lesson_date date not null,
-  lesson_time text not null,
+  -- migration_29.sql: 'package' (a one-time bulk purchase of N lesson
+  -- credits with one teacher, not a real recurring subscription) was
+  -- applied to the live database but this constraint, and the two
+  -- nullability changes plus the quantity column below, were never
+  -- folded back into this file - a fresh install from schema.sql alone
+  -- would reject every package purchase outright and create-payment's
+  -- own package insert (which sets quantity, no lesson_date/lesson_time)
+  -- would fail on both the missing column and the NOT NULL columns.
+  type text not null check (type in ('trial', 'lesson', 'package')),
+  -- a package purchase has no specific lesson date/time - it just
+  -- grants credits, booked later like any other credit-covered lesson
+  lesson_date date,
+  lesson_time text,
+  -- how many lesson_credits a 'package' type payment grants once it succeeds
+  quantity integer,
   price numeric not null,
   -- 'processing' is a short-lived claim state: payment-callback flips a
   -- row into it atomically (status = 'pending'/'failed' -> 'processing')
