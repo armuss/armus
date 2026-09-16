@@ -767,6 +767,16 @@ create policy "attendance_reports_select_participant_or_admin"
 -- the innermost "bookings b" row it's already next to (b.teacher_id),
 -- making the comparison a tautology that never actually checks the new
 -- row's own teacher_id at all (migration_42.sql fixed exactly this).
+--
+-- The 10-minute no-show grace period (class.html's noShowReportReady -
+-- "a student who reports within seconds of joining, the teacher might
+-- just be a minute behind, can't instantly hide someone over nothing")
+-- was only ever enforced by disabling the button client-side - a direct
+-- API call could file a no_show report the literal instant the lesson's
+-- scheduled start passed, with zero grace period, doing exactly what
+-- that comment says it shouldn't. "late" intentionally has no such gate
+-- (any time after the scheduled start, it already is late) - only
+-- no_show needs the extra 10 minutes here.
 create policy "attendance_reports_insert_own_student"
   on attendance_reports for insert
   with check (
@@ -777,7 +787,8 @@ create policy "attendance_reports_insert_own_student"
         and b.student_id = auth.uid()
         and b.status = 'confirmed'
         and b.teacher_id = attendance_reports.teacher_id
-        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) <= now()
+        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone)
+            <= now() - (case when attendance_reports.type = 'no_show' then interval '10 minutes' else interval '0' end)
     )
   );
 
