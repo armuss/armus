@@ -35,7 +35,14 @@ create table profiles (
   bio text,
   video_url text,
   availability text,
-  price numeric,
+  -- dashboard.html's own price-change form only ever rejects 0/NaN
+  -- (`Number(...) || 0`), not a negative value - nothing stopped a
+  -- teacher from submitting a negative price into pending_changes, which
+  -- admin.html's approval handler applies unfiltered. create-payment
+  -- re-validates price > 0 before ever charging a student, so this was
+  -- never chargeable, but a negative price would still show broken on
+  -- the teacher's own public listing until someone tried to book them.
+  price numeric check (price is null or price > 0),
   status text check (status in ('pending', 'approved', 'rejected')),
   applied_at timestamptz,
   weekly_availability jsonb,
