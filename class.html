@@ -551,6 +551,24 @@
 
       const isStudent = session.id === booking.studentId;
       const isTeacher = session.id === booking.teacherId;
+
+      // bookings_select_admin_all (RLS) lets an admin fetch ANY booking
+      // row, for dispute review - armusGetBookingById succeeding above
+      // does NOT mean session is a participant. Without this check, an
+      // admin (or any other id that policy might ever cover) would fall
+      // through everything below and actually mount the Jitsi room as a
+      // live participant in someone else's private lesson - reading the
+      // booking's metadata for moderation is one thing, silently joining
+      // the call itself is a different, much bigger privacy problem.
+      if (!isStudent && !isTeacher) {
+        showGate(
+          armusT("class.gateNotParticipantTitle", "Bu canlı derse katılamazsın"),
+          armusT("class.gateNotParticipantText", "Bu dersin öğrencisi ya da öğretmeni değilsin, bu yüzden canlı görüşmeye katılamazsın."),
+          `<a class="btn btn-light" href="admin.html">${armusT("class.backToAdmin", "← Yönetim paneline dön")}</a>`
+        );
+        return;
+      }
+
       const backHref = isTeacher ? "dashboard.html" : "my-lessons.html";
       document.getElementById("tooEarlyBack").href = backHref;
       document.getElementById("tooLateBack").href = backHref;
