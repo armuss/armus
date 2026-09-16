@@ -29,12 +29,19 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+function escapeHtml(str: string) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function verificationEmailHtml(name: string, code: string) {
   return `
   <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
     <div style="max-width:420px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
       <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
-      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${name || ""},</p>
+      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(name || "")},</p>
       <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">Hesabını doğrulamak için aşağıdaki kodu gir. Kod 10 dakika geçerli.</p>
       <div style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:28px;font-weight:800;letter-spacing:8px;padding:14px 26px;border-radius:12px;">${code}</div>
       <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin.</p>
