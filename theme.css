@@ -36,9 +36,21 @@
   --armus-bg-glow: none;
 }
 
-/* big display headings + the wordmark use a serif, like the
-   EnglishMaster reference - everything else (nav, body, buttons,
-   card titles) stays on Inter */
-h1, h2, .brand, .logo {
+/* big display headings use a serif, like the EnglishMaster reference -
+   everything else (nav, body, buttons, card titles) stays on Inter */
+h1, h2 {
   font-family: "Playfair Display", Georgia, serif;
+}
+
+/* the wordmark itself (.brand/.logo) is now the actual hand-drawn
+   ARMUS mark (logo-black.png / logo-cream.png for the one dark
+   context, class.html's room-bar) rather than styled text - sized off
+   whatever font-size the surrounding .brand/.logo/.sidebar .logo/etc
+   rule already declares for that context, so every page's existing
+   per-context sizing keeps working without needing its own copy of
+   this rule. */
+.logo-img {
+  display: block;
+  height: 1em;
+  width: auto;
 }
