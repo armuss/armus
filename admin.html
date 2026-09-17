@@ -400,6 +400,20 @@
       color: var(--armus-faint);
     }
 
+    .app-badge.banned {
+      border-color: rgba(220, 90, 90, .6);
+      color: #b3261e;
+      background: rgba(220, 90, 90, .08);
+      margin-left: 6px;
+    }
+
+    .app-badge.hidden-status {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+      background: rgba(246, 198, 73, .1);
+      margin-left: 6px;
+    }
+
     .app-actions {
       margin-left: auto;
       display: flex;
@@ -1506,6 +1520,20 @@
         rejected: armusT("admin.statusRejected", "Reddedildi"),
       }[user.status] || armusT("admin.statusNotApplied", "Başvurmadı");
 
+      // The attendance-protection system (migration_41.sql) can ban or
+      // temporarily hide a teacher fully automatically, but until now
+      // nothing in admin.html ever showed that status here, or offered
+      // any way to reverse it - an admin reviewing an appeal (dashboard.html
+      // tells a hidden/banned teacher to "Bize Ulaş") had no way to do
+      // anything about it except a manual SQL update outside the app.
+      const isHiddenUntilActive = user.hidden_until && new Date(user.hidden_until) > new Date();
+      let statusExtraBadges = "";
+      if (user.is_banned) {
+        statusExtraBadges += `<span class="app-badge banned">${armusT("admin.bannedBadge", "⊘ Banlı")}</span>`;
+      } else if (user.hidden_from_new_students || isHiddenUntilActive) {
+        statusExtraBadges += `<span class="app-badge hidden-status">${armusT("admin.hiddenBadge", "Yeni öğrencilerden gizli")}</span>`;
+      }
+
       let actions = "";
       if (user.status === "pending") {
         actions = `
@@ -1516,6 +1544,11 @@
         actions = `<button class="btn btn-reject" data-action="reject">${armusT("admin.removeApproval", "Onayı kaldır")}</button>`;
       } else if (user.status === "rejected") {
         actions = `<button class="btn btn-approve" data-action="approve">${armusT("admin.approve", "Onayla")}</button>`;
+      }
+      if (user.is_banned) {
+        actions += `<button class="btn btn-approve" data-account-action="unban">${armusT("admin.removeBan", "Banı Kaldır")}</button>`;
+      } else if (user.hidden_from_new_students || isHiddenUntilActive) {
+        actions += `<button class="btn btn-approve" data-account-action="unhide">${armusT("admin.removeHide", "Gizliliği Kaldır")}</button>`;
       }
       actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
 
@@ -1536,7 +1569,7 @@
           <div>
             <div class="app-name">${armusEscapeHtml(user.name)}</div>
             <div class="app-email">${armusEscapeHtml(user.email)}</div>
-            <span class="app-badge ${user.status || "none"}">${badgeLabel}</span>
+            <span class="app-badge ${user.status || "none"}">${badgeLabel}</span>${statusExtraBadges}
           </div>
           ${healthGauge}
           <div class="app-actions">${actions}</div>
@@ -1627,6 +1660,23 @@
               newStatus === "approved" ? "profile_approve" : "profile_reject",
               "profile", user.id, user.name
             );
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+
+      card.querySelectorAll("[data-account-action]").forEach(button => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          const isUnban = button.dataset.accountAction === "unban";
+          const updates = isUnban
+            ? { is_banned: false }
+            : { hidden_from_new_students: false, hidden_until: null };
+          const updated = await armusAdminUpdateProfile(user.id, updates);
+          if (updated) {
+            applyProfileUpdate(updated);
+            armusLogAdminAction(isUnban ? "profile_unban" : "profile_unhide", "profile", user.id, user.name);
           } else {
             button.disabled = false;
           }
