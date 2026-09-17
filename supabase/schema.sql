@@ -776,6 +776,7 @@ create table contact_messages (
   name text not null,
   email text not null,
   message text not null,
+  ip_address text,
   created_at timestamptz not null default now()
 );
 

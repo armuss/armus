@@ -72,10 +72,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // This form needs no login, so a per-email limit alone is worthless -
+    // the caller supplies `email` freely and can just vary it. Capping by
+    // IP instead stops a script from exhausting the shared Resend send
+    // quota that send-verification-email also depends on (a saturated
+    // quota there would block real account verification sitewide).
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+
+    if (ip) {
+      const { count: recentFromIp } = await supabaseAdmin
+        .from("contact_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", ip)
+        .gte("created_at", new Date(Date.now() - 60 * 60_000).toISOString());
+
+      if ((recentFromIp ?? 0) >= 5) {
+        return jsonResponse({ error: "Çok fazla mesaj gönderdin. Lütfen bir süre sonra tekrar dene." }, 429);
+      }
+    }
+
     const { error: insertError } = await supabaseAdmin.from("contact_messages").insert({
       name: trimmedName,
       email: trimmedEmail,
       message: trimmedMessage,
+      ip_address: ip,
     });
 
     if (insertError) {
