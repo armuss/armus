@@ -1447,3 +1447,81 @@ as $$
 $$;
 
 grant execute on function public.teacher_marketplace_stats() to anon, authenticated;
+
+-- === PUBLIC-SAFE PROFILE VIEW (name-masking) =========================
+-- "A teacher's full real name is never shown to a student" (see
+-- auth.js's armusShortDisplayName comment - it's there so a student
+-- can't take a teacher's name off ARMUS and contact them elsewhere,
+-- defeating the platform's commission) was only ever enforced by
+-- truncating the name at RENDER time in the client. The raw API
+-- response from a plain `profiles.select(...)` still carried the real
+-- full name over the wire regardless - trivially visible to any student
+-- via devtools' Network tab or Console, no exploit needed. marketplace.js
+-- and messages.js now read from this view instead of the raw table for
+-- every place a student (or anonymous visitor) sees a teacher's name.
+--
+-- Its WHERE clause reproduces the union of profiles_select_public_or_own's
+-- public branch (status = 'approved') and profiles_select_conversation_partner,
+-- so this view never exposes a ROW the base table's RLS didn't already
+-- allow that same viewer to read - only the `name` column's content
+-- changes, and only for a teacher row, and only when the viewer isn't
+-- that teacher themselves or an admin.
+
+create or replace function public.short_display_name(full_name text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when array_length(regexp_split_to_array(trim(coalesce(full_name, '')), '\s+'), 1) < 2
+      then coalesce(nullif(trim(coalesce(full_name, '')), ''), 'Öğretmen')
+    else
+      (regexp_split_to_array(trim(full_name), '\s+'))[1] || ' ' ||
+      left(
+        (regexp_split_to_array(trim(full_name), '\s+'))[
+          array_length(regexp_split_to_array(trim(full_name), '\s+'), 1)
+        ],
+        1
+      ) || '.'
+  end;
+$$;
+
+create or replace view public.masked_profiles
+as
+select
+  p.id,
+  case
+    when auth.uid() = p.id then p.name
+    when public.is_admin() then p.name
+    when p.role = 'teacher' then public.short_display_name(p.name)
+    else p.name
+  end as name,
+  p.photo_url,
+  p.video_url,
+  p.title,
+  p.price,
+  p.subject_taught,
+  p.availability,
+  p.bio,
+  p.languages,
+  p.weekly_availability,
+  p.availability_dates,
+  p.is_online,
+  p.timezone,
+  p.is_banned,
+  p.hidden_from_new_students,
+  p.hidden_until,
+  p.role,
+  p.status
+from public.profiles p
+where
+  p.status = 'approved'
+  or auth.uid() = p.id
+  or public.is_admin()
+  or exists (
+    select 1 from public.conversations c
+    where (c.student_id = auth.uid() and c.teacher_id = p.id)
+       or (c.teacher_id = auth.uid() and c.student_id = p.id)
+  );
+
+grant select on public.masked_profiles to anon, authenticated;
