@@ -13,9 +13,11 @@
 //
 // Needs the same secrets as create-payment (IYZICO_API_KEY,
 // IYZICO_SECRET_KEY, optionally IYZICO_BASE_URL), plus:
-//   SITE_URL - the site's real public URL (e.g. https://armus.vercel.app),
-//     so the buyer lands back on the actual site after paying. Defaults
-//     to https://armus.vercel.app if not set.
+//   SITE_URL - the site's real public URL (https://armus.com.tr), so the
+//     buyer lands back on the actual site after paying. Defaults to
+//     https://armus.com.tr if not set - but set it explicitly in the
+//     function's own secrets rather than relying on that default, since
+//     it can go stale if the domain ever changes again.
 
 import Iyzipay from "npm:iyzipay@^2.0.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -26,7 +28,7 @@ const iyzipay = new Iyzipay({
   uri: Deno.env.get("IYZICO_BASE_URL") ?? "https://sandbox-api.iyzipay.com",
 });
 
-const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.vercel.app").replace(/\/$/, "");
+const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
 
 // teacher_id can be a demo teacher (teachers-data.js, not a real
 // Supabase user/profile) - only look one up when it's a real UUID

@@ -11,13 +11,14 @@
 //   RESEND_API_KEY
 // Optional:
 //   EMAIL_FROM - defaults to "ARMUS <onboarding@resend.dev>"
-//   SITE_URL - defaults to "https://armus.vercel.app"
+//   SITE_URL - defaults to "https://armus.com.tr", but set it explicitly
+//     in the function's own secrets rather than relying on that default
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
-const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.vercel.app").replace(/\/$/, "");
+const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
 
 const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 const MONTH_NAMES = [

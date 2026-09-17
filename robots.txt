@@ -10,4 +10,4 @@ Disallow: /my-lessons.html
 Disallow: /wallet.html
 Disallow: /sifre-sifirla.html
 
-Sitemap: https://armus.vercel.app/sitemap.xml
+Sitemap: https://armus.com.tr/sitemap.xml

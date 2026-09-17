@@ -19,8 +19,8 @@ function armusShortDisplayName(fullName) {
 
 // login.html/register.html redirect to ?next=... after a successful
 // sign-in/sign-up, straight from the URL with no validation - an
-// attacker-crafted link like armus.vercel.app/login.html?next=https://evil.example/phish
-// looks legitimate (the domain really is armus.vercel.app) and passes a
+// attacker-crafted link like armus.com.tr/login.html?next=https://evil.example/phish
+// looks legitimate (the domain really is armus.com.tr) and passes a
 // glance at the URL, but after the victim genuinely authenticates, this
 // silently bounces them to an attacker-controlled page (classic open
 // redirect, e.g. for a fake "session expired, re-enter your password"

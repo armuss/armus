@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://armus.vercel.app/index.html</loc>
+    <loc>https://armus.com.tr/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/teachers.html</loc>
+    <loc>https://armus.com.tr/teachers.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/apply-teacher.html</loc>
+    <loc>https://armus.com.tr/apply-teacher.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/hakkimizda.html</loc>
+    <loc>https://armus.com.tr/hakkimizda.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/iletisim.html</loc>
+    <loc>https://armus.com.tr/iletisim.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/sss.html</loc>
+    <loc>https://armus.com.tr/sss.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/gizlilik-politikasi.html</loc>
+    <loc>https://armus.com.tr/gizlilik-politikasi.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://armus.vercel.app/kullanim-sartlari.html</loc>
+    <loc>https://armus.com.tr/kullanim-sartlari.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
