@@ -53,7 +53,12 @@ async function armusGetConversations() {
   );
 
   const [{ data: profiles }, { data: allMessages }] = await Promise.all([
-    armusSupabase.from("profiles").select("id, name, photo_url").in("id", otherIds),
+    // masked_profiles (migration_59.sql) - a teacher's `name` already
+    // comes back short-formed for a student viewer, so the real full
+    // name never reaches the browser (a plain profiles.select used to
+    // send it regardless of what mesajlar.html's own render-time
+    // truncation did with it, visible to anyone via devtools).
+    armusSupabase.from("masked_profiles").select("id, name, photo_url").in("id", otherIds),
     armusSupabase
       .from("messages")
       .select("*")

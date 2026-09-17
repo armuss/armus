@@ -170,8 +170,14 @@ async function armusGetRegisteredTeachers(viewerId) {
   // (or nothing at all for a logged-out visitor), making these stats
   // wrong for almost everyone browsing the marketplace.
   const [profilesRes, reviewsRes, statsRes] = await Promise.all([
+    // masked_profiles (migration_59.sql), not the raw profiles table -
+    // it returns every column this file needs, with a teacher's `name`
+    // already short-formed server-side, so the real full name is never
+    // sent to the browser for a student/anonymous viewer in the first
+    // place (a plain profiles.select("*") used to send it regardless of
+    // how the UI rendered it, visible to anyone via devtools).
     armusSupabase
-      .from("profiles")
+      .from("masked_profiles")
       .select("*")
       .eq("role", "teacher")
       .eq("status", "approved"),
@@ -217,8 +223,9 @@ async function armusFindMarketplaceTeacher(id, viewerId) {
   // for why a plain bookings query here would be wrong for nearly every
   // viewer.
   const [profileRes, rawReviews, statsRes] = await Promise.all([
+    // masked_profiles - see armusGetRegisteredTeachers above for why
     armusSupabase
-      .from("profiles")
+      .from("masked_profiles")
       .select("*")
       .eq("id", id)
       .eq("status", "approved")
