@@ -245,7 +245,7 @@
 
     /* ---- attendance warning banner + explanation modal ---- */
 
-    .attendance-banner {
+    .attendance-banner:not([hidden]) {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -1642,7 +1642,7 @@
       window.location.href = "index.html";
     });
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
+    document.querySelectorAll(".nav-btn[data-panel]").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
@@ -2497,10 +2497,18 @@
         return merged;
       }
 
-      // weekBlocks[getDay() index] = [{start,end}, ...] in minutes
+      // weekBlocks[getDay() index] = [{start,end}, ...] in minutes.
+      // Mirrors armusSlotsForDate's precedence (bookings.js): availability_dates
+      // wins entirely once the teacher has set anything at all in it (a day
+      // missing from it just means that day is empty); otherwise fall back
+      // entirely to the older weekly_availability array from signup, so the
+      // editor never shows a blank grid for a teacher who's actually bookable.
+      const hasAvailabilityDates = user.availability_dates && Object.keys(user.availability_dates).length;
       const weekBlocks = {};
       DAY_COLUMNS.forEach(([, dayIdx]) => {
-        const raw = user.availability_dates && user.availability_dates[String(dayIdx)];
+        const raw = hasAvailabilityDates
+          ? user.availability_dates[String(dayIdx)]
+          : (user.weekly_availability && user.weekly_availability[dayIdx]);
         weekBlocks[dayIdx] = slotsToBlocks(Array.isArray(raw) ? raw : []);
       });
 
