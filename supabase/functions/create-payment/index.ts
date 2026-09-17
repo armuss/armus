@@ -162,7 +162,12 @@ Deno.serve(async (req) => {
     }
 
     const numericQuantity = Number(quantity);
-    if (type === "package" && (!Number.isInteger(numericQuantity) || numericQuantity <= 0)) {
+    // 200 is far above any real package the UI ever offers (mobile's own
+    // package screen tops out at 5 lessons/week x 4 weeks = 20) - just a
+    // ceiling against an arbitrary quantity being sent directly to this
+    // function, which would otherwise multiply straight into `numericPrice`
+    // below with nothing else bounding it.
+    if (type === "package" && (!Number.isInteger(numericQuantity) || numericQuantity <= 0 || numericQuantity > 200)) {
       return jsonResponse({ error: "Geçersiz ders sayısı." }, 400);
     }
 
@@ -173,6 +178,25 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Nothing was stopping one logged-in account from scripting this
+    // endpoint hundreds of times a minute - each call either writes a
+    // pending_payments row and hits iyzico's own checkoutFormInitialize
+    // API, or (credit-covered) writes a real booking. At volume that's
+    // unbounded pending_payments growth and enough traffic to iyzico's
+    // API to risk a newly-live merchant account being throttled or
+    // flagged for abuse - an outage of the platform's ability to take
+    // ANY payment, not just this one account's. 30/hour is far above any
+    // real student's booking activity.
+    const { count: recentAttempts } = await supabaseAdmin
+      .from("pending_payments")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", user.id)
+      .gte("created_at", new Date(Date.now() - 60 * 60_000).toISOString());
+
+    if ((recentAttempts ?? 0) >= 30) {
+      return jsonResponse({ error: "Çok fazla ödeme denemesi yaptın. Lütfen bir süre sonra tekrar dene." }, 429);
+    }
 
     // The client used to just send `price` and this function trusted it
     // outright - anyone could tamper with the request and pay whatever

@@ -84,6 +84,25 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Çok sık istek gönderdin, biraz sonra tekrar dene." }, 429);
     }
 
+    // The 45s spacing above only slows a script down, it doesn't cap it -
+    // looped forever it's still ~1,900 real emails/day to whatever address
+    // this account claims as its own (profiles.email is set at signup from
+    // whatever the signup form was given, never re-verified against an
+    // inbox first). Anyone can sign up with a victim's email and use this
+    // endpoint as a free email-bomb cannon against them. Capping total
+    // sends per account per rolling 24h stops that regardless of spacing,
+    // and protects the shared Resend send quota every other account's
+    // verification email also depends on.
+    const { count: sentToday } = await supabaseAdmin
+      .from("email_verifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60_000).toISOString());
+
+    if ((sentToday ?? 0) >= 8) {
+      return jsonResponse({ error: "Bugün için çok fazla kod istendi. Lütfen yarın tekrar dene." }, 429);
+    }
+
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("name, email")
