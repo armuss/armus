@@ -907,7 +907,7 @@
               card.appendChild(cancelWrap);
             }
 
-            if (isPast) {
+            if (isPast && !isCancelled) {
               card.appendChild(await buildReviewBlock(booking));
             }
             if (!isCancelled) {
