@@ -850,7 +850,18 @@ create table attendance_reports (
   created_at timestamptz not null default now(),
   explained_at timestamptz,
   resolved_at timestamptz,
-  resolved_by uuid references profiles(id)
+  -- delete-account (service role, via supabase.auth.admin.deleteUser)
+  -- assumes every table referencing profiles(id) cascades, needing no
+  -- manual cleanup - true everywhere else, but this column had no ON
+  -- DELETE clause at all (defaults to NO ACTION), so any admin who had
+  -- ever resolved even one attendance report could never delete their
+  -- own account - the delete would hit this foreign key and fail every
+  -- time, with no way to clear the blocker from inside the app. set
+  -- null instead, matching disputes.booking_id/lesson_credits.source_booking_id's
+  -- same "keep the record, drop the now-dangling reference" pattern -
+  -- the report and its resolution stay intact, only the "which admin"
+  -- attribution is lost.
+  resolved_by uuid references profiles(id) on delete set null
 );
 
 alter table attendance_reports enable row level security;
