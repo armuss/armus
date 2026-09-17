@@ -1475,7 +1475,7 @@
             ${vocabEntries.length > 0 ? `
               <div class="flashcard-chips">
                 <button type="button" class="flashcard-chip ${flashcardCategory === "Tümü" ? "active" : ""}" data-category="Tümü">${armusT("studentDash.flashcardAll", "Tümü")}</button>
-                ${categories.map(c => `<button type="button" class="flashcard-chip ${flashcardCategory === c ? "active" : ""}" data-category="${c}">${flashcardCategoryLabel(c)}</button>`).join("")}
+                ${categories.map(c => `<button type="button" class="flashcard-chip ${flashcardCategory === c ? "active" : ""}" data-category="${armusEscapeHtml(c)}">${armusEscapeHtml(flashcardCategoryLabel(c))}</button>`).join("")}
               </div>
               <div class="flashcard-filter-row">
                 <label><input type="checkbox" id="flashcardHideMasteredCheckbox" ${flashcardHideMastered ? "checked" : ""}> ${armusT("studentDash.flashcardHideMastered", "Sadece öğrenilmeyenler")}</label>
@@ -1497,9 +1497,9 @@
                 <div class="flashcard-face flashcard-front">
                   ${hasEntries ? `
                     ${entry.mastered ? `<span class="flashcard-mastered-pill">${armusT("studentDash.flashcardMasteredPill", "✓ Öğrenildi")}</span>` : ""}
-                    <span class="flashcard-tag">${flashcardCategoryLabel(entry.category || "Genel")}</span>
+                    <span class="flashcard-tag">${armusEscapeHtml(flashcardCategoryLabel(entry.category || "Genel"))}</span>
                     <span class="flashcard-label">${armusT("studentDash.flashcardWordLabel", "Kelime")}</span>
-                    <div class="flashcard-word">${entry.term}</div>
+                    <div class="flashcard-word">${armusEscapeHtml(entry.term)}</div>
                     <span class="flashcard-hint">${armusT("studentDash.flashcardClickToFlip", "Çevirmek için karta tıkla")}</span>
                   ` : `
                     <div class="flashcard-empty">${vocabEntries.length === 0
@@ -1510,7 +1510,7 @@
                 <div class="flashcard-face flashcard-back">
                   ${hasEntries ? `
                     <span class="flashcard-label">${armusT("studentDash.flashcardMeaningLabel", "Anlamı")}</span>
-                    <div class="flashcard-word">${entry.meaning}</div>
+                    <div class="flashcard-word">${armusEscapeHtml(entry.meaning)}</div>
                   ` : ""}
                 </div>
               </div>
@@ -1713,7 +1713,7 @@
               <a class="msg-row" href="mesajlar.html?teacher=${c.otherId}" style="display:flex;">
                 <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
                 <div>
-                  <div class="msg-name">${armusEscapeHtml(c.otherName)}</div>
+                  <div class="msg-name">${armusEscapeHtml(armusShortDisplayName(c.otherName))}</div>
                   <div class="msg-snippet">${snippet}</div>
                 </div>
                 ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
