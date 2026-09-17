@@ -128,6 +128,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px 14px;
       padding: 12px 18px;
       border-bottom: 1px solid var(--armus-border-soft);
       background: rgba(0, 0, 0, .2);
@@ -143,16 +145,37 @@
       background-clip: text;
       color: transparent;
       text-decoration: none;
+      flex-shrink: 0;
     }
 
     .room-bar .lesson-with {
       font-size: 12.5px;
       color: #b8b8bb;
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .room-bar .btn {
       color: var(--armus-silver-1);
       border-color: var(--armus-silver-border-strong);
+    }
+
+    /* On a narrow phone, forcing the logo + both buttons onto one row
+       with the lesson-with text squeezed between them left it wrapping
+       onto its own two lines crammed right against the logo, no real
+       gap - confirmed by actually rendering the page at a phone
+       viewport, not just reading the CSS. Below ~480px the lesson-with
+       text instead drops to its own full-width row (still one line,
+       ellipsized if it's still too long), with the logo and both
+       buttons staying together on the row above.  */
+    @media (max-width: 480px) {
+      .room-bar .lesson-with {
+        order: 3;
+        flex-basis: 100%;
+      }
     }
 
     .room-bar .btn.report-issue-btn {
@@ -356,7 +379,18 @@
 
     .post-class-modal p {
       font-size: 13.5px;
-      color: var(--armus-silver-1);
+      /* --armus-silver-1 (#f7f7f5, near-white) is meant for text on the
+         dark room background behind this modal - the modal itself sits
+         on --armus-panel (white), where that same color is nearly
+         invisible. Every instructional line in these modals (what to
+         report, how many minutes late, which date/time this lesson was)
+         used this rule, so the exact text a student/teacher most needs
+         to read before making an attendance/no-show call was the
+         hardest thing on the page to actually see - confirmed by
+         actually rendering the page rather than just reading the CSS.
+         --armus-muted matches what .state-screen p (same file) already
+         uses for secondary text on a light background. */
+      color: var(--armus-muted);
       margin-bottom: 14px;
     }
 
