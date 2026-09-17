@@ -45,6 +45,62 @@
         opacity: 1;
       }
     }
+
+    .scroll-top-btn {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 500;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+      opacity: 0;
+      transform: translateY(12px) scale(.9);
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .scroll-top-btn.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .scroll-top-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .scroll-top-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    @media (max-width: 560px) {
+      .scroll-top-btn {
+        right: 16px;
+        bottom: 16px;
+        width: 42px;
+        height: 42px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .scroll-top-btn {
+        transition: opacity .15s ease;
+        transform: none;
+      }
+      .scroll-top-btn.visible {
+        transform: none;
+      }
+    }
   </style>
   <noscript>
     <style>
@@ -276,13 +332,17 @@
     <div class="copyright" data-i18n="index.footer.copyright">© 2026 ARMUS. Tüm hakları saklıdır.</div>
   </footer>
 
-  <script src="i18n.js?v=4"></script>
+  <button type="button" class="scroll-top-btn" id="scrollTopBtn" aria-label="Yukarı çık">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+  </button>
+
+  <script src="i18n.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
 
-  <script src="auth.js?v=4"></script>
+  <script src="auth.js?v=5"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="script.js?v=4"></script>
@@ -398,6 +458,27 @@
       // armus-logo-write) so the mark finishes writing itself before
       // it starts flying to the header
       setTimeout(fly, 1300);
+    })();
+  </script>
+
+  <script>
+    // Scroll-to-top button: appears once the visitor has scrolled a
+    // bit past the hero, smooth-scrolls back up on click.
+    (function () {
+      const btn = document.getElementById("scrollTopBtn");
+      const SHOW_AFTER_PX = 480;
+
+      function updateVisibility() {
+        btn.classList.toggle("visible", window.scrollY > SHOW_AFTER_PX);
+      }
+
+      updateVisibility();
+      window.addEventListener("scroll", updateVisibility, { passive: true });
+
+      btn.addEventListener("click", () => {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+      });
     })();
   </script>
 </body>

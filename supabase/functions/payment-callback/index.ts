@@ -82,6 +82,33 @@ Deno.serve(async (req) => {
     return redirectTo(successPath);
   }
 
+  // Claim this token atomically before doing any real work. Without this,
+  // two concurrent callbacks for the same token (iyzico retrying, or two
+  // browser tabs both landing on the redirect) could both read a
+  // not-yet-"succeeded" status above and each go on to create a booking
+  // or grant a batch of lesson credits for what was really one charge.
+  const { data: claimed } = await supabaseAdmin
+    .from("pending_payments")
+    .update({ status: "processing" })
+    .eq("id", pending.id)
+    .in("status", ["pending", "failed"])
+    .select()
+    .maybeSingle();
+
+  if (!claimed) {
+    // lost the race (or this token is already past "pending"/"failed") -
+    // re-read the current state instead of doing anything twice
+    const { data: latest } = await supabaseAdmin
+      .from("pending_payments")
+      .select("*")
+      .eq("id", pending.id)
+      .single();
+    if (latest?.status === "succeeded" && (latest.booking_id || isPackage)) {
+      return redirectTo(successPath);
+    }
+    return redirectTo(failedPath);
+  }
+
   let result: any;
   try {
     result = await new Promise((resolve, reject) => {

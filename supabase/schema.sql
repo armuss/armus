@@ -35,7 +35,14 @@ create table profiles (
   bio text,
   video_url text,
   availability text,
-  price numeric,
+  -- dashboard.html's own price-change form only ever rejects 0/NaN
+  -- (`Number(...) || 0`), not a negative value - nothing stopped a
+  -- teacher from submitting a negative price into pending_changes, which
+  -- admin.html's approval handler applies unfiltered. create-payment
+  -- re-validates price > 0 before ever charging a student, so this was
+  -- never chargeable, but a negative price would still show broken on
+  -- the teacher's own public listing until someone tried to book them.
+  price numeric check (price is null or price > 0),
   status text check (status in ('pending', 'approved', 'rejected')),
   applied_at timestamptz,
   weekly_availability jsonb,
@@ -113,12 +120,30 @@ create table pending_payments (
   student_name text not null,
   teacher_id text not null,
   teacher_name text not null,
-  type text not null check (type in ('trial', 'lesson')),
-  lesson_date date not null,
-  lesson_time text not null,
+  -- migration_29.sql: 'package' (a one-time bulk purchase of N lesson
+  -- credits with one teacher, not a real recurring subscription) was
+  -- applied to the live database but this constraint, and the two
+  -- nullability changes plus the quantity column below, were never
+  -- folded back into this file - a fresh install from schema.sql alone
+  -- would reject every package purchase outright and create-payment's
+  -- own package insert (which sets quantity, no lesson_date/lesson_time)
+  -- would fail on both the missing column and the NOT NULL columns.
+  type text not null check (type in ('trial', 'lesson', 'package')),
+  -- a package purchase has no specific lesson date/time - it just
+  -- grants credits, booked later like any other credit-covered lesson
+  lesson_date date,
+  lesson_time text,
+  -- how many lesson_credits a 'package' type payment grants once it succeeds
+  quantity integer,
   price numeric not null,
+  -- 'processing' is a short-lived claim state: payment-callback flips a
+  -- row into it atomically (status = 'pending'/'failed' -> 'processing')
+  -- before doing any real work, so a concurrent second callback for the
+  -- same token (iyzico can genuinely call back more than once) can't
+  -- also pass that check and create a second booking / grant a second
+  -- batch of lesson credits for what was really one charge.
   status text not null default 'pending'
-    check (status in ('pending', 'succeeded', 'failed', 'paid_no_booking')),
+    check (status in ('pending', 'processing', 'succeeded', 'failed', 'paid_no_booking')),
   booking_id uuid references bookings(id),
   created_at timestamptz not null default now()
 );
@@ -195,6 +220,11 @@ create policy "lesson_credits_select_own" on lesson_credits
   for select
   using (auth.uid() = student_id);
 
+-- lesson_credits_select_teacher/lesson_credits_select_admin (migration_30.sql)
+-- are declared further down, right after public.is_admin() exists to
+-- reference (that function isn't defined until the ROW LEVEL SECURITY
+-- section below) - see the comment there for why they're needed.
+
 -- === EMAIL VERIFICATION (SIGNUP) ===================================
 -- A 6-digit code emailed via Resend (send-verification-email Edge
 -- Function) right after signup; verify-email-code checks it and flips
@@ -258,6 +288,26 @@ set search_path = public
 as $$
   select coalesce((select is_admin from profiles where id = auth.uid()), false);
 $$;
+
+-- migration_30.sql: a teacher (and admins) also need to see lesson_credits
+-- tied to them, to detect when a trial converted into a real package
+-- purchase (armusTrialCountsAsEarned, bookings.js), so the trial's price
+-- can count as real earnings instead of staying with ARMUS by default.
+-- Declared here (rather than back with lesson_credits_select_own above)
+-- because it needs public.is_admin(), just defined above. Applied to the
+-- live database but never folded back into this file - a fresh install
+-- from schema.sql alone left dashboard.html's own credits query
+-- (`lesson_credits.select("*").eq("teacher_id", user.id)`) and admin.html's
+-- (`lesson_credits.select("*")`) silently returning nothing for anyone
+-- but the student, permanently breaking trial-conversion earnings and
+-- the admin credits view.
+create policy "lesson_credits_select_teacher" on lesson_credits
+  for select
+  using (auth.uid()::text = teacher_id);
+
+create policy "lesson_credits_select_admin" on lesson_credits
+  for select
+  using (public.is_admin());
 
 -- profiles: a user can update their own row; an admin can update any row
 -- (needed so admins can approve/reject teacher applications)
@@ -324,6 +374,21 @@ begin
     or new.weekly_availability is distinct from old.weekly_availability
   ) then
     raise exception 'profile_locked: approved profile fields can only change through pending_changes + admin approval';
+  end if;
+
+  -- pending_changes is itself just a jsonb blob a teacher writes to their
+  -- own row, and admin.html's approval handler spreads its contents
+  -- straight into the profile on approve (minus submitted_at) - without
+  -- this check a non-admin could smuggle keys like is_admin or status into
+  -- it that the review UI never renders, so an admin approving what looks
+  -- like a harmless bio/price edit would silently apply them too
+  if new.pending_changes is distinct from old.pending_changes and new.pending_changes is not null then
+    if exists (
+      select 1 from jsonb_object_keys(new.pending_changes) as k
+      where k not in ('submitted_at', 'title', 'price', 'availability', 'bio', 'weekly_availability')
+    ) then
+      raise exception 'pending_changes_lock: pending_changes may only contain submitted_at, title, price, availability, bio, or weekly_availability';
+    end if;
   end if;
 
   return new;
@@ -422,9 +487,20 @@ create policy "conversations_select_participant"
   on conversations for select
   using (auth.uid() = student_id or auth.uid() = teacher_id);
 
+-- "a student and a real teacher" (see this table's own header comment)
+-- was never actually checked - only that the caller is one of the two
+-- named parties. Any authenticated user could set teacher_id (or
+-- student_id) to ANY other profile's id, real teacher or not, and the
+-- fabricated conversation would show up as an unsolicited thread in
+-- that other person's inbox (mesajlar.html), including student-to-
+-- student.
 create policy "conversations_insert_participant"
   on conversations for insert
-  with check (auth.uid() = student_id or auth.uid() = teacher_id);
+  with check (
+    (auth.uid() = student_id or auth.uid() = teacher_id)
+    and exists (select 1 from profiles p where p.id = student_id and p.role = 'student')
+    and exists (select 1 from profiles p where p.id = teacher_id and p.role = 'teacher')
+  );
 
 create policy "messages_select_participant"
   on messages for select
@@ -464,13 +540,32 @@ create policy "messages_update_participant"
 -- only the sender can edit a message's body, and only within 2 minutes
 -- of sending it - RLS alone can't express "this column, this
 -- condition, one specific role" cleanly, hence a trigger.
+--
+-- messages_update_participant is deliberately broad (both participants
+-- need to update read_at), so without this trigger locking everything
+-- else, either participant could rewrite ANY column on a message via a
+-- direct API call - most seriously sender_id, letting a participant make
+-- a message look like the OTHER person wrote it, with no time limit and
+-- no trace. attachment_url/attachment_type had the same gap: unlike
+-- body, they weren't held to the sender-only/2-minute rule at all.
 create or replace function public.enforce_message_edit_rules()
 returns trigger
 language plpgsql
 as $$
 begin
 
-  if new.body is distinct from old.body then
+  if new.sender_id is distinct from old.sender_id
+    or new.conversation_id is distinct from old.conversation_id
+    or new.created_at is distinct from old.created_at
+    or new.corrected_of_id is distinct from old.corrected_of_id
+  then
+    raise exception 'message_locked: sender_id, conversation_id, created_at, and corrected_of_id cannot be changed after sending';
+  end if;
+
+  if new.body is distinct from old.body
+    or new.attachment_url is distinct from old.attachment_url
+    or new.attachment_type is distinct from old.attachment_type
+  then
 
     if auth.uid() <> old.sender_id then
       raise exception 'message_edit_denied: only the sender can edit a message';
@@ -630,6 +725,56 @@ create policy "site_settings_write_admin"
   using (public.is_admin())
   with check (public.is_admin());
 
+-- === NEWSLETTER SIGNUP (migration_31.sql) =========================
+-- Homepage footer form (index.html). Public, unauthenticated
+-- insert-only - anyone can add their email, but nobody but an admin can
+-- read the list back (no scraping other visitors' emails through the
+-- anon key). Applied to the live database but never folded back into
+-- this file - a fresh install from schema.sql alone left index.html's
+-- own insert into this table failing outright (relation does not exist).
+
+create table newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
+alter table newsletter_subscribers enable row level security;
+
+create policy "newsletter_subscribers_insert_anyone" on newsletter_subscribers
+  for insert
+  with check (true);
+
+create policy "newsletter_subscribers_select_admin" on newsletter_subscribers
+  for select
+  using (public.is_admin());
+
+-- === CONTACT FORM (migration_33.sql) ==============================
+-- iletisim.html submissions - a durable backup record of what was sent,
+-- in case the outbound email (send-contact-email Edge Function) ever
+-- fails, mirroring newsletter_subscribers above. Same schema-drift gap:
+-- applied to the live database but never folded back into this file -
+-- send-contact-email's own insert into this table would fail outright
+-- on a fresh install.
+
+create table contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table contact_messages enable row level security;
+
+create policy "contact_messages_insert_anyone" on contact_messages
+  for insert
+  with check (true);
+
+create policy "contact_messages_select_admin" on contact_messages
+  for select
+  using (public.is_admin());
+
 -- === DISPUTE / ISSUE REPORTS ======================================
 -- A student or teacher can report a problem with a specific booking;
 -- an admin triages and resolves it from the admin panel.
@@ -657,7 +802,17 @@ create policy "disputes_select_own_or_admin"
 
 -- a reporter can only attach a booking_id that's actually theirs (as
 -- student or teacher) - a general dispute with no booking_id at all is
--- still allowed (migration_40.sql)
+-- still allowed (migration_40.sql). When a booking IS attached,
+-- reporter_role/other_party_name are also cross-checked against that
+-- booking's real participants - same integrity pattern as
+-- reviews_insert_own_student/attendance_reports_insert_own_student.
+-- Without this, a caller could attach a real booking_id (passing the
+-- ownership check above) while claiming an arbitrary reporter_role or
+-- naming an arbitrary, unrelated person as other_party_name - both are
+-- plain client-supplied text with nothing else tying them to reality,
+-- and disputes are read by admins reviewing real complaints. The one
+-- real call site (my-lessons.html) always sets these to match the
+-- actual booking already, so this only closes a direct-API bypass.
 create policy "disputes_insert_own"
   on disputes for insert
   with check (
@@ -667,7 +822,10 @@ create policy "disputes_insert_own"
       or exists (
         select 1 from bookings b
         where b.id = booking_id
-          and (b.student_id = auth.uid() or b.teacher_id = auth.uid()::text)
+          and (
+            (b.student_id = auth.uid() and reporter_role = 'student' and other_party_name = b.teacher_name)
+            or (b.teacher_id = auth.uid()::text and reporter_role = 'teacher' and other_party_name = b.student_name)
+          )
       )
     )
   );
@@ -705,7 +863,18 @@ create table attendance_reports (
   created_at timestamptz not null default now(),
   explained_at timestamptz,
   resolved_at timestamptz,
-  resolved_by uuid references profiles(id)
+  -- delete-account (service role, via supabase.auth.admin.deleteUser)
+  -- assumes every table referencing profiles(id) cascades, needing no
+  -- manual cleanup - true everywhere else, but this column had no ON
+  -- DELETE clause at all (defaults to NO ACTION), so any admin who had
+  -- ever resolved even one attendance report could never delete their
+  -- own account - the delete would hit this foreign key and fail every
+  -- time, with no way to clear the blocker from inside the app. set
+  -- null instead, matching disputes.booking_id/lesson_credits.source_booking_id's
+  -- same "keep the record, drop the now-dangling reference" pattern -
+  -- the report and its resolution stay intact, only the "which admin"
+  -- attribution is lost.
+  resolved_by uuid references profiles(id) on delete set null
 );
 
 alter table attendance_reports enable row level security;
@@ -727,6 +896,16 @@ create policy "attendance_reports_select_participant_or_admin"
 -- the innermost "bookings b" row it's already next to (b.teacher_id),
 -- making the comparison a tautology that never actually checks the new
 -- row's own teacher_id at all (migration_42.sql fixed exactly this).
+--
+-- The 10-minute no-show grace period (class.html's noShowReportReady -
+-- "a student who reports within seconds of joining, the teacher might
+-- just be a minute behind, can't instantly hide someone over nothing")
+-- was only ever enforced by disabling the button client-side - a direct
+-- API call could file a no_show report the literal instant the lesson's
+-- scheduled start passed, with zero grace period, doing exactly what
+-- that comment says it shouldn't. "late" intentionally has no such gate
+-- (any time after the scheduled start, it already is late) - only
+-- no_show needs the extra 10 minutes here.
 create policy "attendance_reports_insert_own_student"
   on attendance_reports for insert
   with check (
@@ -737,7 +916,8 @@ create policy "attendance_reports_insert_own_student"
         and b.student_id = auth.uid()
         and b.status = 'confirmed'
         and b.teacher_id = attendance_reports.teacher_id
-        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) <= now()
+        and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone)
+            <= now() - (case when attendance_reports.type = 'no_show' then interval '10 minutes' else interval '0' end)
     )
   );
 
@@ -859,10 +1039,18 @@ begin
 
   if new.status = 'dismissed' then
     -- false alarm - unhide, unless something ELSE is still pending or
-    -- was separately upheld inside the current 30-day escalation window
+    -- was separately upheld. The comment above always described this as
+    -- checking upheld reports too, but the condition itself only ever
+    -- checked 'open'/'explained' - dismissing one report could unhide a
+    -- teacher who still had a completely separate, confirmed-real upheld
+    -- violation on record, as long as that upheld report hadn't itself
+    -- crossed the 14/30-day hidden_until escalation threshold (which the
+    -- coalesce(hidden_until, now()) <= now() check below does still
+    -- protect once escalated - this was specifically the gap for a
+    -- teacher's first upheld report, before escalation kicks in).
     if not exists (
       select 1 from attendance_reports
-      where teacher_id = new.teacher_id and status in ('open', 'explained') and id <> new.id
+      where teacher_id = new.teacher_id and status in ('open', 'explained', 'upheld') and id <> new.id
     ) then
       update profiles
       set hidden_from_new_students = false, hidden_reason = null, hidden_at = null
@@ -980,25 +1168,50 @@ create policy "teacher_notes_write_own"
 -- rejected valid uploads in practice, so this settles for "any
 -- authenticated ARMUS account" rather than debugging that blind).
 
-insert into storage.buckets (id, name, public)
-values ('teacher-uploads', 'teacher-uploads', true)
-on conflict (id) do nothing;
+-- allowed_mime_types/file_size_limit are enforced by Supabase Storage
+-- itself (not RLS) - without this, the "any authenticated account" write
+-- policies below let anyone upload ANY file type here, including .html
+-- or .svg with embedded <script>, which this public bucket would then
+-- serve back with that same content-type at its own public URL (a
+-- classic unrestricted-file-upload hole: hosting arbitrary
+-- executable/phishing content on ARMUS's own trusted upload flow).
+-- Matches what this field is actually for: photo/certificate/video.
+insert into storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+values (
+  'teacher-uploads', 'teacher-uploads', true,
+  array['image/png', 'image/jpeg', 'application/pdf', 'video/mp4', 'video/webm', 'video/quicktime'],
+  26214400 -- 25MB
+)
+on conflict (id) do update set
+  allowed_mime_types = excluded.allowed_mime_types,
+  file_size_limit = excluded.file_size_limit;
 
 create policy "teacher_uploads_insert_authenticated"
   on storage.objects for insert
   to authenticated
   with check (bucket_id = 'teacher-uploads');
 
+-- update/delete used to have NO ownership check at all - any
+-- authenticated account (any student, any other teacher) could
+-- overwrite or delete ANY file in this public bucket, not just their
+-- own. Since teacher-uploads is public and every photo/certificate/video
+-- URL is embedded directly in that teacher's own public profile page
+-- (teacher.html), the exact path to target was never a secret - anyone
+-- who viewed a teacher's page could vandalize or delete their photo,
+-- certificate, or intro video. uploadToStorage (apply-teacher.html)
+-- always writes to a fresh, timestamped path per upload and the app
+-- never calls storage.remove() itself, so restricting these to the
+-- actual owner doesn't affect any real flow - it only closes the hole.
 create policy "teacher_uploads_update_authenticated"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'teacher-uploads')
-  with check (bucket_id = 'teacher-uploads');
+  using (bucket_id = 'teacher-uploads' and auth.uid() = owner)
+  with check (bucket_id = 'teacher-uploads' and auth.uid() = owner);
 
 create policy "teacher_uploads_delete_authenticated"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'teacher-uploads');
+  using (bucket_id = 'teacher-uploads' and auth.uid() = owner);
 
 -- uploads use { upsert: true }, which needs storage to check whether the
 -- object already exists first - that existence check runs as the
@@ -1025,7 +1238,16 @@ create table vocab_entries (
   meaning text not null,
   review_count integer not null default 0,
   last_reviewed_at timestamptz,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- migration_32.sql: replaced the due-date review schedule above (kept,
+  -- unused, no data loss) with something the student drives themselves -
+  -- tag a word with a category, mark it known whenever they want. This
+  -- create table was never updated to match, so a fresh install from
+  -- this file alone got a vocab_entries table missing both columns the
+  -- flashcard feature (student-dashboard.html) actually reads/writes,
+  -- breaking every add/edit/mastered-toggle on it.
+  category text not null default 'Genel',
+  mastered boolean not null default false
 );
 
 alter table vocab_entries enable row level security;
@@ -1072,25 +1294,44 @@ create policy "confidence_checkins_all_own"
 -- anyone with the URL (an unguessable path, not browsable), writes
 -- just require being logged in.
 
-insert into storage.buckets (id, name, public)
-values ('chat-attachments', 'chat-attachments', true)
-on conflict (id) do nothing;
+-- allowed_mime_types/file_size_limit - see teacher-uploads above for why:
+-- without this, any authenticated user could upload an .html/.svg file
+-- with embedded script here too, via a direct API call (armusUploadChatAttachment
+-- itself only ever sends image/video/audio, but that's client-side JS,
+-- not an enforced restriction). Matches armusAttachmentTypeForFile
+-- (messages.js).
+insert into storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+values (
+  'chat-attachments', 'chat-attachments', true,
+  array['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime', 'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/ogg'],
+  26214400 -- 25MB
+)
+on conflict (id) do update set
+  allowed_mime_types = excluded.allowed_mime_types,
+  file_size_limit = excluded.file_size_limit;
 
 create policy "chat_attachments_insert_authenticated"
   on storage.objects for insert
   to authenticated
   with check (bucket_id = 'chat-attachments');
 
+-- same ownership gap as teacher_uploads_update/delete_authenticated
+-- above - without this, any authenticated user could overwrite or
+-- delete any chat attachment, including ones from a conversation they
+-- were never part of, once they had (or guessed) its path. messages.js's
+-- armusUploadChatAttachment always writes a fresh, timestamped path and
+-- the app never calls storage.remove() itself, so this doesn't affect
+-- any real flow.
 create policy "chat_attachments_update_authenticated"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'chat-attachments')
-  with check (bucket_id = 'chat-attachments');
+  using (bucket_id = 'chat-attachments' and auth.uid() = owner)
+  with check (bucket_id = 'chat-attachments' and auth.uid() = owner);
 
 create policy "chat_attachments_delete_authenticated"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'chat-attachments');
+  using (bucket_id = 'chat-attachments' and auth.uid() = owner);
 
 create policy "chat_attachments_select_authenticated"
   on storage.objects for select
@@ -1154,3 +1395,40 @@ select cron.schedule(
         between now() + interval '50 minutes' and now() + interval '70 minutes'
   $$
 );
+
+-- === MARKETPLACE TEACHER STATS (aggregate, RLS-safe) ================
+-- teachers.html/teacher.html show each teacher's "completed lessons" /
+-- "students taught" counts as a trust signal. marketplace.js used to get
+-- these by running a plain `bookings.select("*")` client-side and
+-- counting rows itself - but bookings_select_participant only ever
+-- returns rows the CALLER is a participant in (or an admin), so for
+-- every viewer except that exact teacher looking at their own listing,
+-- this silently returned almost nothing: an anonymous visitor (no
+-- auth.uid() at all) got zero rows for every teacher, and a signed-in
+-- student got counted only the bookings they personally had, not the
+-- teacher's real totals. The public marketplace's core trust signal was
+-- wrong for nearly all traffic.
+--
+-- This aggregates server-side (security definer, bypasses RLS) and
+-- returns only per-teacher COUNTS - no student identity, no individual
+-- booking rows - so it's safe to expose to anyone, same trust boundary
+-- as reviews_select_all.
+create or replace function public.teacher_marketplace_stats()
+returns table (teacher_id text, completed_count bigint, student_count bigint)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select
+    b.teacher_id,
+    count(*) filter (
+      where b.lesson_date < (now() at time zone b.teacher_timezone)::date
+    ) as completed_count,
+    count(distinct b.student_id) as student_count
+  from bookings b
+  where b.status <> 'cancelled'
+  group by b.teacher_id;
+$$;
+
+grant execute on function public.teacher_marketplace_stats() to anon, authenticated;

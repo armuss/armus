@@ -73,14 +73,26 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
+// recipientName/otherName ultimately come from profiles.name, which a
+// student or teacher sets themselves at signup - without this, either
+// side of a booking could put arbitrary markup in their own display name
+// and have it injected straight into an email sent to the OTHER
+// participant (e.g. a fake link overlaid on the real "Derse Katıl" button).
+function escapeHtml(str: string) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function reminderEmailHtml(recipientName: string, otherName: string, whenLabel: string, joinUrl: string) {
   return `
   <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
     <div style="max-width:440px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
       <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
-      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${recipientName || ""},</p>
+      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName || "")},</p>
       <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
-        <strong style="color:#f4f4f2;">${otherName}</strong> ile dersin yaklaşıyor:<br>
+        <strong style="color:#f4f4f2;">${escapeHtml(otherName || "")}</strong> ile dersin yaklaşıyor:<br>
         <strong style="color:#e8c777;">${whenLabel}</strong>
       </p>
       <a href="${joinUrl}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Derse Katıl</a>
