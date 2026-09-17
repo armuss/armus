@@ -1026,10 +1026,18 @@ begin
 
   if new.status = 'dismissed' then
     -- false alarm - unhide, unless something ELSE is still pending or
-    -- was separately upheld inside the current 30-day escalation window
+    -- was separately upheld. The comment above always described this as
+    -- checking upheld reports too, but the condition itself only ever
+    -- checked 'open'/'explained' - dismissing one report could unhide a
+    -- teacher who still had a completely separate, confirmed-real upheld
+    -- violation on record, as long as that upheld report hadn't itself
+    -- crossed the 14/30-day hidden_until escalation threshold (which the
+    -- coalesce(hidden_until, now()) <= now() check below does still
+    -- protect once escalated - this was specifically the gap for a
+    -- teacher's first upheld report, before escalation kicks in).
     if not exists (
       select 1 from attendance_reports
-      where teacher_id = new.teacher_id and status in ('open', 'explained') and id <> new.id
+      where teacher_id = new.teacher_id and status in ('open', 'explained', 'upheld') and id <> new.id
     ) then
       update profiles
       set hidden_from_new_students = false, hidden_reason = null, hidden_at = null
