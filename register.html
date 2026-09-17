@@ -207,6 +207,18 @@
       font-weight: 600;
     }
 
+    .consent-note {
+      text-align: center;
+      color: var(--armus-muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 14px;
+    }
+
+    .consent-note a {
+      color: var(--armus-gold-text);
+    }
+
     .verify-note {
       text-align: center;
       color: var(--armus-muted);
@@ -365,6 +377,12 @@
       </div>
 
       <button type="submit" class="submit-btn" id="submitBtn" data-i18n="register.submit">Hesap Oluştur</button>
+
+      <p class="consent-note" data-i18n="register.consentNote">
+        Hesap oluşturarak <a href="kullanim-sartlari.html" target="_blank" rel="noopener">Kullanım Şartları</a>'nı
+        ve <a href="gizlilik-politikasi.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'nı
+        kabul etmiş olursun.
+      </p>
 
     </form>
 
