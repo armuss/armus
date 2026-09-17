@@ -21,11 +21,22 @@ create table profiles (
   languages jsonb,
   phone text,
   age_confirmed boolean,
-  photo_url text,
+  -- these three are normally whatever a real Supabase Storage upload
+  -- returned, but nothing else stops a user writing an arbitrary string
+  -- here directly (armusUpdateOwnProfile has no field allowlist, RLS
+  -- only checks ownership) - the client (armusSafeUrl, i18n.js) builds
+  -- an <img src="...">/<video src="..."> straight from this value via a
+  -- template literal, so a string like
+  -- 'https://x.com/a.jpg" onerror="...' broke out of that attribute and
+  -- ran arbitrary JS in whoever viewed it (an admin reviewing a brand
+  -- new application, most importantly). These constraints mirror
+  -- armusSafeUrl's own rule so a write path that forgets to use it can't
+  -- reopen the hole.
+  photo_url text check (photo_url is null or (photo_url ~ '^https://' and photo_url !~ '[\s"''<>`]')),
   has_certificate boolean,
   certificate_name text,
   certificate_years text,
-  certificate_file_url text,
+  certificate_file_url text check (certificate_file_url is null or (certificate_file_url ~ '^https://' and certificate_file_url !~ '[\s"''<>`]')),
   certificate_file_name text,
   has_education boolean,
   university text,
@@ -33,7 +44,7 @@ create table profiles (
   graduation_year text,
   specialization text,
   bio text,
-  video_url text,
+  video_url text check (video_url is null or (video_url ~ '^https://' and video_url !~ '[\s"''<>`]')),
   availability text,
   -- dashboard.html's own price-change form only ever rejects 0/NaN
   -- (`Number(...) || 0`), not a negative value - nothing stopped a
@@ -481,7 +492,10 @@ create table messages (
   conversation_id uuid not null references conversations(id) on delete cascade,
   sender_id uuid not null references profiles(id) on delete cascade,
   body text not null default '',
-  attachment_url text,
+  -- see profiles.photo_url's comment above - same attribute-breakout XSS
+  -- risk (armusSafeUrl builds an <img>/<video> src straight from this),
+  -- same fix.
+  attachment_url text check (attachment_url is null or (attachment_url ~ '^https://' and attachment_url !~ '[\s"''<>`]')),
   attachment_type text check (attachment_type in ('image', 'video', 'audio')),
   -- vestigial: an earlier "Düzelt Beni" feature let a teacher attach a
   -- correction to a student's message this way; removed from the UI
