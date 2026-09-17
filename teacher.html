@@ -1395,7 +1395,7 @@
         const pill = document.createElement("div");
         pill.className = "speak-pill";
         if (match) {
-          pill.innerHTML = `${match[1]} <span class="speak-pill-level"></span>`;
+          pill.innerHTML = `${armusEscapeHtml(match[1])} <span class="speak-pill-level"></span>`;
           pill.querySelector(".speak-pill-level").textContent = match[2];
         } else {
           pill.textContent = part;
