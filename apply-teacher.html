@@ -219,6 +219,29 @@
       margin-bottom: 16px;
     }
 
+    .consent-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 20px;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--armus-muted);
+      cursor: pointer;
+    }
+
+    .consent-check input[type="checkbox"] {
+      margin-top: 2px;
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+      accent-color: var(--armus-gold-3);
+    }
+
+    .consent-check a {
+      color: var(--armus-gold-text);
+    }
+
     .field label {
       display: block;
       font-size: 12px;
@@ -828,6 +851,17 @@
         <label for="price" data-i18n="applyTeacher.lessonPrice">Ders ücreti (₺)</label>
         <input type="number" id="price" min="0" step="1" placeholder="örn. 500">
       </div>
+
+      <label class="consent-check">
+        <input type="checkbox" id="applyConsent">
+        <span data-i18n="applyTeacher.consentCheck">
+          Bu başvuruda paylaştığım kimlik, iletişim, sertifika/eğitim ve
+          video bilgilerimin, öğretmen başvurumu değerlendirmek ve
+          onaylanırsam profilimi yayınlamak amacıyla işlenmesini
+          <a href="gizlilik-politikasi.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'na
+          uygun şekilde kabul ediyorum.
+        </span>
+      </label>
     </section>
 
     <div class="step-nav">
@@ -1478,6 +1512,10 @@
           const price = Number(document.getElementById("price").value);
           if (!price || price <= 0) {
             showStepError(armusT("applyTeacher.errPriceRequired", "Geçerli bir ders ücreti gir."));
+            return false;
+          }
+          if (!document.getElementById("applyConsent").checked) {
+            showStepError(armusT("applyTeacher.errConsentRequired", "Devam etmek için bilgilerinin işlenmesini kabul etmelisin."));
             return false;
           }
         }

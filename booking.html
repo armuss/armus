@@ -442,6 +442,28 @@
       font-size: 13.5px;
     }
 
+    .payer-fields label.consent-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 12px;
+      line-height: 1.55;
+      cursor: pointer;
+    }
+
+    .consent-check input[type="checkbox"] {
+      margin-top: 2px;
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+      accent-color: var(--armus-gold-3);
+    }
+
+    .consent-check a {
+      color: var(--armus-gold-text);
+    }
+
     .confirm-btn {
       width: 100%;
       margin-top: 20px;
@@ -652,6 +674,15 @@
         <input type="text" id="payerPhone" placeholder="+90 5xx xxx xx xx">
         <label for="payerIdentity" data-i18n="booking.payerIdentityLabel">T.C. kimlik numarası</label>
         <input type="text" id="payerIdentity" placeholder="11 haneli" maxlength="11" inputmode="numeric">
+        <label class="consent-check">
+          <input type="checkbox" id="payerConsent">
+          <span data-i18n="booking.payerConsent">
+            Telefon numaramın ve T.C. kimlik numaramın, bu rezervasyonu
+            tamamlamak amacıyla ödeme sağlayıcımıza iletilmesini
+            <a href="gizlilik-politikasi.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'na
+            uygun şekilde kabul ediyorum.
+          </span>
+        </label>
       </div>
 
       <button class="confirm-btn" id="confirmBtn">Ödemeye Geç</button>
@@ -1007,6 +1038,11 @@
           }
           if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
             confirmError.textContent = armusT("booking.invalidIdentity", "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).");
+            confirmError.style.display = "block";
+            return;
+          }
+          if (!document.getElementById("payerConsent").checked) {
+            confirmError.textContent = armusT("booking.consentRequired", "Devam etmek için kimlik ve ödeme bilgilerinin işlenmesini kabul etmelisin.");
             confirmError.style.display = "block";
             return;
           }
