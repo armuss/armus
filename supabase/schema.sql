@@ -461,6 +461,14 @@ create policy "reviews_select_all"
 -- with even one real completed booking (with ANY teacher) could post a
 -- review naming a completely different, uninvolved teacher - a fake
 -- rating with zero real basis, visible on that teacher's public profile.
+--
+-- IMPORTANT: "b.status <> 'cancelled'" is required (migration_61.sql) -
+-- without it, a student could book a lesson, cancel it (even with a full
+-- credit refund, so at no real cost - cancel-booking), wait for that
+-- lesson_date to pass, and still post a review for a lesson that never
+-- happened - a free way to fake-boost a friend's rating or leave a
+-- baseless bad review on a competitor, reachable straight from
+-- my-lessons.html's normal "rate this lesson" prompt.
 create policy "reviews_insert_own_student"
   on reviews for insert
   with check (
@@ -470,6 +478,7 @@ create policy "reviews_insert_own_student"
       where b.id = booking_id
         and b.student_id = auth.uid()
         and b.teacher_id = reviews.teacher_id
+        and b.status <> 'cancelled'
         and b.lesson_date <= (now() at time zone b.teacher_timezone)::date
     )
   );

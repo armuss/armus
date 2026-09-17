@@ -125,20 +125,31 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Atomically claim this booking before doing any work: the cron's
+    // 50-70 minute matching window is intentionally 20 minutes wide while
+    // it runs every 10 minutes (schema.sql), as a safety net so a failed
+    // call gets retried on the next run - but that same overlap means two
+    // runs can both see reminder_sent = false if the first is still in
+    // flight, and without claiming atomically here both would send
+    // duplicate emails. A plain SELECT-then-UPDATE (the previous version
+    // of this function) can't prevent that.
     const { data: booking } = await supabaseAdmin
       .from("bookings")
-      .select("*")
+      .update({ reminder_sent: true })
       .eq("id", bookingId)
       .eq("reminder_sent", false)
+      .select()
       .maybeSingle();
 
-    // already reminded (or doesn't exist any more) - nothing to do,
-    // this isn't an error
+    // already claimed by another run (or doesn't exist any more) -
+    // nothing to do, this isn't an error
     if (!booking) return new Response("skip", { status: 200 });
 
     const lessonInstant = zonedTimeToUtc(booking.lesson_date, booking.lesson_time, booking.teacher_timezone);
     const joinUrl = `${SITE_URL}/class.html?booking=${booking.id}`;
     const subject = "Dersin yaklaşıyor - ARMUS";
+
+    let allSent = true;
 
     const { data: studentProfile } = await supabaseAdmin
       .from("profiles")
@@ -148,7 +159,8 @@ Deno.serve(async (req) => {
 
     if (studentProfile?.email) {
       const studentWhenLabel = formatDateTimeLabel(lessonInstant, studentProfile.timezone);
-      await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, booking.teacher_name, studentWhenLabel, joinUrl));
+      const ok = await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, booking.teacher_name, studentWhenLabel, joinUrl));
+      allSent = allSent && ok;
     }
 
     // teacher_id can be a demo teacher (teachers-data.js, not a real
@@ -162,11 +174,19 @@ Deno.serve(async (req) => {
 
       if (teacherProfile?.email) {
         const teacherWhenLabel = formatDateTimeLabel(lessonInstant, teacherProfile.timezone);
-        await sendEmail(teacherProfile.email, subject, reminderEmailHtml(teacherProfile.name, booking.student_name, teacherWhenLabel, joinUrl));
+        const ok = await sendEmail(teacherProfile.email, subject, reminderEmailHtml(teacherProfile.name, booking.student_name, teacherWhenLabel, joinUrl));
+        allSent = allSent && ok;
       }
     }
 
-    await supabaseAdmin.from("bookings").update({ reminder_sent: true }).eq("id", bookingId);
+    // Resend actually failing (rate limit, outage, bad key) used to still
+    // get marked reminder_sent - silently losing the reminder for good,
+    // exactly what the cron's wide matching window was meant to prevent.
+    // Un-claim it here so the next run retries instead.
+    if (!allSent) {
+      await supabaseAdmin.from("bookings").update({ reminder_sent: false }).eq("id", bookingId);
+      return new Response("partial failure, will retry", { status: 200 });
+    }
 
     return new Response("sent", { status: 200 });
 
