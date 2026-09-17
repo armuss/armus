@@ -630,12 +630,28 @@
 
       room.style.display = "flex";
 
+      // The room itself is just a public meet.jit.si room with no lobby or
+      // password - the booking-id-derived name is unguessable, but Jitsi's
+      // own "invite people" / "info" / "embed" buttons happily hand out a
+      // copyable, permanent join link to anyone in the call, which would
+      // work for a stranger with no ARMUS login at all. Dropping those
+      // buttons from the toolbar doesn't make the room itself
+      // authenticated, but it stops the app's own UI from actively
+      // surfacing a shareable link past the two people who are supposed
+      // to be here.
       const jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
         roomName: armusRoomNameForBooking(booking.id),
         parentNode: document.getElementById("jitsiContainer"),
         userInfo: { displayName: session.name },
         configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
-        interfaceConfigOverwrite: { MOBILE_APP_PROMO: false },
+        interfaceConfigOverwrite: {
+          MOBILE_APP_PROMO: false,
+          TOOLBAR_BUTTONS: [
+            "microphone", "camera", "desktop", "fullscreen", "fodeviceselection",
+            "hangup", "profile", "chat", "raisehand", "videoquality", "filmstrip",
+            "tileview", "settings", "shortcuts",
+          ],
+        },
       });
 
       // ---- report a no-show / late teacher, right from inside the
