@@ -417,6 +417,36 @@
       border-color: var(--armus-gold-2);
     }
 
+    /* Once a file is confirmed, the box stays (clicking it is still the
+       only way to pick a different file - it's a <label> wrapping the
+       hidden <input>), but shrinks and reads as "done" instead of still
+       looking like an empty, unfilled prompt sitting right above its own
+       preview/confirmation. */
+    .upload-box.has-file {
+      padding: 10px 16px;
+      border-style: solid;
+      border-color: var(--armus-border);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload-box.has-file .upload-label {
+      color: var(--armus-ink);
+    }
+
+    .upload-box.has-file .upload-label::before {
+      content: "✓";
+      color: #1f7a4d;
+      margin-right: 6px;
+      font-weight: 700;
+    }
+
+    .upload-box.has-file .upload-note {
+      margin-top: 0;
+    }
+
     .upload-box input {
       display: none;
     }
@@ -1173,6 +1203,17 @@
         }
       }
 
+      // Shrinks an upload-box <label> into a compact "done" state once its
+      // file is picked, instead of it staying at full size, still reading
+      // as an empty "upload a file" prompt, sitting right above the
+      // preview that already confirms the upload succeeded.
+      function markUploadBoxDone(boxId, label, note) {
+        const box = document.getElementById(boxId);
+        box.classList.add("has-file");
+        box.querySelector(".upload-label").textContent = label;
+        box.querySelector(".upload-note").textContent = note;
+      }
+
       function uploadToStorage(file, folder) {
         const ext = (file.name.includes(".") ? file.name.split(".").pop() : "bin").toLowerCase();
         const path = `${session.id}/${folder}-${Date.now()}.${ext}`;
@@ -1311,6 +1352,7 @@
           document.getElementById("photoPreviewImg").src = previewUrl;
           document.getElementById("photoPreviewName").textContent = file.name;
           document.getElementById("photoPreview").style.display = "flex";
+          markUploadBoxDone("photoBox", armusT("applyTeacher.photoUploaded", "Fotoğraf yüklendi"), armusT("applyTeacher.changePhoto", "Değiştirmek için tıkla"));
 
         } catch (err) {
           errorBox.textContent = err.message;
@@ -1323,6 +1365,7 @@
         uploads.certificate = result;
         document.getElementById("certificatePreviewName").textContent = result.name;
         document.getElementById("certificatePreview").style.display = "flex";
+        markUploadBoxDone("certificateBox", armusT("applyTeacher.certificateUploaded", "Sertifika dosyası yüklendi"), armusT("applyTeacher.changeCertificate", "Değiştirmek için tıkla"));
       });
 
       // Video needs extra checks (duration, orientation) beyond plain size/type,
@@ -1396,6 +1439,7 @@
           document.getElementById("videoPreviewName").textContent =
             `${file.name} · ${minutes}:${seconds}`;
           document.getElementById("videoPreview").style.display = "flex";
+          markUploadBoxDone("videoBox", armusT("applyTeacher.videoUploaded", "Video yüklendi"), armusT("applyTeacher.changeVideo", "Değiştirmek için tıkla"));
 
         } catch (err) {
           errorBox.textContent = err.message;
