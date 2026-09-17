@@ -802,7 +802,17 @@ create policy "disputes_select_own_or_admin"
 
 -- a reporter can only attach a booking_id that's actually theirs (as
 -- student or teacher) - a general dispute with no booking_id at all is
--- still allowed (migration_40.sql)
+-- still allowed (migration_40.sql). When a booking IS attached,
+-- reporter_role/other_party_name are also cross-checked against that
+-- booking's real participants - same integrity pattern as
+-- reviews_insert_own_student/attendance_reports_insert_own_student.
+-- Without this, a caller could attach a real booking_id (passing the
+-- ownership check above) while claiming an arbitrary reporter_role or
+-- naming an arbitrary, unrelated person as other_party_name - both are
+-- plain client-supplied text with nothing else tying them to reality,
+-- and disputes are read by admins reviewing real complaints. The one
+-- real call site (my-lessons.html) always sets these to match the
+-- actual booking already, so this only closes a direct-API bypass.
 create policy "disputes_insert_own"
   on disputes for insert
   with check (
@@ -812,7 +822,10 @@ create policy "disputes_insert_own"
       or exists (
         select 1 from bookings b
         where b.id = booking_id
-          and (b.student_id = auth.uid() or b.teacher_id = auth.uid()::text)
+          and (
+            (b.student_id = auth.uid() and reporter_role = 'student' and other_party_name = b.teacher_name)
+            or (b.teacher_id = auth.uid()::text and reporter_role = 'teacher' and other_party_name = b.student_name)
+          )
       )
     )
   );
