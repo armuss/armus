@@ -170,7 +170,7 @@ async function armusRenderNavAuth() {
 
     el.innerHTML = `
       <a class="btn" href="admin.html">Admin Paneli</a>
-      <span class="nav-greeting">Merhaba, ${session.name.split(" ")[0]} <small>(Admin)</small></span>
+      <span class="nav-greeting">Merhaba, ${armusEscapeHtml(session.name.split(" ")[0])} <small>(Admin)</small></span>
       <button class="btn" id="armusLogoutBtn">Çıkış Yap</button>
     `;
 
@@ -181,7 +181,7 @@ async function armusRenderNavAuth() {
 
   } else if (session) {
 
-    const firstName = session.name.split(" ")[0];
+    const firstName = armusEscapeHtml(session.name.split(" ")[0]);
     const roleLabel = session.role === "teacher" ? "Öğretmen" : "Öğrenci";
     const dashboardLink = session.role === "teacher"
       ? '<a class="btn" href="dashboard.html">Panelim</a>'
@@ -199,7 +199,7 @@ async function armusRenderNavAuth() {
         .eq("status", "available");
 
       if (credits && credits.length > 0) {
-        const teacherList = credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", ");
+        const teacherList = armusEscapeHtml(credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", "));
         creditBadge = `<span title="Kullanılabilir ders hakkın: ${teacherList}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--armus-border);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--armus-gold-text);white-space:nowrap;">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
               <path d="M20 12v9H4v-9"></path>
