@@ -17,7 +17,7 @@ import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { DAY_NAMES, MONTH_NAMES, formatTimeRange, slotsForDate, type Slot } from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
-import { createPayment, hasCoveringCredit } from '../../lib/payments';
+import { createPayment, hasCoveringCredit, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -173,12 +173,13 @@ export default function Booking() {
           startInLoadingState
           renderLoading={() => <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
-            if (navState.url.includes('payment=success')) {
+            const status = parsePaymentRedirect(navState.url);
+            if (status === 'success') {
               finishBooking(false);
-            } else if (navState.url.includes('payment=failed')) {
+            } else if (status === 'failed') {
               setPhase('picking');
               setError('Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı — istersen tekrar deneyebilirsin.');
-            } else if (navState.url.includes('payment=error')) {
+            } else if (status === 'error') {
               setPhase('error');
             }
           }}

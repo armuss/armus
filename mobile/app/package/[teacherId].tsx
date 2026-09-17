@@ -6,7 +6,7 @@ import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
 import { shortDisplayName } from '../../lib/displayName';
-import { createPayment } from '../../lib/payments';
+import { createPayment, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -130,12 +130,13 @@ export default function PackageOffer() {
           startInLoadingState
           renderLoading={() => <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
-            if (navState.url.includes('payment=success')) {
+            const status = parsePaymentRedirect(navState.url);
+            if (status === 'success') {
               setPhase('success');
-            } else if (navState.url.includes('payment=failed')) {
+            } else if (status === 'failed') {
               setPhase('confirm');
               setError('Ödeme tamamlanmadı ya da iptal edildi.');
-            } else if (navState.url.includes('payment=error')) {
+            } else if (status === 'error') {
               setError('Ödemen alındı ama paket tanımlanırken bir sorun çıktı. Lütfen bizimle iletişime geç.');
               setPhase('confirm');
             }

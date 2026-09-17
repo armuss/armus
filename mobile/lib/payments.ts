@@ -43,6 +43,31 @@ export async function createPayment(params: CreatePaymentParams): Promise<Create
   return { ok: true, bookedDirectly: false, paymentPageUrl: data.paymentPageUrl };
 }
 
+// payment-callback (supabase/functions/payment-callback) only ever
+// redirects here - to ARMUS's own real site - after it has already
+// re-verified the charge with iyzico itself server-side; it never trusts
+// the checkout redirect alone. The WebView showing the checkout form
+// passes through iyzico's pages and the buyer's bank's 3-D Secure pages
+// on the way there, though, so `navState.url.includes('payment=success')`
+// on EVERY navigation (what this used to be) would fire on any URL that
+// merely contains that substring anywhere - not necessarily one iyzico
+// or ARMUS ever produced. Matching the exact origin and query param
+// instead means only the one specific, server-verified redirect counts.
+const SITE_URL = 'https://armus.vercel.app';
+
+export function parsePaymentRedirect(url: string): 'success' | 'failed' | 'error' | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.origin !== SITE_URL) return null;
+  const status = parsed.searchParams.get('payment');
+  if (status === 'success' || status === 'failed' || status === 'error') return status;
+  return null;
+}
+
 // Whether the student has an available lesson credit (from a past
 // cancellation) that would cover this booking for free - same teacher, or
 // any teacher for a trial lesson. Purely informational for the UI; the
