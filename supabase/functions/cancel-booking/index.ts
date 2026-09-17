@@ -18,11 +18,83 @@
 // student from farming free lessons by repeatedly cancelling a
 // credit-covered booking.
 //
-// No secrets needed beyond the auto-injected SUPABASE_* ones.
+// Also sends a cancellation email (RESEND_API_KEY, EMAIL_FROM secrets,
+// same as the other Edge Functions) to whichever participant did NOT
+// initiate the cancellation - the one who clicked "cancel" already gets
+// immediate feedback in the UI, so re-emailing them their own action
+// would just be noise. An admin cancellation notifies both, since
+// neither participant did it themselves.
+//
+// SITE_URL, RESEND_API_KEY, EMAIL_FROM - same as create-payment /
+// payment-callback / send-lesson-reminder.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const FREE_CANCEL_HOURS = 4;
+const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
+
+const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const MONTH_NAMES = [
+  "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+  "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+];
+const EN_WEEKDAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+function formatDateTimeLabel(lessonInstant: Date, recipientTimezone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: recipientTimezone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", weekday: "short",
+    }).formatToParts(lessonInstant).map((p) => [p.type, p.value]),
+  );
+  const dayIndex = EN_WEEKDAY_ORDER.indexOf(parts.weekday);
+  const hour = parts.hour === "24" ? "00" : parts.hour;
+  return `${Number(parts.day)} ${MONTH_NAMES[Number(parts.month) - 1]} ${DAY_NAMES[dayIndex] ?? ""}, ${hour}:${parts.minute}`;
+}
+
+function escapeHtml(str: string) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function cancelledEmailHtml(recipientName: string, otherName: string, whenLabel: string, note: string) {
+  return `
+  <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
+    <div style="max-width:440px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
+      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
+      <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 10px;">
+        <strong style="color:#f4f4f2;">${escapeHtml(otherName)}</strong> ile
+        <strong style="color:#e8c777;">${whenLabel}</strong> için planlanan ders iptal edildi.
+      </p>
+      <p style="color:#a3a3a6;font-size:12.5px;line-height:1.6;margin:0 0 22px;">${escapeHtml(note)}</p>
+      <a href="${SITE_URL}/my-lessons.html" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Derslerimi Gör</a>
+    </div>
+  </div>`;
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  try {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    });
+    if (!resp.ok) console.error("resend send failed", to, await resp.text());
+  } catch (err) {
+    console.error("resend send threw", to, err);
+  }
+}
 
 // lesson_date/lesson_time are plain wall-clock strings with no zone of
 // their own - booking.teacher_timezone (migration_37.sql) says which
@@ -181,6 +253,47 @@ Deno.serve(async (req) => {
         refunded = true;
         await supabaseAdmin.from("bookings").update({ refunded: true }).eq("id", booking.id);
       }
+    }
+
+    const studentNote = refunded
+      ? "Bu ders için bir ders hakkı kazandın, dilediğin zaman kullanabilirsin."
+      : (cancelledBy === "student"
+        ? "Derse 4 saatten az kaldığı için ders hakkı kazanılmadı."
+        : "Bu ders için bir şey ödemene gerek kalmadı.");
+    const teacherNote = cancelledBy === "student"
+      ? "Bu saatin artık boş, başka bir öğrenci rezervasyon yapabilir."
+      : "İptalin kaydedildi.";
+
+    const [{ data: studentProfile }, teacherProfileRes] = await Promise.all([
+      supabaseAdmin.from("profiles").select("email, name, timezone").eq("id", booking.student_id).maybeSingle(),
+      isUuid(booking.teacher_id)
+        ? supabaseAdmin.from("profiles").select("email, name, timezone").eq("id", booking.teacher_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    const teacherProfile = teacherProfileRes.data;
+
+    const notifyStudent = cancelledBy !== "student";
+    const notifyTeacher = cancelledBy !== "teacher";
+
+    if (notifyStudent && studentProfile?.email) {
+      await sendEmail(
+        studentProfile.email,
+        "Bir dersin iptal edildi - ARMUS",
+        cancelledEmailHtml(
+          studentProfile.name, booking.teacher_name,
+          formatDateTimeLabel(lessonStart, studentProfile.timezone), studentNote,
+        ),
+      );
+    }
+    if (notifyTeacher && teacherProfile?.email) {
+      await sendEmail(
+        teacherProfile.email,
+        "Bir dersin iptal edildi - ARMUS",
+        cancelledEmailHtml(
+          teacherProfile.name, booking.student_name,
+          formatDateTimeLabel(lessonStart, teacherProfile.timezone), teacherNote,
+        ),
+      );
     }
 
     return jsonResponse({ ok: true, refunded, refundEligible });

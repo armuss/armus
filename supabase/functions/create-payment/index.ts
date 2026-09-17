@@ -41,6 +41,12 @@
 // SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY are
 // already injected automatically into every Edge Function - no need to
 // set those yourself.
+//
+// Also uses SITE_URL, RESEND_API_KEY, EMAIL_FROM (same as payment-callback)
+// to send a booking-confirmed email to both participants when a lesson
+// credit covers a booking outright (no iyzico step, so payment-callback
+// never runs for this path - this is the only place that booking's
+// confirmation email can be sent from).
 
 import Iyzipay from "npm:iyzipay@^2.0.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -50,6 +56,67 @@ const iyzipay = new Iyzipay({
   secretKey: Deno.env.get("IYZICO_SECRET_KEY") ?? "",
   uri: Deno.env.get("IYZICO_BASE_URL") ?? "https://sandbox-api.iyzipay.com",
 });
+
+const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
+
+const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const MONTH_NAMES = [
+  "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+  "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+];
+const EN_WEEKDAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function formatDateTimeLabel(lessonInstant: Date, recipientTimezone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: recipientTimezone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", weekday: "short",
+    }).formatToParts(lessonInstant).map((p) => [p.type, p.value]),
+  );
+  const dayIndex = EN_WEEKDAY_ORDER.indexOf(parts.weekday);
+  const hour = parts.hour === "24" ? "00" : parts.hour;
+  return `${Number(parts.day)} ${MONTH_NAMES[Number(parts.month) - 1]} ${DAY_NAMES[dayIndex] ?? ""}, ${hour}:${parts.minute}`;
+}
+
+function escapeHtml(str: string) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function bookingConfirmedEmailHtml(recipientName: string, otherName: string, whenLabel: string, typeLabel: string, joinUrl: string) {
+  return `
+  <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
+    <div style="max-width:440px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
+      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
+      <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
+        <strong style="color:#f4f4f2;">${escapeHtml(otherName)}</strong> ile ${escapeHtml(typeLabel)}in onaylandı:<br>
+        <strong style="color:#e8c777;">${whenLabel}</strong>
+      </p>
+      <a href="${joinUrl}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Derslerimi Gör</a>
+      <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Ders saatine kadar hazır olman gerekmez, bağlantı ders başladığında açılacak.</p>
+    </div>
+  </div>`;
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  try {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    });
+    if (!resp.ok) console.error("resend send failed", to, await resp.text());
+  } catch (err) {
+    console.error("resend send threw", to, err);
+  }
+}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -139,7 +206,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("name, email, city")
+      .select("name, email, city, timezone")
       .eq("id", user.id)
       .single();
 
@@ -224,6 +291,8 @@ Deno.serve(async (req) => {
     // cron) reads it. Demo teachers have no profile row to read a real
     // timezone from, so they're always Europe/Istanbul.
     let teacherTimezone = "Europe/Istanbul";
+    let teacherEmail: string | null = null;
+    let teacherRealName: string | null = null;
     const isDemoTeacher = Object.prototype.hasOwnProperty.call(DEMO_TEACHER_PRICES, teacherId);
 
     if (isDemoTeacher) {
@@ -231,7 +300,7 @@ Deno.serve(async (req) => {
     } else {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
-        .select("price, status, timezone, weekly_availability, availability_dates")
+        .select("price, status, timezone, weekly_availability, availability_dates, email, name")
         .eq("id", teacherId)
         .maybeSingle();
 
@@ -240,6 +309,8 @@ Deno.serve(async (req) => {
       }
       pricePerLesson = Number(teacherProfile.price);
       teacherTimezone = teacherProfile.timezone || "Europe/Istanbul";
+      teacherEmail = teacherProfile.email || null;
+      teacherRealName = teacherProfile.name || null;
 
       // booking.html's picker (bookings.js's armusSlotsForDate) only ever
       // offers a time that's both on the teacher's declared grid and on
@@ -369,6 +440,31 @@ Deno.serve(async (req) => {
         .from("lesson_credits")
         .update({ used_booking_id: booking.id })
         .eq("id", appliedCredit.id);
+
+      const lessonInstant = zonedTimeToUtc(String(date), String(time), teacherTimezone);
+      const typeLabel = type === "trial" ? "deneme ders" : "ders";
+      const joinUrl = `${SITE_URL}/my-lessons.html`;
+
+      if (profile.email) {
+        await sendEmail(
+          profile.email,
+          "Dersin onaylandı - ARMUS",
+          bookingConfirmedEmailHtml(
+            profile.name, teacherName,
+            formatDateTimeLabel(lessonInstant, profile.timezone), typeLabel, joinUrl,
+          ),
+        );
+      }
+      if (teacherEmail) {
+        await sendEmail(
+          teacherEmail,
+          "Yeni bir dersin var - ARMUS",
+          bookingConfirmedEmailHtml(
+            teacherRealName, profile.name,
+            formatDateTimeLabel(lessonInstant, teacherTimezone), typeLabel, joinUrl,
+          ),
+        );
+      }
 
       return jsonResponse({ bookedDirectly: true, creditApplied: true });
     }

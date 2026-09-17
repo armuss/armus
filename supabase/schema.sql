@@ -85,6 +85,11 @@ create table bookings (
 -- bottom of this file) has already gone out for this booking
 alter table bookings add column if not exists reminder_sent boolean not null default false;
 
+-- same idea, for the "leave a review" email sent to the student a bit
+-- after the lesson ends (send-review-reminder Edge Function, fired by
+-- the armus-review-reminders cron job at the bottom of this file)
+alter table bookings add column if not exists review_email_sent boolean not null default false;
+
 -- soft-cancellation (see cancel-booking Edge Function) - a student
 -- cancelling >= 4 hours before the lesson gets a full iyzico refund, a
 -- teacher/admin cancelling always does, a late student cancellation
@@ -424,6 +429,40 @@ create trigger profiles_lock_teacher_fields
   before update on profiles
   for each row execute procedure public.enforce_teacher_profile_lock();
 
+-- migration_63.sql: emails a teacher applicant when their status changes
+-- to approved or rejected - covers both admin.html's single approve/
+-- reject buttons and its bulk action (both are a plain profiles.update,
+-- so a DB-level trigger catches both without duplicating this in two
+-- client code paths). send-teacher-status-email is an Edge Function -
+-- deploy it too, and turn its "Verify JWT" off, same as the other
+-- trigger-fired functions. Depends on pg_net, enabled down in the LESSON
+-- REMINDER EMAILS section - fine, a trigger body is only checked against
+-- what actually exists when it *runs*, not when it's defined, and pg_net
+-- exists long before any real approval/rejection happens.
+create or replace function public.notify_teacher_status_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.status in ('approved', 'rejected') then
+    perform net.http_post(
+      url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-teacher-status-email',
+      headers := '{"Content-Type": "application/json"}'::jsonb,
+      body := jsonb_build_object('profile_id', new.id, 'status', new.status)
+    );
+  end if;
+  return new;
+end;
+$$;
+
+create trigger profiles_notify_teacher_status_change
+  after update on profiles
+  for each row
+  when (old.status is distinct from new.status)
+  execute procedure public.notify_teacher_status_change();
+
 -- bookings: student or teacher involved in the booking can read it
 create policy "bookings_select_participant"
   on bookings for select
@@ -679,6 +718,36 @@ $$;
 create trigger messages_block_contact_sharing
   before insert on messages
   for each row execute procedure public.enforce_no_contact_sharing();
+
+-- migration_62.sql: emails whichever participant did NOT send this
+-- message (send-message-notification, an Edge Function - deploy it and
+-- turn its "Verify JWT" off, same as payment-callback/send-lesson-reminder).
+-- Demo teachers are never a real conversation participant (this table's
+-- own header comment), so both conversations.student_id/teacher_id
+-- always reference a real profile with a real email - no isUuid-style
+-- guard needed here. Depends on the pg_net extension, enabled down in
+-- the LESSON REMINDER EMAILS section below - fine, since a trigger body
+-- is only checked against what actually exists when it *runs*, not when
+-- it's defined, and pg_net exists long before any real message is sent.
+create or replace function public.notify_new_message()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform net.http_post(
+    url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-message-notification',
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    body := jsonb_build_object('message_id', new.id)
+  );
+  return new;
+end;
+$$;
+
+create trigger messages_notify_new_message
+  after insert on messages
+  for each row execute procedure public.notify_new_message();
 
 -- === ADMIN PANEL EXTRAS ==========================================
 -- An admin activity log and homepage testimonials managed from the
@@ -1431,6 +1500,37 @@ select cron.schedule(
     and b.status = 'confirmed'
     and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone)
         between now() + interval '50 minutes' and now() + interval '70 minutes'
+  $$
+);
+
+-- === LEAVE-A-REVIEW EMAILS =========================================
+-- Same shape as the reminder cron above, but the other end of the
+-- lesson: runs every 10 minutes, matches any lesson that ENDED 10-40
+-- minutes ago (ARMUS_LESSON_MINUTES = 50, bookings.js) and hasn't had
+-- its review email sent yet. The 30-minute-wide window against a
+-- 10-minute schedule is the same deliberate overlap as the reminder
+-- cron - a retry safety net for a failed call, not a bug. Only the
+-- student gets this one (send-review-reminder) - reviews_insert_own_student
+-- already requires the booking not be cancelled (migration_61.sql), so
+-- no need to check status here beyond 'confirmed'.
+--
+-- send-review-reminder must have "Verify JWT" turned OFF, same as
+-- send-lesson-reminder.
+
+select cron.schedule(
+  'armus-review-reminders',
+  '*/10 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-review-reminder',
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    body := jsonb_build_object('booking_id', b.id)
+  )
+  from bookings b
+  where b.review_email_sent = false
+    and b.status = 'confirmed'
+    and ((b.lesson_date + b.lesson_time::time + interval '50 minutes') at time zone b.teacher_timezone)
+        between now() - interval '40 minutes' and now() - interval '10 minutes'
   $$
 );
 
