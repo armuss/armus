@@ -70,6 +70,57 @@ function looksLikeIdentityNumber(value: string) {
   return /^[1-9][0-9]{10}$/.test(value);
 }
 
+// mirrors cancel-booking/index.ts's armusZonedTimeToUtc - date/time here
+// are plain wall-clock strings with no zone of their own; this turns them
+// into the real UTC instant so "is this slot in the past" is checked
+// against the actual lesson time, not a UTC misreading of it.
+function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
+  const guess = new Date(`${dateStr}T${timeStr}:00Z`);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: timeZone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(guess).map((p) => [p.type, p.value]),
+  );
+  const hour = parts.hour === "24" ? 0 : Number(parts.hour);
+  const asIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    hour, Number(parts.minute), Number(parts.second),
+  );
+  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+}
+
+// booking.html only ever offers slots on the half-hour (bookings.js's
+// armusAllTimeSlots) - reject anything else outright rather than trying
+// to look it up in a teacher's grid.
+function isHalfHourSlot(timeStr: string) {
+  return /^([01][0-9]|2[0-3]):(00|30)$/.test(timeStr);
+}
+
+// mirrors bookings.js's armusSlotsForDate: a teacher's per-date grid
+// (availability_dates, keyed by day-of-week string) wins when set,
+// otherwise their older weekly_availability array (indexed by
+// day-of-week number). A teacher with neither set has never declared
+// any working hours at all, so nothing is bookable for them.
+function isSlotInTeacherAvailability(
+  weeklyAvailability: unknown,
+  availabilityDates: unknown,
+  dayOfWeek: number,
+  time: string,
+): boolean {
+  if (availabilityDates && typeof availabilityDates === "object" && Object.keys(availabilityDates as object).length) {
+    const daySlots = (availabilityDates as Record<string, string[]>)[String(dayOfWeek)] || [];
+    return Array.isArray(daySlots) && daySlots.includes(time);
+  }
+  if (Array.isArray(weeklyAvailability) && weeklyAvailability.length) {
+    const daySlots = weeklyAvailability[dayOfWeek];
+    return Array.isArray(daySlots) && daySlots.includes(time);
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
@@ -105,6 +156,9 @@ Deno.serve(async (req) => {
     }
     if (type !== "package" && (!date || !time)) {
       return jsonResponse({ error: "Eksik rezervasyon bilgisi." }, 400);
+    }
+    if (type !== "package" && !isHalfHourSlot(String(time))) {
+      return jsonResponse({ error: "Geçersiz ders saati." }, 400);
     }
 
     const numericQuantity = Number(quantity);
@@ -146,13 +200,14 @@ Deno.serve(async (req) => {
     // cron) reads it. Demo teachers have no profile row to read a real
     // timezone from, so they're always Europe/Istanbul.
     let teacherTimezone = "Europe/Istanbul";
+    const isDemoTeacher = Object.prototype.hasOwnProperty.call(DEMO_TEACHER_PRICES, teacherId);
 
-    if (Object.prototype.hasOwnProperty.call(DEMO_TEACHER_PRICES, teacherId)) {
+    if (isDemoTeacher) {
       pricePerLesson = DEMO_TEACHER_PRICES[teacherId];
     } else {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
-        .select("price, status, timezone")
+        .select("price, status, timezone, weekly_availability, availability_dates")
         .eq("id", teacherId)
         .maybeSingle();
 
@@ -161,6 +216,34 @@ Deno.serve(async (req) => {
       }
       pricePerLesson = Number(teacherProfile.price);
       teacherTimezone = teacherProfile.timezone || "Europe/Istanbul";
+
+      // booking.html's picker (bookings.js's armusSlotsForDate) only ever
+      // offers a time that's both on the teacher's declared grid and on
+      // the half-hour - but that's client-side filtering only, and this
+      // function is reachable directly (armusSupabase.functions.invoke)
+      // with any date/time at all. Without this, anyone could book (and
+      // pay for) a slot the teacher never opened, or one already in the
+      // past - the former can then be weaponized through the
+      // attendance-report system (migration_41.sql) to hide or ban a
+      // teacher over a "no-show" for a lesson time they had no way of
+      // knowing about; the latter lets a review be posted the instant
+      // payment clears instead of after the lesson actually happens.
+      if (type !== "package") {
+        const dayOfWeek = new Date(`${date}T00:00:00Z`).getUTCDay();
+        if (Number.isNaN(dayOfWeek)) {
+          return jsonResponse({ error: "Geçersiz tarih." }, 400);
+        }
+        if (!isSlotInTeacherAvailability(teacherProfile.weekly_availability, teacherProfile.availability_dates, dayOfWeek, String(time))) {
+          return jsonResponse({ error: "Öğretmen bu saatte müsait değil. Lütfen başka bir saat seç." }, 400);
+        }
+      }
+    }
+
+    if (type !== "package") {
+      const lessonStart = zonedTimeToUtc(String(date), String(time), teacherTimezone);
+      if (Number.isNaN(lessonStart.getTime()) || lessonStart < new Date()) {
+        return jsonResponse({ error: "Geçersiz ya da geçmiş bir tarih/saat seçildi." }, 400);
+      }
     }
 
     const numericPrice = type === "package" ? pricePerLesson * numericQuantity : pricePerLesson;

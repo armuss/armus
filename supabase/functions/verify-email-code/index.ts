@@ -63,11 +63,27 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Çok fazla yanlış deneme. Yeni bir kod iste." }, 400);
     }
 
+    // Claim this attempt with a conditional update (attempts must still
+    // match what was just read) before checking the code, instead of
+    // trusting the "attempts >= 5" check above and incrementing
+    // unconditionally afterward. Two guesses racing (a double-submit, a
+    // retried request) could otherwise both read attempts < 5 and both
+    // proceed to check a code, letting more than 5 guesses actually
+    // happen. This affects no one today (nothing else in the app reads
+    // email_verified yet), but the cap should hold regardless.
+    const { data: claimed } = await supabaseAdmin
+      .from("email_verifications")
+      .update({ attempts: verification.attempts + 1 })
+      .eq("id", verification.id)
+      .eq("attempts", verification.attempts)
+      .select()
+      .maybeSingle();
+
+    if (!claimed) {
+      return jsonResponse({ error: "Bir sorun oluştu, lütfen tekrar dene." }, 409);
+    }
+
     if (verification.code !== submittedCode) {
-      await supabaseAdmin
-        .from("email_verifications")
-        .update({ attempts: verification.attempts + 1 })
-        .eq("id", verification.id);
       return jsonResponse({ error: "Kod yanlış. Tekrar dene." }, 400);
     }
 

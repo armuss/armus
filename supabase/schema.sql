@@ -352,6 +352,20 @@ begin
     raise exception 'admin_lock: is_admin can only be changed by an admin';
   end if;
 
+  -- role is set once, at signup (handle_new_user, from the auth metadata
+  -- armusSignUp passes in) and never written again by any legitimate app
+  -- code path - apply-teacher.html only ever sets status/title/price/etc,
+  -- never role. Without this lock, a plain student could self-promote to
+  -- role = 'teacher' with a bare client update, which lets them pass
+  -- conversations_insert_participant's role checks and fabricate a
+  -- conversation naming any real student as the other party - and
+  -- profiles_select_conversation_partner then hands back that student's
+  -- full profile row (email, phone, city, ...), which is otherwise
+  -- completely invisible to another student.
+  if new.role is distinct from old.role then
+    raise exception 'role_lock: role can only be changed by an admin';
+  end if;
+
   if new.status is distinct from old.status and new.status is distinct from 'pending' then
     raise exception 'status_lock: only an admin can approve or reject an application';
   end if;
