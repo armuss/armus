@@ -18,6 +18,11 @@
 //     https://armus.com.tr if not set - but set it explicitly in the
 //     function's own secrets rather than relying on that default, since
 //     it can go stale if the domain ever changes again.
+//   RESEND_API_KEY, EMAIL_FROM - same as send-lesson-reminder, used here
+//     to send a booking-confirmed email to both participants (or a
+//     package-purchased email to the buyer) once the booking/credits are
+//     actually written. A failed send here never fails the payment
+//     itself - the booking/credits already exist by that point.
 
 import Iyzipay from "npm:iyzipay@^2.0.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -29,6 +34,15 @@ const iyzipay = new Iyzipay({
 });
 
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
+
+const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const MONTH_NAMES = [
+  "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+  "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+];
+const EN_WEEKDAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // teacher_id can be a demo teacher (teachers-data.js, not a real
 // Supabase user/profile) - only look one up when it's a real UUID
@@ -38,6 +52,95 @@ function isUuid(value: string) {
 
 function redirectTo(path: string) {
   return new Response(null, { status: 302, headers: { Location: `${SITE_URL}/${path}` } });
+}
+
+// mirrors send-lesson-reminder's zonedTimeToUtc/formatDateTimeLabel - see
+// that file for why the "double conversion" trick is needed and why this
+// formats back out in each RECIPIENT's own timezone, not the teacher's.
+function zonedTimeToUtc(dateKey: string, time: string, teacherTimezone: string): Date {
+  const guess = new Date(`${dateKey}T${time}:00Z`);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: teacherTimezone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(guess).map((p) => [p.type, p.value]),
+  );
+  const hour = parts.hour === "24" ? 0 : Number(parts.hour);
+  const asIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    hour, Number(parts.minute), Number(parts.second),
+  );
+  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+}
+
+function formatDateTimeLabel(lessonInstant: Date, recipientTimezone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: recipientTimezone || "Europe/Istanbul",
+      hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", weekday: "short",
+    }).formatToParts(lessonInstant).map((p) => [p.type, p.value]),
+  );
+  const dayIndex = EN_WEEKDAY_ORDER.indexOf(parts.weekday);
+  const hour = parts.hour === "24" ? "00" : parts.hour;
+  return `${Number(parts.day)} ${MONTH_NAMES[Number(parts.month) - 1]} ${DAY_NAMES[dayIndex] ?? ""}, ${hour}:${parts.minute}`;
+}
+
+function escapeHtml(str: string) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function emailShell(bodyHtml: string) {
+  return `
+  <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
+    <div style="max-width:440px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
+      ${bodyHtml}
+    </div>
+  </div>`;
+}
+
+function bookingConfirmedEmailHtml(recipientName: string, otherName: string, whenLabel: string, typeLabel: string, joinUrl: string) {
+  return emailShell(`
+    <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
+    <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
+      <strong style="color:#f4f4f2;">${escapeHtml(otherName)}</strong> ile ${escapeHtml(typeLabel)}in onaylandı:<br>
+      <strong style="color:#e8c777;">${whenLabel}</strong>
+    </p>
+    <a href="${joinUrl}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Derslerimi Gör</a>
+    <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Ders saatine kadar hazır olman gerekmez, bağlantı ders başladığında açılacak.</p>
+  `);
+}
+
+function packagePurchasedEmailHtml(recipientName: string, teacherName: string, quantity: number, dashboardUrl: string) {
+  return emailShell(`
+    <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
+    <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
+      <strong style="color:#f4f4f2;">${escapeHtml(teacherName)}</strong> ile
+      <strong style="color:#e8c777;">${quantity} derslik</strong> paketin satın alındı.
+    </p>
+    <a href="${dashboardUrl}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Ders Rezervasyonu Yap</a>
+    <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Ders haklarını dilediğin zaman kullanabilirsin.</p>
+  `);
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  try {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    });
+    if (!resp.ok) console.error("resend send failed", to, await resp.text());
+  } catch (err) {
+    console.error("resend send threw", to, err);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -164,6 +267,20 @@ Deno.serve(async (req) => {
       })
       .eq("id", pending.id);
 
+    const { data: buyerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("email, name")
+      .eq("id", pending.student_id)
+      .maybeSingle();
+
+    if (buyerProfile?.email) {
+      await sendEmail(
+        buyerProfile.email,
+        "Paketin satın alındı - ARMUS",
+        packagePurchasedEmailHtml(buyerProfile.name, pending.teacher_name, quantity, `${SITE_URL}/my-lessons.html`),
+      );
+    }
+
     return redirectTo(successPath);
   }
 
@@ -173,12 +290,14 @@ Deno.serve(async (req) => {
   // profile row to read a real timezone from, so they're always
   // Europe/Istanbul.
   let teacherTimezone = "Europe/Istanbul";
+  let teacherProfile: { timezone?: string; email?: string; name?: string } | null = null;
   if (isUuid(pending.teacher_id)) {
-    const { data: teacherProfile } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from("profiles")
-      .select("timezone")
+      .select("timezone, email, name")
       .eq("id", pending.teacher_id)
       .maybeSingle();
+    teacherProfile = data;
     teacherTimezone = teacherProfile?.timezone || "Europe/Istanbul";
   }
 
@@ -236,6 +355,37 @@ Deno.serve(async (req) => {
       iyzico_payment_transaction_id: transactionId,
     })
     .eq("id", pending.id);
+
+  const { data: studentProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("email, name, timezone")
+    .eq("id", pending.student_id)
+    .maybeSingle();
+
+  const lessonInstant = zonedTimeToUtc(pending.lesson_date, pending.lesson_time, teacherTimezone);
+  const typeLabel = pending.type === "trial" ? "deneme ders" : "ders";
+  const joinUrl = `${SITE_URL}/my-lessons.html`;
+
+  if (studentProfile?.email) {
+    await sendEmail(
+      studentProfile.email,
+      "Dersin onaylandı - ARMUS",
+      bookingConfirmedEmailHtml(
+        studentProfile.name, pending.teacher_name,
+        formatDateTimeLabel(lessonInstant, studentProfile.timezone), typeLabel, joinUrl,
+      ),
+    );
+  }
+  if (teacherProfile?.email) {
+    await sendEmail(
+      teacherProfile.email,
+      "Yeni bir dersin var - ARMUS",
+      bookingConfirmedEmailHtml(
+        teacherProfile.name, pending.student_name,
+        formatDateTimeLabel(lessonInstant, teacherProfile.timezone), typeLabel, joinUrl,
+      ),
+    );
+  }
 
   return redirectTo(successPath);
 });
