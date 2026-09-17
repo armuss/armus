@@ -602,6 +602,21 @@
       pageRoot.style.display = "block";
 
       const bookings = await armusGetBookingsForStudent(session.id);
+      // armusGetBookingsForStudent sorts strictly ascending by date/time
+      // (oldest first) with no regard for past vs. upcoming - fine for a
+      // brand-new account, but after a few months of lessons the one thing
+      // a student actually needs (today's/next lesson, still-joinable via
+      // the grace window) ends up buried under every already-completed
+      // lesson. Re-sort here: not-yet-past lessons first (soonest first),
+      // then past ones (most recent first).
+      bookings.sort((a, b) => {
+        const aPast = armusIsBookingPast(a) && !armusCanJoinLessonNow(a);
+        const bPast = armusIsBookingPast(b) && !armusCanJoinLessonNow(b);
+        if (aPast !== bPast) return aPast ? 1 : -1;
+        const aStart = armusZonedTimeToUtc(a.date, a.time, a.teacherTimezone || "Europe/Istanbul").getTime();
+        const bStart = armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone || "Europe/Istanbul").getTime();
+        return aPast ? bStart - aStart : aStart - bStart;
+      });
       const list = document.getElementById("lessonsList");
       const empty = document.getElementById("emptyState");
 
@@ -798,6 +813,13 @@
             // could disagree by a day depending on the teacher/viewer's
             // actual locations and time of day.
             const isPast = armusIsBookingPast(booking);
+            // armusIsBookingPast flips true right at the lesson's scheduled
+            // end, but class.html (and armusCanJoinLessonNow) still admits
+            // the student for ARMUS_JOIN_LATE_GRACE_MINUTES after that - so
+            // isPast alone is NOT enough to decide whether to still show
+            // the join button, or a running-late lesson's join button would
+            // vanish here while the room is still actually open.
+            const canJoinNow = armusCanJoinLessonNow(booking);
             const isCancelled = booking.status === "cancelled";
             const avatarInner = teacher
               ? (armusSafeUrl(teacher.photo) ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">` : armusEscapeHtml(teacher.initials))
@@ -807,7 +829,7 @@
             const when = armusFormatLessonWhen(booking);
 
             const card = document.createElement("div");
-            card.className = "lesson-card" + (isPast ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
+            card.className = "lesson-card" + (isPast && !canJoinNow ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
 
             card.innerHTML = `
               <div class="lesson-row">
@@ -817,7 +839,7 @@
                     ${armusEscapeHtml(armusShortDisplayName(booking.teacherName))}
                     <span class="lesson-type">${booking.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</span>
                   </div>
-                  <div class="lesson-meta">₺${booking.price} ${armusT("booking.perLesson", "/ 50 dakika")}${isPast ? armusT("myLessons.pastSuffix", " · geçti") : ""}</div>
+                  <div class="lesson-meta">₺${booking.price} ${armusT("booking.perLesson", "/ 50 dakika")}${(isPast && !canJoinNow) ? armusT("myLessons.pastSuffix", " · geçti") : ""}</div>
                 </div>
                 <div class="lesson-when">
                   <div class="lesson-date">${when.dateLabel}</div>
@@ -828,9 +850,9 @@
                 <div class="lesson-cancel-badge">
                   ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}
                 </div>
-              ` : (!isPast && (armusCanJoinLessonNow(booking) || booking.date === todayKey)) ? `
+              ` : (canJoinNow || (!isPast && booking.date === todayKey)) ? `
                 <div class="lesson-join">
-                  ${armusCanJoinLessonNow(booking)
+                  ${canJoinNow
                     ? `<a class="join-btn" href="class.html?booking=${booking.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`
                     : `<span class="join-hint">${armusT("myLessons.joinHint", "Ders saatinde bu kart üzerinden odaya katılabileceksin.")}</span>`}
                 </div>
