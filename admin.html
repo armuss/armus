@@ -1637,25 +1637,36 @@
         button.addEventListener("click", async () => {
 
           button.disabled = true;
-          let updated;
           const approved = button.dataset.changeAction === "approve";
+          const { submitted_at, ...fieldsToApply } = user.pending_changes || {};
 
-          if (approved) {
-            const { submitted_at, ...fieldsToApply } = user.pending_changes;
-            updated = await armusAdminUpdateProfile(user.id, { ...fieldsToApply, pending_changes: null });
-          } else {
-            updated = await armusAdminUpdateProfile(user.id, { pending_changes: null });
-          }
+          // user.pending_changes is whatever loadAll() last fetched - there's
+          // no polling or realtime refresh of it, so if the teacher submits
+          // ANOTHER edit between then and this click, applying/clearing it
+          // unconditionally would silently apply (or discard) fields the
+          // admin never actually reviewed on screen. Guard the write on
+          // pending_changes->>submitted_at still matching what was loaded;
+          // if it doesn't, someone else's newer submission is sitting there
+          // now and this stale click should stop, not blow it away.
+          const { data: updated, error: updateError } = await armusSupabase
+            .from("profiles")
+            .update(approved ? { ...fieldsToApply, pending_changes: null } : { pending_changes: null })
+            .eq("id", user.id)
+            .eq("pending_changes->>submitted_at", submitted_at)
+            .select()
+            .maybeSingle();
 
-          if (updated) {
-            applyProfileUpdate(updated);
-            armusLogAdminAction(
-              approved ? "change_approve" : "change_reject",
-              "profile", user.id, user.name
-            );
-          } else {
+          if (updateError || !updated) {
+            alert(armusT("admin.pendingChangeStale", "Bu talep değişmiş, lütfen sayfayı yenile."));
             button.disabled = false;
+            return;
           }
+
+          applyProfileUpdate(updated);
+          armusLogAdminAction(
+            approved ? "change_approve" : "change_reject",
+            "profile", user.id, user.name
+          );
         });
       });
 
