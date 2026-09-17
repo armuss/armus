@@ -1141,16 +1141,31 @@ function armusEscapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-// A profile's photo_url/video_url/certificate_file_url are normally
-// whatever a real Supabase Storage upload returned, but nothing stops a
-// user from writing an arbitrary string into those columns directly
-// (armusUpdateOwnProfile has no field allowlist, and RLS only checks
-// ownership) - a "javascript:" URL there would run in whoever clicks the
-// link's session (an admin reviewing an application, most importantly).
-// Only ever build an href/src from a URL that's passed through this.
+// A profile's photo_url/video_url/certificate_file_url (and a message's
+// attachment_url) are normally whatever a real Supabase Storage upload
+// returned, but nothing stops a user from writing an arbitrary string
+// into those columns directly (armusUpdateOwnProfile has no field
+// allowlist, armusSendMessage's attachment fields aren't format-checked,
+// and RLS only checks ownership) - a "javascript:" URL there would run
+// in whoever clicks the link's session (an admin reviewing an
+// application, most importantly). Only ever build an href/src from a
+// URL that's passed through this.
+//
+// Checking the scheme alone used to be the whole check - but every call
+// site drops the return value straight into an HTML attribute via a
+// template literal (src="${armusSafeUrl(...)}"), and a value like
+// `https://x.com/a.jpg" onerror="alert(1)` still passes a scheme-only
+// check, then breaks out of that attribute the moment it's interpolated
+// and adds an arbitrary one of its own. A real, unencoded http(s) URL
+// never legitimately contains a quote, angle bracket, backtick or
+// whitespace character, so rejecting any of those closes the
+// attribute-breakout at its one shared source instead of needing every
+// call site fixed individually.
 function armusSafeUrl(value) {
   const url = String(value || "").trim();
-  return /^https?:\/\//i.test(url) ? url : "";
+  if (!/^https?:\/\//i.test(url)) return "";
+  if (/["'<>`\s]/.test(url)) return "";
+  return url;
 }
 
 // For text a page sets dynamically via JS (e.g. after fetching data),
