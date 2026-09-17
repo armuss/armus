@@ -915,7 +915,7 @@
         const row = document.createElement("div");
         row.className = "language-row";
         row.innerHTML = `
-          <input type="text" class="language-name" placeholder="${armusT("applyTeacher.languageNamePlaceholder", "Dil (örn. İngilizce)")}" value="${language}">
+          <input type="text" class="language-name" placeholder="${armusT("applyTeacher.languageNamePlaceholder", "Dil (örn. İngilizce)")}" value="${armusEscapeHtml(language)}">
           <select class="language-level">
             ${LANGUAGE_LEVELS.map(l => `<option value="${l}"${l === level ? " selected" : ""}>${languageLevelLabel(l)}</option>`).join("")}
           </select>
