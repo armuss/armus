@@ -1144,25 +1144,13 @@ body {
 .visual-3 {
   height: 280px;
 }
-.visual-3 img {
+.visual-3 .v3-photo {
   position: absolute;
   inset: 22px 0 0 0;
   width: 100%;
   height: calc(100% - 22px);
   border-radius: 18px;
   object-fit: cover;
-}
-.visual-3 .s1 {
-  transform: translateX(-30px) scale(0.9);
-  opacity: 0.35;
-}
-.visual-3 .s2 {
-  transform: translateX(-15px) scale(0.95);
-  opacity: 0.6;
-}
-.visual-3 .s3 {
-  transform: translateX(0) scale(1);
-  opacity: 1;
   box-shadow: 0 20px 40px rgba(35, 26, 10, 0.16);
 }
 @media (max-width: 900px) {
