@@ -1049,18 +1049,11 @@ body {
   font-weight: 800;
   font-size: 19px;
 }
-.step-badge.b1 {
+.step-badge.b1,
+.step-badge.b2,
+.step-badge.b3 {
   background: var(--armus-gold-gradient);
   color: var(--armus-on-gold);
-}
-.step-badge.b2 {
-  background: var(--armus-silver-gradient);
-  color: #1c1c1e;
-}
-.step-badge.b3 {
-  background: var(--armus-panel-2);
-  border: 1px solid var(--armus-silver-border-strong);
-  color: var(--armus-gold-text);
 }
 .steps .step-card h3 {
   font-size: 32px;
