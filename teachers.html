@@ -404,10 +404,12 @@
       accent-color: var(--armus-gold-2);
     }
 
-    .filter-price-label {
-      font-size: 12px;
-      color: var(--armus-muted);
-      margin-bottom: 8px;
+    .filter-price-value {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--armus-ink);
+      margin-bottom: 16px;
     }
 
     .price-slider-wrap {
@@ -860,7 +862,7 @@
           <span class="chev">▾</span>
         </button>
         <div class="filter-panel">
-          <div class="filter-price-label" data-i18n="teachersPage.priceRange">Fiyat aralığı</div>
+          <div class="filter-price-value" id="priceRangeValue"></div>
           <div class="price-slider-wrap">
             <input type="range" id="priceMin" min="0" max="1000" step="50" value="0">
             <input type="range" id="priceMax" min="0" max="1000" step="50" value="1000">
@@ -1060,6 +1062,7 @@
     const priceMin = document.getElementById("priceMin");
     const priceMax = document.getElementById("priceMax");
     const priceRangeLabel = document.getElementById("priceRangeLabel");
+    const priceRangeValue = document.getElementById("priceRangeValue");
     const levelBoxValue = document.getElementById("levelBoxValue");
     const langBoxValue = document.getElementById("langBoxValue");
     const sortSelect = document.getElementById("sortSelect");
@@ -1133,7 +1136,9 @@
 
       const minPrice = Number(priceMin.value);
       const maxPrice = Number(priceMax.value);
-      priceRangeLabel.textContent = `₺${minPrice}–₺${maxPrice}${maxPrice >= 1000 ? "+" : ""}`;
+      const priceRangeText = `₺${minPrice}–₺${maxPrice}${maxPrice >= 1000 ? "+" : ""}`;
+      priceRangeLabel.textContent = priceRangeText;
+      priceRangeValue.textContent = priceRangeText;
 
       const search = searchInput.value.toLowerCase();
 
