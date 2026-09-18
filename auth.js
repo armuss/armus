@@ -4,6 +4,17 @@
  * loaded before this file.
  */
 
+// Names are stored exactly as the person typed them at signup (whatever
+// casing that was), but should always render capitalized - this only
+// affects what gets rendered, never the stored value.
+function armusCapitalizeName(fullName) {
+  return String(fullName || "")
+    .trim()
+    .split(/\s+/)
+    .map(word => word ? word[0].toUpperCase() + word.slice(1) : word)
+    .join(" ");
+}
+
 // A teacher's full real name is never shown to a student anywhere in the
 // UI - only "Ahmet Y." - so a student can't take that name off ARMUS and
 // look the teacher up (or contact them) elsewhere, bypassing the platform
@@ -12,7 +23,7 @@
 // what gets rendered. Never applied to a student's own name shown to
 // their teacher - that's not what this protects against.
 function armusShortDisplayName(fullName) {
-  const parts = String(fullName || "").trim().split(/\s+/);
+  const parts = armusCapitalizeName(fullName).split(/\s+/).filter(Boolean);
   if (parts.length < 2) return parts[0] || "Öğretmen";
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }

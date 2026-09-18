@@ -657,7 +657,7 @@
     // the same as everywhere else a teacher's identity would otherwise be
     // exposed to a student.
     function otherPartyDisplayName(name) {
-      return currentSession && currentSession.role === "student" ? armusShortDisplayName(name) : name;
+      return currentSession && currentSession.role === "student" ? armusShortDisplayName(name) : armusCapitalizeName(name);
     }
 
     function showChatWarning(message) {
