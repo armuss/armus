@@ -449,7 +449,7 @@ begin
   if new.status in ('approved', 'rejected') then
     perform net.http_post(
       url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-teacher-status-email',
-      headers := '{"Content-Type": "application/json"}'::jsonb,
+      headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
       body := jsonb_build_object('profile_id', new.id, 'status', new.status)
     );
   end if;
@@ -738,7 +738,7 @@ as $$
 begin
   perform net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-message-notification',
-    headers := '{"Content-Type": "application/json"}'::jsonb,
+    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
     body := jsonb_build_object('message_id', new.id)
   );
   return new;
@@ -1523,7 +1523,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-review-reminder',
-    headers := '{"Content-Type": "application/json"}'::jsonb,
+    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
     body := jsonb_build_object('booking_id', b.id)
   )
   from bookings b

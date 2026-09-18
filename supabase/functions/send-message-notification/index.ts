@@ -7,9 +7,16 @@
 // OFF "Verify JWT" (Enforce JWT Verification) - the trigger's HTTP call
 // carries no Supabase auth token, same as payment-callback.
 //
+// Since Verify JWT is off, anyone who guessed a real message_id could
+// otherwise call this function directly and force a re-send - the
+// TRIGGER_SECRET header check below closes that: the trigger (migration_62.sql)
+// sends this same secret in a header, and requests without it are rejected.
+//
 // Needs these secrets set (Edge Functions -> Manage secrets) - already
 // configured for the other email-sending functions, reused here as-is:
 //   RESEND_API_KEY
+//   TRIGGER_SECRET - shared with migration_62.sql's trigger function, see
+//     migration_65.sql for how it's set on the database side
 // Optional:
 //   EMAIL_FROM - defaults to "ARMUS <onboarding@resend.dev>"
 //   SITE_URL - defaults to "https://armus.com.tr"
@@ -24,6 +31,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const TRIGGER_SECRET = Deno.env.get("TRIGGER_SECRET") ?? "";
 const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
 
@@ -71,6 +79,10 @@ async function sendEmail(to: string, subject: string, html: string) {
 
 Deno.serve(async (req) => {
   try {
+    if (!TRIGGER_SECRET || req.headers.get("x-armus-trigger-secret") !== TRIGGER_SECRET) {
+      return new Response("unauthorized", { status: 401 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const messageId = body.message_id;
     if (!messageId) return new Response("missing message_id", { status: 400 });
