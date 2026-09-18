@@ -36,6 +36,17 @@ function escapeHtml(str: string) {
     .replace(/>/g, "&gt;");
 }
 
+// A teacher's full real name is never shown to a student anywhere -
+// only "Ahmet Y." (see auth.js armusShortDisplayName) - so a student
+// can't take that name off ARMUS and look the teacher up elsewhere,
+// bypassing the platform. This email always goes to the student, so
+// every teacherName it's given goes through this.
+function shortDisplayName(fullName: string) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 function reviewEmailHtml(recipientName: string, teacherName: string) {
   return `
   <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
@@ -111,7 +122,7 @@ Deno.serve(async (req) => {
     const ok = await sendEmail(
       studentProfile.email,
       "Dersin nasıldı? - ARMUS",
-      reviewEmailHtml(studentProfile.name, booking.teacher_name),
+      reviewEmailHtml(studentProfile.name, shortDisplayName(booking.teacher_name)),
     );
 
     // a genuine send failure (Resend down, rate limited) shouldn't

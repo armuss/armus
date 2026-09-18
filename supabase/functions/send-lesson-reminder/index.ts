@@ -7,8 +7,22 @@
 // OFF "Verify JWT" (Enforce JWT Verification) - the cron job's HTTP call
 // carries no Supabase auth token, same as payment-callback.
 //
+// Since Verify JWT is off, anyone who guessed a real booking_id (it's
+// embedded in class.html?booking=<id> links and in confirmation emails,
+// so it's not exactly secret) could otherwise call this function
+// directly - the TRIGGER_SECRET header check below closes that, same as
+// send-review-reminder/send-message-notification/send-teacher-status-email:
+// the cron job sends this same secret in a header, and requests without
+// it are rejected. Without this check, a student or teacher could claim
+// reminder_sent early (permanently suppressing their own real reminder)
+// or force a "starts soon" email for a lesson that's actually days away.
+//
 // Needs these secrets set (Edge Functions -> Manage secrets):
 //   RESEND_API_KEY
+//   TRIGGER_SECRET - shared with the armus-lesson-reminders cron job -
+//     make sure the cron job's HTTP call sends it as the
+//     x-armus-trigger-secret header (see send-review-reminder's cron
+//     migration, migration_65.sql, for the pattern to copy)
 // Optional:
 //   EMAIL_FROM - defaults to "ARMUS <onboarding@resend.dev>"
 //   SITE_URL - defaults to "https://armus.com.tr", but set it explicitly
@@ -17,6 +31,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const TRIGGER_SECRET = Deno.env.get("TRIGGER_SECRET") ?? "";
 const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
 
@@ -86,6 +101,18 @@ function escapeHtml(str: string) {
     .replace(/>/g, "&gt;");
 }
 
+// A teacher's full real name is never shown to a student anywhere -
+// only "Ahmet Y." (see auth.js armusShortDisplayName) - so a student
+// can't take that name off ARMUS and look the teacher up elsewhere,
+// bypassing the platform. Same policy here for the emails this function
+// sends the student; never applied to a student's own name shown to
+// their teacher.
+function shortDisplayName(fullName: string) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 function reminderEmailHtml(recipientName: string, otherName: string, whenLabel: string, joinUrl: string) {
   return `
   <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
@@ -117,6 +144,10 @@ async function sendEmail(to: string, subject: string, html: string) {
 
 Deno.serve(async (req) => {
   try {
+    if (!TRIGGER_SECRET || req.headers.get("x-armus-trigger-secret") !== TRIGGER_SECRET) {
+      return new Response("unauthorized", { status: 401 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const bookingId = body.booking_id;
     if (!bookingId) return new Response("missing booking_id", { status: 400 });
@@ -160,7 +191,7 @@ Deno.serve(async (req) => {
 
     if (studentProfile?.email) {
       const studentWhenLabel = formatDateTimeLabel(lessonInstant, studentProfile.timezone);
-      const ok = await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, booking.teacher_name, studentWhenLabel, joinUrl));
+      const ok = await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, shortDisplayName(booking.teacher_name), studentWhenLabel, joinUrl));
       allSent = allSent && ok;
     }
 

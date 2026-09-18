@@ -758,7 +758,7 @@
     const viewerId = (session && session.role === "student") ? session.id : null;
 
     const [teacher, busyTimes] = await Promise.all([
-      armusFindMarketplaceTeacher(teacherId, viewerId),
+      armusFindMarketplaceTeacher(teacherId, viewerId).catch(() => null),
       armusGetTeacherBusyTimes(teacherId).catch(() => []),
     ]);
 

@@ -196,13 +196,26 @@ function armusTrialCountsAsEarned(booking, allBookings, credits) {
     b.type === "lesson" &&
     b.status !== "cancelled"
   );
-  if (hasRealLesson) return true;
 
-  return (credits || []).some(c =>
+  const hasConversionCredit = (credits || []).some(c =>
     c.student_id === booking.studentId &&
     c.teacher_id === booking.teacherId &&
     !c.source_booking_id
   );
+
+  if (!hasRealLesson && !hasConversionCredit) return false;
+
+  // A student can end up with more than one trial booking against the
+  // same teacher (a stale/repeated booking link) - without this, every
+  // one of them would independently pass the checks above off the same
+  // single real lesson/credit, double- (or more-) counting one
+  // conversion event into a teacher's earnings. Only the earliest trial
+  // (by creation time) for this student-teacher pair is ever credited.
+  const earliestTrialId = (allBookings || [])
+    .filter(b => b.type === "trial" && b.studentId === booking.studentId && b.teacherId === booking.teacherId)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0]?.id;
+
+  return booking.id === earliestTrialId;
 }
 
 // Cancels a booking via the cancel-booking Edge Function (which also
