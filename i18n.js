@@ -1175,6 +1175,11 @@ function armusEscapeHtml(value) {
 // call site fixed individually.
 function armusSafeUrl(value) {
   const url = String(value || "").trim();
+  // demo teacher photos (teachers-data.js) are our own local files, not
+  // user input, so a plain relative path under avatars/ is allowed too -
+  // the strict filename pattern (no "..", no scheme) keeps this from
+  // becoming a loophole for the untrusted-value case below.
+  if (/^avatars\/[\w-]+\.(?:jpe?g|png|webp|svg)$/i.test(url)) return url;
   if (!/^https?:\/\//i.test(url)) return "";
   if (/["'<>`\s]/.test(url)) return "";
   return url;
