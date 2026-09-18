@@ -260,6 +260,9 @@ body {
 .teacher-card {
   position: absolute;
   width: 190px;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--armus-border);
   border-radius: 20px;
   background: var(--armus-panel);
@@ -285,6 +288,7 @@ body {
 }
 .portrait {
   height: 165px;
+  flex-shrink: 0;
   display: grid;
   place-items: end center;
   padding-bottom: 18px;
@@ -319,13 +323,26 @@ body {
 }
 .card-body {
   padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .card-body h3 {
   margin: 0 0 2px;
   font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .card-body small {
   color: var(--armus-muted);
+}
+.card-body small.role-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .card-body > strong {
   display: block;
@@ -334,6 +351,7 @@ body {
 }
 .card-body button {
   width: 100%;
+  margin-top: auto;
   border: 1px solid #444;
   background: #0a0a0a;
   color: #fff;
