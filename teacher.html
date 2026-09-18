@@ -714,38 +714,6 @@
       font-size: 13px;
     }
 
-    /* SIDEBAR */
-
-    .side-box {
-      border: 1px solid var(--armus-border);
-      background: var(--armus-panel-2);
-      border-radius: 20px;
-      padding: 22px;
-      margin-bottom: 18px;
-    }
-
-    .side-box h3 {
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-
-    .side-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--armus-border-soft);
-      color: var(--armus-muted);
-      font-size: 12px;
-    }
-
-    .side-item:last-child {
-      border-bottom: none;
-    }
-
-    .side-item strong {
-      color: var(--armus-ink);
-    }
-
     /* NOT FOUND */
 
     .not-found {
@@ -1023,43 +991,6 @@
               Henüz ödeme alınmayacak
             </div>
 
-          </div>
-
-          <div class="side-box">
-
-            <h3 data-i18n="teacherProfile.lessonInfo">Ders bilgileri</h3>
-
-            <div class="side-item">
-              <span data-i18n="teacherProfile.lessonDuration">Ders süresi</span>
-              <strong data-i18n="teacherProfile.fiftyMin">50 dk</strong>
-            </div>
-
-            <div class="side-item">
-              <span data-i18n="teacherProfile.lessonFormat">Ders formatı</span>
-              <strong data-i18n="teacherProfile.online">Online</strong>
-            </div>
-
-            <div class="side-item">
-              <span data-i18n="teacherProfile.languages">Diller</span>
-              <strong id="languages"></strong>
-            </div>
-
-            <div class="side-item">
-              <span data-i18n="teacherProfile.level">Seviye</span>
-              <strong id="levelRange"></strong>
-            </div>
-
-          </div>
-
-
-          <div class="side-box">
-            <h3 data-i18n="teacherProfile.specialties">Uzmanlık alanları</h3>
-            <div id="specialtiesList"></div>
-          </div>
-
-          <div class="side-box" id="scheduleBox" style="display: none;">
-            <h3 data-i18n="teacherProfile.weeklySchedule">Haftalık Program</h3>
-            <div id="schedulePreview"></div>
           </div>
 
         </aside>
@@ -1494,58 +1425,6 @@
         reviewsList.appendChild(div);
       });
 
-      document.getElementById("languages").textContent = teacher.languages;
-      document.getElementById("levelRange").textContent = teacher.levelRange;
-
-      const specialtiesList = document.getElementById("specialtiesList");
-      teacher.specialties.forEach(specialty => {
-
-        const item = document.createElement("div");
-        item.className = "side-item";
-
-        const label = document.createElement("span");
-        label.textContent = specialty;
-
-        const check = document.createElement("strong");
-        check.textContent = "✓";
-
-        item.appendChild(label);
-        item.appendChild(check);
-        specialtiesList.appendChild(item);
-      });
-
-      if (Array.isArray(teacher.weeklyAvailability)) {
-
-        const schedulePreview = document.getElementById("schedulePreview");
-
-        function renderSchedulePreview() {
-          // Monday-first display order (getDay() index)
-          const dayIndexes = [1, 2, 3, 4, 5, 6, 0];
-          const dayLabels = armusDayNames();
-
-          schedulePreview.innerHTML = "";
-
-          dayIndexes.forEach(dayIndex => {
-
-            const slots = teacher.weeklyAvailability[dayIndex] || [];
-            const hours = slots.length * 0.5;
-            const label = dayLabels[dayIndex];
-
-            const item = document.createElement("div");
-            item.className = "side-item";
-            item.innerHTML = slots.length
-              ? `<span>${label}</span><strong>${armusT("teacherProfile.hoursAvailable", "{n} saat müsait").replace("{n}", hours)}</strong>`
-              : `<span>${label}</span><strong style="color:var(--armus-muted);font-weight:400;">${armusT("teacherProfile.notAvailable", "Müsait değil")}</strong>`;
-
-            schedulePreview.appendChild(item);
-          });
-        }
-
-        renderSchedulePreview();
-        document.addEventListener("armus:langchange", renderSchedulePreview);
-
-        document.getElementById("scheduleBox").style.display = "block";
-      }
     }
 
     })();
