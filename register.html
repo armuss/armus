@@ -510,7 +510,7 @@
       if (!data || !data.session) {
         form.style.display = "none";
         successBox.innerHTML = armusT("register.accountCreatedSuccess", "Hesabın oluşturuldu! <strong>{email}</strong> adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.")
-          .replace("{email}", email);
+          .replace("{email}", armusEscapeHtml(email));
         successBox.style.display = "block";
         return;
       }
