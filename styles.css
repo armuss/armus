@@ -1118,24 +1118,14 @@ body {
 .visual-2 {
   height: 280px;
 }
-.visual-2 img {
+.visual-2 .v2-photo {
   position: absolute;
+  inset: 22px 0 0 0;
+  width: 100%;
+  height: calc(100% - 22px);
   border-radius: 18px;
   object-fit: cover;
   box-shadow: 0 20px 40px rgba(35, 26, 10, 0.16);
-}
-.visual-2 .v2-back {
-  width: 78%;
-  height: 100%;
-  left: 0;
-  top: 22px;
-}
-.visual-2 .v2-front {
-  width: 52%;
-  height: 58%;
-  right: 0;
-  bottom: 0;
-  border: 3px solid var(--armus-bg);
 }
 .visual-3 {
   height: 280px;
