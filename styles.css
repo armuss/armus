@@ -982,7 +982,7 @@ body {
   top: 0;
   width: 220px;
   transform: translateX(0);
-  opacity: 0.92;
+  opacity: 1;
   z-index: 1;
 }
 .teacher-card.pos-main {
@@ -998,7 +998,7 @@ body {
   top: 0;
   width: 220px;
   transform: translateX(-100%);
-  opacity: 0.92;
+  opacity: 1;
   z-index: 1;
 }
 .teacher-card.pos-stage {
