@@ -291,20 +291,11 @@ body {
   font-size: 36px;
   font-weight: 800;
   color: #1c1c1e;
-  background: var(--armus-silver-gradient);
+  background: #ffffff;
 }
 .main .portrait {
   height: 195px;
   font-size: 44px;
-}
-.portrait-sarah {
-  background: linear-gradient(145deg, #574f47, #c5b7a5);
-}
-.portrait-david {
-  background: linear-gradient(145deg, #202020, #777);
-}
-.portrait-emma {
-  background: linear-gradient(145deg, #454545, #a6a6a6);
 }
 .rating {
   position: absolute;
@@ -911,18 +902,6 @@ body {
 }
 .hero-fade {
   opacity: 0;
-}
-.portrait-emily {
-  background: linear-gradient(145deg, #454545, #a6a6a6);
-}
-.portrait-michael {
-  background: linear-gradient(145deg, #3a3226, #b8a074);
-}
-.portrait-anna {
-  background: linear-gradient(145deg, #2b2b2b, #8c8c8c);
-}
-.portrait-james {
-  background: linear-gradient(145deg, #4a4038, #d4c4a8);
 }
 .reveal {
   opacity: 0;
