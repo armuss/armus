@@ -1011,7 +1011,8 @@
           <a href="${teacherLink}" class="teacher-name">${armusEscapeHtml(armusShortDisplayName(teacher.name))}</a>
           <small class="teacher-role">${armusEscapeHtml(teacher.role)}</small>
           <div class="tags">
-            ${teacher.tags.slice(0, 2).map(tag => `<span class="tag">${armusEscapeHtml(tag)}</span>`).join("")}
+            <span class="tag">${armusEscapeHtml(teacher.completedLessons)} ${armusT("teacherProfile.lessonsWord", "ders")}</span>
+            <span class="tag">${armusT("teacherProfile.studentsCount", "{n} öğrenci").replace("{n}", teacher.students)}</span>
           </div>
           <div class="card-side">
             <span class="price">₺${teacher.price} <span>${armusT("teachersPage.perLesson", "/ ders")}</span></span>
