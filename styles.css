@@ -1111,9 +1111,15 @@ body {
 .mini-teacher-card.peek {
   height: 28px;
   margin: -14px 12px 0;
-  opacity: 0.5;
+  opacity: 0.6;
   border-radius: 0 0 16px 16px;
   z-index: 1;
+  overflow: hidden;
+}
+.mini-teacher-card.peek.peek-2 {
+  margin: -14px 22px 0;
+  opacity: 0.35;
+  z-index: 0;
 }
 .visual-2 {
   height: 280px;
