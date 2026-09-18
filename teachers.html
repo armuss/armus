@@ -643,28 +643,21 @@
       text-overflow: ellipsis;
     }
 
-    .teacher-role {
-      display: block;
-      color: var(--armus-muted);
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
     .tags {
       display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 10px;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
     }
 
     .tag {
-      font-size: 9px;
-      color: var(--armus-muted);
-      border: 1px solid var(--armus-border-soft);
-      padding: 5px 8px;
-      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--armus-ink);
     }
 
     .card-side {
@@ -1009,9 +1002,9 @@
 
         <div class="card-mid">
           <a href="${teacherLink}" class="teacher-name">${armusEscapeHtml(armusShortDisplayName(teacher.name))}</a>
-          <small class="teacher-role">${armusEscapeHtml(teacher.role)}</small>
           <div class="tags">
-            ${teacher.tags.slice(0, 2).map(tag => `<span class="tag">${armusEscapeHtml(tag)}</span>`).join("")}
+            <span class="tag">${armusEscapeHtml(teacher.completedLessons)} ${armusT("teacherProfile.lessonsWord", "ders")}</span>
+            <span class="tag">${armusT("teacherProfile.studentsCount", "{n} öğrenci").replace("{n}", teacher.students)}</span>
           </div>
           <div class="card-side">
             <span class="price">₺${teacher.price} <span>${armusT("teachersPage.perLesson", "/ ders")}</span></span>
