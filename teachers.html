@@ -41,18 +41,30 @@
     /* NAVBAR */
 
     .navbar {
-      height: 76px;
-      border-bottom: 1px solid var(--armus-border-soft);
-      display: flex;
-      align-items: center;
+      padding-top: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .nav-inner {
       width: min(1100px, calc(100% - 40px));
       margin: auto;
+      height: 68px;
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 8px 30px rgba(35, 26, 10, 0.06);
+      backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      padding: 0 12px 0 18px;
+    }
+    /* .nav-links gets the auto margin (not justify-content:space-between
+       on the row) so it self-centers while nav-utility/nav-buttons stay
+       clustered flush against the right edge - matches index.html's nav. */
+    .nav-links {
+      margin: auto;
     }
 
     .logo {
