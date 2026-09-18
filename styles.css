@@ -1109,33 +1109,37 @@ body {
   color: var(--armus-muted);
 }
 .mini-teacher-card.peek {
-  height: 28px;
-  margin: -14px 12px 0;
-  opacity: 0.5;
+  height: 46px;
+  margin: -20px 12px 0;
+  align-items: flex-start;
+  opacity: 0.85;
   border-radius: 0 0 16px 16px;
   z-index: 1;
+  overflow: hidden;
+}
+.mini-teacher-card.peek img {
+  width: 46px;
+  height: 46px;
+}
+.mini-teacher-card.peek .mtc-info small {
+  margin: 2px 0 0;
+}
+.mini-teacher-card.peek.peek-2 {
+  margin: -20px 22px 0;
+  opacity: 0.6;
+  z-index: 0;
 }
 .visual-2 {
   height: 280px;
 }
-.visual-2 img {
+.visual-2 .v2-photo {
   position: absolute;
+  inset: 10px 0 0 0;
+  width: 100%;
+  height: calc(100% - 10px);
   border-radius: 18px;
   object-fit: cover;
   box-shadow: 0 20px 40px rgba(35, 26, 10, 0.16);
-}
-.visual-2 .v2-back {
-  width: 78%;
-  height: 100%;
-  left: 0;
-  top: 22px;
-}
-.visual-2 .v2-front {
-  width: 52%;
-  height: 58%;
-  right: 0;
-  bottom: 0;
-  border: 3px solid var(--armus-bg);
 }
 .visual-3 {
   height: 280px;
