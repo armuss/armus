@@ -25,10 +25,15 @@ async function armusAddReview(review) {
   return armusMapReviewRow(data);
 }
 
+// masked_reviews (migration_67.sql), not the raw reviews table - it
+// masks the reviewing student's real name the same way masked_profiles
+// masks a teacher's, for every caller except the reviewer themselves,
+// the reviewed teacher, or an admin (all of whom the view still shows
+// the real name to).
 async function armusGetReviewsForTeacher(teacherId) {
 
   const { data, error } = await armusSupabase
-    .from("reviews")
+    .from("masked_reviews")
     .select("*")
     .eq("teacher_id", teacherId)
     .order("created_at", { ascending: false });

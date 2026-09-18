@@ -1629,10 +1629,16 @@
         submitBtn.disabled = true;
         submitBtn.textContent = armusT("applyTeacher.submitting", "Gönderiliyor...");
 
-        await submitApplication();
-
-        submitBtn.disabled = false;
-        submitBtn.textContent = armusT("applyTeacher.submitApplication", "Başvuruyu Gönder");
+        // try/finally so the button always comes back, even if
+        // submitApplication() itself somehow throws - a stuck disabled
+        // button here means someone who just filled out an 8-step form
+        // with photo/video uploads has no way to retry without reloading
+        try {
+          await submitApplication();
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = armusT("applyTeacher.submitApplication", "Başvuruyu Gönder");
+        }
       });
 
       async function submitApplication() {
@@ -1661,33 +1667,46 @@
           return;
         }
 
-        const result = await armusUpdateOwnProfile({
-          name: fullName,
-          country: document.getElementById("country").value.trim(),
-          subject_taught: subject,
-          title: subject + " Öğretmeni",
-          languages: getLanguages(),
-          phone: document.getElementById("phone").value.trim(),
-          age_confirmed: true,
-          photo_url: photoUrl,
-          has_certificate: hasCertificate,
-          certificate_name: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
-          certificate_years: hasCertificate ? document.getElementById("certificateYears").value.trim() : "",
-          certificate_file_url: hasCertificate ? certificateUrl : null,
-          certificate_file_name: hasCertificate && uploads.certificate ? uploads.certificate.name : null,
-          has_education: hasEducation,
-          university: hasEducation ? document.getElementById("university").value.trim() : "",
-          degree_type: hasEducation ? document.getElementById("degreeType").value : "",
-          graduation_year: hasEducation ? document.getElementById("graduationYear").value.trim() : "",
-          specialization: hasEducation ? document.getElementById("specialization").value.trim() : "",
-          bio: document.getElementById("description").value.trim(),
-          video_url: videoUrl,
-          availability: "Şu anda ders almaya uygun",
-          weekly_availability: getWeeklyAvailability(),
-          price: Number(document.getElementById("price").value) || 0,
-          status: "pending",
-          applied_at: new Date().toISOString(),
-        });
+        // armusUpdateOwnProfile normally resolves to false on a Supabase
+        // {error} response (handled below), but a rejection - a thrown
+        // network error, an SDK quirk, auth.getUser() failing on a stale
+        // session - is a real possibility too, same as the upload promises
+        // just above. Without this catch, that rejection propagates
+        // uncaught through this whole click handler: the button stays
+        // stuck on "Gönderiliyor..." forever, with no error shown and no
+        // way to retry short of reloading and redoing all 8 steps.
+        let result;
+        try {
+          result = await armusUpdateOwnProfile({
+            name: fullName,
+            country: document.getElementById("country").value.trim(),
+            subject_taught: subject,
+            title: subject + " Öğretmeni",
+            languages: getLanguages(),
+            phone: document.getElementById("phone").value.trim(),
+            age_confirmed: true,
+            photo_url: photoUrl,
+            has_certificate: hasCertificate,
+            certificate_name: hasCertificate ? document.getElementById("certificateName").value.trim() : "",
+            certificate_years: hasCertificate ? document.getElementById("certificateYears").value.trim() : "",
+            certificate_file_url: hasCertificate ? certificateUrl : null,
+            certificate_file_name: hasCertificate && uploads.certificate ? uploads.certificate.name : null,
+            has_education: hasEducation,
+            university: hasEducation ? document.getElementById("university").value.trim() : "",
+            degree_type: hasEducation ? document.getElementById("degreeType").value : "",
+            graduation_year: hasEducation ? document.getElementById("graduationYear").value.trim() : "",
+            specialization: hasEducation ? document.getElementById("specialization").value.trim() : "",
+            bio: document.getElementById("description").value.trim(),
+            video_url: videoUrl,
+            availability: "Şu anda ders almaya uygun",
+            weekly_availability: getWeeklyAvailability(),
+            price: Number(document.getElementById("price").value) || 0,
+            status: "pending",
+            applied_at: new Date().toISOString(),
+          });
+        } catch (err) {
+          result = false;
+        }
 
         if (result === false) {
           showStepError(armusT("applyTeacher.errSubmitFailed", "Başvuru kaydedilemedi. Lütfen tekrar dene."));

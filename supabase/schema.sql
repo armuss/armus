@@ -280,10 +280,18 @@ alter table profiles enable row level security;
 alter table bookings enable row level security;
 alter table reviews enable row level security;
 
--- profiles: anyone can read approved teachers (public marketplace) or their own row
-create policy "profiles_select_public_or_own"
+-- profiles: a user can read their own row. Public/other-party reads
+-- (the marketplace, a conversation partner, an admin) go through
+-- masked_profiles / profiles_select_conversation_partner /
+-- profiles_select_admin_all instead (migration_67.sql) - this used to
+-- also allow "status = 'approved'" here, which let anyone with the
+-- (public) anon key read every column of any approved teacher's raw
+-- row directly - not just the name masked_profiles protects, but their
+-- real email, phone, and certificate file - completely bypassing that
+-- view.
+create policy "profiles_select_own"
   on profiles for select
-  using (status = 'approved' or auth.uid() = id);
+  using (auth.uid() = id);
 
 -- profiles: a user can create only their own row
 create policy "profiles_insert_own"
@@ -478,10 +486,20 @@ create policy "bookings_select_admin_all"
 -- confirming the charge with iyzico), never directly by a student. See
 -- pending_payments above and migration_22.sql.
 
--- reviews: readable by everyone (shown on public teacher profiles)
-create policy "reviews_select_all"
+-- reviews: the raw row (with the reviewer's real, unmasked name) is
+-- readable only by the reviewing student, the reviewed teacher, and
+-- admins - everyone else reads the public masked_reviews view instead
+-- (defined further down, migration_67.sql), which masks student_name
+-- the same way masked_profiles masks a teacher's name. Review ROWS
+-- themselves stay fully public either way (shown on public teacher
+-- profiles) - only the name column's content changes.
+create policy "reviews_select_own_or_admin"
   on reviews for select
-  using (true);
+  using (
+    auth.uid() = student_id
+    or auth.uid()::text = teacher_id
+    or public.is_admin()
+  );
 
 -- reviews: a student can review only their own completed booking - same
 -- day or earlier counts as "completed" (rather than strictly before
@@ -1391,10 +1409,45 @@ create table confidence_checkins (
 
 alter table confidence_checkins enable row level security;
 
-create policy "confidence_checkins_all_own"
-  on confidence_checkins for all
+-- insert/update also verify booking_id is actually one of the caller's
+-- own bookings (migration_67.sql) - the original single "for all" policy
+-- only pinned student_id to the caller, unlike every other "own real
+-- booking" policy in this file (reviews_insert_own_student,
+-- disputes_insert_own, attendance_reports_insert_own_student all join
+-- back to bookings the same way) - a student could otherwise insert a
+-- checkin against any booking id that exists at all, polluting their
+-- own confidence-trend chart (never anyone else's - checkins are only
+-- ever readable by their own student_id).
+create policy "confidence_checkins_select_own"
+  on confidence_checkins for select
+  using (auth.uid() = student_id);
+
+create policy "confidence_checkins_insert_own"
+  on confidence_checkins for insert
+  with check (
+    auth.uid() = student_id
+    and exists (
+      select 1 from bookings b
+      where b.id = confidence_checkins.booking_id
+        and b.student_id = auth.uid()
+    )
+  );
+
+create policy "confidence_checkins_update_own"
+  on confidence_checkins for update
   using (auth.uid() = student_id)
-  with check (auth.uid() = student_id);
+  with check (
+    auth.uid() = student_id
+    and exists (
+      select 1 from bookings b
+      where b.id = confidence_checkins.booking_id
+        and b.student_id = auth.uid()
+    )
+  );
+
+create policy "confidence_checkins_delete_own"
+  on confidence_checkins for delete
+  using (auth.uid() = student_id);
 
 -- === CHAT ATTACHMENTS (STORAGE) ===================================
 -- Public bucket, same trade-off as teacher-uploads: reads are open to
@@ -1554,7 +1607,7 @@ select cron.schedule(
 -- This aggregates server-side (security definer, bypasses RLS) and
 -- returns only per-teacher COUNTS - no student identity, no individual
 -- booking rows - so it's safe to expose to anyone, same trust boundary
--- as reviews_select_all.
+-- as masked_reviews (migration_67.sql).
 create or replace function public.teacher_marketplace_stats()
 returns table (teacher_id text, completed_count bigint, student_count bigint)
 language sql
@@ -1652,3 +1705,31 @@ where
   );
 
 grant select on public.masked_profiles to anon, authenticated;
+
+-- === PUBLIC-SAFE REVIEWS VIEW (name-masking) ==========================
+-- Same bug, same fix, for reviews.student_name (migration_67.sql):
+-- reviews_select_own_or_admin above only lets the reviewing student, the
+-- reviewed teacher, and admins read the raw row - everyone else
+-- (marketplace.js, teacher.html, armusGetReviewsForTeacher) reads this
+-- view instead, which reuses short_display_name() the same way
+-- masked_profiles does. Review rows themselves stay fully public (no
+-- WHERE clause here) - only the name column's content changes.
+create or replace view public.masked_reviews
+as
+select
+  r.id,
+  r.booking_id,
+  r.teacher_id,
+  r.student_id,
+  case
+    when auth.uid() = r.student_id then r.student_name
+    when auth.uid()::text = r.teacher_id then r.student_name
+    when public.is_admin() then r.student_name
+    else public.short_display_name(r.student_name)
+  end as student_name,
+  r.stars,
+  r.comment,
+  r.created_at
+from public.reviews r;
+
+grant select on public.masked_reviews to anon, authenticated;
