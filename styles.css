@@ -156,13 +156,43 @@ body {
 .btn-lg {
   padding: 15px 21px;
 }
+.hero-band {
+  background: var(--armus-gold-gradient);
+}
 .hero {
-  min-height: 650px;
+  min-height: 600px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  align-items: center;
+  align-items: start;
   gap: 20px;
-  padding: 78px 10px 55px;
+  padding: 46px 10px 40px;
+}
+.hero-band .eyebrow {
+  color: var(--armus-on-gold);
+  opacity: 0.62;
+}
+.hero-band .dot {
+  background: var(--armus-on-gold);
+}
+.hero-band .hero h1 span {
+  color: var(--armus-on-gold);
+  opacity: 0.55;
+}
+.hero-band .hero-copy > p {
+  color: var(--armus-on-gold);
+  opacity: 0.72;
+}
+.hero-band .social-proof {
+  color: var(--armus-on-gold);
+  opacity: 0.72;
+}
+.hero-band .social-proof strong {
+  color: var(--armus-on-gold);
+  opacity: 1;
+}
+.hero-cta {
+  background: var(--armus-silver-gradient);
+  color: #1c1c1e;
 }
 .eyebrow,
 .section-label {
@@ -230,7 +260,7 @@ body {
 }
 .teacher-stack {
   position: relative;
-  height: 440px;
+  height: 410px;
 }
 .teacher-card {
   position: absolute;
@@ -936,7 +966,7 @@ body {
 }
 .teacher-card.pos-left {
   left: 2%;
-  top: 92px;
+  top: 58px;
   width: 220px;
   transform: translateX(0);
   opacity: 0.92;
@@ -944,7 +974,7 @@ body {
 }
 .teacher-card.pos-main {
   left: 50%;
-  top: 40px;
+  top: 10px;
   width: 260px;
   transform: translateX(-50%);
   opacity: 1;
@@ -952,7 +982,7 @@ body {
 }
 .teacher-card.pos-right {
   left: 98%;
-  top: 92px;
+  top: 58px;
   width: 220px;
   transform: translateX(-100%);
   opacity: 0.92;
@@ -960,7 +990,7 @@ body {
 }
 .teacher-card.pos-stage {
   left: 2%;
-  top: 92px;
+  top: 58px;
   width: 220px;
   transform: translateX(0);
   opacity: 0;
