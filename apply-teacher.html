@@ -215,6 +215,32 @@
       line-height: 1.6;
     }
 
+    .photo-rules {
+      list-style: none;
+      margin: -12px 0 22px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .photo-rules li {
+      position: relative;
+      padding-left: 22px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--armus-ink);
+    }
+
+    .photo-rules li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--armus-gold-text);
+      font-weight: 700;
+    }
+
     .field {
       margin-bottom: 16px;
     }
@@ -726,7 +752,16 @@
     <!-- STEP 2: PHOTO -->
     <section class="step-panel" data-step="2">
       <div class="step-title" data-i18n="applyTeacher.step2Title">Fotoğraf</div>
-      <div class="step-hint" data-i18n="applyTeacher.step2Hint">Yüzünün net göründüğü, tek başına olduğun, arka planı düz beyaz olan bir fotoğraf yükle.</div>
+      <div class="step-hint" data-i18n="applyTeacher.step2Hint">Fotoğrafın profilinde ve öğretmen kartında görünecek. Yüklemeden önce şu kurallara uyduğundan emin ol:</div>
+
+      <ul class="photo-rules">
+        <li data-i18n="applyTeacher.photoRuleBg">Arka plan düz beyaz olmalı</li>
+        <li data-i18n="applyTeacher.photoRuleFormal">Resmi ve sade bir fotoğraf olmalı (biyometrik fotoğraf gibi)</li>
+        <li data-i18n="applyTeacher.photoRuleLight">Işık yeterli olmalı, yüzün net ve gölgesiz görünmeli</li>
+        <li data-i18n="applyTeacher.photoRuleSmile">Hafif ve doğal bir gülümsemeyle bakmalısın</li>
+        <li data-i18n="applyTeacher.photoRuleCenter">Yüzün fotoğrafın tam ortasında olmalı</li>
+        <li data-i18n="applyTeacher.photoRuleFrame">Kafan veya omuzların kenarlardan kesilmemeli, çerçeveden taşmamalı</li>
+      </ul>
 
       <label class="upload-box" id="photoBox">
         <input type="file" id="photoInput" accept="image/png,image/jpeg">
