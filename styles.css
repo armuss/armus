@@ -970,12 +970,14 @@ body {
   }
 }
 .teacher-card {
-  transition:
-    left 1s cubic-bezier(0.65, 0, 0.35, 1),
-    transform 1s cubic-bezier(0.65, 0, 0.35, 1),
-    top 1s cubic-bezier(0.65, 0, 0.35, 1),
-    width 1s cubic-bezier(0.65, 0, 0.35, 1),
-    opacity 1s cubic-bezier(0.65, 0, 0.35, 1);
+  /* the rotator used to slide/fade cards between slots with an animated
+     transition here, but animating transform while a card is at full
+     opacity is a known Chrome/Safari trigger for blurry text (the text
+     gets rasterized once and the GPU scales/translates that bitmap
+     instead of re-rendering it crisply every frame) - the trade-off
+     wasn't worth it, so role changes now apply instantly with no
+     animation, guaranteeing every card is always sharp and readable. */
+  transition: none;
 }
 .teacher-card.pos-left {
   left: 2%;
