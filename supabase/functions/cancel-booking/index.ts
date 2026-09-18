@@ -12,11 +12,15 @@
 //   - student cancels < 4 hours before the lesson: no credit, but the
 //     booking is still cancelled (frees the slot either way)
 // A booking with no successful payment on file (pre-payment-system
-// bookings, a payment that never completed, or a lesson that was itself
-// booked for free with a credit) simply has nothing to credit - it still
-// gets cancelled normally. That last case matters: it's what stops a
-// student from farming free lessons by repeatedly cancelling a
-// credit-covered booking.
+// bookings, a payment that never completed) simply has nothing to
+// credit - it still gets cancelled normally. A lesson that was itself
+// booked for free with an existing credit is different: when the
+// STUDENT cancels that one themselves, it still gets nothing (that's
+// what stops a student from farming free lessons by repeatedly cancelling a
+// credit-covered booking) - but when the TEACHER or an ADMIN cancels
+// it, the credit that funded it comes back, matching the "always a
+// full credit" policy above (it was never the student's fault, so a
+// credit-funded booking is no different from a paid one here).
 //
 // Also sends a cancellation email (RESEND_API_KEY, EMAIL_FROM secrets,
 // same as the other Edge Functions) to whichever participant did NOT
@@ -65,6 +69,18 @@ function escapeHtml(str: string) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+// A teacher's full real name is never shown to a student anywhere -
+// only "Ahmet Y." (see auth.js armusShortDisplayName) - so a student
+// can't take that name off ARMUS and look the teacher up elsewhere,
+// bypassing the platform. Same policy here for the emails this function
+// sends the student; never applied to a student's own name shown to
+// their teacher.
+function shortDisplayName(fullName: string) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
 function cancelledEmailHtml(recipientName: string, otherName: string, whenLabel: string, note: string) {
@@ -237,9 +253,24 @@ Deno.serve(async (req) => {
       .eq("status", "succeeded")
       .maybeSingle();
 
+    // a credit-covered booking never gets a pending_payments row (see
+    // this file's header) - so when the canceller is the teacher or an
+    // admin, check whether an existing lesson_credits row was spent on
+    // THIS booking, so that credit can come back. Only for a non-student
+    // canceller: looking this up for a student cancellation would reopen
+    // the farming loophole the header warns about.
+    const { data: consumedCredit } = (!payment && cancelledBy !== "student")
+      ? await supabaseAdmin
+        .from("lesson_credits")
+        .select("id")
+        .eq("used_booking_id", booking.id)
+        .eq("status", "used")
+        .maybeSingle()
+      : { data: null };
+
     let refunded = false;
 
-    if (refundEligible && payment?.status === "succeeded") {
+    if (refundEligible && (payment?.status === "succeeded" || consumedCredit)) {
       const { error: creditError } = await supabaseAdmin.from("lesson_credits").insert({
         student_id: booking.student_id,
         teacher_id: booking.teacher_id,
@@ -280,7 +311,7 @@ Deno.serve(async (req) => {
         studentProfile.email,
         "Bir dersin iptal edildi - ARMUS",
         cancelledEmailHtml(
-          studentProfile.name, booking.teacher_name,
+          studentProfile.name, shortDisplayName(booking.teacher_name),
           formatDateTimeLabel(lessonStart, studentProfile.timezone), studentNote,
         ),
       );

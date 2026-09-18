@@ -89,6 +89,18 @@ function escapeHtml(str: string) {
     .replace(/>/g, "&gt;");
 }
 
+// A teacher's full real name is never shown to a student anywhere -
+// only "Ahmet Y." (see auth.js armusShortDisplayName) - so a student
+// can't take that name off ARMUS and look the teacher up elsewhere,
+// bypassing the platform. Same policy here for the emails this function
+// sends the student; never applied to a student's own name shown to
+// their teacher.
+function shortDisplayName(fullName: string) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 function bookingConfirmedEmailHtml(recipientName: string, otherName: string, whenLabel: string, typeLabel: string, joinUrl: string) {
   return `
   <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
@@ -450,7 +462,7 @@ Deno.serve(async (req) => {
           profile.email,
           "Dersin onaylandı - ARMUS",
           bookingConfirmedEmailHtml(
-            profile.name, teacherName,
+            profile.name, shortDisplayName(teacherName),
             formatDateTimeLabel(lessonInstant, profile.timezone), typeLabel, joinUrl,
           ),
         );

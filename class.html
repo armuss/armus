@@ -572,7 +572,10 @@
         return;
       }
 
-      const booking = await armusGetBookingById(bookingId);
+      // caught so a transient Supabase error reaches the same
+      // "invalid link" gate below instead of leaving the room state
+      // unresolved
+      const booking = await armusGetBookingById(bookingId).catch(() => null);
 
       // RLS already restricts this to participants (or admin) - a null
       // result covers both "doesn't exist" and "not your booking"

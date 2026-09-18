@@ -1481,7 +1481,11 @@ alter table profiles add column if not exists timezone text not null default 'Eu
 -- silently skipping that booking forever.
 --
 -- send-lesson-reminder must have "Verify JWT" turned OFF (same as
--- payment-callback) since this call carries no Supabase auth token.
+-- payment-callback) since this call carries no Supabase auth token -
+-- which is why it also needs the x-armus-trigger-secret header below
+-- (migration_66.sql), same reason and same secret as the review-reminder
+-- cron just under this one: without it, anyone who guessed a real
+-- booking_id could call send-lesson-reminder directly.
 
 create extension if not exists pg_cron with schema extensions;
 create extension if not exists pg_net with schema extensions;
@@ -1492,7 +1496,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-lesson-reminder',
-    headers := '{"Content-Type": "application/json"}'::jsonb,
+    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
     body := jsonb_build_object('booking_id', b.id)
   )
   from bookings b

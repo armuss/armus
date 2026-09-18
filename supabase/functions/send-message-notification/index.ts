@@ -42,6 +42,18 @@ function escapeHtml(str: string) {
     .replace(/>/g, "&gt;");
 }
 
+// A teacher's full real name is never shown to a student anywhere -
+// only "Ahmet Y." (see auth.js armusShortDisplayName) - so a student
+// can't take that name off ARMUS and look the teacher up elsewhere,
+// bypassing the platform. Applied below only when the recipient is the
+// student (i.e. the sender is their teacher) - never to a student's own
+// name shown to their teacher.
+function shortDisplayName(fullName: string) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 // mirrors mesajlar.html's attachmentPreviewLabel
 function attachmentPreviewLabel(type: string | null) {
   if (type === "image") return "📷 Fotoğraf";
@@ -121,10 +133,15 @@ Deno.serve(async (req) => {
 
     const preview = message.body ? message.body.slice(0, 200) : attachmentPreviewLabel(message.attachment_type);
 
+    const recipientIsStudent = recipientId === conversation.student_id;
+    const senderDisplayName = sender?.name
+      ? (recipientIsStudent ? shortDisplayName(sender.name) : sender.name)
+      : "Bir kullanıcı";
+
     await sendEmail(
       recipient.email,
       "Yeni bir mesajın var - ARMUS",
-      newMessageEmailHtml(recipient.name, sender?.name || "Bir kullanıcı", preview),
+      newMessageEmailHtml(recipient.name, senderDisplayName, preview),
     );
 
     return new Response("sent", { status: 200 });
