@@ -558,7 +558,10 @@
         return;
       }
 
-      const session = await armusGetSession();
+      // caught so a slow/blocked Supabase SDK still reaches showGate()
+      // below instead of leaving the page fully blank (.state-screen and
+      // .room both start hidden, so an unguarded throw here shows neither)
+      const session = await armusGetSession().catch(() => null);
 
       if (!session) {
         showGate(

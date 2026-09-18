@@ -1048,7 +1048,9 @@
 
     (async function() {
 
-      currentSession = await armusGetSession();
+      // caught so a slow/blocked Supabase SDK still reaches the static
+      // login gate below instead of leaving pageRoot's default state on screen
+      currentSession = await armusGetSession().catch(() => null);
 
       if (!currentSession) {
         gate.style.display = "block";

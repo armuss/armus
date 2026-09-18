@@ -751,8 +751,10 @@
     // session is needed before the teacher fetch, not just after it - a
     // hidden teacher (migration_41.sql) should still be bookable by a
     // student who's already had a lesson with them, not just blocked
-    // outright the way a new visitor is
-    const session = await armusGetSession();
+    // outright the way a new visitor is - caught so a slow/blocked
+    // Supabase SDK still reaches the "not found"/login-gate fallbacks
+    // below instead of leaving bookingRoot's default state on screen
+    const session = await armusGetSession().catch(() => null);
     const viewerId = (session && session.role === "student") ? session.id : null;
 
     const [teacher, busyTimes] = await Promise.all([

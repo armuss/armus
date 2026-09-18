@@ -591,7 +591,9 @@
 
     (async function() {
 
-    const session = await armusGetSession();
+    // caught so a slow/blocked Supabase SDK still reaches the static
+    // login gate below instead of leaving pageRoot's default state on screen
+    const session = await armusGetSession().catch(() => null);
 
     if (!session) {
 

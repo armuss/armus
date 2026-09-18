@@ -1192,7 +1192,9 @@
 
     (async function() {
 
-      const session = await armusGetSession();
+      // caught so a slow/blocked Supabase SDK still reaches the static
+      // login gate below instead of leaving pageRoot's default state on screen
+      const session = await armusGetSession().catch(() => null);
 
       if (!session) {
         // logged out: the logo can safely link home (no "click logo while
@@ -1739,7 +1741,7 @@
             <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
             <div class="rec-name">${armusEscapeHtml(t.name)}</div>
             <div class="rec-meta">${t.rating ? "★ " + t.rating : armusT("studentDash.newTeacher", "Yeni Öğretmen")} · ₺${t.price}</div>
-            <a class="rec-cta" href="teacher.html?id=${t.id}">${armusT("studentDash.viewProfile", "Profili Gör")}</a>
+            <a class="rec-cta" href="teacher.html?teacher=${encodeURIComponent(t.id)}">${armusT("studentDash.viewProfile", "Profili Gör")}</a>
           </div>
         `).join("");
       }
@@ -1753,7 +1755,7 @@
       if (favoriteTeachers.length > 0) {
         document.getElementById("favSection").style.display = "block";
         document.getElementById("favRow").innerHTML = favoriteTeachers.map(t => `
-          <a class="fav-chip" href="teacher.html?id=${t.id}">
+          <a class="fav-chip" href="teacher.html?teacher=${encodeURIComponent(t.id)}">
             <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
             ${armusEscapeHtml(armusShortDisplayName(t.name))}
           </a>

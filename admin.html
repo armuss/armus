@@ -3355,7 +3355,10 @@
 
     (async function() {
 
-      const session = await armusGetSession();
+      // caught so a slow/blocked Supabase SDK still reaches showGate()
+      // below instead of leaving the page fully blank (both .gate and
+      // .shell start hidden, so an unguarded throw here shows neither)
+      const session = await armusGetSession().catch(() => null);
 
       if (!session) {
         showGate(armusT("admin.gateLoginTitle", "Giriş gerekiyor"), armusT("admin.gateLoginText", "Bu panele erişmek için admin hesabınla giriş yapmalısın."));

@@ -11,7 +11,7 @@ function armusCapitalizeName(fullName) {
   return String(fullName || "")
     .trim()
     .split(/\s+/)
-    .map(word => word ? word[0].toUpperCase() + word.slice(1) : word)
+    .map(word => word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word)
     .join(" ");
 }
 
