@@ -506,6 +506,7 @@
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
+      gap: 16px;
       padding: 90px 0 70px;
     }
 
@@ -520,12 +521,30 @@
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 15px 40px rgba(35, 26, 10, 0.1);
-      margin-left: -42px;
+      cursor: pointer;
       transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
     }
 
-    .teacher-card:first-child {
-      margin-left: 0;
+    /* the overlap only kicks in once a full page of cards is guaranteed
+       to fit on one row - below that, wrapped rows would each carry the
+       same negative margin on their own leading card (only the true
+       first-child in the DOM gets it removed), cutting that card off at
+       the page edge. 960px covers TEACHERS_PER_PAGE=5 cards at 220px
+       wide with a 42px overlap (932px) plus some breathing room - if
+       TEACHERS_PER_PAGE changes, this threshold should move with it. */
+    @media (min-width: 960px) {
+      .teachers {
+        gap: 0;
+        flex-wrap: nowrap;
+      }
+
+      .teacher-card {
+        margin-left: -42px;
+      }
+
+      .teacher-card:first-child {
+        margin-left: 0;
+      }
     }
 
     .teacher-card:hover {
@@ -573,6 +592,7 @@
       position: absolute;
       left: 10px;
       top: 10px;
+      z-index: 2;
       width: 28px;
       height: 28px;
       display: grid;
@@ -714,12 +734,6 @@
     .page-ellipsis {
       color: var(--armus-faint);
       padding: 0 4px;
-    }
-
-    @media (max-width: 800px) {
-      .teacher-card {
-        margin-left: -28px;
-      }
     }
 
     .empty {
@@ -926,7 +940,7 @@
   </main>
 
 
-  <script src="i18n.js?v=5"></script>
+  <script src="i18n.js?v=6"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="favorites.js?v=4"></script>
   <script src="auth.js?v=5"></script>
@@ -999,6 +1013,14 @@
         const nowFavorited = armusToggleFavorite(btn.dataset.fav);
         btn.classList.toggle("active", nowFavorited);
         if (favoritesOnlyFilter.checked) updateTeachers();
+      });
+
+      // the whole card opens the teacher's profile now (matching the
+      // hover-lift feel of "this whole thing is clickable") - except its
+      // own interactive bits, which keep their own actions
+      article.addEventListener("click", event => {
+        if (event.target.closest("a, button")) return;
+        window.location.href = teacherLink;
       });
 
       return article;
