@@ -1034,7 +1034,7 @@ body {
   position: static;
   padding: 36px;
   background: var(--armus-panel);
-  border: 1px solid var(--armus-border-soft);
+  border: 2px solid var(--armus-silver-border-strong);
   border-radius: 24px;
   display: flex;
   flex-direction: column;
