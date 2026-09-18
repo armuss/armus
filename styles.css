@@ -970,44 +970,46 @@ body {
   }
 }
 .teacher-card {
-  /* the rotator used to slide/fade cards between slots with an animated
-     transition here, but animating transform while a card is at full
-     opacity is a known Chrome/Safari trigger for blurry text (the text
-     gets rasterized once and the GPU scales/translates that bitmap
-     instead of re-rendering it crisply every frame) - the trade-off
-     wasn't worth it, so role changes now apply instantly with no
-     animation, guaranteeing every card is always sharp and readable. */
-  transition: none;
+  /* animating left (a layout property) instead of transform keeps text
+     crisp during the slide - animating transform on a fully-opaque
+     text-containing element is what caused the earlier blur, because the
+     browser rasterizes the text once and the GPU scales/translates that
+     bitmap instead of re-rendering it every frame. left-based motion
+     forces a real re-paint each frame, so there's no bitmap to blur. */
+  transition:
+    left 1s cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 1s cubic-bezier(0.65, 0, 0.35, 1);
 }
+/* left/main/right are positioned with a fixed-pixel overlap (not a
+   percentage) so the front (main) card only ever covers a small sliver
+   of its neighbors - enough for the stacked-photo look, not enough to
+   cover their name/role text underneath. A percentage-based overlap grew
+   with the container and used to eat most of the side cards' text. */
 .teacher-card.pos-left {
-  left: 2%;
+  left: calc(50% - 318px);
   top: 0;
   width: 220px;
-  transform: translateX(0);
   opacity: 1;
   z-index: 1;
 }
 .teacher-card.pos-main {
-  left: 50%;
+  left: calc(50% - 110px);
   top: 0;
   width: 220px;
-  transform: translateX(-50%);
   opacity: 1;
   z-index: 3;
 }
 .teacher-card.pos-right {
-  left: 98%;
+  left: calc(50% + 98px);
   top: 0;
   width: 220px;
-  transform: translateX(-100%);
   opacity: 1;
   z-index: 1;
 }
 .teacher-card.pos-stage {
-  left: 2%;
+  left: calc(50% - 318px);
   top: 0;
   width: 220px;
-  transform: translateX(0);
   opacity: 0;
   z-index: 0;
   pointer-events: none;
