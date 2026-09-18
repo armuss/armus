@@ -970,7 +970,7 @@ body {
 .teacher-card.pos-main {
   left: 50%;
   top: 0;
-  width: 220px;
+  width: 190px;
   transform: translateX(-50%);
   opacity: 1;
   z-index: 3;
@@ -998,8 +998,8 @@ body {
     font-size 1s cubic-bezier(0.65, 0, 0.35, 1);
 }
 .pos-main .portrait {
-  height: 195px;
-  font-size: 44px;
+  height: 165px;
+  font-size: 36px;
 }
 .card-body button {
   transition:
@@ -1012,9 +1012,6 @@ body {
 }
 .teacher-card .tags span:nth-child(n + 3) {
   display: none;
-}
-.teacher-card.pos-main .tags span:nth-child(n + 3) {
-  display: inline-block;
 }
 .portrait {
   position: relative;
