@@ -181,7 +181,10 @@ async function armusGetRegisteredTeachers(viewerId) {
       .select("*")
       .eq("role", "teacher")
       .eq("status", "approved"),
-    armusSupabase.from("reviews").select("*"),
+    // masked_reviews (migration_67.sql), not the raw reviews table - see
+    // its comment above the masked_profiles call: same reasoning, for a
+    // reviewing student's real name instead of a teacher's.
+    armusSupabase.from("masked_reviews").select("*"),
     armusSupabase.rpc("teacher_marketplace_stats"),
   ]);
 
