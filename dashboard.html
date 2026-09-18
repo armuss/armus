@@ -1821,7 +1821,7 @@
       document.getElementById("avatar").innerHTML = armusSafeUrl(user.photo_url)
         ? `<img src="${armusSafeUrl(user.photo_url)}" alt="">`
         : armusEscapeHtml(user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase());
-      document.getElementById("dashName").textContent = user.name;
+      document.getElementById("dashName").textContent = armusCapitalizeName(user.name);
       document.getElementById("dashEmail").textContent = user.email;
 
       await renderAttendanceBanner(user);
@@ -2112,7 +2112,7 @@
         if (recentReviews.length) {
           digestParts.push(armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
         }
-        const firstName = user.name.split(" ")[0];
+        const firstName = armusCapitalizeName(user.name).split(" ")[0];
         document.getElementById("digestCard").innerHTML =
           armusT("teacherDash.digestGreeting", "👋 Merhaba {name}, ").replace("{name}", firstName) + digestParts.join(", ") + ".";
       }

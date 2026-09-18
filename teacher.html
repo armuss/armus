@@ -1398,7 +1398,7 @@
 
         const name = document.createElement("div");
         name.className = "review-name";
-        name.textContent = review.name;
+        name.textContent = armusCapitalizeName(review.name);
         nameWrap.appendChild(name);
 
         if (review.date) {
