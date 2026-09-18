@@ -961,7 +961,7 @@ body {
 }
 .teacher-card.pos-left {
   left: 2%;
-  top: 34px;
+  top: 0;
   width: 190px;
   transform: translateX(0);
   opacity: 0.92;
@@ -977,7 +977,7 @@ body {
 }
 .teacher-card.pos-right {
   left: 98%;
-  top: 34px;
+  top: 0;
   width: 190px;
   transform: translateX(-100%);
   opacity: 0.92;
@@ -985,7 +985,7 @@ body {
 }
 .teacher-card.pos-stage {
   left: 2%;
-  top: 34px;
+  top: 0;
   width: 190px;
   transform: translateX(0);
   opacity: 0;
