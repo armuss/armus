@@ -58,7 +58,7 @@ function armusInitHeroRotator(){
     article.querySelector('.tags').innerHTML=teacher.tags.slice(0,3).map(t=>'<span>'+t+'</span>').join('');
     article.querySelector('.price').innerHTML='₺'+teacher.price+' <small>/ ders</small>';
     article.querySelector('.card-body button').onclick=function(){
-      window.location.href='teacher.html?id='+teacher.id;
+      window.location.href='teacher.html?teacher='+encodeURIComponent(teacher.id);
     };
   }
 
