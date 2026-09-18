@@ -964,7 +964,10 @@
 
     (async function() {
 
-    const session = await armusGetSession();
+    // caught so a slow/blocked Supabase SDK degrades to "not logged in"
+    // (shows the gate) instead of leaving the page blank with neither
+    // the gate nor the wizard ever shown
+    const session = await armusGetSession().catch(() => null);
 
     if (!session || session.role !== "teacher") {
 

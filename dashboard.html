@@ -2112,7 +2112,7 @@
         if (recentReviews.length) {
           digestParts.push(armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
         }
-        const firstName = armusCapitalizeName(user.name).split(" ")[0];
+        const firstName = armusEscapeHtml(armusCapitalizeName(user.name).split(" ")[0]);
         document.getElementById("digestCard").innerHTML =
           armusT("teacherDash.digestGreeting", "👋 Merhaba {name}, ").replace("{name}", firstName) + digestParts.join(", ") + ".";
       }

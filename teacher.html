@@ -1025,8 +1025,11 @@
 
     // needed up front (not just for the "Mesaj Gönder" check further
     // below) so a hidden teacher (migration_41.sql) still shows normally
-    // to a student who's already booked them, not just to new visitors
-    const viewerSession = await armusGetSession();
+    // to a student who's already booked them, not just to new visitors -
+    // caught so a slow/blocked Supabase SDK (ad-blocker, bad connection)
+    // degrades to "anonymous visitor" instead of blanking the whole page,
+    // demo teachers included, which need no session or network at all
+    const viewerSession = await armusGetSession().catch(() => null);
     const viewerId = (viewerSession && viewerSession.role === "student") ? viewerSession.id : null;
 
     const teacher = await armusFindMarketplaceTeacher(teacherId, viewerId);
