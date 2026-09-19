@@ -947,6 +947,15 @@
       event.target.value = "";
       if (!file || !activeConversationId) return;
 
+      // checked here, before ever attempting the upload, so an
+      // unsupported format (e.g. an iPhone photo reported as image/heic)
+      // gets a specific message instead of the same generic "couldn't
+      // send" text a real network/storage failure would show
+      if (!armusAttachmentTypeForFile(file)) {
+        showChatWarning(armusT("messages.fileTypeUnsupported", "Bu dosya türü desteklenmiyor. JPEG, PNG, GIF, WEBP, MP4 ya da WEBM dene."));
+        return;
+      }
+
       const maxBytes = file.type.startsWith("video/") ? 25 * 1024 * 1024 : 8 * 1024 * 1024;
       if (file.size > maxBytes) {
         showChatWarning(armusT("messages.fileTooBig", "Dosya çok büyük (maks {mb}MB).").replace("{mb}", Math.round(maxBytes / 1024 / 1024)));
@@ -970,6 +979,7 @@
     let recordedChunks = [];
     let recordingCancelled = false;
     let recordingTimerInterval = null;
+    let micRequestInFlight = false;
 
     document.getElementById("micBtn").addEventListener("click", async () => {
 
@@ -980,13 +990,26 @@
         return;
       }
 
+      // guards the window between this click and getUserMedia()
+      // resolving - mediaRecorder is still null here, so without this a
+      // second click before the (often human-perceptible, especially on
+      // a first-ever permission prompt) permission dialog resolves would
+      // start a SECOND independent recording, silently overwriting the
+      // shared mediaRecorder/recordingTimerInterval variables above and
+      // orphaning the first one (its interval never cleared, its audio
+      // never uploaded, its mic stream never explicitly released).
+      if (micRequestInFlight) return;
+      micRequestInFlight = true;
+
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch (err) {
+        micRequestInFlight = false;
         showChatWarning(armusT("messages.micDenied", "Mikrofon erişimi alınamadı. Tarayıcı izinlerini kontrol et."));
         return;
       }
+      micRequestInFlight = false;
 
       hideChatWarning();
       recordedChunks = [];

@@ -2387,21 +2387,48 @@
         });
       }
 
+      // matches apply-teacher.html's own signup-time checks exactly (same
+      // 400-char bio minimum, same "price > 0" rule) - without this, an
+      // already-approved teacher could submit a price of 0/negative or a
+      // near-empty bio through pending_changes with no error shown here,
+      // only for admin's Approve click to fail later against the DB's
+      // "price > 0" check constraint with a misleading "this request has
+      // changed, refresh the page" message that has nothing to do with
+      // the actual (price/bio) cause.
+      const TEACHER_MIN_BIO_CHARS = 400;
+
       document.getElementById("profileForm").addEventListener("submit", async event => {
 
         event.preventDefault();
 
+        const status = document.getElementById("saveStatus");
+        const priceValue = Number(document.getElementById("price").value);
+        const bioValue = document.getElementById("bio").value.trim();
+
+        if (!priceValue || priceValue <= 0) {
+          status.textContent = armusT("teacherDash.errPriceRequired", "Geçerli bir ders ücreti gir.");
+          status.classList.add("visible");
+          setTimeout(() => status.classList.remove("visible"), 2500);
+          return;
+        }
+
+        if (bioValue.length < TEACHER_MIN_BIO_CHARS) {
+          status.textContent = armusT("teacherDash.errBioTooShort", "Açıklama en az {min} karakter olmalı (şu an {n} karakter).")
+            .replace("{min}", TEACHER_MIN_BIO_CHARS).replace("{n}", bioValue.length);
+          status.classList.add("visible");
+          setTimeout(() => status.classList.remove("visible"), 2500);
+          return;
+        }
+
         const newPendingChanges = {
           ...(user.pending_changes || {}),
           title: document.getElementById("title").value.trim(),
-          price: Number(document.getElementById("price").value) || 0,
+          price: priceValue,
           availability: document.getElementById("availability").value,
-          bio: document.getElementById("bio").value.trim(),
+          bio: bioValue,
         };
 
         const result = await armusUpdateOwnProfile({ pending_changes: newPendingChanges });
-
-        const status = document.getElementById("saveStatus");
 
         if (result === false) {
           status.textContent = armusT("teacherDash.submitFailed", "Gönderilemedi ✕");
