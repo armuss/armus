@@ -679,20 +679,40 @@
       // authenticated, but it stops the app's own UI from actively
       // surfacing a shareable link past the two people who are supposed
       // to be here.
-      const jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
-        roomName: armusRoomNameForBooking(booking.id),
-        parentNode: document.getElementById("jitsiContainer"),
-        userInfo: { displayName: session.name },
-        configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
-        interfaceConfigOverwrite: {
-          MOBILE_APP_PROMO: false,
-          TOOLBAR_BUTTONS: [
-            "microphone", "camera", "desktop", "fullscreen", "fodeviceselection",
-            "hangup", "profile", "chat", "raisehand", "videoquality", "filmstrip",
-            "tileview", "settings", "shortcuts",
-          ],
-        },
-      });
+      // Caught so a blocked/failed meet.jit.si script (a school/corporate
+      // network filtering video-conferencing CDNs, a transient jit.si
+      // outage) doesn't leave this - the single most safety-critical page
+      // in the app, a live paid lesson - as a dead shell: everything
+      // below this point (the report-issue button, the leave button, the
+      // lesson-progress timer) is wired up in the same synchronous flow,
+      // so an uncaught throw here would silently skip all of it too, with
+      // no error shown and no working control left except the static
+      // logo link in the room bar.
+      let jitsiApi = null;
+      try {
+        jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
+          roomName: armusRoomNameForBooking(booking.id),
+          parentNode: document.getElementById("jitsiContainer"),
+          userInfo: { displayName: session.name },
+          configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
+          interfaceConfigOverwrite: {
+            MOBILE_APP_PROMO: false,
+            TOOLBAR_BUTTONS: [
+              "microphone", "camera", "desktop", "fullscreen", "fodeviceselection",
+              "hangup", "profile", "chat", "raisehand", "videoquality", "filmstrip",
+              "tileview", "settings", "shortcuts",
+            ],
+          },
+        });
+      } catch (err) {
+        console.error("Jitsi failed to load", err);
+        document.getElementById("jitsiContainer").innerHTML = `
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;color:#fff;">
+            <p style="max-width:360px;">${armusT("class.jitsiLoadError", "Görüntülü ders bağlantısı yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.")}</p>
+            <button type="button" class="btn btn-light" onclick="window.location.reload()">${armusT("class.jitsiLoadRetry", "Sayfayı Yenile")}</button>
+          </div>
+        `;
+      }
 
       // ---- report a no-show / late teacher, right from inside the
       // room - a student shouldn't have to sit through the whole lesson
@@ -1056,7 +1076,7 @@
       }
 
       document.getElementById("leaveBtn").addEventListener("click", openPostClassModal);
-      jitsiApi.addEventListener("readyToClose", openPostClassModal);
+      if (jitsiApi) jitsiApi.addEventListener("readyToClose", openPostClassModal);
 
     })();
 

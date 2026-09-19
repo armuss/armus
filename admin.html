@@ -3171,14 +3171,21 @@
 
     // ---- keyboard shortcuts for pending applications (j/k/a/r) + global Ctrl/Cmd+K ----
 
-    let armusFocusedPendingIndex = -1;
+    // tracked by the card's teacher id, not its array index - approving/
+    // rejecting a card rebuilds #pendingList from scratch (one fewer
+    // card, all new DOM nodes), so a remembered index silently pointed
+    // at a DIFFERENT teacher after every action, and pressing a/r again
+    // (the natural next move when triaging a queue) could approve or
+    // reject someone the admin never actually looked at
+    let armusFocusedPendingId = null;
 
     function focusPendingCard(index) {
       const cards = Array.from(document.querySelectorAll("#pendingList .app-card"));
       cards.forEach(c => c.classList.remove("kbd-focus"));
-      if (!cards.length) { armusFocusedPendingIndex = -1; return; }
-      armusFocusedPendingIndex = Math.max(0, Math.min(index, cards.length - 1));
-      const card = cards[armusFocusedPendingIndex];
+      if (!cards.length) { armusFocusedPendingId = null; return; }
+      const clampedIndex = Math.max(0, Math.min(index, cards.length - 1));
+      const card = cards[clampedIndex];
+      armusFocusedPendingId = card.dataset.id;
       card.classList.add("kbd-focus");
       card.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -3201,18 +3208,24 @@
       const teachersPanelActive = document.getElementById("panel-teachers").classList.contains("active");
       if (!teachersPanelActive) return;
 
-      const cards = document.querySelectorAll("#pendingList .app-card");
+      const cards = Array.from(document.querySelectorAll("#pendingList .app-card"));
       if (!cards.length) return;
+
+      // re-derived by id every keypress, never trusted from a previous
+      // render - see the comment on armusFocusedPendingId above
+      const currentIndex = armusFocusedPendingId
+        ? cards.findIndex(c => c.dataset.id === armusFocusedPendingId)
+        : -1;
 
       if (event.key === "j") {
         event.preventDefault();
-        focusPendingCard(armusFocusedPendingIndex + 1);
+        focusPendingCard(currentIndex + 1);
       } else if (event.key === "k") {
         event.preventDefault();
-        focusPendingCard(armusFocusedPendingIndex <= 0 ? 0 : armusFocusedPendingIndex - 1);
+        focusPendingCard(currentIndex <= 0 ? 0 : currentIndex - 1);
       } else if (event.key === "a" || event.key === "r") {
-        if (armusFocusedPendingIndex < 0) return;
-        const card = cards[armusFocusedPendingIndex];
+        if (currentIndex < 0) return;
+        const card = cards[currentIndex];
         if (!card) return;
         const button = card.querySelector(event.key === "a" ? "[data-action='approve']" : "[data-action='reject']");
         if (button) button.click();
