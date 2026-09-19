@@ -414,6 +414,8 @@ const ARMUS_I18N_EN = {
   "class.backToLessons": "← Back to my lessons",
   "class.tooLateTitle": "This lesson has ended",
   "class.tooLateText": "This lesson's room time has run out. You can book a new lesson to get a new room.",
+  "class.jitsiLoadError": "The video call couldn't load. Check your internet connection and refresh the page.",
+  "class.jitsiLoadRetry": "Refresh Page",
   "class.leave": "Leave",
   "class.addWord": "+ Add Word",
   "class.wordPlaceholder": "Word",
