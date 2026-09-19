@@ -53,7 +53,7 @@ export async function createPayment(params: CreatePaymentParams): Promise<Create
 // merely contains that substring anywhere - not necessarily one iyzico
 // or ARMUS ever produced. Matching the exact origin and query param
 // instead means only the one specific, server-verified redirect counts.
-const SITE_URL = 'https://armus.vercel.app';
+const SITE_URL = 'https://armus.com.tr';
 
 export function parsePaymentRedirect(url: string): 'success' | 'failed' | 'error' | null {
   let parsed: URL;

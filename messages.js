@@ -159,11 +159,30 @@ async function armusEditMessage(messageId, newBody) {
   return data;
 }
 
+// mirrors the chat-attachments storage bucket's real allowed_mime_types
+// (schema.sql) exactly - checking only the image/video/audio PREFIX (the
+// old behavior) let a file pass this client-side check and actually
+// upload, only to be rejected by Storage's own MIME allow-list, with no
+// way for the caller here to tell "unsupported format" apart from a
+// generic network/upload failure. A common real case: an iPhone photo
+// reported as image/heic - passes a prefix check, but was never in the
+// bucket's allow-list.
+const ARMUS_CHAT_ATTACHMENT_MIME_TYPES = {
+  "image/png": "image",
+  "image/jpeg": "image",
+  "image/gif": "image",
+  "image/webp": "image",
+  "video/mp4": "video",
+  "video/webm": "video",
+  "video/quicktime": "video",
+  "audio/webm": "audio",
+  "audio/mpeg": "audio",
+  "audio/mp4": "audio",
+  "audio/ogg": "audio",
+};
+
 function armusAttachmentTypeForFile(file) {
-  if (file.type.startsWith("image/")) return "image";
-  if (file.type.startsWith("video/")) return "video";
-  if (file.type.startsWith("audio/")) return "audio";
-  return null;
+  return ARMUS_CHAT_ATTACHMENT_MIME_TYPES[file.type] || null;
 }
 
 // Uploads a photo/video/voice-recording file to the chat-attachments
