@@ -7,7 +7,7 @@ import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { colors, fonts, radius } from '../../lib/theme';
 
-const SITE_URL = 'https://armus.vercel.app';
+const SITE_URL = 'https://armus.com.tr';
 
 export default function Profile() {
   const { profile, signOut, deleteAccount } = useAuth();

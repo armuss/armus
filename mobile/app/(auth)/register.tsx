@@ -21,7 +21,7 @@ import { colors, fonts, radius } from '../../lib/theme';
 // certificate, video, availability...) - the app only ever creates
 // student accounts. An existing teacher account (approved via the site)
 // still logs in and uses the app's teacher screens just fine.
-const TEACHER_APPLY_URL = 'https://armus.vercel.app/apply-teacher.html';
+const TEACHER_APPLY_URL = 'https://armus.com.tr/apply-teacher.html';
 
 export default function Register() {
   const [name, setName] = useState('');

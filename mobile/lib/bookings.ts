@@ -10,6 +10,7 @@ export type Booking = {
   date: string;
   dateLabel: string;
   time: string;
+  teacherTimezone: string;
   price: number;
   status: string;
 };
@@ -94,6 +95,7 @@ function mapBookingRow(row: any): Booking {
     date: row.lesson_date,
     dateLabel: formatDateLabel(row.lesson_date),
     time: row.lesson_time,
+    teacherTimezone: row.teacher_timezone || 'Europe/Istanbul',
     price: row.price,
     status: row.status || 'confirmed',
   };
@@ -139,11 +141,42 @@ export function roomNameForBooking(bookingId: string) {
   return 'armus-lesson-' + String(bookingId).replace(/-/g, '');
 }
 
+// lesson_date/lesson_time are plain wall-clock strings with no zone of
+// their own - they mean whatever the TEACHER's calendar grid meant when
+// they set their availability, in the teacher's own local time
+// (booking.teacherTimezone, migration_37.sql). This turns them into the
+// real UTC instant, correctly handling DST for any zone - mirrors the
+// web app's armusZonedTimeToUtc (bookings.js) exactly: format a UTC
+// guess back in the target zone, see how far off the wall-clock reading
+// is, and shift by that difference. Without this, a device whose OS
+// timezone isn't Europe/Istanbul (a user currently abroad, or simply a
+// phone set to UTC) computed the join window against the wrong instant,
+// off by exactly the timezone difference - shown "too early" for a
+// lesson already in progress, or let into/locked out of the room hours
+// off from the real scheduled time.
+function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
+  const guess = new Date(`${dateStr}T${timeStr}:00Z`);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timeZone || 'Europe/Istanbul',
+      hour12: false,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).formatToParts(guess).map((p) => [p.type, p.value])
+  );
+  const hour = parts.hour === '24' ? 0 : Number(parts.hour);
+  const asIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    hour, Number(parts.minute), Number(parts.second)
+  );
+  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+}
+
 const JOIN_EARLY_MINUTES = 15;
 const JOIN_LATE_GRACE_MINUTES = 15;
 
 export function lessonWindow(booking: Booking) {
-  const start = new Date(`${booking.date}T${booking.time}:00`);
+  const start = zonedTimeToUtc(booking.date, booking.time, booking.teacherTimezone);
   const end = new Date(start.getTime() + LESSON_MINUTES * 60000);
   const joinsFrom = new Date(start.getTime() - JOIN_EARLY_MINUTES * 60000);
   const joinsUntil = new Date(end.getTime() + JOIN_LATE_GRACE_MINUTES * 60000);
