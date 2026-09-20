@@ -282,13 +282,14 @@ alter table reviews enable row level security;
 
 -- profiles: a user can read their own row. Public/other-party reads
 -- (the marketplace, a conversation partner, an admin) go through
--- masked_profiles / profiles_select_conversation_partner /
--- profiles_select_admin_all instead (migration_67.sql) - this used to
--- also allow "status = 'approved'" here, which let anyone with the
--- (public) anon key read every column of any approved teacher's raw
--- row directly - not just the name masked_profiles protects, but their
--- real email, phone, and certificate file - completely bypassing that
--- view.
+-- masked_profiles / profiles_select_admin_all instead (migration_67.sql
+-- and migration_70.sql) - this used to also allow "status = 'approved'"
+-- here, which let anyone with the (public) anon key read every column
+-- of any approved teacher's raw row directly - not just the name
+-- masked_profiles protects, but their real email, phone, and
+-- certificate file - completely bypassing that view. migration_70.sql
+-- closed the same hole for a conversation partner's raw row (see the
+-- removed profiles_select_conversation_partner policy, further down).
 create policy "profiles_select_own"
   on profiles for select
   using (auth.uid() = id);
@@ -382,10 +383,9 @@ begin
   -- never role. Without this lock, a plain student could self-promote to
   -- role = 'teacher' with a bare client update, which lets them pass
   -- conversations_insert_participant's role checks and fabricate a
-  -- conversation naming any real student as the other party - and
-  -- profiles_select_conversation_partner then hands back that student's
-  -- full profile row (email, phone, city, ...), which is otherwise
-  -- completely invisible to another student.
+  -- conversation naming any real student as the other party - masking
+  -- as a fake teacher to talk to a student who'd normally never see
+  -- them in the marketplace.
   if new.role is distinct from old.role then
     raise exception 'role_lock: role can only be changed by an admin';
   end if;
@@ -696,19 +696,25 @@ create trigger messages_enforce_edit_rules
 
 alter publication supabase_realtime add table messages;
 
--- lets each side of a conversation read the other's name/photo - without
--- this, a student's profile row (no "approved" status of its own) is
--- invisible to profiles_select_public_or_own, so a teacher's inbox falls
--- back to a generic "Kullanıcı" label for every student they message.
-create policy "profiles_select_conversation_partner"
-  on profiles for select
-  using (
-    exists (
-      select 1 from conversations c
-      where (c.student_id = auth.uid() and c.teacher_id = profiles.id)
-         or (c.teacher_id = auth.uid() and c.student_id = profiles.id)
-    )
-  );
+-- migration_70.sql removed this policy. It used to let each side of a
+-- conversation read the other's raw profiles row so a teacher's inbox
+-- wouldn't fall back to a generic "Kullanıcı" label for a student who
+-- has no "approved" status of their own. But RLS is row-level, not
+-- column-level - "read the other's name/photo" actually granted every
+-- column, including email, phone, and certificate_file_url, to anyone
+-- who had ever messaged the row's owner. Any student could open a
+-- conversation with any teacher (no booking required - see
+-- messages_insert_own below) and then read that teacher's real email,
+-- phone number and certificate file straight off the raw REST endpoint
+-- or a postgres_changes subscription (profiles is in the
+-- supabase_realtime publication), bypassing masked_profiles and the
+-- enforce_no_contact_sharing trigger's whole purpose. masked_profiles
+-- (below) already reproduces this exact "own side of a conversation"
+-- predicate in its WHERE clause and only exposes the columns a partner
+-- actually needs (masked name, photo, bio, etc, never email/phone/
+-- certificate_file_url) - every call site already reads from it instead
+-- of the raw table for a conversation partner, so this raw-table policy
+-- was pure unused exposure once masked_profiles shipped.
 
 -- blocks off-platform contact sharing (phone numbers, email addresses,
 -- named outside messaging apps) in chat until the two of them actually
@@ -1701,11 +1707,12 @@ grant execute on function public.teacher_marketplace_stats() to anon, authentica
 -- and messages.js now read from this view instead of the raw table for
 -- every place a student (or anonymous visitor) sees a teacher's name.
 --
--- Its WHERE clause reproduces the union of profiles_select_public_or_own's
--- public branch (status = 'approved') and profiles_select_conversation_partner,
--- so this view never exposes a ROW the base table's RLS didn't already
--- allow that same viewer to read - only the `name` column's content
--- changes, and only for a teacher row, and only when the viewer isn't
+-- Its WHERE clause reproduces the old profiles_select_public_or_own
+-- policy's public branch (status = 'approved') plus the
+-- conversation-partner predicate migration_70.sql removed from the
+-- base table's own RLS (it's evaluated here instead, scoped to this
+-- view's safe column list) - only the `name` column's content changes,
+-- and only for a teacher row, and only when the viewer isn't
 -- that teacher themselves or an admin.
 
 create or replace function public.short_display_name(full_name text)

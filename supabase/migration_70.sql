@@ -1,0 +1,36 @@
+-- ARMUS migration 70: removes profiles_select_conversation_partner, a
+-- raw-table RLS policy that let either side of a conversation read the
+-- OTHER party's full profiles row - not just their name/photo (what it
+-- was written for), but every column, including email, phone, and
+-- certificate_file_url. RLS is row-level, not column-level, so "let a
+-- conversation partner read the other's name/photo" actually granted
+-- the whole row.
+--
+-- Any student can open a conversation with any teacher with no booking
+-- required (messages_insert_own only checks the caller is a real
+-- student/teacher pair on the conversation, see schema.sql), so this
+-- was reachable by every student who had ever messaged a teacher - a
+-- single `GET /rest/v1/profiles?id=eq.<teacherId>&select=email,phone,
+-- certificate_file_url` returned the teacher's real contact details and
+-- application document, completely bypassing masked_profiles and the
+-- enforce_no_contact_sharing trigger that's supposed to keep a teacher's
+-- contact info off the platform until a real booking exists. Because
+-- `profiles` is in the supabase_realtime publication, the same policy
+-- also let a student open a postgres_changes subscription and get
+-- pushed the teacher's unmasked row on every future profile edit.
+--
+-- masked_profiles already reproduces this exact "conversation partner"
+-- predicate in its own WHERE clause (see schema.sql) and only exposes
+-- the columns a partner actually needs (masked name, photo, bio, etc -
+-- never email/phone/certificate_file_url). Every call site (web
+-- messages.js, mobile lib/messages.ts and lib/teachers.ts) already
+-- reads from masked_profiles instead of the raw table for a
+-- conversation partner, so dropping this raw-table policy removes
+-- unused exposure without breaking any real feature. The one exception
+-- was mobile's students.tsx, which read `profiles.photo_url` directly
+-- for a teacher's own booked students - switched to masked_profiles in
+-- the same commit as this migration.
+--
+-- Run this whole file once in Supabase Dashboard -> SQL Editor.
+
+drop policy if exists "profiles_select_conversation_partner" on profiles;

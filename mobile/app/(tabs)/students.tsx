@@ -44,8 +44,12 @@ export default function Students() {
         });
 
         const ids = Array.from(byStudent.keys());
+        // masked_profiles, not the raw profiles table - migration_70.sql
+        // removed the raw table's conversation-partner read grant since
+        // it exposed a student's/teacher's full row (email, phone,
+        // certificate_file_url), not just the photo this screen needs.
         const { data: profiles } = ids.length
-          ? await supabase.from('profiles').select('id, photo_url').in('id', ids)
+          ? await supabase.from('masked_profiles').select('id, photo_url').in('id', ids)
           : { data: [] as any[] };
         const photoById = Object.fromEntries((profiles || []).map((p: any) => [p.id, p.photo_url]));
 
