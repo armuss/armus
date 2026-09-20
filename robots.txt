@@ -7,7 +7,6 @@ Disallow: /booking.html
 Disallow: /class.html
 Disallow: /mesajlar.html
 Disallow: /my-lessons.html
-Disallow: /wallet.html
 Disallow: /sifre-sifirla.html
 
 Sitemap: https://armus.com.tr/sitemap.xml
