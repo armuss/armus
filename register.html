@@ -495,11 +495,13 @@
       submitBtn.disabled = false;
 
       if (error) {
-        showError(
-          error.message.includes("already registered") || error.message.includes("already been registered")
-            ? armusT("register.errAlreadyRegistered", "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.")
-            : armusT("register.errAccountCreationFailed", "Hesap oluşturulamadı: {msg}").replace("{msg}", error.message)
-        );
+        // Deliberately the same message whether or not this email is
+        // already registered - matching login.html/sifre-sifirla.html,
+        // which both avoid an "account exists" oracle. Branching the
+        // copy on Supabase's "already registered" error let anyone
+        // script signup attempts against a wordlist of emails and learn
+        // from the response text alone which ones have an ARMUS account.
+        showError(armusT("register.errAccountCreationFailed", "Hesap oluşturulamadı. Bilgilerini kontrol et, ya da zaten bir hesabın varsa giriş yapmayı dene."));
         return;
       }
 
