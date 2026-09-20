@@ -606,6 +606,15 @@ create policy "messages_select_participant"
     )
   );
 
+-- rate-limited (migration_69.sql) - every insert fires a real Resend
+-- email via the messages_notify_new_message trigger with no debounce
+-- of its own (see send-message-notification's header comment), and
+-- unlike every other email-triggering action in this schema
+-- (create-payment: 30/hr, send-verification-email: 8/day + 45s
+-- cooldown), sending a message had no cap at all - a scripted account
+-- could loop this insert to flood a specific person's inbox or burn
+-- through ARMUS's shared Resend quota. 120/hour is far above any real
+-- conversation's pace.
 create policy "messages_insert_own"
   on messages for insert
   with check (
@@ -615,6 +624,11 @@ create policy "messages_insert_own"
       where c.id = conversation_id
         and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
     )
+    and (
+      select count(*) from messages m2
+      where m2.sender_id = auth.uid()
+        and m2.created_at > now() - interval '1 hour'
+    ) < 120
   );
 
 -- broad on purpose - the OTHER participant needs to update read_at to

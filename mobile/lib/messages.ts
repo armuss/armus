@@ -43,7 +43,15 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
   const otherIds = conversations.map((c: any) => (c.student_id === userId ? c.teacher_id : c.student_id));
 
   const [{ data: profiles }, { data: allMessages }] = await Promise.all([
-    supabase.from('profiles').select('id, name, photo_url').in('id', otherIds),
+    // masked_profiles, not the raw profiles table - a teacher's full
+    // real name must never be shown to a student (see displayName.ts's
+    // shortDisplayName), so a student can't take that name off ARMUS
+    // and contact them elsewhere. The raw table only masks nothing -
+    // it's RLS-readable here (profiles_select_conversation_partner)
+    // precisely because this app used to rely on masking it client-side
+    // only, which still ships the real name over the wire in the raw
+    // JSON response even though the UI re-shortens it before rendering.
+    supabase.from('masked_profiles').select('id, name, photo_url').in('id', otherIds),
     supabase
       .from('messages')
       .select('*')
