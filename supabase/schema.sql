@@ -606,6 +606,15 @@ create policy "messages_select_participant"
     )
   );
 
+-- rate-limited (migration_69.sql) - every insert fires a real Resend
+-- email via the messages_notify_new_message trigger with no debounce
+-- of its own (see send-message-notification's header comment), and
+-- unlike every other email-triggering action in this schema
+-- (create-payment: 30/hr, send-verification-email: 8/day + 45s
+-- cooldown), sending a message had no cap at all - a scripted account
+-- could loop this insert to flood a specific person's inbox or burn
+-- through ARMUS's shared Resend quota. 120/hour is far above any real
+-- conversation's pace.
 create policy "messages_insert_own"
   on messages for insert
   with check (
@@ -615,6 +624,11 @@ create policy "messages_insert_own"
       where c.id = conversation_id
         and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
     )
+    and (
+      select count(*) from messages m2
+      where m2.sender_id = auth.uid()
+        and m2.created_at > now() - interval '1 hour'
+    ) < 120
   );
 
 -- broad on purpose - the OTHER participant needs to update read_at to
@@ -1340,12 +1354,21 @@ create policy "teacher_uploads_delete_authenticated"
 
 -- uploads use { upsert: true }, which needs storage to check whether the
 -- object already exists first - that existence check runs as the
--- authenticated user and needs its own SELECT policy.
-
+-- authenticated user and needs its own SELECT policy. Scoped to the
+-- owner (or an admin) rather than any authenticated user
+-- (migration_68.sql) - "bucket_id = 'teacher-uploads'" alone let ANY
+-- signed-in account (including a brand-new, unverified signup) call
+-- storage.from('teacher-uploads').list(...) and enumerate/download
+-- every teacher's application photo, certificate, and intro video -
+-- including pending/rejected applications never shown on any public
+-- page. This only governs the AUTHENTICATED list/download API; public
+-- display (teacher.html img src, built via getPublicUrl - a pure
+-- client-side string builder, no RLS involved) is on the separate
+-- public-bucket serving path and is unaffected by this policy.
 create policy "teacher_uploads_select_authenticated"
   on storage.objects for select
   to authenticated
-  using (bucket_id = 'teacher-uploads');
+  using (bucket_id = 'teacher-uploads' and (auth.uid() = owner or public.is_admin()));
 
 -- === STUDENT DASHBOARD EXTRAS =====================================
 -- how many lessons a student wants to take this week - powers the
@@ -1493,10 +1516,48 @@ create policy "chat_attachments_delete_authenticated"
   to authenticated
   using (bucket_id = 'chat-attachments' and auth.uid() = owner);
 
+-- migration_68.sql: "bucket_id = 'chat-attachments'" alone let ANY
+-- signed-in account (including a brand-new signup, no relation to any
+-- conversation at all) call storage.from('chat-attachments').list(...)
+-- and enumerate/download every photo, video, and voice message ever
+-- exchanged between any student and any teacher, not just their own
+-- conversations - messages.js's upload paths ("<conversation_id>/...")
+-- are trivially enumerable via list() once bucket_id alone is enough to
+-- see them. Wrapped in a function (rather than inlined into the policy)
+-- so a malformed/unexpected object name can never turn into a raw
+-- ::uuid cast error breaking the whole query - it just evaluates to
+-- "not a participant" instead.
+create or replace function public.is_chat_attachment_participant(object_name text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  conv_id uuid;
+begin
+  begin
+    conv_id := split_part(object_name, '/', 1)::uuid;
+  exception when others then
+    return false;
+  end;
+
+  return exists (
+    select 1 from conversations c
+    where c.id = conv_id
+      and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
+  );
+end;
+$$;
+
 create policy "chat_attachments_select_authenticated"
   on storage.objects for select
   to authenticated
-  using (bucket_id = 'chat-attachments');
+  using (
+    bucket_id = 'chat-attachments'
+    and (auth.uid() = owner or public.is_chat_attachment_participant(name) or public.is_admin())
+  );
 
 -- === TEACHER AVAILABILITY (WEEKLY, DRAG-EDITED) ===================
 -- { "1": ["14:00","14:30"], ... } - keyed by day-of-week

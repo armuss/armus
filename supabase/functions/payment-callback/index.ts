@@ -167,6 +167,16 @@ Deno.serve(async (req) => {
 
   if (!token) return redirectTo("booking.html?payment=failed");
 
+  // Wraps the rest of the handler - every other Edge Function in this
+  // codebase wraps its whole body and returns a fixed generic response
+  // on any uncaught error; this one didn't, so a transient failure here
+  // (a network blip mid-request, an unexpected null) would fall through
+  // to Deno's own default error response instead of this function's own
+  // controlled redirect, leaving the buyer's browser on a broken page
+  // in the middle of a real payment instead of routed back to
+  // booking.html with a clear "something went wrong" state.
+  try {
+
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -400,4 +410,9 @@ Deno.serve(async (req) => {
   }
 
   return redirectTo(successPath);
+
+  } catch (err) {
+    console.error(err);
+    return redirectTo("booking.html?payment=error");
+  }
 });

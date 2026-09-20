@@ -77,7 +77,7 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[])
 // get added on top of the hand-written ones rather than replacing them.
 async function enrichDemoTeacherReviews(teacher: Teacher): Promise<Teacher> {
   const { data, error } = await supabase
-    .from('reviews')
+    .from('masked_reviews')
     .select('*')
     .eq('teacher_id', teacher.id)
     .order('created_at', { ascending: false });
@@ -96,8 +96,18 @@ async function enrichDemoTeacherReviews(teacher: Teacher): Promise<Teacher> {
 // Only the real, self-registered teachers (a Supabase round trip).
 async function getRegisteredTeachers(): Promise<Teacher[]> {
   const [profilesRes, reviewsRes, bookingsRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('role', 'teacher').eq('status', 'approved'),
-    supabase.from('reviews').select('*'),
+    // masked_profiles/masked_reviews, not the raw tables - mirrors
+    // marketplace.js on the web exactly. A teacher's full real name
+    // (and a reviewing student's) must never ship over the wire to
+    // another viewer, only what this app already re-shortens client-side
+    // before rendering - querying the raw tables sent the real names in
+    // the JSON response regardless of how the UI displayed them.
+    // Also: migration_67.sql removed the raw profiles table's public
+    // SELECT policy, so this raw query returned zero rows for every
+    // teacher the viewer hadn't already messaged - masked_profiles is
+    // what actually still grants public marketplace read access.
+    supabase.from('masked_profiles').select('*').eq('role', 'teacher').eq('status', 'approved'),
+    supabase.from('masked_reviews').select('*'),
     supabase.from('bookings').select('*'),
   ]);
 
@@ -128,8 +138,8 @@ export async function findMarketplaceTeacher(id: string): Promise<Teacher | null
   if (demoTeacher) return enrichDemoTeacherReviews(demoTeacher);
 
   const [profileRes, reviewsRes, bookingsRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
-    supabase.from('reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
+    supabase.from('masked_profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
+    supabase.from('masked_reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
     supabase.from('bookings').select('*').eq('teacher_id', id),
   ]);
 
