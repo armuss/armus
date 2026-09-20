@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title id="pageTitle">Öğretmen Profili | ARMUS</title>
+  <meta id="pageDescription" name="description" content="ARMUS'ta İngilizce öğretmenlerinin profillerini incele, müsaitlik takvimlerine bak ve ücretsiz deneme dersi rezervasyonu yap.">
+  <meta id="ogTitle" property="og:title" content="Öğretmen Profili | ARMUS">
+  <meta id="ogDescription" property="og:description" content="ARMUS'ta İngilizce öğretmenlerinin profillerini incele, müsaitlik takvimlerine bak ve ücretsiz deneme dersi rezervasyonu yap.">
+  <meta id="ogImage" property="og:image" content="https://armus.com.tr/og-image.png">
+  <meta property="og:type" content="profile">
+  <meta property="og:site_name" content="ARMUS">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1046,8 +1052,22 @@
       // per-day render loop is never itself async
       const busyTimes = await armusGetTeacherBusyTimes(teacher.id).catch(() => []);
 
-      document.getElementById("pageTitle").textContent =
-        `${armusShortDisplayName(teacher.name)} | ARMUS`;
+      const teacherDisplayName = armusShortDisplayName(teacher.name);
+      const seoTitle = `${teacherDisplayName} | ARMUS`;
+      const seoDescription = armusT("teacherProfile.seoDescription", "{name} ile online birebir İngilizce dersi al. Profilini incele, müsaitlik takvimine bak, ücretsiz deneme dersiyle başla.").replace("{name}", teacherDisplayName);
+      // og:image has to be an absolute URL for link-preview crawlers to
+      // fetch it - demo teachers' photos are relative paths ("avatars/
+      // sarah.jpg"), real teachers' are already-absolute Supabase Storage
+      // URLs, so only the demo case needs resolving against the site origin.
+      const seoImage = armusSafeUrl(teacher.photo)
+        ? new URL(teacher.photo, location.origin).href
+        : "https://armus.com.tr/og-image.png";
+
+      document.getElementById("pageTitle").textContent = seoTitle;
+      document.getElementById("pageDescription").setAttribute("content", seoDescription);
+      document.getElementById("ogTitle").setAttribute("content", seoTitle);
+      document.getElementById("ogDescription").setAttribute("content", seoDescription);
+      document.getElementById("ogImage").setAttribute("content", seoImage);
 
       document.getElementById("avatar").innerHTML = armusSafeUrl(teacher.photo)
         ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`
