@@ -899,6 +899,7 @@ const ARMUS_I18N_EN = {
 
   // teacher.html (profile page) - calendar expand button
   "teacherProfile.viewFullSchedule": "View full schedule",
+  "teacherProfile.seoDescription": "Take private online English lessons with {name}. Check their profile, availability calendar, and start with a free trial lesson.",
   "teacherProfile.newTeacher": "New",
   "teacherProfile.reviewCount": "{n} reviews",
   "teacherProfile.noReviewsYet": "No reviews yet",
