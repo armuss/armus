@@ -223,6 +223,15 @@ body {
   gap: 10px;
   margin-top: 28px;
 }
+/* mobile-only hero photo, replacing the desktop teacher-stack visual
+   (hidden here, shown under the 900px breakpoint below) - lives inside
+   .hero-copy so the gold .hero-band background wraps all the way around
+   it instead of cutting to white right after the subtitle text, which
+   is what happened before this existed (teacher-stack hidden, nothing
+   else in the gold band to give it height) */
+.hero-mobile-photo {
+  display: none;
+}
 .social-proof {
   display: flex;
   align-items: center;
@@ -797,6 +806,31 @@ body {
   }
   .teacher-stack {
     display: none;
+  }
+  .hero-mobile-photo {
+    display: block;
+    position: relative;
+    margin: 26px 0 6px;
+    border-radius: 26px;
+    overflow: hidden;
+    box-shadow: 0 24px 54px rgba(35, 26, 10, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+  .hero-mobile-photo::after {
+    /* a soft gold veil ties the photo into the band's own gradient
+       instead of it sitting on top like a pasted-in sticker */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(212, 165, 63, 0) 55%, rgba(151, 105, 26, 0.35) 100%);
+    pointer-events: none;
+  }
+  .hero-mobile-photo img {
+    display: block;
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    object-position: center 20%;
   }
   .search-row {
     flex-wrap: wrap;
