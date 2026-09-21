@@ -583,7 +583,7 @@
 
     /* ---- trend chart ---- */
 
-    #trendChart {
+    #trendChart, #revenueTrendChart {
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
       border-radius: 14px;
@@ -1148,6 +1148,8 @@
         <div class="stat-grid" id="overviewStats"></div>
         <h3 data-i18n="admin.trendHeading">Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
+        <h3 data-i18n="admin.revenueTrendHeading">Son 6 ay - ciro trendi</h3>
+        <div id="revenueTrendChart"></div>
         <h3><span data-i18n="admin.pulseHeading">Canlı Akış</span> <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;" data-i18n="admin.pulseLive">● CANLI</span></h3>
         <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
@@ -1951,6 +1953,13 @@
       }
     });
 
+    // month-key helper ("2026-09") shared by the overview stats and both
+    // trend charts, so "this month"/"last month" always mean the same thing
+    function armusMonthKey(dateLike) {
+      const d = new Date(dateLike);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+
     function renderOverview(profiles, bookings, reviews) {
 
       const students = profiles.filter(p => p.role === "student");
@@ -1963,6 +1972,34 @@
         ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
         : "—";
 
+      const now = new Date();
+      const thisMonthKey = armusMonthKey(now);
+      const lastMonthKey = armusMonthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+      const revenueForMonth = key => completedBookings
+        .filter(b => armusMonthKey(b.date) === key)
+        .reduce((sum, b) => sum + (b.price || 0), 0);
+      const thisMonthRevenue = revenueForMonth(thisMonthKey);
+      const lastMonthRevenue = revenueForMonth(lastMonthKey);
+      const revenueDelta = lastMonthRevenue
+        ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+        : null;
+      const revenueDeltaLabel = revenueDelta === null
+        ? ""
+        : ` (${revenueDelta >= 0 ? "+" : ""}${revenueDelta}%)`;
+
+      const newStudentsThisMonth = students.filter(s => s.created_at && armusMonthKey(s.created_at) === thisMonthKey).length;
+
+      // "repeat" = booked (any non-cancelled booking) with more than one
+      // distinct teacher-agnostic booking - a simple loyalty/retention signal
+      const bookingCountByStudent = new Map();
+      bookings.filter(b => b.status !== "cancelled").forEach(b => {
+        bookingCountByStudent.set(b.studentId, (bookingCountByStudent.get(b.studentId) || 0) + 1);
+      });
+      const studentsWithBookings = bookingCountByStudent.size;
+      const repeatStudents = [...bookingCountByStudent.values()].filter(n => n > 1).length;
+      const repeatRate = studentsWithBookings ? Math.round((repeatStudents / studentsWithBookings) * 100) : 0;
+
       const stats = [
         [students.length, armusT("admin.statTotalStudents", "Toplam öğrenci")],
         [teachers.length, armusT("admin.statTotalTeacherAccounts", "Toplam öğretmen hesabı")],
@@ -1972,6 +2009,9 @@
         [completedBookings.length, armusT("admin.statCompletedLessons", "Tamamlanan ders")],
         [`₺${grossRevenue}`, armusT("admin.statGrossRevenue", "Toplam ciro (tamamlanan dersler)")],
         [`${avgRating} (${reviews.length})`, armusT("admin.statAvgRating", "Ortalama puan / değerlendirme")],
+        [`₺${thisMonthRevenue}${revenueDeltaLabel}`, armusT("admin.statMonthRevenue", "Bu ayki ciro (geçen aya göre)")],
+        [newStudentsThisMonth, armusT("admin.statNewStudentsMonth", "Bu ay katılan yeni öğrenci")],
+        [`%${repeatRate}`, armusT("admin.statRepeatRate", "Birden fazla ders alan öğrenci oranı")],
       ];
 
       document.getElementById("overviewStats").innerHTML = stats.map(([value, label]) => `
@@ -2007,6 +2047,49 @@
         return `
           <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
           <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">${count}</text>
+          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
+          ${bars}
+        </svg>
+      `;
+    }
+
+    // same shape as renderTrendChart, but bars are completed-lesson revenue
+    // (₺) per month instead of a raw booking count - a full booking count
+    // can climb while revenue stays flat (more trial/low-price lessons), so
+    // the two charts answer different questions side by side.
+    function renderRevenueTrendChart(bookings) {
+
+      const container = document.getElementById("revenueTrendChart");
+      const completed = bookings.filter(b => b.status !== "cancelled" && armusIsBookingPast(b));
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
+        });
+      }
+
+      const totals = months.map(m => completed
+        .filter(b => b.date.startsWith(m.key))
+        .reduce((sum, b) => sum + (b.price || 0), 0));
+      const max = Math.max(1, ...totals);
+      const barWidth = 48, gap = 24, chartHeight = 130;
+      const width = months.length * (barWidth + gap);
+
+      const bars = totals.map((total, i) => {
+        const h = total ? Math.max(4, Math.round((total / max) * (chartHeight - 24))) : 0;
+        const x = i * (barWidth + gap);
+        const y = chartHeight - h;
+        return `
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
+          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="11" style="fill:var(--armus-ink)">₺${total}</text>
           <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
         `;
       }).join("");
@@ -3275,6 +3358,7 @@
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
       renderTrendChart(armusAdminBookings);
+      renderRevenueTrendChart(armusAdminBookings);
       renderAtRiskPanel(computeAtRiskTeachers(teachers, armusAdminBookings, armusAdminReviews));
       renderBulkActionsBar();
       renderTeachersPanel(filteredTeachers);

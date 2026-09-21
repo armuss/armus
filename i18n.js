@@ -696,6 +696,7 @@ const ARMUS_I18N_EN = {
   // admin.html panel bodies
   "admin.overviewHeading": "Overview",
   "admin.trendHeading": "Last 6 months - booking trend",
+  "admin.revenueTrendHeading": "Last 6 months - revenue trend",
   "admin.pulseHeading": "Live Feed",
   "admin.pulseLive": "● LIVE",
   "admin.pulseHint": "New bookings, sign-ups and reviews appear here the moment they happen - no need to refresh the page.",
@@ -822,6 +823,9 @@ const ARMUS_I18N_EN = {
   "admin.statCompletedLessons": "Completed lessons",
   "admin.statGrossRevenue": "Total revenue (completed lessons)",
   "admin.statAvgRating": "Average rating / reviews",
+  "admin.statMonthRevenue": "This month's revenue (vs last month)",
+  "admin.statNewStudentsMonth": "New students this month",
+  "admin.statRepeatRate": "Students with more than one lesson",
   "admin.logApplicationApproved": "Application approved",
   "admin.logApplicationRejected": "Application rejected",
   "admin.logChangeApproved": "Profile change approved",
