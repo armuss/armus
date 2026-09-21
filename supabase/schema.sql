@@ -958,6 +958,30 @@ create policy "client_errors_select_admin"
 
 create index client_errors_created_at_idx on client_errors (created_at desc);
 
+-- migration_73.sql: log + IP rate-limit backing for the "site-chat"
+-- Edge Function (floating chat bubble, added to i18n.js). Only the
+-- Edge Function's service-role client ever writes here - no
+-- anon/authenticated insert policy on purpose.
+
+create table site_chat_logs (
+  id uuid primary key default gen_random_uuid(),
+  session_id text,
+  message text not null check (char_length(message) <= 2000),
+  reply text check (reply is null or char_length(reply) <= 4000),
+  ip_address text,
+  user_id uuid references profiles(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+alter table site_chat_logs enable row level security;
+
+create policy "site_chat_logs_select_admin"
+  on site_chat_logs for select
+  using (public.is_admin());
+
+create index site_chat_logs_created_at_idx on site_chat_logs (created_at desc);
+create index site_chat_logs_ip_idx on site_chat_logs (ip_address, created_at desc);
+
 create table testimonials (
   id uuid primary key default gen_random_uuid(),
   name text not null,

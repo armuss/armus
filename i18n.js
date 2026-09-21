@@ -1370,3 +1370,227 @@ document.addEventListener("DOMContentLoaded", () => {
     armusReportClientError(message, stack).catch(() => {});
   });
 })();
+
+// ---- site chat widget (migration_73.sql / site-chat Edge Function) ------
+// A floating "ask ARMUS" bubble, added here instead of ~25 HTML files for
+// the same reason the error log above lives in i18n.js. It only talks to
+// armusSupabase on click (never at load time), so it doesn't care that
+// this file executes before supabase-config.js does - by the time a
+// visitor can actually click the bubble, every script tag has long since
+// run.
+(function () {
+
+  const GREETING = "Merhaba! Ben ARMUS asistanıyım. Dersler, öğretmenler, fiyatlandırma, iptal/iade ya da öğretmen olmak hakkında merak ettiğin her şeyi sorabilirsin.";
+  const HISTORY_LIMIT = 10;
+
+  function getSessionId() {
+    try {
+      let id = sessionStorage.getItem("armusChatSession");
+      if (!id) {
+        id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+        sessionStorage.setItem("armusChatSession", id);
+      }
+      return id;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function buildWidget() {
+    if (document.getElementById("armusChatRoot")) return;
+
+    const style = document.createElement("style");
+    style.textContent = `
+      #armusChatRoot { position: fixed; right: 20px; bottom: 20px; z-index: 999; font-family: Inter, system-ui, sans-serif; }
+      .armus-chat-toggle {
+        width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
+        background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e));
+        color: var(--armus-on-gold, #0a0a0a);
+        box-shadow: 0 10px 30px rgba(35, 26, 10, 0.25);
+        display: flex; align-items: center; justify-content: center;
+        transition: transform 0.2s;
+      }
+      .armus-chat-toggle:hover { transform: translateY(-2px); }
+      .armus-chat-toggle svg { width: 26px; height: 26px; }
+      .armus-chat-panel {
+        position: fixed; right: 20px; bottom: 90px; z-index: 999;
+        width: min(360px, calc(100vw - 40px)); height: min(520px, calc(100vh - 130px));
+        background: var(--armus-bg, #fff); border: 1px solid var(--armus-border-soft, #ececec);
+        border-radius: 20px; box-shadow: 0 20px 60px rgba(20, 15, 5, 0.22);
+        display: none; flex-direction: column; overflow: hidden;
+      }
+      .armus-chat-panel.open { display: flex; }
+      .armus-chat-head {
+        background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e));
+        color: var(--armus-on-gold, #0a0a0a); padding: 16px 18px;
+        display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+      }
+      .armus-chat-head strong { font-size: 15px; display: block; }
+      .armus-chat-head span { font-size: 12px; opacity: 0.75; }
+      .armus-chat-close {
+        background: rgba(10, 10, 10, 0.12); border: none; border-radius: 50%;
+        width: 26px; height: 26px; cursor: pointer; color: inherit; font-size: 15px; line-height: 1;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .armus-chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--armus-panel-2, #f5f5f5); }
+      .armus-chat-msg { max-width: 84%; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+      .armus-chat-msg.bot { align-self: flex-start; background: #fff; border: 1px solid var(--armus-border-soft, #ececec); color: var(--armus-ink, #0a0a0a); border-bottom-left-radius: 4px; }
+      .armus-chat-msg.user { align-self: flex-end; background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e)); color: var(--armus-on-gold, #0a0a0a); border-bottom-right-radius: 4px; }
+      .armus-chat-msg.error { align-self: flex-start; background: #fdeceb; border: 1px solid #f3b9b3; color: #8a2c22; }
+      .armus-chat-typing { align-self: flex-start; display: flex; gap: 4px; padding: 12px 14px; }
+      .armus-chat-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--armus-faint, #8f8f8f); animation: armus-chat-blink 1.2s infinite ease-in-out; }
+      .armus-chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+      .armus-chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes armus-chat-blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+      .armus-chat-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--armus-border-soft, #ececec); background: var(--armus-bg, #fff); flex-shrink: 0; }
+      .armus-chat-input {
+        flex: 1; border: 1px solid var(--armus-border, #e2e2e2); border-radius: 12px; padding: 10px 12px;
+        font: 13.5px Inter, system-ui, sans-serif; resize: none; max-height: 80px; color: var(--armus-ink, #0a0a0a);
+      }
+      .armus-chat-input:focus { outline: none; border-color: var(--armus-gold-3, #dfac2e); }
+      .armus-chat-send {
+        border: none; border-radius: 12px; width: 40px; flex-shrink: 0; cursor: pointer;
+        background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e));
+        color: var(--armus-on-gold, #0a0a0a); display: flex; align-items: center; justify-content: center;
+      }
+      .armus-chat-send:disabled { opacity: 0.5; cursor: default; }
+      .armus-chat-send svg { width: 17px; height: 17px; }
+      @media (max-width: 480px) {
+        .armus-chat-panel { right: 12px; left: 12px; width: auto; bottom: 82px; }
+        #armusChatRoot { right: 12px; bottom: 12px; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const root = document.createElement("div");
+    root.id = "armusChatRoot";
+    root.innerHTML = `
+      <div class="armus-chat-panel" id="armusChatPanel">
+        <div class="armus-chat-head">
+          <div>
+            <strong>ARMUS Asistan</strong>
+            <span>Site hakkında sorularını yanıtlıyorum</span>
+          </div>
+          <button type="button" class="armus-chat-close" id="armusChatCloseBtn" aria-label="Kapat">&times;</button>
+        </div>
+        <div class="armus-chat-body" id="armusChatBody"></div>
+        <form class="armus-chat-form" id="armusChatForm">
+          <textarea class="armus-chat-input" id="armusChatInput" rows="1" placeholder="Bir soru yaz..." maxlength="2000"></textarea>
+          <button type="submit" class="armus-chat-send" id="armusChatSendBtn" aria-label="Gönder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </form>
+      </div>
+      <button type="button" class="armus-chat-toggle" id="armusChatToggleBtn" aria-label="Sohbeti aç">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+      </button>
+    `;
+    document.body.appendChild(root);
+
+    const panel = document.getElementById("armusChatPanel");
+    const body = document.getElementById("armusChatBody");
+    const form = document.getElementById("armusChatForm");
+    const input = document.getElementById("armusChatInput");
+    const sendBtn = document.getElementById("armusChatSendBtn");
+    const toggleBtn = document.getElementById("armusChatToggleBtn");
+    const closeBtn = document.getElementById("armusChatCloseBtn");
+
+    const history = [];
+    let opened = false;
+    let sending = false;
+
+    function addMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = "armus-chat-msg " + (role === "user" ? "user" : role === "error" ? "error" : "bot");
+      div.innerHTML = armusEscapeHtml(text);
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function setTyping(on) {
+      const existing = document.getElementById("armusChatTyping");
+      if (existing) existing.remove();
+      if (!on) return;
+      const div = document.createElement("div");
+      div.id = "armusChatTyping";
+      div.className = "armus-chat-typing";
+      div.innerHTML = "<span></span><span></span><span></span>";
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      panel.classList.toggle("open");
+      if (!opened && panel.classList.contains("open")) {
+        opened = true;
+        addMessage("bot", GREETING);
+      }
+      if (panel.classList.contains("open")) input.focus();
+    });
+
+    closeBtn.addEventListener("click", () => panel.classList.remove("open"));
+
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 80) + "px";
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text || sending) return;
+
+      if (typeof armusSupabase === "undefined") {
+        addMessage("error", "Sohbet şu anda kullanılamıyor, lütfen sayfayı yenile.");
+        return;
+      }
+
+      sending = true;
+      sendBtn.disabled = true;
+      addMessage("user", text);
+      input.value = "";
+      input.style.height = "auto";
+      setTyping(true);
+
+      const sessionId = getSessionId();
+      const requestHistory = history.slice(-HISTORY_LIMIT);
+
+      try {
+        const { data, error } = await armusSupabase.functions.invoke("site-chat", {
+          body: { message: text, history: requestHistory, sessionId },
+        });
+
+        setTyping(false);
+
+        if (error || !data || (!data.reply && !data.error)) {
+          addMessage("error", "Cevap alınamadı, lütfen tekrar dener misin?");
+        } else if (data.error) {
+          addMessage("error", data.error);
+        } else {
+          history.push({ role: "user", content: text });
+          history.push({ role: "assistant", content: data.reply });
+          addMessage("bot", data.reply);
+        }
+      } catch (err) {
+        setTyping(false);
+        addMessage("error", "Cevap alınamadı, lütfen tekrar dener misin?");
+      }
+
+      sending = false;
+      sendBtn.disabled = false;
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", buildWidget);
+  } else {
+    buildWidget();
+  }
+})();
