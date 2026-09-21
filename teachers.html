@@ -783,6 +783,16 @@
         display: none;
       }
 
+      /* .nav-links' own margin: auto was what pushed nav-utility/
+         nav-buttons flush against the right edge - with it hidden here,
+         nothing does that anymore, so the logo and EN/Giriş/Kayıt Ol just
+         sit left-packed with barely a gap between them. Giving
+         nav-utility its own margin-left: auto claims that space instead
+         (same fix as index.html's identical nav). */
+      .nav-utility {
+        margin-left: auto;
+      }
+
       .sort-wrap {
         margin-left: 0;
         width: 100%;
