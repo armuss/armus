@@ -72,7 +72,9 @@
     .scroll-top-btn {
       position: fixed;
       right: 24px;
-      bottom: 24px;
+      /* stacked above the site chat bubble (i18n.js, right:20/bottom:20,
+         58px) instead of sitting behind it in the same corner */
+      bottom: 92px;
       z-index: 500;
       width: 48px;
       height: 48px;
@@ -109,7 +111,8 @@
     @media (max-width: 560px) {
       .scroll-top-btn {
         right: 16px;
-        bottom: 16px;
+        /* mobile chat bubble is right:12/bottom:12, 58px */
+        bottom: 78px;
         width: 42px;
         height: 42px;
       }
