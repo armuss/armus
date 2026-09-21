@@ -23,6 +23,7 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: "Inter", sans-serif;
@@ -34,12 +35,12 @@
 
     a { color: var(--armus-gold-text); }
 
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
 
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
 
     .nav-inner {
-      width: min(760px, calc(100% - 40px));
+      width: min(980px, calc(100% - 40px));
       margin: auto;
       display: flex;
       align-items: center;
@@ -148,6 +149,42 @@
     @media (max-width: 700px) {
       .cta-banner { flex-direction: column; align-items: flex-start; }
     }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -172,9 +209,16 @@
 
     <span class="cat">Rehber</span>
     <h1>Online İngilizce özel ders fiyatları ne kadar?</h1>
-    <div class="article-meta">6 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 6 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/guide.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         "Bir saatlik İngilizce özel ders ne kadar tutar?" sorusunun tek bir
         cevabı yok - fiyat, birkaç somut faktöre göre geniş bir aralıkta
@@ -182,14 +226,14 @@
         belirlediğini anlamak gerekir.
       </p>
 
-      <h2>Fiyatı belirleyen üç ana faktör</h2>
+      <h2 id="s1">Fiyatı belirleyen üç ana faktör</h2>
       <ul>
         <li><strong>Öğretmenin deneyimi ve uzmanlığı:</strong> Yeni başlayan bir öğretmenle, 10 yıllık IELTS/iş İngilizcesi deneyimi olan bir öğretmenin fiyatı doğal olarak farklıdır. Uzmanlık alanı (sınav hazırlığı, çocuk eğitimi gibi) fiyatı yukarı çeker.</li>
         <li><strong>Ders sıklığı ve paket büyüklüğü:</strong> Tek seferlik bir ders genelde paket halinde alınan derslerden (örneğin 10 ders birden) saat başına daha pahalıdır - birçok öğretmen çoklu paket alımında saatlik fiyatı düşürür.</li>
         <li><strong>Bire bir mi, grup mu:</strong> Bire bir dersler doğal olarak grup derslerinden daha yüksek fiyatlıdır, çünkü dersin tamamı sana ayrılır.</li>
       </ul>
 
-      <h2>ARMUS'ta fiyatlar nasıl belirleniyor?</h2>
+      <h2 id="s2">ARMUS'ta fiyatlar nasıl belirleniyor?</h2>
       <p>
         ARMUS'ta her öğretmen kendi fiyatını kendisi belirler - platform
         sabit bir tarife koymaz. Bu, hem yeni başlayan bir öğretmenden uygun
@@ -205,7 +249,7 @@
         yol açabilir.
       </div>
 
-      <h2>Ucuz mu, pahalı mı - nasıl karar verirsin?</h2>
+      <h2 id="s3">Ucuz mu, pahalı mı - nasıl karar verirsin?</h2>
       <p>
         En düşük fiyat her zaman en iyi değer anlamına gelmez. Sorman gereken
         soru "bu fiyata karşılık ne kadar hızlı ilerleme sağlıyorum?" olmalı.
@@ -215,23 +259,34 @@
         aslında daha düşük çıkabilir.
       </p>
 
-      <h2>Bütçeni planlarken dikkat edilecekler</h2>
+      <h2 id="s4">Bütçeni planlarken dikkat edilecekler</h2>
       <ol>
         <li>Hedefini netleştir (sınav, iş, günlük konuşma) - bu, kaç ders ve hangi sıklıkta gerektiğini belirler.</li>
         <li>Birden fazla öğretmenin ücretsiz deneme dersini dene - fiyat/uyum dengesini görmeden karar verme.</li>
         <li>Tek seferlik yerine paket almayı düşün - düzenli çalışma hem fiyatı düşürür hem sonucu hızlandırır.</li>
       </ol>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Bütçene uygun öğretmeni bul</h2>
         <p>ARMUS'ta fiyata göre filtrele, öğretmen profillerini karşılaştır ve ücretsiz deneme dersiyle başla.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">Fiyatı belirleyen üç ana faktör</a>
+        <a href="#s2">ARMUS'ta fiyatlar nasıl belirleniyor?</a>
+        <a href="#s3">Ucuz mu, pahalı mı - nasıl karar verirsin?</a>
+        <a href="#s4">Bütçeni planlarken dikkat edilecekler</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 

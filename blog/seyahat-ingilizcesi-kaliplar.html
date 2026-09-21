@@ -23,11 +23,12 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body { font-family: "Inter", sans-serif; background-color: var(--armus-bg); background-image: var(--armus-bg-glow); color: var(--armus-ink); line-height: 1.7; }
     a { color: var(--armus-gold-text); }
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
-    .nav-inner { width: min(760px, calc(100% - 40px)); margin: auto; display: flex; align-items: center; justify-content: space-between; }
+    .nav-inner { width: min(980px, calc(100% - 40px)); margin: auto; display: flex; align-items: center; justify-content: space-between; }
     .logo-img { height: 22px; }
     .nav-right { display: flex; align-items: center; gap: 14px; }
     .nav-utility { display: flex; align-items: center; gap: 8px; }
@@ -66,6 +67,42 @@
       .phrase-list li { flex-direction: column; gap: 2px; }
       .phrase-list li span:last-child { text-align: left; }
     }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -90,16 +127,23 @@
 
     <span class="cat">Konuşma Pratiği</span>
     <h1>Seyahat İngilizcesi: en çok ihtiyaç duyacağın kalıplar</h1>
-    <div class="article-meta">5 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 5 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/conversation.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         Akıcı İngilizce konuşamasan bile, doğru kalıpları bilmek bir
         seyahati çok daha rahat hale getirir. İşte en sık ihtiyaç
         duyacağın durumlar için pratik ifadeler.
       </p>
 
-      <h2>Havalimanında</h2>
+      <h2 id="s1">Havalimanında</h2>
       <ul class="phrase-list">
         <li><span>"Where is the boarding gate for flight...?"</span><span>Uçuşumun kapısı nerede?</span></li>
         <li><span>"I'd like an aisle/window seat, please."</span><span>Koridor/pencere koltuğu rica ederim.</span></li>
@@ -107,7 +151,7 @@
         <li><span>"Where can I find the baggage claim?"</span><span>Bagaj alanı nerede?</span></li>
       </ul>
 
-      <h2>Otelde</h2>
+      <h2 id="s2">Otelde</h2>
       <ul class="phrase-list">
         <li><span>"I have a reservation under the name..."</span><span>... adına rezervasyonum var.</span></li>
         <li><span>"Could I get a late checkout?"</span><span>Geç çıkış yapabilir miyim?</span></li>
@@ -115,7 +159,7 @@
         <li><span>"Could you call a taxi for me?"</span><span>Benim için taksi çağırabilir misiniz?</span></li>
       </ul>
 
-      <h2>Restoranda</h2>
+      <h2 id="s3">Restoranda</h2>
       <ul class="phrase-list">
         <li><span>"Could we get a table for two, please?"</span><span>İki kişilik masa rica ederim.</span></li>
         <li><span>"What would you recommend?"</span><span>Ne önerirsiniz?</span></li>
@@ -123,7 +167,7 @@
         <li><span>"Could we have the bill, please?"</span><span>Hesabı alabilir miyiz?</span></li>
       </ul>
 
-      <h2>Acil durumlarda</h2>
+      <h2 id="s4">Acil durumlarda</h2>
       <ul class="phrase-list">
         <li><span>"I need help / I'm lost."</span><span>Yardıma ihtiyacım var / Kayboldum.</span></li>
         <li><span>"Could you call an ambulance/the police?"</span><span>Ambulans/polis çağırabilir misiniz?</span></li>
@@ -138,7 +182,7 @@
         daha hızlı hatırlıyor.
       </div>
 
-      <h2>Gerçek bir konuşmaya nasıl hazırlanırsın?</h2>
+      <h2 id="s5">Gerçek bir konuşmaya nasıl hazırlanırsın?</h2>
       <p>
         Kalıpları ezberlemek iyi bir başlangıç, ama gerçek bir konuşmada
         karşı taraf senin ezberlediğin cümleyle cevap vermeyecek. Bir
@@ -146,17 +190,29 @@
         pratiği yapmak - "havalimanında gecikme yaşadın, ne yaparsın?" gibi
         - gerçek bir konuşmaya çok daha hazır hale getirir.
       </p>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Seyahat öncesi son bir pratik yap</h2>
         <p>ARMUS'taki bir öğretmenle gerçek seyahat senaryoları üzerinden pratik yap - ücretsiz deneme dersiyle başla.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">Havalimanında</a>
+        <a href="#s2">Otelde</a>
+        <a href="#s3">Restoranda</a>
+        <a href="#s4">Acil durumlarda</a>
+        <a href="#s5">Gerçek bir konuşmaya nasıl hazırlanırsın?</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 

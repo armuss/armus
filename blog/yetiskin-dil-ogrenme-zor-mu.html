@@ -23,11 +23,12 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body { font-family: "Inter", sans-serif; background-color: var(--armus-bg); background-image: var(--armus-bg-glow); color: var(--armus-ink); line-height: 1.7; }
     a { color: var(--armus-gold-text); }
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
-    .nav-inner { width: min(760px, calc(100% - 40px)); margin: auto; display: flex; align-items: center; justify-content: space-between; }
+    .nav-inner { width: min(980px, calc(100% - 40px)); margin: auto; display: flex; align-items: center; justify-content: space-between; }
     .logo-img { height: 22px; }
     .nav-right { display: flex; align-items: center; gap: 14px; }
     .nav-utility { display: flex; align-items: center; gap: 8px; }
@@ -59,6 +60,42 @@
     .back-to-blog { display: inline-block; margin-top: 40px; font-size: 13.5px; color: var(--armus-muted); text-decoration: none; }
     .back-to-blog:hover { color: var(--armus-ink); }
     @media (max-width: 700px) { .cta-banner { flex-direction: column; align-items: flex-start; } }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -83,9 +120,16 @@
 
     <span class="cat">Motivasyon</span>
     <h1>Yetişkin olarak İngilizce öğrenmek gerçekten zor mu?</h1>
-    <div class="article-meta">5 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 5 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/motivation.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         "Çocukken öğrenseydim çok daha kolay olurdu" - bu cümleyi çoğu
         yetişkin öğrenci kurar. Kısmen doğru, ama düşünüldüğünden çok daha
@@ -93,7 +137,7 @@
         miti düzeltelim.
       </p>
 
-      <h2>Yaygın mitler ve gerçekler</h2>
+      <h2 id="s1">Yaygın mitler ve gerçekler</h2>
 
       <div class="myth-box">
         <div class="myth-label">MİT</div>
@@ -122,7 +166,7 @@
         <p>Hafif bir aksan tamamen normal ve KONUŞMA BECERİNİ engellemez - dünya çapında milyonlarca insan aksanlı ama son derece etkili İngilizce konuşuyor. Hedef, anlaşılırlık, mükemmel bir native aksanı değil.</p>
       </div>
 
-      <h2>Yetişkin olmanın gerçek avantajları</h2>
+      <h2 id="s2">Yetişkin olmanın gerçek avantajları</h2>
       <ul>
         <li><strong>Analitik düşünme:</strong> Gramer kurallarını mantıksal olarak anlayıp uygulayabilme becerisi - çocuklar bunu sezgisel öğrenir, yetişkinler bilinçli olarak daha hızlı kavrayabilir.</li>
         <li><strong>Net hedefler:</strong> Bir çocuğun aksine, yetişkin neden öğrendiğini bilir (iş, seyahat, sınav) - bu motivasyon, öğrenmeyi hızlandırıyor.</li>
@@ -137,7 +181,7 @@
         bir rutinle ve hatalardan öğrenmeye açık bir yaklaşımla.
       </div>
 
-      <h2>Peki nasıl başlamalı?</h2>
+      <h2 id="s3">Peki nasıl başlamalı?</h2>
       <p>
         En etkili yol, "geç kaldım" düşüncesini bir kenara bırakıp somut,
         küçük bir hedefle başlamak - haftada 2 ders, düzenli bir rutin.
@@ -145,17 +189,27 @@
         süreçte belirgin hale geliyor - sabır ve tutarlılık, "doğuştan
         yetenek"ten çok daha belirleyici.
       </p>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Bugün ilk adımı at</h2>
         <p>ARMUS'ta bir öğretmen bul, ücretsiz deneme dersiyle risk almadan başla.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">Yaygın mitler ve gerçekler</a>
+        <a href="#s2">Yetişkin olmanın gerçek avantajları</a>
+        <a href="#s3">Peki nasıl başlamalı?</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 

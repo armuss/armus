@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#g)"/>
+  <circle cx="140" cy="110" r="6" fill="#0a0a0a" opacity="0.13"/>
+  <circle cx="1070" cy="110" r="5" fill="#0a0a0a" opacity="0.15"/>
+  <circle cx="1000" cy="400" r="6" fill="#0a0a0a" opacity="0.12"/>
+  <circle cx="150" cy="390" r="4" fill="#0a0a0a" opacity="0.15"/>
+  <!-- ABC blocks -->
+  <g stroke="#0a0a0a" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="410" y="240" width="110" height="110" rx="16" fill="#fee06d" transform="rotate(-6 465 295)"/>
+    <rect x="545" y="220" width="110" height="110" rx="16" fill="#ffffff" transform="rotate(3 600 275)"/>
+    <rect x="680" y="245" width="110" height="110" rx="16" fill="#fee06d" transform="rotate(-4 735 300)"/>
+  </g>
+  <g fill="#0a0a0a" font-family="Georgia, serif" font-weight="700" text-anchor="middle">
+    <text x="465" y="312" font-size="60" transform="rotate(-6 465 295)">A</text>
+    <text x="600" y="292" font-size="60" transform="rotate(3 600 275)">B</text>
+    <text x="735" y="317" font-size="60" transform="rotate(-4 735 300)">C</text>
+  </g>
+</svg>

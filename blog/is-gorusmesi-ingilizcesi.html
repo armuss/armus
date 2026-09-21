@@ -23,11 +23,12 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body { font-family: "Inter", sans-serif; background-color: var(--armus-bg); background-image: var(--armus-bg-glow); color: var(--armus-ink); line-height: 1.7; }
     a { color: var(--armus-gold-text); }
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
-    .nav-inner { width: min(760px, calc(100% - 40px)); margin: auto; display: flex; align-items: center; justify-content: space-between; }
+    .nav-inner { width: min(980px, calc(100% - 40px)); margin: auto; display: flex; align-items: center; justify-content: space-between; }
     .logo-img { height: 22px; }
     .nav-right { display: flex; align-items: center; gap: 14px; }
     .nav-utility { display: flex; align-items: center; gap: 8px; }
@@ -59,6 +60,42 @@
     .back-to-blog { display: inline-block; margin-top: 40px; font-size: 13.5px; color: var(--armus-muted); text-decoration: none; }
     .back-to-blog:hover { color: var(--armus-ink); }
     @media (max-width: 700px) { .cta-banner { flex-direction: column; align-items: flex-start; } }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -83,9 +120,16 @@
 
     <span class="cat">İş İngilizcesi</span>
     <h1>İş görüşmesi için İngilizce nasıl hazırlanılır?</h1>
-    <div class="article-meta">6 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 6 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/business.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         İngilizce bir iş görüşmesi, günlük sohbetten farklı bir baskı
         yaratır - hem doğru cevabı vermen hem de bunu akıcı ve özgüvenli
@@ -93,7 +137,7 @@
         yani hazırlanmak gerçekten fark yaratıyor.
       </p>
 
-      <h2>En sık sorulan sorular ve nasıl cevaplanır</h2>
+      <h2 id="s1">En sık sorulan sorular ve nasıl cevaplanır</h2>
 
       <div class="phrase-box">
         <div class="q">"Tell me about yourself."</div>
@@ -112,7 +156,7 @@
         <div class="a">Gerçekçi ve bu role bağlı bir cevap ver - hedeflerinin bu pozisyonla nasıl örtüştüğünü göster.</div>
       </div>
 
-      <h2>Dil bilgisinden daha önemli olan şey</h2>
+      <h2 id="s2">Dil bilgisinden daha önemli olan şey</h2>
       <p>
         Mükemmel gramer kadar önemli olan - hatta bazen daha önemli - akıcılık
         ve doğal duraksama yönetimi. "Um, let me think about that" gibi
@@ -128,23 +172,33 @@
         cevapları ezberlemekten çok daha faydalı.
       </div>
 
-      <h2>Görüşme günü için son tavsiyeler</h2>
+      <h2 id="s3">Görüşme günü için son tavsiyeler</h2>
       <ul>
         <li>Şirketin kullandığı terminolojiyi (varsa iş ilanından) önceden öğren - o kelimeleri kullanmak profesyonellik izlenimi verir.</li>
         <li>Sonunda soracağın 2-3 soruyu önceden hazırla - "Do you have any questions for us?" sorusuna hazırlıksız yakalanma.</li>
         <li>Anlamadığın bir soruyu tekrar sormaktan çekinme - "Could you rephrase that, please?" gibi bir cümle her zaman kabul edilebilir.</li>
       </ul>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Sahte mülakatla pratik yap</h2>
         <p>ARMUS'taki bir iş İngilizcesi öğretmeniyle gerçek bir mülakat senaryosu üzerinden çalış - ücretsiz deneme dersiyle başla.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">En sık sorulan sorular ve nasıl cevaplanır</a>
+        <a href="#s2">Dil bilgisinden daha önemli olan şey</a>
+        <a href="#s3">Görüşme günü için son tavsiyeler</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 

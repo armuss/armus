@@ -34,12 +34,12 @@
 
     a { color: inherit; text-decoration: none; }
 
-    .container { width: min(1040px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(1080px, calc(100% - 40px)); margin: auto; }
 
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
 
     .nav-inner {
-      width: min(1040px, calc(100% - 40px));
+      width: min(1080px, calc(100% - 40px));
       margin: auto;
       display: flex;
       align-items: center;
@@ -86,43 +86,69 @@
       margin-bottom: 18px;
     }
 
-    .intro { color: var(--armus-muted); font-size: 15.5px; max-width: 62ch; margin-bottom: 48px; }
+    .intro { color: var(--armus-muted); font-size: 15.5px; max-width: 62ch; margin-bottom: 32px; }
+
+    /* ---- category filter pills ---- */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+    .filter-pill {
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel);
+      color: var(--armus-muted);
+      font: 600 12.5px Inter, sans-serif;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+    .filter-pill:hover { border-color: var(--armus-gold-2); color: var(--armus-ink); }
+    .filter-pill.active {
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+      color: var(--armus-on-gold);
+    }
 
     .post-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 18px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
     }
 
     .post-card {
       background: var(--armus-panel);
       border: 1px solid var(--armus-border-soft);
       border-radius: 20px;
-      padding: 28px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 14px;
       transition: 0.2s;
     }
 
-    .post-card:hover { border-color: var(--armus-gold-2); transform: translateY(-2px); }
+    .post-card:hover { border-color: var(--armus-gold-2); transform: translateY(-3px); box-shadow: 0 20px 40px rgba(35, 26, 10, 0.1); }
+
+    .post-card .thumb { height: 150px; overflow: hidden; }
+    .post-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .post-card .card-body { padding: 22px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 
     .post-card .cat {
       display: inline-flex;
       align-self: flex-start;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.6px;
       text-transform: uppercase;
-      color: var(--armus-on-gold);
-      background: var(--armus-gold-gradient);
-      padding: 5px 11px;
-      border-radius: 999px;
+      color: var(--armus-gold-3);
     }
 
-    .post-card h2 { font-size: 20px; letter-spacing: -0.4px; line-height: 1.3; }
+    .post-card h2 { font-size: 18px; letter-spacing: -0.3px; line-height: 1.3; }
 
-    .post-card p { color: var(--armus-muted); font-size: 14px; }
+    .post-card p { color: var(--armus-muted); font-size: 13.5px; }
 
     .post-card .meta {
       margin-top: auto;
@@ -130,13 +156,17 @@
       align-items: center;
       gap: 8px;
       color: var(--armus-muted);
-      font-size: 12.5px;
+      font-size: 12px;
+      padding-top: 4px;
     }
 
-    .post-card .read-more { color: var(--armus-gold-text); font-weight: 700; font-size: 13px; }
-
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
+      .post-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
       .post-grid { grid-template-columns: 1fr; }
+      .filter-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin: 0 -20px 32px; padding: 0 20px; }
+      .filter-row::-webkit-scrollbar { display: none; }
     }
   </style>
 </head>
@@ -168,118 +198,177 @@
       pratik tavsiyeler.
     </p>
 
-    <div class="post-grid">
+    <div class="filter-row" id="filterRow">
+      <button type="button" class="filter-pill active" data-filter="all" data-i18n="blog.filterAll">Tümü</button>
+      <button type="button" class="filter-pill" data-filter="exam" data-i18n="blog.catExam">Sınav Hazırlığı</button>
+      <button type="button" class="filter-pill" data-filter="business" data-i18n="blog.catBusiness">İş İngilizcesi</button>
+      <button type="button" class="filter-pill" data-filter="conversation" data-i18n="blog.catGeneral">Konuşma Pratiği</button>
+      <button type="button" class="filter-pill" data-filter="kids" data-i18n="blog.catKids">Çocuklar için İngilizce</button>
+      <button type="button" class="filter-pill" data-filter="guide" data-i18n="blog.catGuide">Rehber</button>
+      <button type="button" class="filter-pill" data-filter="techniques" data-i18n="blog.catTechniques">Öğrenme Teknikleri</button>
+      <button type="button" class="filter-pill" data-filter="motivation" data-i18n="blog.catMotivation">Motivasyon</button>
+    </div>
 
-      <a class="post-card" href="blog/ielts-hazirlik-ozel-ders.html">
-        <span class="cat" data-i18n="blog.catExam">Sınav Hazırlığı</span>
-        <h2 data-i18n="blog.post1Title">IELTS hazırlığında özel ders neden hızlandırıcı olur?</h2>
-        <p data-i18n="blog.post1Excerpt">Hedef puanına ulaşmak için hangi beceriye ne kadar zaman ayırman gerektiğini ve bir özel öğretmenin bunu nasıl netleştirdiğini anlat.</p>
-        <div class="meta"><span data-i18n="blog.readTime7">7 dk okuma</span></div>
+    <div class="post-grid" id="postGrid">
+
+      <a class="post-card" data-filter-group="exam" href="blog/ielts-hazirlik-ozel-ders.html">
+        <div class="thumb"><img src="blog/covers/exam-prep.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catExam">Sınav Hazırlığı</span>
+          <h2 data-i18n="blog.post1Title">IELTS hazırlığında özel ders neden hızlandırıcı olur?</h2>
+          <p data-i18n="blog.post1Excerpt">Hedef puanına ulaşmak için hangi beceriye ne kadar zaman ayırman gerektiğini ve bir özel öğretmenin bunu nasıl netleştirdiğini anlat.</p>
+          <div class="meta"><span data-i18n="blog.readTime7">7 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/is-ingilizcesi-ozel-ders.html">
-        <span class="cat" data-i18n="blog.catBusiness">İş İngilizcesi</span>
-        <h2 data-i18n="blog.post2Title">Kariyerini büyütecek iş İngilizcesi nasıl öğrenilir?</h2>
-        <p data-i18n="blog.post2Excerpt">Toplantı, e-posta ve sunum İngilizcesi arasındaki farkı ve bunları en hızlı nasıl geliştireceğini öğren.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="business" href="blog/is-ingilizcesi-ozel-ders.html">
+        <div class="thumb"><img src="blog/covers/business.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catBusiness">İş İngilizcesi</span>
+          <h2 data-i18n="blog.post2Title">Kariyerini büyütecek iş İngilizcesi nasıl öğrenilir?</h2>
+          <p data-i18n="blog.post2Excerpt">Toplantı, e-posta ve sunum İngilizcesi arasındaki farkı ve bunları en hızlı nasıl geliştireceğini öğren.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/online-ingilizce-konusma-pratigi.html">
-        <span class="cat" data-i18n="blog.catGeneral">Konuşma Pratiği</span>
-        <h2 data-i18n="blog.post3Title">Online İngilizce konuşma pratiği gerçekten işe yarar mı?</h2>
-        <p data-i18n="blog.post3Excerpt">Gramer bilip konuşamama sorununu çözmek için haftalık pratik rutini nasıl kurulur.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="conversation" href="blog/online-ingilizce-konusma-pratigi.html">
+        <div class="thumb"><img src="blog/covers/conversation.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGeneral">Konuşma Pratiği</span>
+          <h2 data-i18n="blog.post3Title">Online İngilizce konuşma pratiği gerçekten işe yarar mı?</h2>
+          <p data-i18n="blog.post3Excerpt">Gramer bilip konuşamama sorununu çözmek için haftalık pratik rutini nasıl kurulur.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/cocuklar-icin-online-ingilizce.html">
-        <span class="cat" data-i18n="blog.catKids">Çocuklar için İngilizce</span>
-        <h2 data-i18n="blog.post4Title">Çocuğunuz için online İngilizce öğretmeni nasıl seçilir?</h2>
-        <p data-i18n="blog.post4Excerpt">Yaşa göre doğru yöntem, ders süresi ve bir ebeveyn olarak dikkat etmen gereken işaretler.</p>
-        <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+      <a class="post-card" data-filter-group="kids" href="blog/cocuklar-icin-online-ingilizce.html">
+        <div class="thumb"><img src="blog/covers/kids.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catKids">Çocuklar için İngilizce</span>
+          <h2 data-i18n="blog.post4Title">Çocuğunuz için online İngilizce öğretmeni nasıl seçilir?</h2>
+          <p data-i18n="blog.post4Excerpt">Yaşa göre doğru yöntem, ders süresi ve bir ebeveyn olarak dikkat etmen gereken işaretler.</p>
+          <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/online-ingilizce-ozel-ders-fiyatlari.html">
-        <span class="cat" data-i18n="blog.catGuide">Rehber</span>
-        <h2 data-i18n="blog.post5Title">Online İngilizce özel ders fiyatları ne kadar?</h2>
-        <p data-i18n="blog.post5Excerpt">Fiyatı neler belirler, bütçeni nasıl planlarsın ve ucuz mu pahalı mı diye nasıl karar verirsin?</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="guide" href="blog/online-ingilizce-ozel-ders-fiyatlari.html">
+        <div class="thumb"><img src="blog/covers/guide.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGuide">Rehber</span>
+          <h2 data-i18n="blog.post5Title">Online İngilizce özel ders fiyatları ne kadar?</h2>
+          <p data-i18n="blog.post5Excerpt">Fiyatı neler belirler, bütçeni nasıl planlarsın ve ucuz mu pahalı mı diye nasıl karar verirsin?</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/ingilizce-seviyeleri-rehberi.html">
-        <span class="cat" data-i18n="blog.catGuide">Rehber</span>
-        <h2 data-i18n="blog.post6Title">İngilizce seviyeni nasıl anlarsın? A1'den C2'ye rehber</h2>
-        <p data-i18n="blog.post6Excerpt">A1, A2, B1, B2, C1, C2 ne anlama gelir ve seviyeni doğru belirlemenin en güvenilir yolu ne?</p>
-        <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+      <a class="post-card" data-filter-group="guide" href="blog/ingilizce-seviyeleri-rehberi.html">
+        <div class="thumb"><img src="blog/covers/guide.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGuide">Rehber</span>
+          <h2 data-i18n="blog.post6Title">İngilizce seviyeni nasıl anlarsın? A1'den C2'ye rehber</h2>
+          <p data-i18n="blog.post6Excerpt">A1, A2, B1, B2, C1, C2 ne anlama gelir ve seviyeni doğru belirlemenin en güvenilir yolu ne?</p>
+          <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/toefl-vs-ielts.html">
-        <span class="cat" data-i18n="blog.catExam">Sınav Hazırlığı</span>
-        <h2 data-i18n="blog.post7Title">TOEFL mu IELTS mi? Hangisini seçmelisin?</h2>
-        <p data-i18n="blog.post7Excerpt">Format, puanlama ve hedefine göre iki sınav arasındaki farkları anlatan pratik bir karşılaştırma.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="exam" href="blog/toefl-vs-ielts.html">
+        <div class="thumb"><img src="blog/covers/exam-prep.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catExam">Sınav Hazırlığı</span>
+          <h2 data-i18n="blog.post7Title">TOEFL mu IELTS mi? Hangisini seçmelisin?</h2>
+          <p data-i18n="blog.post7Excerpt">Format, puanlama ve hedefine göre iki sınav arasındaki farkları anlatan pratik bir karşılaştırma.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/ingilizce-kelime-ezberleme.html">
-        <span class="cat" data-i18n="blog.catTechniques">Öğrenme Teknikleri</span>
-        <h2 data-i18n="blog.post8Title">İngilizce kelime nasıl kalıcı öğrenilir?</h2>
-        <p data-i18n="blog.post8Excerpt">Ezberlediğin kelimeleri neden unutuyorsun ve onları kalıcı hafızaya taşıyan bilimsel yöntemler.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="techniques" href="blog/ingilizce-kelime-ezberleme.html">
+        <div class="thumb"><img src="blog/covers/techniques.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catTechniques">Öğrenme Teknikleri</span>
+          <h2 data-i18n="blog.post8Title">İngilizce kelime nasıl kalıcı öğrenilir?</h2>
+          <p data-i18n="blog.post8Excerpt">Ezberlediğin kelimeleri neden unutuyorsun ve onları kalıcı hafızaya taşıyan bilimsel yöntemler.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/online-mi-yuz-yuze-mi-ingilizce.html">
-        <span class="cat" data-i18n="blog.catGuide">Rehber</span>
-        <h2 data-i18n="blog.post9Title">Online mu yüz yüze mi İngilizce dersi daha etkili?</h2>
-        <p data-i18n="blog.post9Excerpt">Araştırmalar ne diyor, hangi durumda hangisi daha mantıklı? Objektif bir karşılaştırma.</p>
-        <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+      <a class="post-card" data-filter-group="guide" href="blog/online-mi-yuz-yuze-mi-ingilizce.html">
+        <div class="thumb"><img src="blog/covers/guide.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGuide">Rehber</span>
+          <h2 data-i18n="blog.post9Title">Online mu yüz yüze mi İngilizce dersi daha etkili?</h2>
+          <p data-i18n="blog.post9Excerpt">Araştırmalar ne diyor, hangi durumda hangisi daha mantıklı? Objektif bir karşılaştırma.</p>
+          <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/ingilizce-ogrenirken-yapilan-hatalar.html">
-        <span class="cat" data-i18n="blog.catTechniques">Öğrenme Teknikleri</span>
-        <h2 data-i18n="blog.post10Title">İngilizce öğrenirken en sık yapılan 8 hata</h2>
-        <p data-i18n="blog.post10Excerpt">İlerlemeni yavaşlatan 8 yaygın hata ve her biri için somut bir çözüm.</p>
-        <div class="meta"><span data-i18n="blog.readTime7">7 dk okuma</span></div>
+      <a class="post-card" data-filter-group="techniques" href="blog/ingilizce-ogrenirken-yapilan-hatalar.html">
+        <div class="thumb"><img src="blog/covers/techniques.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catTechniques">Öğrenme Teknikleri</span>
+          <h2 data-i18n="blog.post10Title">İngilizce öğrenirken en sık yapılan 8 hata</h2>
+          <p data-i18n="blog.post10Excerpt">İlerlemeni yavaşlatan 8 yaygın hata ve her biri için somut bir çözüm.</p>
+          <div class="meta"><span data-i18n="blog.readTime7">7 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/yds-yokdil-hazirlik.html">
-        <span class="cat" data-i18n="blog.catExam">Sınav Hazırlığı</span>
-        <h2 data-i18n="blog.post11Title">YDS/YÖKDİL hazırlığında özel ders nasıl yardımcı olur?</h2>
-        <p data-i18n="blog.post11Excerpt">Çeviri ve paragraf ağırlıklı formata özel bir hazırlık stratejisi.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="exam" href="blog/yds-yokdil-hazirlik.html">
+        <div class="thumb"><img src="blog/covers/exam-prep.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catExam">Sınav Hazırlığı</span>
+          <h2 data-i18n="blog.post11Title">YDS/YÖKDİL hazırlığında özel ders nasıl yardımcı olur?</h2>
+          <p data-i18n="blog.post11Excerpt">Çeviri ve paragraf ağırlıklı formata özel bir hazırlık stratejisi.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/ingilizce-ozel-ogretmen-secimi.html">
-        <span class="cat" data-i18n="blog.catGuide">Rehber</span>
-        <h2 data-i18n="blog.post12Title">İngilizce özel öğretmeni seçerken nelere dikkat etmeli?</h2>
-        <p data-i18n="blog.post12Excerpt">Sorman gereken sorular, dikkat etmen gereken işaretler ve deneme dersini verimli kullanma.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="guide" href="blog/ingilizce-ozel-ogretmen-secimi.html">
+        <div class="thumb"><img src="blog/covers/guide.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGuide">Rehber</span>
+          <h2 data-i18n="blog.post12Title">İngilizce özel öğretmeni seçerken nelere dikkat etmeli?</h2>
+          <p data-i18n="blog.post12Excerpt">Sorman gereken sorular, dikkat etmen gereken işaretler ve deneme dersini verimli kullanma.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/is-gorusmesi-ingilizcesi.html">
-        <span class="cat" data-i18n="blog.catBusiness">İş İngilizcesi</span>
-        <h2 data-i18n="blog.post13Title">İş görüşmesi için İngilizce nasıl hazırlanılır?</h2>
-        <p data-i18n="blog.post13Excerpt">En sık sorulan sorular, doğal cevap kalıpları ve sahte mülakatla pratik yapmanın gücü.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="business" href="blog/is-gorusmesi-ingilizcesi.html">
+        <div class="thumb"><img src="blog/covers/business.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catBusiness">İş İngilizcesi</span>
+          <h2 data-i18n="blog.post13Title">İş görüşmesi için İngilizce nasıl hazırlanılır?</h2>
+          <p data-i18n="blog.post13Excerpt">En sık sorulan sorular, doğal cevap kalıpları ve sahte mülakatla pratik yapmanın gücü.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/ingilizce-telaffuz-aksan.html">
-        <span class="cat" data-i18n="blog.catGeneral">Konuşma Pratiği</span>
-        <h2 data-i18n="blog.post14Title">İngilizce telaffuzunu geliştirmenin 7 yolu</h2>
-        <p data-i18n="blog.post14Excerpt">Türkçe konuşanların en sık zorlandığı sesler ve telaffuzu doğallaştırma yöntemleri.</p>
-        <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+      <a class="post-card" data-filter-group="conversation" href="blog/ingilizce-telaffuz-aksan.html">
+        <div class="thumb"><img src="blog/covers/conversation.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGeneral">Konuşma Pratiği</span>
+          <h2 data-i18n="blog.post14Title">İngilizce telaffuzunu geliştirmenin 7 yolu</h2>
+          <p data-i18n="blog.post14Excerpt">Türkçe konuşanların en sık zorlandığı sesler ve telaffuzu doğallaştırma yöntemleri.</p>
+          <div class="meta"><span data-i18n="blog.readTime6">6 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/yetiskin-dil-ogrenme-zor-mu.html">
-        <span class="cat" data-i18n="blog.catMotivation">Motivasyon</span>
-        <h2 data-i18n="blog.post15Title">Yetişkin olarak İngilizce öğrenmek gerçekten zor mu?</h2>
-        <p data-i18n="blog.post15Excerpt">Yaygın mitler, gerçekler ve yetişkin olmanın sağladığı gerçek avantajlar.</p>
-        <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+      <a class="post-card" data-filter-group="motivation" href="blog/yetiskin-dil-ogrenme-zor-mu.html">
+        <div class="thumb"><img src="blog/covers/motivation.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catMotivation">Motivasyon</span>
+          <h2 data-i18n="blog.post15Title">Yetişkin olarak İngilizce öğrenmek gerçekten zor mu?</h2>
+          <p data-i18n="blog.post15Excerpt">Yaygın mitler, gerçekler ve yetişkin olmanın sağladığı gerçek avantajlar.</p>
+          <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+        </div>
       </a>
 
-      <a class="post-card" href="blog/seyahat-ingilizcesi-kaliplar.html">
-        <span class="cat" data-i18n="blog.catGeneral">Konuşma Pratiği</span>
-        <h2 data-i18n="blog.post16Title">Seyahat İngilizcesi: en çok ihtiyaç duyacağın kalıplar</h2>
-        <p data-i18n="blog.post16Excerpt">Havalimanı, otel, restoran ve acil durumlar için pratik ifadeler.</p>
-        <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+      <a class="post-card" data-filter-group="conversation" href="blog/seyahat-ingilizcesi-kaliplar.html">
+        <div class="thumb"><img src="blog/covers/conversation.svg" alt=""></div>
+        <div class="card-body">
+          <span class="cat" data-i18n="blog.catGeneral">Konuşma Pratiği</span>
+          <h2 data-i18n="blog.post16Title">Seyahat İngilizcesi: en çok ihtiyaç duyacağın kalıplar</h2>
+          <p data-i18n="blog.post16Excerpt">Havalimanı, otel, restoran ve acil durumlar için pratik ifadeler.</p>
+          <div class="meta"><span data-i18n="blog.readTime5">5 dk okuma</span></div>
+        </div>
       </a>
 
     </div>
@@ -297,5 +386,19 @@
   </script>
 
   <script src="i18n.js?v=6"></script>
+  <script>
+    document.getElementById("filterRow").addEventListener("click", event => {
+      const btn = event.target.closest(".filter-pill");
+      if (!btn) return;
+
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+
+      const filter = btn.dataset.filter;
+      document.querySelectorAll("#postGrid .post-card").forEach(card => {
+        card.style.display = (filter === "all" || card.dataset.filterGroup === filter) ? "" : "none";
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#g)"/>
+  <circle cx="140" cy="100" r="5" fill="#0a0a0a" opacity="0.14"/>
+  <circle cx="1070" cy="130" r="6" fill="#0a0a0a" opacity="0.13"/>
+  <circle cx="1010" cy="400" r="5" fill="#0a0a0a" opacity="0.14"/>
+  <!-- two speech bubbles -->
+  <g fill="none" stroke="#0a0a0a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M430 190 h230 a30 30 0 0 1 30 30 v90 a30 30 0 0 1 -30 30 h-140 l-45 40 v-40 h-45 a30 30 0 0 1 -30 -30 v-90 a30 30 0 0 1 30 -30 z" opacity="0.9"/>
+    <path d="M560 270 h220 a28 28 0 0 1 28 28 v70 a28 28 0 0 1 -28 28 h-40 v38 l-42 -38 h-138 a28 28 0 0 1 -28 -28 v-70 a28 28 0 0 1 28 -28 z" fill="#fee06d" opacity="0.95"/>
+  </g>
+  <circle cx="500" cy="240" r="8" fill="#0a0a0a"/>
+  <circle cx="545" cy="240" r="8" fill="#0a0a0a"/>
+  <circle cx="590" cy="240" r="8" fill="#0a0a0a"/>
+</svg>
