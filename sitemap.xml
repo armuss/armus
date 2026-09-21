@@ -31,6 +31,31 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://armus.com.tr/blog.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/ielts-hazirlik-ozel-ders.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/is-ingilizcesi-ozel-ders.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/online-ingilizce-konusma-pratigi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/cocuklar-icin-online-ingilizce.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://armus.com.tr/gizlilik-politikasi.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>

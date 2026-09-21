@@ -21,6 +21,7 @@ const ARMUS_I18N_EN = {
   "nav.teachers": "Teachers",
   "nav.how": "How It Works",
   "nav.about": "About Us",
+  "nav.blog": "Blog",
   "nav.login": "Log In",
   "nav.register": "Sign Up",
   "nav.help": "Help",
