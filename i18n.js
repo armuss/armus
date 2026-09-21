@@ -689,6 +689,7 @@ const ARMUS_I18N_EN = {
   "admin.navBookings": "Bookings",
   "admin.navStudents": "Students",
   "admin.navLog": "Activity Log",
+  "admin.navErrorLog": "Error Log",
   "admin.navTestimonials": "Homepage Reviews",
   "admin.navDisputes": "Disputes",
   "admin.navReviews": "Reviews",
@@ -741,6 +742,11 @@ const ARMUS_I18N_EN = {
   "admin.colTarget": "Target",
   "admin.colTime2": "Time",
   "admin.logEmpty": "No actions logged yet.",
+  "admin.errorLogHint": "JavaScript errors caught on visitors' own devices - not real APM, just enough to notice a recurring bug. (This panel starts filling once the client_errors table exists in Supabase.)",
+  "admin.colErrorMessage": "Error",
+  "admin.colPage": "Page",
+  "admin.errorLogEmpty": "No errors logged yet.",
+  "admin.errorLogShowStack": "Stack trace",
   "admin.testimonialsHint": "Manage the testimonials shown in the \"What our students say\" section on the homepage. As soon as there's at least one \"Published\" testimonial, the homepage shows those automatically; if none are published, the homepage keeps showing its fixed sample testimonials.",
   "admin.addTestimonialHeading": "Add a new testimonial",
   "admin.testimonialNamePlaceholder": "Name (e.g. Zeynep A.)",
@@ -1298,3 +1304,69 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// ---- lightweight client error log (migration_72.sql) --------------------
+// i18n.js is the one file already loaded on every single page, so the
+// capture lives here instead of adding a <script> tag to ~25 HTML files.
+// Not real APM (no source maps, no alerting) - just "make a recurring
+// error discoverable in admin.html instead of silent". Best-effort only:
+// never throws, never blocks anything, and caps itself so a
+// crash-looping bug can't flood the table.
+(function () {
+
+  let reportsThisPageLoad = 0;
+  let lastMessage = null;
+  const MAX_REPORTS_PER_PAGE = 5;
+
+  // The whole body is one try/catch, not just the SDK-presence check:
+  // armusSupabase is declared with `const` in a later <script> tag
+  // (supabase-config.js) sharing this same top-level scope, so if that
+  // script hasn't run yet - or never finishes because the CDN it loads
+  // from is blocked/slow - `typeof armusSupabase` itself THROWS
+  // ("Cannot access 'armusSupabase' before initialization", a
+  // temporal-dead-zone ReferenceError; `typeof` only avoids throwing for
+  // a completely undeclared identifier, not a declared-but-uninitialized
+  // let/const). Left unguarded, that throw - inside an async function
+  // with no caller awaiting or catching it - becomes an unhandled
+  // rejection, which fires this same file's own unhandledrejection
+  // listener below, which calls right back in here: an infinite
+  // self-triggered loop, observed firsthand while testing this file.
+  async function armusReportClientError(message, stack) {
+    try {
+      if (typeof armusSupabase === "undefined") return; // SDK didn't load
+      if (!message || message === "Script error." || message === "ResizeObserver loop limit exceeded") return; // opaque cross-origin/browser noise, not our bug
+      if (message === lastMessage) return; // same error firing repeatedly in one load
+      if (reportsThisPageLoad >= MAX_REPORTS_PER_PAGE) return;
+
+      reportsThisPageLoad += 1;
+      lastMessage = message;
+
+      let userId = null;
+      try {
+        const { data } = await armusSupabase.auth.getUser();
+        userId = (data && data.user && data.user.id) || null;
+      } catch (e) {}
+
+      await armusSupabase.from("client_errors").insert({
+        message: String(message).slice(0, 2000),
+        stack: stack ? String(stack).slice(0, 8000) : null,
+        page_url: location.href,
+        user_agent: navigator.userAgent,
+        user_id: userId,
+      });
+    } catch (e) {
+      // never let error reporting become a source of new errors
+    }
+  }
+
+  window.addEventListener("error", event => {
+    armusReportClientError(event.message, event.error && event.error.stack).catch(() => {});
+  });
+
+  window.addEventListener("unhandledrejection", event => {
+    const reason = event.reason;
+    const message = reason instanceof Error ? reason.message : String(reason);
+    const stack = reason instanceof Error ? reason.stack : null;
+    armusReportClientError(message, stack).catch(() => {});
+  });
+})();

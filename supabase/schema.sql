@@ -926,6 +926,38 @@ create policy "admin_actions_insert_admin"
   on admin_actions for insert
   with check (public.is_admin() and admin_id = auth.uid());
 
+-- === CLIENT ERROR LOG =================================================
+-- migration_72.sql: a lightweight, self-hosted stand-in for real error
+-- monitoring (no source maps, no alerting - just "is this recurring,
+-- discoverable instead of silent"). Captured by a small block at the
+-- bottom of i18n.js (loaded on every page already), read in admin.html's
+-- "Hata Günlüğü" panel.
+
+create table client_errors (
+  id uuid primary key default gen_random_uuid(),
+  message text not null check (char_length(message) <= 2000),
+  stack text check (stack is null or char_length(stack) <= 8000),
+  page_url text,
+  user_agent text,
+  -- nullable - most JS errors happen to anonymous/logged-out visitors
+  -- too, and the insert policy below lets a report go in with no user_id
+  -- at all (anon can't set auth.uid()), never with someone ELSE's id
+  user_id uuid references profiles(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+alter table client_errors enable row level security;
+
+create policy "client_errors_insert_anyone"
+  on client_errors for insert
+  with check (user_id is null or user_id = auth.uid());
+
+create policy "client_errors_select_admin"
+  on client_errors for select
+  using (public.is_admin());
+
+create index client_errors_created_at_idx on client_errors (created_at desc);
+
 create table testimonials (
   id uuid primary key default gen_random_uuid(),
   name text not null,

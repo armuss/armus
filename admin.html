@@ -1119,6 +1119,7 @@
       <button class="nav-btn" data-panel="bookings" data-i18n="admin.navBookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="students" data-i18n="admin.navStudents">Öğrenciler</button>
       <button class="nav-btn" data-panel="log" data-i18n="admin.navLog">Etkinlik Günlüğü</button>
+      <button class="nav-btn" data-panel="errorlog" data-i18n="admin.navErrorLog">Hata Günlüğü</button>
       <button class="nav-btn" data-panel="testimonials" data-i18n="admin.navTestimonials">Anasayfa Yorumları</button>
       <button class="nav-btn" data-panel="attendance"><span data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</span> <span class="nav-badge" id="attendanceBadge"></span></button>
       <button class="nav-btn" data-panel="disputes"><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
@@ -1266,6 +1267,27 @@
           <tbody id="logBody"></tbody>
         </table>
         <div class="empty-note" id="logEmpty" style="display: none;" data-i18n="admin.logEmpty">Henüz kayıtlı işlem yok.</div>
+      </div>
+
+      <div class="panel" id="panel-errorlog">
+        <h2 data-i18n="admin.navErrorLog">Hata Günlüğü</h2>
+        <p class="section-hint" data-i18n="admin.errorLogHint">
+          Ziyaretçilerin cihazında yakalanan JavaScript hataları - gerçek bir
+          APM değil, sadece tekrar eden bir hatayı fark edebilmen için. (Bu
+          panel client_errors tablosu Supabase'de oluşturulduktan sonra
+          dolmaya başlar.)
+        </p>
+        <table id="errorLogTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colErrorMessage">Hata</th>
+              <th data-i18n="admin.colPage">Sayfa</th>
+              <th data-i18n="admin.colTime2">Zaman</th>
+            </tr>
+          </thead>
+          <tbody id="errorLogBody"></tbody>
+        </table>
+        <div class="empty-note" id="errorLogEmpty" style="display: none;" data-i18n="admin.errorLogEmpty">Henüz kayıtlı hata yok.</div>
       </div>
 
       <div class="panel" id="panel-testimonials">
@@ -2179,6 +2201,36 @@
           `;
           body.appendChild(tr);
         });
+    }
+
+    // ---- client error log (migration_72.sql) ----
+    // message/stack/page_url/user_agent are all attacker-controllable -
+    // anyone (including anon) can insert a client_errors row - so every
+    // field is escaped here exactly like any other user-submitted text
+    // rendered in this dashboard.
+    function renderErrorLogPanel(errors) {
+      const body = document.getElementById("errorLogBody");
+      const empty = document.getElementById("errorLogEmpty");
+      body.innerHTML = "";
+
+      if (!errors.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      errors.forEach(err => {
+        const tr = document.createElement("tr");
+        const stackDetail = err.stack
+          ? `<details><summary>${armusT("admin.errorLogShowStack", "Stack trace")}</summary><pre style="white-space:pre-wrap;font-size:11px;color:var(--armus-muted);margin-top:6px;">${armusEscapeHtml(err.stack)}</pre></details>`
+          : "";
+        tr.innerHTML = `
+          <td>${armusEscapeHtml(err.message)}${stackDetail}</td>
+          <td style="max-width:220px;overflow-wrap:anywhere;">${armusEscapeHtml(err.page_url) || "—"}</td>
+          <td>${new Date(err.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
+        `;
+        body.appendChild(tr);
+      });
     }
 
     // ---- homepage testimonials management ----
@@ -3326,6 +3378,7 @@
     let armusAdminDisputes = [];
     let armusAdminAttendanceReports = [];
     let armusAdminCredits = [];
+    let armusAdminClientErrors = [];
     let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "" };
 
     function matchesSearch(value, term) {
@@ -3366,6 +3419,7 @@
       renderBookingsPanel(filteredBookings);
       renderStudentsPanel(filteredStudents, armusAdminBookings);
       renderLogPanel(armusAdminLogs);
+      renderErrorLogPanel(armusAdminClientErrors);
       renderTestimonialsPanel(armusAdminTestimonials);
       renderDisputesPanel(filteredDisputes);
       renderAttendancePanel(filteredAttendanceReports);
@@ -3424,7 +3478,7 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
@@ -3433,6 +3487,7 @@
         armusAdminGetAllDisputes(),
         armusAdminGetAllAttendanceReports(),
         armusSupabase.from("lesson_credits").select("*"),
+        armusSupabase.from("client_errors").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -3442,6 +3497,9 @@
       armusAdminTestimonials = testimonialsRes || [];
       armusAdminDisputes = disputesRes || [];
       armusAdminAttendanceReports = attendanceRes || [];
+      // best-effort: client_errors (migration_72.sql) may not exist in
+      // Supabase yet, same defensive pattern as admin_actions above
+      armusAdminClientErrors = clientErrorsRes.data || [];
       // every teacher's lesson_credits (migration_30.sql admin policy) -
       // used by computeEarnings to tell whether a trial converted into a
       // real package purchase yet (see armusTrialCountsAsEarned)
