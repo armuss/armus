@@ -56,6 +56,16 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://armus.com.tr/blog/online-ingilizce-ozel-ders-fiyatlari.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/ingilizce-seviyeleri-rehberi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://armus.com.tr/gizlilik-politikasi.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
