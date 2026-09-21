@@ -431,6 +431,29 @@
     const searchParams = new URLSearchParams(window.location.search);
     const requestedRole = searchParams.get("role");
     const nextParam = searchParams.get("next");
+    const referralCode = searchParams.get("ref");
+
+    // Best-effort, never blocks signup: resolves ?ref=<code> to a
+    // referrer id (resolve_referral_code - a plain user has no SELECT
+    // access to another profile's row, so the code can't be resolved by
+    // querying profiles directly) and files the referrals row now that a
+    // real session exists (referrals_insert_self requires
+    // auth.uid() = referred_id). A bad/missing code, a self-referral
+    // (armusSignUp already blocks a code for the browser's own
+    // account since the RPC only ever returns THIS visitor's id if they
+    // shared their own link with themselves) or a friend who already has
+    // a referrer (referred_id is unique) all just fail silently - none
+    // of them should ever surface as a registration error.
+    async function armusRecordReferral(newUserId) {
+      if (!referralCode) return;
+      try {
+        const { data: referrerId } = await armusSupabase.rpc("resolve_referral_code", { code: referralCode });
+        if (!referrerId || referrerId === newUserId) return;
+        await armusSupabase.from("referrals").insert({ referrer_id: referrerId, referred_id: newUserId });
+      } catch {
+        // silent - see comment above
+      }
+    }
 
     // Role is decided by how the visitor got here (the general "Kayıt Ol"
     // link vs. an "Öğretmen Ol" link with ?role=teacher) - not a toggle on
@@ -519,6 +542,7 @@
         return;
       }
 
+      await armusRecordReferral(data.session.user.id);
       startVerification(email);
     });
 

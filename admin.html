@@ -583,7 +583,7 @@
 
     /* ---- trend chart ---- */
 
-    #trendChart {
+    #trendChart, #revenueTrendChart {
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
       border-radius: 14px;
@@ -1119,6 +1119,7 @@
       <button class="nav-btn" data-panel="bookings" data-i18n="admin.navBookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="students" data-i18n="admin.navStudents">Öğrenciler</button>
       <button class="nav-btn" data-panel="log" data-i18n="admin.navLog">Etkinlik Günlüğü</button>
+      <button class="nav-btn" data-panel="errorlog" data-i18n="admin.navErrorLog">Hata Günlüğü</button>
       <button class="nav-btn" data-panel="testimonials" data-i18n="admin.navTestimonials">Anasayfa Yorumları</button>
       <button class="nav-btn" data-panel="attendance"><span data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</span> <span class="nav-badge" id="attendanceBadge"></span></button>
       <button class="nav-btn" data-panel="disputes"><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
@@ -1148,6 +1149,8 @@
         <div class="stat-grid" id="overviewStats"></div>
         <h3 data-i18n="admin.trendHeading">Son 6 ay - rezervasyon trendi</h3>
         <div id="trendChart"></div>
+        <h3 data-i18n="admin.revenueTrendHeading">Son 6 ay - ciro trendi</h3>
+        <div id="revenueTrendChart"></div>
         <h3><span data-i18n="admin.pulseHeading">Canlı Akış</span> <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;" data-i18n="admin.pulseLive">● CANLI</span></h3>
         <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
@@ -1264,6 +1267,27 @@
           <tbody id="logBody"></tbody>
         </table>
         <div class="empty-note" id="logEmpty" style="display: none;" data-i18n="admin.logEmpty">Henüz kayıtlı işlem yok.</div>
+      </div>
+
+      <div class="panel" id="panel-errorlog">
+        <h2 data-i18n="admin.navErrorLog">Hata Günlüğü</h2>
+        <p class="section-hint" data-i18n="admin.errorLogHint">
+          Ziyaretçilerin cihazında yakalanan JavaScript hataları - gerçek bir
+          APM değil, sadece tekrar eden bir hatayı fark edebilmen için. (Bu
+          panel client_errors tablosu Supabase'de oluşturulduktan sonra
+          dolmaya başlar.)
+        </p>
+        <table id="errorLogTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colErrorMessage">Hata</th>
+              <th data-i18n="admin.colPage">Sayfa</th>
+              <th data-i18n="admin.colTime2">Zaman</th>
+            </tr>
+          </thead>
+          <tbody id="errorLogBody"></tbody>
+        </table>
+        <div class="empty-note" id="errorLogEmpty" style="display: none;" data-i18n="admin.errorLogEmpty">Henüz kayıtlı hata yok.</div>
       </div>
 
       <div class="panel" id="panel-testimonials">
@@ -1951,6 +1975,13 @@
       }
     });
 
+    // month-key helper ("2026-09") shared by the overview stats and both
+    // trend charts, so "this month"/"last month" always mean the same thing
+    function armusMonthKey(dateLike) {
+      const d = new Date(dateLike);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+
     function renderOverview(profiles, bookings, reviews) {
 
       const students = profiles.filter(p => p.role === "student");
@@ -1963,6 +1994,34 @@
         ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
         : "—";
 
+      const now = new Date();
+      const thisMonthKey = armusMonthKey(now);
+      const lastMonthKey = armusMonthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+      const revenueForMonth = key => completedBookings
+        .filter(b => armusMonthKey(b.date) === key)
+        .reduce((sum, b) => sum + (b.price || 0), 0);
+      const thisMonthRevenue = revenueForMonth(thisMonthKey);
+      const lastMonthRevenue = revenueForMonth(lastMonthKey);
+      const revenueDelta = lastMonthRevenue
+        ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+        : null;
+      const revenueDeltaLabel = revenueDelta === null
+        ? ""
+        : ` (${revenueDelta >= 0 ? "+" : ""}${revenueDelta}%)`;
+
+      const newStudentsThisMonth = students.filter(s => s.created_at && armusMonthKey(s.created_at) === thisMonthKey).length;
+
+      // "repeat" = booked (any non-cancelled booking) with more than one
+      // distinct teacher-agnostic booking - a simple loyalty/retention signal
+      const bookingCountByStudent = new Map();
+      bookings.filter(b => b.status !== "cancelled").forEach(b => {
+        bookingCountByStudent.set(b.studentId, (bookingCountByStudent.get(b.studentId) || 0) + 1);
+      });
+      const studentsWithBookings = bookingCountByStudent.size;
+      const repeatStudents = [...bookingCountByStudent.values()].filter(n => n > 1).length;
+      const repeatRate = studentsWithBookings ? Math.round((repeatStudents / studentsWithBookings) * 100) : 0;
+
       const stats = [
         [students.length, armusT("admin.statTotalStudents", "Toplam öğrenci")],
         [teachers.length, armusT("admin.statTotalTeacherAccounts", "Toplam öğretmen hesabı")],
@@ -1972,6 +2031,9 @@
         [completedBookings.length, armusT("admin.statCompletedLessons", "Tamamlanan ders")],
         [`₺${grossRevenue}`, armusT("admin.statGrossRevenue", "Toplam ciro (tamamlanan dersler)")],
         [`${avgRating} (${reviews.length})`, armusT("admin.statAvgRating", "Ortalama puan / değerlendirme")],
+        [`₺${thisMonthRevenue}${revenueDeltaLabel}`, armusT("admin.statMonthRevenue", "Bu ayki ciro (geçen aya göre)")],
+        [newStudentsThisMonth, armusT("admin.statNewStudentsMonth", "Bu ay katılan yeni öğrenci")],
+        [`%${repeatRate}`, armusT("admin.statRepeatRate", "Birden fazla ders alan öğrenci oranı")],
       ];
 
       document.getElementById("overviewStats").innerHTML = stats.map(([value, label]) => `
@@ -2007,6 +2069,49 @@
         return `
           <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
           <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">${count}</text>
+          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
+          ${bars}
+        </svg>
+      `;
+    }
+
+    // same shape as renderTrendChart, but bars are completed-lesson revenue
+    // (₺) per month instead of a raw booking count - a full booking count
+    // can climb while revenue stays flat (more trial/low-price lessons), so
+    // the two charts answer different questions side by side.
+    function renderRevenueTrendChart(bookings) {
+
+      const container = document.getElementById("revenueTrendChart");
+      const completed = bookings.filter(b => b.status !== "cancelled" && armusIsBookingPast(b));
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
+        });
+      }
+
+      const totals = months.map(m => completed
+        .filter(b => b.date.startsWith(m.key))
+        .reduce((sum, b) => sum + (b.price || 0), 0));
+      const max = Math.max(1, ...totals);
+      const barWidth = 48, gap = 24, chartHeight = 130;
+      const width = months.length * (barWidth + gap);
+
+      const bars = totals.map((total, i) => {
+        const h = total ? Math.max(4, Math.round((total / max) * (chartHeight - 24))) : 0;
+        const x = i * (barWidth + gap);
+        const y = chartHeight - h;
+        return `
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
+          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="11" style="fill:var(--armus-ink)">₺${total}</text>
           <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
         `;
       }).join("");
@@ -2096,6 +2201,36 @@
           `;
           body.appendChild(tr);
         });
+    }
+
+    // ---- client error log (migration_72.sql) ----
+    // message/stack/page_url/user_agent are all attacker-controllable -
+    // anyone (including anon) can insert a client_errors row - so every
+    // field is escaped here exactly like any other user-submitted text
+    // rendered in this dashboard.
+    function renderErrorLogPanel(errors) {
+      const body = document.getElementById("errorLogBody");
+      const empty = document.getElementById("errorLogEmpty");
+      body.innerHTML = "";
+
+      if (!errors.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      errors.forEach(err => {
+        const tr = document.createElement("tr");
+        const stackDetail = err.stack
+          ? `<details><summary>${armusT("admin.errorLogShowStack", "Stack trace")}</summary><pre style="white-space:pre-wrap;font-size:11px;color:var(--armus-muted);margin-top:6px;">${armusEscapeHtml(err.stack)}</pre></details>`
+          : "";
+        tr.innerHTML = `
+          <td>${armusEscapeHtml(err.message)}${stackDetail}</td>
+          <td style="max-width:220px;overflow-wrap:anywhere;">${armusEscapeHtml(err.page_url) || "—"}</td>
+          <td>${new Date(err.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
+        `;
+        body.appendChild(tr);
+      });
     }
 
     // ---- homepage testimonials management ----
@@ -3243,6 +3378,7 @@
     let armusAdminDisputes = [];
     let armusAdminAttendanceReports = [];
     let armusAdminCredits = [];
+    let armusAdminClientErrors = [];
     let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "" };
 
     function matchesSearch(value, term) {
@@ -3275,6 +3411,7 @@
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
       renderTrendChart(armusAdminBookings);
+      renderRevenueTrendChart(armusAdminBookings);
       renderAtRiskPanel(computeAtRiskTeachers(teachers, armusAdminBookings, armusAdminReviews));
       renderBulkActionsBar();
       renderTeachersPanel(filteredTeachers);
@@ -3282,6 +3419,7 @@
       renderBookingsPanel(filteredBookings);
       renderStudentsPanel(filteredStudents, armusAdminBookings);
       renderLogPanel(armusAdminLogs);
+      renderErrorLogPanel(armusAdminClientErrors);
       renderTestimonialsPanel(armusAdminTestimonials);
       renderDisputesPanel(filteredDisputes);
       renderAttendancePanel(filteredAttendanceReports);
@@ -3340,7 +3478,7 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
@@ -3349,6 +3487,7 @@
         armusAdminGetAllDisputes(),
         armusAdminGetAllAttendanceReports(),
         armusSupabase.from("lesson_credits").select("*"),
+        armusSupabase.from("client_errors").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -3358,6 +3497,9 @@
       armusAdminTestimonials = testimonialsRes || [];
       armusAdminDisputes = disputesRes || [];
       armusAdminAttendanceReports = attendanceRes || [];
+      // best-effort: client_errors (migration_72.sql) may not exist in
+      // Supabase yet, same defensive pattern as admin_actions above
+      armusAdminClientErrors = clientErrorsRes.data || [];
       // every teacher's lesson_credits (migration_30.sql admin policy) -
       // used by computeEarnings to tell whether a trial converted into a
       // real package purchase yet (see armusTrialCountsAsEarned)

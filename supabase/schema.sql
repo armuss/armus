@@ -59,8 +59,19 @@ create table profiles (
   weekly_availability jsonb,
   pending_changes jsonb,
 
+  -- migration_71.sql: a shareable code ("give a friend, get a free
+  -- lesson" referral program - see the REFERRALS section further down).
+  -- Deterministic from the row's own id (10 hex chars), not declared
+  -- UNIQUE - handle_new_user runs inside the auth.users insert
+  -- transaction, and a uniqueness failure there would break signup
+  -- itself over what is, at 10 hex chars, an astronomically unlikely
+  -- collision; resolve_referral_code() just takes the first match.
+  referral_code text,
+
   created_at timestamptz not null default now()
 );
+
+create index profiles_referral_code_idx on profiles (referral_code);
 
 -- === BOOKINGS ====================================================
 
@@ -189,13 +200,14 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, name, role, city)
+  insert into public.profiles (id, email, name, role, city, referral_code)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'name', ''),
     coalesce(new.raw_user_meta_data->>'role', 'student'),
-    new.raw_user_meta_data->>'city'
+    new.raw_user_meta_data->>'city',
+    upper(left(replace(new.id::text, '-', ''), 10))
   );
   return new;
 end;
@@ -240,6 +252,26 @@ create policy "lesson_credits_select_own" on lesson_credits
 -- are declared further down, right after public.is_admin() exists to
 -- reference (that function isn't defined until the ROW LEVEL SECURITY
 -- section below) - see the comment there for why they're needed.
+
+-- === REFERRALS ========================================================
+-- migration_71.sql: "give a friend, get a free lesson". Bare table here;
+-- its RLS policies, resolve_referral_code(), and the reward trigger are
+-- declared further down for the same reason as lesson_credits' own
+-- deferred policies - they need public.is_admin()/bookings' full shape,
+-- neither of which exists yet at this point in the file.
+
+create table referrals (
+  id uuid primary key default gen_random_uuid(),
+  referrer_id uuid not null references profiles(id) on delete cascade,
+  referred_id uuid not null unique references profiles(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'rewarded')),
+  rewarded_booking_id uuid references bookings(id) on delete set null,
+  created_at timestamptz not null default now(),
+  rewarded_at timestamptz,
+  constraint referrals_no_self_referral check (referrer_id <> referred_id)
+);
+
+alter table referrals enable row level security;
 
 -- === EMAIL VERIFICATION (SIGNUP) ===================================
 -- A 6-digit code emailed via Resend (send-verification-email Edge
@@ -333,6 +365,84 @@ create policy "lesson_credits_select_teacher" on lesson_credits
 create policy "lesson_credits_select_admin" on lesson_credits
   for select
   using (public.is_admin());
+
+-- referrals: each side of a referral can see it, so can an admin
+create policy "referrals_select_own"
+  on referrals for select
+  using (auth.uid() = referrer_id or auth.uid() = referred_id or public.is_admin());
+
+-- referred_id being UNIQUE (above) is what actually stops referral
+-- farming via repeated inserts - a given account can only ever be
+-- someone's referred friend once, whichever referrer's link they used
+-- first.
+create policy "referrals_insert_self"
+  on referrals for insert
+  with check (auth.uid() = referred_id);
+
+-- resolves a referral_code to the referrer's id without granting the
+-- caller any broader read access to that profile's row (name, email,
+-- etc stay invisible - register.html only ever gets the id back, just
+-- enough to file the referrals insert above).
+create or replace function public.resolve_referral_code(code text)
+returns uuid
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select id from profiles where referral_code = upper(code) limit 1;
+$$;
+
+grant execute on function public.resolve_referral_code(text) to anon, authenticated;
+
+-- fires on every new booking; the first time a referred student's
+-- booking is a REAL (non-trial) lesson, marks the referral "rewarded"
+-- and grants the REFERRER a lesson_credit for that same teacher - reuses
+-- the exact same same-teacher-credit semantics cancel-booking already
+-- uses (see lesson_credits' own comment above). Requiring a real, paid
+-- booking (not a free/cheap trial) before rewarding anyone is the
+-- anti-fraud gate - a pending referral costs nothing to create, a real
+-- booking costs the referred account real money.
+create or replace function public.armus_reward_referral_on_first_real_booking()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_referrer_id uuid;
+begin
+  if new.type = 'trial' then
+    return new;
+  end if;
+
+  if exists (
+    select 1 from bookings b
+    where b.student_id = new.student_id
+      and b.type <> 'trial'
+      and b.id <> new.id
+  ) then
+    return new;
+  end if;
+
+  update referrals
+  set status = 'rewarded', rewarded_at = now(), rewarded_booking_id = new.id
+  where referred_id = new.student_id
+    and status = 'pending'
+  returning referrer_id into v_referrer_id;
+
+  if v_referrer_id is not null then
+    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
+    values (v_referrer_id, new.teacher_id, new.teacher_name, new.id);
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger armus_reward_referral
+  after insert on bookings
+  for each row execute procedure public.armus_reward_referral_on_first_real_booking();
 
 -- profiles: a user can update their own row; an admin can update any row
 -- (needed so admins can approve/reject teacher applications)
@@ -815,6 +925,38 @@ create policy "admin_actions_select_admin"
 create policy "admin_actions_insert_admin"
   on admin_actions for insert
   with check (public.is_admin() and admin_id = auth.uid());
+
+-- === CLIENT ERROR LOG =================================================
+-- migration_72.sql: a lightweight, self-hosted stand-in for real error
+-- monitoring (no source maps, no alerting - just "is this recurring,
+-- discoverable instead of silent"). Captured by a small block at the
+-- bottom of i18n.js (loaded on every page already), read in admin.html's
+-- "Hata Günlüğü" panel.
+
+create table client_errors (
+  id uuid primary key default gen_random_uuid(),
+  message text not null check (char_length(message) <= 2000),
+  stack text check (stack is null or char_length(stack) <= 8000),
+  page_url text,
+  user_agent text,
+  -- nullable - most JS errors happen to anonymous/logged-out visitors
+  -- too, and the insert policy below lets a report go in with no user_id
+  -- at all (anon can't set auth.uid()), never with someone ELSE's id
+  user_id uuid references profiles(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+alter table client_errors enable row level security;
+
+create policy "client_errors_insert_anyone"
+  on client_errors for insert
+  with check (user_id is null or user_id = auth.uid());
+
+create policy "client_errors_select_admin"
+  on client_errors for select
+  using (public.is_admin());
+
+create index client_errors_created_at_idx on client_errors (created_at desc);
 
 create table testimonials (
   id uuid primary key default gen_random_uuid(),
