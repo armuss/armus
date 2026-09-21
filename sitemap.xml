@@ -86,6 +86,36 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://armus.com.tr/blog/yds-yokdil-hazirlik.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/ingilizce-ozel-ogretmen-secimi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/is-gorusmesi-ingilizcesi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/ingilizce-telaffuz-aksan.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/yetiskin-dil-ogrenme-zor-mu.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://armus.com.tr/blog/seyahat-ingilizcesi-kaliplar.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://armus.com.tr/gizlilik-politikasi.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
