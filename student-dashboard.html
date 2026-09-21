@@ -439,6 +439,75 @@
       font-size: 13px;
     }
 
+    .referral-box {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      background: var(--armus-panel);
+      margin-bottom: 24px;
+    }
+
+    .referral-box-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .referral-box-top span {
+      color: var(--armus-muted);
+      font-size: 12px;
+      max-width: 46ch;
+      display: inline-block;
+    }
+
+    .referral-reward {
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .referral-reward strong {
+      display: block;
+      font-size: 20px;
+      color: var(--armus-gold-text);
+    }
+
+    .referral-reward span {
+      font-size: 11px;
+      color: var(--armus-muted);
+    }
+
+    .referral-link-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .referral-link-row input {
+      flex: 1;
+      min-width: 0;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .referral-link-row button {
+      flex-shrink: 0;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
     .goal-inputs button {
       border: 1px solid var(--armus-border);
       background: transparent;
@@ -1090,6 +1159,23 @@
       <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%;"></div></div>
     </div>
 
+    <div class="referral-box">
+      <div class="referral-box-top">
+        <div>
+          <strong data-i18n="studentDash.referralTitle">Arkadaşını Davet Et</strong><br>
+          <span data-i18n="studentDash.referralCaption">Arkadaşın ilk dersini alınca, sen de aynı öğretmenle ücretsiz bir ders kazanırsın.</span>
+        </div>
+        <div class="referral-reward">
+          <strong id="referralRewardCount">0</strong>
+          <span data-i18n="studentDash.referralRewardLabel">ücretsiz ders kazandın</span>
+        </div>
+      </div>
+      <div class="referral-link-row">
+        <input type="text" id="referralLinkInput" readonly>
+        <button type="button" id="referralCopyBtn" data-i18n="studentDash.referralCopy">Kopyala</button>
+      </div>
+    </div>
+
     <div id="confidenceSection">
       <h2 data-i18n="studentDash.confidenceTitle">Konuşma Güvenin</h2>
       <div class="confidence-card" id="confidenceCard"></div>
@@ -1221,6 +1307,40 @@
         document.getElementById("greetName").textContent = armusT("studentDash.greeting", "Merhaba, {name} 👋").replace("{name}", session.name.split(" ")[0]);
       }
       renderGreetName();
+
+      // ---- referral card: own shareable link + how many friends have
+      // rewarded a free lesson so far. Best-effort - if migration_71.sql
+      // hasn't been run yet, referral_code is null and the referrals
+      // query 404s; both fail silently rather than breaking the rest of
+      // the dashboard.
+      if (session.referral_code) {
+        document.getElementById("referralLinkInput").value =
+          `${location.origin}/register.html?ref=${session.referral_code}`;
+      }
+      armusSupabase
+        .from("referrals")
+        .select("id")
+        .eq("referrer_id", session.id)
+        .eq("status", "rewarded")
+        .then(({ data }) => {
+          document.getElementById("referralRewardCount").textContent = (data || []).length;
+        })
+        .catch(() => {});
+
+      document.getElementById("referralCopyBtn").addEventListener("click", async () => {
+        const input = document.getElementById("referralLinkInput");
+        if (!input.value) return;
+        try {
+          await navigator.clipboard.writeText(input.value);
+        } catch {
+          input.select();
+          document.execCommand("copy");
+        }
+        const btn = document.getElementById("referralCopyBtn");
+        const original = btn.textContent;
+        btn.textContent = armusT("studentDash.referralCopied", "Kopyalandı ✓");
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      });
 
       const [allBookings, conversations, marketplaceTeachers, confidenceCheckins, vocabEntries] = await Promise.all([
         armusGetBookingsForStudent(session.id),
