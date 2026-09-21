@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -10 320 210">
+  <defs>
+    <linearGradient id="armusGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#armusGoldGrad)" d="
+    M 20 175 C 25 148, 33 118, 50 98 C 68 78, 92 62, 115 52
+    C 118 30, 125 10, 145 0 C 150 15, 152 35, 150 55
+    C 172 60, 198 70, 222 88 C 245 72, 270 62, 300 55
+    C 280 72, 262 88, 248 100 C 262 112, 280 128, 300 145
+    C 278 138, 252 128, 230 118 C 205 122, 175 118, 148 116
+    C 122 114, 96 118, 72 128 C 55 136, 38 148, 27 160
+    C 24 165, 21 170, 20 175 Z"/>
+  <circle cx="58" cy="108" r="7" fill="#0a0a0a"/>
+</svg>
