@@ -23,6 +23,7 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: "Inter", sans-serif;
@@ -34,12 +35,12 @@
 
     a { color: var(--armus-gold-text); }
 
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
 
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
 
     .nav-inner {
-      width: min(760px, calc(100% - 40px));
+      width: min(980px, calc(100% - 40px));
       margin: auto;
       display: flex;
       align-items: center;
@@ -148,6 +149,42 @@
     @media (max-width: 700px) {
       .cta-banner { flex-direction: column; align-items: flex-start; }
     }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -172,9 +209,16 @@
 
     <span class="cat">Çocuklar için İngilizce</span>
     <h1>Çocuğunuz için online İngilizce öğretmeni nasıl seçilir?</h1>
-    <div class="article-meta">5 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 5 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/kids.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         Bir çocuğa İngilizce öğretmek, bir yetişkine öğretmekle aynı şey değil.
         Doğru öğretmen sadece dili değil, çocuğun dikkatini, motivasyonunu ve
@@ -182,14 +226,14 @@
         seçim yaparken dikkat etmeniz gereken noktalar.
       </p>
 
-      <h2>Yaşa göre doğru yöntem değişir</h2>
+      <h2 id="s1">Yaşa göre doğru yöntem değişir</h2>
       <ul>
         <li><strong>5-8 yaş:</strong> Bu yaşta odak süresi kısadır - ders oyun, şarkı ve görsel materyallerle desteklenmeli, tamamen "ders gibi" hissettirmemeli. Kısa (25 dakikalık) dersler daha etkilidir.</li>
         <li><strong>9-12 yaş:</strong> Artık daha yapılandırılmış bir müfredat takip edilebilir, ama hâlâ etkileşimli olmalı - hikaye anlatma, basit diyaloglar, kısa yazma egzersizleri iyi çalışır.</li>
         <li><strong>13 yaş ve üzeri:</strong> Bu noktada okuldaki İngilizceyi destekleme (sınav hazırlığı, ödev yardımı) ya da gerçek konuşma becerisi geliştirme hedefi netleşmeye başlar - öğretmenle bu hedefi baştan konuşmak önemli.</li>
       </ul>
 
-      <h2>Ders süresi ne kadar olmalı?</h2>
+      <h2 id="s2">Ders süresi ne kadar olmalı?</h2>
       <p>
         Küçük yaş grupları için 45-60 dakikalık bir ders çoğu zaman fazla
         uzundur - çocuk 20-25 dakikadan sonra dikkatini kaybetmeye başlar.
@@ -205,14 +249,14 @@
         bir öğretmenle bir deneme dersi daha denemek makul bir sonraki adımdır.
       </p>
 
-      <h2>Bir öğretmende nelere dikkat etmelisiniz?</h2>
+      <h2 id="s3">Bir öğretmende nelere dikkat etmelisiniz?</h2>
       <ul>
         <li>Profilinde çocuklarla çalışma deneyimi açıkça belirtilmiş mi?</li>
         <li>İlk derste çocuğun seviyesini ve ilgi alanlarını (spor, çizgi film, oyun) öğrenmeye çalışıyor mu - yoksa doğrudan standart bir müfredata mı geçiyor?</li>
         <li>Ders sonunda size (ebeveyne) kısa bir geri bildirim veriyor mu - neyin iyi gittiği, nerede desteğe ihtiyaç olduğu?</li>
       </ul>
 
-      <h2>Ebeveyn olarak süreçte rolünüz ne?</h2>
+      <h2 id="s4">Ebeveyn olarak süreçte rolünüz ne?</h2>
       <p>
         Küçük yaştaki çocuklar için ilk birkaç dersi yakınlarda oturup izlemek
         - hem çocuğun rahat hissetmesi hem de öğretmenin tarzını görmeniz
@@ -221,17 +265,28 @@
         yarar: birlikte İngilizce bir çizgi film izlemek, ders sonrası
         öğrendiği 2-3 kelimeyi sizinle paylaşmasını istemek gibi.
       </p>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Çocuğunuz için doğru öğretmeni bulun</h2>
         <p>ARMUS'taki öğretmen profillerini inceleyin ve ücretsiz deneme dersiyle başlayın - hangi öğretmenin çocuğunuza uygun olduğunu risk almadan görün.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">Yaşa göre doğru yöntem değişir</a>
+        <a href="#s2">Ders süresi ne kadar olmalı?</a>
+        <a href="#s3">Bir öğretmende nelere dikkat etmelisiniz?</a>
+        <a href="#s4">Ebeveyn olarak süreçte rolünüz ne?</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 

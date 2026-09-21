@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#g)"/>
+  <circle cx="150" cy="100" r="5" fill="#0a0a0a" opacity="0.14"/>
+  <circle cx="1060" cy="120" r="6" fill="#0a0a0a" opacity="0.13"/>
+  <circle cx="1020" cy="400" r="5" fill="#0a0a0a" opacity="0.14"/>
+  <!-- compass -->
+  <g fill="none" stroke="#0a0a0a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="600" cy="250" r="120"/>
+    <circle cx="600" cy="250" r="4" fill="#0a0a0a" stroke="none"/>
+    <path d="M600 250 L650 180 L620 240 Z" fill="#0a0a0a" stroke="none"/>
+    <path d="M600 250 L550 320 L580 260 Z" fill="#ffffff" stroke="none" opacity="0.9"/>
+    <line x1="600" y1="150" x2="600" y2="130" stroke-width="8"/>
+    <line x1="600" y1="350" x2="600" y2="370" stroke-width="8"/>
+    <line x1="500" y1="250" x2="480" y2="250" stroke-width="8"/>
+    <line x1="700" y1="250" x2="720" y2="250" stroke-width="8"/>
+  </g>
+</svg>

@@ -23,6 +23,7 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: "Inter", sans-serif;
@@ -34,12 +35,12 @@
 
     a { color: var(--armus-gold-text); }
 
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
 
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
 
     .nav-inner {
-      width: min(760px, calc(100% - 40px));
+      width: min(980px, calc(100% - 40px));
       margin: auto;
       display: flex;
       align-items: center;
@@ -148,6 +149,42 @@
     @media (max-width: 700px) {
       .cta-banner { flex-direction: column; align-items: flex-start; }
     }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -172,9 +209,16 @@
 
     <span class="cat">Öğrenme Teknikleri</span>
     <h1>İngilizce kelime nasıl kalıcı öğrenilir?</h1>
-    <div class="article-meta">6 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 6 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/techniques.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         Bir listeyi ezberleyip birkaç gün sonra yarısını unutmak - bu neredeyse
         herkesin başına gelir, ve sebep senin hafızanın kötü olması değil.
@@ -182,7 +226,7 @@
         siliyor. Kalıcı öğrenme, farklı bir yöntem gerektiriyor.
       </p>
 
-      <h2>Neden unutuyoruz?</h2>
+      <h2 id="s1">Neden unutuyoruz?</h2>
       <p>
         "Unutma eğrisi" (Ebbinghaus) denen bir olgu var: yeni öğrenilen bilginin
         büyük kısmı ilk 24 saat içinde kaybolur, eğer tekrar edilmezse. Bir
@@ -192,7 +236,7 @@
         görmek.
       </p>
 
-      <h2>Kalıcı öğrenmeyi sağlayan 4 yöntem</h2>
+      <h2 id="s2">Kalıcı öğrenmeyi sağlayan 4 yöntem</h2>
       <ul>
         <li><strong>Aralıklı tekrar (spaced repetition):</strong> Bir kelimeyi öğrendikten sonra artan aralıklarla (1 gün, 3 gün, 1 hafta, 1 ay) tekrar et. Flashcard uygulamaları (Anki gibi) bunu otomatik planlar.</li>
         <li><strong>Bağlam içinde öğrenme:</strong> Kelimeyi tek başına ezberlemek yerine bir cümle içinde öğren - "improve" kelimesini değil, "I want to improve my speaking" cümlesini öğren. Beyin bağlamlı bilgiyi çok daha iyi saklıyor.</li>
@@ -207,7 +251,7 @@
         yüzeysel'den daha iyidir.
       </div>
 
-      <h2>Bir öğretmenle çalışmak neden fark yaratır?</h2>
+      <h2 id="s3">Bir öğretmenle çalışmak neden fark yaratır?</h2>
       <p>
         Kendi başına kelime ezberlerken en büyük eksik, kelimeyi doğru
         bağlamda kullanıp kullanmadığını bilememek. Bir öğretmen, dersin
@@ -218,7 +262,7 @@
         bir şey.
       </p>
 
-      <h2>Hangi kelimelere öncelik vermelisin?</h2>
+      <h2 id="s4">Hangi kelimelere öncelik vermelisin?</h2>
       <p>
         Rastgele kelime listeleri yerine, KENDİ hedefine uygun kelimeleri
         önceliklendirmek daha etkili: iş İngilizcesi hedefliyorsan sektörel
@@ -227,17 +271,28 @@
         kelime. "Her kelimeyi öğrenmeye çalışmak" yerine hedefe özel bir
         liste, zamanını çok daha verimli kullanır.
       </p>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Kelime dağarcığını bir öğretmenle geliştir</h2>
         <p>Öğrendiğin kelimeleri gerçek konuşmada kullanmayı bir öğretmenle pratik et - ücretsiz deneme dersiyle başla.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">Neden unutuyoruz?</a>
+        <a href="#s2">Kalıcı öğrenmeyi sağlayan 4 yöntem</a>
+        <a href="#s3">Bir öğretmenle çalışmak neden fark yaratır?</a>
+        <a href="#s4">Hangi kelimelere öncelik vermelisin?</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 

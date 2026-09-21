@@ -23,6 +23,7 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: "Inter", sans-serif;
@@ -34,12 +35,12 @@
 
     a { color: var(--armus-gold-text); }
 
-    .container { width: min(760px, calc(100% - 40px)); margin: auto; }
+    .container { width: min(980px, calc(100% - 40px)); margin: auto; }
 
     nav { height: 76px; border-bottom: 1px solid var(--armus-border-soft); display: flex; align-items: center; }
 
     .nav-inner {
-      width: min(760px, calc(100% - 40px));
+      width: min(980px, calc(100% - 40px));
       margin: auto;
       display: flex;
       align-items: center;
@@ -161,6 +162,42 @@
     @media (max-width: 700px) {
       .cta-banner { flex-direction: column; align-items: flex-start; }
     }
+
+    .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .byline .mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: grid; place-items: center;
+      font-family: "Playfair Display", serif; font-weight: 800; font-size: 14px; color: var(--armus-on-gold);
+      flex-shrink: 0;
+    }
+    .byline .byline-text { font-size: 13px; color: var(--armus-muted); }
+    .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
+
+    .cover-image {
+      border-radius: 22px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
+    }
+    .cover-image img { display: block; width: 100%; height: 280px; object-fit: cover; }
+
+    .article-layout { display: grid; grid-template-columns: 1fr 210px; gap: 50px; align-items: start; }
+    .article-main { min-width: 0; }
+
+    .toc { position: sticky; top: 96px; font-size: 13px; }
+    .toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--armus-muted); margin-bottom: 14px; font-weight: 700; }
+    .toc nav { display: flex; flex-direction: column; gap: 11px; border-left: 2px solid var(--armus-border-soft); }
+    .toc nav a { color: var(--armus-muted); text-decoration: none; padding-left: 14px; border-left: 2px solid transparent; margin-left: -2px; line-height: 1.4; transition: 0.15s; }
+    .toc nav a:hover { color: var(--armus-ink); border-left-color: var(--armus-gold-2); }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
+      .toc nav { border-left: none; }
+      .toc nav a { border-left: none; padding-left: 0; }
+      .cover-image img { height: 200px; }
+    }
   </style>
 </head>
 
@@ -185,9 +222,16 @@
 
     <span class="cat">Öğrenme Teknikleri</span>
     <h1>İngilizce öğrenirken en sık yapılan 8 hata</h1>
-    <div class="article-meta">7 dk okuma</div>
+    <div class="byline">
+      <div class="mark">A</div>
+      <div class="byline-text"><strong>ARMUS Ekibi</strong> · 7 dk okuma</div>
+    </div>
 
-    <article>
+    <div class="cover-image"><img src="covers/techniques.svg" alt=""></div>
+
+<div class="article-layout">
+      <div class="article-main">
+        <article>
       <p class="lead">
         Yıllarca İngilizce çalışıp hâlâ akıcı konuşamayan birçok insan var -
         genelde sorun yetenek değil, çalışma yönteminde tekrar eden birkaç
@@ -197,7 +241,7 @@
       <div class="mistake">
         <div class="mistake-num">1</div>
         <div>
-          <h3>Sadece gramer çalışmak</h3>
+          <h3 id="s1">Sadece gramer çalışmak</h3>
           <p><strong>Sorun:</strong> Kuralları ezbere bilip cümle kuramamak. <strong>Çözüm:</strong> Her gramer kuralını öğrendiğinde, onu içeren 3-5 kendi cümleni yaz ya da söyle - kural bilgisini aktif kullanıma çevir.</p>
         </div>
       </div>
@@ -205,7 +249,7 @@
       <div class="mistake">
         <div class="mistake-num">2</div>
         <div>
-          <h3>Mükemmel cümle kurma takıntısı</h3>
+          <h3 id="s2">Mükemmel cümle kurma takıntısı</h3>
           <p><strong>Sorun:</strong> Hata yapmaktan korkup konuşmaktan kaçınmak. <strong>Çözüm:</strong> Akıcılık, doğruluktan önce gelir - önce konuş, hatalarını sonra düzelt. Bir öğretmenle çalışmak bunun için ideal, çünkü hatanı anında, yargılamadan düzeltir.</p>
         </div>
       </div>
@@ -213,7 +257,7 @@
       <div class="mistake">
         <div class="mistake-num">3</div>
         <div>
-          <h3>Sadece pasif tüketim (izlemek/okumak)</h3>
+          <h3 id="s3">Sadece pasif tüketim (izlemek/okumak)</h3>
           <p><strong>Sorun:</strong> Dizi izlemek, podcast dinlemek faydalı ama tek başına yetmiyor - anlama becerisi gelişir, konuşma becerisi gelişmez. <strong>Çözüm:</strong> Her pasif çalışmaya aktif bir bileşen ekle - izlediğin bölümü özetle, duyduğun bir cümleyi kendi hayatına uyarlayıp söyle.</p>
         </div>
       </div>
@@ -221,7 +265,7 @@
       <div class="mistake">
         <div class="mistake-num">4</div>
         <div>
-          <h3>Düzensiz çalışma</h3>
+          <h3 id="s4">Düzensiz çalışma</h3>
           <p><strong>Sorun:</strong> Ayda bir 4 saat çalışmak, haftada 4 kez 1 saat çalışmaktan çok daha az etkili - dil öğrenme, tekrar ve sürekliliğe dayanır. <strong>Çözüm:</strong> Kısa ama düzenli bir rutin kur; haftalık sabit gün/saatte ders almak bunu kolaylaştırır.</p>
         </div>
       </div>
@@ -229,7 +273,7 @@
       <div class="mistake">
         <div class="mistake-num">5</div>
         <div>
-          <h3>Ana dile birebir çeviri yapmaya çalışmak</h3>
+          <h3 id="s5">Ana dile birebir çeviri yapmaya çalışmak</h3>
           <p><strong>Sorun:</strong> Türkçe cümleyi kelime kelime İngilizceye çevirmeye çalışmak, doğal olmayan cümlelere yol açıyor. <strong>Çözüm:</strong> Kalıpları (fikir bazında) öğren, kelime kelime değil - "kafam karıştı" için "my head is confused" değil, "I'm confused" doğal ifade.</p>
         </div>
       </div>
@@ -237,7 +281,7 @@
       <div class="mistake">
         <div class="mistake-num">6</div>
         <div>
-          <h3>Geri bildirim almadan tek başına çalışmak</h3>
+          <h3 id="s6">Geri bildirim almadan tek başına çalışmak</h3>
           <p><strong>Sorun:</strong> Kendi kendine çalışırken tekrar eden hataları fark edemezsin - yanlış bir telaffuzu ya da yapıyı ay'larca aynı şekilde tekrar edebilirsin. <strong>Çözüm:</strong> Düzenli olarak birinin (bir öğretmenin) seni dinleyip düzeltmesi gerekiyor.</p>
         </div>
       </div>
@@ -245,7 +289,7 @@
       <div class="mistake">
         <div class="mistake-num">7</div>
         <div>
-          <h3>Hedefsiz çalışmak</h3>
+          <h3 id="s7">Hedefsiz çalışmak</h3>
           <p><strong>Sorun:</strong> "İngilizcemi geliştireceğim" çok belirsiz bir hedef - neyi, ne zamana kadar geliştireceğini bilmeden ilerlemeyi ölçemezsin. <strong>Çözüm:</strong> Somut bir hedef koy ("3 ay sonra bir iş görüşmesini İngilizce yapabilmek" gibi) ve buna göre çalış.</p>
         </div>
       </div>
@@ -253,21 +297,36 @@
       <div class="mistake">
         <div class="mistake-num">8</div>
         <div>
-          <h3>Seviyene uygun olmayan materyalle çalışmak</h3>
+          <h3 id="s8">Seviyene uygun olmayan materyalle çalışmak</h3>
           <p><strong>Sorun:</strong> Çok zor bir kitap/podcast ile başlamak motivasyonu kırıyor; çok kolay materyalle kalmak ilerlemeyi durduruyor. <strong>Çözüm:</strong> Gerçek seviyeni bilmek (bkz. CEFR seviye rehberimiz) ve materyali buna göre seçmek, hem motive edici hem etkili.</p>
         </div>
       </div>
-    </article>
+        </article>
 
-    <div class="cta-banner">
+        <div class="cta-banner">
       <div>
         <h2>Bu hataları bir öğretmenle aş</h2>
         <p>Düzenli geri bildirim alarak çalışmanın en hızlı yolu - ücretsiz deneme dersiyle bir öğretmen bul.</p>
       </div>
       <a class="btn" href="../teachers.html">Öğretmenleri İncele →</a>
-    </div>
+        </div>
 
-    <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+        <a class="back-to-blog" href="../blog.html">← Diğer yazılara dön</a>
+      </div>
+      <aside class="toc">
+        <h4>İçindekiler</h4>
+        <nav>
+          <a href="#s1">1. Sadece gramer çalışmak</a>
+          <a href="#s2">2. Mükemmel cümle kurma takıntısı</a>
+          <a href="#s3">3. Sadece pasif tüketim (izlemek/okumak)</a>
+          <a href="#s4">4. Düzensiz çalışma</a>
+          <a href="#s5">5. Ana dile birebir çeviri yapmaya çalışmak</a>
+          <a href="#s6">6. Geri bildirim almadan tek başına çalışmak</a>
+          <a href="#s7">7. Hedefsiz çalışmak</a>
+          <a href="#s8">8. Seviyene uygun olmayan materyalle çalışmak</a>
+        </nav>
+      </aside>
+    </div>
 
   </main>
 
