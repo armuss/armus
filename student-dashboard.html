@@ -1240,18 +1240,26 @@
       return armusSafeUrl(photoUrl) ? `<img src="${armusSafeUrl(photoUrl)}" alt="">` : initialsOf(name);
     }
 
+    // yyyy-mm-dd from a Date's own local year/month/day - never goes
+    // through toISOString(), which converts to UTC first and silently
+    // shifts the date by a day in any timezone ahead of UTC (Istanbul
+    // included), throwing off every caller that chains these keys.
+    function localDateKey(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
     // Monday (yyyy-mm-dd) of the week dateStr falls in.
     function weekKeyOf(dateStr) {
       const d = new Date(dateStr + "T00:00:00");
       const dayIndex = (d.getDay() + 6) % 7; // 0 = Monday
       d.setDate(d.getDate() - dayIndex);
-      return d.toISOString().slice(0, 10);
+      return localDateKey(d);
     }
 
     function shiftWeekKey(mondayKey, deltaWeeks) {
       const d = new Date(mondayKey + "T00:00:00");
       d.setDate(d.getDate() + deltaWeeks * 7);
-      return d.toISOString().slice(0, 10);
+      return localDateKey(d);
     }
 
     // Consecutive weeks (ending at the current one) with at least one
@@ -1360,7 +1368,7 @@
       // counts toward "next lesson", stats, or anything else on this page
       const bookings = allBookings.filter(b => b.status !== "cancelled");
 
-      const todayKey = new Date().toISOString().slice(0, 10);
+      const todayKey = localDateKey(new Date());
       const teacherById = new Map(marketplaceTeachers.map(t => [t.id, t]));
 
       // armusIsBookingPast (reviews.js) compares the lesson's real,
@@ -1540,7 +1548,17 @@
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
         .find(b => !confidenceCheckins.some(c => c.booking_id === b.id));
 
-      if (pendingCheckinBooking) {
+      // Re-run on armus:langchange too (see below) so toggling the site
+      // language while this prompt is showing doesn't leave it stuck in
+      // the old language - it isn't reached by renderConfidenceTrend()
+      // since it renders its own markup up front, before any checkin
+      // exists to trend.
+      function renderConfidencePrompt() {
+
+        if (!pendingCheckinBooking) {
+          renderConfidenceTrend();
+          return;
+        }
 
         confidenceCard.innerHTML = `
           <div class="confidence-prompt-q">${armusT("studentDash.confidencePromptQ", "{name} ile olan dersin nasıldı? Ne kadar rahat konuştun?").replace("{name}", armusEscapeHtml(armusShortDisplayName(pendingCheckinBooking.teacherName)))}</div>
@@ -1558,10 +1576,9 @@
             renderConfidenceTrend();
           });
         });
-
-      } else {
-        renderConfidenceTrend();
       }
+
+      renderConfidencePrompt();
 
       // ---- flashcards ----
 
@@ -1893,7 +1910,7 @@
         renderHero();
         renderStats();
         renderGoal(Number(goalInput.value) || goal);
-        if (!pendingCheckinBooking) renderConfidenceTrend();
+        renderConfidencePrompt();
         if (document.getElementById("flashcardSection").style.display !== "none") renderFlashcardSection();
         renderBadges();
         renderUpcoming();

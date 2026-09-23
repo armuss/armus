@@ -1828,7 +1828,7 @@
 
       document.getElementById("avatar").innerHTML = armusSafeUrl(user.photo_url)
         ? `<img src="${armusSafeUrl(user.photo_url)}" alt="">`
-        : armusEscapeHtml(user.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase());
+        : armusEscapeHtml((user.name || "?").split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?");
       document.getElementById("dashName").textContent = armusCapitalizeName(user.name);
       document.getElementById("dashEmail").textContent = user.email;
 
@@ -2534,11 +2534,20 @@
 
       // weekBlocks[getDay() index] = [{start,end}, ...] in minutes.
       // Mirrors armusSlotsForDate's precedence (bookings.js): availability_dates
-      // wins entirely once the teacher has set anything at all in it (a day
-      // missing from it just means that day is empty); otherwise fall back
-      // entirely to the older weekly_availability array from signup, so the
-      // editor never shows a blank grid for a teacher who's actually bookable.
-      const hasAvailabilityDates = user.availability_dates && Object.keys(user.availability_dates).length;
+      // wins entirely once the teacher has saved through this editor at
+      // least once (a day missing from it just means that day is empty);
+      // otherwise fall back entirely to the older weekly_availability array
+      // from signup, so the editor never shows a blank grid for a teacher
+      // who's actually bookable.
+      //
+      // "Has saved at least once" can't be read off Object.keys(...).length,
+      // because the column defaults to '{}' for every profile AND a teacher
+      // who intentionally clears every slot also saves '{}' - both look
+      // identical, so relying on key count silently un-clears the calendar
+      // the moment a fully-cleared teacher reloads the page. The _set
+      // sentinel (added by the save handler below, ignored everywhere this
+      // object's day keys ("0".."6") are read) is the actual signal.
+      const hasAvailabilityDates = user.availability_dates && user.availability_dates._set === true;
       const weekBlocks = {};
       DAY_COLUMNS.forEach(([, dayIdx]) => {
         const raw = hasAvailabilityDates
@@ -2731,7 +2740,7 @@
 
       document.getElementById("saveAvailabilityBtn").addEventListener("click", async () => {
 
-        const cleaned = {};
+        const cleaned = { _set: true };
         DAY_COLUMNS.forEach(([, dayIdx]) => {
           const slots = blocksToSlots(weekBlocks[dayIdx]);
           if (slots.length) cleaned[String(dayIdx)] = slots;

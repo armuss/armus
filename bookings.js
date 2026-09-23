@@ -345,11 +345,14 @@ function armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes) {
   );
 
   // the dashboard.html weekly timeline (a recurring day-of-week pattern,
-  // not tied to a specific date) wins when the teacher has set anything
-  // at all; otherwise fall back to their older weekly_availability
-  // pattern (set once during the apply-teacher.html signup wizard), and
-  // finally to a deterministic mock for demo teachers with neither.
-  if (teacher.availabilityDates && Object.keys(teacher.availabilityDates).length) {
+  // not tied to a specific date) wins when the teacher has saved through
+  // that editor at least once (the _set sentinel dashboard.html writes -
+  // see its comment there for why key count alone can't tell "never
+  // touched" apart from "intentionally cleared everything"); otherwise
+  // fall back to their older weekly_availability pattern (set once during
+  // the apply-teacher.html signup wizard), and finally to a deterministic
+  // mock for demo teachers with neither.
+  if (teacher.availabilityDates && teacher.availabilityDates._set === true) {
     const daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
     return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
   }
