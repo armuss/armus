@@ -1398,6 +1398,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function buildWidget() {
     if (document.getElementById("armusChatRoot")) return;
+    // Visitor-facing support bubble - doesn't belong on the internal
+    // admin panel, where it would just float over admin's own tools.
+    if (/(^|\/)admin\.html$/.test(location.pathname)) return;
 
     const style = document.createElement("style");
     style.textContent = `
