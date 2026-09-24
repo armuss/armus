@@ -1608,6 +1608,15 @@
   <script src="attendance.js?v=4"></script>
   <script>
 
+    // yyyy-mm-dd from a Date's own local year/month/day - never goes
+    // through toISOString(), which converts to UTC first and silently
+    // shifts the date by a day in any timezone ahead of UTC (Istanbul
+    // included, ARMUS's own market) - every dateKey below must go through
+    // this instead of toISOString().slice(0, 10).
+    function localDateKey(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
     const gate = document.getElementById("gate");
     const shell = document.getElementById("shell");
 
@@ -1971,12 +1980,12 @@
             ? `${startD.getDate()}–${endD.getDate()} ${bkMonths[endD.getMonth()]} ${endD.getFullYear()}`
             : `${startD.getDate()} ${bkMonths[startD.getMonth()]} – ${endD.getDate()} ${bkMonths[endD.getMonth()]} ${endD.getFullYear()}`;
 
-        const todayKeyNow = new Date().toISOString().slice(0, 10);
+        const todayKeyNow = localDateKey(new Date());
 
         const headerEl = document.getElementById("bkHeaderDays");
         headerEl.innerHTML = "";
         weekDates.forEach((d, i) => {
-          const key = d.toISOString().slice(0, 10);
+          const key = localDateKey(d);
           const col = document.createElement("div");
           col.className = "week-header-day" + (key === todayKeyNow ? " bk-today" : "");
           col.innerHTML = `${bkDows[i]}<span class="bk-daynum">${d.getDate()}</span>`;
@@ -2010,7 +2019,7 @@
 
         weekDates.forEach((d, colIndex) => {
 
-          const key = d.toISOString().slice(0, 10);
+          const key = localDateKey(d);
           const dayBookings = bookingsByDateKey.get(key) || [];
 
           dayBookings.forEach(booking => {
@@ -2098,8 +2107,8 @@
 
       // ---- weekly narrative digest ----
 
-      const weekAgoKey = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-      const twoWeeksAgoKey = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+      const weekAgoKey = localDateKey(new Date(Date.now() - 7 * 86400000));
+      const twoWeeksAgoKey = localDateKey(new Date(Date.now() - 14 * 86400000));
 
       const lessonsThisWeek = completedBookings.filter(b => b.date >= weekAgoKey).length;
       const lessonsLastWeek = completedBookings.filter(b => b.date >= twoWeeksAgoKey && b.date < weekAgoKey).length;
@@ -2129,7 +2138,7 @@
 
       // ---- "today" widget ----
 
-      const todayKey = new Date().toISOString().slice(0, 10);
+      const todayKey = localDateKey(new Date());
       const todayBookings = activeBookings.filter(b => b.date === todayKey);
 
       function renderTodayList() {
