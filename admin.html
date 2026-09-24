@@ -1984,7 +1984,8 @@
     // month-key helper ("2026-09") shared by the overview stats and both
     // trend charts, so "this month"/"last month" always mean the same thing
     function armusMonthKey(dateLike) {
-      const d = new Date(dateLike);
+      const raw = typeof dateLike === "string" && dateLike.length === 10 ? dateLike + "T00:00:00" : dateLike;
+      const d = new Date(raw);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     }
 
@@ -2293,16 +2294,26 @@
         renderAllFromState();
       }
 
+      const disableMoveButtons = () => {
+        list.querySelectorAll("[data-move-up], [data-move-down]").forEach(b => { b.disabled = true; });
+      };
+
       list.querySelectorAll("[data-move-up]").forEach(button => {
         button.addEventListener("click", () => {
           const idx = sorted.findIndex(t => t.id === button.dataset.moveUp);
-          if (idx > 0) swapOrder(sorted[idx], sorted[idx - 1]);
+          if (idx > 0) {
+            disableMoveButtons();
+            swapOrder(sorted[idx], sorted[idx - 1]);
+          }
         });
       });
       list.querySelectorAll("[data-move-down]").forEach(button => {
         button.addEventListener("click", () => {
           const idx = sorted.findIndex(t => t.id === button.dataset.moveDown);
-          if (idx !== -1 && idx < sorted.length - 1) swapOrder(sorted[idx], sorted[idx + 1]);
+          if (idx !== -1 && idx < sorted.length - 1) {
+            disableMoveButtons();
+            swapOrder(sorted[idx], sorted[idx + 1]);
+          }
         });
       });
       list.querySelectorAll("[data-toggle-pub]").forEach(button => {
@@ -2936,12 +2947,16 @@
     // on the page, so the overview reads like a summary instead of a wall
     // of numbers.
 
+    function localDateKey(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
     function renderDigest(profiles, bookings, disputes) {
       const el = document.getElementById("digestCard");
-      const todayKey = new Date().toISOString().slice(0, 10);
-      const weekAgoKey = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+      const todayKey = localDateKey(new Date());
+      const weekAgoKey = localDateKey(new Date(Date.now() - 7 * 86400000));
 
-      const newToday = profiles.filter(p => (p.created_at || "").slice(0, 10) === todayKey).length;
+      const newToday = profiles.filter(p => p.created_at && localDateKey(new Date(p.created_at)) === todayKey).length;
       const bookingsToday = bookings.filter(b => b.date === todayKey).length;
       const bookingsThisWeek = bookings.filter(b => b.date >= weekAgoKey);
 
