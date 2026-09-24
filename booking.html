@@ -879,7 +879,7 @@
       }
 
       function toDateKey(date) {
-        return date.toISOString().slice(0, 10);
+        return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
       }
 
       const dateRow = document.getElementById("dateRow");
@@ -1062,18 +1062,23 @@
           ? armusT("booking.redirecting", "Yönlendiriliyor...")
           : armusT("booking.completing", "Tamamlanıyor...");
 
-        const { data, error } = await armusSupabase.functions.invoke("create-payment", {
-          body: {
-            teacherId: teacher.id,
-            teacherName: teacher.name,
-            type: bookingType,
-            date: selectedDate,
-            time: selectedTime,
-            price: teacher.price,
-            phone,
-            identityNumber,
-          },
-        });
+        let data, error;
+        try {
+          ({ data, error } = await armusSupabase.functions.invoke("create-payment", {
+            body: {
+              teacherId: teacher.id,
+              teacherName: teacher.name,
+              type: bookingType,
+              date: selectedDate,
+              time: selectedTime,
+              price: teacher.price,
+              phone,
+              identityNumber,
+            },
+          }));
+        } catch (err) {
+          error = err;
+        }
 
         if (error || !data || (!data.paymentPageUrl && !data.bookedDirectly)) {
           confirmError.textContent =
