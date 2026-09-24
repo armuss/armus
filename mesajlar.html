@@ -730,9 +730,20 @@
 
       document.getElementById("threadForm").style.display = "flex";
 
-      activeConversationHasBooking = await armusHasBookingWithOtherParty(otherId);
+      // Everything below this point awaits at least once, so a second
+      // openConversation() call (the user clicking another conversation
+      // before this one finishes loading) can resolve its own awaits out
+      // of order and clobber this call's UI/state with a different
+      // conversation's data. activeConversationId still being this call's
+      // conversationId after each await means no newer call has taken
+      // over - bail out the moment that stops being true instead of
+      // continuing to act on a conversation the user has since left.
+      const hasBooking = await armusHasBookingWithOtherParty(otherId);
+      if (activeConversationId !== conversationId) return;
+      activeConversationHasBooking = hasBooking;
 
       await loadThread(conversationId);
+      if (activeConversationId !== conversationId) return;
 
       if (currentChannel) armusSupabase.removeChannel(currentChannel);
       currentChannel = armusSubscribeToMessages(
@@ -747,6 +758,7 @@
       );
 
       await armusMarkMessagesRead(conversationId, currentSession.id);
+      if (activeConversationId !== conversationId) return;
       await refreshConvoList(conversationId);
     }
 

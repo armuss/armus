@@ -810,7 +810,12 @@
 
           empty.style.display = "none";
 
-          const todayKey = new Date().toISOString().slice(0, 10);
+          // yyyy-mm-dd from a Date's own local year/month/day - never goes
+          // through toISOString(), which converts to UTC first and shifts
+          // the date by a day in any positive-UTC-offset viewer timezone
+          // (Istanbul included).
+          const localDateKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+          const todayKey = localDateKey(new Date());
 
           for (const booking of bookings) {
 
@@ -821,6 +826,12 @@
             // could disagree by a day depending on the teacher/viewer's
             // actual locations and time of day.
             const isPast = armusIsBookingPast(booking);
+            // Same reasoning for the join-hint's own "is this lesson today"
+            // check below: booking.date is teacher-local, so it's compared
+            // against the VIEWER's local today by first converting to the
+            // lesson's real start instant and reading the viewer's own
+            // local calendar day off that - not compared as raw strings.
+            const bookingLocalDateKey = localDateKey(armusZonedTimeToUtc(booking.date, booking.time, booking.teacherTimezone || "Europe/Istanbul"));
             // armusIsBookingPast flips true right at the lesson's scheduled
             // end, but class.html (and armusCanJoinLessonNow) still admits
             // the student for ARMUS_JOIN_LATE_GRACE_MINUTES after that - so
@@ -858,7 +869,7 @@
                 <div class="lesson-cancel-badge">
                   ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}
                 </div>
-              ` : (canJoinNow || (!isPast && booking.date === todayKey)) ? `
+              ` : (canJoinNow || (!isPast && bookingLocalDateKey === todayKey)) ? `
                 <div class="lesson-join">
                   ${canJoinNow
                     ? `<a class="join-btn" href="class.html?booking=${booking.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`

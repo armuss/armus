@@ -539,6 +539,18 @@
   <script src="https://meet.jit.si/external_api.js"></script>
   <script>
 
+    // Reads the "how many minutes late" number input the way the min=1/
+    // max=180 attributes on it promise, which the browser only enforces on
+    // a real form submit - a plain .value read here does neither, so an
+    // explicit "0" (falsy) used to be discarded as if the field were left
+    // empty instead of being sent as 0, and an out-of-range or negative
+    // number typed directly in went through unvalidated.
+    function parseLateMinutes(rawValue) {
+      const n = Number(rawValue);
+      if (rawValue === "" || !Number.isFinite(n)) return null;
+      return Math.min(180, Math.max(1, Math.round(n)));
+    }
+
     const gate = document.getElementById("gate");
     const tooEarly = document.getElementById("tooEarly");
     const tooLate = document.getElementById("tooLate");
@@ -815,7 +827,7 @@
           `;
           attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
           attendanceReportBody.querySelector("[data-submit-late]").addEventListener("click", () => {
-            const minutes = Number(document.getElementById("lateMinutesInput").value) || null;
+            const minutes = parseLateMinutes(document.getElementById("lateMinutesInput").value);
             submitAttendanceReport("late", minutes);
           });
         });
@@ -1041,7 +1053,7 @@
                 </div>
               `;
               postClassBody.querySelector("[data-continue]").addEventListener("click", () => {
-                const minutes = Number(document.getElementById("checkinLateMinutes").value) || null;
+                const minutes = parseLateMinutes(document.getElementById("checkinLateMinutes").value);
                 async function submitCheckinLate() {
                   postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
                   const result = await armusReportAttendanceIssue({
