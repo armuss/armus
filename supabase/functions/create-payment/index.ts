@@ -225,7 +225,8 @@ Deno.serve(async (req) => {
     if (!profile) return jsonResponse({ error: "Profil bulunamadı." }, 400);
 
     const body = await req.json().catch(() => ({}));
-    const { teacherId, teacherName, type, date, time, phone, identityNumber, quantity } = body;
+    let { teacherId, teacherName } = body;
+    const { type, date, time, phone, identityNumber, quantity } = body;
 
     if (type !== "trial" && type !== "lesson" && type !== "package") {
       return jsonResponse({ error: "Geçersiz ders tipi." }, 400);
@@ -323,6 +324,13 @@ Deno.serve(async (req) => {
       teacherTimezone = teacherProfile.timezone || "Europe/Istanbul";
       teacherEmail = teacherProfile.email || null;
       teacherRealName = teacherProfile.name || null;
+      // never trust the client-supplied display name for a real teacher -
+      // it's reachable directly (armusSupabase.functions.invoke) with any
+      // string at all, and would otherwise end up stored on the booking/
+      // pending_payments row, in the student's confirmation email, and on
+      // the iyzico basket item, all showing a name that doesn't match the
+      // real teacher tied to teacherId
+      teacherName = teacherRealName || teacherName;
 
       // booking.html's picker (bookings.js's armusSlotsForDate) only ever
       // offers a time that's both on the teacher's declared grid and on
