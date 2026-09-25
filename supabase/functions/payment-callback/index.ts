@@ -224,14 +224,26 @@ Deno.serve(async (req) => {
 
   if (!claimed) {
     // lost the race (or this token is already past "pending"/"failed") -
-    // re-read the current state instead of doing anything twice
-    const { data: latest } = await supabaseAdmin
-      .from("pending_payments")
-      .select("*")
-      .eq("id", pending.id)
-      .single();
-    if (latest?.status === "succeeded" && (latest.booking_id || isPackage)) {
-      return redirectTo(successPath);
+    // re-read the current state instead of doing anything twice. If the
+    // winning request is still mid-flight ("processing"), briefly poll for
+    // it to finish instead of immediately telling this browser the payment
+    // failed - a duplicated redirect/webhook hit for the same token is
+    // routine (iyzico retry, two open tabs), and the winner usually
+    // resolves within a second or two.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data: latest } = await supabaseAdmin
+        .from("pending_payments")
+        .select("*")
+        .eq("id", pending.id)
+        .single();
+      if (latest?.status === "succeeded" && (latest.booking_id || isPackage)) {
+        return redirectTo(successPath);
+      }
+      if (latest?.status === "failed") {
+        return redirectTo(failedPath);
+      }
+      // still "processing" - give the winner a moment to finish
+      await new Promise(resolve => setTimeout(resolve, 400));
     }
     return redirectTo(failedPath);
   }
@@ -245,6 +257,10 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("iyzico retrieve failed", err);
+    // roll the claim back so a retry (iyzico's own, or the buyer reloading)
+    // can attempt this token again instead of finding it stuck forever in
+    // "processing" and permanently unrecoverable without a manual DB fix
+    await supabaseAdmin.from("pending_payments").update({ status: "failed" }).eq("id", pending.id);
     return redirectTo(failedPath);
   }
 
