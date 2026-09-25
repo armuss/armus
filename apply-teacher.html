@@ -1267,7 +1267,13 @@
       }
 
       function uploadToStorage(file, folder) {
-        const ext = (file.name.includes(".") ? file.name.split(".").pop() : "bin").toLowerCase();
+        // file.name is attacker-controllable (a script can construct its
+        // own File object with any name, bypassing the <input accept>
+        // hint entirely) - only ever accept a short alphanumeric
+        // extension, so nothing like "/" or ".." can reach the storage
+        // key built below.
+        const rawExt = file.name.includes(".") ? file.name.split(".").pop() : "";
+        const ext = /^[a-zA-Z0-9]{1,10}$/.test(rawExt) ? rawExt.toLowerCase() : "bin";
         const path = `${session.id}/${folder}-${Date.now()}.${ext}`;
         return armusSupabase.storage
           .from("teacher-uploads")

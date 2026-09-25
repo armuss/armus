@@ -93,8 +93,12 @@ Deno.serve(async (req) => {
     );
 
     // Anonymous, no-login widget - same reasoning as send-contact-email:
-    // cap by IP so a script can't run up the Anthropic bill.
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    // cap by IP so a script can't run up the Anthropic bill. Trust the
+    // LAST x-forwarded-for entry (appended by our own edge network's
+    // trusted final hop), not the first (client-supplied, trivially
+    // spoofable by sending an arbitrary value on every request).
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",").pop()?.trim() || null : null;
 
     if (ip) {
       const { count: recentFromIp } = await supabaseAdmin

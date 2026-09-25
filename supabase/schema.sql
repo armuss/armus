@@ -1497,10 +1497,19 @@ on conflict (id) do update set
   allowed_mime_types = excluded.allowed_mime_types,
   file_size_limit = excluded.file_size_limit;
 
+-- scoped to the caller's own "<uid>/..." folder (migration_74.sql) -
+-- checking bucket_id alone let any authenticated account upload to ANY
+-- path in this bucket, not just their own prefix that
+-- apply-teacher.html's uploadToStorage() always uses - the object's
+-- `owner` column is set to the caller regardless of path chosen, so it
+-- never actually protected the path itself.
 create policy "teacher_uploads_insert_authenticated"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id = 'teacher-uploads');
+  with check (
+    bucket_id = 'teacher-uploads'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 -- update/delete used to have NO ownership check at all - any
 -- authenticated account (any student, any other teacher) could
