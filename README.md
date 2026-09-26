@@ -40,6 +40,24 @@ Then open `http://localhost:8000/index.html`. The Supabase project
 itself (schema, edge functions, secrets) is managed through the
 Supabase Dashboard, not from this checkout.
 
+## Tests
+
+```
+npm test
+```
+
+Runs `tests/*.test.js` with Node's built-in test runner (Node 18+, no
+extra dependencies). These are regression tests for the pure business
+logic in `bookings.js`/`reviews.js`/`i18n.js` — timezone conversion,
+slot availability, trial-to-paid conversion, commission tiers, and the
+output-sanitization helpers — loaded into an isolated `vm` context the
+same way a `<script>` tag would, without a browser or a live Supabase
+project. They exist specifically to catch regressions of bug classes
+that have shipped before in this codebase (the
+`toISOString()`-vs-local-date timezone trap above all). There is no
+browser/e2e test suite yet; anything involving a real page render,
+Supabase, or a payment flow is still manually tested.
+
 ## Database
 
 - `supabase/schema.sql` is the **canonical, current** combined schema —
