@@ -15,15 +15,22 @@ import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
-import { DAY_NAMES, MONTH_NAMES, formatTimeRange, slotsForDate, type Slot } from '../../lib/bookings';
+import { DAY_NAMES, MONTH_NAMES, formatTimeRange, getTeacherBusyTimes, slotsForDate, type BusyTime, type Slot } from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
 import { createPayment, hasCoveringCredit, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 
+// getDate()/getMonth()/getFullYear() read the device's own local
+// calendar day - date.toISOString() reads the UTC date instead, which
+// silently disagrees with the day number/name shown on each pill (built
+// from the same local Date with getDate()/getDay() below) for any device
+// in a positive-UTC-offset timezone (Turkey is UTC+3) during the few
+// hours right after local midnight. Mirrors the identical fix already
+// made to booking.html's own toDateKey().
 function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
 }
 
 const DATE_OPTIONS = Array.from({ length: 10 }, (_, i) => {
@@ -46,6 +53,7 @@ export default function Booking() {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCredit, setHasCredit] = useState(false);
+  const [busyTimes, setBusyTimes] = useState<BusyTime[]>([]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -75,12 +83,33 @@ export default function Booking() {
     hasCoveringCredit(profile.id, teacher.id, type === 'trial').then(setHasCredit);
   }, [profile, teacher, type]);
 
+  // Without this, the picker can't tell a slot someone else already took
+  // apart from a genuinely open one - it would show as pickable right up
+  // until the booking itself fails server-side (bookings_teacher_slot_unique).
+  useEffect(() => {
+    if (!teacher) return;
+    let active = true;
+    getTeacherBusyTimes(teacher.id).then((busy) => {
+      if (active) setBusyTimes(busy);
+    });
+    return () => {
+      active = false;
+    };
+  }, [teacher]);
+
+  // re-checked after a slot_taken redirect (below) - the slot that was
+  // just lost to another student needs to grey out immediately, not only
+  // on the next time this screen happens to remount.
+  function refreshBusyTimes() {
+    if (teacher) getTeacherBusyTimes(teacher.id).then(setBusyTimes);
+  }
+
   const selectedDateInfo = DATE_OPTIONS.find((d) => d.key === selectedDate) || null;
 
   const slots: Slot[] = useMemo(() => {
     if (!teacher || !selectedDateInfo) return [];
-    return slotsForDate(teacher, selectedDateInfo.key, selectedDateInfo.date.getDay());
-  }, [teacher, selectedDateInfo]);
+    return slotsForDate(teacher, selectedDateInfo.key, selectedDateInfo.date.getDay(), busyTimes);
+  }, [teacher, selectedDateInfo, busyTimes]);
 
   function pickDate(key: string) {
     setSelectedDate(key);
@@ -179,6 +208,13 @@ export default function Booking() {
             } else if (status === 'failed') {
               setPhase('picking');
               setError('Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı — istersen tekrar deneyebilirsin.');
+            } else if (status === 'slot_taken') {
+              setPhase('picking');
+              setSelectedTime(null);
+              refreshBusyTimes();
+              setError(
+                'Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.'
+              );
             } else if (status === 'error') {
               setPhase('error');
             }
