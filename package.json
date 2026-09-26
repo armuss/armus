@@ -1,0 +1,8 @@
+{
+  "name": "armus",
+  "private": true,
+  "description": "ARMUS - Turkish English learning marketplace",
+  "scripts": {
+    "test": "node --test"
+  }
+}
