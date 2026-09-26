@@ -2799,12 +2799,18 @@
     // Same tiering logic dashboard.html shows each teacher for themselves,
     // applied here across every teacher at once.
 
+    const ADMIN_COMMISSION_RANGE_KEYS = [
+      "admin.hoursRange0", "admin.hoursRange100", "admin.hoursRange200", "admin.hoursRange300", "admin.hoursRange500",
+    ];
+    const ADMIN_COMMISSION_RANGE_FALLBACKS = [
+      "0–100 saat", "100–200 saat", "200–300 saat", "300–500 saat", "500+ saat",
+    ];
     function commissionForHours(hours) {
-      if (hours < 100) return { rate: 30, range: armusT("admin.hoursRange0", "0–100 saat") };
-      if (hours < 200) return { rate: 28, range: armusT("admin.hoursRange100", "100–200 saat") };
-      if (hours < 300) return { rate: 25, range: armusT("admin.hoursRange200", "200–300 saat") };
-      if (hours < 500) return { rate: 20, range: armusT("admin.hoursRange300", "300–500 saat") };
-      return { rate: 15, range: armusT("admin.hoursRange500", "500+ saat") };
+      const tier = armusCommissionForHours(hours);
+      return {
+        rate: tier.rate,
+        range: armusT(ADMIN_COMMISSION_RANGE_KEYS[tier.tierIndex], ADMIN_COMMISSION_RANGE_FALLBACKS[tier.tierIndex]),
+      };
     }
 
     function computeEarnings(teachers, bookings, credits) {

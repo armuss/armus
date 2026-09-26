@@ -218,6 +218,25 @@ function armusTrialCountsAsEarned(booking, allBookings, credits) {
   return booking.id === earliestTrialId;
 }
 
+// The commission tier a teacher's payout is computed at, by their total
+// completed hours so far. Shared by dashboard.html (a teacher's own
+// rate/earnings) and admin.html (the payout ledger across every
+// teacher) - they used to each keep their own copy of these exact same
+// tier boundaries and rates, which meant a future change to one could
+// silently drift from the other and show a teacher a different rate
+// than what they're actually paid. Returns tierIndex (0-4) rather than
+// a translated label, so each caller keeps using its own existing i18n
+// keys for the range text (teacherDash.commissionRange* /
+// admin.hoursRange*) - only the numbers that actually determine money
+// live here, once.
+function armusCommissionForHours(hours) {
+  if (hours < 100) return { rate: 30, tierIndex: 0 };
+  if (hours < 200) return { rate: 28, tierIndex: 1 };
+  if (hours < 300) return { rate: 25, tierIndex: 2 };
+  if (hours < 500) return { rate: 20, tierIndex: 3 };
+  return { rate: 15, tierIndex: 4 };
+}
+
 // Cancels a booking via the cancel-booking Edge Function (which also
 // issues an iyzico refund when the canceller is eligible for one - see
 // that function's file header for the exact policy). Returns

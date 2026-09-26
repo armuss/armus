@@ -59,8 +59,12 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Tüm alanları doldurmalısın." }, 400);
     }
 
-    const trimmedName = name.trim().slice(0, 200);
-    const trimmedEmail = email.trim().slice(0, 200);
+    // strip embedded CR/LF before these ever reach an email header
+    // (subject, reply_to below) - without this, a name/email containing
+    // a newline could inject extra headers into the outgoing message
+    const stripNewlines = (value: string) => value.replace(/[\r\n]+/g, " ");
+    const trimmedName = stripNewlines(name.trim()).slice(0, 200);
+    const trimmedEmail = stripNewlines(email.trim()).slice(0, 200);
     const trimmedMessage = message.trim().slice(0, 5000);
 
     if (!trimmedName || !trimmedEmail || !trimmedMessage) {
@@ -77,7 +81,14 @@ Deno.serve(async (req) => {
     // IP instead stops a script from exhausting the shared Resend send
     // quota that send-verification-email also depends on (a saturated
     // quota there would block real account verification sitewide).
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    // x-forwarded-for is "client, proxy1, proxy2, ..." as a request
+    // passes through hops - the FIRST entry is client-supplied and
+    // trivially spoofable (any caller can send an arbitrary value), but
+    // the LAST entry is the one appended by our own edge network's
+    // trusted final hop, so it's the one this per-IP limiter can
+    // actually trust.
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",").pop()?.trim() || null : null;
 
     if (ip) {
       const { count: recentFromIp } = await supabaseAdmin
