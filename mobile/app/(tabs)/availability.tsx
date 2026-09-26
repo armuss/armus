@@ -68,7 +68,16 @@ export default function Availability() {
 
   async function handleSave() {
     setSaving(true);
-    const cleaned: Record<string, string[]> = {};
+    // _set:true marks this as a real, deliberate save - without it, a
+    // teacher who manages their schedule only from the app would have it
+    // silently ignored everywhere availability is read (both here and on
+    // the web app), which checks this same sentinel rather than just
+    // "does the object have any keys" (availability_dates defaults to
+    // '{}' for every profile, so an empty save and "never touched" are
+    // otherwise indistinguishable - see bookings.js's armusSlotsForDate
+    // for the full history of that bug). Mirrors dashboard.html's save
+    // handler exactly.
+    const cleaned: Record<string, string[] | boolean> = { _set: true };
     DAY_COLUMNS.forEach(([, dayIdx]) => {
       const slots = weekSlots[dayIdx] || [];
       if (slots.length) cleaned[String(dayIdx)] = slots;
