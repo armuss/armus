@@ -1833,6 +1833,32 @@ select cron.schedule(
   $$
 );
 
+-- === IP ADDRESS RETENTION (migration_75.sql) =======================
+-- gizlilik-politikasi.html (Privacy Policy) promises the IP address
+-- collected from the contact form is kept "kısa süreliğine" (briefly),
+-- purely to prevent abuse - until this migration nothing ever actually
+-- deleted it, on this table or on site_chat_logs' identical one. Nulls
+-- ip_address (never the row - the message/reply content itself is a
+-- real support/quality-review record worth keeping) once it's 30 days
+-- past being useful for the 1-hour rate-limit window either logger
+-- actually needs.
+
+select cron.schedule(
+  'armus-purge-old-ip-addresses',
+  '0 4 * * *', -- once a day, 04:00 UTC
+  $$
+  update contact_messages
+  set ip_address = null
+  where ip_address is not null
+    and created_at < now() - interval '30 days';
+
+  update site_chat_logs
+  set ip_address = null
+  where ip_address is not null
+    and created_at < now() - interval '30 days';
+  $$
+);
+
 -- === MARKETPLACE TEACHER STATS (aggregate, RLS-safe) ================
 -- teachers.html/teacher.html show each teacher's "completed lessons" /
 -- "students taught" counts as a trust signal. marketplace.js used to get
