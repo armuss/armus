@@ -948,9 +948,34 @@ create table client_errors (
 
 alter table client_errors enable row level security;
 
+-- rate-limited by content, not just checked for a spoofed user_id
+-- (migration_76.sql) - an anonymous caller could otherwise flood this
+-- table with unlimited rows via a direct REST call, no login needed.
+-- The count has to run as a security-definer function: a plain
+-- subquery in the policy would be blocked by client_errors_select_admin
+-- below and always see zero rows for a non-admin caller, never
+-- actually throttling anyone.
+create or replace function public.client_errors_recent_count(p_message text, p_page_url text)
+returns integer
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select count(*)::int from client_errors
+  where message = p_message
+    and page_url is not distinct from p_page_url
+    and created_at > now() - interval '10 minutes'
+$$;
+
+grant execute on function public.client_errors_recent_count(text, text) to anon, authenticated;
+
 create policy "client_errors_insert_anyone"
   on client_errors for insert
-  with check (user_id is null or user_id = auth.uid());
+  with check (
+    (user_id is null or user_id = auth.uid())
+    and public.client_errors_recent_count(message, page_url) < 20
+  );
 
 create policy "client_errors_select_admin"
   on client_errors for select
