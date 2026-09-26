@@ -198,7 +198,7 @@ const ARMUS_I18N_EN = {
   // gizlilik-politikasi.html
   "privacy.eyebrow": "LEGAL",
   "privacy.title": "Privacy Policy",
-  "privacy.updated": "Last updated: 17.09.2026",
+  "privacy.updated": "Last updated: 26.09.2026",
   "privacy.intro": "This Privacy Policy explains what personal data we collect while you use ARMUS (\"we\", \"the platform\"), why and how we process it, and what rights you have. ARMUS is a platform that matches students who want to learn English in Turkey with English teachers.",
   "privacy.s1Title": "1. What data do we collect?",
   "privacy.s1Intro": "Depending on your account and how you use the platform, we may collect:",
@@ -206,7 +206,8 @@ const ARMUS_I18N_EN = {
   "privacy.s1Li2": "For teachers: country, subject taught, languages spoken, phone number, photo, certificate and education information, intro video",
   "privacy.s1Li3": "Lesson history, booking information and student reviews",
   "privacy.s1Li4": "When you pay for a lesson: your phone number and T.C. identity number are sent to our payment provider iyzico to process the payment - we do not store them in our own database. Your card details never reach us at all; they're handled entirely by iyzico.",
-  "privacy.s1Li5": "When you reach us through the contact form, we keep your IP address for a short time to prevent abuse (like automated spam)",
+  "privacy.s1Li5": "When you reach us through the contact form, we keep your IP address for 30 days to prevent abuse (like automated spam), then remove it from the record",
+  "privacy.s1Li6": "When you use the AI chat widget on the site, we log your message, our reply, and your IP address to improve response quality and prevent abuse (the IP address is removed after 30 days); if you're signed in, this log is linked to your account",
   "privacy.s2Title": "2. Why do we process your data?",
   "privacy.s2Li1": "To create your account and let you use the platform",
   "privacy.s2Li2": "To review and approve teacher applications",
