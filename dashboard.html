@@ -2065,12 +2065,22 @@
 
       // ---- overview stats (real, computed from bookings/reviews) ----
 
+      const TEACHER_DASH_COMMISSION_RANGE_KEYS = [
+        "teacherDash.commissionRange0",
+        "teacherDash.commissionRange100",
+        "teacherDash.commissionRange200",
+        "teacherDash.commissionRange300",
+        "teacherDash.commissionRange500",
+      ];
+      const TEACHER_DASH_COMMISSION_RANGE_FALLBACKS = [
+        "0–100 saat arası", "100–200 saat arası", "200–300 saat arası", "300–500 saat arası", "500+ saat",
+      ];
       function commissionForHours(hours) {
-        if (hours < 100) return { rate: 30, range: armusT("teacherDash.commissionRange0", "0–100 saat arası") };
-        if (hours < 200) return { rate: 28, range: armusT("teacherDash.commissionRange100", "100–200 saat arası") };
-        if (hours < 300) return { rate: 25, range: armusT("teacherDash.commissionRange200", "200–300 saat arası") };
-        if (hours < 500) return { rate: 20, range: armusT("teacherDash.commissionRange300", "300–500 saat arası") };
-        return { rate: 15, range: armusT("teacherDash.commissionRange500", "500+ saat") };
+        const tier = armusCommissionForHours(hours);
+        return {
+          rate: tier.rate,
+          range: armusT(TEACHER_DASH_COMMISSION_RANGE_KEYS[tier.tierIndex], TEACHER_DASH_COMMISSION_RANGE_FALLBACKS[tier.tierIndex]),
+        };
       }
 
       const completedBookings = activeBookings.filter(armusIsBookingPast);
