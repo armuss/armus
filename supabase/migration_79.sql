@@ -1,0 +1,22 @@
+-- ARMUS migration 79: caps a booking to one dispute per reporter.
+--
+-- disputes had no duplicate- or rate-limit protection at all, unlike
+-- reviews (unique student_id+booking_id) and messages (120/hour trigger
+-- cap, migration_69.sql). disputes_insert_own (schema.sql) already
+-- verifies a booking_id is genuinely the caller's own and the reporter
+-- role/other-party name match the real booking, but nothing stopped the
+-- same reporter from inserting the same complaint about the same
+-- booking any number of times - a caller could flood admin.html's
+-- disputes queue with hundreds of duplicate rows for one booking,
+-- burying real reports from other users under noise.
+--
+-- A plain `unique (booking_id, reporter_id)` still allows unlimited
+-- "general" disputes with booking_id null (migration_40.sql's own
+-- comment: "a general dispute with no booking_id at all is still
+-- allowed") - Postgres never treats two nulls as equal for uniqueness,
+-- so this only caps the "same booking, same reporter" case, exactly the
+-- flooding vector described above.
+--
+-- Run this whole file once in Supabase Dashboard -> SQL Editor.
+
+alter table disputes add constraint disputes_one_per_booking_reporter unique (booking_id, reporter_id);
