@@ -165,22 +165,35 @@ Deno.serve(async (req) => {
     // flight, and without claiming atomically here both would send
     // duplicate emails. A plain SELECT-then-UPDATE (the previous version
     // of this function) can't prevent that.
+    // status = 'confirmed' matches the cron's own SELECT filter
+    // (schema.sql) - without it, a booking cancelled between the cron's
+    // SELECT and this call still gets claimed and emailed "your lesson is
+    // starting soon" for a lesson that's no longer happening.
     const { data: booking } = await supabaseAdmin
       .from("bookings")
       .update({ reminder_sent: true })
       .eq("id", bookingId)
       .eq("reminder_sent", false)
+      .eq("status", "confirmed")
       .select()
       .maybeSingle();
 
-    // already claimed by another run (or doesn't exist any more) -
-    // nothing to do, this isn't an error
+    // already claimed by another run, cancelled since the cron selected
+    // it, or doesn't exist any more - nothing to do, this isn't an error
     if (!booking) return new Response("skip", { status: 200 });
 
     const lessonInstant = zonedTimeToUtc(booking.lesson_date, booking.lesson_time, booking.teacher_timezone);
     const joinUrl = `${SITE_URL}/class.html?booking=${booking.id}`;
     const subject = "Dersin yaklaşıyor - ARMUS";
 
+    // Starts true and is only ANDed with a real send result - a student
+    // or (real, non-demo) teacher profile existing but its email fetch
+    // coming back empty used to leave allSent untouched at its initial
+    // true, silently marking the reminder "sent" with zero emails
+    // actually sent and no retry. A real account always has a required
+    // email (handle_new_user copies it from auth.users.email at signup),
+    // so failing to find one here is a data/fetch problem worth retrying,
+    // not a reason to consider this reminder handled.
     let allSent = true;
 
     const { data: studentProfile } = await supabaseAdmin
@@ -193,10 +206,14 @@ Deno.serve(async (req) => {
       const studentWhenLabel = formatDateTimeLabel(lessonInstant, studentProfile.timezone);
       const ok = await sendEmail(studentProfile.email, subject, reminderEmailHtml(studentProfile.name, shortDisplayName(booking.teacher_name), studentWhenLabel, joinUrl));
       allSent = allSent && ok;
+    } else {
+      allSent = false;
     }
 
     // teacher_id can be a demo teacher (teachers-data.js, not a real
-    // Supabase user/profile) - only look one up when it's a real UUID
+    // Supabase user/profile) - only look one up when it's a real UUID.
+    // A demo teacher has no real account to email at all, so that case
+    // deliberately never touches allSent - there's nothing missing.
     if (isUuid(booking.teacher_id)) {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
@@ -208,6 +225,8 @@ Deno.serve(async (req) => {
         const teacherWhenLabel = formatDateTimeLabel(lessonInstant, teacherProfile.timezone);
         const ok = await sendEmail(teacherProfile.email, subject, reminderEmailHtml(teacherProfile.name, booking.student_name, teacherWhenLabel, joinUrl));
         allSent = allSent && ok;
+      } else {
+        allSent = false;
       }
     }
 

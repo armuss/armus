@@ -99,16 +99,21 @@ Deno.serve(async (req) => {
     // as send-lesson-reminder: the cron's 10-40 minute matching window is
     // deliberately wider than its 10-minute schedule (a retry safety
     // net), so two runs can overlap while the first is still in flight.
+    // status = 'confirmed' matches the cron's own SELECT filter
+    // (schema.sql) - without it, a booking cancelled between the cron's
+    // SELECT and this call still gets claimed and emailed "how was your
+    // lesson" for a lesson that never happened.
     const { data: booking } = await supabaseAdmin
       .from("bookings")
       .update({ review_email_sent: true })
       .eq("id", bookingId)
       .eq("review_email_sent", false)
+      .eq("status", "confirmed")
       .select()
       .maybeSingle();
 
-    // already claimed by another run (or doesn't exist any more) -
-    // nothing to do, this isn't an error
+    // already claimed by another run, cancelled since the cron selected
+    // it, or doesn't exist any more - nothing to do, this isn't an error
     if (!booking) return new Response("skip", { status: 200 });
 
     const { data: studentProfile } = await supabaseAdmin
@@ -117,7 +122,15 @@ Deno.serve(async (req) => {
       .eq("id", booking.student_id)
       .maybeSingle();
 
-    if (!studentProfile?.email) return new Response("skip", { status: 200 });
+    // A real student profile always has a required email, so getting
+    // here means the fetch failed or the row is missing - un-claim
+    // rather than silently mark this reminder "sent" with nobody
+    // actually notified and no retry (same bug send-lesson-reminder's
+    // allSent had).
+    if (!studentProfile?.email) {
+      await supabaseAdmin.from("bookings").update({ review_email_sent: false }).eq("id", bookingId);
+      return new Response("skip - no student email, will retry", { status: 200 });
+    }
 
     const ok = await sendEmail(
       studentProfile.email,

@@ -87,8 +87,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const profileId = body.profile_id;
-    const status = body.status;
-    if (!profileId || (status !== "approved" && status !== "rejected")) {
+    const bodyStatus = body.status;
+    if (!profileId || (bodyStatus !== "approved" && bodyStatus !== "rejected")) {
       return new Response("missing/invalid fields", { status: 400 });
     }
 
@@ -99,11 +99,25 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("email, name")
+      .select("email, name, status")
       .eq("id", profileId)
       .maybeSingle();
 
     if (!profile?.email) return new Response("skip", { status: 200 });
+
+    // Always sends the email matching the profile's CURRENT status, never
+    // the trigger call's own body.status - two status changes in quick
+    // succession (e.g. rejected then approved) queue two independent,
+    // unordered async trigger calls, and without this the older one
+    // landing last could email "rejected" after the profile was already
+    // re-approved, leaving the user's inbox contradicting their real
+    // status. profile.status can also legitimately be neither
+    // approved/rejected by the time this runs (e.g. re-applied and it's
+    // back to 'pending') - skip rather than send a stale email either way.
+    const status = profile.status;
+    if (status !== "approved" && status !== "rejected") {
+      return new Response("skip - status changed again since this was queued", { status: 200 });
+    }
 
     if (status === "approved") {
       await sendEmail(profile.email, "Öğretmen başvurun onaylandı! - ARMUS", approvedEmailHtml(profile.name));
