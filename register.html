@@ -629,13 +629,18 @@
       if (resendCodeLink.classList.contains("disabled")) return;
 
       verifyError.style.display = "none";
-      startResendCooldown();
 
       const { error, data } = await armusSupabase.functions.invoke("send-verification-email");
       if (error || (data && data.error)) {
+        // Don't start the 45s cooldown for a send that never actually
+        // went out (offline, the function erroring) - that would lock
+        // the user out of retrying on top of the failure they already hit.
         verifyError.textContent = (data && data.error) || armusT("register.errCodeResendFailed", "Kod gönderilemedi.");
         verifyError.style.display = "block";
+        return;
       }
+
+      startResendCooldown();
     });
 
   </script>

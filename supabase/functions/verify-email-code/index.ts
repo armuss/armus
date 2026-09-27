@@ -87,7 +87,12 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Kod yanlış. Tekrar dene." }, 400);
     }
 
-    await supabaseAdmin.from("profiles").update({ email_verified: true }).eq("id", user.id);
+    // goes through mark_email_verified() (migration_77.sql) rather than a
+    // raw table update - enforce_teacher_profile_lock now rejects any
+    // write to email_verified that doesn't come through it, since a raw
+    // client update to this column used to let anyone mark themselves
+    // verified without ever receiving or entering a code.
+    await supabaseAdmin.rpc("mark_email_verified", { p_user_id: user.id });
     await supabaseAdmin.from("email_verifications").delete().eq("id", verification.id);
 
     return jsonResponse({ ok: true });
