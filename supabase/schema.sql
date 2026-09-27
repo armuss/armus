@@ -281,6 +281,25 @@ alter table referrals enable row level security;
 
 alter table profiles add column if not exists email_verified boolean not null default false;
 
+-- verify-email-code's only legitimate way to flip email_verified
+-- (migration_77.sql) - a raw client/table update to this column is
+-- blocked by enforce_teacher_profile_lock below. Deliberately not
+-- granted to anon/authenticated: only reachable over a service-role
+-- connection, same as verify-email-code's own SUPABASE_SERVICE_ROLE_KEY use.
+create or replace function public.mark_email_verified(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform set_config('armus.email_verification_update', 'on', true);
+  update profiles set email_verified = true where id = p_user_id;
+end;
+$$;
+
+revoke all on function public.mark_email_verified(uuid) from public, anon, authenticated;
+
 -- === ATTENDANCE (migration_41.sql) =================================
 -- Teacher hide/ban state driven by student-reported no-shows/lateness
 -- (attendance_reports, declared further down where bookings/disputes
@@ -305,6 +324,56 @@ create table email_verifications (
 );
 
 alter table email_verifications enable row level security;
+
+-- send-verification-email's only legitimate way to check the resend
+-- cooldown/daily cap and insert a new code (migration_78.sql) - does the
+-- whole check-then-insert atomically under an advisory lock so two
+-- concurrent resend requests for the same user can't both slip past the
+-- 45-second cooldown. Deliberately not granted to anon/authenticated,
+-- same reasoning as mark_email_verified() above.
+create or replace function public.claim_verification_send(
+  p_user_id uuid,
+  p_code text,
+  p_expires_at timestamptz
+)
+returns text  -- null on success (the row was inserted); 'cooldown' or 'daily_cap' if rejected
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_recent timestamptz;
+  v_count int;
+begin
+  perform pg_advisory_xact_lock(hashtext(p_user_id::text));
+
+  select created_at into v_recent
+    from email_verifications
+    where user_id = p_user_id
+    order by created_at desc
+    limit 1;
+
+  if v_recent is not null and (now() - v_recent) < interval '45 seconds' then
+    return 'cooldown';
+  end if;
+
+  select count(*) into v_count
+    from email_verifications
+    where user_id = p_user_id
+      and created_at >= now() - interval '24 hours';
+
+  if v_count >= 8 then
+    return 'daily_cap';
+  end if;
+
+  insert into email_verifications (user_id, code, expires_at)
+  values (p_user_id, p_code, p_expires_at);
+
+  return null;
+end;
+$$;
+
+revoke all on function public.claim_verification_send(uuid, text, timestamptz) from public, anon, authenticated;
 
 -- === ROW LEVEL SECURITY ==========================================
 
@@ -483,6 +552,12 @@ begin
     return new;
   end if;
 
+  -- set only by mark_email_verified() (migration_77.sql) - never by a
+  -- plain client update
+  if coalesce(current_setting('armus.email_verification_update', true), '') = 'on' then
+    return new;
+  end if;
+
   if new.is_admin is distinct from old.is_admin then
     raise exception 'admin_lock: is_admin can only be changed by an admin';
   end if;
@@ -498,6 +573,23 @@ begin
   -- them in the marketplace.
   if new.role is distinct from old.role then
     raise exception 'role_lock: role can only be changed by an admin';
+  end if;
+
+  -- set once at signup from auth.users.email (handle_new_user) and never
+  -- legitimately written again (migration_77.sql) - an unlocked
+  -- profiles.email let a teacher redirect their own booking/message
+  -- notification emails (create-payment, send-message-notification, ...
+  -- all read this column, not auth.users.email) to an inbox they don't
+  -- own.
+  if new.email is distinct from old.email then
+    raise exception 'email_lock: email can only be changed by an admin';
+  end if;
+
+  -- only mark_email_verified() (service-role only, migration_77.sql) may
+  -- flip this - a plain client setting it directly would skip
+  -- verify-email-code's entire verification flow.
+  if new.email_verified is distinct from old.email_verified then
+    raise exception 'email_verified_lock: email_verified can only be set by the verification system';
   end if;
 
   if new.status is distinct from old.status and new.status is distinct from 'pending' then

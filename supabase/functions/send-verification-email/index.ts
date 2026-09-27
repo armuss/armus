@@ -70,39 +70,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // simple resend cooldown - don't let the same user trigger a flood of
-    // emails by mashing "kodu tekrar gönder"
-    const { data: recent } = await supabaseAdmin
-      .from("email_verifications")
-      .select("created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (recent && Date.now() - new Date(recent.created_at).getTime() < 45_000) {
-      return jsonResponse({ error: "Çok sık istek gönderdin, biraz sonra tekrar dene." }, 429);
-    }
-
-    // The 45s spacing above only slows a script down, it doesn't cap it -
-    // looped forever it's still ~1,900 real emails/day to whatever address
-    // this account claims as its own (profiles.email is set at signup from
-    // whatever the signup form was given, never re-verified against an
-    // inbox first). Anyone can sign up with a victim's email and use this
-    // endpoint as a free email-bomb cannon against them. Capping total
-    // sends per account per rolling 24h stops that regardless of spacing,
-    // and protects the shared Resend send quota every other account's
-    // verification email also depends on.
-    const { count: sentToday } = await supabaseAdmin
-      .from("email_verifications")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60_000).toISOString());
-
-    if ((sentToday ?? 0) >= 8) {
-      return jsonResponse({ error: "Bugün için çok fazla kod istendi. Lütfen yarın tekrar dene." }, 429);
-    }
-
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("name, email")
@@ -112,16 +79,32 @@ Deno.serve(async (req) => {
     if (!profile?.email) return jsonResponse({ error: "Profil bulunamadı." }, 400);
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
 
-    const { error: insertError } = await supabaseAdmin.from("email_verifications").insert({
-      user_id: user.id,
-      code,
-      expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+    // Checks the 45s resend cooldown and the 8-per-day cap (profiles.email
+    // is set at signup from whatever the signup form was given, never
+    // re-verified against an inbox first - anyone can sign up with a
+    // victim's email and use this endpoint as a free email-bomb cannon
+    // against them without the cap) and inserts the new code, all
+    // atomically under an advisory lock (migration_78.sql) - a plain
+    // select-then-insert here let two concurrent requests both slip past
+    // the cooldown by both reading the same prior state before either
+    // insert landed.
+    const { data: claimResult, error: claimError } = await supabaseAdmin.rpc("claim_verification_send", {
+      p_user_id: user.id,
+      p_code: code,
+      p_expires_at: expiresAt,
     });
 
-    if (insertError) {
-      console.error("email_verifications insert failed", insertError);
-      return jsonResponse({ error: "Kod oluşturulamadı." }, 500);
+    if (claimError) {
+      console.error("claim_verification_send failed", claimError);
+      return jsonResponse({ error: "Kod gönderilemedi. Lütfen tekrar dene." }, 500);
+    }
+    if (claimResult === "cooldown") {
+      return jsonResponse({ error: "Çok sık istek gönderdin, biraz sonra tekrar dene." }, 429);
+    }
+    if (claimResult === "daily_cap") {
+      return jsonResponse({ error: "Bugün için çok fazla kod istendi. Lütfen yarın tekrar dene." }, 429);
     }
 
     const resendResp = await fetch("https://api.resend.com/emails", {
