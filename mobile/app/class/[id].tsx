@@ -5,13 +5,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
+import { getAttendanceReportForBooking, reportAttendanceIssue } from '../../lib/attendance';
 import { useAuth } from '../../lib/auth';
 import { canJoinLessonNow, formatTimeRange, getBookingById, lessonWindow, roomNameForBooking, type Booking } from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { colors, fonts, radius } from '../../lib/theme';
 
-type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'review';
+type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'checkin' | 'review';
+
+// how long after the lesson's real start a "the teacher never showed up"
+// report can be filed - mirrors ARMUS_NO_SHOW_GRACE_MINUTES (class.html):
+// short enough a student doesn't wait long to report, long enough that a
+// teacher joining a couple minutes late isn't instantly flagged.
+const NO_SHOW_GRACE_MINUTES = 10;
 
 function formatClock(ms: number) {
   const totalSeconds = Math.max(0, Math.round(ms / 1000));
@@ -39,9 +46,21 @@ export default function Class() {
 
   useEffect(() => {
     if (!profile) return;
+    let active = true;
 
     getBookingById(id).then((b) => {
+      if (!active) return;
+
       if (!b) {
+        setPhase('noAccess');
+        return;
+      }
+      // RLS lets more than just the two participants read a booking row
+      // (an admin, for dispute review) - getBookingById succeeding is not
+      // the same as "you belong in this call", unlike a booking that
+      // doesn't exist or isn't yours at all, which already lands here as
+      // `!b` via RLS. Mirrors class.html's explicit isStudent/isTeacher gate.
+      if (profile.id !== b.studentId && profile.id !== b.teacherId) {
         setPhase('noAccess');
         return;
       }
@@ -68,7 +87,35 @@ export default function Class() {
       setBooking(b);
       setPhase('room');
     });
+
+    return () => {
+      active = false;
+    };
   }, [id, profile]);
+
+  // "tooEarly" only reflects the moment the booking was first fetched - a
+  // student who opened the link early would otherwise be stuck on this
+  // screen forever even once the join window actually opens, with no way
+  // back in short of leaving and re-entering. Re-checks every 15s and
+  // flips into the room once joinsFrom passes, mirroring class.html.
+  useEffect(() => {
+    if (phase !== 'tooEarly' || !booking) return;
+
+    const interval = setInterval(() => {
+      const { start, end, joinsFrom, joinsUntil } = lessonWindow(booking);
+      const now = new Date();
+      if (now >= joinsFrom && now <= joinsUntil) {
+        windowRef.current = { start, end };
+        setPhase('room');
+      } else if (now > joinsUntil) {
+        setPhase('tooLate');
+      } else {
+        setMinutesUntil(Math.ceil((joinsFrom.getTime() - now.getTime()) / 60000));
+      }
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [phase, booking]);
 
   useEffect(() => {
     if (phase !== 'room' || !windowRef.current) return;
@@ -93,15 +140,68 @@ export default function Class() {
     return () => clearInterval(interval);
   }, [phase]);
 
+  const [checkinBusy, setCheckinBusy] = useState(false);
+  const [checkinError, setCheckinError] = useState(false);
+
+  // Only the student rates a lesson or reports the teacher's attendance -
+  // mirrors class.html's `if (isStudent)` gate around its whole
+  // post-class modal. A teacher leaving just goes straight back.
   async function handleLeave() {
     if (!booking || !profile) return;
 
-    const existing = await getReviewForBooking(booking.id);
-    if (existing) {
+    if (profile.id !== booking.studentId) {
       router.replace('/(tabs)/lessons');
       return;
     }
-    setPhase('review');
+
+    // asked first, every time (unless already reported from inside the
+    // room, which this screen doesn't offer yet - only the post-leave
+    // check-in below) - an existing report already answered this, so go
+    // straight to the review step same as web does.
+    const existingReport = await getAttendanceReportForBooking(booking.id);
+    if (existingReport) {
+      const existingReview = await getReviewForBooking(booking.id);
+      if (existingReview) {
+        router.replace('/(tabs)/lessons');
+        return;
+      }
+      setPhase('review');
+      return;
+    }
+
+    setPhase('checkin');
+  }
+
+  async function submitCheckin(type: 'yes' | 'late' | 'no_show') {
+    if (!booking || !profile) return;
+
+    if (type === 'yes') {
+      const existing = await getReviewForBooking(booking.id);
+      if (existing) {
+        router.replace('/(tabs)/lessons');
+        return;
+      }
+      setPhase('review');
+      return;
+    }
+
+    setCheckinBusy(true);
+    setCheckinError(false);
+    const result = await reportAttendanceIssue({
+      bookingId: booking.id,
+      teacherId: booking.teacherId,
+      studentId: profile.id,
+      type,
+    });
+    setCheckinBusy(false);
+
+    if (!result) {
+      setCheckinError(true);
+      return;
+    }
+    // nothing to rate for a lesson that didn't properly happen - same as
+    // web, a filed no_show/late report skips straight to leaving.
+    router.replace('/(tabs)/lessons');
   }
 
   async function submitReview() {
@@ -173,6 +273,55 @@ export default function Class() {
         buttonLabel="Derslerime dön"
         onPress={() => router.replace('/(tabs)/lessons')}
       />
+    );
+  }
+
+  if (phase === 'checkin' && booking) {
+    const noShowReady = windowRef.current
+      ? new Date() >= new Date(windowRef.current.start.getTime() + NO_SHOW_GRACE_MINUTES * 60000)
+      : false;
+
+    if (checkinError) {
+      return (
+        <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
+          <Text style={styles.reviewTitle}>Bildirim gönderilemedi</Text>
+          <Text style={styles.gateSubtitle}>Lütfen tekrar dene.</Text>
+          <View style={{ width: '100%', marginTop: 20, gap: 10 }}>
+            <Button label="Tekrar dene" onPress={() => setCheckinError(false)} />
+            <Pressable onPress={() => router.replace('/(tabs)/lessons')}>
+              <Text style={styles.skipText}>Atla</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
+
+    return (
+      <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
+        <Text style={styles.reviewTitle}>Bu ders gerçekleşti mi?</Text>
+        <Text style={[styles.gateSubtitle, { marginBottom: 20 }]}>
+          {booking.dateLabel}, {formatTimeRange(booking.time)} için planlanan ders.
+        </Text>
+        <View style={{ width: '100%', gap: 10 }}>
+          <Button label="Evet, zamanında oldu" onPress={() => submitCheckin('yes')} loading={checkinBusy} />
+          <Button
+            label="Evet ama öğretmen geç geldi"
+            variant="outline"
+            onPress={() => submitCheckin('late')}
+            loading={checkinBusy}
+          />
+          <Button
+            label="Hayır, öğretmen gelmedi"
+            variant="outline"
+            onPress={() => submitCheckin('no_show')}
+            disabled={!noShowReady}
+            loading={checkinBusy}
+          />
+          {!noShowReady && (
+            <Text style={styles.skipText}>Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.</Text>
+          )}
+        </View>
+      </SafeAreaView>
     );
   }
 
