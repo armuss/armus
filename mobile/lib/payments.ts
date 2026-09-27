@@ -55,7 +55,7 @@ export async function createPayment(params: CreatePaymentParams): Promise<Create
 // instead means only the one specific, server-verified redirect counts.
 const SITE_URL = 'https://armus.com.tr';
 
-export function parsePaymentRedirect(url: string): 'success' | 'failed' | 'error' | null {
+export function parsePaymentRedirect(url: string): 'success' | 'failed' | 'error' | 'slot_taken' | null {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -64,7 +64,7 @@ export function parsePaymentRedirect(url: string): 'success' | 'failed' | 'error
   }
   if (parsed.origin !== SITE_URL) return null;
   const status = parsed.searchParams.get('payment');
-  if (status === 'success' || status === 'failed' || status === 'error') return status;
+  if (status === 'success' || status === 'failed' || status === 'error' || status === 'slot_taken') return status;
   return null;
 }
 

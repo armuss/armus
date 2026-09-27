@@ -57,31 +57,60 @@ function hashCode(str: string) {
 }
 
 export type Slot = { time: string; available: boolean };
+export type BusyTime = { date: string; time: string };
+
+// The web app used to key this same precedence check off
+// Object.keys(availabilityDates).length - which can't tell "teacher never
+// touched the date-specific editor" apart from "teacher intentionally
+// cleared every slot and saved" (availability_dates defaults to '{}' for
+// every profile). Fixed there to check the explicit `_set` sentinel the
+// save handler now always writes instead (see bookings.js); this mirrors
+// that fix so mobile reads the exact same convention rather than relying
+// on the incidental fact that a saved-but-empty calendar still carries at
+// least the `_set` key itself.
+type AvailabilityDates = Record<string, string[] | boolean>;
 
 // The weekly timeline (a recurring day-of-week pattern) wins when the
-// teacher has set anything at all; otherwise the older weekly_availability
-// pattern; otherwise a deterministic mock for demo teachers with neither.
+// teacher has saved through the date-specific editor at least once;
+// otherwise the older weekly_availability pattern; otherwise a
+// deterministic mock for demo teachers with neither. busyTimes (see
+// getTeacherBusyTimes) - a time already booked by anyone is never offered
+// again regardless of what the teacher's own availability says, mirroring
+// armusSlotsForDate (bookings.js) exactly so the mobile picker can't offer
+// a slot the web picker already knows is taken.
 export function slotsForDate(
-  teacher: { id: string; weeklyAvailability?: string[][] | null; availabilityDates?: Record<string, string[]> | null },
+  teacher: { id: string; weeklyAvailability?: string[][] | null; availabilityDates?: AvailabilityDates | null },
   dateKey: string,
-  dayOfWeek: number
+  dayOfWeek: number,
+  busyTimes?: BusyTime[]
 ): Slot[] {
   const allSlots = allTimeSlots();
+  const takenTimes = new Set((busyTimes || []).filter((b) => b.date === dateKey).map((b) => b.time));
 
-  if (teacher.availabilityDates && Object.keys(teacher.availabilityDates).length) {
-    const daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
-    return allSlots.map((time) => ({ time, available: daySlots.includes(time) }));
+  if (teacher.availabilityDates && teacher.availabilityDates._set === true) {
+    const daySlots = (teacher.availabilityDates[String(dayOfWeek)] as string[] | undefined) || [];
+    return allSlots.map((time) => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
   }
 
   if (teacher.weeklyAvailability) {
     const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
-    return allSlots.map((time) => ({ time, available: daySlots.includes(time) }));
+    return allSlots.map((time) => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
   }
 
   return allSlots.map((time) => {
     const n = hashCode(teacher.id + dateKey + time);
-    return { time, available: n % 3 !== 0 };
+    return { time, available: n % 3 !== 0 && !takenTimes.has(time) };
   });
+}
+
+// Every non-cancelled booking's date+time for a teacher, with no student
+// identity attached (see get-teacher-busy-times's own header comment for
+// why this has to go through a service-role Edge Function rather than a
+// plain client query). Mirrors armusGetTeacherBusyTimes (bookings.js).
+export async function getTeacherBusyTimes(teacherId: string): Promise<BusyTime[]> {
+  const { data, error } = await supabase.functions.invoke('get-teacher-busy-times', { body: { teacherId } });
+  if (error || !data || !data.busy) return [];
+  return data.busy;
 }
 
 function mapBookingRow(row: any): Booking {
