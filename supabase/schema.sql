@@ -1219,7 +1219,12 @@ create table disputes (
   status text not null default 'open' check (status in ('open', 'in_progress', 'resolved')),
   admin_notes text,
   created_at timestamptz not null default now(),
-  resolved_at timestamptz
+  resolved_at timestamptz,
+  -- caps a booking to one dispute per reporter (migration_79.sql) -
+  -- nulls (a "general" dispute with no booking_id) are never treated as
+  -- equal, so this only stops flooding the SAME booking with duplicate
+  -- reports from the SAME reporter.
+  unique (booking_id, reporter_id)
 );
 
 alter table disputes enable row level security;

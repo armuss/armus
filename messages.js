@@ -30,8 +30,25 @@ async function armusGetOrCreateConversation(otherUserId) {
     .select()
     .single();
 
-  if (error) return false;
-  return data;
+  if (!error) return data;
+
+  // 23505 = unique_violation (student_id, teacher_id) - two near-
+  // simultaneous calls for the same pair (two tabs, a double-click) can
+  // both pass the "existing" check above before either insert commits;
+  // the loser used to just return false here even though the
+  // conversation now genuinely exists, leaving that caller stuck with
+  // nothing instead of the conversation the other call just created.
+  if (error.code === "23505") {
+    const { data: nowExisting } = await armusSupabase
+      .from("conversations")
+      .select("*")
+      .eq("student_id", studentId)
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+    if (nowExisting) return nowExisting;
+  }
+
+  return false;
 }
 
 // Every conversation the current user is a participant in, newest

@@ -464,11 +464,19 @@
       const email = input.value.trim().toLowerCase();
       if (!email) return;
 
-      const { error } = await armusSupabase.from("newsletter_subscribers").insert({ email });
+      // upsert + ignoreDuplicates (ON CONFLICT DO NOTHING) instead of a
+      // plain insert - a plain insert made an already-subscribed email
+      // return a distinguishable 23505 conflict at the API level, not
+      // just in this page's own UI. Anyone calling the table directly
+      // with the public anon key (bypassing this page entirely) could
+      // use that to check whether a specific address is already on the
+      // list - a real email-enumeration oracle, not just a cosmetic one
+      // this page's own success-either-way message happened to hide.
+      const { error } = await armusSupabase
+        .from("newsletter_subscribers")
+        .upsert({ email }, { onConflict: "email", ignoreDuplicates: true });
 
-      // A duplicate email (already subscribed) still reads as success to
-      // the visitor - it's not something they need to know or fix.
-      if (error && error.code !== "23505") {
+      if (error) {
         msg.textContent = armusT("index.newsletterError", "Bir şeyler ters gitti, lütfen tekrar dene.");
         return;
       }
