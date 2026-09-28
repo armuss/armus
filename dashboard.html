@@ -1716,6 +1716,20 @@
           REAPPLY_BTN()
         );
 
+      } else if (user.is_banned) {
+
+        // banned accounts can no longer write anything on their own
+        // profile (enforce_teacher_profile_lock, migration_81.sql) or
+        // send new messages (messages_insert_own) - showing the full
+        // interactive dashboard here would just present buttons that
+        // silently fail, so this gates it exactly like the other
+        // non-functional statuses above.
+        showGate(
+          armusT("teacherDash.attendanceBannedTitle", "Hesabın kapatıldı"),
+          armusT("teacherDash.attendanceBannedText", "Tekrarlanan, doğrulanmış devamsızlık nedeniyle hesabın kalıcı olarak kapatıldı. İtiraz etmek istersen bizimle iletişime geç."),
+          `<a class="btn" href="iletisim.html">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a>`
+        );
+
       } else {
 
       await renderApprovedDashboard(user);
