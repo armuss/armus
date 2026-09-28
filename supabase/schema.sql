@@ -558,6 +558,16 @@ begin
     return new;
   end if;
 
+  -- migration_81.sql: is_banned is the "account closed" state (10
+  -- confirmed no-shows, migration_41.sql) - dashboard.html showed a
+  -- closed-account banner over it, but the rest of the page (is_online,
+  -- pending_changes, availability_dates) stayed fully writable, since
+  -- nothing here actually stopped a banned teacher's own updates. A
+  -- banned profile can only be written by an admin from here on.
+  if old.is_banned then
+    raise exception 'banned_lock: banned accounts cannot update their profile';
+  end if;
+
   if new.is_admin is distinct from old.is_admin then
     raise exception 'admin_lock: is_admin can only be changed by an admin';
   end if;
@@ -858,6 +868,12 @@ create policy "messages_insert_own"
   on messages for insert
   with check (
     sender_id = auth.uid()
+    -- migration_81.sql: a banned account (is_banned, migration_41.sql)
+    -- could still send new messages to any student they already had a
+    -- conversation with - nothing here checked it - even though
+    -- enforce_teacher_profile_lock now refuses every other write for
+    -- that account.
+    and coalesce((select is_banned from profiles where id = auth.uid()), false) = false
     and exists (
       select 1 from conversations c
       where c.id = conversation_id
