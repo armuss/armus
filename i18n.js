@@ -193,6 +193,7 @@ const ARMUS_I18N_EN = {
   "contact.emailFieldLabel": "Email",
   "contact.messageLabel": "Your message",
   "contact.submit": "Send",
+  "contact.submitting": "Sending...",
   "contact.sentMsg": "Your message was received, thanks! We'll get back to you as soon as we can.",
 
   // gizlilik-politikasi.html
