@@ -616,6 +616,43 @@ begin
     raise exception 'profile_locked: approved profile fields can only change through pending_changes + admin approval';
   end if;
 
+  -- migration_80.sql: the rest of apply-teacher.html's application fields
+  -- were never locked here at all, unlike title/price/bio/availability/
+  -- weekly_availability just above - armusUpdateOwnProfile has no field
+  -- allowlist (auth.js), so once approved a teacher could still rewrite
+  -- their own subject/certificate/education/video info with a bare
+  -- client update, completely bypassing the pending_changes + admin
+  -- review flow those other fields go through. That's the trust-critical
+  -- data admin.html's approval screen actually reviewed - a teacher could
+  -- silently swap in a fake certificate_file_url or claim a different
+  -- university after being approved on the strength of the real one, with
+  -- no admin ever seeing the change. No UI writes any of these fields for
+  -- an already-approved teacher (only apply-teacher.html does, and that
+  -- always pairs them with status: 'pending', which the status_lock check
+  -- above still allows), so flatly locking them (no pending_changes
+  -- escape hatch, unlike the fields above) matches current behavior.
+  if old.status = 'approved' and (
+    new.country is distinct from old.country
+    or new.subject_taught is distinct from old.subject_taught
+    or new.languages is distinct from old.languages
+    or new.phone is distinct from old.phone
+    or new.age_confirmed is distinct from old.age_confirmed
+    or new.photo_url is distinct from old.photo_url
+    or new.has_certificate is distinct from old.has_certificate
+    or new.certificate_name is distinct from old.certificate_name
+    or new.certificate_years is distinct from old.certificate_years
+    or new.certificate_file_url is distinct from old.certificate_file_url
+    or new.certificate_file_name is distinct from old.certificate_file_name
+    or new.has_education is distinct from old.has_education
+    or new.university is distinct from old.university
+    or new.degree_type is distinct from old.degree_type
+    or new.graduation_year is distinct from old.graduation_year
+    or new.specialization is distinct from old.specialization
+    or new.video_url is distinct from old.video_url
+  ) then
+    raise exception 'application_locked: approved teachers cannot edit application details directly - contact support to update them';
+  end if;
+
   -- pending_changes is itself just a jsonb blob a teacher writes to their
   -- own row, and admin.html's approval handler spreads its contents
   -- straight into the profile on approve (minus submitted_at) - without
