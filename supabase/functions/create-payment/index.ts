@@ -313,12 +313,37 @@ Deno.serve(async (req) => {
     } else {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
-        .select("price, status, timezone, weekly_availability, availability_dates, email, name")
+        .select("price, status, timezone, weekly_availability, availability_dates, email, name, is_banned, hidden_from_new_students, hidden_until")
         .eq("id", teacherId)
         .maybeSingle();
 
       if (!teacherProfile || teacherProfile.status !== "approved" || !(Number(teacherProfile.price) > 0)) {
         return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
+      }
+
+      // marketplace.js's armusFilterVisibleTeachers only hides a banned/
+      // hidden teacher from the listing client-side - this function is
+      // reachable directly (armusSupabase.functions.invoke) with any
+      // teacherId at all, so without this the attendance-report ban/hide
+      // system (migration_41.sql) does nothing to stop a student from
+      // still booking and paying a teacher ARMUS has already flagged.
+      // Matches armusIsTeacherHiddenFromEveryone/armusFilterVisibleTeachers:
+      // banned or actively hidden_until blocks everyone; hidden_from_new_students
+      // only blocks a student who has never booked this teacher before -
+      // an existing student keeps their relationship with that teacher.
+      const hiddenUntilStillActive = teacherProfile.hidden_until && new Date(teacherProfile.hidden_until) > new Date();
+      if (teacherProfile.is_banned || hiddenUntilStillActive) {
+        return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
+      }
+      if (teacherProfile.hidden_from_new_students) {
+        const { count: priorBookingCount } = await supabaseAdmin
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("student_id", user.id)
+          .eq("teacher_id", teacherId);
+        if (!priorBookingCount) {
+          return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
+        }
       }
       pricePerLesson = Number(teacherProfile.price);
       teacherTimezone = teacherProfile.timezone || "Europe/Istanbul";
