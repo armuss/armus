@@ -775,10 +775,18 @@ create policy "reviews_select_own_or_admin"
 -- happened - a free way to fake-boost a friend's rating or leave a
 -- baseless bad review on a competitor, reachable straight from
 -- my-lessons.html's normal "rate this lesson" prompt.
+-- migration_83.sql: student_name was plain client-supplied text with
+-- nothing tying it to the reviewer's real identity - a student could
+-- submit a review under any name at all (someone else's real name
+-- included), which masked_reviews then shows unmasked to the reviewed
+-- teacher, and short_display_name(student_name) derives the public name
+-- everyone else sees. Now pinned to the caller's own real profiles.name,
+-- same integrity pattern as disputes_insert_own/attendance_reports_insert_own_student.
 create policy "reviews_insert_own_student"
   on reviews for insert
   with check (
     auth.uid() = student_id
+    and student_name = (select p.name from profiles p where p.id = auth.uid())
     and exists (
       select 1 from bookings b
       where b.id = booking_id
