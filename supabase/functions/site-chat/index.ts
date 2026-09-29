@@ -116,16 +116,25 @@ Deno.serve(async (req) => {
     const forwardedFor = req.headers.get("x-forwarded-for");
     const ip = forwardedFor ? forwardedFor.split(",").pop()?.trim() || null : null;
 
-    if (ip) {
-      const { count: recentFromIp } = await supabaseAdmin
-        .from("site_chat_logs")
-        .select("id", { count: "exact", head: true })
-        .eq("ip_address", ip)
-        .gte("created_at", new Date(Date.now() - 60 * 60_000).toISOString());
+    // Fail CLOSED, not open: this used to just skip the whole rate-limit
+    // check whenever ip couldn't be resolved, which would have let a
+    // caller who somehow reaches this function without that header make
+    // unlimited free calls to the paid Anthropic API. A real request
+    // through our own edge network always carries x-forwarded-for: a
+    // missing one is itself a sign of an irregular caller, so denying it
+    // outright is the safe default, not a limitation on real traffic.
+    if (!ip) {
+      return jsonResponse({ error: "İstek doğrulanamadı, lütfen tekrar dene." }, 400);
+    }
 
-      if ((recentFromIp ?? 0) >= 20) {
-        return jsonResponse({ error: "Çok fazla mesaj gönderdin. Lütfen bir süre sonra tekrar dene." }, 429);
-      }
+    const { count: recentFromIp } = await supabaseAdmin
+      .from("site_chat_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_address", ip)
+      .gte("created_at", new Date(Date.now() - 60 * 60_000).toISOString());
+
+    if ((recentFromIp ?? 0) >= 20) {
+      return jsonResponse({ error: "Çok fazla mesaj gönderdin. Lütfen bir süre sonra tekrar dene." }, 429);
     }
 
     let userId: string | null = null;
