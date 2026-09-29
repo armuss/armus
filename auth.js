@@ -136,6 +136,49 @@ function armusRefreshOwnTimezone(profile) {
   } catch (err) {}
 }
 
+// A brand-new signup gets a fully active, usable Supabase Auth session
+// the instant armusSignUp() returns (send-verification-email/
+// verify-email-code both need that session's own JWT to know who
+// they're verifying) - register.html's 6-digit-code step was only ever
+// a UI suggestion the user could just navigate away from, never an
+// actual gate: nothing anywhere (this site's pages or any Edge
+// Function) ever checked email_verified before letting a session book,
+// pay, or message normally.
+//
+// Only accounts created from this cutoff onward are required to verify
+// before using the rest of the site - accounts from before this shipped
+// are grandfathered in. Many real users have been using ARMUS for a
+// while with email_verified still false (nothing ever required it), and
+// retroactively locking all of them out the moment this ships would be
+// a surprise mass lockout, not a fix.
+const ARMUS_EMAIL_VERIFICATION_REQUIRED_FROM = new Date("2026-09-29T00:00:00Z");
+
+function armusNeedsEmailVerification(profile) {
+  return !!profile
+    && !profile.email_verified
+    && new Date(profile.created_at) >= ARMUS_EMAIL_VERIFICATION_REQUIRED_FROM;
+}
+
+// Runs on every page via the DOMContentLoaded listener below, same
+// trigger armusRenderNavAuth uses - kept as its own independent
+// armusGetSession() call (a second one per page load, alongside
+// armusRenderNavAuth's) rather than piggybacking on that function,
+// since armusRenderNavAuth exits immediately on any page without a
+// #navAuthButtons element (e.g. a page with no standard header) and
+// this gate has to hold everywhere, including exactly the pages most
+// worth reaching before verifying (class.html, booking.html, ...).
+// register.html/login.html are exempt: register.html is where
+// verification actually happens, and login.html never renders gated
+// content itself - whatever it redirects to after a successful sign-in
+// gets caught by this same check on its own next page load.
+async function armusEnforceEmailVerification() {
+  if (/(^|\/)(register|login)\.html$/.test(location.pathname)) return;
+  const session = await armusGetSession().catch(() => null);
+  if (!armusNeedsEmailVerification(session)) return;
+  window.location.href = "register.html?resume=1";
+}
+document.addEventListener("DOMContentLoaded", armusEnforceEmailVerification);
+
 // Updates the currently logged-in user's own profile row.
 // Returns the updated row, or false if the update failed.
 async function armusUpdateOwnProfile(updates) {

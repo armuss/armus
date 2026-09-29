@@ -464,7 +464,7 @@
     // Role is decided by how the visitor got here (the general "Kayıt Ol"
     // link vs. an "Öğretmen Ol" link with ?role=teacher) - not a toggle on
     // this page, so there's no accidental student/teacher mix-up.
-    const selectedRole = requestedRole === "teacher" ? "teacher" : "student";
+    let selectedRole = requestedRole === "teacher" ? "teacher" : "student";
     function renderRoleNote() {
       document.getElementById("roleNote").textContent = selectedRole === "teacher"
         ? armusT("register.roleNoteTeacher", "Öğretmen olarak kayıt oluyorsun.")
@@ -600,6 +600,24 @@
       } else {
         startResendCooldown();
       }
+    }
+
+    // auth.js's armusEnforceEmailVerification sends any signed-up-but-
+    // unverified session back here (?resume=1) from wherever else on the
+    // site they tried to go - resume the code-entry step directly
+    // instead of showing the signup form again (armusSignUp() would just
+    // fail with "already registered" for this email). selectedRole came
+    // from the URL's ?role= above, which is meaningless for a resumed
+    // session (there's no ?role= on this redirect) - overwritten here
+    // from the real session's own role so proceedAfterVerification still
+    // sends a teacher to apply-teacher.html, not student-dashboard.html.
+    if (searchParams.get("resume") === "1") {
+      (async function resumeVerification() {
+        const session = await armusGetSession().catch(() => null);
+        if (!session || session.email_verified) return;
+        selectedRole = session.role;
+        await startVerification(session.email);
+      })();
     }
 
     verifyForm.addEventListener("submit", async event => {
