@@ -837,12 +837,26 @@ create policy "conversations_select_participant"
 -- fabricated conversation would show up as an unsolicited thread in
 -- that other person's inbox (mesajlar.html), including student-to-
 -- student.
+-- migration_82.sql: role = 'teacher' alone was never enough - a
+-- brand-new self-registered account (register.html?role=teacher,
+-- status starts null, no application/admin review yet) or an
+-- admin-rejected one (status = 'rejected') still passed this, and could
+-- open an unsolicited conversation with any real student by id, same as
+-- a banned one could. Only an approved, non-banned teacher should ever
+-- be able to originate a new thread - except an admin, who legitimately
+-- messages a still-pending applicant straight from the review screen
+-- (admin.html's "Öğretmene Mesaj" button), so that path stays open.
 create policy "conversations_insert_participant"
   on conversations for insert
   with check (
     (auth.uid() = student_id or auth.uid() = teacher_id)
     and exists (select 1 from profiles p where p.id = student_id and p.role = 'student')
-    and exists (select 1 from profiles p where p.id = teacher_id and p.role = 'teacher')
+    and exists (
+      select 1 from profiles p
+      where p.id = teacher_id
+        and p.role = 'teacher'
+        and (public.is_admin() or (p.status = 'approved' and coalesce(p.is_banned, false) = false))
+    )
   );
 
 create policy "messages_select_participant"
