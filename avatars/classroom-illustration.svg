@@ -1,0 +1,101 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sıcak, aydınlık bir İngilizce dersi sınıfı illüstrasyonu">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdf3da"/>
+      <stop offset="100%" stop-color="#f6e2ad"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#caa06b"/>
+      <stop offset="100%" stop-color="#a97c4c"/>
+    </linearGradient>
+    <radialGradient id="windowGlow" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#fff6d9" stop-opacity=".95"/>
+      <stop offset="100%" stop-color="#fff6d9" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="boardFrame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
+    </linearGradient>
+    <linearGradient id="boardFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2f6152"/>
+      <stop offset="100%" stop-color="#204438"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#wall)"/>
+  <rect x="0" y="660" width="1200" height="140" fill="url(#floor)"/>
+  <rect x="0" y="660" width="1200" height="10" fill="#8a6238" opacity=".6"/>
+
+  <!-- window, left -->
+  <g>
+    <rect x="70" y="120" width="320" height="380" rx="14" fill="#fffaf0" stroke="#e7cf9a" stroke-width="10"/>
+    <circle cx="230" cy="300" r="230" fill="url(#windowGlow)"/>
+    <rect x="86" y="136" width="288" height="348" fill="#bfe3e8" opacity=".55"/>
+    <rect x="86" y="136" width="288" height="348" fill="none" stroke="#e7cf9a" stroke-width="8"/>
+    <line x1="230" y1="136" x2="230" y2="484" stroke="#e7cf9a" stroke-width="8"/>
+    <line x1="86" y1="310" x2="374" y2="310" stroke="#e7cf9a" stroke-width="8"/>
+    <!-- distant hills through the window, echoing the reference's own nature backdrop -->
+    <path d="M86 420 Q160 360 230 410 T374 400 V484 H86 Z" fill="#8fbf9a" opacity=".8"/>
+    <path d="M86 450 Q170 410 260 445 T374 435 V484 H86 Z" fill="#6fa87f" opacity=".85"/>
+  </g>
+
+  <!-- small potted plant under the window -->
+  <g transform="translate(120 500)">
+    <rect x="-26" y="30" width="52" height="46" rx="8" fill="#c96a4b"/>
+    <path d="M0 30 C -34 4 -30 -46 0 -60 C 30 -46 34 4 0 30 Z" fill="#4f8f63"/>
+    <path d="M0 24 C -18 6 -16 -28 0 -40" stroke="#3b7350" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- bookshelf, far left -->
+  <g transform="translate(20 560)">
+    <rect width="150" height="100" rx="6" fill="#8a5a34"/>
+    <rect x="8" y="10" width="134" height="24" fill="#dfac2e"/>
+    <rect x="8" y="40" width="134" height="24" fill="#b6522f"/>
+    <rect x="8" y="70" width="134" height="22" fill="#3f7a63"/>
+  </g>
+
+  <!-- chalkboard, right of center - this is the illustration's own focal point, its
+       on-canvas position (≈72%, 41% of this 1200x800 viewBox) is what
+       script.js's zoom/burst math targets, so the scroll-driven zoom
+       visibly converges on it and the burst effect originates from it -->
+  <g>
+    <rect x="700" y="150" width="360" height="360" rx="18" fill="url(#boardFrame)"/>
+    <rect x="724" y="174" width="312" height="312" rx="10" fill="url(#boardFace)"/>
+    <!-- simple chalk doodles: a lightbulb (an idea) and wavy "handwriting" lines -->
+    <g stroke="#f6f1e2" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85">
+      <circle cx="800" cy="245" r="26"/>
+      <path d="M788 268 h24 M792 278 h16"/>
+      <line x1="800" y1="205" x2="800" y2="193"/>
+      <line x1="826" y1="219" x2="836" y2="211"/>
+      <line x1="774" y1="219" x2="764" y2="211"/>
+      <path d="M860 235 q20 -14 40 0 t40 0"/>
+      <path d="M770 330 h230"/>
+      <path d="M770 366 h170"/>
+      <path d="M770 402 h200"/>
+    </g>
+    <!-- chalk tray + a stick of chalk -->
+    <rect x="724" y="486" width="312" height="14" rx="6" fill="#9c7a3e"/>
+    <rect x="900" y="478" width="30" height="10" rx="4" fill="#fdf6e8"/>
+  </g>
+
+  <!-- a row of small desks, foreground, for scale/warmth -->
+  <g fill="#e2bd7c" opacity=".9">
+    <rect x="150" y="650" width="120" height="14" rx="4"/>
+    <rect x="164" y="664" width="10" height="34"/>
+    <rect x="246" y="664" width="10" height="34"/>
+    <rect x="470" y="650" width="120" height="14" rx="4"/>
+    <rect x="484" y="664" width="10" height="34"/>
+    <rect x="566" y="664" width="10" height="34"/>
+    <rect x="900" y="650" width="120" height="14" rx="4"/>
+    <rect x="914" y="664" width="10" height="34"/>
+    <rect x="996" y="664" width="10" height="34"/>
+  </g>
+
+  <!-- warm hanging pendant lamp, upper right -->
+  <g transform="translate(1080 40)">
+    <line x1="0" y1="0" x2="0" y2="46" stroke="#c9a45a" stroke-width="4"/>
+    <path d="M-34 46 a34 22 0 0 0 68 0 Z" fill="#f6c649"/>
+    <ellipse cx="0" cy="60" rx="70" ry="26" fill="#fff6d9" opacity=".35"/>
+  </g>
+</svg>
