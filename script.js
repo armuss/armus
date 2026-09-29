@@ -224,7 +224,7 @@ function armusInitScrollIntro(){
     burst.style.opacity=String(burstIn*(1-burstOut));
 
     const settle=smoothstep(0.58,0.85,progress);
-    mosaicGrid.style.transform='scale('+(1.12-settle*0.12)+')';
+    mosaicGrid.style.transform='scale('+(1.06-settle*0.06)+')';
     copyMosaic.style.opacity=String(smoothstep(0.6,0.8,progress));
   }
 
