@@ -19,7 +19,29 @@
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    window.scrollTo(0, 0);
+    // styles.css sets html{scroll-behavior:smooth} site-wide - without
+    // an explicit behavior:'instant' here, this reset would itself
+    // ANIMATE from wherever the browser put it down to 0 instead of
+    // snapping there, which can read as unfinished/janky (or even get
+    // cut short) rather than as "the page is simply at the top".
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+    // The scrollRestoration/scrollTo pair above only runs once, on a
+    // genuine fresh load - it does NOT cover coming back to this tab via
+    // the back button, or Chrome restoring a previously-closed tab,
+    // because for those the browser's back/forward cache (bfcache)
+    // un-freezes the ENTIRE page (DOM, JS state, and whatever scroll
+    // position was in effect when the user left) straight from memory
+    // without re-running any of this page's scripts - this <head>
+    // script included. "pageshow" is the one event that still fires on
+    // a bfcache restore (with event.persisted true), so it's the actual
+    // hook for this case - this is almost certainly what kept showing
+    // the mosaic already-settled after the scrollRestoration fix alone:
+    // switching back to an already-scrolled tab is a bfcache restore,
+    // not a fresh load or a reload.
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    });
   </script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="alternate icon" href="favicon.ico">
