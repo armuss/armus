@@ -143,7 +143,165 @@
       font-weight: 800;
       color: var(--armus-on-gold);
     }
+
+    /* ---- scroll-driven intro (armusInitScrollIntro, script.js) ----
+       .scroll-intro-pin is a tall (240vh) scroll runway; .scroll-intro-stage
+       inside it is position:sticky so it stays pinned to the viewport for
+       that whole runway while script.js reads scroll progress through it
+       (0 at the top of the runway, 1 at the bottom) and drives two things
+       directly via inline styles set every frame (never a CSS transition -
+       a transition would lag behind/overshoot a scroll that can reverse
+       or jump instantly): the single photo's zoom (transform: scale) and
+       the crossfade opacity between the single-photo layer and the
+       mosaic layer. Once progress reaches 1 the stage stops being sticky
+       (its pin runway has fully scrolled past) and the page continues
+       straight into .hero-band below, unpinned. */
+    .scroll-intro-pin {
+      position: relative;
+      height: 240vh;
+    }
+    .scroll-intro-stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+    .scroll-intro-layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .scroll-intro-single {
+      opacity: 1;
+    }
+    .scroll-intro-single img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1);
+      transform-origin: center;
+      will-change: transform;
+    }
+    .scroll-intro-shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(10, 10, 10, 0) 40%, rgba(10, 10, 10, .65) 100%);
+      pointer-events: none;
+    }
+    .scroll-intro-mosaic {
+      opacity: 0;
+      background: var(--armus-gold-gradient);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .scroll-intro-mosaic-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(84px, 140px));
+      gap: 14px;
+      will-change: transform;
+    }
+    .scroll-intro-mosaic-grid .tile {
+      aspect-ratio: 340 / 372;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 3px solid rgba(10, 10, 10, .12);
+      box-shadow: 0 16px 34px rgba(35, 26, 10, .28);
+    }
+    .scroll-intro-mosaic-grid .tile:nth-child(even) {
+      transform: translateY(-18px);
+    }
+    .scroll-intro-mosaic-grid .tile:nth-child(3n) {
+      transform: translateY(10px);
+    }
+    .scroll-intro-mosaic-grid .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .scroll-intro-copy {
+      position: relative;
+      z-index: 2;
+      padding: 0 24px 64px;
+      width: 100%;
+      text-align: center;
+    }
+    .scroll-intro-mosaic .scroll-intro-copy {
+      padding: 0 24px;
+      opacity: 0;
+    }
+    .scroll-intro-copy .scroll-intro-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      letter-spacing: 3px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .scroll-intro-single .scroll-intro-copy .scroll-intro-eyebrow {
+      color: var(--armus-gold-2);
+    }
+    .scroll-intro-single .scroll-intro-copy .scroll-intro-eyebrow .dot {
+      background: var(--armus-gold-2);
+    }
+    .scroll-intro-mosaic .scroll-intro-copy .scroll-intro-eyebrow {
+      color: var(--armus-on-gold);
+    }
+    .scroll-intro-mosaic .scroll-intro-copy .scroll-intro-eyebrow .dot {
+      background: var(--armus-on-gold);
+    }
+    .scroll-intro-copy h2 {
+      font-size: clamp(30px, 5vw, 56px);
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      margin: 0;
+    }
+    .scroll-intro-single .scroll-intro-copy h2 {
+      color: #fff;
+    }
+    .scroll-intro-mosaic .scroll-intro-copy h2 {
+      color: var(--armus-on-gold);
+    }
+
+    @media (max-width: 760px) {
+      .scroll-intro-pin {
+        height: 200vh;
+      }
+      .scroll-intro-mosaic-grid {
+        grid-template-columns: repeat(3, minmax(78px, 120px));
+        gap: 10px;
+      }
+      .scroll-intro-mosaic-grid .tile:nth-child(even) {
+        transform: none;
+      }
+      .scroll-intro-mosaic-grid .tile:nth-child(3n) {
+        transform: none;
+      }
+    }
+
+    /* No scroll-jacking for anyone who asked not to have motion, and no
+       broken half-built layout for anyone without JS (the crossfade/zoom
+       is only ever driven by script.js) - the normal .hero-band right
+       after this section is a complete, fully-working homepage on its
+       own either way. */
+    @media (prefers-reduced-motion: reduce) {
+      .scroll-intro {
+        display: none;
+      }
+    }
   </style>
+  <noscript>
+    <style>
+      .scroll-intro { display: none; }
+    </style>
+  </noscript>
   <noscript>
     <style>
       .logo-splash { display: none; }
@@ -179,6 +337,35 @@
   </header>
 
   <main>
+    <!-- Scroll-driven intro: a single real ARMUS lesson photo zooms in as
+         you scroll, then crossfades into a mosaic of real ARMUS teachers -
+         "one lesson" becoming "hundreds of teachers" before the normal
+         hero-band below takes over. Purely additive (script.js/
+         armusInitScrollIntro guards on #scrollIntro existing, and this
+         whole section no-ops to display:none under prefers-reduced-motion
+         or with JS off) - nothing about hero-band below was touched. -->
+    <section class="scroll-intro" id="scrollIntro">
+      <div class="scroll-intro-pin">
+        <div class="scroll-intro-stage">
+          <div class="scroll-intro-layer scroll-intro-single" id="introLayerSingle">
+            <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor" id="introSingleImg">
+            <div class="scroll-intro-shade"></div>
+            <div class="scroll-intro-copy" id="introCopySingle">
+              <p class="scroll-intro-eyebrow"><span class="dot"></span> ARMUS</p>
+              <h2 data-i18n="index.scrollIntro.title1">Bir öğretmenle başla.</h2>
+            </div>
+          </div>
+          <div class="scroll-intro-layer scroll-intro-mosaic" id="introLayerMosaic">
+            <div class="scroll-intro-mosaic-grid" id="introMosaicGrid"></div>
+            <div class="scroll-intro-copy" id="introCopyMosaic">
+              <p class="scroll-intro-eyebrow"><span class="dot"></span> ARMUS</p>
+              <h2 data-i18n="index.scrollIntro.title2">Bir isim, yüzlerce öğretmen.</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="hero-band">
     <div class="hero shell">
       <div class="hero-copy">

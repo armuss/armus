@@ -42,6 +42,8 @@ const ARMUS_I18N_EN = {
 
   // index.html
   "index.eyebrow": "Turkey's English learning platform",
+  "index.scrollIntro.title1": "Start with one teacher.",
+  "index.scrollIntro.title2": "One name, hundreds of teachers.",
   "index.hero.title1": "A better way",
   "index.hero.title2": "to learn English.",
   "index.hero.subtitle": "Find the right English teacher for you. Pick your lesson based on your goal, level and budget.",
