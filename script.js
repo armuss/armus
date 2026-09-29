@@ -103,19 +103,33 @@ function armusInitScrollIntro(){
   const layerSingle=document.getElementById('introLayerSingle');
   const layerMosaic=document.getElementById('introLayerMosaic');
   const mosaicGrid=document.getElementById('introMosaicGrid');
+  const mist=document.getElementById('introMist');
   const copySingle=document.getElementById('introCopySingle');
   const copyMosaic=document.getElementById('introCopyMosaic');
-  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!copySingle||!copyMosaic)return;
+  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!copySingle||!copyMosaic)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
   // than just leaving it be - no reason to pay for it.
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 
+  // appended, not innerHTML - mosaicGrid already holds the static .spark
+  // decorative dots (index.html), and tiles need to paint after/above
+  // them in DOM order for the scattered cluster's own z-index values to
+  // make sense. Real tiles first (their CSS positions them by
+  // nth-of-type(1..6) among the grid's div children), then 2 dimmed
+  // "ghost" tiles appended last so they don't shift that numbering -
+  // reusing 2 of the same photos is fine, they're barely visible
+  // (blurred/dimmed, tucked behind), just a "more teachers behind these"
+  // depth cue, not meant to be read individually.
   if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
-    mosaicGrid.innerHTML=TEACHERS.slice(0,6).map(t=>
+    mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(0,6).map(t=>
       '<div class="tile"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'
-    ).join('');
+    ).join(''));
+    const ghosts=[TEACHERS[2],TEACHERS[4]].filter(Boolean);
+    mosaicGrid.insertAdjacentHTML('beforeend',ghosts.map((t,i)=>
+      '<div class="tile ghost g'+(i+1)+'"><img src="'+t.photo+'" alt="" aria-hidden="true" loading="lazy"></div>'
+    ).join(''));
   }
 
   function smoothstep(edge0,edge1,x){
@@ -140,6 +154,17 @@ function armusInitScrollIntro(){
     const cross=smoothstep(0.5,0.66,progress);
     layerSingle.style.opacity=String(1-cross);
     layerMosaic.style.opacity=String(cross);
+
+    // a brief mist/dust window straddling the crossfade point - the
+    // cluster visually emerges through it rather than just cross-fading
+    // in flat. Rises from 0.44, peaks around the crossfade itself, and
+    // is gone again by 0.72 so it never lingers once the mosaic has
+    // settled.
+    const mistIn=smoothstep(0.44,0.56,progress);
+    const mistOut=smoothstep(0.6,0.72,progress);
+    const mistT=mistIn*(1-mistOut);
+    mist.style.opacity=String(mistT*0.85);
+    mist.style.transform='scale('+(0.85+mistT*0.35)+')';
 
     const settle=smoothstep(0.58,0.85,progress);
     mosaicGrid.style.transform='scale('+(1.12-settle*0.12)+')';
