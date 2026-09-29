@@ -177,15 +177,45 @@
     .scroll-intro-single {
       opacity: 1;
     }
-    .scroll-intro-single img {
+    /* the zoom (script.js sets scale() every frame) is anchored on the
+       classroom illustration's own chalkboard, not the frame's center -
+       matching its position in avatars/classroom-illustration.svg's
+       1200x800 viewBox (chalkboard center ≈73%, 41%) - so scrolling
+       visibly converges on the board, the same point the mist/burst
+       erupts from a moment later, rather than a generic center-zoom. */
+    .scroll-intro-classroom-bg {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       transform: scale(1);
-      transform-origin: center;
+      transform-origin: 73% 41%;
       will-change: transform;
+    }
+    /* the one real photo left in this layer - a small framed "live
+       lesson" card sitting in the illustrated classroom, rather than a
+       full-bleed stock photo - starts wide/visible and fades out on its
+       own (script.js) well before the zoom reaches the board, so it
+       never fights the board for attention. */
+    .scroll-intro-video-card {
+      position: absolute;
+      left: 11%;
+      bottom: 16%;
+      width: min(300px, 27vw);
+      aspect-ratio: 900 / 619;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 5px solid rgba(255, 255, 255, .95);
+      box-shadow: 0 26px 46px rgba(10, 10, 10, .4);
+      transform: rotate(-3deg);
+      will-change: transform, opacity;
+    }
+    .scroll-intro-video-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .scroll-intro-shade {
       position: absolute;
@@ -263,7 +293,15 @@
       border-radius: 16px;
       overflow: hidden;
       border: 4px solid rgba(255, 255, 255, .92);
-      box-shadow: 0 24px 40px rgba(35, 26, 10, .38);
+      /* stacked steps behind the card's own drop shadow - the classic
+         "deck of pages" trick, giving each card real visible thickness
+         (a thick book's edge) instead of reading as a flat photo pinned
+         at an angle */
+      box-shadow:
+        3px 4px 0 rgba(191, 148, 74, .95),
+        6px 8px 0 rgba(163, 122, 58, .9),
+        9px 12px 0 rgba(133, 98, 45, .85),
+        0 26px 42px rgba(35, 26, 10, .4);
       transform-style: preserve-3d;
     }
     .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 20%; top: 22%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(-9deg) rotateY(14deg) rotateX(-6deg); }
@@ -282,9 +320,11 @@
        (armusInitScrollIntro, script.js, drives its opacity/scale - a
        brief window around the crossfade point, not a fixed-duration
        animation, so it stays scroll-scrubbed like everything else here)
-       - covers the whole stage, not just the grid box, since the
-       reference's products visually emerge from the milk splash across
-       the full frame, not from a small contained area. */
+       - clustered around the same point (≈66%, 38%) the chalkboard sits
+       at in the layer beneath and the firework burst below erupts from,
+       so the whole moment reads as one single locus, not a generic haze
+       - with a couple of puffs spread wider for general atmosphere over
+       the area the cluster settles into. */
     .scroll-intro-mist {
       position: absolute;
       inset: 0;
@@ -298,12 +338,41 @@
       background: #fff;
       filter: blur(40px);
     }
-    .scroll-intro-mist span:nth-child(1) { left: 22%; top: 30%; width: 220px; height: 220px; }
-    .scroll-intro-mist span:nth-child(2) { left: 48%; top: 15%; width: 260px; height: 260px; }
-    .scroll-intro-mist span:nth-child(3) { left: 68%; top: 40%; width: 200px; height: 200px; }
-    .scroll-intro-mist span:nth-child(4) { left: 35%; top: 60%; width: 180px; height: 180px; }
-    .scroll-intro-mist span:nth-child(5) { left: 58%; top: 65%; width: 230px; height: 230px; }
-    .scroll-intro-mist span:nth-child(6) { left: 78%; top: 62%; width: 170px; height: 170px; }
+    .scroll-intro-mist span:nth-child(1) { left: 58%; top: 30%; width: 240px; height: 240px; }
+    .scroll-intro-mist span:nth-child(2) { left: 68%; top: 22%; width: 260px; height: 260px; }
+    .scroll-intro-mist span:nth-child(3) { left: 74%; top: 42%; width: 220px; height: 220px; }
+    .scroll-intro-mist span:nth-child(4) { left: 60%; top: 48%; width: 200px; height: 200px; }
+    .scroll-intro-mist span:nth-child(5) { left: 34%; top: 55%; width: 180px; height: 180px; }
+    .scroll-intro-mist span:nth-child(6) { left: 44%; top: 68%; width: 190px; height: 190px; }
+    /* Firework-style burst: 12 thin gradient rays fixed at even angles
+       (--a, set inline per span in the HTML) around the same origin
+       point as the mist, echoing the user's own reference - rockets
+       bursting with color at a celebration - rather than literal fire.
+       script.js grows their length (scaleX) and fades them alongside
+       the mist. transform-origin left-center so each ray extends
+       outward FROM the origin point along its own angle, not through it. */
+    .scroll-intro-burst {
+      position: absolute;
+      left: 66%;
+      top: 38%;
+      width: 1px;
+      height: 1px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .scroll-intro-burst span {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 150px;
+      height: 4px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #fff6d9 0%, var(--armus-gold-2) 45%, rgba(246, 198, 73, 0) 100%);
+      transform-origin: 0 50%;
+      transform: rotate(var(--a)) scaleX(var(--t, 0));
+    }
+    .scroll-intro-burst span:nth-child(3n) { width: 110px; }
+    .scroll-intro-burst span:nth-child(3n+1) { width: 170px; }
     .scroll-intro-copy {
       position: relative;
       z-index: 2;
@@ -420,17 +489,47 @@
       <div class="scroll-intro-pin">
         <div class="scroll-intro-stage">
           <div class="scroll-intro-layer scroll-intro-single" id="introLayerSingle">
-            <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor" id="introSingleImg">
+            <img src="avatars/classroom-illustration.svg" alt="" id="introSingleImg" class="scroll-intro-classroom-bg">
+            <div class="scroll-intro-video-card" id="introVideoCard">
+              <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor">
+            </div>
             <div class="scroll-intro-shade"></div>
             <div class="scroll-intro-copy" id="introCopySingle">
               <p class="scroll-intro-eyebrow"><span class="dot"></span> ARMUS</p>
               <h2 data-i18n="index.scrollIntro.title1">Bir öğretmenle başla.</h2>
             </div>
           </div>
+          <!-- mist + firework burst live BETWEEN the two crossfading
+               layers in DOM order (not nested inside either) - their own
+               independently-opacitied layer, so the mosaic layer's cards
+               (after this in DOM order, default stacking) paint on top
+               of the burst rather than being washed out by it, while the
+               burst itself still paints over the classroom/board layer
+               before it. script.js drives their opacity across a window
+               (0.42-0.78) that starts well before .scroll-intro-mosaic's
+               own crossfade opacity (cross, ramping from 0.5) has risen
+               off zero - nesting them inside that layer (as originally
+               built) silently multiplied their visibility down to
+               nothing for the first part of that window, the same class
+               of bug as the earlier nth-child/nth-of-type one. -->
+          <div class="scroll-intro-mist" id="introMist" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="scroll-intro-burst" id="introBurst" aria-hidden="true">
+            <span style="--a:0deg"></span>
+            <span style="--a:30deg"></span>
+            <span style="--a:60deg"></span>
+            <span style="--a:90deg"></span>
+            <span style="--a:120deg"></span>
+            <span style="--a:150deg"></span>
+            <span style="--a:180deg"></span>
+            <span style="--a:210deg"></span>
+            <span style="--a:240deg"></span>
+            <span style="--a:270deg"></span>
+            <span style="--a:300deg"></span>
+            <span style="--a:330deg"></span>
+          </div>
           <div class="scroll-intro-layer scroll-intro-mosaic" id="introLayerMosaic">
-            <div class="scroll-intro-mist" id="introMist" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span><span></span>
-            </div>
             <div class="scroll-intro-mosaic-grid" id="introMosaicGrid">
               <span class="spark s1"></span>
               <span class="spark s2"></span>

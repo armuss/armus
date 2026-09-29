@@ -104,9 +104,12 @@ function armusInitScrollIntro(){
   const layerMosaic=document.getElementById('introLayerMosaic');
   const mosaicGrid=document.getElementById('introMosaicGrid');
   const mist=document.getElementById('introMist');
+  const burst=document.getElementById('introBurst');
+  const videoCard=document.getElementById('introVideoCard');
   const copySingle=document.getElementById('introCopySingle');
   const copyMosaic=document.getElementById('introCopyMosaic');
-  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!copySingle||!copyMosaic)return;
+  const nav=document.querySelector('header.nav');
+  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!burst||!videoCard||!copySingle||!copyMosaic)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
@@ -145,26 +148,54 @@ function armusInitScrollIntro(){
     const scrollable=rect.height-window.innerHeight;
     const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
 
-    // photo keeps zooming the whole first half, independent of the text
-    // (which needs to fade out earlier, on its own, to stay readable)
+    // the classroom starts as a wide establishing shot and zooms in
+    // toward the chalkboard specifically (transform-origin: 73% 41% in
+    // CSS matches the board's real position in the illustration) - a
+    // bigger zoom than a simple photo crop needs, since it has to carry
+    // the eye all the way from "whole room" to "right up on the board"
+    // by the time the burst fires.
     const zoomT=smoothstep(0,0.55,progress);
-    singleImg.style.transform='scale('+(1+zoomT*0.45)+')';
-    copySingle.style.opacity=String(1-smoothstep(0.12,0.34,progress));
+    singleImg.style.transform='scale('+(1+zoomT*1.6)+')';
+    // the framed video-call card and the intro copy both live on the
+    // wide establishing shot - fade them out early, well before the
+    // zoom gets close enough to the board that they'd otherwise still
+    // be hanging around the edge of frame
+    const earlyFade=String(1-smoothstep(0.1,0.28,progress));
+    copySingle.style.opacity=earlyFade;
+    videoCard.style.opacity=earlyFade;
+
+    // the floating nav (header.nav, every page) would otherwise sit on
+    // top of this whole sequence throughout - fades out fast once
+    // scrolling into the pin starts, stays gone through the zoom/burst/
+    // settle, and fades back in only once the mosaic has fully settled
+    // and we're about to hand off to the normal hero-band below.
+    if(nav){
+      const navOpacity=1-smoothstep(0,0.08,progress)+smoothstep(0.9,1,progress);
+      nav.style.opacity=String(Math.min(1,navOpacity));
+      nav.style.pointerEvents=navOpacity<0.5?'none':'auto';
+    }
 
     const cross=smoothstep(0.5,0.66,progress);
     layerSingle.style.opacity=String(1-cross);
     layerMosaic.style.opacity=String(cross);
 
-    // a brief mist/dust window straddling the crossfade point - the
-    // cluster visually emerges through it rather than just cross-fading
-    // in flat. Rises from 0.44, peaks around the crossfade itself, and
-    // is gone again by 0.72 so it never lingers once the mosaic has
-    // settled.
+    // a brief mist/dust + firework-burst window straddling the
+    // crossfade point - the cluster visually erupts through it rather
+    // than just cross-fading in flat. Rises from 0.44, peaks around the
+    // crossfade itself, and is gone again by 0.72 so it never lingers
+    // once the mosaic has settled. The burst rays grow out slightly
+    // faster than the mist fades in (feels like the spark comes first,
+    // the haze follows) and hold a beat longer before fading.
     const mistIn=smoothstep(0.44,0.56,progress);
     const mistOut=smoothstep(0.6,0.72,progress);
     const mistT=mistIn*(1-mistOut);
     mist.style.opacity=String(mistT*0.85);
     mist.style.transform='scale('+(0.85+mistT*0.35)+')';
+
+    const burstIn=smoothstep(0.42,0.52,progress);
+    const burstOut=smoothstep(0.64,0.78,progress);
+    burst.style.setProperty('--t',String(burstIn*(1-burstOut)));
+    burst.style.opacity=String(burstIn*(1-burstOut));
 
     const settle=smoothstep(0.58,0.85,progress);
     mosaicGrid.style.transform='scale('+(1.12-settle*0.12)+')';
