@@ -166,12 +166,20 @@ function armusInitScrollIntro(){
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
-    // scrolling into the pin starts, stays gone through the zoom/burst/
-    // settle, and fades back in only once the mosaic has fully settled
-    // and we're about to hand off to the normal hero-band below.
+    // scrolling into the pin starts, and stays gone for the ENTIRE
+    // mosaic section, not just the zoom/burst/settle part: progress
+    // caps at 1 while the sticky stage still fills the whole viewport
+    // (rect.bottom === innerHeight at that point), so waiting on
+    // progress alone brought the nav back while the mosaic cards were
+    // still the only thing on screen. Instead it tracks rect.bottom
+    // directly through the extra scroll after unstick, and only
+    // reveals in the last stretch as the pin's bottom edge - and with
+    // it, the whole mosaic - actually leaves the top of the viewport.
     if(nav){
-      const navOpacity=1-smoothstep(0,0.08,progress)+smoothstep(0.9,1,progress);
-      nav.style.opacity=String(Math.min(1,navOpacity));
+      const navHideOut=smoothstep(0,0.08,progress);
+      const navRevealIn=smoothstep(window.innerHeight*0.2,0,rect.bottom);
+      const navOpacity=Math.min(1,(1-navHideOut)+navRevealIn);
+      nav.style.opacity=String(navOpacity);
       nav.style.pointerEvents=navOpacity<0.5?'none':'auto';
     }
 
