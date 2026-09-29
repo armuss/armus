@@ -2,6 +2,25 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    // The homepage now has a tall (240vh) pinned scroll-intro section
+    // before the real page content - Chrome's default scroll
+    // restoration (history.scrollRestoration = "auto") remembers and
+    // reapplies whatever scroll position a tab/history entry was at,
+    // which used to be a minor cosmetic thing on a normal page but now
+    // means a fresh reload (or coming back to an already-scrolled tab)
+    // can land you mid-way through - or fully past - the intro
+    // animation instead of at the real top, looking like the page
+    // loaded broken. "manual" opts this page out of that automatic
+    // restore; window.scrollTo below is a belt-and-suspenders reset for
+    // any restore that already happened before this ran (this has to be
+    // the very first thing in <head>, ahead of every other script, to
+    // beat the browser's own restore timing as much as possible).
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  </script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="alternate icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
