@@ -66,31 +66,47 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Sohbet asistanı şu anda kullanılamıyor." }, 500);
     }
 
-    const { message, history, sessionId } = await req.json();
+    const { message, sessionId } = await req.json();
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return jsonResponse({ error: "Bir mesaj yazmalısın." }, 400);
     }
 
     const trimmedMessage = message.trim().slice(0, 2000);
-
-    // history: at most the last few turns the widget already showed,
-    // so the model has short-term context without an unbounded payload.
-    const safeHistory = Array.isArray(history)
-      ? history
-          .filter((m: unknown): m is { role: string; content: string } =>
-            !!m && typeof m === "object" &&
-            ((m as any).role === "user" || (m as any).role === "assistant") &&
-            typeof (m as any).content === "string"
-          )
-          .slice(-8)
-          .map(m => ({ role: m.role, content: String(m.content).slice(0, 2000) }))
-      : [];
+    const safeSessionId = typeof sessionId === "string" ? sessionId.slice(0, 100) : null;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // history used to be trusted straight from the client (whatever
+    // {role, content} pairs the caller sent), letting a direct caller
+    // (this function needs no auth) forge a fake "assistant" reply
+    // Claude never actually said - e.g. a bogus discount code - and have
+    // Claude then affirm/continue it as if it were its own prior turn,
+    // producing a reply that reads as an official ARMUS statement. Every
+    // genuine reply this function ever sent is already recorded in
+    // site_chat_logs below (this function is the only writer of that
+    // "reply" column), so history is rebuilt server-side from there
+    // instead - same depth (last 4 exchanges) the client used to send.
+    let safeHistory: { role: string; content: string }[] = [];
+    if (safeSessionId) {
+      const { data: priorRows } = await supabaseAdmin
+        .from("site_chat_logs")
+        .select("message, reply")
+        .eq("session_id", safeSessionId)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      if (priorRows) {
+        safeHistory = priorRows
+          .reverse()
+          .flatMap((r: any) => [
+            { role: "user", content: r.message },
+            { role: "assistant", content: r.reply },
+          ]);
+      }
+    }
 
     // Anonymous, no-login widget - same reasoning as send-contact-email:
     // cap by IP so a script can't run up the Anthropic bill. Trust the
@@ -147,7 +163,7 @@ Deno.serve(async (req) => {
       .trim() || "Üzgünüm, şu an cevap oluşturamadım. Tekrar dener misin?";
 
     const { error: insertError } = await supabaseAdmin.from("site_chat_logs").insert({
-      session_id: typeof sessionId === "string" ? sessionId.slice(0, 100) : null,
+      session_id: safeSessionId,
       message: trimmedMessage,
       reply: reply.slice(0, 4000),
       ip_address: ip,
