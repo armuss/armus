@@ -218,39 +218,41 @@
     .scroll-intro-single {
       opacity: 1;
     }
-    /* the zoom (script.js sets scale() every frame) is anchored on the
-       classroom illustration's own chalkboard, not the frame's center -
-       matching its position in avatars/classroom-illustration.svg's
-       1200x800 viewBox (chalkboard center ≈73%, 41%) - so scrolling
-       visibly converges on the board, the same point the mist/burst
-       erupts from a moment later, rather than a generic center-zoom. */
+    /* the illustrated classroom is now a static backdrop, not the zoom
+       target - it just sits behind the teacher's photo, unmoving, so the
+       room still reads as "one real lesson happening somewhere" without
+       competing with the zoom below for attention. */
     .scroll-intro-classroom-bg {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform: scale(1);
-      transform-origin: 73% 41%;
-      will-change: transform;
     }
-    /* the one real photo left in this layer - a small framed "live
-       lesson" card sitting in the illustrated classroom, rather than a
-       full-bleed stock photo - starts wide/visible and fades out on its
-       own (script.js) well before the zoom reaches the board, so it
-       never fights the board for attention. */
-    .scroll-intro-video-card {
+    /* the teacher's own video-call photo is the zoom's real subject now -
+       .scroll-intro-video-wrap only ever handles its fixed, centered
+       position (script.js never touches it), so script.js is free to
+       drive .scroll-intro-video-card's own transform every frame (rotate
+       + scale) without fighting that positioning. transform-origin sits
+       on her face within the photo (roughly where it falls in
+       avatars/hero-mobile-video-call.jpg), so scaling the card up visibly
+       converges on her specifically, the same point the burst erupts
+       from a moment later - not a generic center-zoom. */
+    .scroll-intro-video-wrap {
       position: absolute;
-      left: 11%;
-      bottom: 16%;
+      left: 50%;
+      bottom: 14%;
       width: min(300px, 27vw);
+      transform: translateX(-50%);
+    }
+    .scroll-intro-video-card {
       aspect-ratio: 900 / 619;
       border-radius: 14px;
       overflow: hidden;
       border: 5px solid rgba(255, 255, 255, .95);
       box-shadow: 0 26px 46px rgba(10, 10, 10, .4);
-      transform: rotate(-3deg);
-      will-change: transform, opacity;
+      transform-origin: 54% 24%;
+      will-change: transform;
     }
     .scroll-intro-video-card img {
       width: 100%;
@@ -294,9 +296,9 @@
     .scroll-intro-mosaic-grid {
       position: relative;
       z-index: 2;
-      width: min(760px, 92vw);
-      aspect-ratio: 760 / 440;
-      perspective: 700px;
+      width: min(920px, 94vw);
+      aspect-ratio: 920 / 640;
+      perspective: 900px;
       will-change: transform;
     }
     .scroll-intro-mosaic-grid .spark {
@@ -312,31 +314,39 @@
     .scroll-intro-mosaic-grid .spark.s4 { left: 45%; top: 54%; width: 1.1%; aspect-ratio: 1; }
     .scroll-intro-mosaic-grid .spark.s5 { left: 73%; top: 85%; width: 1.7%; aspect-ratio: 1; }
     /* .ghost: 2 extra soft, dimmed, blurred tiles tucked behind the main
-       6 (low z-index, no rotateY/rotateX of their own since they're
-       barely visible anyway) - not meant to be looked at directly, just
-       a "there are more behind these" depth cue, reusing 2 of the same
-       6 photos since they're mostly hidden either way. */
+       6 (low z-index) - not meant to be looked at directly, just a
+       "there are more behind these" depth cue, reusing 2 of the same 6
+       photos since they're mostly hidden either way. They keep the old
+       plain photo-only markup (no card body), so they need their own
+       aspect-ratio - the real cards below get theirs from their content
+       (photo + body) stacking naturally instead. */
     .scroll-intro-mosaic-grid .tile.ghost {
+      aspect-ratio: 220 / 205;
       filter: blur(1.5px) brightness(1.08);
       opacity: .55;
       box-shadow: none;
       border-color: rgba(255, 255, 255, .7);
     }
-    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 38%; top: 38%; width: 15%; z-index: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.9); }
-    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 67%; top: 66%; width: 13%; z-index: 0; transform: translate(-50%, -50%) rotate(7deg) scale(.9); }
-    /* Real 3D tilt (perspective + rotateX/rotateY above, not just a flat
-       2D rotate) so each card reads as floating at its own angle in
-       space, closer to the reference's product renders than a flat
-       photo pinned at a slant. */
+    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 36%; top: 46%; width: 15%; z-index: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.9); }
+    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 68%; top: 70%; width: 13%; z-index: 0; transform: translate(-50%, -50%) rotate(7deg) scale(.9); }
+    /* Real teacher cards now (matching teachers.html's own card exactly -
+       photo + rating badge + favorite heart + name + lesson/student
+       counts + price + trial button), not bare photo tiles, each one
+       still floating at its own hand-placed position/depth/tilt like a
+       scattered photo. rotateX/rotateY are kept modest here (unlike the
+       earlier photo-only tiles) so the card's own text stays legible at
+       an angle instead of shearing into illegibility. */
     .scroll-intro-mosaic-grid .tile {
       position: absolute;
-      aspect-ratio: 340 / 372;
+      display: flex;
+      flex-direction: column;
+      background: #fffaf0;
       border-radius: 16px;
       overflow: hidden;
       border: 4px solid rgba(255, 255, 255, .92);
       /* stacked steps behind the card's own drop shadow - the classic
          "deck of pages" trick, giving each card real visible thickness
-         (a thick book's edge) instead of reading as a flat photo pinned
+         (a thick book's edge) instead of reading as a flat card pinned
          at an angle */
       box-shadow:
         3px 4px 0 rgba(191, 148, 74, .95),
@@ -345,27 +355,107 @@
         0 26px 42px rgba(35, 26, 10, .4);
       transform-style: preserve-3d;
     }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 20%; top: 22%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(-9deg) rotateY(14deg) rotateX(-6deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 19%; width: 21%; z-index: 4; transform: translate(-50%, -50%) rotate(6deg) rotateY(-10deg) rotateX(8deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 80%; top: 28%; width: 15%; z-index: 2; transform: translate(-50%, -50%) rotate(-8deg) rotateY(16deg) rotateX(4deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 27%; top: 68%; width: 20%; z-index: 3; transform: translate(-50%, -50%) rotate(10deg) rotateY(-14deg) rotateX(-5deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-5deg) rotateY(9deg) rotateX(7deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 84%; top: 60%; width: 14%; z-index: 1; transform: translate(-50%, -50%) rotate(9deg) rotateY(-12deg) rotateX(-8deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 17%; top: 25%; width: 21%; z-index: 3; transform: translate(-50%, -50%) rotate(-7deg) rotateY(8deg) rotateX(-4deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 21%; width: 24%; z-index: 4; transform: translate(-50%, -50%) rotate(4deg) rotateY(-6deg) rotateX(5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 82%; top: 31%; width: 19%; z-index: 2; transform: translate(-50%, -50%) rotate(-6deg) rotateY(9deg) rotateX(3deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 23%; top: 73%; width: 23%; z-index: 3; transform: translate(-50%, -50%) rotate(7deg) rotateY(-8deg) rotateX(-4deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 79%; width: 20%; z-index: 2; transform: translate(-50%, -50%) rotate(-4deg) rotateY(6deg) rotateX(5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 87%; top: 66%; width: 18%; z-index: 1; transform: translate(-50%, -50%) rotate(6deg) rotateY(-7deg) rotateX(-5deg); }
     .scroll-intro-mosaic-grid .tile img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
+    .scroll-intro-mosaic-grid .tile-photo {
+      position: relative;
+      aspect-ratio: 220 / 205;
+    }
+    .scroll-intro-mosaic-grid .tile-rating {
+      position: absolute;
+      right: 7px;
+      top: 7px;
+      background: var(--armus-gold-gradient);
+      border-radius: 8px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--armus-on-gold);
+    }
+    .scroll-intro-mosaic-grid .tile-fav {
+      position: absolute;
+      left: 7px;
+      top: 7px;
+      width: 18px;
+      height: 18px;
+      color: #fff;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .45));
+    }
+    .scroll-intro-mosaic-grid .tile-fav svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+    }
+    .scroll-intro-mosaic-grid .tile-body {
+      padding: 8px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .scroll-intro-mosaic-grid .tile-name {
+      margin: 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #231a0a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .scroll-intro-mosaic-grid .tile-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: rgba(35, 26, 10, .06);
+      border-radius: 8px;
+      padding: 5px 7px;
+    }
+    .scroll-intro-mosaic-grid .tile-tags span {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #3d3226;
+    }
+    .scroll-intro-mosaic-grid .tile-price {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #231a0a;
+    }
+    .scroll-intro-mosaic-grid .tile-price small {
+      font-weight: 400;
+      opacity: .6;
+      font-size: 9px;
+    }
+    .scroll-intro-mosaic-grid .tile-trial {
+      text-align: center;
+      background: #0a0a0a;
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 9.5px;
+      font-weight: 600;
+    }
     /* Mist/dust burst the cluster "emerges through" mid-crossfade
        (armusInitScrollIntro, script.js, drives its opacity/scale - a
        brief window around the crossfade point, not a fixed-duration
        animation, so it stays scroll-scrubbed like everything else here)
-       - clustered around the same point (≈66%, 38%) the chalkboard sits
-       at in the layer beneath and the firework burst below erupts from,
-       so the whole moment reads as one single locus, not a generic haze
-       - with a couple of puffs spread wider for general atmosphere over
-       the area the cluster settles into. */
+       - clustered around the same point (≈50%, 66%) the teacher's face
+       sits at once .scroll-intro-video-card has zoomed in, the same
+       point the firework burst below erupts from, so the whole moment
+       reads as one single locus, not a generic haze - with a couple of
+       puffs spread wider for general atmosphere over the area the
+       cluster settles into. */
     .scroll-intro-mist {
       position: absolute;
       inset: 0;
@@ -379,41 +469,55 @@
       background: #fff;
       filter: blur(40px);
     }
-    .scroll-intro-mist span:nth-child(1) { left: 58%; top: 30%; width: 240px; height: 240px; }
-    .scroll-intro-mist span:nth-child(2) { left: 68%; top: 22%; width: 260px; height: 260px; }
-    .scroll-intro-mist span:nth-child(3) { left: 74%; top: 42%; width: 220px; height: 220px; }
-    .scroll-intro-mist span:nth-child(4) { left: 60%; top: 48%; width: 200px; height: 200px; }
-    .scroll-intro-mist span:nth-child(5) { left: 34%; top: 55%; width: 180px; height: 180px; }
-    .scroll-intro-mist span:nth-child(6) { left: 44%; top: 68%; width: 190px; height: 190px; }
-    /* Firework-style burst: 12 thin gradient rays fixed at even angles
-       (--a, set inline per span in the HTML) around the same origin
-       point as the mist, echoing the user's own reference - rockets
-       bursting with color at a celebration - rather than literal fire.
-       script.js grows their length (scaleX) and fades them alongside
-       the mist. transform-origin left-center so each ray extends
-       outward FROM the origin point along its own angle, not through it. */
+    .scroll-intro-mist span:nth-child(1) { left: 42%; top: 58%; width: 220px; height: 220px; }
+    .scroll-intro-mist span:nth-child(2) { left: 60%; top: 52%; width: 250px; height: 250px; }
+    .scroll-intro-mist span:nth-child(3) { left: 64%; top: 68%; width: 210px; height: 210px; }
+    .scroll-intro-mist span:nth-child(4) { left: 46%; top: 74%; width: 190px; height: 190px; }
+    .scroll-intro-mist span:nth-child(5) { left: 28%; top: 66%; width: 170px; height: 170px; }
+    .scroll-intro-mist span:nth-child(6) { left: 36%; top: 50%; width: 180px; height: 180px; }
+    /* Firework-style burst: a small bright flash at the origin
+       (.scroll-intro-burst-core) plus a shower of small round sparks
+       flying outward at hand-placed angles/distances (--a/--d, set
+       inline per span in the HTML) - varied distances and 3 alternating
+       colors (white/gold/amber) so it reads as scattering debris, not a
+       single symmetric sunburst graphic (an earlier version used 12
+       even, same-length rays from one point, which read as a flat
+       sparkle-emoji icon rather than an actual burst - this replaces
+       it). script.js grows --t (0 to 1) every frame, driving both the
+       core's scale and each spark's outward travel + shrink together,
+       and fades the whole thing alongside the mist. */
     .scroll-intro-burst {
       position: absolute;
-      left: 66%;
-      top: 38%;
+      left: 50%;
+      top: 66%;
       width: 1px;
       height: 1px;
       z-index: 1;
       pointer-events: none;
     }
+    .scroll-intro-burst-core {
+      position: absolute;
+      left: -45px;
+      top: -45px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff9e6 0%, var(--armus-gold-2) 45%, rgba(246, 198, 73, 0) 75%);
+      transform: scale(var(--t, 0));
+    }
     .scroll-intro-burst span {
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 150px;
-      height: 4px;
-      border-radius: 4px;
-      background: linear-gradient(90deg, #fff6d9 0%, var(--armus-gold-2) 45%, rgba(246, 198, 73, 0) 100%);
-      transform-origin: 0 50%;
-      transform: rotate(var(--a)) scaleX(var(--t, 0));
+      left: -4px;
+      top: -4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff6d9;
+      box-shadow: 0 0 6px 1px rgba(246, 198, 73, .8);
+      transform: rotate(var(--a)) translateX(calc(var(--d) * var(--t, 0))) scale(calc(1.15 - var(--t, 0) * .5));
     }
-    .scroll-intro-burst span:nth-child(3n) { width: 110px; }
-    .scroll-intro-burst span:nth-child(3n+1) { width: 170px; }
+    .scroll-intro-burst span:nth-child(3n+1) { background: #fff; box-shadow: 0 0 6px 1px rgba(255, 255, 255, .85); }
+    .scroll-intro-burst span:nth-child(3n+2) { background: var(--armus-gold-2); box-shadow: 0 0 6px 1px rgba(246, 198, 73, .85); }
     .scroll-intro-copy {
       position: relative;
       z-index: 2;
@@ -531,8 +635,10 @@
         <div class="scroll-intro-stage">
           <div class="scroll-intro-layer scroll-intro-single" id="introLayerSingle">
             <img src="avatars/classroom-illustration.svg" alt="" id="introSingleImg" class="scroll-intro-classroom-bg">
-            <div class="scroll-intro-video-card" id="introVideoCard">
-              <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor">
+            <div class="scroll-intro-video-wrap">
+              <div class="scroll-intro-video-card" id="introVideoCard">
+                <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor">
+              </div>
             </div>
             <div class="scroll-intro-shade"></div>
             <div class="scroll-intro-copy" id="introCopySingle">
@@ -557,18 +663,25 @@
             <span></span><span></span><span></span><span></span><span></span><span></span>
           </div>
           <div class="scroll-intro-burst" id="introBurst" aria-hidden="true">
-            <span style="--a:0deg"></span>
-            <span style="--a:30deg"></span>
-            <span style="--a:60deg"></span>
-            <span style="--a:90deg"></span>
-            <span style="--a:120deg"></span>
-            <span style="--a:150deg"></span>
-            <span style="--a:180deg"></span>
-            <span style="--a:210deg"></span>
-            <span style="--a:240deg"></span>
-            <span style="--a:270deg"></span>
-            <span style="--a:300deg"></span>
-            <span style="--a:330deg"></span>
+            <div class="scroll-intro-burst-core"></div>
+            <span style="--a:0deg; --d:150px"></span>
+            <span style="--a:20deg; --d:110px"></span>
+            <span style="--a:40deg; --d:175px"></span>
+            <span style="--a:60deg; --d:130px"></span>
+            <span style="--a:80deg; --d:95px"></span>
+            <span style="--a:100deg; --d:155px"></span>
+            <span style="--a:120deg; --d:120px"></span>
+            <span style="--a:140deg; --d:180px"></span>
+            <span style="--a:160deg; --d:100px"></span>
+            <span style="--a:180deg; --d:145px"></span>
+            <span style="--a:200deg; --d:115px"></span>
+            <span style="--a:220deg; --d:170px"></span>
+            <span style="--a:240deg; --d:105px"></span>
+            <span style="--a:260deg; --d:140px"></span>
+            <span style="--a:280deg; --d:165px"></span>
+            <span style="--a:300deg; --d:95px"></span>
+            <span style="--a:320deg; --d:155px"></span>
+            <span style="--a:340deg; --d:125px"></span>
           </div>
           <div class="scroll-intro-layer scroll-intro-mosaic" id="introLayerMosaic">
             <div class="scroll-intro-mosaic-grid" id="introMosaicGrid">
