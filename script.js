@@ -88,6 +88,76 @@ function armusInitHeroRotator(){
 }
 armusInitHeroRotator();
 
+// Scroll-driven homepage intro: a single real lesson photo zooms in as
+// the visitor scrolls through .scroll-intro-pin's tall runway, then
+// crossfades into a mosaic of real ARMUS teacher photos (pulled from
+// TEACHERS, teachers-data.js, so it never drifts out of sync with the
+// actual demo roster) - "one lesson" becoming "hundreds of teachers".
+// See the CSS comment above .scroll-intro-pin (index.html) for the
+// pin/sticky mechanism itself. Every scroll-linked value here is set as
+// a direct inline style, never a CSS transition, so it stays exactly
+// locked to scroll position even on a fast flick or an instant jump.
+function armusInitScrollIntro(){
+  const pin=document.querySelector('.scroll-intro-pin');
+  const singleImg=document.getElementById('introSingleImg');
+  const layerSingle=document.getElementById('introLayerSingle');
+  const layerMosaic=document.getElementById('introLayerMosaic');
+  const mosaicGrid=document.getElementById('introMosaicGrid');
+  const copySingle=document.getElementById('introCopySingle');
+  const copyMosaic=document.getElementById('introCopyMosaic');
+  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!copySingle||!copyMosaic)return;
+
+  // display:none under prefers-reduced-motion (index.html CSS) makes this
+  // pointless work either way, but skip the scroll listener too rather
+  // than just leaving it be - no reason to pay for it.
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+
+  if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
+    mosaicGrid.innerHTML=TEACHERS.slice(0,6).map(t=>
+      '<div class="tile"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'
+    ).join('');
+  }
+
+  function smoothstep(edge0,edge1,x){
+    const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
+    return t*t*(3-2*t);
+  }
+
+  let ticking=false;
+
+  function update(){
+    ticking=false;
+    const rect=pin.getBoundingClientRect();
+    const scrollable=rect.height-window.innerHeight;
+    const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
+
+    // photo keeps zooming the whole first half, independent of the text
+    // (which needs to fade out earlier, on its own, to stay readable)
+    const zoomT=smoothstep(0,0.55,progress);
+    singleImg.style.transform='scale('+(1+zoomT*0.45)+')';
+    copySingle.style.opacity=String(1-smoothstep(0.12,0.34,progress));
+
+    const cross=smoothstep(0.5,0.66,progress);
+    layerSingle.style.opacity=String(1-cross);
+    layerMosaic.style.opacity=String(cross);
+
+    const settle=smoothstep(0.58,0.85,progress);
+    mosaicGrid.style.transform='scale('+(1.12-settle*0.12)+')';
+    copyMosaic.style.opacity=String(smoothstep(0.6,0.8,progress));
+  }
+
+  function onScroll(){
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(update);
+  }
+
+  update();
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+}
+armusInitScrollIntro();
+
 // Proof carousel: 3 stat/testimonial cards auto-cross-fade, with dots
 // showing progress and doubling as manual controls.
 function armusInitProofCarousel(){
