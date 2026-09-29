@@ -200,6 +200,17 @@
       justify-content: center;
       flex-direction: column;
       gap: 28px;
+      /* the floating pill nav (header.nav, styles.css) is position:sticky
+         at top:14px/height:68px same as on every page, and it's meant to
+         float over this section's full-bleed photo (.scroll-intro-single)
+         - but on a wide, short browser window the highest tile in the
+         scattered cluster below can get vertically centered close enough
+         to the very top of the stage to poke up behind the nav and get
+         its own top edge clipped by it. A fixed top padding here (not on
+         the shared .scroll-intro-layer/.scroll-intro-single, which stay
+         full-bleed on purpose) guarantees the cluster's centered block
+         never starts above the nav regardless of viewport height. */
+      padding-top: 100px;
     }
     /* A scattered, tilted, depth-layered cluster (not a flat grid) - each
        tile is individually placed/rotated/sized by hand below, echoing
@@ -256,7 +267,7 @@
       transform-style: preserve-3d;
     }
     .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 20%; top: 22%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(-9deg) rotateY(14deg) rotateX(-6deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 14%; width: 22%; z-index: 4; transform: translate(-50%, -50%) rotate(6deg) rotateY(-10deg) rotateX(8deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 19%; width: 21%; z-index: 4; transform: translate(-50%, -50%) rotate(6deg) rotateY(-10deg) rotateX(8deg); }
     .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 80%; top: 28%; width: 15%; z-index: 2; transform: translate(-50%, -50%) rotate(-8deg) rotateY(16deg) rotateX(4deg); }
     .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 27%; top: 68%; width: 20%; z-index: 3; transform: translate(-50%, -50%) rotate(10deg) rotateY(-14deg) rotateX(-5deg); }
     .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-5deg) rotateY(9deg) rotateX(7deg); }
