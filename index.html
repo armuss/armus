@@ -201,25 +201,46 @@
       flex-direction: column;
       gap: 28px;
     }
+    /* A scattered, tilted, depth-layered cluster (not a flat grid) - each
+       tile is individually placed/rotated/sized by hand below, echoing
+       the reference video's floating product splash (different
+       depths/angles/overlap, not a neat row) rather than an evenly
+       spaced photo grid. left/top/width are all percentages of this
+       container, so the whole cluster scales down together on narrow
+       viewports with no separate mobile layout needed - only the
+       container's own max-width (below) changes. */
     .scroll-intro-mosaic-grid {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(84px, 140px));
-      gap: 14px;
+      position: relative;
+      width: min(760px, 92vw);
+      aspect-ratio: 760 / 440;
       will-change: transform;
     }
+    .scroll-intro-mosaic-grid .spark {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .7);
+      filter: blur(1px);
+      pointer-events: none;
+    }
+    .scroll-intro-mosaic-grid .spark.s1 { left: 38%; top: 6%; width: 1.8%; aspect-ratio: 1; }
+    .scroll-intro-mosaic-grid .spark.s2 { left: 68%; top: 12%; width: 1.2%; aspect-ratio: 1; }
+    .scroll-intro-mosaic-grid .spark.s3 { left: 8%; top: 50%; width: 1.5%; aspect-ratio: 1; }
+    .scroll-intro-mosaic-grid .spark.s4 { left: 45%; top: 54%; width: 1.1%; aspect-ratio: 1; }
+    .scroll-intro-mosaic-grid .spark.s5 { left: 73%; top: 85%; width: 1.7%; aspect-ratio: 1; }
     .scroll-intro-mosaic-grid .tile {
+      position: absolute;
       aspect-ratio: 340 / 372;
       border-radius: 16px;
       overflow: hidden;
-      border: 3px solid rgba(10, 10, 10, .12);
-      box-shadow: 0 16px 34px rgba(35, 26, 10, .28);
+      border: 4px solid rgba(255, 255, 255, .92);
+      box-shadow: 0 20px 38px rgba(35, 26, 10, .32);
     }
-    .scroll-intro-mosaic-grid .tile:nth-child(even) {
-      transform: translateY(-18px);
-    }
-    .scroll-intro-mosaic-grid .tile:nth-child(3n) {
-      transform: translateY(10px);
-    }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 20%; top: 22%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(-9deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 14%; width: 22%; z-index: 4; transform: translate(-50%, -50%) rotate(6deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 80%; top: 28%; width: 15%; z-index: 2; transform: translate(-50%, -50%) rotate(-8deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 27%; top: 68%; width: 20%; z-index: 3; transform: translate(-50%, -50%) rotate(10deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 84%; top: 60%; width: 14%; z-index: 1; transform: translate(-50%, -50%) rotate(9deg); }
     .scroll-intro-mosaic-grid .tile img {
       width: 100%;
       height: 100%;
@@ -270,19 +291,13 @@
       color: var(--armus-on-gold);
     }
 
+    /* .scroll-intro-mosaic-grid needs no mobile override of its own -
+       every tile's left/top/width is a percentage of the container, and
+       the container's own width is min(760px, 92vw), so the whole
+       scattered cluster scales down together automatically. */
     @media (max-width: 760px) {
       .scroll-intro-pin {
         height: 200vh;
-      }
-      .scroll-intro-mosaic-grid {
-        grid-template-columns: repeat(3, minmax(78px, 120px));
-        gap: 10px;
-      }
-      .scroll-intro-mosaic-grid .tile:nth-child(even) {
-        transform: none;
-      }
-      .scroll-intro-mosaic-grid .tile:nth-child(3n) {
-        transform: none;
       }
     }
 
@@ -356,7 +371,13 @@
             </div>
           </div>
           <div class="scroll-intro-layer scroll-intro-mosaic" id="introLayerMosaic">
-            <div class="scroll-intro-mosaic-grid" id="introMosaicGrid"></div>
+            <div class="scroll-intro-mosaic-grid" id="introMosaicGrid">
+              <span class="spark s1"></span>
+              <span class="spark s2"></span>
+              <span class="spark s3"></span>
+              <span class="spark s4"></span>
+              <span class="spark s5"></span>
+            </div>
             <div class="scroll-intro-copy" id="introCopyMosaic">
               <p class="scroll-intro-eyebrow"><span class="dot"></span> ARMUS</p>
               <h2 data-i18n="index.scrollIntro.title2">Bir isim, yüzlerce öğretmen.</h2>

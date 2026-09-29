@@ -112,10 +112,14 @@ function armusInitScrollIntro(){
   // than just leaving it be - no reason to pay for it.
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 
+  // appended, not innerHTML - mosaicGrid already holds the static .spark
+  // decorative dots (index.html), and tiles need to paint after/above
+  // them in DOM order for the scattered cluster's own z-index values to
+  // make sense
   if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
-    mosaicGrid.innerHTML=TEACHERS.slice(0,6).map(t=>
+    mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(0,6).map(t=>
       '<div class="tile"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'
-    ).join('');
+    ).join(''));
   }
 
   function smoothstep(edge0,edge1,x){
