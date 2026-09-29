@@ -211,8 +211,10 @@
        container's own max-width (below) changes. */
     .scroll-intro-mosaic-grid {
       position: relative;
+      z-index: 2;
       width: min(760px, 92vw);
       aspect-ratio: 760 / 440;
+      perspective: 700px;
       will-change: transform;
     }
     .scroll-intro-mosaic-grid .spark {
@@ -227,26 +229,70 @@
     .scroll-intro-mosaic-grid .spark.s3 { left: 8%; top: 50%; width: 1.5%; aspect-ratio: 1; }
     .scroll-intro-mosaic-grid .spark.s4 { left: 45%; top: 54%; width: 1.1%; aspect-ratio: 1; }
     .scroll-intro-mosaic-grid .spark.s5 { left: 73%; top: 85%; width: 1.7%; aspect-ratio: 1; }
+    /* .ghost: 2 extra soft, dimmed, blurred tiles tucked behind the main
+       6 (low z-index, no rotateY/rotateX of their own since they're
+       barely visible anyway) - not meant to be looked at directly, just
+       a "there are more behind these" depth cue, reusing 2 of the same
+       6 photos since they're mostly hidden either way. */
+    .scroll-intro-mosaic-grid .tile.ghost {
+      filter: blur(1.5px) brightness(1.08);
+      opacity: .55;
+      box-shadow: none;
+      border-color: rgba(255, 255, 255, .7);
+    }
+    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 38%; top: 38%; width: 15%; z-index: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.9); }
+    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 67%; top: 66%; width: 13%; z-index: 0; transform: translate(-50%, -50%) rotate(7deg) scale(.9); }
+    /* Real 3D tilt (perspective + rotateX/rotateY above, not just a flat
+       2D rotate) so each card reads as floating at its own angle in
+       space, closer to the reference's product renders than a flat
+       photo pinned at a slant. */
     .scroll-intro-mosaic-grid .tile {
       position: absolute;
       aspect-ratio: 340 / 372;
       border-radius: 16px;
       overflow: hidden;
       border: 4px solid rgba(255, 255, 255, .92);
-      box-shadow: 0 20px 38px rgba(35, 26, 10, .32);
+      box-shadow: 0 24px 40px rgba(35, 26, 10, .38);
+      transform-style: preserve-3d;
     }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 20%; top: 22%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(-9deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 14%; width: 22%; z-index: 4; transform: translate(-50%, -50%) rotate(6deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 80%; top: 28%; width: 15%; z-index: 2; transform: translate(-50%, -50%) rotate(-8deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 27%; top: 68%; width: 20%; z-index: 3; transform: translate(-50%, -50%) rotate(10deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-5deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 84%; top: 60%; width: 14%; z-index: 1; transform: translate(-50%, -50%) rotate(9deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 20%; top: 22%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(-9deg) rotateY(14deg) rotateX(-6deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 14%; width: 22%; z-index: 4; transform: translate(-50%, -50%) rotate(6deg) rotateY(-10deg) rotateX(8deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 80%; top: 28%; width: 15%; z-index: 2; transform: translate(-50%, -50%) rotate(-8deg) rotateY(16deg) rotateX(4deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 27%; top: 68%; width: 20%; z-index: 3; transform: translate(-50%, -50%) rotate(10deg) rotateY(-14deg) rotateX(-5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-5deg) rotateY(9deg) rotateX(7deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 84%; top: 60%; width: 14%; z-index: 1; transform: translate(-50%, -50%) rotate(9deg) rotateY(-12deg) rotateX(-8deg); }
     .scroll-intro-mosaic-grid .tile img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
+    /* Mist/dust burst the cluster "emerges through" mid-crossfade
+       (armusInitScrollIntro, script.js, drives its opacity/scale - a
+       brief window around the crossfade point, not a fixed-duration
+       animation, so it stays scroll-scrubbed like everything else here)
+       - covers the whole stage, not just the grid box, since the
+       reference's products visually emerge from the milk splash across
+       the full frame, not from a small contained area. */
+    .scroll-intro-mist {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .scroll-intro-mist span {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      filter: blur(40px);
+    }
+    .scroll-intro-mist span:nth-child(1) { left: 22%; top: 30%; width: 220px; height: 220px; }
+    .scroll-intro-mist span:nth-child(2) { left: 48%; top: 15%; width: 260px; height: 260px; }
+    .scroll-intro-mist span:nth-child(3) { left: 68%; top: 40%; width: 200px; height: 200px; }
+    .scroll-intro-mist span:nth-child(4) { left: 35%; top: 60%; width: 180px; height: 180px; }
+    .scroll-intro-mist span:nth-child(5) { left: 58%; top: 65%; width: 230px; height: 230px; }
+    .scroll-intro-mist span:nth-child(6) { left: 78%; top: 62%; width: 170px; height: 170px; }
     .scroll-intro-copy {
       position: relative;
       z-index: 2;
@@ -371,6 +417,9 @@
             </div>
           </div>
           <div class="scroll-intro-layer scroll-intro-mosaic" id="introLayerMosaic">
+            <div class="scroll-intro-mist" id="introMist" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
             <div class="scroll-intro-mosaic-grid" id="introMosaicGrid">
               <span class="spark s1"></span>
               <span class="spark s2"></span>
