@@ -125,9 +125,26 @@ function armusInitScrollIntro(){
   // reusing 2 of the same photos is fine, they're barely visible
   // (blurred/dimmed, tucked behind), just a "more teachers behind these"
   // depth cue, not meant to be read individually.
+  // Real tiles are now full teacher cards (photo, rating, favorite heart,
+  // name, lesson/student counts, price, trial button) - matching
+  // teachers.html's own .teacher-card markup, just under scoped
+  // .scroll-intro-mosaic-grid .tile-* class names (index.html) instead of
+  // its bare ones, since those are already spoken for elsewhere on this
+  // page (the hero-band's .teacher-card rotator further down).
+  const HEART_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>';
   if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
     mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(0,6).map(t=>
-      '<div class="tile"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'
+      '<div class="tile">'+
+        '<div class="tile-photo"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'+
+        '<div class="tile-rating">★ '+t.rating+'</div>'+
+        '<div class="tile-fav">'+HEART_ICON+'</div>'+
+        '<div class="tile-body">'+
+          '<p class="tile-name">'+t.name+'</p>'+
+          '<div class="tile-tags"><span>'+t.completedLessons+' ders</span><span>'+t.students+' öğrenci</span></div>'+
+          '<div class="tile-price">₺'+t.price+' <small>/ ders</small></div>'+
+          '<div class="tile-trial">Deneme Dersi Al</div>'+
+        '</div>'+
+      '</div>'
     ).join(''));
     const ghosts=[TEACHERS[2],TEACHERS[4]].filter(Boolean);
     mosaicGrid.insertAdjacentHTML('beforeend',ghosts.map((t,i)=>
@@ -148,21 +165,22 @@ function armusInitScrollIntro(){
     const scrollable=rect.height-window.innerHeight;
     const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
 
-    // the classroom starts as a wide establishing shot and zooms in
-    // toward the chalkboard specifically (transform-origin: 73% 41% in
-    // CSS matches the board's real position in the illustration) - a
-    // bigger zoom than a simple photo crop needs, since it has to carry
-    // the eye all the way from "whole room" to "right up on the board"
-    // by the time the burst fires.
+    // the classroom illustration itself barely moves now (a faint
+    // ambient drift, not a real zoom) - the teacher's own video-call
+    // photo is what the scroll actually zooms into, converging on her
+    // face (transform-origin: 54% 24% in CSS matches roughly where her
+    // face falls in avatars/hero-mobile-video-call.jpg) until it fills
+    // most of the frame by the time the burst fires from that same spot.
     const zoomT=smoothstep(0,0.55,progress);
-    singleImg.style.transform='scale('+(1+zoomT*1.6)+')';
-    // the framed video-call card and the intro copy both live on the
-    // wide establishing shot - fade them out early, well before the
-    // zoom gets close enough to the board that they'd otherwise still
-    // be hanging around the edge of frame
-    const earlyFade=String(1-smoothstep(0.1,0.28,progress));
-    copySingle.style.opacity=earlyFade;
-    videoCard.style.opacity=earlyFade;
+    singleImg.style.transform='scale('+(1+zoomT*0.12)+')';
+    videoCard.style.transform='rotate(-3deg) scale('+(1+zoomT*5.5)+')';
+    // the intro copy lives on the wide establishing shot - fades out
+    // early and fast, before the video card (which now grows quickly)
+    // gets big enough to visibly compete with it. The card itself needs
+    // no fade of its own - it's the zoom's subject, so it just stays put
+    // until .scroll-intro-single's own crossfade opacity (cross, below)
+    // takes the whole layer down with it.
+    copySingle.style.opacity=String(1-smoothstep(0.04,0.16,progress));
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
