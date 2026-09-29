@@ -567,7 +567,16 @@ Deno.serve(async (req) => {
         email: profile.email || user.email,
         identityNumber: cleanIdentity,
         registrationAddress: addressLine,
-        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "85.34.78.112",
+        // x-forwarded-for is "client, proxy1, proxy2, ..." as a request
+        // passes through hops - the FIRST entry is client-supplied and
+        // trivially spoofable (functions.invoke lets a caller set
+        // arbitrary headers), but the LAST entry is the one appended by
+        // our own edge network's trusted final hop. Sending the
+        // spoofable first entry to iyzico's buyer.ip let a caller mask
+        // the real originating IP on a fraudulent card attempt from
+        // whatever fraud/3-D-Secure risk scoring iyzico does with it -
+        // same class of bug already fixed in send-contact-email/site-chat.
+        ip: req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || "85.34.78.112",
         city: profile.city || "İstanbul",
         country: "Turkey",
       },
