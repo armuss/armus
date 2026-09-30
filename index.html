@@ -377,12 +377,45 @@
        card at the burst's screen position, tiny, and ease it out to its
        real hand-placed spot/size below, instead of the cluster just
        cross-fading into place flat. */
-    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 24%; top: 36%; width: 16%; z-index: 3; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-7deg) rotateY(8deg) rotateX(-4deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 33%; width: 18%; z-index: 4; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(4deg) rotateY(-6deg) rotateX(5deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 76%; top: 39%; width: 15%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-6deg) rotateY(9deg) rotateX(3deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 30%; top: 62%; width: 17%; z-index: 3; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(7deg) rotateY(-8deg) rotateX(-4deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 66%; width: 15%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-4deg) rotateY(6deg) rotateX(5deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 80%; top: 57%; width: 14%; z-index: 1; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(6deg) rotateY(-7deg) rotateX(-5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 24%; top: 36%; width: 16%; z-index: 3; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-7deg) rotateY(8deg) rotateX(-4deg); animation: tileWobble1 5.6s ease-in-out .1s infinite; }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 33%; width: 18%; z-index: 4; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(4deg) rotateY(-6deg) rotateX(5deg); animation: tileWobble2 6.4s ease-in-out .9s infinite; }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 76%; top: 39%; width: 15%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-6deg) rotateY(9deg) rotateX(3deg); animation: tileWobble3 5.9s ease-in-out 1.6s infinite; }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 30%; top: 62%; width: 17%; z-index: 3; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(7deg) rotateY(-8deg) rotateX(-4deg); animation: tileWobble4 6.1s ease-in-out .4s infinite; }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 66%; width: 15%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-4deg) rotateY(6deg) rotateX(5deg); animation: tileWobble5 6.7s ease-in-out 1.1s infinite; }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 80%; top: 57%; width: 14%; z-index: 1; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(6deg) rotateY(-7deg) rotateX(-5deg); animation: tileWobble6 5.3s ease-in-out .7s infinite; }
+    /* Each settled card drifts with its own tiny, slow wobble (~1deg tilt
+       + a few px of vertical float) so the cluster reads as gently alive
+       rather than a static image - kept subtle on purpose, and every
+       card has its own duration/delay so they never move in unison. The
+       0%/100% keyframe exactly reproduces the card's own resting
+       transform (same emerge-vars + base rotate/rotateY/rotateX as the
+       static rule above), so the animation never conflicts with the
+       scroll-driven emerge entrance - it only reads once a card has
+       already arrived and progress' emerge vars have settled at rest. */
+    @keyframes tileWobble1 {
+      0%, 100% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-7deg) rotateY(8deg) rotateX(-4deg) translateY(0); }
+      50% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-6.1deg) rotateY(8deg) rotateX(-4deg) translateY(-5px); }
+    }
+    @keyframes tileWobble2 {
+      0%, 100% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(4deg) rotateY(-6deg) rotateX(5deg) translateY(0); }
+      50% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(4.9deg) rotateY(-6deg) rotateX(5deg) translateY(-6px); }
+    }
+    @keyframes tileWobble3 {
+      0%, 100% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-6deg) rotateY(9deg) rotateX(3deg) translateY(0); }
+      50% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-5.1deg) rotateY(9deg) rotateX(3deg) translateY(-4px); }
+    }
+    @keyframes tileWobble4 {
+      0%, 100% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(7deg) rotateY(-8deg) rotateX(-4deg) translateY(0); }
+      50% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(7.9deg) rotateY(-8deg) rotateX(-4deg) translateY(-5px); }
+    }
+    @keyframes tileWobble5 {
+      0%, 100% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-4deg) rotateY(6deg) rotateX(5deg) translateY(0); }
+      50% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-3.1deg) rotateY(6deg) rotateX(5deg) translateY(-4px); }
+    }
+    @keyframes tileWobble6 {
+      0%, 100% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(6deg) rotateY(-7deg) rotateX(-5deg) translateY(0); }
+      50% { transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(6.9deg) rotateY(-7deg) rotateX(-5deg) translateY(-5px); }
+    }
     .scroll-intro-mosaic-grid .tile img {
       width: 100%;
       height: 100%;
