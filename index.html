@@ -178,8 +178,8 @@
       object-fit: cover;
     }
     .scroll-video-spacer {
-      height: clamp(48px, 8vw, 140px);
-      background: var(--armus-gold-3);
+      height: clamp(80px, 12vw, 220px);
+      background: var(--armus-bg);
     }
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the scrub is only
@@ -239,10 +239,12 @@
          additive (script.js guards on #scrollVideo existing, and no-ops
          to display:none under prefers-reduced-motion or with JS off) -
          nothing about the sections around it was touched.
-         .scroll-video-spacer right after is a plain gold buffer (same
-         color as hero-band's own gradient start) giving the handoff into
-         hero-band some room instead of the two sections butting up
-         edge-to-edge. -->
+         .scroll-video-spacer right after is a plain gap in the page's
+         normal background color - an earlier version tried filling it
+         with a gold tone matched to hero-band's gradient start, but a
+         flat color never quite matches the video's own (textured, lit)
+         last frame, so the seam was still visible; a plain neutral gap
+         reads as a deliberate pause between sections instead. -->
     <section class="scroll-video" id="scrollVideo">
       <div class="scroll-video-pin">
         <div class="scroll-video-stage">
