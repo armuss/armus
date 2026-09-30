@@ -105,11 +105,17 @@ function armusInitScrollIntro(){
   const mosaicGrid=document.getElementById('introMosaicGrid');
   const mist=document.getElementById('introMist');
   const burst=document.getElementById('introBurst');
+  // videoCard/copySingle (the small framed call photo + "Bir öğretmenle
+  // başla." text that used to sit over the classroom shot) are gone now
+  // that shot is a real photo with the teacher already in it - optional
+  // here rather than required so the rest of the sequence (mosaic,
+  // burst) keeps working while the next step (zooming into/bursting
+  // from the new photo itself) is still pending.
   const videoCard=document.getElementById('introVideoCard');
   const copySingle=document.getElementById('introCopySingle');
   const copyMosaic=document.getElementById('introCopyMosaic');
   const nav=document.querySelector('header.nav');
-  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!burst||!videoCard||!copySingle||!copyMosaic)return;
+  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!burst||!copyMosaic)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
@@ -161,18 +167,23 @@ function armusInitScrollIntro(){
 
   // .scroll-intro-burst/.scroll-intro-mist are CSS-positioned at a fixed
   // 50%/66% of the stage (index.html), which only actually lands on her
-  // face on roughly desktop-shaped viewports - .scroll-intro-video-card
-  // sits at a fixed bottom:14%, so on a narrow/tall phone screen it ends
-  // up much further down the stage (as a fraction of stage height) than
-  // 66%, and the burst fired from empty space instead of her face. Both
-  // get the same real measured offset applied via transform (translate
-  // is unaffected by each element's own scale/--t-driven transform
+  // face on roughly desktop-shaped viewports when there's a real element
+  // to measure her face from - .scroll-intro-video-card sat at a fixed
+  // bottom:14%, so on a narrow/tall phone screen it ended up much
+  // further down the stage (as a fraction of stage height) than 66%,
+  // and the burst fired from empty space instead of her face. Both get
+  // the same real measured offset applied via transform (translate is
+  // unaffected by each element's own scale/--t-driven transform
   // functions as long as it's composed after them, so it layers on top
   // of the existing scale/spark animations without touching them) so
   // they land correctly on any aspect ratio, not just the one this was
-  // first built against.
+  // first built against. Now that the video-card is gone (pending the
+  // next step - zooming into/bursting from the new classroom photo
+  // itself), this is a no-op (faceOffset stays 0,0, i.e. the plain
+  // 50%/66% default) until that lands.
   let faceOffset={dx:0,dy:0};
   function measureFaceOffset(){
+    if(!videoCard)return;
     const cardRect=videoCard.getBoundingClientRect();
     const faceX=cardRect.left+cardRect.width*0.54;
     const faceY=cardRect.top+cardRect.height*0.24;
@@ -214,22 +225,13 @@ function armusInitScrollIntro(){
     const scrollable=rect.height-window.innerHeight;
     const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
 
-    // the classroom illustration itself barely moves now (a faint
-    // ambient drift, not a real zoom) - the teacher's own video-call
-    // photo is what the scroll actually zooms into, converging on her
-    // face (transform-origin: 54% 24% in CSS matches roughly where her
-    // face falls in avatars/hero-mobile-video-call.jpg) until it fills
-    // most of the frame by the time the burst fires from that same spot.
+    // the classroom photo itself barely moves (a faint ambient drift,
+    // not a real zoom) - pending the next step, which points the actual
+    // zoom/burst at this photo directly instead of the old video-card.
     const zoomT=smoothstep(0,0.55,progress);
     singleImg.style.transform='scale('+(1+zoomT*0.12)+')';
-    videoCard.style.transform='rotate(-3deg) scale('+(1+zoomT*5.5)+')';
-    // the intro copy lives on the wide establishing shot - fades out
-    // early and fast, before the video card (which now grows quickly)
-    // gets big enough to visibly compete with it. The card itself needs
-    // no fade of its own - it's the zoom's subject, so it just stays put
-    // until .scroll-intro-single's own crossfade opacity (cross, below)
-    // takes the whole layer down with it.
-    copySingle.style.opacity=String(1-smoothstep(0.04,0.16,progress));
+    if(videoCard)videoCard.style.transform='rotate(-3deg) scale('+(1+zoomT*5.5)+')';
+    if(copySingle)copySingle.style.opacity=String(1-smoothstep(0.04,0.16,progress));
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
