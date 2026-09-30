@@ -150,10 +150,9 @@
        further down the page - .scroll-video-stage stays pinned
        (position:sticky) for that whole runway while script.js scrubs the
        video's own currentTime straight off scroll position (never
-       autoplayed). Unlike that old intro, this video is never cropped or
-       zoomed to fill the frame - object-fit:contain keeps the whole shot
-       intact letterboxed on a plain dark backdrop instead, exactly as
-       provided. */
+       autoplayed). object-fit:cover fills the whole viewport with no
+       letterbox bars, cropping the sides or top/bottom as needed on
+       viewports whose aspect ratio doesn't match the source video. */
     .scroll-video-pin {
       position: relative;
       height: 400vh;
@@ -171,7 +170,7 @@
     .scroll-video-media {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
     }
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the scrub is only
