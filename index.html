@@ -150,9 +150,15 @@
        further down the page - .scroll-video-stage stays pinned
        (position:sticky) for that whole runway while script.js scrubs the
        video's own currentTime straight off scroll position (never
-       autoplayed). object-fit:cover fills the whole viewport with no
-       letterbox bars, cropping the sides or top/bottom as needed on
-       viewports whose aspect ratio doesn't match the source video. */
+       autoplayed). Fit mode is picked per-viewport by script.js, not
+       fixed here: cover (default below) fills the frame with no bars but
+       crops whichever axis overflows - safe when it crops sky/floor
+       above and below the shot, but on a viewport narrower/taller than
+       the video it crops the sides instead, which cuts into the
+       card-cluster ending since that composition runs close to the
+       frame's left/right edges. .scroll-video-media.fit-contain
+       (toggled in JS when that's the case) switches to a letterboxed
+       fit instead, trading side crop for top/bottom bars. */
     .scroll-video-pin {
       position: relative;
       height: 400vh;
@@ -171,6 +177,9 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+    .scroll-video-media.fit-contain {
+      object-fit: contain;
     }
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the scrub is only

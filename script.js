@@ -122,7 +122,21 @@ function armusInitScrollVideo(){
   // covers that case; the event covers the normal case where it hasn't
   // loaded yet.
   let videoDuration=video.duration||0;
-  video.addEventListener('loadedmetadata',()=>{videoDuration=video.duration||0;});
+  video.addEventListener('loadedmetadata',()=>{videoDuration=video.duration||0;updateFit();});
+
+  // cover crops whichever axis overflows the viewport - safe when that's
+  // top/bottom (just sky/floor), but the ending card cluster runs close
+  // to the frame's left/right edges, so on a viewport narrower/taller
+  // than the video itself, cover's side crop cuts the outer cards off.
+  // Switching to contain there trades that for harmless top/bottom bars
+  // instead. Only matters once we know the video's real aspect ratio
+  // (videoWidth/videoHeight), so this is a no-op until metadata loads.
+  function updateFit(){
+    if(!video.videoWidth||!video.videoHeight)return;
+    const videoAspect=video.videoWidth/video.videoHeight;
+    const viewportAspect=window.innerWidth/window.innerHeight;
+    video.classList.toggle('fit-contain',viewportAspect<videoAspect);
+  }
 
   function update(){
     ticking=false;
@@ -171,9 +185,11 @@ function armusInitScrollVideo(){
     requestAnimationFrame(update);
   }
 
+  updateFit();
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
+  window.addEventListener('resize',updateFit);
 }
 armusInitScrollVideo();
 
