@@ -158,19 +158,42 @@ function armusInitScrollIntro(){
   // inconsistent once the real cards started visibly emerging from the
   // burst point.
   const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile'));
+
+  // .scroll-intro-burst/.scroll-intro-mist are CSS-positioned at a fixed
+  // 50%/66% of the stage (index.html), which only actually lands on her
+  // face on roughly desktop-shaped viewports - .scroll-intro-video-card
+  // sits at a fixed bottom:14%, so on a narrow/tall phone screen it ends
+  // up much further down the stage (as a fraction of stage height) than
+  // 66%, and the burst fired from empty space instead of her face. Both
+  // get the same real measured offset applied via transform (translate
+  // is unaffected by each element's own scale/--t-driven transform
+  // functions as long as it's composed after them, so it layers on top
+  // of the existing scale/spark animations without touching them) so
+  // they land correctly on any aspect ratio, not just the one this was
+  // first built against.
+  let faceOffset={dx:0,dy:0};
+  function measureFaceOffset(){
+    const cardRect=videoCard.getBoundingClientRect();
+    const faceX=cardRect.left+cardRect.width*0.54;
+    const faceY=cardRect.top+cardRect.height*0.24;
+    const burstRect=burst.getBoundingClientRect();
+    faceOffset={dx:faceX-burstRect.left,dy:faceY-burstRect.top};
+  }
+
   // Each card "flies out" of the burst and lands at its own hand-placed
   // spot (CSS, --emerge-x/-y/-s below) instead of just cross-fading into
   // place flat. tileEmergeOffsets[i] is the pixel vector from tile i's
-  // own resting position back to the burst's origin point - measured
-  // once (elements are already laid out by their CSS position/size at
-  // this point, untouched by any scroll-driven transform yet) and re-
-  // measured on resize, since it's fixed screen pixels, not something
-  // percentages/vh can keep correct on their own across viewport
-  // changes.
+  // own resting position back to the burst's real (face-corrected)
+  // origin point - measured once (elements are already laid out by
+  // their CSS position/size at this point, untouched by any scroll-
+  // driven transform yet) and re-measured on resize, since it's fixed
+  // screen pixels, not something percentages/vh can keep correct on
+  // their own across viewport changes.
   let tileEmergeOffsets=[];
   function measureEmergeOffsets(){
+    measureFaceOffset();
     const originRect=burst.getBoundingClientRect();
-    const originX=originRect.left,originY=originRect.top;
+    const originX=originRect.left+faceOffset.dx,originY=originRect.top+faceOffset.dy;
     tileEmergeOffsets=emergeTiles.map(tile=>{
       const r=tile.getBoundingClientRect();
       return{dx:originX-(r.left+r.width/2),dy:originY-(r.top+r.height/2)};
@@ -241,12 +264,17 @@ function armusInitScrollIntro(){
     const mistOut=smoothstep(0.74,0.88,progress);
     const mistT=mistIn*(1-mistOut);
     mist.style.opacity=String(mistT*0.9);
-    mist.style.transform='scale('+(0.85+mistT*0.4)+')';
+    // translate(faceOffset) first (unaffected by the scale that follows,
+    // since it's a real fixed-pixel correction) shifts mist's whole
+    // inset:0 box - and every span positioned by % within it - onto her
+    // actual measured face position instead of the assumed 66% of stage.
+    mist.style.transform='translate('+faceOffset.dx+'px,'+faceOffset.dy+'px) scale('+(0.85+mistT*0.4)+')';
 
     const burstIn=smoothstep(0.42,0.52,progress);
     const burstOut=smoothstep(0.64,0.78,progress);
     burst.style.setProperty('--t',String(burstIn*(1-burstOut)));
     burst.style.opacity=String(burstIn*(1-burstOut));
+    burst.style.transform='translate('+faceOffset.dx+'px,'+faceOffset.dy+'px)';
 
     // each card travels from the burst's origin point to its own resting
     // spot, growing from a small spark-sized speck up to full size as it
