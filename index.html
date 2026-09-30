@@ -635,14 +635,52 @@
       font-size: clamp(20px, 2.8vw, 32px);
     }
 
-    /* .scroll-intro-mosaic-grid needs no mobile override of its own -
-       every tile's left/top/width is a percentage of the container, and
-       the container's own width is min(760px, 92vw), so the whole
-       scattered cluster scales down together automatically. */
     @media (max-width: 760px) {
       .scroll-intro-pin {
         height: 320vh;
       }
+      /* The desktop cluster just scaling its percentages down on a
+         narrow phone screen looked fine geometrically but wasn't
+         actually usable - each card's BODY (name/tags/price/button) is
+         fixed px, not a percentage, so shrinking the photo down to match
+         a small container left the card badly out of proportion (tall
+         and narrow) with its own name truncating to "Sa…"/"Dav…" etc.
+         Cards get real minimum-viable pixel widths here instead (a
+         bigger fraction of a slightly wider container), pulled in
+         tighter toward the center so 6 now-bigger cards still fit
+         without spilling past the container - same hand-placed/
+         scattered feel, just re-tuned for a narrow screen instead of a
+         wide one. Ghosts and the extra margin-filling spark dots exist
+         to fill wide empty side margins on a desktop window - there's
+         no such empty margin on a phone, so both are hidden here. */
+      .scroll-intro-mosaic-grid {
+        width: min(680px, 92vw);
+      }
+      /* object-fit:cover on this 1200x800 (landscape) illustration inside
+         a narrow portrait box crops down to a vertical sliver centered
+         on the image by default - which lands mostly on the empty wall
+         between the window and the chalkboard rather than the board
+         itself (the chalkboard sits right-of-center in the source
+         illustration). Shifting the crop's focal point right brings the
+         board itself into that sliver instead. */
+      .scroll-intro-classroom-bg {
+        object-position: 68% center;
+      }
+      .scroll-intro-mosaic-grid .tile.ghost,
+      .scroll-intro-mosaic-grid .spark.s6,
+      .scroll-intro-mosaic-grid .spark.s7,
+      .scroll-intro-mosaic-grid .spark.s8,
+      .scroll-intro-mosaic-grid .spark.s9,
+      .scroll-intro-mosaic-grid .spark.s10,
+      .scroll-intro-mosaic-grid .spark.s11 {
+        display: none;
+      }
+      .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 38%; top: 44%; width: 42%; }
+      .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 42%; width: 46%; }
+      .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 62%; top: 45%; width: 40%; }
+      .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 41%; top: 55%; width: 44%; }
+      .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 54%; top: 57%; width: 40%; }
+      .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 64%; top: 53%; width: 38%; }
     }
 
     /* No scroll-jacking for anyone who asked not to have motion, and no
