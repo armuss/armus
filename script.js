@@ -133,10 +133,8 @@ function armusInitScrollIntro(){
   // its bare ones, since those are already spoken for elsewhere on this
   // page (the hero-band's .teacher-card rotator further down).
   const HEART_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>';
-  let heroTile=null;
-  if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
-    mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(0,6).map(t=>
-      '<div class="tile">'+
+  function tileHTML(t,extraClass,id){
+    return '<div class="tile'+(extraClass?' '+extraClass:'')+'"'+(id?' id="'+id+'"':'')+'>'+
         '<div class="tile-photo"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'+
         '<div class="tile-rating">★ '+t.rating+'</div>'+
         '<div class="tile-fav">'+HEART_ICON+'</div>'+
@@ -146,25 +144,20 @@ function armusInitScrollIntro(){
           '<div class="tile-price">₺'+t.price+' <small>/ ders</small></div>'+
           '<div class="tile-trial">Deneme Dersi Al</div>'+
         '</div>'+
-      '</div>'
-    ).join(''));
-    // the hero card - the establishing shot's own teacher, as a real card
-    // identical in markup to the other 6, so "her face becomes a card"
-    // reads as literally true rather than a different-looking special
-    // element landing among them.
-    mosaicGrid.insertAdjacentHTML('beforeend',
-      '<div class="tile hero-card" id="introHeroTile">'+
-        '<div class="tile-photo"><img src="avatars/hero-teacher-card.jpg" alt="Kurucu Öğretmen" loading="lazy"></div>'+
-        '<div class="tile-rating">★ 5.0</div>'+
-        '<div class="tile-fav">'+HEART_ICON+'</div>'+
-        '<div class="tile-body">'+
-          '<p class="tile-name">Claire M.</p>'+
-          '<div class="tile-tags"><span>1,850 ders</span><span>540 öğrenci</span></div>'+
-          '<div class="tile-price">₺780 <small>/ ders</small></div>'+
-          '<div class="tile-trial">Deneme Dersi Al</div>'+
-        '</div>'+
-      '</div>'
-    );
+      '</div>';
+  }
+  let heroTile=null;
+  if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
+    // only 5 real teachers now (not 6) - the hero card takes the 6th
+    // spot. She's inserted as the 2nd tile div specifically (between the
+    // 1st and 2nd real teacher), so CSS's nth-of-type(2) - the cluster's
+    // original, most prominent slot - picks her up automatically, with
+    // .tile.hero-card (index.html) only overriding what needs to differ
+    // (opacity/transform/z-index, not position/size).
+    const HERO={photo:'avatars/hero-teacher-card.jpg',name:'Claire M.',rating:'5.0',completedLessons:'1,850',students:'540',price:'780'};
+    mosaicGrid.insertAdjacentHTML('beforeend',tileHTML(TEACHERS[0]));
+    mosaicGrid.insertAdjacentHTML('beforeend',tileHTML(HERO,'hero-card','introHeroTile'));
+    mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(1,5).map(t=>tileHTML(t)).join(''));
     heroTile=document.getElementById('introHeroTile');
     const ghosts=[TEACHERS[2],TEACHERS[4],TEACHERS[0],TEACHERS[5],TEACHERS[1]].filter(Boolean);
     mosaicGrid.insertAdjacentHTML('beforeend',ghosts.map((t,i)=>
