@@ -182,24 +182,24 @@
        for a full-bleed frame, explained above) - #scrollVideoEndcard is
        a plain image of that same ending composition (supplied directly,
        not cropped from the video) that takes over at the very end of
-       the scroll, using object-fit:contain so this one frame is always
-       shown complete, every card fully in view, regardless of viewport.
-       A hard swap (or a plain opacity crossfade) jumps visibly, because
-       contain's natural scale is smaller than the video's own
-       cover-crop scale - two different sizes of the same composition.
-       script.js computes that exact ratio (video cover-fit scale vs
-       this image's contain-fit scale, both for the live viewport size)
-       and drives --scroll-video-endcard-scale from it every frame, so
-       the image starts at precisely the video's last-frame size (no
-       jump at all) and eases down to its natural size as the user
-       keeps scrolling - a deliberate zoom-out reveal, not a snap. */
+       the scroll. This was object-fit:contain at first (guarantees the
+       whole frame fits, but visibly smaller than the video's own
+       full-bleed size - the user asked to keep the same size instead)
+       and object-position:center (crops evenly off every edge, so it
+       could still cut into the cards' bottom, the actual complaint).
+       object-position:bottom keeps the same cover scale as the video -
+       no shrink - while always anchoring the full bottom edge of the
+       supplied photo (where the cards' own bottoms/buttons sit, with
+       headroom below them in that image) in view; any cropping cover
+       still needs on a given viewport comes off the top instead, which
+       only touches background, not the cards. */
     .scroll-video-endcard {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      transform: scale(var(--scroll-video-endcard-scale, 1));
+      object-fit: cover;
+      object-position: center bottom;
       opacity: 0;
       pointer-events: none;
     }
