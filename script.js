@@ -146,7 +146,7 @@ function armusInitScrollIntro(){
         '</div>'+
       '</div>'
     ).join(''));
-    const ghosts=[TEACHERS[2],TEACHERS[4]].filter(Boolean);
+    const ghosts=[TEACHERS[2],TEACHERS[4],TEACHERS[0],TEACHERS[5],TEACHERS[1]].filter(Boolean);
     mosaicGrid.insertAdjacentHTML('beforeend',ghosts.map((t,i)=>
       '<div class="tile ghost g'+(i+1)+'"><img src="'+t.photo+'" alt="" aria-hidden="true" loading="lazy"></div>'
     ).join(''));
