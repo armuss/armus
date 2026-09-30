@@ -107,11 +107,9 @@ function armusInitScrollIntro(){
   const layerSingle=document.getElementById('introLayerSingle');
   const layerMosaic=document.getElementById('introLayerMosaic');
   const mosaicGrid=document.getElementById('introMosaicGrid');
-  const mist=document.getElementById('introMist');
-  const burst=document.getElementById('introBurst');
   const copyMosaic=document.getElementById('introCopyMosaic');
   const nav=document.querySelector('header.nav');
-  if(!pin||!introVideo||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!burst||!copyMosaic)return;
+  if(!pin||!introVideo||!layerSingle||!layerMosaic||!mosaicGrid||!copyMosaic)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
@@ -122,11 +120,12 @@ function armusInitScrollIntro(){
   // decorative dots (index.html), and tiles need to paint after/above
   // them in DOM order for the scattered cluster's own z-index values to
   // make sense. Real tiles first (their CSS positions them by
-  // nth-of-type(1..6) among the grid's div children), then 2 dimmed
-  // "ghost" tiles appended last so they don't shift that numbering -
-  // reusing 2 of the same photos is fine, they're barely visible
-  // (blurred/dimmed, tucked behind), just a "more teachers behind these"
-  // depth cue, not meant to be read individually.
+  // nth-of-type(1..6) among the grid's div children), then the hero card
+  // (her own face, styled identically), then the dimmed "ghost" tiles -
+  // ghosts and hero are both appended AFTER the 6 real ones so neither
+  // shifts that nth-of-type(1..6) numbering. Reusing some of the same 6
+  // photos for ghosts is fine, they're barely visible (blurred/dimmed,
+  // tucked behind), just a "more teachers behind these" depth cue.
   // Real tiles are now full teacher cards (photo, rating, favorite heart,
   // name, lesson/student counts, price, trial button) - matching
   // teachers.html's own .teacher-card markup, just under scoped
@@ -134,6 +133,7 @@ function armusInitScrollIntro(){
   // its bare ones, since those are already spoken for elsewhere on this
   // page (the hero-band's .teacher-card rotator further down).
   const HEART_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>';
+  let heroTile=null;
   if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
     mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(0,6).map(t=>
       '<div class="tile">'+
@@ -148,69 +148,51 @@ function armusInitScrollIntro(){
         '</div>'+
       '</div>'
     ).join(''));
+    // the hero card - the establishing shot's own teacher, as a real card
+    // identical in markup to the other 6, so "her face becomes a card"
+    // reads as literally true rather than a different-looking special
+    // element landing among them.
+    mosaicGrid.insertAdjacentHTML('beforeend',
+      '<div class="tile hero" id="introHeroTile">'+
+        '<div class="tile-photo"><img src="avatars/hero-teacher-card.jpg" alt="Kurucu Öğretmen" loading="lazy"></div>'+
+        '<div class="tile-rating">★ 5.0</div>'+
+        '<div class="tile-fav">'+HEART_ICON+'</div>'+
+        '<div class="tile-body">'+
+          '<p class="tile-name">Claire M.</p>'+
+          '<div class="tile-tags"><span>1,850 ders</span><span>540 öğrenci</span></div>'+
+          '<div class="tile-price">₺780 <small>/ ders</small></div>'+
+          '<div class="tile-trial">Deneme Dersi Al</div>'+
+        '</div>'+
+      '</div>'
+    );
+    heroTile=document.getElementById('introHeroTile');
     const ghosts=[TEACHERS[2],TEACHERS[4],TEACHERS[0],TEACHERS[5],TEACHERS[1]].filter(Boolean);
     mosaicGrid.insertAdjacentHTML('beforeend',ghosts.map((t,i)=>
       '<div class="tile ghost g'+(i+1)+'"><img src="'+t.photo+'" alt="" aria-hidden="true" loading="lazy"></div>'
     ).join(''));
   }
 
-  // Ghost tiles fly out of the burst too now, same as the real cards -
-  // they used to just sit at their resting spot for the whole sequence
-  // (only the shared layer opacity faded them in), which read as
-  // inconsistent once the real cards started visibly emerging from the
-  // burst point.
-  const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile'));
+  // The other 6 cards fly out from behind the hero card and land at their
+  // own hand-placed spot (CSS, --emerge-x/-y/-s below) instead of just
+  // cross-fading into place flat - the hero card itself doesn't fly
+  // anywhere (it only fades/scales in, see --hero-o/--hero-s below), so
+  // it reads as "she becomes this card" rather than a copy of her
+  // launching out alongside the rest.
+  const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile:not(.hero)'));
 
-  // .scroll-intro-burst/.scroll-intro-mist are CSS-positioned at a fixed
-  // 50%/66% of the stage (index.html) by default, which only actually
-  // lands on the word "ARMUS" chalked on the board (the real burst
-  // origin now) on whatever one aspect ratio that guess happens to match.
-  // Instead this measures the word's real on-screen position: the video
-  // has a fixed spot in its own frame (ARMUS_WORD_FX/FY, measured by eye
-  // off the video's final settled frame) that object-fit:cover maps onto
-  // the actual rendered box depending on the video's intrinsic size, the
-  // container's current size, AND object-position (which itself changes
-  // on mobile, index.html) - so all of that has to be replayed here
-  // rather than assumed. The result is applied via transform (translate
-  // is unaffected by each element's own scale/--t-driven transform
-  // functions as long as it's composed after them, so it layers on top
-  // of the existing scale/spark animations without touching them) so it
-  // lands correctly on any aspect ratio.
-  const ARMUS_WORD_FX=0.53,ARMUS_WORD_FY=0.205;
-  let boardOffset={dx:0,dy:0};
-  function parseObjectPosition(el){
-    const parts=(getComputedStyle(el).objectPosition||'50% 50%').split(' ').map(s=>parseFloat(s)/100);
-    return{px:isNaN(parts[0])?0.5:parts[0],py:isNaN(parts[1])?0.5:parts[1]};
-  }
-  function measureBoardOffset(){
-    const nw=introVideo.videoWidth,nh=introVideo.videoHeight;
-    if(!nw||!nh)return;
-    const rect=introVideo.getBoundingClientRect();
-    const scale=Math.max(rect.width/nw,rect.height/nh);
-    const renderedW=nw*scale,renderedH=nh*scale;
-    const pos=parseObjectPosition(introVideo);
-    const offsetX=(renderedW-rect.width)*pos.px;
-    const offsetY=(renderedH-rect.height)*pos.py;
-    const targetX=rect.left+ARMUS_WORD_FX*renderedW-offsetX;
-    const targetY=rect.top+ARMUS_WORD_FY*renderedH-offsetY;
-    const burstRect=burst.getBoundingClientRect();
-    boardOffset={dx:targetX-burstRect.left,dy:targetY-burstRect.top};
-  }
-
-  // Each card "flies out" of the burst and lands at its own hand-placed
-  // spot (CSS, --emerge-x/-y/-s below) instead of just cross-fading into
-  // place flat. tileEmergeOffsets[i] is the pixel vector from tile i's
-  // own resting position back to the burst's real (board-corrected)
-  // origin point - measured once (elements are already laid out by
-  // their CSS position/size at this point, untouched by any scroll-
-  // driven transform yet) and re-measured on resize, since it's fixed
-  // screen pixels, not something percentages/vh can keep correct on
-  // their own across viewport changes.
+  // tileEmergeOffsets[i] is the pixel vector from tile i's own resting
+  // position back to the hero card's own resting center - measured once
+  // (elements are already laid out by their CSS position/size at this
+  // point, untouched by any scroll-driven transform yet) and re-measured
+  // on resize, since it's fixed screen pixels, not something percentages/
+  // vh can keep correct on their own across viewport changes. The hero
+  // card's own position never changes (it doesn't fly, only fades/
+  // scales), so its center is stable to measure against.
   let tileEmergeOffsets=[];
   function measureEmergeOffsets(){
-    measureBoardOffset();
-    const originRect=burst.getBoundingClientRect();
-    const originX=originRect.left+boardOffset.dx,originY=originRect.top+boardOffset.dy;
+    if(!heroTile)return;
+    const heroRect=heroTile.getBoundingClientRect();
+    const originX=heroRect.left+heroRect.width/2,originY=heroRect.top+heroRect.height/2;
     tileEmergeOffsets=emergeTiles.map(tile=>{
       const r=tile.getBoundingClientRect();
       return{dx:originX-(r.left+r.width/2),dy:originY-(r.top+r.height/2)};
@@ -224,15 +206,14 @@ function armusInitScrollIntro(){
   }
 
   let ticking=false;
-  // videoWidth/videoHeight/duration (needed by measureBoardOffset and the
-  // scrub below) are all 0 until the video's metadata has loaded - on a
-  // fast/local connection that can already have happened by the time this
-  // script runs (preload="auto" starts the fetch the instant the <video>
-  // tag is parsed, well before script.js at the bottom of the page even
-  // executes), so 'loadedmetadata' alone would never fire again and both
-  // would silently stay stuck at 0. Checking readyState synchronously
-  // covers that case; the event covers the normal case where it hasn't
-  // loaded yet.
+  // duration (needed by the scrub below) is 0 until the video's metadata
+  // has loaded - on a fast/local connection that can already have
+  // happened by the time this script runs (preload="auto" starts the
+  // fetch the instant the <video> tag is parsed, well before script.js at
+  // the bottom of the page even executes), so 'loadedmetadata' alone
+  // would never fire again and it would silently stay stuck at 0.
+  // Checking readyState synchronously covers that case; the event covers
+  // the normal case where it hasn't loaded yet.
   let videoDuration=introVideo.duration||0;
   function onVideoMeta(){videoDuration=introVideo.duration||0;measureEmergeOffsets();}
   if(introVideo.readyState>=1)onVideoMeta();
@@ -247,20 +228,21 @@ function armusInitScrollIntro(){
     // the establishing shot's own camera move (wide classroom -> close on
     // the teacher, baked into the video itself, not a CSS transform) is
     // scrubbed straight off scroll progress - the video only ever moves
-    // because the user is scrolling, it's never actually played. Finishes
-    // at progress 0.42, just as the board-burst below starts firing, so
-    // she's already in close-up with "ARMUS" clearly on the board behind
-    // her by the time it goes off.
+    // because the user is scrolling, it's never actually played. Capped
+    // at 3.6s (not the video's full ~5s) since that's where her
+    // expression is calm/normal, not the startled look later in the
+    // clip - she needs to read as "about to become a card", not
+    // "surprised", right before the hero card takes over.
     if(videoDuration){
       const scrubT=smoothstep(0,0.42,progress);
-      const target=scrubT*videoDuration;
+      const target=scrubT*Math.min(videoDuration,3.6);
       if(Math.abs(introVideo.currentTime-target)>0.02)introVideo.currentTime=target;
     }
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
     // scrolling into the pin starts, and stays gone for the ENTIRE
-    // mosaic section, not just the zoom/burst/settle part: progress
+    // mosaic section, not just the crossfade/settle part: progress
     // caps at 1 while the sticky stage still fills the whole viewport
     // (rect.bottom === innerHeight at that point), so waiting on
     // progress alone brought the nav back while the mosaic cards were
@@ -287,34 +269,21 @@ function armusInitScrollIntro(){
     layerMosaic.style.opacity=String(cross);
     layerMosaic.style.transform='translateY('+((1-cross)*70)+'px)';
 
-    // a dust/mist + firework-burst window straddling the crossfade point
-    // - the cluster visually erupts through it rather than just cross-
-    // fading in flat. Mist now rises earlier and holds well past the
-    // burst itself, all the way through the cards' own emerge travel
-    // below, so there's a real dusty haze sitting behind them as they
-    // fly out and land - not just a brief flash at the crossfade instant.
-    const mistIn=smoothstep(0.42,0.54,progress);
-    const mistOut=smoothstep(0.74,0.88,progress);
-    const mistT=mistIn*(1-mistOut);
-    mist.style.opacity=String(mistT*0.9);
-    // translate(boardOffset) first (unaffected by the scale that follows,
-    // since it's a real fixed-pixel correction) shifts mist's whole
-    // inset:0 box - and every span positioned by % within it - onto the
-    // word "ARMUS"'s actual measured position instead of the assumed 66%
-    // of stage.
-    mist.style.transform='translate('+boardOffset.dx+'px,'+boardOffset.dy+'px) scale('+(0.85+mistT*0.4)+')';
+    // the hero card doesn't fly in - it fades/scales up in place, right
+    // as the video fades out (a touch ahead of the crossfade's own 0.5
+    // start, so she's already mostly a card by the time the other 6
+    // start emerging from behind her).
+    if(heroTile){
+      const heroT=smoothstep(0.44,0.62,progress);
+      heroTile.style.setProperty('--hero-o',String(heroT));
+      heroTile.style.setProperty('--hero-s',String(.8+heroT*.2));
+    }
 
-    const burstIn=smoothstep(0.42,0.52,progress);
-    const burstOut=smoothstep(0.64,0.78,progress);
-    burst.style.setProperty('--t',String(burstIn*(1-burstOut)));
-    burst.style.opacity=String(burstIn*(1-burstOut));
-    burst.style.transform='translate('+boardOffset.dx+'px,'+boardOffset.dy+'px)';
-
-    // each card travels from the burst's origin point to its own resting
-    // spot, growing from a small spark-sized speck up to full size as it
-    // arrives - starts just as the burst itself fires and finishes
-    // before the mist has fully cleared, so the cards read as flying out
-    // of the explosion rather than fading in independently of it.
+    // each card travels from the hero card's position to its own resting
+    // spot, growing from a small speck up to full size as it arrives -
+    // starts just as the hero card itself is fading in and finishes
+    // once the mosaic has mostly crossfaded in, so the cards read as
+    // coming out from behind her rather than fading in independently.
     const emergeT=smoothstep(0.46,0.76,progress);
     const emergeScale=0.12+emergeT*0.88;
     emergeTiles.forEach((tile,i)=>{
