@@ -177,6 +177,25 @@
       height: 100%;
       object-fit: cover;
     }
+    /* object-fit:cover on the video itself can crop into the ending
+       scene's cards on some viewport shapes (the deliberate tradeoff
+       for a full-bleed frame, explained above) - #scrollVideoEndcard is
+       a plain image of that same ending composition (supplied directly,
+       not cropped from the video) that fades in on top, right at the
+       very end of the scroll, using object-fit:contain so this one
+       frame is always shown complete, every card fully in view,
+       regardless of viewport. script.js crossfades it in over the last
+       sliver of scroll once the video has already settled on its own
+       matching final frame, so the swap is invisible. */
+    .scroll-video-endcard {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      pointer-events: none;
+    }
     /* Matching the spacer's starting color to the video's real sampled
        edge color (below) closed most of the gap, but a hard cut from the
        video's own texture/vignette straight into a flat color still read
@@ -292,6 +311,7 @@
             <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
             <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
           </video>
+          <img class="scroll-video-endcard" id="scrollVideoEndcard" src="avatars/scroll-video-endcard.jpg" alt="" aria-hidden="true">
           <div class="scroll-video-fade" id="scrollVideoFade" aria-hidden="true"></div>
         </div>
       </div>
