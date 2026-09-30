@@ -99,6 +99,8 @@ armusInitHeroRotator();
 function armusInitScrollVideo(){
   const pin=document.querySelector('.scroll-video-pin');
   const video=document.getElementById('scrollVideoEl');
+  const stage=document.querySelector('.scroll-video-stage');
+  const spacer=document.querySelector('.scroll-video-spacer');
   const nav=document.querySelector('header.nav');
   if(!pin||!video)return;
 
@@ -111,6 +113,44 @@ function armusInitScrollVideo(){
     const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
     return t*t*(3-2*t);
   }
+
+  // .scroll-video-spacer's gradient (index.html CSS) starts from
+  // --scroll-video-edge-color - this samples that color for real, straight
+  // off the video's own visible bottom edge, instead of guessing a fixed
+  // value that would only match one particular frame. Replicates the same
+  // crop math object-fit:cover applies (the video is never letterboxed, so
+  // what's visually at the bottom of the viewport is a cropped region of
+  // the source frame, not the whole thing) to find the right source
+  // coordinates, draws a thin strip of just that edge into a tiny
+  // offscreen canvas, and averages it into one color.
+  let edgeCanvas,edgeCtx;
+  function sampleEdgeColor(){
+    if(!spacer||!stage||!video.videoWidth||!video.videoHeight)return;
+    if(!edgeCanvas){
+      edgeCanvas=document.createElement('canvas');
+      edgeCanvas.width=8;
+      edgeCanvas.height=1;
+      edgeCtx=edgeCanvas.getContext('2d');
+    }
+    const cw=stage.clientWidth,ch=stage.clientHeight;
+    const vw=video.videoWidth,vh=video.videoHeight;
+    const scale=Math.max(cw/vw,ch/vh);
+    const sw=cw/scale,sh=ch/scale;
+    const sx=(vw-sw)/2,sy=(vh-sh)/2;
+    const stripH=Math.max(1,sh*0.02);
+    try{
+      edgeCtx.drawImage(video,sx,sy+sh-stripH,sw,stripH,0,0,8,1);
+      const data=edgeCtx.getImageData(0,0,8,1).data;
+      let r=0,g=0,b=0;
+      for(let i=0;i<8;i++){r+=data[i*4];g+=data[i*4+1];b+=data[i*4+2];}
+      spacer.style.setProperty('--scroll-video-edge-color','rgb('+Math.round(r/8)+','+Math.round(g/8)+','+Math.round(b/8)+')');
+    }catch(e){
+      // same-origin video, this shouldn't throw - but if it ever does,
+      // the CSS fallback (var(--armus-gold-3)) just keeps applying.
+    }
+  }
+  video.addEventListener('seeked',sampleEdgeColor);
+  video.addEventListener('loadeddata',sampleEdgeColor);
 
   let ticking=false;
   // duration is 0 until the video's metadata has loaded - on a fast/local
@@ -170,9 +210,11 @@ function armusInitScrollVideo(){
     requestAnimationFrame(update);
   }
 
+  sampleEdgeColor();
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
+  window.addEventListener('resize',sampleEdgeColor);
 }
 armusInitScrollVideo();
 

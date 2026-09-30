@@ -177,9 +177,19 @@
       height: 100%;
       object-fit: cover;
     }
+    /* No flat color (gold-matched or plain white) ever quite matches the
+       video's own last frame, which is lit/textured rather than a flat
+       fill - so script.js samples the real pixel color at the video's
+       visible bottom edge (via a tiny offscreen canvas) each time it
+       settles and writes it into --scroll-video-edge-color. The gradient
+       below starts from that sampled color - an exact match, whatever
+       the frame actually looks like - and eases into hero-band's own
+       gold-3, so the whole gap reads as one continuous fade instead of a
+       seam. --armus-gold-3 is only the fallback before JS has sampled a
+       frame. */
     .scroll-video-spacer {
       height: clamp(80px, 12vw, 220px);
-      background: var(--armus-bg);
+      background: linear-gradient(to bottom, var(--scroll-video-edge-color, var(--armus-gold-3)), var(--armus-gold-3));
     }
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the scrub is only
@@ -239,12 +249,11 @@
          additive (script.js guards on #scrollVideo existing, and no-ops
          to display:none under prefers-reduced-motion or with JS off) -
          nothing about the sections around it was touched.
-         .scroll-video-spacer right after is a plain gap in the page's
-         normal background color - an earlier version tried filling it
-         with a gold tone matched to hero-band's gradient start, but a
-         flat color never quite matches the video's own (textured, lit)
-         last frame, so the seam was still visible; a plain neutral gap
-         reads as a deliberate pause between sections instead. -->
+         .scroll-video-spacer right after fades from the video's own
+         actual edge color (sampled live in script.js) into hero-band's
+         gradient start - see the CSS comment above .scroll-video-spacer
+         for why a fixed color (gold-matched or plain white) never quite
+         worked. -->
     <section class="scroll-video" id="scrollVideo">
       <div class="scroll-video-pin">
         <div class="scroll-video-stage">
