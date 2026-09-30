@@ -156,8 +156,20 @@ body {
 .btn-lg {
   padding: 15px 21px;
 }
+/* Mirrors .scroll-intro-mosaic's own gradient (index.html) instead of
+   reusing --armus-gold-gradient as-is: that's a 135deg diagonal, so two
+   separate full-width sections stacked on top of each other each render
+   their own independent 0-100% sweep across their own (different)
+   height, and the colors never actually line up at the seam between
+   them - confirmed by a real screenshot showing a visible color jump
+   right where the scroll-intro section hands off to this one. Both are
+   now a plain top-to-bottom gradient, and this one starts at gold-3
+   (exactly where .scroll-intro-mosaic's own gradient ends at its
+   bottom) and works back through gold-2 to gold-1, so the seam is the
+   same color on both sides regardless of either section's actual
+   rendered height. */
 .hero-band {
-  background: var(--armus-gold-gradient);
+  background: linear-gradient(180deg, var(--armus-gold-3) 0%, var(--armus-gold-2) 45%, var(--armus-gold-1) 100%);
 }
 .hero {
   min-height: 500px;

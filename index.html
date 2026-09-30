@@ -271,7 +271,13 @@
     }
     .scroll-intro-mosaic {
       opacity: 0;
-      background: var(--armus-gold-gradient);
+      /* plain top-to-bottom (not --armus-gold-gradient's own 135deg
+         diagonal) so it ends at exactly gold-3 - .hero-band right below
+         this section (styles.css) starts its own gradient at that same
+         gold-3, so the seam between them reads as one continuous
+         gradient instead of two independent ones jumping at the
+         boundary. */
+      background: linear-gradient(180deg, var(--armus-gold-1) 0%, var(--armus-gold-2) 55%, var(--armus-gold-3) 100%);
       align-items: center;
       justify-content: center;
       flex-direction: column;
