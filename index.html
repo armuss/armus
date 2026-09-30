@@ -350,8 +350,8 @@
       box-shadow: none;
       border-color: rgba(255, 255, 255, .7);
     }
-    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 42%; top: 45%; width: 11%; z-index: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.9); }
-    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 64%; top: 60%; width: 9.5%; z-index: 0; transform: translate(-50%, -50%) rotate(7deg) scale(.9); }
+    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 42%; top: 45%; width: 11%; z-index: 0; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-4deg) scale(.9); }
+    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 64%; top: 60%; width: 9.5%; z-index: 0; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(7deg) scale(.9); }
     /* g3-g5: reach out toward the wide open margins either side of the
        cluster (negative/over-100% left, still within the mosaic LAYER's
        own overflow:hidden bounds even though it's outside the grid's own
@@ -362,9 +362,9 @@
        before). Kept to the same safe 35-65% vertical band the real cards
        occupy, so none of these are any more likely to overflow than the
        cards already sitting there. */
-    .scroll-intro-mosaic-grid .tile.ghost.g3 { left: -6%; top: 38%; width: 10%; z-index: 0; transform: translate(-50%, -50%) rotate(6deg) scale(.85); }
-    .scroll-intro-mosaic-grid .tile.ghost.g4 { left: 106%; top: 42%; width: 9%; z-index: 0; transform: translate(-50%, -50%) rotate(-5deg) scale(.85); }
-    .scroll-intro-mosaic-grid .tile.ghost.g5 { left: 100%; top: 62%; width: 8.5%; z-index: 0; transform: translate(-50%, -50%) rotate(8deg) scale(.85); }
+    .scroll-intro-mosaic-grid .tile.ghost.g3 { left: -6%; top: 38%; width: 10%; z-index: 0; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(6deg) scale(.85); }
+    .scroll-intro-mosaic-grid .tile.ghost.g4 { left: 106%; top: 42%; width: 9%; z-index: 0; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-5deg) scale(.85); }
+    .scroll-intro-mosaic-grid .tile.ghost.g5 { left: 100%; top: 62%; width: 8.5%; z-index: 0; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(8deg) scale(.85); }
     /* Real teacher cards now (matching teachers.html's own card exactly -
        photo + rating badge + favorite heart + name + lesson/student
        counts + price + trial button), not bare photo tiles, each one
