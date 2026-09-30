@@ -189,12 +189,17 @@
        .scroll-intro-pin is a tall (400vh) scroll runway; .scroll-intro-stage
        inside it is position:sticky so it stays pinned to the viewport for
        that whole runway while script.js reads scroll progress through it
-       (0 at the top of the runway, 1 at the bottom) and drives two things
+       (0 at the top of the runway, 1 at the bottom) and drives everything
        directly via inline styles set every frame (never a CSS transition -
        a transition would lag behind/overshoot a scroll that can reverse
-       or jump instantly): the single photo's zoom (transform: scale) and
-       the crossfade opacity between the single-photo layer and the
-       mosaic layer. Once progress reaches 1 the stage stops being sticky
+       or jump instantly): the establishing shot is now a real video
+       (#introSingleImg) whose own baked-in camera move (wide classroom ->
+       close on the teacher) is scrubbed frame-by-frame by setting its
+       currentTime straight off scroll progress - no autoplay, the video
+       only ever moves because the user is scrolling - then a firework
+       burst erupts from the word "ARMUS" chalked on the board behind her,
+       and the shot + the mosaic of teacher cards rise together into the
+       crossfade. Once progress reaches 1 the stage stops being sticky
        (its pin runway has fully scrolled past) and the page continues
        straight into .hero-band below, unpinned. 400vh (up from an
        original 240vh) spreads that same 0-1 progress over a lot more
@@ -221,12 +226,13 @@
     .scroll-intro-single {
       opacity: 1;
     }
-    /* a real photo of a teacher at the board now, not the SVG classroom
-       illustration - stays a static backdrop, not the zoom target, so
-       the room still reads as "one real lesson happening somewhere"
-       without competing with the zoom below for attention. The zoom/
-       burst choreography for this photo (to replace the small framed
-       video-card below) is a separate follow-up. */
+    /* the establishing shot: a real video of a teacher at the board (not
+       a static photo or a CSS-only zoom) - its own camera move from a
+       wide classroom shot to a close-up on her is scrubbed by
+       script.js setting currentTime off scroll progress, never played on
+       its own. poster (index.html markup) is the same still used before
+       this landed, so there's no flash/mismatch before the video's
+       metadata loads. */
     .scroll-intro-classroom-bg {
       position: absolute;
       inset: 0;
@@ -496,12 +502,14 @@
        brief window around the crossfade point, not a fixed-duration
        animation, so it stays scroll-scrubbed like everything else here)
        - clustered around a fixed point (50%, 66% of the stage by
-       default; script.js corrects that against a real measured face
-       position once the next step points the zoom at the new classroom
-       photo directly), the same point the firework burst below erupts
-       from, so the whole moment reads as one single locus, not a
-       generic haze - with a couple of puffs spread wider for general
-       atmosphere over the area the cluster settles into. */
+       default; script.js corrects that against the real measured
+       position of the word "ARMUS" chalked on the board in the intro
+       video, using the video's own intrinsic size + object-position so
+       it lands there on any aspect ratio), the same point the firework
+       burst below erupts from, so the whole moment reads as the word
+       itself exploding into the cluster, not a generic haze - with a
+       couple of puffs spread wider for general atmosphere over the area
+       the cluster settles into. */
     .scroll-intro-mist {
       position: absolute;
       inset: 0;
@@ -618,15 +626,17 @@
       .scroll-intro-mosaic-grid {
         width: min(680px, 92vw);
       }
-      /* object-fit:cover on this 1200x800 (landscape) illustration inside
-         a narrow portrait box crops down to a vertical sliver centered
-         on the image by default - which lands mostly on the empty wall
-         between the window and the chalkboard rather than the board
-         itself (the chalkboard sits right-of-center in the source
-         illustration). Shifting the crop's focal point right brings the
-         board itself into that sliver instead. */
+      /* object-fit:cover on this landscape video inside a narrow portrait
+         box crops down to a vertical sliver - centered by default, which
+         cuts off the left half of "ARMUS" on the board once the video has
+         zoomed all the way into its close-up (the word ends up left-of-
+         center in that tight framing, off-center enough that a 50% crop
+         clips it). 56% keeps both the word and her face inside that
+         sliver at every point along the zoom, close shot and wide shot
+         alike - unlike 68% (tuned for a since-replaced static photo with
+         different framing), which was too far right for this video. */
       .scroll-intro-classroom-bg {
-        object-position: 68% center;
+        object-position: 56% center;
       }
       .scroll-intro-mosaic-grid .tile.ghost,
       .scroll-intro-mosaic-grid .spark.s6,
@@ -707,7 +717,16 @@
       <div class="scroll-intro-pin">
         <div class="scroll-intro-stage">
           <div class="scroll-intro-layer scroll-intro-single" id="introLayerSingle">
-            <img src="avatars/classroom-photo.jpg" alt="" id="introSingleImg" class="scroll-intro-classroom-bg">
+            <!-- a real video now, not a static photo - muted/playsinline
+                 so the browser allows script.js to seek it (currentTime)
+                 without ever calling play(); it never plays on its own,
+                 only scrubs as the user scrolls. poster is the same still
+                 photo used before this landed, so there's nothing to
+                 flash/swap while the video's metadata loads. -->
+            <video id="introSingleImg" class="scroll-intro-classroom-bg" poster="avatars/classroom-photo.jpg" muted playsinline preload="auto">
+              <source src="avatars/classroom-teacher-reveal.mp4" type="video/mp4">
+              <source src="avatars/classroom-teacher-reveal.webm" type="video/webm">
+            </video>
             <div class="scroll-intro-shade"></div>
           </div>
           <!-- mist + firework burst live BETWEEN the two crossfading
