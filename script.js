@@ -88,113 +88,25 @@ function armusInitHeroRotator(){
 }
 armusInitHeroRotator();
 
-// Scroll-driven homepage intro: a single real lesson photo zooms in as
-// the visitor scrolls through .scroll-intro-pin's tall runway, then
-// crossfades into a mosaic of real ARMUS teacher photos (pulled from
-// TEACHERS, teachers-data.js, so it never drifts out of sync with the
-// actual demo roster) - "one lesson" becoming "hundreds of teachers".
-// See the CSS comment above .scroll-intro-pin (index.html) for the
-// pin/sticky mechanism itself. Every scroll-linked value here is set as
-// a direct inline style, never a CSS transition, so it stays exactly
-// locked to scroll position even on a fast flick or an instant jump.
+// Scroll-driven homepage intro: one authored video (classroom -> dust
+// transition -> teacher cards settling into place, all baked in by the
+// person who made it) scrubbed by setting its currentTime straight off
+// scroll position as the visitor scrolls through .scroll-intro-pin's tall
+// runway - the video never plays on its own. See the CSS comment above
+// .scroll-intro-pin (index.html) for the pin/sticky mechanism itself.
+// Every scroll-linked value here is set as a direct inline style/property,
+// never a CSS transition, so it stays exactly locked to scroll position
+// even on a fast flick or an instant jump.
 function armusInitScrollIntro(){
   const pin=document.querySelector('.scroll-intro-pin');
-  // the establishing shot is a real <video> (index.html) whose own baked-
-  // in camera move (wide classroom -> close on the teacher) gets scrubbed
-  // by setting currentTime off scroll progress below - it never plays on
-  // its own.
   const introVideo=document.getElementById('introSingleImg');
-  const layerSingle=document.getElementById('introLayerSingle');
-  const layerMosaic=document.getElementById('introLayerMosaic');
-  const mosaicGrid=document.getElementById('introMosaicGrid');
-  // headline dropped from the DOM for now (index.html) - optional here
-  // rather than required so the rest of the sequence keeps working
-  // without it.
-  const copyMosaic=document.getElementById('introCopyMosaic');
   const nav=document.querySelector('header.nav');
-  if(!pin||!introVideo||!layerSingle||!layerMosaic||!mosaicGrid)return;
+  if(!pin||!introVideo)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
   // than just leaving it be - no reason to pay for it.
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-
-  // appended, not innerHTML - mosaicGrid already holds the static .spark
-  // decorative dots (index.html), and tiles need to paint after/above
-  // them in DOM order for the scattered cluster's own z-index values to
-  // make sense. Real tiles first (their CSS positions them by
-  // nth-of-type(1..6) among the grid's div children), then the hero card
-  // (her own face, styled identically), then the dimmed "ghost" tiles -
-  // ghosts and hero are both appended AFTER the 6 real ones so neither
-  // shifts that nth-of-type(1..6) numbering. Reusing some of the same 6
-  // photos for ghosts is fine, they're barely visible (blurred/dimmed,
-  // tucked behind), just a "more teachers behind these" depth cue.
-  // Real tiles are now full teacher cards (photo, rating, favorite heart,
-  // name, lesson/student counts, price, trial button) - matching
-  // teachers.html's own .teacher-card markup, just under scoped
-  // .scroll-intro-mosaic-grid .tile-* class names (index.html) instead of
-  // its bare ones, since those are already spoken for elsewhere on this
-  // page (the hero-band's .teacher-card rotator further down).
-  const HEART_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>';
-  function tileHTML(t,extraClass,id){
-    return '<div class="tile'+(extraClass?' '+extraClass:'')+'"'+(id?' id="'+id+'"':'')+'>'+
-        '<div class="tile-photo"><img src="'+t.photo+'" alt="'+t.name+'" loading="lazy"></div>'+
-        '<div class="tile-rating">★ '+t.rating+'</div>'+
-        '<div class="tile-fav">'+HEART_ICON+'</div>'+
-        '<div class="tile-body">'+
-          '<p class="tile-name">'+t.name+'</p>'+
-          '<div class="tile-tags"><span>'+t.completedLessons+' ders</span><span>'+t.students+' öğrenci</span></div>'+
-          '<div class="tile-price">₺'+t.price+' <small>/ ders</small></div>'+
-          '<div class="tile-trial">Deneme Dersi Al</div>'+
-        '</div>'+
-      '</div>';
-  }
-  let heroTile=null;
-  if(typeof TEACHERS!=='undefined'&&TEACHERS.length){
-    // only 5 real teachers now (not 6) - the hero card takes the 6th
-    // spot. She's inserted as the 2nd tile div specifically (between the
-    // 1st and 2nd real teacher), so CSS's nth-of-type(2) - the cluster's
-    // original, most prominent slot - picks her up automatically, with
-    // .tile.hero-card (index.html) only overriding what needs to differ
-    // (opacity/transform/z-index, not position/size).
-    const HERO={photo:'avatars/hero-teacher-card.jpg',name:'Claire M.',rating:'5.0',completedLessons:'1,850',students:'540',price:'780'};
-    mosaicGrid.insertAdjacentHTML('beforeend',tileHTML(TEACHERS[0]));
-    mosaicGrid.insertAdjacentHTML('beforeend',tileHTML(HERO,'hero-card','introHeroTile'));
-    mosaicGrid.insertAdjacentHTML('beforeend',TEACHERS.slice(1,5).map(t=>tileHTML(t)).join(''));
-    heroTile=document.getElementById('introHeroTile');
-    const ghosts=[TEACHERS[2],TEACHERS[4],TEACHERS[0],TEACHERS[5],TEACHERS[1]].filter(Boolean);
-    mosaicGrid.insertAdjacentHTML('beforeend',ghosts.map((t,i)=>
-      '<div class="tile ghost g'+(i+1)+'"><img src="'+t.photo+'" alt="" aria-hidden="true" loading="lazy"></div>'
-    ).join(''));
-  }
-
-  // The other 6 cards fly out from behind the hero card and land at their
-  // own hand-placed spot (CSS, --emerge-x/-y/-s below) instead of just
-  // cross-fading into place flat - the hero card itself doesn't fly
-  // anywhere (it only fades/scales in, see --hero-o/--hero-s below), so
-  // it reads as "she becomes this card" rather than a copy of her
-  // launching out alongside the rest.
-  const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile:not(.hero-card)'));
-
-  // tileEmergeOffsets[i] is the pixel vector from tile i's own resting
-  // position back to the hero card's own resting center - measured once
-  // (elements are already laid out by their CSS position/size at this
-  // point, untouched by any scroll-driven transform yet) and re-measured
-  // on resize, since it's fixed screen pixels, not something percentages/
-  // vh can keep correct on their own across viewport changes. The hero
-  // card's own position never changes (it doesn't fly, only fades/
-  // scales), so its center is stable to measure against.
-  let tileEmergeOffsets=[];
-  function measureEmergeOffsets(){
-    if(!heroTile)return;
-    const heroRect=heroTile.getBoundingClientRect();
-    const originX=heroRect.left+heroRect.width/2,originY=heroRect.top+heroRect.height/2;
-    tileEmergeOffsets=emergeTiles.map(tile=>{
-      const r=tile.getBoundingClientRect();
-      return{dx:originX-(r.left+r.width/2),dy:originY-(r.top+r.height/2)};
-    });
-  }
-  measureEmergeOffsets();
 
   function smoothstep(edge0,edge1,x){
     const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
@@ -202,18 +114,16 @@ function armusInitScrollIntro(){
   }
 
   let ticking=false;
-  // duration (needed by the scrub below) is 0 until the video's metadata
-  // has loaded - on a fast/local connection that can already have
-  // happened by the time this script runs (preload="auto" starts the
-  // fetch the instant the <video> tag is parsed, well before script.js at
-  // the bottom of the page even executes), so 'loadedmetadata' alone
-  // would never fire again and it would silently stay stuck at 0.
-  // Checking readyState synchronously covers that case; the event covers
-  // the normal case where it hasn't loaded yet.
+  // duration is 0 until the video's metadata has loaded - on a fast/local
+  // connection that can already have happened by the time this script
+  // runs (preload="auto" starts the fetch the instant the <video> tag is
+  // parsed, well before script.js at the bottom of the page even
+  // executes), so 'loadedmetadata' alone would never fire again and it
+  // would silently stay stuck at 0. Checking readyState synchronously
+  // covers that case; the event covers the normal case where it hasn't
+  // loaded yet.
   let videoDuration=introVideo.duration||0;
-  function onVideoMeta(){videoDuration=introVideo.duration||0;measureEmergeOffsets();}
-  if(introVideo.readyState>=1)onVideoMeta();
-  introVideo.addEventListener('loadedmetadata',onVideoMeta);
+  introVideo.addEventListener('loadedmetadata',()=>{videoDuration=introVideo.duration||0;});
 
   function update(){
     ticking=false;
@@ -221,31 +131,23 @@ function armusInitScrollIntro(){
     const scrollable=rect.height-window.innerHeight;
     const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
 
-    // the establishing shot's own camera move (wide classroom -> close on
-    // the teacher, baked into the video itself, not a CSS transform) is
-    // scrubbed straight off scroll progress - the video only ever moves
-    // because the user is scrolling, it's never actually played. Capped
-    // at 3.6s (not the video's full ~5s) since that's where her
-    // expression is calm/normal, not the startled look later in the
-    // clip - she needs to read as "about to become a card", not
-    // "surprised", right before the hero card takes over.
+    // the whole clip (classroom -> dust transition -> cards settling) is
+    // scrubbed across most of the scroll range, holding on its own final
+    // frame for the last stretch while it fades into .hero-band below.
     if(videoDuration){
-      const scrubT=smoothstep(0,0.42,progress);
-      const target=scrubT*Math.min(videoDuration,3.6);
+      const scrubT=smoothstep(0,0.85,progress);
+      const target=scrubT*videoDuration;
       if(Math.abs(introVideo.currentTime-target)>0.02)introVideo.currentTime=target;
     }
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
-    // scrolling into the pin starts, and stays gone for the ENTIRE
-    // mosaic section, not just the crossfade/settle part: progress
-    // caps at 1 while the sticky stage still fills the whole viewport
-    // (rect.bottom === innerHeight at that point), so waiting on
-    // progress alone brought the nav back while the mosaic cards were
-    // still the only thing on screen. Instead it tracks rect.bottom
-    // directly through the extra scroll after unstick, and only
-    // reveals in the last stretch as the pin's bottom edge - and with
-    // it, the whole mosaic - actually leaves the top of the viewport.
+    // scrolling into the pin starts, and stays gone until the stage
+    // actually leaves the top of the viewport: progress caps at 1 while
+    // the sticky stage still fills the whole viewport (rect.bottom ===
+    // innerHeight at that point), so waiting on progress alone would
+    // bring the nav back too early. Instead it tracks rect.bottom
+    // directly through the extra scroll after unstick.
     if(nav){
       const navHideOut=smoothstep(0,0.08,progress);
       const navRevealIn=smoothstep(window.innerHeight*0.2,0,rect.bottom);
@@ -254,45 +156,10 @@ function armusInitScrollIntro(){
       nav.style.pointerEvents=navOpacity<0.5?'none':'auto';
     }
 
-    // the video and the card cluster rise together through the crossfade
-    // instead of just swapping opacity in place - the shot drifts up and
-    // out as it fades, the mosaic drifts up into place as it fades in, so
-    // the whole moment reads as "this rises up and becomes these cards"
-    // rather than two flat layers dissolving into each other.
-    const cross=smoothstep(0.5,0.66,progress);
-    layerSingle.style.opacity=String(1-cross);
-    layerSingle.style.transform='translateY('+(-cross*90)+'px)';
-    layerMosaic.style.opacity=String(cross);
-    layerMosaic.style.transform='translateY('+((1-cross)*70)+'px)';
-
-    // the hero card doesn't fly in - it fades/scales up in place, right
-    // as the video fades out (a touch ahead of the crossfade's own 0.5
-    // start, so she's already mostly a card by the time the other 6
-    // start emerging from behind her).
-    if(heroTile){
-      const heroT=smoothstep(0.44,0.62,progress);
-      heroTile.style.setProperty('--hero-o',String(heroT));
-      heroTile.style.setProperty('--hero-s',String(.8+heroT*.2));
-    }
-
-    // each card travels from the hero card's position to its own resting
-    // spot, growing from a small speck up to full size as it arrives -
-    // starts just as the hero card itself is fading in and finishes
-    // once the mosaic has mostly crossfaded in, so the cards read as
-    // coming out from behind her rather than fading in independently.
-    const emergeT=smoothstep(0.46,0.76,progress);
-    const emergeScale=0.12+emergeT*0.88;
-    emergeTiles.forEach((tile,i)=>{
-      const off=tileEmergeOffsets[i];
-      if(!off)return;
-      tile.style.setProperty('--emerge-x',(off.dx*(1-emergeT))+'px');
-      tile.style.setProperty('--emerge-y',(off.dy*(1-emergeT))+'px');
-      tile.style.setProperty('--emerge-s',String(emergeScale));
-    });
-
-    const settle=smoothstep(0.58,0.85,progress);
-    mosaicGrid.style.transform='scale('+(1.06-settle*0.06)+')';
-    if(copyMosaic)copyMosaic.style.opacity=String(smoothstep(0.6,0.8,progress));
+    // fades into .hero-band below over the last stretch of scroll, once
+    // the video has finished scrubbing and is holding on its last frame.
+    const fadeOut=smoothstep(0.88,1,progress);
+    introVideo.style.opacity=String(1-fadeOut);
   }
 
   function onScroll(){
@@ -301,14 +168,9 @@ function armusInitScrollIntro(){
     requestAnimationFrame(update);
   }
 
-  function onResize(){
-    measureEmergeOffsets();
-    onScroll();
-  }
-
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
-  window.addEventListener('resize',onResize);
+  window.addEventListener('resize',onScroll);
 }
 armusInitScrollIntro();
 
