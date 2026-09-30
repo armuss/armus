@@ -293,11 +293,19 @@
        container, so the whole cluster scales down together on narrow
        viewports with no separate mobile layout needed - only the
        container's own max-width (below) changes. */
+    /* height is tied to vh, not to width via aspect-ratio - a width-driven
+       aspect-ratio gives the SAME pixel height regardless of how short the
+       actual browser viewport is, which is exactly what let cards get
+       clipped on a wide-but-short window (confirmed by a real screenshot:
+       width was capped at 760px same as ever, but the real available
+       vertical room was much less than the aspect-ratio assumed). Tying
+       height straight to vh makes it shrink automatically with the
+       viewport instead. */
     .scroll-intro-mosaic-grid {
       position: relative;
       z-index: 2;
-      width: min(760px, 90vw);
-      aspect-ratio: 760 / 560;
+      width: min(680px, 86vw);
+      height: min(50vh, 460px);
       perspective: 900px;
       will-change: transform;
     }
@@ -327,8 +335,8 @@
       box-shadow: none;
       border-color: rgba(255, 255, 255, .7);
     }
-    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 42%; top: 42%; width: 12%; z-index: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.9); }
-    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 64%; top: 66%; width: 10.5%; z-index: 0; transform: translate(-50%, -50%) rotate(7deg) scale(.9); }
+    .scroll-intro-mosaic-grid .tile.ghost.g1 { left: 42%; top: 42%; width: 13%; z-index: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.9); }
+    .scroll-intro-mosaic-grid .tile.ghost.g2 { left: 64%; top: 66%; width: 11.5%; z-index: 0; transform: translate(-50%, -50%) rotate(7deg) scale(.9); }
     /* Real teacher cards now (matching teachers.html's own card exactly -
        photo + rating badge + favorite heart + name + lesson/student
        counts + price + trial button), not bare photo tiles, each one
@@ -355,12 +363,17 @@
         0 26px 42px rgba(35, 26, 10, .4);
       transform-style: preserve-3d;
     }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 24%; top: 26%; width: 17%; z-index: 3; transform: translate(-50%, -50%) rotate(-7deg) rotateY(8deg) rotateX(-4deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 22%; width: 19%; z-index: 4; transform: translate(-50%, -50%) rotate(4deg) rotateY(-6deg) rotateX(5deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 76%; top: 32%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-6deg) rotateY(9deg) rotateX(3deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 30%; top: 70%; width: 18%; z-index: 3; transform: translate(-50%, -50%) rotate(7deg) rotateY(-8deg) rotateX(-4deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 16%; z-index: 2; transform: translate(-50%, -50%) rotate(-4deg) rotateY(6deg) rotateX(5deg); }
-    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 80%; top: 62%; width: 15%; z-index: 1; transform: translate(-50%, -50%) rotate(6deg) rotateY(-7deg) rotateX(-5deg); }
+    /* --emerge-x/--emerge-y/--emerge-s (script.js) drive each card's own
+       "fly out of the burst and land here" entrance - they start the
+       card at the burst's screen position, tiny, and ease it out to its
+       real hand-placed spot/size below, instead of the cluster just
+       cross-fading into place flat. */
+    .scroll-intro-mosaic-grid .tile:nth-of-type(1) { left: 24%; top: 26%; width: 19%; z-index: 3; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-7deg) rotateY(8deg) rotateX(-4deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(2) { left: 50%; top: 22%; width: 21%; z-index: 4; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(4deg) rotateY(-6deg) rotateX(5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(3) { left: 76%; top: 32%; width: 18%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-6deg) rotateY(9deg) rotateX(3deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 30%; top: 70%; width: 20%; z-index: 3; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(7deg) rotateY(-8deg) rotateX(-4deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 58%; top: 76%; width: 18%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-4deg) rotateY(6deg) rotateX(5deg); }
+    .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 80%; top: 62%; width: 17%; z-index: 1; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(6deg) rotateY(-7deg) rotateX(-5deg); }
     .scroll-intro-mosaic-grid .tile img {
       width: 100%;
       height: 100%;
@@ -469,12 +482,14 @@
       background: #fff;
       filter: blur(40px);
     }
-    .scroll-intro-mist span:nth-child(1) { left: 42%; top: 58%; width: 220px; height: 220px; }
-    .scroll-intro-mist span:nth-child(2) { left: 60%; top: 52%; width: 250px; height: 250px; }
-    .scroll-intro-mist span:nth-child(3) { left: 64%; top: 68%; width: 210px; height: 210px; }
-    .scroll-intro-mist span:nth-child(4) { left: 46%; top: 74%; width: 190px; height: 190px; }
-    .scroll-intro-mist span:nth-child(5) { left: 28%; top: 66%; width: 170px; height: 170px; }
-    .scroll-intro-mist span:nth-child(6) { left: 36%; top: 50%; width: 180px; height: 180px; }
+    .scroll-intro-mist span:nth-child(1) { left: 42%; top: 58%; width: 260px; height: 260px; }
+    .scroll-intro-mist span:nth-child(2) { left: 60%; top: 52%; width: 290px; height: 290px; }
+    .scroll-intro-mist span:nth-child(3) { left: 64%; top: 68%; width: 250px; height: 250px; }
+    .scroll-intro-mist span:nth-child(4) { left: 46%; top: 74%; width: 230px; height: 230px; }
+    .scroll-intro-mist span:nth-child(5) { left: 28%; top: 66%; width: 210px; height: 210px; }
+    .scroll-intro-mist span:nth-child(6) { left: 36%; top: 50%; width: 220px; height: 220px; }
+    .scroll-intro-mist span:nth-child(7) { left: 78%; top: 60%; width: 200px; height: 200px; }
+    .scroll-intro-mist span:nth-child(8) { left: 20%; top: 40%; width: 190px; height: 190px; }
     /* Firework-style burst: a small bright flash at the origin
        (.scroll-intro-burst-core) plus a shower of small round sparks
        flying outward at hand-placed angles/distances (--a/--d, set
@@ -660,7 +675,7 @@
                nothing for the first part of that window, the same class
                of bug as the earlier nth-child/nth-of-type one. -->
           <div class="scroll-intro-mist" id="introMist" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
           </div>
           <div class="scroll-intro-burst" id="introBurst" aria-hidden="true">
             <div class="scroll-intro-burst-core"></div>
