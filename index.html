@@ -561,11 +561,14 @@
     .scroll-intro-single .scroll-intro-copy .scroll-intro-eyebrow .dot {
       background: var(--armus-gold-2);
     }
+    /* the mosaic copy's own eyebrow sits right where the card cluster
+       lands (unlike the single-photo layer's, which has a clear empty
+       band under it) - it kept getting half-buried behind a card and
+       reading as broken/illegible, so it's dropped here rather than
+       fought over positioning; the "ARMUS" copy on the single-photo
+       layer above already carries the brand mark for this whole section. */
     .scroll-intro-mosaic .scroll-intro-copy .scroll-intro-eyebrow {
-      color: var(--armus-on-gold);
-    }
-    .scroll-intro-mosaic .scroll-intro-copy .scroll-intro-eyebrow .dot {
-      background: var(--armus-on-gold);
+      display: none;
     }
     .scroll-intro-copy h2 {
       font-size: clamp(30px, 5vw, 56px);
@@ -578,6 +581,7 @@
     }
     .scroll-intro-mosaic .scroll-intro-copy h2 {
       color: var(--armus-on-gold);
+      font-size: clamp(20px, 2.8vw, 32px);
     }
 
     /* .scroll-intro-mosaic-grid needs no mobile override of its own -
