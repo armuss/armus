@@ -153,7 +153,7 @@ function armusInitScrollIntro(){
     // reads as literally true rather than a different-looking special
     // element landing among them.
     mosaicGrid.insertAdjacentHTML('beforeend',
-      '<div class="tile hero" id="introHeroTile">'+
+      '<div class="tile hero-card" id="introHeroTile">'+
         '<div class="tile-photo"><img src="avatars/hero-teacher-card.jpg" alt="Kurucu Öğretmen" loading="lazy"></div>'+
         '<div class="tile-rating">★ 5.0</div>'+
         '<div class="tile-fav">'+HEART_ICON+'</div>'+
@@ -178,7 +178,7 @@ function armusInitScrollIntro(){
   // anywhere (it only fades/scales in, see --hero-o/--hero-s below), so
   // it reads as "she becomes this card" rather than a copy of her
   // launching out alongside the rest.
-  const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile:not(.hero)'));
+  const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile:not(.hero-card)'));
 
   // tileEmergeOffsets[i] is the pixel vector from tile i's own resting
   // position back to the hero card's own resting center - measured once
