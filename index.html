@@ -493,17 +493,20 @@
     .scroll-intro-mist span:nth-child(6) { left: 36%; top: 50%; width: 220px; height: 220px; }
     .scroll-intro-mist span:nth-child(7) { left: 78%; top: 60%; width: 200px; height: 200px; }
     .scroll-intro-mist span:nth-child(8) { left: 20%; top: 40%; width: 190px; height: 190px; }
-    /* Firework-style burst: a small bright flash at the origin
-       (.scroll-intro-burst-core) plus a shower of small round sparks
-       flying outward at hand-placed angles/distances (--a/--d, set
-       inline per span in the HTML) - varied distances and 3 alternating
-       colors (white/gold/amber) so it reads as scattering debris, not a
-       single symmetric sunburst graphic (an earlier version used 12
-       even, same-length rays from one point, which read as a flat
-       sparkle-emoji icon rather than an actual burst - this replaces
-       it). script.js grows --t (0 to 1) every frame, driving both the
-       core's scale and each spark's outward travel + shrink together,
-       and fades the whole thing alongside the mist. */
+    /* Firework-style burst: a shower of small round sparks flying outward
+       at hand-placed angles/distances (--a/--d, set inline per span in
+       the HTML) - varied distances and 3 alternating colors (white/gold/
+       amber) so it reads as scattering debris, not a single symmetric
+       sunburst graphic (an earlier version used 12 even, same-length
+       rays from one point, which read as a flat sparkle-emoji icon
+       rather than an actual burst - this replaces it). A bright flash
+       core used to sit at the origin too, but it stayed large and fully
+       lit well into the moment the cards had already landed, reading as
+       a stray glowing dot rather than part of the burst - dropped
+       instead of just retimed, since the spark shower alone already
+       carries the "erupting" moment. script.js grows --t (0 to 1) every
+       frame, driving each spark's outward travel + shrink, and fades
+       the whole thing alongside the mist. */
     .scroll-intro-burst {
       position: absolute;
       left: 50%;
@@ -512,16 +515,6 @@
       height: 1px;
       z-index: 1;
       pointer-events: none;
-    }
-    .scroll-intro-burst-core {
-      position: absolute;
-      left: -45px;
-      top: -45px;
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #fff9e6 0%, var(--armus-gold-2) 45%, rgba(246, 198, 73, 0) 75%);
-      transform: scale(var(--t, 0));
     }
     .scroll-intro-burst span {
       position: absolute;
@@ -685,7 +678,6 @@
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
           </div>
           <div class="scroll-intro-burst" id="introBurst" aria-hidden="true">
-            <div class="scroll-intro-burst-core"></div>
             <span style="--a:0deg; --d:150px"></span>
             <span style="--a:20deg; --d:110px"></span>
             <span style="--a:40deg; --d:175px"></span>
