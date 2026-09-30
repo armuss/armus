@@ -88,6 +88,87 @@ function armusInitHeroRotator(){
 }
 armusInitHeroRotator();
 
+// Scroll-driven video (between .hero-band and .proof): scrubs a single
+// video's currentTime straight off scroll position as the visitor scrolls
+// through .scroll-video-pin's tall runway - the video never plays on its
+// own. See the CSS comment above .scroll-video-pin (index.html) for the
+// pin/sticky mechanism itself. Every scroll-linked value here is set as a
+// direct inline style/property, never a CSS transition, so it stays
+// exactly locked to scroll position even on a fast flick or an instant
+// jump.
+function armusInitScrollVideo(){
+  const pin=document.querySelector('.scroll-video-pin');
+  const video=document.getElementById('scrollVideoEl');
+  const nav=document.querySelector('header.nav');
+  if(!pin||!video)return;
+
+  // display:none under prefers-reduced-motion (index.html CSS) makes this
+  // pointless work either way, but skip the scroll listener too rather
+  // than just leaving it be - no reason to pay for it.
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+
+  function smoothstep(edge0,edge1,x){
+    const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
+    return t*t*(3-2*t);
+  }
+
+  let ticking=false;
+  // duration is 0 until the video's metadata has loaded - on a fast/local
+  // connection that can already have happened by the time this script
+  // runs (preload="auto" starts the fetch the instant the <video> tag is
+  // parsed, well before script.js at the bottom of the page even
+  // executes), so 'loadedmetadata' alone would never fire again and it
+  // would silently stay stuck at 0. Checking readyState synchronously
+  // covers that case; the event covers the normal case where it hasn't
+  // loaded yet.
+  let videoDuration=video.duration||0;
+  video.addEventListener('loadedmetadata',()=>{videoDuration=video.duration||0;});
+
+  function update(){
+    ticking=false;
+    const rect=pin.getBoundingClientRect();
+    const scrollable=rect.height-window.innerHeight;
+    const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
+
+    // the whole clip is scrubbed across most of the scroll range, holding
+    // on its own final frame (the teacher cards settling into place) for
+    // the rest of the scroll.
+    if(videoDuration){
+      const scrubT=smoothstep(0,0.85,progress);
+      const target=scrubT*videoDuration;
+      if(Math.abs(video.currentTime-target)>0.02)video.currentTime=target;
+    }
+
+    // the floating nav (header.nav, every page) would otherwise sit on
+    // top of this section throughout, hard to read against its dark
+    // letterbox background - fades out fast once scrolling into the pin
+    // starts, and stays gone until the stage actually leaves the top of
+    // the viewport: progress caps at 1 while the sticky stage still fills
+    // the whole viewport (rect.bottom === innerHeight at that point), so
+    // waiting on progress alone would bring the nav back too early.
+    // Instead it tracks rect.bottom directly through the extra scroll
+    // after unstick.
+    if(nav){
+      const navHideOut=smoothstep(0,0.08,progress);
+      const navRevealIn=smoothstep(window.innerHeight*0.2,0,rect.bottom);
+      const navOpacity=Math.min(1,(1-navHideOut)+navRevealIn);
+      nav.style.opacity=String(navOpacity);
+      nav.style.pointerEvents=navOpacity<0.5?'none':'auto';
+    }
+  }
+
+  function onScroll(){
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(update);
+  }
+
+  update();
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+}
+armusInitScrollVideo();
+
 // Proof carousel: 3 stat/testimonial cards auto-cross-fade, with dots
 // showing progress and doubling as manual controls.
 function armusInitProofCarousel(){
