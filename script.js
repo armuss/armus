@@ -100,7 +100,7 @@ function armusInitScrollVideo(){
   const pin=document.querySelector('.scroll-video-pin');
   const video=document.getElementById('scrollVideoEl');
   const stage=document.querySelector('.scroll-video-stage');
-  const spacer=document.querySelector('.scroll-video-spacer');
+  const fade=document.getElementById('scrollVideoFade');
   const nav=document.querySelector('header.nav');
   if(!pin||!video)return;
 
@@ -114,18 +114,20 @@ function armusInitScrollVideo(){
     return t*t*(3-2*t);
   }
 
-  // .scroll-video-spacer's gradient (index.html CSS) starts from
-  // --scroll-video-edge-color - this samples that color for real, straight
-  // off the video's own visible bottom edge, instead of guessing a fixed
-  // value that would only match one particular frame. Replicates the same
-  // crop math object-fit:cover applies (the video is never letterboxed, so
+  // --scroll-video-edge-color feeds both #scrollVideoFade and
+  // .scroll-video-spacer's gradients (index.html CSS) - set on :root so
+  // both can read it. This samples that color for real, straight off the
+  // video's own visible bottom edge, instead of guessing a fixed value
+  // that would only match one particular frame. Replicates the same crop
+  // math object-fit:cover applies (the video is never letterboxed, so
   // what's visually at the bottom of the viewport is a cropped region of
   // the source frame, not the whole thing) to find the right source
   // coordinates, draws a thin strip of just that edge into a tiny
   // offscreen canvas, and averages it into one color.
+  const root=document.documentElement;
   let edgeCanvas,edgeCtx;
   function sampleEdgeColor(){
-    if(!spacer||!stage||!video.videoWidth||!video.videoHeight)return;
+    if(!stage||!video.videoWidth||!video.videoHeight)return;
     if(!edgeCanvas){
       edgeCanvas=document.createElement('canvas');
       edgeCanvas.width=8;
@@ -143,7 +145,7 @@ function armusInitScrollVideo(){
       const data=edgeCtx.getImageData(0,0,8,1).data;
       let r=0,g=0,b=0;
       for(let i=0;i<8;i++){r+=data[i*4];g+=data[i*4+1];b+=data[i*4+2];}
-      spacer.style.setProperty('--scroll-video-edge-color','rgb('+Math.round(r/8)+','+Math.round(g/8)+','+Math.round(b/8)+')');
+      root.style.setProperty('--scroll-video-edge-color','rgb('+Math.round(r/8)+','+Math.round(g/8)+','+Math.round(b/8)+')');
     }catch(e){
       // same-origin video, this shouldn't throw - but if it ever does,
       // the CSS fallback (var(--armus-gold-3)) just keeps applying.
@@ -186,6 +188,12 @@ function armusInitScrollVideo(){
       const target=scrubT*videoDuration;
       if(Math.abs(video.currentTime-target)>0.02)video.currentTime=target;
     }
+
+    // #scrollVideoFade (index.html CSS) only needs to be visible right as
+    // the video settles on its ending frame and is about to hand off to
+    // .scroll-video-spacer below - for the rest of the scroll it stays
+    // fully transparent so it never covers the video's real content.
+    if(fade)fade.style.opacity=String(smoothstep(0.88,1,progress));
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this section throughout - fades out fast once scrolling into the pin
