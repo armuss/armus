@@ -221,10 +221,12 @@
     .scroll-intro-single {
       opacity: 1;
     }
-    /* the illustrated classroom is now a static backdrop, not the zoom
-       target - it just sits behind the teacher's photo, unmoving, so the
-       room still reads as "one real lesson happening somewhere" without
-       competing with the zoom below for attention. */
+    /* a real photo of a teacher at the board now, not the SVG classroom
+       illustration - stays a static backdrop, not the zoom target, so
+       the room still reads as "one real lesson happening somewhere"
+       without competing with the zoom below for attention. The zoom/
+       burst choreography for this photo (to replace the small framed
+       video-card below) is a separate follow-up. */
     .scroll-intro-classroom-bg {
       position: absolute;
       inset: 0;
@@ -745,7 +747,7 @@
       <div class="scroll-intro-pin">
         <div class="scroll-intro-stage">
           <div class="scroll-intro-layer scroll-intro-single" id="introLayerSingle">
-            <img src="avatars/classroom-illustration.svg" alt="" id="introSingleImg" class="scroll-intro-classroom-bg">
+            <img src="avatars/classroom-photo.jpg" alt="" id="introSingleImg" class="scroll-intro-classroom-bg">
             <div class="scroll-intro-video-wrap">
               <div class="scroll-intro-video-card" id="introVideoCard">
                 <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor">
