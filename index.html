@@ -150,19 +150,14 @@
        .scroll-video-stage stays pinned (position:sticky) for that whole
        runway while script.js scrubs the video's own currentTime straight
        off scroll position (never autoplayed).
-       Fit: plain cover crops whichever axis overflows to fill the frame,
-       but the card-cluster ending runs close to every edge of the shot,
-       so cover cropped cards on ordinary viewports too. Plain contain
-       fixed that but left flat-color bars that read as broken/empty on
-       wide viewports even after color-matching them to the page.
-       #scrollVideoBg is the fix for both: a canvas, positioned behind the
-       real video and blurred, continuously redrawn (script.js) with that
-       same frame cropped/scaled to fully cover the stage - so the margin
-       around the sharp, never-cropped foreground video is filled with a
-       soft, on-theme continuation of the shot itself instead of an empty
-       bar. Single decode (the canvas draws from the one <video> element,
-       nothing decodes twice), so this costs a cheap drawImage per seek,
-       not a second video. */
+       Fit: object-fit:cover, edge to edge, no margin on any viewport -
+       contain (with or without a blurred fill behind it) was tried to
+       avoid cropping the card-cluster ending, but a filled/blurred edge
+       still reads as "not full screen" once you can see it, so cover
+       (accepting that cover can crop the shot's own edges - including,
+       on some viewport shapes, the outer cards) is the deliberate
+       tradeoff here: the user chose a full-bleed frame over guaranteeing
+       every card is always uncropped. */
     .scroll-video-pin {
       position: relative;
       height: 400vh;
@@ -177,22 +172,10 @@
       align-items: center;
       justify-content: center;
     }
-    .scroll-video-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      /* scaled up so the blur's own soft edge (sampling past the canvas
-         bounds) never peeks in from the sides */
-      transform: scale(1.15);
-      filter: blur(60px) saturate(1.15) brightness(0.92);
-    }
     .scroll-video-media {
-      position: relative;
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      z-index: 1;
+      object-fit: cover;
     }
     .scroll-video-spacer {
       height: clamp(48px, 8vw, 140px);
@@ -250,10 +233,8 @@
 
   <main>
     <!-- Scroll-driven video: scrubbed by scroll position, first thing in
-         <main> (above .hero-band). Always object-fit:contain - never
-         crops a card - with #scrollVideoBg (a canvas, script.js) filling
-         the margin around it with a blurred cover-fit copy of the same
-         frame instead of a flat bar. See the CSS comment above
+         <main> (above .hero-band). object-fit:cover - full-bleed, no
+         margin on any viewport. See the CSS comment above
          .scroll-video-pin (index.html) for the full reasoning. Purely
          additive (script.js guards on #scrollVideo existing, and no-ops
          to display:none under prefers-reduced-motion or with JS off) -
@@ -265,7 +246,6 @@
     <section class="scroll-video" id="scrollVideo">
       <div class="scroll-video-pin">
         <div class="scroll-video-stage">
-          <canvas class="scroll-video-bg" id="scrollVideoBg" aria-hidden="true"></canvas>
           <!-- muted/playsinline so the browser allows script.js to seek it
                (currentTime) without ever calling play(); it never plays on
                its own, only scrubs as the user scrolls. poster is the

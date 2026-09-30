@@ -99,8 +99,6 @@ armusInitHeroRotator();
 function armusInitScrollVideo(){
   const pin=document.querySelector('.scroll-video-pin');
   const video=document.getElementById('scrollVideoEl');
-  const stage=document.querySelector('.scroll-video-stage');
-  const bgCanvas=document.getElementById('scrollVideoBg');
   const nav=document.querySelector('header.nav');
   if(!pin||!video)return;
 
@@ -112,36 +110,6 @@ function armusInitScrollVideo(){
   function smoothstep(edge0,edge1,x){
     const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
     return t*t*(3-2*t);
-  }
-
-  // Fills the margin the contained (never-cropped) video leaves around
-  // itself with a blurred, cover-fit copy of the same frame, instead of a
-  // flat color bar. Draws from the <video> element itself - the same
-  // frame already decoded for the sharp foreground - so this never
-  // triggers a second decode, just a cheap drawImage. The canvas buffer
-  // is deliberately drawn at a fraction of its display size: the CSS
-  // blur filter erases detail anyway, so a low-res source costs far less
-  // per draw with no visible difference once blurred.
-  const bgCtx=bgCanvas&&bgCanvas.getContext('2d');
-  const BG_SCALE=0.25;
-  function resizeBg(){
-    if(!bgCanvas||!stage)return;
-    bgCanvas.width=Math.max(1,Math.round(stage.clientWidth*BG_SCALE));
-    bgCanvas.height=Math.max(1,Math.round(stage.clientHeight*BG_SCALE));
-  }
-  function drawBg(){
-    if(!bgCtx||!video.videoWidth||!video.videoHeight)return;
-    const cw=bgCanvas.width,ch=bgCanvas.height;
-    const vw=video.videoWidth,vh=video.videoHeight;
-    const scale=Math.max(cw/vw,ch/vh);
-    const sw=cw/scale,sh=ch/scale;
-    const sx=(vw-sw)/2,sy=(vh-sh)/2;
-    bgCtx.drawImage(video,sx,sy,sw,sh,0,0,cw,ch);
-  }
-  if(bgCanvas){
-    resizeBg();
-    video.addEventListener('seeked',drawBg);
-    video.addEventListener('loadeddata',drawBg);
   }
 
   let ticking=false;
@@ -205,7 +173,6 @@ function armusInitScrollVideo(){
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
-  if(bgCanvas)window.addEventListener('resize',()=>{resizeBg();drawBg();});
 }
 armusInitScrollVideo();
 
