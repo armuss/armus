@@ -149,17 +149,20 @@
        scroll runway the same way the old top-of-page intro worked -
        .scroll-video-stage stays pinned (position:sticky) for that whole
        runway while script.js scrubs the video's own currentTime straight
-       off scroll position (never autoplayed). object-fit:contain always -
-       cover was tried (crops whichever axis overflows to fill the frame
-       with no bars) but the card-cluster ending runs close to every edge
-       of the shot, not just the sides, so cover ended up cropping cards
-       on ordinary viewports too, not just extreme ones. contain guarantees
-       the whole shot - including every card - stays on screen; any
-       leftover bars use --armus-gold-3 (below) instead of black, matching
-       hero-band's own gradient start so they read as part of the page's
-       color instead of an empty gap. .scroll-video-spacer (index.html,
-       right after this section) adds a bit of breathing room before
-       hero-band starts, in that same color so the seam stays invisible. */
+       off scroll position (never autoplayed).
+       Fit: plain cover crops whichever axis overflows to fill the frame,
+       but the card-cluster ending runs close to every edge of the shot,
+       so cover cropped cards on ordinary viewports too. Plain contain
+       fixed that but left flat-color bars that read as broken/empty on
+       wide viewports even after color-matching them to the page.
+       #scrollVideoBg is the fix for both: a canvas, positioned behind the
+       real video and blurred, continuously redrawn (script.js) with that
+       same frame cropped/scaled to fully cover the stage - so the margin
+       around the sharp, never-cropped foreground video is filled with a
+       soft, on-theme continuation of the shot itself instead of an empty
+       bar. Single decode (the canvas draws from the one <video> element,
+       nothing decodes twice), so this costs a cheap drawImage per seek,
+       not a second video. */
     .scroll-video-pin {
       position: relative;
       height: 400vh;
@@ -174,10 +177,22 @@
       align-items: center;
       justify-content: center;
     }
+    .scroll-video-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      /* scaled up so the blur's own soft edge (sampling past the canvas
+         bounds) never peeks in from the sides */
+      transform: scale(1.15);
+      filter: blur(60px) saturate(1.15) brightness(0.92);
+    }
     .scroll-video-media {
+      position: relative;
       width: 100%;
       height: 100%;
       object-fit: contain;
+      z-index: 1;
     }
     .scroll-video-spacer {
       height: clamp(48px, 8vw, 140px);
@@ -235,18 +250,22 @@
 
   <main>
     <!-- Scroll-driven video: scrubbed by scroll position, first thing in
-         <main> (above .hero-band). Always object-fit:contain - see the
-         CSS comment above .scroll-video-pin (index.html) for why cover
-         was dropped. Purely additive (script.js guards on #scrollVideo
-         existing, and no-ops to display:none under prefers-reduced-motion
-         or with JS off) - nothing about the sections around it was
-         touched. .scroll-video-spacer right after is a plain gold buffer
-         (same color as .scroll-video-stage's letterbox and hero-band's
-         own gradient start) giving the handoff into hero-band some room
-         instead of the two sections butting up edge-to-edge. -->
+         <main> (above .hero-band). Always object-fit:contain - never
+         crops a card - with #scrollVideoBg (a canvas, script.js) filling
+         the margin around it with a blurred cover-fit copy of the same
+         frame instead of a flat bar. See the CSS comment above
+         .scroll-video-pin (index.html) for the full reasoning. Purely
+         additive (script.js guards on #scrollVideo existing, and no-ops
+         to display:none under prefers-reduced-motion or with JS off) -
+         nothing about the sections around it was touched.
+         .scroll-video-spacer right after is a plain gold buffer (same
+         color as hero-band's own gradient start) giving the handoff into
+         hero-band some room instead of the two sections butting up
+         edge-to-edge. -->
     <section class="scroll-video" id="scrollVideo">
       <div class="scroll-video-pin">
         <div class="scroll-video-stage">
+          <canvas class="scroll-video-bg" id="scrollVideoBg" aria-hidden="true"></canvas>
           <!-- muted/playsinline so the browser allows script.js to seek it
                (currentTime) without ever calling play(); it never plays on
                its own, only scrubs as the user scrolls. poster is the
