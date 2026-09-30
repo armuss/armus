@@ -152,21 +152,26 @@ function armusInitScrollIntro(){
     ).join(''));
   }
 
-  const realTiles=Array.from(mosaicGrid.querySelectorAll('.tile:not(.ghost)'));
-  // Each real card "flies out" of the burst and lands at its own
-  // hand-placed spot (CSS, --emerge-x/-y/-s below) instead of just
-  // cross-fading into place flat. tileEmergeOffsets[i] is the pixel
-  // vector from tile i's own resting position back to the burst's
-  // origin point - measured once (elements are already laid out by
-  // their CSS position/size at this point, untouched by any scroll-
-  // driven transform yet) and re-measured on resize, since it's fixed
-  // screen pixels, not something percentages/vh can keep correct on
-  // their own across viewport changes.
+  // Ghost tiles fly out of the burst too now, same as the real cards -
+  // they used to just sit at their resting spot for the whole sequence
+  // (only the shared layer opacity faded them in), which read as
+  // inconsistent once the real cards started visibly emerging from the
+  // burst point.
+  const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile'));
+  // Each card "flies out" of the burst and lands at its own hand-placed
+  // spot (CSS, --emerge-x/-y/-s below) instead of just cross-fading into
+  // place flat. tileEmergeOffsets[i] is the pixel vector from tile i's
+  // own resting position back to the burst's origin point - measured
+  // once (elements are already laid out by their CSS position/size at
+  // this point, untouched by any scroll-driven transform yet) and re-
+  // measured on resize, since it's fixed screen pixels, not something
+  // percentages/vh can keep correct on their own across viewport
+  // changes.
   let tileEmergeOffsets=[];
   function measureEmergeOffsets(){
     const originRect=burst.getBoundingClientRect();
     const originX=originRect.left,originY=originRect.top;
-    tileEmergeOffsets=realTiles.map(tile=>{
+    tileEmergeOffsets=emergeTiles.map(tile=>{
       const r=tile.getBoundingClientRect();
       return{dx:originX-(r.left+r.width/2),dy:originY-(r.top+r.height/2)};
     });
@@ -250,7 +255,7 @@ function armusInitScrollIntro(){
     // of the explosion rather than fading in independently of it.
     const emergeT=smoothstep(0.46,0.76,progress);
     const emergeScale=0.12+emergeT*0.88;
-    realTiles.forEach((tile,i)=>{
+    emergeTiles.forEach((tile,i)=>{
       const off=tileEmergeOffsets[i];
       if(!off)return;
       tile.style.setProperty('--emerge-x',(off.dx*(1-emergeT))+'px');
