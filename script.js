@@ -100,7 +100,6 @@ function armusInitScrollVideo(){
   const pin=document.querySelector('.scroll-video-pin');
   const video=document.getElementById('scrollVideoEl');
   const stage=document.querySelector('.scroll-video-stage');
-  const endcard=document.getElementById('scrollVideoEndcard');
   const fade=document.getElementById('scrollVideoFade');
   const nav=document.querySelector('header.nav');
   if(!pin||!video)return;
@@ -174,8 +173,7 @@ function armusInitScrollVideo(){
     const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
 
     // the whole clip is scrubbed across most of the scroll range, holding
-    // on its own final frame (the teacher cards settling into place) for
-    // the rest of the scroll.
+    // on its own final frame for the rest of the scroll.
     //
     // video.seeking guard: a single seek takes tens of ms to decode, while
     // scroll fires this update every ~16ms. Without the guard, a fast
@@ -188,32 +186,6 @@ function armusInitScrollVideo(){
       const scrubT=smoothstep(0,0.85,progress);
       const target=scrubT*videoDuration;
       if(Math.abs(video.currentTime-target)>0.02)video.currentTime=target;
-    }
-
-    // #scrollVideoEndcard (index.html CSS) replaces the video once it's
-    // already settled on its own matching final frame (which happens by
-    // progress 0.85, above) - a supplied photo of the same ending
-    // composition, with real headroom below the cards, so object-position:
-    // bottom keeps their full bottom edge (and the "Deneme Dersi Al"
-    // buttons on them) always in view; cover still fills the frame at the
-    // same scale as the video, no shrink. (contain + a zoom-out reveal was
-    // tried first so nothing was ever cropped at all, but the user wanted
-    // the ending to stay at the video's own full-bleed size instead.)
-    //
-    // opacity is a hard on/off, not a gradual fade: the video frame and
-    // this supplied photo are two different renders of the same design,
-    // not pixel-identical, so any window where both are partially visible
-    // shows a double-exposure ghost (confirmed visually - card text
-    // doubled up mid-fade) even though they're now the same scale.
-    if(endcard){
-      const endcardVisible=progress>=0.9;
-      endcard.style.opacity=endcardVisible?'1':'0';
-      // The video sitting underneath is still fully opaque and cover-
-      // fills the whole stage - without hiding it, it'd show through
-      // anywhere the endcard's own crop doesn't reach (e.g. once scrolled
-      // past the sticky stage, where the two images' edges no longer line
-      // up), doubling the scene's own floating decorations.
-      video.style.opacity=endcardVisible?'0':'1';
     }
 
     // #scrollVideoFade (index.html CSS) only needs to be visible right as

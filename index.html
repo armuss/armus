@@ -145,22 +145,26 @@
     }
 
     /* ---- scroll-driven video (armusInitScrollVideo, script.js) ----
-       first section in <main>, above .hero-band: a tall (400vh) pinned
-       scroll runway the same way the old top-of-page intro worked -
+       first section in <main>, above .hero-band: a tall pinned scroll
+       runway the same way the old top-of-page intro worked -
        .scroll-video-stage stays pinned (position:sticky) for that whole
        runway while script.js scrubs the video's own currentTime straight
-       off scroll position (never autoplayed).
+       off scroll position (never autoplayed). Height is proportional to
+       the video's own duration (currently ~700vh for ~12.3s of footage -
+       the original 400vh was tuned for the first ~7s clip alone) so a
+       longer video doesn't scrub any faster than before.
        Fit: object-fit:cover, edge to edge, no margin on any viewport -
-       contain (with or without a blurred fill behind it) was tried to
-       avoid cropping the card-cluster ending, but a filled/blurred edge
-       still reads as "not full screen" once you can see it, so cover
-       (accepting that cover can crop the shot's own edges - including,
-       on some viewport shapes, the outer cards) is the deliberate
-       tradeoff here: the user chose a full-bleed frame over guaranteeing
-       every card is always uncropped. */
+       the user chose a full-bleed frame over guaranteeing every card is
+       always uncropped (cover can crop the shot's own edges on some
+       viewport shapes). An earlier cut of this video held its last frame
+       on the teacher-card cluster, which sits close to the frame's edges,
+       so a #scrollVideoEndcard overlay image used to take over right at
+       the end to guarantee those cards stayed uncropped; the video now
+       continues past that scene into a different ending (not card-heavy),
+       so that overlay no longer applies and was removed. */
     .scroll-video-pin {
       position: relative;
-      height: 400vh;
+      height: 700vh;
     }
     .scroll-video-stage {
       position: sticky;
@@ -176,32 +180,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-    /* object-fit:cover on the video itself can crop into the ending
-       scene's cards on some viewport shapes (the deliberate tradeoff
-       for a full-bleed frame, explained above) - #scrollVideoEndcard is
-       a plain image of that same ending composition (supplied directly,
-       not cropped from the video) that takes over at the very end of
-       the scroll. This was object-fit:contain at first (guarantees the
-       whole frame fits, but visibly smaller than the video's own
-       full-bleed size - the user asked to keep the same size instead)
-       and object-position:center (crops evenly off every edge, so it
-       could still cut into the cards' bottom, the actual complaint).
-       object-position:bottom keeps the same cover scale as the video -
-       no shrink - while always anchoring the full bottom edge of the
-       supplied photo (where the cards' own bottoms/buttons sit, with
-       headroom below them in that image) in view; any cropping cover
-       still needs on a given viewport comes off the top instead, which
-       only touches background, not the cards. */
-    .scroll-video-endcard {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center bottom;
-      opacity: 0;
-      pointer-events: none;
     }
     /* Matching the spacer's starting color to the video's real sampled
        edge color (below) closed most of the gap, but a hard cut from the
@@ -318,7 +296,6 @@
             <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
             <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
           </video>
-          <img class="scroll-video-endcard" id="scrollVideoEndcard" src="avatars/scroll-video-endcard.jpg" alt="" aria-hidden="true">
           <div class="scroll-video-fade" id="scrollVideoFade" aria-hidden="true"></div>
         </div>
       </div>
