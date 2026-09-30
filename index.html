@@ -148,17 +148,18 @@
        first section in <main>, above .hero-band: a tall (400vh) pinned
        scroll runway the same way the old top-of-page intro worked -
        .scroll-video-stage stays pinned (position:sticky) for that whole
-       runway while script.js scrubs the
-       video's own currentTime straight off scroll position (never
-       autoplayed). Fit mode is picked per-viewport by script.js, not
-       fixed here: cover (default below) fills the frame with no bars but
-       crops whichever axis overflows - safe when it crops sky/floor
-       above and below the shot, but on a viewport narrower/taller than
-       the video it crops the sides instead, which cuts into the
-       card-cluster ending since that composition runs close to the
-       frame's left/right edges. .scroll-video-media.fit-contain
-       (toggled in JS when that's the case) switches to a letterboxed
-       fit instead, trading side crop for top/bottom bars. */
+       runway while script.js scrubs the video's own currentTime straight
+       off scroll position (never autoplayed). object-fit:contain always -
+       cover was tried (crops whichever axis overflows to fill the frame
+       with no bars) but the card-cluster ending runs close to every edge
+       of the shot, not just the sides, so cover ended up cropping cards
+       on ordinary viewports too, not just extreme ones. contain guarantees
+       the whole shot - including every card - stays on screen; any
+       leftover bars use --armus-gold-3 (below) instead of black, matching
+       hero-band's own gradient start so they read as part of the page's
+       color instead of an empty gap. .scroll-video-spacer (index.html,
+       right after this section) adds a bit of breathing room before
+       hero-band starts, in that same color so the seam stays invisible. */
     .scroll-video-pin {
       position: relative;
       height: 400vh;
@@ -168,7 +169,7 @@
       top: 0;
       height: 100vh;
       overflow: hidden;
-      background: #0a0a0a;
+      background: var(--armus-gold-3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -176,10 +177,11 @@
     .scroll-video-media {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-    }
-    .scroll-video-media.fit-contain {
       object-fit: contain;
+    }
+    .scroll-video-spacer {
+      height: clamp(48px, 8vw, 140px);
+      background: var(--armus-gold-3);
     }
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the scrub is only
@@ -189,12 +191,16 @@
       .scroll-video {
         display: none;
       }
+      .scroll-video-spacer {
+        display: none;
+      }
     }
 
   </style>
   <noscript>
     <style>
       .scroll-video { display: none; }
+      .scroll-video-spacer { display: none; }
       .logo-splash { display: none; }
       header.nav a.brand .logo-img { opacity: 1; }
     </style>
@@ -228,13 +234,16 @@
   </header>
 
   <main>
-    <!-- Scroll-driven video: scrubbed by scroll position, now the first
-         thing in <main> (above .hero-band). Fit mode (cover vs contain)
-         is picked per-viewport in script.js/armusInitScrollVideo - index.html
-         CSS above .scroll-video-pin. Purely additive (script.js guards on
-         #scrollVideo existing, and no-ops to display:none under
-         prefers-reduced-motion or with JS off) - nothing about the
-         sections around it was touched. -->
+    <!-- Scroll-driven video: scrubbed by scroll position, first thing in
+         <main> (above .hero-band). Always object-fit:contain - see the
+         CSS comment above .scroll-video-pin (index.html) for why cover
+         was dropped. Purely additive (script.js guards on #scrollVideo
+         existing, and no-ops to display:none under prefers-reduced-motion
+         or with JS off) - nothing about the sections around it was
+         touched. .scroll-video-spacer right after is a plain gold buffer
+         (same color as .scroll-video-stage's letterbox and hero-band's
+         own gradient start) giving the handoff into hero-band some room
+         instead of the two sections butting up edge-to-edge. -->
     <section class="scroll-video" id="scrollVideo">
       <div class="scroll-video-pin">
         <div class="scroll-video-stage">
@@ -250,6 +259,7 @@
         </div>
       </div>
     </section>
+    <div class="scroll-video-spacer" aria-hidden="true"></div>
 
     <section class="hero-band">
     <div class="hero shell">
