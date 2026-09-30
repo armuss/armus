@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <script>
-    // The homepage now has a tall (240vh) pinned scroll-intro section
+    // The homepage now has a tall (400vh) pinned scroll-intro section
     // before the real page content - Chrome's default scroll
     // restoration (history.scrollRestoration = "auto") remembers and
     // reapplies whatever scroll position a tab/history entry was at,
@@ -186,7 +186,7 @@
     }
 
     /* ---- scroll-driven intro (armusInitScrollIntro, script.js) ----
-       .scroll-intro-pin is a tall (240vh) scroll runway; .scroll-intro-stage
+       .scroll-intro-pin is a tall (400vh) scroll runway; .scroll-intro-stage
        inside it is position:sticky so it stays pinned to the viewport for
        that whole runway while script.js reads scroll progress through it
        (0 at the top of the runway, 1 at the bottom) and drives two things
@@ -196,10 +196,13 @@
        the crossfade opacity between the single-photo layer and the
        mosaic layer. Once progress reaches 1 the stage stops being sticky
        (its pin runway has fully scrolled past) and the page continues
-       straight into .hero-band below, unpinned. */
+       straight into .hero-band below, unpinned. 400vh (up from an
+       original 240vh) spreads that same 0-1 progress over a lot more
+       physical scrolling, so the whole sequence reads as a slower,
+       deliberate scroll rather than something a small flick blows past. */
     .scroll-intro-pin {
       position: relative;
-      height: 240vh;
+      height: 400vh;
     }
     .scroll-intro-stage {
       position: sticky;
@@ -583,7 +586,7 @@
        scattered cluster scales down together automatically. */
     @media (max-width: 760px) {
       .scroll-intro-pin {
-        height: 200vh;
+        height: 320vh;
       }
     }
 
