@@ -133,7 +133,15 @@ function armusInitScrollVideo(){
     // the whole clip is scrubbed across most of the scroll range, holding
     // on its own final frame (the teacher cards settling into place) for
     // the rest of the scroll.
-    if(videoDuration){
+    //
+    // video.seeking guard: a single seek takes tens of ms to decode, while
+    // scroll fires this update every ~16ms. Without the guard, a fast
+    // scroll/flick queues a new seek before the last one finishes, and the
+    // video visibly freezes trying to work through the backlog. Skipping
+    // the assignment while a seek is still in flight means the next free
+    // frame jumps straight to wherever the scroll actually is by then,
+    // instead of grinding through every position in between.
+    if(videoDuration&&!video.seeking){
       const scrubT=smoothstep(0,0.85,progress);
       const target=scrubT*videoDuration;
       if(Math.abs(video.currentTime-target)>0.02)video.currentTime=target;
