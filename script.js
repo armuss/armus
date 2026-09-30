@@ -192,60 +192,27 @@ function armusInitScrollVideo(){
 
     // #scrollVideoEndcard (index.html CSS) replaces the video once it's
     // already settled on its own matching final frame (which happens by
-    // progress 0.85, above) - object-fit:contain guarantees this
-    // supplied image shows every card complete, unlike the video's own
-    // object-fit:cover which can crop them on some viewport shapes.
+    // progress 0.85, above) - a supplied photo of the same ending
+    // composition, with real headroom below the cards, so object-position:
+    // bottom keeps their full bottom edge (and the "Deneme Dersi Al"
+    // buttons on them) always in view; cover still fills the frame at the
+    // same scale as the video, no shrink. (contain + a zoom-out reveal was
+    // tried first so nothing was ever cropped at all, but the user wanted
+    // the ending to stay at the video's own full-bleed size instead.)
     //
-    // Two things were tried and rejected before this: a plain opacity
-    // crossfade ghosted, because the video (cover-cropped, effectively
-    // zoomed in) and the endcard (contain-fit, zoomed out to stay whole)
-    // sit at different scales - blending two differently-scaled views of
-    // the same composition looks like a double exposure, not a dissolve.
-    // A hard, unscaled cut avoided the ghosting but still *looked* like
-    // a sudden resize, because contain's natural scale is smaller than
-    // cover's - so the image visibly snapped smaller the instant it
-    // appeared.
-    //
-    // The fix: compute the actual ratio between those two scales for the
-    // live viewport - video's cover-fit scale (how much the video source
-    // is enlarged to cover the stage) divided by the endcard's contain-
-    // fit scale (how much the endcard source is shrunk/enlarged to fit
-    // without cropping) - and apply it as a CSS transform on the
-    // endcard. At progress 0.9 the endcard is scaled up by exactly that
-    // ratio, so it's the same size the video's last frame already was -
-    // no jump. From there it eases down to scale(1) as the user keeps
-    // scrolling, a deliberate zoom-out reveal tied to scroll position
-    // instead of an instant swap.
-    if(endcard&&video.videoWidth&&video.videoHeight&&endcard.naturalWidth&&endcard.naturalHeight){
-      const cw=stage.clientWidth,ch=stage.clientHeight;
-      const videoCoverScale=Math.max(cw/video.videoWidth,ch/video.videoHeight);
-      const endcardContainScale=Math.min(cw/endcard.naturalWidth,ch/endcard.naturalHeight);
-      const zoomRatio=videoCoverScale/endcardContainScale;
-      const revealT=smoothstep(0.9,1,progress);
-      // opacity is a hard on/off, not a gradual fade: the video frame and
-      // this supplied photo are two different renders of the same design,
-      // not pixel-identical, so any window where both are partially
-      // visible shows a double-exposure ghost (confirmed visually - card
-      // text doubled up mid-fade) no matter how closely their scale is
-      // matched. Switching instantly avoids that entirely; it doesn't
-      // read as a jump because the scale below already matches the
-      // video's last frame exactly at this same instant.
+    // opacity is a hard on/off, not a gradual fade: the video frame and
+    // this supplied photo are two different renders of the same design,
+    // not pixel-identical, so any window where both are partially visible
+    // shows a double-exposure ghost (confirmed visually - card text
+    // doubled up mid-fade) even though they're now the same scale.
+    if(endcard){
       const endcardVisible=progress>=0.9;
       endcard.style.opacity=endcardVisible?'1':'0';
-      root.style.setProperty('--scroll-video-endcard-scale',String(zoomRatio-(zoomRatio-1)*revealT));
-      // object-fit:contain only paints the endcard's own fitted area,
-      // leaving the rest of its box transparent (the letterboxed margin
-      // around it) - the video sitting underneath is still fully opaque
-      // and cover-fills the whole stage, so without this it shows
-      // straight through that margin. Once scrolled past the sticky
-      // stage, that margin lands somewhere the video's own content
-      // doesn't line up with the endcard's - two different renders of
-      // the scene, each with its own floating decorations in slightly
-      // different spots - so what peeked through read as a second,
-      // misaligned copy of the image, not a subtle seam. Hiding the
-      // video once the endcard is showing removes that layer entirely;
-      // what's left behind the endcard's margin is just the stage's own
-      // gold-3 background (index.html CSS).
+      // The video sitting underneath is still fully opaque and cover-
+      // fills the whole stage - without hiding it, it'd show through
+      // anywhere the endcard's own crop doesn't reach (e.g. once scrolled
+      // past the sticky stage, where the two images' edges no longer line
+      // up), doubling the scene's own floating decorations.
       video.style.opacity=endcardVisible?'0':'1';
     }
 
