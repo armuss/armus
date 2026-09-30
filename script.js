@@ -133,12 +133,25 @@ function armusInitScrollIntro(){
 
     // the whole clip (classroom -> dust transition -> cards settling) is
     // scrubbed across most of the scroll range, holding on its own final
-    // frame for the last stretch while it fades into .hero-band below.
+    // frame (already the same gold as .hero-band right below) for the
+    // rest of the scroll - no fade needed, the two colors already meet
+    // cleanly, and fading to transparent here used to flash the stage's
+    // own black background through mid-fade, which read as a jarring
+    // black cut rather than a continuous shot.
+    let scrubT=0;
     if(videoDuration){
-      const scrubT=smoothstep(0,0.85,progress);
+      scrubT=smoothstep(0,0.85,progress);
       const target=scrubT*videoDuration;
       if(Math.abs(introVideo.currentTime-target)>0.02)introVideo.currentTime=target;
     }
+
+    // once the clip has reached its own settled ending (cards in place),
+    // give the whole shot a very slight, slow wobble - the individual
+    // per-card wobble from the old DOM-built cluster can't carry over now
+    // that the cards are pixels baked into this video rather than
+    // separate elements, so this is the closest equivalent: a gentle
+    // breathing/sway on the frame as a whole, not held perfectly still.
+    introVideo.classList.toggle('is-settled',scrubT>=1);
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
@@ -155,11 +168,6 @@ function armusInitScrollIntro(){
       nav.style.opacity=String(navOpacity);
       nav.style.pointerEvents=navOpacity<0.5?'none':'auto';
     }
-
-    // fades into .hero-band below over the last stretch of scroll, once
-    // the video has finished scrubbing and is holding on its last frame.
-    const fadeOut=smoothstep(0.88,1,progress);
-    introVideo.style.opacity=String(1-fadeOut);
   }
 
   function onScroll(){

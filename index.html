@@ -224,6 +224,20 @@
       height: 100%;
       object-fit: cover;
     }
+    /* once the clip has scrubbed all the way to its own settled ending
+       (script.js toggles this once scrubT hits 1), give the whole frame a
+       slow, barely-there wobble instead of holding perfectly still - the
+       closest equivalent, now that the cards are pixels baked into this
+       video, to the per-card wobble the old DOM-built cluster had. scale
+       stays just above 1 throughout so the rotate never reveals an edge
+       gap against the stage's own bounds. */
+    .scroll-intro-classroom-bg.is-settled {
+      animation: introVideoWobble 7s ease-in-out infinite;
+    }
+    @keyframes introVideoWobble {
+      0%, 100% { transform: scale(1.015) rotate(-0.25deg); }
+      50% { transform: scale(1.02) rotate(0.25deg); }
+    }
 
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the crossfade/zoom
