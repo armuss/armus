@@ -194,15 +194,45 @@ function armusInitScrollVideo(){
     // already settled on its own matching final frame (which happens by
     // progress 0.85, above) - object-fit:contain guarantees this
     // supplied image shows every card complete, unlike the video's own
-    // object-fit:cover which can crop them on some viewport shapes. A
-    // gradual opacity crossfade was tried first, but the video (cropped,
-    // effectively zoomed in) and the endcard (contain-fit, zoomed out to
-    // stay whole) are at different scales - blending them mid-fade
-    // produced a double-exposure ghosting effect, not a clean dissolve.
-    // A hard cut avoids that entirely; it lands while the video is
-    // already static on its held final frame, so there's no motion to
-    // interrupt.
-    if(endcard)endcard.style.opacity=progress>=0.96?'1':'0';
+    // object-fit:cover which can crop them on some viewport shapes.
+    //
+    // Two things were tried and rejected before this: a plain opacity
+    // crossfade ghosted, because the video (cover-cropped, effectively
+    // zoomed in) and the endcard (contain-fit, zoomed out to stay whole)
+    // sit at different scales - blending two differently-scaled views of
+    // the same composition looks like a double exposure, not a dissolve.
+    // A hard, unscaled cut avoided the ghosting but still *looked* like
+    // a sudden resize, because contain's natural scale is smaller than
+    // cover's - so the image visibly snapped smaller the instant it
+    // appeared.
+    //
+    // The fix: compute the actual ratio between those two scales for the
+    // live viewport - video's cover-fit scale (how much the video source
+    // is enlarged to cover the stage) divided by the endcard's contain-
+    // fit scale (how much the endcard source is shrunk/enlarged to fit
+    // without cropping) - and apply it as a CSS transform on the
+    // endcard. At progress 0.9 the endcard is scaled up by exactly that
+    // ratio, so it's the same size the video's last frame already was -
+    // no jump. From there it eases down to scale(1) as the user keeps
+    // scrolling, a deliberate zoom-out reveal tied to scroll position
+    // instead of an instant swap.
+    if(endcard&&video.videoWidth&&video.videoHeight&&endcard.naturalWidth&&endcard.naturalHeight){
+      const cw=stage.clientWidth,ch=stage.clientHeight;
+      const videoCoverScale=Math.max(cw/video.videoWidth,ch/video.videoHeight);
+      const endcardContainScale=Math.min(cw/endcard.naturalWidth,ch/endcard.naturalHeight);
+      const zoomRatio=videoCoverScale/endcardContainScale;
+      const revealT=smoothstep(0.9,1,progress);
+      // opacity is a hard on/off, not a gradual fade: the video frame and
+      // this supplied photo are two different renders of the same design,
+      // not pixel-identical, so any window where both are partially
+      // visible shows a double-exposure ghost (confirmed visually - card
+      // text doubled up mid-fade) no matter how closely their scale is
+      // matched. Switching instantly avoids that entirely; it doesn't
+      // read as a jump because the scale below already matches the
+      // video's last frame exactly at this same instant.
+      endcard.style.opacity=progress>=0.9?'1':'0';
+      root.style.setProperty('--scroll-video-endcard-scale',String(zoomRatio-(zoomRatio-1)*revealT));
+    }
 
     // #scrollVideoFade (index.html CSS) only needs to be visible right as
     // the video settles on its ending frame and is about to hand off to
