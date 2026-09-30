@@ -152,6 +152,27 @@ function armusInitScrollIntro(){
     ).join(''));
   }
 
+  const realTiles=Array.from(mosaicGrid.querySelectorAll('.tile:not(.ghost)'));
+  // Each real card "flies out" of the burst and lands at its own
+  // hand-placed spot (CSS, --emerge-x/-y/-s below) instead of just
+  // cross-fading into place flat. tileEmergeOffsets[i] is the pixel
+  // vector from tile i's own resting position back to the burst's
+  // origin point - measured once (elements are already laid out by
+  // their CSS position/size at this point, untouched by any scroll-
+  // driven transform yet) and re-measured on resize, since it's fixed
+  // screen pixels, not something percentages/vh can keep correct on
+  // their own across viewport changes.
+  let tileEmergeOffsets=[];
+  function measureEmergeOffsets(){
+    const originRect=burst.getBoundingClientRect();
+    const originX=originRect.left,originY=originRect.top;
+    tileEmergeOffsets=realTiles.map(tile=>{
+      const r=tile.getBoundingClientRect();
+      return{dx:originX-(r.left+r.width/2),dy:originY-(r.top+r.height/2)};
+    });
+  }
+  measureEmergeOffsets();
+
   function smoothstep(edge0,edge1,x){
     const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
     return t*t*(3-2*t);
@@ -205,23 +226,37 @@ function armusInitScrollIntro(){
     layerSingle.style.opacity=String(1-cross);
     layerMosaic.style.opacity=String(cross);
 
-    // a brief mist/dust + firework-burst window straddling the
-    // crossfade point - the cluster visually erupts through it rather
-    // than just cross-fading in flat. Rises from 0.44, peaks around the
-    // crossfade itself, and is gone again by 0.72 so it never lingers
-    // once the mosaic has settled. The burst rays grow out slightly
-    // faster than the mist fades in (feels like the spark comes first,
-    // the haze follows) and hold a beat longer before fading.
-    const mistIn=smoothstep(0.44,0.56,progress);
-    const mistOut=smoothstep(0.6,0.72,progress);
+    // a dust/mist + firework-burst window straddling the crossfade point
+    // - the cluster visually erupts through it rather than just cross-
+    // fading in flat. Mist now rises earlier and holds well past the
+    // burst itself, all the way through the cards' own emerge travel
+    // below, so there's a real dusty haze sitting behind them as they
+    // fly out and land - not just a brief flash at the crossfade instant.
+    const mistIn=smoothstep(0.42,0.54,progress);
+    const mistOut=smoothstep(0.74,0.88,progress);
     const mistT=mistIn*(1-mistOut);
-    mist.style.opacity=String(mistT*0.85);
-    mist.style.transform='scale('+(0.85+mistT*0.35)+')';
+    mist.style.opacity=String(mistT*0.9);
+    mist.style.transform='scale('+(0.85+mistT*0.4)+')';
 
     const burstIn=smoothstep(0.42,0.52,progress);
     const burstOut=smoothstep(0.64,0.78,progress);
     burst.style.setProperty('--t',String(burstIn*(1-burstOut)));
     burst.style.opacity=String(burstIn*(1-burstOut));
+
+    // each card travels from the burst's origin point to its own resting
+    // spot, growing from a small spark-sized speck up to full size as it
+    // arrives - starts just as the burst itself fires and finishes
+    // before the mist has fully cleared, so the cards read as flying out
+    // of the explosion rather than fading in independently of it.
+    const emergeT=smoothstep(0.46,0.76,progress);
+    const emergeScale=0.12+emergeT*0.88;
+    realTiles.forEach((tile,i)=>{
+      const off=tileEmergeOffsets[i];
+      if(!off)return;
+      tile.style.setProperty('--emerge-x',(off.dx*(1-emergeT))+'px');
+      tile.style.setProperty('--emerge-y',(off.dy*(1-emergeT))+'px');
+      tile.style.setProperty('--emerge-s',String(emergeScale));
+    });
 
     const settle=smoothstep(0.58,0.85,progress);
     mosaicGrid.style.transform='scale('+(1.06-settle*0.06)+')';
@@ -234,9 +269,14 @@ function armusInitScrollIntro(){
     requestAnimationFrame(update);
   }
 
+  function onResize(){
+    measureEmergeOffsets();
+    onScroll();
+  }
+
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
-  window.addEventListener('resize',onScroll);
+  window.addEventListener('resize',onResize);
 }
 armusInitScrollIntro();
 
