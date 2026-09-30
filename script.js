@@ -107,9 +107,12 @@ function armusInitScrollIntro(){
   const layerSingle=document.getElementById('introLayerSingle');
   const layerMosaic=document.getElementById('introLayerMosaic');
   const mosaicGrid=document.getElementById('introMosaicGrid');
+  // headline dropped from the DOM for now (index.html) - optional here
+  // rather than required so the rest of the sequence keeps working
+  // without it.
   const copyMosaic=document.getElementById('introCopyMosaic');
   const nav=document.querySelector('header.nav');
-  if(!pin||!introVideo||!layerSingle||!layerMosaic||!mosaicGrid||!copyMosaic)return;
+  if(!pin||!introVideo||!layerSingle||!layerMosaic||!mosaicGrid)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
@@ -289,7 +292,7 @@ function armusInitScrollIntro(){
 
     const settle=smoothstep(0.58,0.85,progress);
     mosaicGrid.style.transform='scale('+(1.06-settle*0.06)+')';
-    copyMosaic.style.opacity=String(smoothstep(0.6,0.8,progress));
+    if(copyMosaic)copyMosaic.style.opacity=String(smoothstep(0.6,0.8,progress));
   }
 
   function onScroll(){
