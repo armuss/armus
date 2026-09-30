@@ -230,8 +230,23 @@ function armusInitScrollVideo(){
       // matched. Switching instantly avoids that entirely; it doesn't
       // read as a jump because the scale below already matches the
       // video's last frame exactly at this same instant.
-      endcard.style.opacity=progress>=0.9?'1':'0';
+      const endcardVisible=progress>=0.9;
+      endcard.style.opacity=endcardVisible?'1':'0';
       root.style.setProperty('--scroll-video-endcard-scale',String(zoomRatio-(zoomRatio-1)*revealT));
+      // object-fit:contain only paints the endcard's own fitted area,
+      // leaving the rest of its box transparent (the letterboxed margin
+      // around it) - the video sitting underneath is still fully opaque
+      // and cover-fills the whole stage, so without this it shows
+      // straight through that margin. Once scrolled past the sticky
+      // stage, that margin lands somewhere the video's own content
+      // doesn't line up with the endcard's - two different renders of
+      // the scene, each with its own floating decorations in slightly
+      // different spots - so what peeked through read as a second,
+      // misaligned copy of the image, not a subtle seam. Hiding the
+      // video once the endcard is showing removes that layer entirely;
+      // what's left behind the endcard's margin is just the stage's own
+      // gold-3 background (index.html CSS).
+      video.style.opacity=endcardVisible?'0':'1';
     }
 
     // #scrollVideoFade (index.html CSS) only needs to be visible right as
