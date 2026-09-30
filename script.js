@@ -99,23 +99,19 @@ armusInitHeroRotator();
 // locked to scroll position even on a fast flick or an instant jump.
 function armusInitScrollIntro(){
   const pin=document.querySelector('.scroll-intro-pin');
-  const singleImg=document.getElementById('introSingleImg');
+  // the establishing shot is a real <video> (index.html) whose own baked-
+  // in camera move (wide classroom -> close on the teacher) gets scrubbed
+  // by setting currentTime off scroll progress below - it never plays on
+  // its own.
+  const introVideo=document.getElementById('introSingleImg');
   const layerSingle=document.getElementById('introLayerSingle');
   const layerMosaic=document.getElementById('introLayerMosaic');
   const mosaicGrid=document.getElementById('introMosaicGrid');
   const mist=document.getElementById('introMist');
   const burst=document.getElementById('introBurst');
-  // videoCard/copySingle (the small framed call photo + "Bir öğretmenle
-  // başla." text that used to sit over the classroom shot) are gone now
-  // that shot is a real photo with the teacher already in it - optional
-  // here rather than required so the rest of the sequence (mosaic,
-  // burst) keeps working while the next step (zooming into/bursting
-  // from the new photo itself) is still pending.
-  const videoCard=document.getElementById('introVideoCard');
-  const copySingle=document.getElementById('introCopySingle');
   const copyMosaic=document.getElementById('introCopyMosaic');
   const nav=document.querySelector('header.nav');
-  if(!pin||!singleImg||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!burst||!copyMosaic)return;
+  if(!pin||!introVideo||!layerSingle||!layerMosaic||!mosaicGrid||!mist||!burst||!copyMosaic)return;
 
   // display:none under prefers-reduced-motion (index.html CSS) makes this
   // pointless work either way, but skip the scroll listener too rather
@@ -166,35 +162,45 @@ function armusInitScrollIntro(){
   const emergeTiles=Array.from(mosaicGrid.querySelectorAll('.tile'));
 
   // .scroll-intro-burst/.scroll-intro-mist are CSS-positioned at a fixed
-  // 50%/66% of the stage (index.html), which only actually lands on her
-  // face on roughly desktop-shaped viewports when there's a real element
-  // to measure her face from - .scroll-intro-video-card sat at a fixed
-  // bottom:14%, so on a narrow/tall phone screen it ended up much
-  // further down the stage (as a fraction of stage height) than 66%,
-  // and the burst fired from empty space instead of her face. Both get
-  // the same real measured offset applied via transform (translate is
-  // unaffected by each element's own scale/--t-driven transform
+  // 50%/66% of the stage (index.html) by default, which only actually
+  // lands on the word "ARMUS" chalked on the board (the real burst
+  // origin now) on whatever one aspect ratio that guess happens to match.
+  // Instead this measures the word's real on-screen position: the video
+  // has a fixed spot in its own frame (ARMUS_WORD_FX/FY, measured by eye
+  // off the video's final settled frame) that object-fit:cover maps onto
+  // the actual rendered box depending on the video's intrinsic size, the
+  // container's current size, AND object-position (which itself changes
+  // on mobile, index.html) - so all of that has to be replayed here
+  // rather than assumed. The result is applied via transform (translate
+  // is unaffected by each element's own scale/--t-driven transform
   // functions as long as it's composed after them, so it layers on top
-  // of the existing scale/spark animations without touching them) so
-  // they land correctly on any aspect ratio, not just the one this was
-  // first built against. Now that the video-card is gone (pending the
-  // next step - zooming into/bursting from the new classroom photo
-  // itself), this is a no-op (faceOffset stays 0,0, i.e. the plain
-  // 50%/66% default) until that lands.
-  let faceOffset={dx:0,dy:0};
-  function measureFaceOffset(){
-    if(!videoCard)return;
-    const cardRect=videoCard.getBoundingClientRect();
-    const faceX=cardRect.left+cardRect.width*0.54;
-    const faceY=cardRect.top+cardRect.height*0.24;
+  // of the existing scale/spark animations without touching them) so it
+  // lands correctly on any aspect ratio.
+  const ARMUS_WORD_FX=0.53,ARMUS_WORD_FY=0.205;
+  let boardOffset={dx:0,dy:0};
+  function parseObjectPosition(el){
+    const parts=(getComputedStyle(el).objectPosition||'50% 50%').split(' ').map(s=>parseFloat(s)/100);
+    return{px:isNaN(parts[0])?0.5:parts[0],py:isNaN(parts[1])?0.5:parts[1]};
+  }
+  function measureBoardOffset(){
+    const nw=introVideo.videoWidth,nh=introVideo.videoHeight;
+    if(!nw||!nh)return;
+    const rect=introVideo.getBoundingClientRect();
+    const scale=Math.max(rect.width/nw,rect.height/nh);
+    const renderedW=nw*scale,renderedH=nh*scale;
+    const pos=parseObjectPosition(introVideo);
+    const offsetX=(renderedW-rect.width)*pos.px;
+    const offsetY=(renderedH-rect.height)*pos.py;
+    const targetX=rect.left+ARMUS_WORD_FX*renderedW-offsetX;
+    const targetY=rect.top+ARMUS_WORD_FY*renderedH-offsetY;
     const burstRect=burst.getBoundingClientRect();
-    faceOffset={dx:faceX-burstRect.left,dy:faceY-burstRect.top};
+    boardOffset={dx:targetX-burstRect.left,dy:targetY-burstRect.top};
   }
 
   // Each card "flies out" of the burst and lands at its own hand-placed
   // spot (CSS, --emerge-x/-y/-s below) instead of just cross-fading into
   // place flat. tileEmergeOffsets[i] is the pixel vector from tile i's
-  // own resting position back to the burst's real (face-corrected)
+  // own resting position back to the burst's real (board-corrected)
   // origin point - measured once (elements are already laid out by
   // their CSS position/size at this point, untouched by any scroll-
   // driven transform yet) and re-measured on resize, since it's fixed
@@ -202,9 +208,9 @@ function armusInitScrollIntro(){
   // their own across viewport changes.
   let tileEmergeOffsets=[];
   function measureEmergeOffsets(){
-    measureFaceOffset();
+    measureBoardOffset();
     const originRect=burst.getBoundingClientRect();
-    const originX=originRect.left+faceOffset.dx,originY=originRect.top+faceOffset.dy;
+    const originX=originRect.left+boardOffset.dx,originY=originRect.top+boardOffset.dy;
     tileEmergeOffsets=emergeTiles.map(tile=>{
       const r=tile.getBoundingClientRect();
       return{dx:originX-(r.left+r.width/2),dy:originY-(r.top+r.height/2)};
@@ -218,6 +224,19 @@ function armusInitScrollIntro(){
   }
 
   let ticking=false;
+  // videoWidth/videoHeight/duration (needed by measureBoardOffset and the
+  // scrub below) are all 0 until the video's metadata has loaded - on a
+  // fast/local connection that can already have happened by the time this
+  // script runs (preload="auto" starts the fetch the instant the <video>
+  // tag is parsed, well before script.js at the bottom of the page even
+  // executes), so 'loadedmetadata' alone would never fire again and both
+  // would silently stay stuck at 0. Checking readyState synchronously
+  // covers that case; the event covers the normal case where it hasn't
+  // loaded yet.
+  let videoDuration=introVideo.duration||0;
+  function onVideoMeta(){videoDuration=introVideo.duration||0;measureEmergeOffsets();}
+  if(introVideo.readyState>=1)onVideoMeta();
+  introVideo.addEventListener('loadedmetadata',onVideoMeta);
 
   function update(){
     ticking=false;
@@ -225,13 +244,18 @@ function armusInitScrollIntro(){
     const scrollable=rect.height-window.innerHeight;
     const progress=scrollable>0?Math.min(1,Math.max(0,-rect.top/scrollable)):0;
 
-    // the classroom photo itself barely moves (a faint ambient drift,
-    // not a real zoom) - pending the next step, which points the actual
-    // zoom/burst at this photo directly instead of the old video-card.
-    const zoomT=smoothstep(0,0.55,progress);
-    singleImg.style.transform='scale('+(1+zoomT*0.12)+')';
-    if(videoCard)videoCard.style.transform='rotate(-3deg) scale('+(1+zoomT*5.5)+')';
-    if(copySingle)copySingle.style.opacity=String(1-smoothstep(0.04,0.16,progress));
+    // the establishing shot's own camera move (wide classroom -> close on
+    // the teacher, baked into the video itself, not a CSS transform) is
+    // scrubbed straight off scroll progress - the video only ever moves
+    // because the user is scrolling, it's never actually played. Finishes
+    // at progress 0.42, just as the board-burst below starts firing, so
+    // she's already in close-up with "ARMUS" clearly on the board behind
+    // her by the time it goes off.
+    if(videoDuration){
+      const scrubT=smoothstep(0,0.42,progress);
+      const target=scrubT*videoDuration;
+      if(Math.abs(introVideo.currentTime-target)>0.02)introVideo.currentTime=target;
+    }
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this whole sequence throughout - fades out fast once
@@ -252,9 +276,16 @@ function armusInitScrollIntro(){
       nav.style.pointerEvents=navOpacity<0.5?'none':'auto';
     }
 
+    // the video and the card cluster rise together through the crossfade
+    // instead of just swapping opacity in place - the shot drifts up and
+    // out as it fades, the mosaic drifts up into place as it fades in, so
+    // the whole moment reads as "this rises up and becomes these cards"
+    // rather than two flat layers dissolving into each other.
     const cross=smoothstep(0.5,0.66,progress);
     layerSingle.style.opacity=String(1-cross);
+    layerSingle.style.transform='translateY('+(-cross*90)+'px)';
     layerMosaic.style.opacity=String(cross);
+    layerMosaic.style.transform='translateY('+((1-cross)*70)+'px)';
 
     // a dust/mist + firework-burst window straddling the crossfade point
     // - the cluster visually erupts through it rather than just cross-
@@ -266,17 +297,18 @@ function armusInitScrollIntro(){
     const mistOut=smoothstep(0.74,0.88,progress);
     const mistT=mistIn*(1-mistOut);
     mist.style.opacity=String(mistT*0.9);
-    // translate(faceOffset) first (unaffected by the scale that follows,
+    // translate(boardOffset) first (unaffected by the scale that follows,
     // since it's a real fixed-pixel correction) shifts mist's whole
-    // inset:0 box - and every span positioned by % within it - onto her
-    // actual measured face position instead of the assumed 66% of stage.
-    mist.style.transform='translate('+faceOffset.dx+'px,'+faceOffset.dy+'px) scale('+(0.85+mistT*0.4)+')';
+    // inset:0 box - and every span positioned by % within it - onto the
+    // word "ARMUS"'s actual measured position instead of the assumed 66%
+    // of stage.
+    mist.style.transform='translate('+boardOffset.dx+'px,'+boardOffset.dy+'px) scale('+(0.85+mistT*0.4)+')';
 
     const burstIn=smoothstep(0.42,0.52,progress);
     const burstOut=smoothstep(0.64,0.78,progress);
     burst.style.setProperty('--t',String(burstIn*(1-burstOut)));
     burst.style.opacity=String(burstIn*(1-burstOut));
-    burst.style.transform='translate('+faceOffset.dx+'px,'+faceOffset.dy+'px)';
+    burst.style.transform='translate('+boardOffset.dx+'px,'+boardOffset.dy+'px)';
 
     // each card travels from the burst's origin point to its own resting
     // spot, growing from a small spark-sized speck up to full size as it
