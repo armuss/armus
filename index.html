@@ -145,10 +145,10 @@
     }
 
     /* ---- scroll-driven video (armusInitScrollVideo, script.js) ----
-       between .hero-band and .proof: a tall (400vh) pinned scroll runway
-       the same way the old top-of-page intro worked, just relocated
-       further down the page - .scroll-video-stage stays pinned
-       (position:sticky) for that whole runway while script.js scrubs the
+       first section in <main>, above .hero-band: a tall (400vh) pinned
+       scroll runway the same way the old top-of-page intro worked -
+       .scroll-video-stage stays pinned (position:sticky) for that whole
+       runway while script.js scrubs the
        video's own currentTime straight off scroll position (never
        autoplayed). Fit mode is picked per-viewport by script.js, not
        fixed here: cover (default below) fills the frame with no bars but
@@ -228,6 +228,29 @@
   </header>
 
   <main>
+    <!-- Scroll-driven video: scrubbed by scroll position, now the first
+         thing in <main> (above .hero-band). Fit mode (cover vs contain)
+         is picked per-viewport in script.js/armusInitScrollVideo - index.html
+         CSS above .scroll-video-pin. Purely additive (script.js guards on
+         #scrollVideo existing, and no-ops to display:none under
+         prefers-reduced-motion or with JS off) - nothing about the
+         sections around it was touched. -->
+    <section class="scroll-video" id="scrollVideo">
+      <div class="scroll-video-pin">
+        <div class="scroll-video-stage">
+          <!-- muted/playsinline so the browser allows script.js to seek it
+               (currentTime) without ever calling play(); it never plays on
+               its own, only scrubs as the user scrolls. poster is the
+               video's own first frame, so there's nothing to flash/swap
+               while the video's metadata loads. -->
+          <video id="scrollVideoEl" class="scroll-video-media" poster="avatars/classroom-full-reveal-poster.jpg" muted playsinline preload="auto">
+            <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
+            <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
+          </video>
+        </div>
+      </div>
+    </section>
+
     <section class="hero-band">
     <div class="hero shell">
       <div class="hero-copy">
@@ -294,29 +317,6 @@
         </article>
       </div>
     </div>
-    </section>
-
-    <!-- Scroll-driven video: scrubbed by scroll position the same way the
-         old top-of-page intro was, just placed between .hero-band and
-         .proof instead. Shown uncropped/unzoomed (object-fit:contain) -
-         index.html CSS above .scroll-video-pin. Purely additive
-         (script.js/armusInitScrollVideo guards on #scrollVideo existing,
-         and no-ops to display:none under prefers-reduced-motion or with
-         JS off) - nothing about the sections around it was touched. -->
-    <section class="scroll-video" id="scrollVideo">
-      <div class="scroll-video-pin">
-        <div class="scroll-video-stage">
-          <!-- muted/playsinline so the browser allows script.js to seek it
-               (currentTime) without ever calling play(); it never plays on
-               its own, only scrubs as the user scrolls. poster is the
-               video's own first frame, so there's nothing to flash/swap
-               while the video's metadata loads. -->
-          <video id="scrollVideoEl" class="scroll-video-media" poster="avatars/classroom-full-reveal-poster.jpg" muted playsinline preload="auto">
-            <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
-            <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
-          </video>
-        </div>
-      </div>
     </section>
 
     <section class="proof shell" data-flag-id="flagProof">
