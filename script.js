@@ -100,6 +100,7 @@ function armusInitScrollVideo(){
   const pin=document.querySelector('.scroll-video-pin');
   const video=document.getElementById('scrollVideoEl');
   const stage=document.querySelector('.scroll-video-stage');
+  const endcard=document.getElementById('scrollVideoEndcard');
   const fade=document.getElementById('scrollVideoFade');
   const nav=document.querySelector('header.nav');
   if(!pin||!video)return;
@@ -188,6 +189,20 @@ function armusInitScrollVideo(){
       const target=scrubT*videoDuration;
       if(Math.abs(video.currentTime-target)>0.02)video.currentTime=target;
     }
+
+    // #scrollVideoEndcard (index.html CSS) replaces the video once it's
+    // already settled on its own matching final frame (which happens by
+    // progress 0.85, above) - object-fit:contain guarantees this
+    // supplied image shows every card complete, unlike the video's own
+    // object-fit:cover which can crop them on some viewport shapes. A
+    // gradual opacity crossfade was tried first, but the video (cropped,
+    // effectively zoomed in) and the endcard (contain-fit, zoomed out to
+    // stay whole) are at different scales - blending them mid-fade
+    // produced a double-exposure ghosting effect, not a clean dissolve.
+    // A hard cut avoids that entirely; it lands while the video is
+    // already static on its held final frame, so there's no motion to
+    // interrupt.
+    if(endcard)endcard.style.opacity=progress>=0.96?'1':'0';
 
     // #scrollVideoFade (index.html CSS) only needs to be visible right as
     // the video settles on its ending frame and is about to hand off to
