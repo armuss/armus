@@ -382,7 +382,10 @@
     .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 85%; top: 64%; width: 14%; z-index: 2; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-6deg) rotateY(9deg) rotateX(3deg); animation: tileWobble4 6.1s ease-in-out .4s infinite; }
     .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 37%; top: 77%; width: 14%; z-index: 1; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(-4deg) rotateY(6deg) rotateX(5deg); animation: tileWobble5 6.7s ease-in-out 1.1s infinite; }
     .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 63%; top: 77%; width: 14%; z-index: 1; transform: translate(-50%, -50%) translate(var(--emerge-x, 0px), var(--emerge-y, 0px)) scale(var(--emerge-s, 1)) rotate(4deg) rotateY(-6deg) rotateX(5deg); animation: tileWobble6 5.3s ease-in-out .7s infinite; }
-    /* The hero card: her own face, styled exactly like the other cards,
+    /* The hero card: her own face, styled and SIZED exactly like the
+       other cards (same width as the biggest of the 6, not enlarged -
+       every real teacher card on the site, teachers.html included, is
+       the same size as every other one, so hers isn't an exception) -
        sitting front-and-center where the intro video's face was. It
        doesn't fly in from anywhere (that reads as "she becomes this
        card" rather than "a copy of her flies out") - script.js only
@@ -390,10 +393,10 @@
        out, in place. Every other card's own --emerge-x/-y above is
        measured against THIS element's resting position, so they read as
        coming out from behind her. */
-    .scroll-intro-mosaic-grid .tile.hero {
+    .scroll-intro-mosaic-grid .tile.hero-card {
       left: 50%;
       top: 40%;
-      width: 21%;
+      width: 15%;
       z-index: 6;
       opacity: var(--hero-o, 0);
       transform: translate(-50%, -50%) scale(var(--hero-s, .88)) rotate(-2deg) rotateY(-3deg) rotateX(2deg);
@@ -607,10 +610,9 @@
       .scroll-intro-mosaic-grid .tile:nth-of-type(4) { left: 41%; top: 55%; width: 44%; }
       .scroll-intro-mosaic-grid .tile:nth-of-type(5) { left: 54%; top: 57%; width: 40%; }
       .scroll-intro-mosaic-grid .tile:nth-of-type(6) { left: 64%; top: 53%; width: 38%; }
-      /* she stays the same deck's front card here too - biggest, dead
-         center of the same overlapping fan the other 6 already sit in,
-         same "front card of the stack" feel as desktop's central slot. */
-      .scroll-intro-mosaic-grid .tile.hero { left: 50%; top: 49%; width: 52%; }
+      /* same size as the other 6 here too (not enlarged) - just dead
+         center of the same overlapping fan they already sit in. */
+      .scroll-intro-mosaic-grid .tile.hero-card { left: 50%; top: 49%; width: 46%; }
     }
 
     /* No scroll-jacking for anyone who asked not to have motion, and no
