@@ -183,21 +183,37 @@
     }
     /* Mirrors .scroll-video-spacer/#scrollVideoFade below, but for the
        hero-band -> video handoff at the top instead of the video -> proof
-       handoff at the bottom. script.js samples a small, low-res crop of
-       the video's own first frame (--scroll-video-top-strip, a data-URL
-       image - see the comment above sampleTopStripOnce for why it keeps
-       real rows and columns instead of collapsing to one flat color)
-       stretched to fill (background-size:100% 100%); the browser's own
-       image scaling softens it into something that reads as an
-       out-of-focus version of the real frame, not a flat tint, so it
-       carries real structure both left-to-right and top-to-bottom.
-       --armus-gold-1 (background-color, always a flat match for
-       hero-band's own last gradient stop) is the base layer in case the
-       strip image hasn't been sampled yet. */
+       handoff at the bottom. Several things were tried here and reverted
+       in production, in order: a single averaged color (too flat
+       left-to-right); a 1px-tall strip image stretched taller (too flat
+       top-to-bottom, read as a hard-edged card); that strip with a mask
+       fade; a real blurred crop of the poster photo via filter:blur() in
+       an oversized/clipped child element. Every version past the first
+       kept showing a visible seam in production that local mocks didn't
+       reproduce - #scrollVideoFade below has never had this problem, and
+       the one structural thing it has that none of the above did is
+       staying a single plain gradient, no filter/mask/child-element
+       layering over the live <video> element. This version follows that
+       same shape: --armus-top-strip-colors is a 5-stop horizontal
+       gradient built from real colors sampled across the poster image
+       (left to right), giving left/right accuracy without an image file;
+       layered under a plain vertical gold-1-to-transparent gradient on
+       .scroll-video-spacer-top (same 2-layer shape already proven on
+       .scroll-video-spacer below), and revealed via mask-image on
+       #scrollVideoFadeTop - the one piece that's still necessary, since
+       unlike the bottom fade this one needs to vary by both x and y. */
+    :root {
+      /* 5 real colors sampled left-to-right across the video's own first
+         frame (the same image as avatars/classroom-full-reveal-
+         poster.jpg), replacing what used to be a single averaged color -
+         see the comment above .scroll-video-spacer-top for why this
+         stayed a plain gradient instead of an image. */
+      --armus-top-strip-colors: linear-gradient(to right, rgb(135,117,94) 0%, rgb(149,122,89) 25%, rgb(177,154,122) 50%, rgb(165,131,93) 75%, rgb(130,102,64) 100%);
+    }
     .scroll-video-spacer-top {
       height: clamp(80px, 12vw, 220px);
       background-color: var(--armus-gold-1);
-      background-image: linear-gradient(to bottom, var(--armus-gold-1), transparent), var(--scroll-video-top-strip, none);
+      background-image: linear-gradient(to bottom, var(--armus-gold-1), transparent), var(--armus-top-strip-colors);
       background-size: 100% 100%;
       background-repeat: no-repeat;
     }
@@ -207,17 +223,7 @@
       right: 0;
       top: 0;
       height: 16%;
-      background-color: var(--armus-gold-1);
-      background-image: var(--scroll-video-top-strip, none);
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
-      /* without its own fade the (still slightly soft, not pin-sharp)
-         strip image would meet the real video with a visible edge -
-         this mask fades the whole box (color + image together) from
-         opaque at its own top to fully transparent at its own bottom,
-         same shape as #scrollVideoFade's single-gradient fade at the
-         other end, just split into a separate mask layer here because
-         this one also needs the image layer underneath it. */
+      background: var(--armus-top-strip-colors);
       -webkit-mask-image: linear-gradient(to bottom, black, transparent);
       mask-image: linear-gradient(to bottom, black, transparent);
       opacity: 1;
@@ -391,10 +397,10 @@
          prefers-reduced-motion or with JS off) - nothing about the
          sections around it was touched.
          .scroll-video-spacer-top right before fades hero-band's own
-         gold-1 into the video's sampled first-frame color - see the CSS
-         comment above .scroll-video-spacer-top. .scroll-video-spacer
-         right after fades the video's own actual edge color (sampled live
-         in script.js) into .proof's plain page background (--armus-bg) -
+         gold-1 into the video's own sampled colors - see the CSS comment
+         above .scroll-video-spacer-top. .scroll-video-spacer right after
+         fades the video's own actual edge color (sampled live in
+         script.js) into .proof's plain page background (--armus-bg) -
          see the CSS comment above .scroll-video-spacer for why a fixed
          color never quite worked either way. -->
     <div class="scroll-video-spacer-top" aria-hidden="true"></div>
