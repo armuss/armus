@@ -177,11 +177,8 @@ body {
   grid-template-columns: 1fr 1fr;
   align-items: start;
   gap: 20px;
-  /* extra top padding (was 46px) - the scroll-intro section right above
-     this one (index.html) ends its own copy close to the seam now that
-     the two sections share one continuous gradient with no dividing
-     line, so this needed real breathing room of its own instead of
-     relying on a color change to separate them. */
+  /* generous top padding so the hero copy doesn't sit flush under the
+     floating nav header. */
   padding: 96px 10px 40px;
 }
 .hero-band .eyebrow {

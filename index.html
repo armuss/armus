@@ -145,7 +145,7 @@
     }
 
     /* ---- scroll-driven video (armusInitScrollVideo, script.js) ----
-       first section in <main>, above .hero-band: a tall pinned scroll
+       sits right after .hero-band in <main>: a tall pinned scroll
        runway the same way the old top-of-page intro worked -
        .scroll-video-stage stays pinned (position:sticky) for that whole
        runway while script.js scrubs the video's own currentTime straight
@@ -214,12 +214,12 @@
        settles and writes it into --scroll-video-edge-color (shared with
        #scrollVideoFade above). The gradient below starts from that same
        sampled color - an exact match, whatever the frame actually looks
-       like - and eases into hero-band's own gold-3, continuing the fade
-       #scrollVideoFade already started. --armus-gold-3 is only the
-       fallback before JS has sampled a frame. */
+       like - and eases into .proof's own plain page background
+       (--armus-bg), continuing the fade #scrollVideoFade already started.
+       --armus-gold-3 is only the fallback before JS has sampled a frame. */
     .scroll-video-spacer {
       height: clamp(80px, 12vw, 220px);
-      background: linear-gradient(to bottom, var(--scroll-video-edge-color, var(--armus-gold-3)), var(--armus-gold-3));
+      background: linear-gradient(to bottom, var(--scroll-video-edge-color, var(--armus-gold-3)), var(--armus-bg));
     }
     /* No scroll-jacking for anyone who asked not to have motion, and no
        broken half-built layout for anyone without JS (the scrub is only
@@ -272,36 +272,6 @@
   </header>
 
   <main>
-    <!-- Scroll-driven video: scrubbed by scroll position, first thing in
-         <main> (above .hero-band). object-fit:cover - full-bleed, no
-         margin on any viewport. See the CSS comment above
-         .scroll-video-pin (index.html) for the full reasoning. Purely
-         additive (script.js guards on #scrollVideo existing, and no-ops
-         to display:none under prefers-reduced-motion or with JS off) -
-         nothing about the sections around it was touched.
-         .scroll-video-spacer right after fades from the video's own
-         actual edge color (sampled live in script.js) into hero-band's
-         gradient start - see the CSS comment above .scroll-video-spacer
-         for why a fixed color (gold-matched or plain white) never quite
-         worked. -->
-    <section class="scroll-video" id="scrollVideo">
-      <div class="scroll-video-pin">
-        <div class="scroll-video-stage">
-          <!-- muted/playsinline so the browser allows script.js to seek it
-               (currentTime) without ever calling play(); it never plays on
-               its own, only scrubs as the user scrolls. poster is the
-               video's own first frame, so there's nothing to flash/swap
-               while the video's metadata loads. -->
-          <video id="scrollVideoEl" class="scroll-video-media" poster="avatars/classroom-full-reveal-poster.jpg" muted playsinline preload="auto">
-            <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
-            <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
-          </video>
-          <div class="scroll-video-fade" id="scrollVideoFade" aria-hidden="true"></div>
-        </div>
-      </div>
-    </section>
-    <div class="scroll-video-spacer" aria-hidden="true"></div>
-
     <section class="hero-band">
     <div class="hero shell">
       <div class="hero-copy">
@@ -369,6 +339,35 @@
       </div>
     </div>
     </section>
+
+    <!-- Scroll-driven video: scrubbed by scroll position, right after
+         .hero-band. object-fit:cover - full-bleed, no margin on any
+         viewport. See the CSS comment above .scroll-video-pin (index.html)
+         for the full reasoning. Purely additive (script.js guards on
+         #scrollVideo existing, and no-ops to display:none under
+         prefers-reduced-motion or with JS off) - nothing about the
+         sections around it was touched.
+         .scroll-video-spacer right after fades from the video's own
+         actual edge color (sampled live in script.js) into .proof's plain
+         page background (--armus-bg) - see the CSS comment above
+         .scroll-video-spacer for why a fixed color never quite worked. -->
+    <section class="scroll-video" id="scrollVideo">
+      <div class="scroll-video-pin">
+        <div class="scroll-video-stage">
+          <!-- muted/playsinline so the browser allows script.js to seek it
+               (currentTime) without ever calling play(); it never plays on
+               its own, only scrubs as the user scrolls. poster is the
+               video's own first frame, so there's nothing to flash/swap
+               while the video's metadata loads. -->
+          <video id="scrollVideoEl" class="scroll-video-media" poster="avatars/classroom-full-reveal-poster.jpg" muted playsinline preload="auto">
+            <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
+            <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
+          </video>
+          <div class="scroll-video-fade" id="scrollVideoFade" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+    <div class="scroll-video-spacer" aria-hidden="true"></div>
 
     <section class="proof shell" data-flag-id="flagProof">
       <h2 class="reveal" data-i18n="index.proof.title">Binlerce öğrenci, yüzlerce öğretmen.<br>Kişisel ve kanıtlanmış ilerleme.</h2>
