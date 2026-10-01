@@ -181,6 +181,32 @@
       height: 100%;
       object-fit: cover;
     }
+    /* Mirrors .scroll-video-spacer/#scrollVideoFade below, but for the
+       hero-band -> video handoff at the top instead of the video -> proof
+       handoff at the bottom: hero-band always ends in a flat
+       --armus-gold-1 (its own gradient's last stop), so unlike the bottom
+       edge there's nothing to sample there, but the video's own first
+       frame is never a flat color either - script.js samples it once (at
+       currentTime 0, before any scrubbing) into
+       --scroll-video-top-edge-color, and the gradient below bridges
+       gold-1 into that sampled color. #scrollVideoFadeTop then fades the
+       video's real content in from that same flat color over the first
+       stretch of scroll, so the hard cut this used to be becomes a soft
+       one on both counts (color and texture) instead of just color. */
+    .scroll-video-spacer-top {
+      height: clamp(80px, 12vw, 220px);
+      background: linear-gradient(to bottom, var(--armus-gold-1), var(--scroll-video-top-edge-color, var(--armus-gold-1)));
+    }
+    .scroll-video-fade-top {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 12%;
+      background: linear-gradient(to bottom, var(--scroll-video-top-edge-color, var(--armus-gold-1)), transparent);
+      opacity: 1;
+      pointer-events: none;
+    }
     /* Matching the spacer's starting color to the video's real sampled
        edge color (below) closed most of the gap, but a hard cut from the
        video's own texture/vignette straight into a flat color still read
@@ -229,7 +255,8 @@
       .scroll-video {
         display: none;
       }
-      .scroll-video-spacer {
+      .scroll-video-spacer,
+      .scroll-video-spacer-top {
         display: none;
       }
     }
@@ -238,7 +265,7 @@
   <noscript>
     <style>
       .scroll-video { display: none; }
-      .scroll-video-spacer { display: none; }
+      .scroll-video-spacer, .scroll-video-spacer-top { display: none; }
       .logo-splash { display: none; }
       header.nav a.brand .logo-img { opacity: 1; }
     </style>
@@ -347,10 +374,14 @@
          #scrollVideo existing, and no-ops to display:none under
          prefers-reduced-motion or with JS off) - nothing about the
          sections around it was touched.
-         .scroll-video-spacer right after fades from the video's own
-         actual edge color (sampled live in script.js) into .proof's plain
-         page background (--armus-bg) - see the CSS comment above
-         .scroll-video-spacer for why a fixed color never quite worked. -->
+         .scroll-video-spacer-top right before fades hero-band's own
+         gold-1 into the video's sampled first-frame color - see the CSS
+         comment above .scroll-video-spacer-top. .scroll-video-spacer
+         right after fades the video's own actual edge color (sampled live
+         in script.js) into .proof's plain page background (--armus-bg) -
+         see the CSS comment above .scroll-video-spacer for why a fixed
+         color never quite worked either way. -->
+    <div class="scroll-video-spacer-top" aria-hidden="true"></div>
     <section class="scroll-video" id="scrollVideo">
       <div class="scroll-video-pin">
         <div class="scroll-video-stage">
@@ -363,6 +394,7 @@
             <source src="avatars/classroom-full-reveal-4k.mp4" type="video/mp4">
             <source src="avatars/classroom-full-reveal-4k.webm" type="video/webm">
           </video>
+          <div class="scroll-video-fade-top" id="scrollVideoFadeTop" aria-hidden="true"></div>
           <div class="scroll-video-fade" id="scrollVideoFade" aria-hidden="true"></div>
         </div>
       </div>
