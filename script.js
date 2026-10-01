@@ -160,23 +160,29 @@ function armusInitScrollVideo(){
   // color feeds the bottom pair - except this only ever needs sampling
   // once (the hero-band -> video handoff always happens at the video's
   // own first frame, currentTime 0, before any scroll has scrubbed it
-  // anywhere else - sampled on 'loadeddata' and never touched again), and
-  // it keeps 64 columns across the strip's width instead of collapsing
-  // to a single averaged color: a flat color matched the right-hand side
-  // of this particular frame fine but was visibly off on the left, where
-  // the window lets in a much brighter/cooler tone than the wall the
-  // average leans toward. Drawing the strip into a wide-but-1px-tall
-  // canvas and reading it back out as a data URL keeps that left-to-right
-  // variation; the CSS stretches it to fill with background-size, and the
-  // browser's own image scaling smooths the 64 columns into a gradient.
+  // anywhere else - sampled on 'loadeddata' and never touched again).
+  // Two things went wrong on the way to this version, in order: a single
+  // averaged color matched the right-hand side of this particular frame
+  // (warm wall) but was visibly off on the left (a window lets in a much
+  // brighter/cooler tone) - one flat color can't represent both. Widening
+  // that to a 1px-tall, 64-column strip fixed left-to-right but was still
+  // a flat color *vertically* - stretched over ~150-200px of real height
+  // it read as a solid card with hard edges, not a blur, because it had
+  // no vertical structure at all. This version keeps real rows too (a
+  // short but non-trivial crop, not a 1px sliver) at low res (48x24) -
+  // stretched to fill, the browser's own image scaling softens it into
+  // something that actually looks like an out-of-focus version of the
+  // real frame (because it is one), carrying real top-to-bottom structure
+  // as well as left-to-right - not a CSS filter:blur() on the box itself,
+  // which bleeds the box's own hard edges into visible lighter rims.
   let topSampled=false;
   let topStripCanvas,topStripCtx;
   function sampleTopStripOnce(){
     if(topSampled||!stage||!video.videoWidth||!video.videoHeight)return;
     if(!topStripCanvas){
       topStripCanvas=document.createElement('canvas');
-      topStripCanvas.width=64;
-      topStripCanvas.height=1;
+      topStripCanvas.width=48;
+      topStripCanvas.height=24;
       topStripCtx=topStripCanvas.getContext('2d');
     }
     const cw=stage.clientWidth,ch=stage.clientHeight;
@@ -184,9 +190,9 @@ function armusInitScrollVideo(){
     const scale=Math.max(cw/vw,ch/vh);
     const sw=cw/scale,sh=ch/scale;
     const sx=(vw-sw)/2,sy=(vh-sh)/2;
-    const stripH=Math.max(1,sh*0.02);
+    const stripH=Math.max(1,sh*0.2);
     try{
-      topStripCtx.drawImage(video,sx,sy,sw,stripH,0,0,64,1);
+      topStripCtx.drawImage(video,sx,sy,sw,stripH,0,0,48,24);
       root.style.setProperty('--scroll-video-top-strip','url("'+topStripCanvas.toDataURL('image/png')+'")');
       topSampled=true;
     }catch(e){

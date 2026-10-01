@@ -183,19 +183,17 @@
     }
     /* Mirrors .scroll-video-spacer/#scrollVideoFade below, but for the
        hero-band -> video handoff at the top instead of the video -> proof
-       handoff at the bottom, with one difference: a single averaged color
-       (the first approach here) matched the right-hand side of the frame
-       fine but was visibly off on the left, where the window lets in a
-       much brighter/cooler tone than the wall the average leans toward -
-       one flat color can't represent both at once. script.js instead
-       samples a short, wide strip of the video's own first frame (not
-       collapsed to one pixel) into --scroll-video-top-strip, a small
-       data-URL image that varies left-to-right exactly like the real
-       frame - stretched to fill (background-size:100% 100%) it reads as
-       a smooth horizontal gradient, not a flat tint, so both sides stay
-       correct at once. --armus-gold-1 (background-color, always a flat
-       match for hero-band's own last gradient stop) is the base layer in
-       case the strip image hasn't been sampled yet. */
+       handoff at the bottom. script.js samples a small, low-res crop of
+       the video's own first frame (--scroll-video-top-strip, a data-URL
+       image - see the comment above sampleTopStripOnce for why it keeps
+       real rows and columns instead of collapsing to one flat color)
+       stretched to fill (background-size:100% 100%); the browser's own
+       image scaling softens it into something that reads as an
+       out-of-focus version of the real frame, not a flat tint, so it
+       carries real structure both left-to-right and top-to-bottom.
+       --armus-gold-1 (background-color, always a flat match for
+       hero-band's own last gradient stop) is the base layer in case the
+       strip image hasn't been sampled yet. */
     .scroll-video-spacer-top {
       height: clamp(80px, 12vw, 220px);
       background-color: var(--armus-gold-1);
@@ -208,14 +206,13 @@
       left: 0;
       right: 0;
       top: 0;
-      height: 12%;
+      height: 16%;
       background-color: var(--armus-gold-1);
       background-image: var(--scroll-video-top-strip, none);
       background-size: 100% 100%;
       background-repeat: no-repeat;
-      /* the strip image is flat vertically (stretched from a 1px-tall
-         source), so without its own fade it would read as a solid block
-         with a hard edge right where it meets the real video below -
+      /* without its own fade the (still slightly soft, not pin-sharp)
+         strip image would meet the real video with a visible edge -
          this mask fades the whole box (color + image together) from
          opaque at its own top to fully transparent at its own bottom,
          same shape as #scrollVideoFade's single-gradient fade at the
