@@ -183,19 +183,25 @@
     }
     /* Mirrors .scroll-video-spacer/#scrollVideoFade below, but for the
        hero-band -> video handoff at the top instead of the video -> proof
-       handoff at the bottom: hero-band always ends in a flat
-       --armus-gold-1 (its own gradient's last stop), so unlike the bottom
-       edge there's nothing to sample there, but the video's own first
-       frame is never a flat color either - script.js samples it once (at
-       currentTime 0, before any scrubbing) into
-       --scroll-video-top-edge-color, and the gradient below bridges
-       gold-1 into that sampled color. #scrollVideoFadeTop then fades the
-       video's real content in from that same flat color over the first
-       stretch of scroll, so the hard cut this used to be becomes a soft
-       one on both counts (color and texture) instead of just color. */
+       handoff at the bottom, with one difference: a single averaged color
+       (the first approach here) matched the right-hand side of the frame
+       fine but was visibly off on the left, where the window lets in a
+       much brighter/cooler tone than the wall the average leans toward -
+       one flat color can't represent both at once. script.js instead
+       samples a short, wide strip of the video's own first frame (not
+       collapsed to one pixel) into --scroll-video-top-strip, a small
+       data-URL image that varies left-to-right exactly like the real
+       frame - stretched to fill (background-size:100% 100%) it reads as
+       a smooth horizontal gradient, not a flat tint, so both sides stay
+       correct at once. --armus-gold-1 (background-color, always a flat
+       match for hero-band's own last gradient stop) is the base layer in
+       case the strip image hasn't been sampled yet. */
     .scroll-video-spacer-top {
       height: clamp(80px, 12vw, 220px);
-      background: linear-gradient(to bottom, var(--armus-gold-1), var(--scroll-video-top-edge-color, var(--armus-gold-1)));
+      background-color: var(--armus-gold-1);
+      background-image: linear-gradient(to bottom, var(--armus-gold-1), transparent), var(--scroll-video-top-strip, none);
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
     }
     .scroll-video-fade-top {
       position: absolute;
@@ -203,7 +209,10 @@
       right: 0;
       top: 0;
       height: 12%;
-      background: linear-gradient(to bottom, var(--scroll-video-top-edge-color, var(--armus-gold-1)), transparent);
+      background-color: var(--armus-gold-1);
+      background-image: var(--scroll-video-top-strip, none);
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
       opacity: 1;
       pointer-events: none;
     }

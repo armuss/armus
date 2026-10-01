@@ -155,23 +155,29 @@ function armusInitScrollVideo(){
   video.addEventListener('seeked',sampleEdgeColor);
   video.addEventListener('loadeddata',sampleEdgeColor);
 
-  // --scroll-video-top-edge-color feeds .scroll-video-spacer-top and
-  // #scrollVideoFadeTop (index.html CSS) the same way the pair above
-  // feeds the bottom ones - except this only ever needs sampling once:
-  // the hero-band -> video handoff always happens at the video's own
-  // first frame (currentTime 0, before any scroll has scrubbed it
-  // anywhere else), so unlike the bottom edge - which changes with
-  // whatever frame the user actually stopped scrolling on - there's only
-  // ever one real value here. Sampled on 'loadeddata' (currentTime is
-  // still 0 at that point) and never touched again.
+  // --scroll-video-top-strip feeds .scroll-video-spacer-top and
+  // #scrollVideoFadeTop (index.html CSS) the same way --scroll-video-edge-
+  // color feeds the bottom pair - except this only ever needs sampling
+  // once (the hero-band -> video handoff always happens at the video's
+  // own first frame, currentTime 0, before any scroll has scrubbed it
+  // anywhere else - sampled on 'loadeddata' and never touched again), and
+  // it keeps 64 columns across the strip's width instead of collapsing
+  // to a single averaged color: a flat color matched the right-hand side
+  // of this particular frame fine but was visibly off on the left, where
+  // the window lets in a much brighter/cooler tone than the wall the
+  // average leans toward. Drawing the strip into a wide-but-1px-tall
+  // canvas and reading it back out as a data URL keeps that left-to-right
+  // variation; the CSS stretches it to fill with background-size, and the
+  // browser's own image scaling smooths the 64 columns into a gradient.
   let topSampled=false;
-  function sampleTopEdgeColorOnce(){
+  let topStripCanvas,topStripCtx;
+  function sampleTopStripOnce(){
     if(topSampled||!stage||!video.videoWidth||!video.videoHeight)return;
-    if(!edgeCanvas){
-      edgeCanvas=document.createElement('canvas');
-      edgeCanvas.width=8;
-      edgeCanvas.height=1;
-      edgeCtx=edgeCanvas.getContext('2d');
+    if(!topStripCanvas){
+      topStripCanvas=document.createElement('canvas');
+      topStripCanvas.width=64;
+      topStripCanvas.height=1;
+      topStripCtx=topStripCanvas.getContext('2d');
     }
     const cw=stage.clientWidth,ch=stage.clientHeight;
     const vw=video.videoWidth,vh=video.videoHeight;
@@ -180,18 +186,16 @@ function armusInitScrollVideo(){
     const sx=(vw-sw)/2,sy=(vh-sh)/2;
     const stripH=Math.max(1,sh*0.02);
     try{
-      edgeCtx.drawImage(video,sx,sy,sw,stripH,0,0,8,1);
-      const data=edgeCtx.getImageData(0,0,8,1).data;
-      let r=0,g=0,b=0;
-      for(let i=0;i<8;i++){r+=data[i*4];g+=data[i*4+1];b+=data[i*4+2];}
-      root.style.setProperty('--scroll-video-top-edge-color','rgb('+Math.round(r/8)+','+Math.round(g/8)+','+Math.round(b/8)+')');
+      topStripCtx.drawImage(video,sx,sy,sw,stripH,0,0,64,1);
+      root.style.setProperty('--scroll-video-top-strip','url("'+topStripCanvas.toDataURL('image/png')+'")');
       topSampled=true;
     }catch(e){
       // same-origin video, this shouldn't throw - but if it ever does,
-      // the CSS fallback (var(--armus-gold-1)) just keeps applying.
+      // the CSS fallback (background-color: var(--armus-gold-1)) just
+      // keeps applying.
     }
   }
-  video.addEventListener('loadeddata',sampleTopEdgeColorOnce);
+  video.addEventListener('loadeddata',sampleTopStripOnce);
 
   let ticking=false;
   // duration is 0 until the video's metadata has loaded - on a fast/local
@@ -262,7 +266,7 @@ function armusInitScrollVideo(){
   }
 
   sampleEdgeColor();
-  sampleTopEdgeColorOnce();
+  sampleTopStripOnce();
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
