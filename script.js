@@ -155,53 +155,13 @@ function armusInitScrollVideo(){
   video.addEventListener('seeked',sampleEdgeColor);
   video.addEventListener('loadeddata',sampleEdgeColor);
 
-  // --scroll-video-top-strip feeds .scroll-video-spacer-top and
-  // #scrollVideoFadeTop (index.html CSS) the same way --scroll-video-edge-
-  // color feeds the bottom pair - except this only ever needs sampling
-  // once (the hero-band -> video handoff always happens at the video's
-  // own first frame, currentTime 0, before any scroll has scrubbed it
-  // anywhere else - sampled on 'loadeddata' and never touched again).
-  // Two things went wrong on the way to this version, in order: a single
-  // averaged color matched the right-hand side of this particular frame
-  // (warm wall) but was visibly off on the left (a window lets in a much
-  // brighter/cooler tone) - one flat color can't represent both. Widening
-  // that to a 1px-tall, 64-column strip fixed left-to-right but was still
-  // a flat color *vertically* - stretched over ~150-200px of real height
-  // it read as a solid card with hard edges, not a blur, because it had
-  // no vertical structure at all. This version keeps real rows too (a
-  // short but non-trivial crop, not a 1px sliver) at low res (48x24) -
-  // stretched to fill, the browser's own image scaling softens it into
-  // something that actually looks like an out-of-focus version of the
-  // real frame (because it is one), carrying real top-to-bottom structure
-  // as well as left-to-right - not a CSS filter:blur() on the box itself,
-  // which bleeds the box's own hard edges into visible lighter rims.
-  let topSampled=false;
-  let topStripCanvas,topStripCtx;
-  function sampleTopStripOnce(){
-    if(topSampled||!stage||!video.videoWidth||!video.videoHeight)return;
-    if(!topStripCanvas){
-      topStripCanvas=document.createElement('canvas');
-      topStripCanvas.width=48;
-      topStripCanvas.height=24;
-      topStripCtx=topStripCanvas.getContext('2d');
-    }
-    const cw=stage.clientWidth,ch=stage.clientHeight;
-    const vw=video.videoWidth,vh=video.videoHeight;
-    const scale=Math.max(cw/vw,ch/vh);
-    const sw=cw/scale,sh=ch/scale;
-    const sx=(vw-sw)/2,sy=(vh-sh)/2;
-    const stripH=Math.max(1,sh*0.2);
-    try{
-      topStripCtx.drawImage(video,sx,sy,sw,stripH,0,0,48,24);
-      root.style.setProperty('--scroll-video-top-strip','url("'+topStripCanvas.toDataURL('image/png')+'")');
-      topSampled=true;
-    }catch(e){
-      // same-origin video, this shouldn't throw - but if it ever does,
-      // the CSS fallback (background-color: var(--armus-gold-1)) just
-      // keeps applying.
-    }
-  }
-  video.addEventListener('loadeddata',sampleTopStripOnce);
+  // The hero-band -> video handoff (top of the pin) doesn't need any of
+  // this sampling machinery the way the video -> proof handoff (bottom)
+  // does: that boundary is always the video's own first frame, by
+  // construction (nothing has scrubbed it anywhere else yet), so its
+  // colors are fixed and were sampled once by hand instead of live -
+  // see the CSS comment above .scroll-video-spacer-top
+  // (--armus-top-strip-colors) for the full reasoning.
 
   let ticking=false;
   // duration is 0 until the video's metadata has loaded - on a fast/local
@@ -243,9 +203,10 @@ function armusInitScrollVideo(){
     // fully transparent so it never covers the video's real content.
     if(fade)fade.style.opacity=String(smoothstep(0.88,1,progress));
     // #scrollVideoFadeTop is the mirror image at the other end: fully
-    // opaque (hiding the video's real first frame behind the flat sampled
-    // color) until scrolling actually starts into the pin, then fades out
-    // over the same size window #scrollVideoFade fades in over at the end.
+    // opaque (hiding the video's real first frame behind the blurred
+    // poster image) until scrolling actually starts into the pin, then
+    // fades out over the same size window #scrollVideoFade fades in over
+    // at the end.
     if(fadeTop)fadeTop.style.opacity=String(1-smoothstep(0,0.12,progress));
 
     // the floating nav (header.nav, every page) would otherwise sit on
