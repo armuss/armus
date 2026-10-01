@@ -203,8 +203,9 @@ body {
   color: var(--armus-on-gold);
 }
 .hero-cta {
-  background: var(--armus-silver-gradient);
-  color: #1c1c1e;
+  background: #0a0a0a;
+  color: #eee;
+  border: 1px solid #303030;
 }
 .eyebrow,
 .section-label {
@@ -1368,9 +1369,9 @@ body {
   }
 }
 .hero-cta {
-  padding: 19px 34px;
-  font-size: 15px;
-  border-radius: 15px;
+  padding: 22px 48px;
+  font-size: 16px;
+  border-radius: 10px;
 }
 @media (max-width: 560px) {
   .hero-cta {
