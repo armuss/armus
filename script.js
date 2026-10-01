@@ -101,6 +101,7 @@ function armusInitScrollVideo(){
   const video=document.getElementById('scrollVideoEl');
   const stage=document.querySelector('.scroll-video-stage');
   const fade=document.getElementById('scrollVideoFade');
+  const fadeTop=document.getElementById('scrollVideoFadeTop');
   const nav=document.querySelector('header.nav');
   if(!pin||!video)return;
 
@@ -154,6 +155,44 @@ function armusInitScrollVideo(){
   video.addEventListener('seeked',sampleEdgeColor);
   video.addEventListener('loadeddata',sampleEdgeColor);
 
+  // --scroll-video-top-edge-color feeds .scroll-video-spacer-top and
+  // #scrollVideoFadeTop (index.html CSS) the same way the pair above
+  // feeds the bottom ones - except this only ever needs sampling once:
+  // the hero-band -> video handoff always happens at the video's own
+  // first frame (currentTime 0, before any scroll has scrubbed it
+  // anywhere else), so unlike the bottom edge - which changes with
+  // whatever frame the user actually stopped scrolling on - there's only
+  // ever one real value here. Sampled on 'loadeddata' (currentTime is
+  // still 0 at that point) and never touched again.
+  let topSampled=false;
+  function sampleTopEdgeColorOnce(){
+    if(topSampled||!stage||!video.videoWidth||!video.videoHeight)return;
+    if(!edgeCanvas){
+      edgeCanvas=document.createElement('canvas');
+      edgeCanvas.width=8;
+      edgeCanvas.height=1;
+      edgeCtx=edgeCanvas.getContext('2d');
+    }
+    const cw=stage.clientWidth,ch=stage.clientHeight;
+    const vw=video.videoWidth,vh=video.videoHeight;
+    const scale=Math.max(cw/vw,ch/vh);
+    const sw=cw/scale,sh=ch/scale;
+    const sx=(vw-sw)/2,sy=(vh-sh)/2;
+    const stripH=Math.max(1,sh*0.02);
+    try{
+      edgeCtx.drawImage(video,sx,sy,sw,stripH,0,0,8,1);
+      const data=edgeCtx.getImageData(0,0,8,1).data;
+      let r=0,g=0,b=0;
+      for(let i=0;i<8;i++){r+=data[i*4];g+=data[i*4+1];b+=data[i*4+2];}
+      root.style.setProperty('--scroll-video-top-edge-color','rgb('+Math.round(r/8)+','+Math.round(g/8)+','+Math.round(b/8)+')');
+      topSampled=true;
+    }catch(e){
+      // same-origin video, this shouldn't throw - but if it ever does,
+      // the CSS fallback (var(--armus-gold-1)) just keeps applying.
+    }
+  }
+  video.addEventListener('loadeddata',sampleTopEdgeColorOnce);
+
   let ticking=false;
   // duration is 0 until the video's metadata has loaded - on a fast/local
   // connection that can already have happened by the time this script
@@ -193,6 +232,11 @@ function armusInitScrollVideo(){
     // .scroll-video-spacer below - for the rest of the scroll it stays
     // fully transparent so it never covers the video's real content.
     if(fade)fade.style.opacity=String(smoothstep(0.88,1,progress));
+    // #scrollVideoFadeTop is the mirror image at the other end: fully
+    // opaque (hiding the video's real first frame behind the flat sampled
+    // color) until scrolling actually starts into the pin, then fades out
+    // over the same size window #scrollVideoFade fades in over at the end.
+    if(fadeTop)fadeTop.style.opacity=String(1-smoothstep(0,0.12,progress));
 
     // the floating nav (header.nav, every page) would otherwise sit on
     // top of this section throughout - fades out fast once scrolling into the pin
@@ -218,6 +262,7 @@ function armusInitScrollVideo(){
   }
 
   sampleEdgeColor();
+  sampleTopEdgeColorOnce();
   update();
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
