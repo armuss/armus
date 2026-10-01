@@ -213,6 +213,16 @@
       background-image: var(--scroll-video-top-strip, none);
       background-size: 100% 100%;
       background-repeat: no-repeat;
+      /* the strip image is flat vertically (stretched from a 1px-tall
+         source), so without its own fade it would read as a solid block
+         with a hard edge right where it meets the real video below -
+         this mask fades the whole box (color + image together) from
+         opaque at its own top to fully transparent at its own bottom,
+         same shape as #scrollVideoFade's single-gradient fade at the
+         other end, just split into a separate mask layer here because
+         this one also needs the image layer underneath it. */
+      -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+      mask-image: linear-gradient(to bottom, black, transparent);
       opacity: 1;
       pointer-events: none;
     }
