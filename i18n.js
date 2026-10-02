@@ -149,7 +149,7 @@ const ARMUS_I18N_EN = {
   "register.resendLink": "Resend code",
   "register.roleNoteTeacher": "You're registering as a teacher.",
   "register.roleNoteStudent": "You're registering as a student.",
-  "register.errNameRequired": "Please write your first and last name.",
+  "register.errNameRequired": "Please write your first and last name (a single word isn't enough).",
   "register.errInvalidEmail": "Enter a valid email address.",
   "register.errPasswordTooShort": "Password must be at least 6 characters.",
   "register.errPasswordsDontMatch": "Passwords don't match.",

@@ -500,9 +500,15 @@
       const password2 = document.getElementById("password2").value;
 
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // requires at least two letter-only words (first name + last name,
+      // hyphenated/apostrophe'd names like "Ahmet-Can" or "O'Brien" still
+      // count as one word each) - a single word (a nickname, a username)
+      // used to pass this check silently, so "Ad Soyad" wasn't actually
+      // enforced despite the label and placeholder both asking for it.
+      const namePattern = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
 
-      if (!name) {
-        showError(armusT("register.errNameRequired", "Lütfen adını soyadını yaz."));
+      if (!namePattern.test(name)) {
+        showError(armusT("register.errNameRequired", "Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil)."));
         return;
       }
 

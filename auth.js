@@ -222,7 +222,7 @@ async function armusRenderNavAuth() {
 
   if (session && session.is_admin) {
 
-    const firstName = armusEscapeHtml(session.name.split(" ")[0]);
+    const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
     el.innerHTML = `
       <a class="btn" href="admin.html">${armusT("nav.adminPanel", "Admin Paneli")}</a>
       <span class="nav-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)} <small>(${armusT("nav.roleAdmin", "Admin")})</small></span>
@@ -236,7 +236,7 @@ async function armusRenderNavAuth() {
 
   } else if (session) {
 
-    const firstName = armusEscapeHtml(session.name.split(" ")[0]);
+    const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
     const roleLabel = session.role === "teacher"
       ? armusT("nav.roleTeacher", "Öğretmen")
       : armusT("nav.roleStudent", "Öğrenci");
