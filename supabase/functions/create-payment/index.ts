@@ -524,6 +524,37 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Geçerli bir T.C. kimlik numarası gir (11 haneli)." }, 400);
     }
 
+    // Two open tabs, or a double-click on "confirm", can both reach this
+    // point before either one's pending_payments row resolves - each
+    // would otherwise get its own iyzico checkout page, and if both get
+    // paid that's two real charges for what the student meant as one
+    // booking (only one ever becomes a real booking; the other today
+    // just turns into a lesson credit instead of a refund - better than
+    // losing the money, but the double charge itself should never
+    // happen). Block a second identical request outright while an
+    // earlier one for the exact same thing is still unresolved. Scoped
+    // to the last 20 minutes so an abandoned checkout (student just
+    // never finishes it, no callback ever fires) doesn't lock this
+    // slot/package out forever.
+    const duplicateMatch = type === "package"
+      ? { teacher_id: teacherId, quantity: numericQuantity }
+      : { teacher_id: teacherId, lesson_date: date, lesson_time: time };
+
+    const { data: inFlight } = await supabaseAdmin
+      .from("pending_payments")
+      .select("id")
+      .eq("student_id", user.id)
+      .eq("type", type)
+      .match(duplicateMatch)
+      .in("status", ["pending", "processing"])
+      .gte("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
+      .limit(1)
+      .maybeSingle();
+
+    if (inFlight) {
+      return jsonResponse({ error: "Bu işlem için zaten bir ödemen devam ediyor. Diğer sekmeyi tamamla ya da birkaç dakika sonra tekrar dene." }, 409);
+    }
+
     const { data: pending, error: pendingError } = await supabaseAdmin
       .from("pending_payments")
       .insert({

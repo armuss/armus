@@ -876,6 +876,12 @@
           "Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi - aşağıdan başka bir saat seçebilirsin."
         );
         paymentNotice.style.display = "block";
+      } else if (paymentStatus === "time_passed") {
+        paymentNotice.textContent = armusT(
+          "booking.paymentTimePassed",
+          "Ödemen tamamlanana kadar seçtiğin ders saati geçti. Ödemen bir ders hakkına çevrildi - aşağıdan başka bir saat seçebilirsin."
+        );
+        paymentNotice.style.display = "block";
       }
 
       function toDateKey(date) {
@@ -891,7 +897,28 @@
       let selectedDateLabel = "";
       let selectedTime = null;
 
-      const today = new Date();
+      // "today" for the date picker has to be the TEACHER's own calendar
+      // date, not the viewer's browser clock - the picker only ever
+      // offers the next 10 days starting there. For a teacher in a very
+      // different timezone than the viewer, anchoring to the viewer's
+      // own "today" can start the picker a calendar day off from the
+      // teacher's, showing a date (and its slots) as bookable when
+      // every slot on it has actually already passed for the teacher -
+      // create-payment then rejects it server-side with a vague
+      // "invalid or past date" error instead of the picker ever having
+      // offered it. Used only for calendar-date arithmetic below, never
+      // as a real timezone-aware instant.
+      function teacherTodayAnchor(timeZone) {
+        const parts = Object.fromEntries(
+          new Intl.DateTimeFormat("en-US", {
+            timeZone: timeZone || "Europe/Istanbul",
+            year: "numeric", month: "2-digit", day: "2-digit",
+          }).formatToParts(new Date()).map(p => [p.type, p.value])
+        );
+        return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+      }
+
+      const today = teacherTodayAnchor(teacher.timezone);
 
       function renderDateRow() {
         const dayNames = armusDayNames();
@@ -990,7 +1017,7 @@
         availableCredits = result.data || [];
       } catch (err) {}
 
-      const creditApplies = !!(availableCredits && availableCredits.length > 0 && (
+      let creditApplies = !!(availableCredits && availableCredits.length > 0 && (
         availableCredits.some((c) => c.teacher_id === teacher.id) ||
         bookingType === "trial"
       ));
@@ -1016,11 +1043,18 @@
         confirmBox.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
-      if (preselectedDate) {
+      // preselectedDate/preselectedTime come straight from the URL - a
+      // malformed value (an unescaped quote, a bracket) dropped into the
+      // querySelector attribute selectors below would throw a
+      // DOMException and abort this whole IIFE before it ever reaches
+      // the confirmBtn click listener further down, leaving "Onayla"
+      // permanently inert with no error shown. Only ever treat them as
+      // a real date/time if they actually look like one.
+      if (preselectedDate && /^\d{4}-\d{2}-\d{2}$/.test(preselectedDate)) {
         const pill = dateRow.querySelector(`[data-date="${preselectedDate}"]`);
         if (pill) {
           pill.click();
-          if (preselectedTime) {
+          if (preselectedTime && /^\d{2}:\d{2}$/.test(preselectedTime)) {
             const slotEl = slotGrid.querySelector(`[data-time="${preselectedTime}"]:not(.unavailable)`);
             if (slotEl) slotEl.click();
           }
@@ -1033,6 +1067,50 @@
 
         const confirmError = document.getElementById("confirmError");
         confirmError.style.display = "none";
+
+        // availableCredits/creditApplies were snapshotted once at page
+        // load - if this student's credit got consumed somewhere else
+        // (another open tab, cancel-booking racing in) before this
+        // click, the payer fields are still hidden (showConfirm hid
+        // them based on that stale snapshot) and submitting now would
+        // send create-payment an empty phone/identityNumber, which it
+        // rejects - leaving the student stuck on an error with no way
+        // to see or fill in the fields that would fix it, short of a
+        // full page refresh. Re-check right before submitting instead
+        // of trusting the snapshot.
+        if (creditApplies) {
+          let stillHasCredit = true;
+          try {
+            const result = await armusSupabase
+              .from("lesson_credits")
+              .select("*")
+              .eq("student_id", session.id)
+              .eq("status", "available");
+            const freshCredits = result.data || [];
+            stillHasCredit = freshCredits.some((c) => c.teacher_id === teacher.id) || bookingType === "trial"
+              ? freshCredits.length > 0
+              : false;
+          } catch (err) {
+            // re-check itself failed - trust the snapshot rather than
+            // blocking the student entirely
+          }
+
+          if (!stillHasCredit) {
+            creditApplies = false;
+            cardAmount = teacher.price;
+            document.getElementById("confirmCreditRow").style.display = "none";
+            document.getElementById("payerFields").style.display = "block";
+            document.getElementById("confirmNote").textContent =
+              armusT("booking.confirmNote", "Güvenli ödeme sayfasına yönlendirileceksin");
+            renderConfirmBtn();
+            confirmError.textContent = armusT(
+              "booking.creditNoLongerAvailable",
+              "Ders hakkın bu arada kullanıldı. Devam etmek için ödeme bilgilerini gir."
+            );
+            confirmError.style.display = "block";
+            return;
+          }
+        }
 
         const needsCard = cardAmount > 0;
         const phone = document.getElementById("payerPhone").value.trim();

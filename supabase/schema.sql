@@ -169,8 +169,13 @@ create table pending_payments (
   -- same token (iyzico can genuinely call back more than once) can't
   -- also pass that check and create a second booking / grant a second
   -- batch of lesson credits for what was really one charge.
+  -- 'slot_taken' and 'time_passed' (migration_84.sql) are both fully
+  -- resolved outcomes where the charge succeeded but no booking row was
+  -- made - the buyer got a lesson credit instead; 'paid_no_booking' is
+  -- reserved for a genuine write failure that still needs manual
+  -- follow-up.
   status text not null default 'pending'
-    check (status in ('pending', 'processing', 'succeeded', 'failed', 'paid_no_booking')),
+    check (status in ('pending', 'processing', 'succeeded', 'failed', 'paid_no_booking', 'slot_taken', 'time_passed')),
   booking_id uuid references bookings(id),
   created_at timestamptz not null default now()
 );

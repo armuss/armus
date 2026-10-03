@@ -201,6 +201,7 @@ Deno.serve(async (req) => {
   const failedPath = isPackage ? `teacher.html?payment=failed&${query}` : `booking.html?payment=failed&${query}`;
   const errorPath = isPackage ? `teacher.html?payment=error&${query}` : `booking.html?payment=error&${query}`;
   const slotTakenPath = `booking.html?payment=slot_taken&${query}`;
+  const timePassedPath = `booking.html?payment=time_passed&${query}`;
 
   // iyzico can call this more than once for the same token - if we
   // already fulfilled this payment (booking created, or credits granted
@@ -241,6 +242,20 @@ Deno.serve(async (req) => {
       }
       if (latest?.status === "failed") {
         return redirectTo(failedPath);
+      }
+      // both are fully resolved, self-service outcomes (migration_84.sql)
+      // - the charge succeeded and a lesson credit was already granted,
+      // there's nothing left for this duplicate request to do
+      if (latest?.status === "slot_taken") {
+        return redirectTo(slotTakenPath);
+      }
+      if (latest?.status === "time_passed") {
+        return redirectTo(timePassedPath);
+      }
+      // a genuine write failure the winning request already gave up on -
+      // same terminal outcome this duplicate would reach on its own
+      if (latest?.status === "paid_no_booking") {
+        return redirectTo(errorPath);
       }
       // still "processing" - give the winner a moment to finish
       await new Promise(resolve => setTimeout(resolve, 400));
@@ -339,6 +354,35 @@ Deno.serve(async (req) => {
     teacherTimezone = teacherProfile?.timezone || "Europe/Istanbul";
   }
 
+  // create-payment already rejected a past slot at the moment the charge
+  // was started, but iyzico's own checkout step (3D-Secure, a buyer who
+  // just sits on the payment page) can take long enough that the lesson's
+  // real start time has since passed by the time this callback runs. The
+  // charge already succeeded and cancel-booking never cancels (or
+  // refunds) a lesson that's already over, so writing the booking anyway
+  // would create an unrefundable booking for a lesson time that can
+  // never happen - grant a credit instead, same as the slot-taken race
+  // below, so the buyer can rebook a real time with nothing lost.
+  if (!isPackage) {
+    const lessonStart = zonedTimeToUtc(pending.lesson_date, pending.lesson_time, teacherTimezone);
+    if (lessonStart < new Date()) {
+      await supabaseAdmin.from("lesson_credits").insert({
+        student_id: pending.student_id,
+        teacher_id: pending.teacher_id,
+        teacher_name: pending.teacher_name,
+      });
+      await supabaseAdmin
+        .from("pending_payments")
+        .update({
+          status: "time_passed",
+          iyzico_payment_id: result.paymentId ?? null,
+          iyzico_payment_transaction_id: transactionId,
+        })
+        .eq("id", pending.id);
+      return redirectTo(timePassedPath);
+    }
+  }
+
   const { data: booking, error: bookingError } = await supabaseAdmin
     .from("bookings")
     .insert({
@@ -371,7 +415,18 @@ Deno.serve(async (req) => {
         teacher_id: pending.teacher_id,
         teacher_name: pending.teacher_name,
       });
-      await supabaseAdmin.from("pending_payments").update({ status: "paid_no_booking" }).eq("id", pending.id);
+      // 'slot_taken' (migration_84.sql), not 'paid_no_booking' - this is
+      // a fully resolved outcome (credit already granted), not a stuck
+      // state needing manual follow-up, and a duplicate/retried callback
+      // for this same token needs to be able to tell the two apart
+      await supabaseAdmin
+        .from("pending_payments")
+        .update({
+          status: "slot_taken",
+          iyzico_payment_id: result.paymentId ?? null,
+          iyzico_payment_transaction_id: transactionId,
+        })
+        .eq("id", pending.id);
       return redirectTo(slotTakenPath);
     }
 
