@@ -1140,7 +1140,23 @@
         return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
       }
 
-      const calToday = new Date();
+      // "today" here has to be the TEACHER's own calendar date, not the
+      // viewer's browser clock - see booking.html's own teacherTodayAnchor
+      // for why anchoring to the viewer's "today" can open the week a
+      // calendar day off from the teacher's and show an already-past
+      // slot as bookable. Used only for calendar-date arithmetic below,
+      // never as a real timezone-aware instant.
+      function calTeacherTodayAnchor(timeZone) {
+        const parts = Object.fromEntries(
+          new Intl.DateTimeFormat("en-US", {
+            timeZone: timeZone || "Europe/Istanbul",
+            year: "numeric", month: "2-digit", day: "2-digit",
+          }).formatToParts(new Date()).map(p => [p.type, p.value])
+        );
+        return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+      }
+
+      const calToday = calTeacherTodayAnchor(teacher.timezone);
       let calWeekOffset = 0;
       let calExpanded = false;
 

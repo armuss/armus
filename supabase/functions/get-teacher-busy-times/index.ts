@@ -43,11 +43,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Without an explicit order+limit, PostgREST silently caps the
+    // response at its own default row limit - for a teacher with a long
+    // booking history (1000+ past lessons) that cap could be reached
+    // entirely by old bookings, pushing a real future one out of the
+    // result and showing an actually-taken slot as free to the picker
+    // (booking.html, teacher.html), risking a double-booking.
+    //
+    // Past bookings are irrelevant to "is this slot free" anyway - the
+    // picker only ever offers today-or-later dates - so exclude anything
+    // clearly in the past first; that alone keeps the result small for
+    // any real teacher. lesson_date is the TEACHER's own wall-clock date
+    // (migration_37.sql), so a 36-hour buffer (instead of exactly
+    // "today" in UTC) comfortably covers any timezone offset without
+    // risking clipping a lesson that's still today for the teacher.
+    const cutoffDateKey = new Date(Date.now() - 36 * 60 * 60_000).toISOString().slice(0, 10);
+
     const { data, error } = await supabaseAdmin
       .from("bookings")
       .select("lesson_date, lesson_time")
       .eq("teacher_id", teacherId)
-      .neq("status", "cancelled");
+      .neq("status", "cancelled")
+      .gte("lesson_date", cutoffDateKey)
+      .order("lesson_date", { ascending: true })
+      .limit(5000);
 
     if (error) {
       console.error(error);

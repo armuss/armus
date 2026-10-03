@@ -967,6 +967,13 @@
             });
 
             postClassSave.onclick = async () => {
+              // reviews.booking_id is unique - a double-click here would
+              // otherwise fire two armusAddReview calls before either
+              // resolves, the second hitting that constraint. Disabling
+              // synchronously (before the await) stops the browser from
+              // delivering a second click to this button at all.
+              if (postClassSave.disabled) return;
+              postClassSave.disabled = true;
               if (stars > 0) {
                 await armusAddReview({
                   bookingId: booking.id,

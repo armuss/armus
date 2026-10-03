@@ -685,6 +685,15 @@
             return;
           }
 
+          // reviews.booking_id is unique - without this, a double-click
+          // fires two submits before either resolves: the first really
+          // saves the review, the second hits that unique constraint and
+          // returns false, showing "couldn't save" even though the
+          // review was in fact saved. Disabling synchronously (before
+          // the await) stops the browser from ever delivering a second
+          // click to this button in the first place.
+          submitBtn.disabled = true;
+
           const result = await armusAddReview({
             bookingId: booking.id,
             teacherId: booking.teacherId,
@@ -696,6 +705,7 @@
 
           if (result === false) {
             alert(armusT("myLessons.reviewFailedAlert", "Değerlendirme kaydedilemedi."));
+            submitBtn.disabled = false;
             return;
           }
 

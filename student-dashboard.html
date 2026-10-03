@@ -1383,11 +1383,22 @@
       return localDateKey(d);
     }
 
+    // b.date is a wall-clock date in the TEACHER's own timezone
+    // (migration_37.sql), not the viewer's - bucketing streak/weekly-goal
+    // counts by that raw string directly disagreed with the viewer's own
+    // calendar near a week boundary (Sun/Mon), miscounting which week a
+    // lesson actually falls in for them. Convert to the lesson's real
+    // start instant first, then read the VIEWER's own local date off
+    // that, same fix as renderHero's day-diff label above.
+    function bookingLocalDateKey(b) {
+      return localDateKey(armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone));
+    }
+
     // Consecutive weeks (ending at the current one) with at least one
     // completed lesson. The current week doesn't break the streak just
     // because it isn't over yet - it only needs a lesson once it's past.
     function computeStreak(pastBookings, todayKey) {
-      const weeksWithLesson = new Set(pastBookings.map(b => weekKeyOf(b.date)));
+      const weeksWithLesson = new Set(pastBookings.map(b => weekKeyOf(bookingLocalDateKey(b))));
       let cursor = weekKeyOf(todayKey);
       if (!weeksWithLesson.has(cursor)) {
         cursor = shiftWeekKey(cursor, -1);
@@ -1600,7 +1611,7 @@
       // still upcoming, so booking 3 lessons for later this week already
       // showed the weekly goal as "3/3 tamamlandı" before attending any
       // of them, which defeats the point of a lesson-attendance goal.
-      const thisWeekCount = pastBookings.filter(b => weekKeyOf(b.date) === currentWeekKey).length;
+      const thisWeekCount = pastBookings.filter(b => weekKeyOf(bookingLocalDateKey(b)) === currentWeekKey).length;
       const goal = Math.max(1, Number(session.weekly_lesson_goal) || 3);
 
       const goalInput = document.getElementById("goalInput");
@@ -1955,6 +1966,15 @@
           upcomingList.innerHTML = upcomingToShow.map(b => {
             const teacher = teacherById.get(b.teacherId) || null;
             const canJoin = armusCanJoinLessonNow(b);
+            // b.dateLabel is formatted straight from the raw lesson_date
+            // (the TEACHER's own wall-clock date, migration_37.sql) with
+            // no zone conversion at all, while the time below was
+            // already shown in the VIEWER's local time - two different
+            // zones in the same row could show the wrong day for a
+            // large enough timezone gap. armusFormatLessonWhen converts
+            // once and returns both from that same viewer-local instant
+            // (same fix already applied to my-lessons.html/class.html).
+            const when = armusFormatLessonWhen(b);
             return `
               <div class="mini-lesson-row">
                 <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
@@ -1963,8 +1983,8 @@
                   <div class="mini-lesson-meta">${b.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")} · ₺${b.price}</div>
                 </div>
                 <div class="mini-lesson-when">
-                  <div class="mini-lesson-date">${b.dateLabel}</div>
-                  <div class="mini-lesson-time">${armusFormatSlotTimeRangeForViewer(b.date, b.time, b.teacherTimezone)}</div>
+                  <div class="mini-lesson-date">${when.dateLabel}</div>
+                  <div class="mini-lesson-time">${when.timeRange}</div>
                 </div>
                 ${canJoin ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">${armusT("studentDash.joinShort", "Katıl")}</a>` : ""}
               </div>
