@@ -891,26 +891,137 @@
 
     /* flashcards */
 
-    .flashcard-toggle-btn {
-      display: block;
+    .flashcard-toggle-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 32px;
       width: 100%;
       border: none;
-      border-radius: 20px;
-      padding: 24px;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
+      border-radius: 28px;
+      padding: 36px 40px;
+      min-height: 220px;
+      overflow: hidden;
+      background: #0a0a0a;
+      text-align: left;
       font-family: inherit;
-      font-weight: 800;
-      font-size: 17px;
-      letter-spacing: -0.3px;
       cursor: pointer;
       margin-bottom: 20px;
-      box-shadow: 0 10px 28px rgba(223, 172, 46, .28);
       transition: transform .15s ease;
     }
 
-    .flashcard-toggle-btn:hover {
-      transform: translateY(-1px);
+    .flashcard-toggle-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .flashcard-toggle-glow {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(246, 198, 73, .25), transparent 70%);
+      top: -90px;
+      right: -50px;
+      pointer-events: none;
+    }
+
+    .flashcard-toggle-icon {
+      position: relative;
+      z-index: 1;
+      width: 84px;
+      height: 84px;
+      flex-shrink: 0;
+      border-radius: 22px;
+      background: var(--armus-gold-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 14px 30px rgba(223, 172, 46, .4);
+    }
+
+    .flashcard-toggle-icon svg {
+      width: 38px;
+      height: 38px;
+      color: var(--armus-on-gold);
+    }
+
+    .flashcard-toggle-mid {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .flashcard-toggle-eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--armus-gold-2);
+      margin-bottom: 8px;
+    }
+
+    .flashcard-toggle-title {
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .flashcard-toggle-sub {
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, .6);
+      margin-bottom: 20px;
+    }
+
+    .flashcard-toggle-sub strong {
+      color: var(--armus-gold-1);
+      font-weight: 700;
+    }
+
+    .flashcard-toggle-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-radius: 14px;
+      padding: 14px 22px;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 8px 20px rgba(223, 172, 46, .3);
+    }
+
+    .flashcard-toggle-cta svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    @media (max-width: 560px) {
+      .flashcard-toggle-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 28px;
+      }
+
+      .flashcard-toggle-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+      }
+
+      .flashcard-toggle-icon svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .flashcard-toggle-title {
+        font-size: 20px;
+      }
     }
 
     .flashcard-section {
@@ -1607,7 +1718,21 @@
       <div class="confidence-card" id="confidenceCard"></div>
     </div>
 
-    <button type="button" class="flashcard-toggle-btn" id="flashcardToggleBtn" data-i18n="studentDash.flashcards">📇 Flaş Kart</button>
+    <button type="button" class="flashcard-toggle-card" id="flashcardToggleBtn">
+      <div class="flashcard-toggle-glow"></div>
+      <div class="flashcard-toggle-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="16" height="12" rx="2"></rect><rect x="6" y="2" width="16" height="12" rx="2"></rect></svg>
+      </div>
+      <div class="flashcard-toggle-mid">
+        <div class="flashcard-toggle-eyebrow" data-i18n="studentDash.flashcardsEyebrow">Kelime Hazinen</div>
+        <div class="flashcard-toggle-title" data-i18n="studentDash.flashcardsTitle">Flaş Kartlarınla Pratik Yap</div>
+        <div class="flashcard-toggle-sub" id="flashcardToggleSub"></div>
+        <div class="flashcard-toggle-cta">
+          <span data-i18n="studentDash.flashcardsCta">Kartları Aç</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </div>
+      </div>
+    </button>
     <div class="flashcard-section" id="flashcardSection" style="display:none;"></div>
 
     <h2 data-i18n="studentDash.badges">Rozetlerin</h2>
@@ -1629,7 +1754,7 @@
 
   </main>
 
-  <script src="i18n.js?v=12"></script>
+  <script src="i18n.js?v=13"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -2149,6 +2274,20 @@
         });
       }
 
+      // the toggle card's stat line lives outside flashcardSection (it's
+      // visible before the modal ever opens), so it needs its own
+      // refresh call anywhere vocabEntries changes rather than piggy-
+      // backing on renderFlashcardSection.
+      function renderFlashcardToggleSub() {
+        const masteredCount = vocabEntries.filter(e => e.mastered).length;
+        document.getElementById("flashcardToggleSub").innerHTML = vocabEntries.length === 0
+          ? armusT("studentDash.flashcardsSubtitleEmpty", "Henüz kelime eklemedin. İlk kartını oluştur.")
+          : armusT("studentDash.flashcardsSubtitleCount", "<strong>{total} kelime</strong> kaydettin · {mastered} tanesini öğrendin")
+              .replace("{total}", vocabEntries.length)
+              .replace("{mastered}", masteredCount);
+      }
+      renderFlashcardToggleSub();
+
       function renderFlashcardSection() {
 
         const categories = flashcardCategories();
@@ -2299,6 +2438,7 @@
             if (updated) {
               entry.mastered = updated.mastered;
               renderFlashcardSection();
+              renderFlashcardToggleSub();
             }
           });
 
@@ -2310,6 +2450,7 @@
               if (idx !== -1) vocabEntries.splice(idx, 1);
               flashcardFlipped = false;
               renderFlashcardSection();
+              renderFlashcardToggleSub();
             }
           });
         }
@@ -2328,6 +2469,7 @@
             flashcardIndex = 0;
             flashcardFlipped = false;
             renderFlashcardSection();
+            renderFlashcardToggleSub();
           }
         });
       }
