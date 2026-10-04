@@ -988,7 +988,7 @@
   </main>
 
 
-  <script src="i18n.js?v=9"></script>
+  <script src="i18n.js?v=10"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="favorites.js?v=4"></script>
   <script src="auth.js?v=5"></script>
@@ -1300,9 +1300,13 @@
     sortSelect.addEventListener("change", () => updateTeachers({ resetPage: true }));
     favoritesOnlyFilter.addEventListener("change", () => updateTeachers({ resetPage: true }));
 
-    const initialQuery = new URLSearchParams(window.location.search).get("q");
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialQuery = initialParams.get("q");
     if (initialQuery) {
       searchInput.value = initialQuery;
+    }
+    if (initialParams.get("favorites") === "1") {
+      favoritesOnlyFilter.checked = true;
     }
 
     updateTeachers();
