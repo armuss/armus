@@ -380,7 +380,7 @@ async function armusRenderStudentNav(el, session, firstName) {
     <a class="gnav-icon-btn" href="mesajlar.html" title="${armusT("nav.messages", "Mesajlar")}" aria-label="${armusT("nav.messages", "Mesajlar")}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
     </a>
-    <a class="gnav-icon-btn" href="teachers.html?favorites=1" title="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}" aria-label="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}">
+    <a class="gnav-icon-btn" href="favorites.html" title="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}" aria-label="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
     </a>
     <div class="gnav-dropdown-wrap">
@@ -402,7 +402,7 @@ async function armusRenderStudentNav(el, session, firstName) {
         <a href="student-dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>
         <a href="mesajlar.html">${armusT("nav.messages", "Mesajlar")}</a>
         <a href="my-lessons.html">${armusT("studentDash.navSchedule", "Derslerim")}</a>
-        <a href="teachers.html?favorites=1">${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}</a>
+        <a href="favorites.html">${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}</a>
         <a href="student-dashboard.html#referralBox">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
         <a href="settings.html">${armusT("nav.settings", "Ayarlar")}</a>
         <a href="sss.html">${armusT("nav.help", "Yardım")}</a>

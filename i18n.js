@@ -68,6 +68,15 @@ const ARMUS_I18N_EN = {
   "settings.deleteWarningTitle": "Delete Your Account",
   "settings.deleteButton": "Delete My Account",
 
+  // favorites.html
+  "favoritesPage.eyebrow": "MY FAVORITES",
+  "favoritesPage.title": "My Favorite Teachers",
+  "favoritesPage.countTitle": "{n} Saved Teacher",
+  "favoritesPage.gateTitle": "Log in to see your favorite teachers",
+  "favoritesPage.gateText": "You need an account before you can see the teachers you've saved.",
+  "favoritesPage.emptyText": "You haven't saved any teachers yet.",
+  "favoritesPage.emptyCta": "Explore teachers →",
+
   // index.html
   "index.eyebrow": "Turkey's English learning platform",
   "index.scrollIntro.title1": "Start with one teacher.",
