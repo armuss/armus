@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
-  <link rel="stylesheet" href="theme.css?v=6">
+  <link rel="stylesheet" href="theme.css?v=7">
 
   <style>
     * {
@@ -55,24 +55,21 @@
     /* NAVBAR */
 
     .navbar {
-      padding-top: 14px;
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 50;
+      background-color: var(--armus-bg);
     }
 
     .nav-inner {
-      width: min(1100px, calc(100% - 40px));
+      width: min(940px, calc(100% - 40px));
       margin: auto;
-      height: 68px;
-      border: 1px solid var(--armus-border-soft);
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.86);
-      box-shadow: 0 8px 30px rgba(35, 26, 10, 0.06);
-      backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
-      padding: 0 12px 0 18px;
     }
     /* .nav-links gets the auto margin (not justify-content:space-between
        on the row) so it self-centers while nav-utility/nav-buttons stay
@@ -991,7 +988,7 @@
   <script src="i18n.js?v=11"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="favorites.js?v=4"></script>
-  <script src="auth.js?v=7"></script>
+  <script src="auth.js?v=8"></script>
   <script>
 
     // Everything in this block only needs teachers-data.js and favorites.js

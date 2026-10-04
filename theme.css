@@ -279,7 +279,14 @@ h1, h2 {
   white-space: nowrap;
 }
 
+.gnav-refer-btn {
+  font-size: 12.5px;
+  padding: 9px 16px;
+  white-space: nowrap;
+}
+
 @media (max-width: 560px) {
   a.gnav-icon-btn { display: none; }
+  a.gnav-refer-btn { display: none; }
   .gnav-dropdown { width: 240px; }
 }
