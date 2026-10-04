@@ -641,6 +641,7 @@ const ARMUS_I18N_EN = {
   "studentDash.save": "Save",
   "studentDash.navRefer": "Refer a Friend",
   "studentDash.navSchedule": "My Lessons",
+  "studentDash.navBellTitle": "Notifications",
   "studentDash.navBellAttachment": "📎 Sent an attachment",
   "studentDash.navBellSoon": "Your lesson is coming up",
   "studentDash.navBellEmpty": "No notifications yet.",
