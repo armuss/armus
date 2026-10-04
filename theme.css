@@ -36,10 +36,11 @@
   --armus-bg-glow: none;
 }
 
-/* big display headings use a serif, like the EnglishMaster reference -
-   everything else (nav, body, buttons, card titles) stays on Inter */
+/* big display headings use the same bold geometric display face as the
+   student dashboard's hero/numbers (Unbounded) - everything else (nav,
+   body, buttons, card titles) stays on Inter */
 h1, h2 {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Unbounded", "Inter", sans-serif;
 }
 
 /* the wordmark itself (.brand/.logo) is now the actual hand-drawn
