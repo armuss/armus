@@ -75,6 +75,32 @@
       color: transparent;
     }
 
+    .nav-find-tutor {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--armus-ink);
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 8px 16px 8px 12px;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: 0.2s;
+    }
+
+    .nav-find-tutor:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .nav-find-tutor svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
     .nav-buttons {
       display: flex;
       gap: 10px;
@@ -562,6 +588,14 @@
         display: none;
       }
 
+      .nav-find-tutor {
+        padding: 8px;
+      }
+
+      .nav-find-tutor span {
+        display: none;
+      }
+
       .nav-greeting {
         display: none;
       }
@@ -587,6 +621,10 @@
   <nav>
     <div class="nav-inner">
       <span class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></span>
+      <a href="teachers.html" class="nav-find-tutor" title="Öğretmen Bul" aria-label="Öğretmen Bul">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span data-i18n="nav.findTutor">Öğretmen Bul</span>
+      </a>
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
         <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">

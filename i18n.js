@@ -19,6 +19,7 @@
 const ARMUS_I18N_EN = {
   // shared nav
   "nav.teachers": "Teachers",
+  "nav.findTutor": "Find a Tutor",
   "nav.how": "How It Works",
   "nav.about": "About Us",
   "nav.blog": "Blog",
