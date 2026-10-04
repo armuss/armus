@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Favori Öğretmenlerim | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css?v=7">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: var(--armus-muted);
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 45px 0 90px;
+      display: none;
+    }
+
+    .eyebrow {
+      color: var(--armus-muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 34px);
+      letter-spacing: -0.3px;
+      margin-bottom: 30px;
+    }
+
+    /* TEACHER GRID - same card look as teachers.html, laid out as a
+       plain grid instead of the browse page's overlapping card stack
+       (that overlap effect only makes sense scrolling through a long
+       list, not a short personal collection). */
+
+    .favorites-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 24px;
+    }
+
+    .teacher-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 40px rgba(35, 26, 10, 0.1);
+      cursor: pointer;
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
+    }
+
+    .teacher-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 55px rgba(35, 26, 10, 0.18);
+    }
+
+    .avatar {
+      position: relative;
+      height: 205px;
+      flex-shrink: 0;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: grid;
+      place-items: end center;
+      padding-bottom: 18px;
+      font-weight: 800;
+      font-size: 40px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    .rating {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      background: var(--armus-gold-gradient);
+      border: none;
+      border-radius: 10px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--armus-on-gold);
+    }
+
+    .fav-btn {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      z-index: 2;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      background: none;
+      border: none;
+      color: var(--armus-ink);
+      cursor: pointer;
+      line-height: 1;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+    }
+
+    .fav-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .fav-btn svg path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+    }
+
+    .fav-btn.active {
+      color: var(--armus-gold-text);
+    }
+
+    .fav-btn.active svg path {
+      fill: currentColor;
+    }
+
+    .card-mid {
+      padding: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .teacher-name {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tags {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .tag {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--armus-ink);
+    }
+
+    .card-side {
+      margin-top: 15px;
+    }
+
+    .price {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .price span {
+      color: var(--armus-muted);
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .trial {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #0a0a0a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .teacher-card:hover .trial {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    /* EMPTY STATE */
+
+    .empty-state {
+      display: none;
+      text-align: center;
+      padding: 70px 20px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+    }
+
+    .empty-state .heart {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 18px;
+      color: var(--armus-faint);
+    }
+
+    .empty-state p {
+      color: var(--armus-muted);
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+
+    @media (max-width: 560px) {
+      .logo { font-size: 24px; }
+      .nav-utility { gap: 6px; }
+      .help-btn { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="student-dashboard.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
+      </div>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1 data-i18n="favoritesPage.gateTitle">Favori öğretmenlerini görmek için giriş yap</h1>
+      <p data-i18n="favoritesPage.gateText">Kaydettiğin öğretmenleri görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html?next=favorites.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=favorites.html" data-i18n="nav.register">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="pageRoot">
+
+    <div class="eyebrow" data-i18n="favoritesPage.eyebrow">FAVORİLERİM</div>
+    <h1 id="pageTitle" data-i18n="favoritesPage.title">Favori Öğretmenlerim</h1>
+
+    <div class="favorites-grid" id="favoritesGrid"></div>
+
+    <div class="empty-state" id="emptyState">
+      <svg class="heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+      <p data-i18n="favoritesPage.emptyText">Henüz favori öğretmenin yok.</p>
+      <a class="btn btn-light" href="teachers.html" data-i18n="favoritesPage.emptyCta">Öğretmenleri Keşfet →</a>
+    </div>
+
+  </main>
+
+  <script src="i18n.js?v=11"></script>
+  <script src="teachers-data.js?v=4"></script>
+  <script src="favorites.js?v=4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="site-settings.js?v=4"></script>
+  <script src="auth.js?v=9"></script>
+  <script src="reviews.js?v=5"></script>
+  <script src="marketplace.js?v=5"></script>
+  <script>
+
+    const gate = document.getElementById("gate");
+    const pageRoot = document.getElementById("pageRoot");
+
+    function renderTeacherCard(teacher) {
+
+      const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
+      const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
+      const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
+      const avatarInner = armusSafeUrl(teacher.photo)
+        ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`
+        : armusEscapeHtml(teacher.initials);
+
+      const article = document.createElement("article");
+      article.className = "teacher-card";
+      article.dataset.teacherId = teacher.id;
+
+      article.innerHTML = `
+        <button type="button" class="fav-btn active" data-fav="${teacher.id}" aria-label="${armusT("teacherProfile.addToFavorites", "Favorilere ekle")}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>
+        </button>
+        <div class="avatar">${avatarInner}</div>
+        <div class="rating">${ratingLabel}</div>
+
+        <div class="card-mid">
+          <a href="${teacherLink}" class="teacher-name">${armusEscapeHtml(armusShortDisplayName(teacher.name))}</a>
+          <div class="tags">
+            <span class="tag">${armusEscapeHtml(teacher.completedLessons)} ${armusT("teacherProfile.lessonsWord", "ders")}</span>
+            <span class="tag">${armusT("teacherProfile.studentsCount", "{n} öğrenci").replace("{n}", teacher.students)}</span>
+          </div>
+          <div class="card-side">
+            <span class="price">₺${teacher.price} <span>${armusT("teachersPage.perLesson", "/ ders")}</span></span>
+            <a class="trial" href="${bookingLink}">${armusT("teacherProfile.trialLessonBtn", "Deneme Dersi Al")}</a>
+          </div>
+        </div>
+      `;
+
+      const btn = article.querySelector(".fav-btn");
+      btn.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        armusToggleFavorite(btn.dataset.fav);
+        article.remove();
+        renderCountAndEmptyState();
+      });
+
+      article.addEventListener("click", event => {
+        if (event.target.closest("a, button")) return;
+        window.location.href = teacherLink;
+      });
+
+      return article;
+    }
+
+    const grid = document.getElementById("favoritesGrid");
+    const emptyState = document.getElementById("emptyState");
+    const pageTitle = document.getElementById("pageTitle");
+
+    function renderCountAndEmptyState() {
+      const count = grid.children.length;
+      emptyState.style.display = count === 0 ? "block" : "none";
+      grid.style.display = count === 0 ? "none" : "grid";
+      pageTitle.textContent = count === 0
+        ? armusT("favoritesPage.title", "Favori Öğretmenlerim")
+        : armusT("favoritesPage.countTitle", "{n} Kayıtlı Öğretmen").replace("{n}", count);
+    }
+
+    (async function() {
+
+      // caught so a slow/blocked Supabase SDK still reaches the static
+      // login gate below instead of leaving pageRoot's default state on screen
+      const session = await armusGetSession().catch(() => null);
+
+      if (!session) {
+        gate.style.display = "block";
+        return;
+      }
+
+      pageRoot.style.display = "block";
+
+      const favoriteIds = armusGetFavorites();
+
+      if (favoriteIds.length > 0) {
+        const allTeachers = await armusGetMarketplaceTeachers(session.id).catch(() => []);
+        allTeachers
+          .filter(t => favoriteIds.includes(t.id))
+          .forEach(t => grid.appendChild(renderTeacherCard(t)));
+      }
+
+      renderCountAndEmptyState();
+
+      if (typeof armusApplyTranslations === "function") armusApplyTranslations();
+
+    })();
+
+  </script>
+
+</body>
+</html>
