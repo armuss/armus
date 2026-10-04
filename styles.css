@@ -1374,13 +1374,19 @@ body {
   }
 }
 .hero-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  max-width: 480px;
   padding: 22px 48px;
   font-size: 16px;
   border-radius: 10px;
 }
 @media (max-width: 560px) {
   .hero-cta {
-    width: 100%;
+    max-width: none;
     padding: 17px 24px;
   }
 }
