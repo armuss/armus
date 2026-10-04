@@ -232,6 +232,29 @@ function armusAvatarInner(photoUrl, name) {
   return armusSafeUrl(photoUrl) ? `<img src="${armusSafeUrl(photoUrl)}" alt="">` : armusAvatarInitials(name);
 }
 
+// Wherever a logged-in student is in their panel, clicking the ARMUS
+// mark top-left should take them back to their panel - most pages still
+// point it at index.html (my-lessons.html, teacher.html, teachers.html),
+// index.html's own points nowhere (href="#"), and mesajlar.html doesn't
+// link it at all. Every page's header mark is ".logo" except index.html,
+// which uses ".brand" for both its header mark and an unrelated footer
+// mark - "header.nav a.brand" scopes to the header one there without
+// touching the footer's.
+function armusLinkLogoToPanel(href) {
+  const logo = document.querySelector(".logo, header.nav a.brand");
+  if (!logo) return;
+  if (logo.tagName === "A") {
+    logo.setAttribute("href", href);
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = href;
+  if (logo.id) a.id = logo.id;
+  a.className = logo.className;
+  a.innerHTML = logo.innerHTML;
+  logo.replaceWith(a);
+}
+
 // Closes every open global-nav dropdown (bell, profile) except the one
 // passed in, if any - shared by the click-outside/Escape listeners below
 // and by each dropdown's own open toggle. Queried fresh every call
@@ -411,6 +434,7 @@ async function armusRenderStudentNav(el, session, firstName) {
   }
 
   armusRenderGnavBell(session);
+  armusLinkLogoToPanel("student-dashboard.html");
 }
 
 async function armusRenderNavAuth() {
