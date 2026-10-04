@@ -924,8 +924,22 @@
     }
 
     .flashcard-section-inner {
-      width: min(560px, 100%);
+      width: min(960px, 100%);
       margin: 0 auto;
+    }
+
+    .flashcard-panel {
+      border: 1px solid var(--armus-border);
+      border-radius: 28px;
+      padding: 36px;
+      background: var(--armus-panel);
+    }
+
+    .flashcard-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      align-items: center;
+      margin-bottom: 24px;
     }
 
     .flashcard-close-btn {
@@ -1037,18 +1051,21 @@
 
     .flashcard-stage {
       perspective: 1400px;
-      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .flashcard {
       position: relative;
       width: 100%;
       max-width: 480px;
-      min-height: 260px;
+      min-height: 380px;
       margin: 0 auto;
       cursor: pointer;
       transform-style: preserve-3d;
       transition: transform .6s cubic-bezier(.4, .2, .2, 1);
+      box-shadow: 0 24px 55px rgba(223, 172, 46, .28);
     }
 
     .flashcard.flipped {
@@ -1132,11 +1149,28 @@
       line-height: 1.6;
     }
 
+    .flashcard-empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(10, 10, 10, .08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+
+    .flashcard-empty-icon svg {
+      width: 26px;
+      height: 26px;
+      color: var(--armus-on-gold);
+    }
+
     .flashcard-actions {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 24px;
+      margin-top: 22px;
     }
 
     .flashcard-actions button {
@@ -1163,32 +1197,92 @@
     }
 
     .flashcard-add-form {
+      margin-left: -56px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(10, 10, 10, .12);
+      padding: 30px;
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .flashcard-form-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .flashcard-field {
+      position: relative;
+    }
+
+    .flashcard-field svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--armus-faint);
+      pointer-events: none;
     }
 
     .flashcard-add-form input {
-      flex: 1;
-      min-width: 120px;
-      background: var(--armus-bg);
+      width: 100%;
+      background: var(--armus-panel-2);
       border: 1px solid var(--armus-border);
-      border-radius: 10px;
-      padding: 9px 12px;
+      border-radius: 12px;
+      padding: 13px 14px 13px 38px;
       color: var(--armus-ink);
       font-family: inherit;
-      font-size: 13px;
+      font-size: 13.5px;
     }
 
-    .flashcard-add-form button {
-      border: 1px solid var(--armus-border);
-      border-radius: 10px;
-      padding: 9px 16px;
-      background: var(--armus-panel-2);
-      color: var(--armus-ink);
+    .flashcard-add-form button[type="submit"] {
+      margin-top: 4px;
+      border: none;
+      border-radius: 999px;
+      padding: 16px;
+      background: #0a0a0a;
+      color: #fff;
       font-family: inherit;
-      font-size: 12.5px;
+      font-weight: 800;
+      font-size: 14.5px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .flashcard-add-form button[type="submit"] svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    @media (max-width: 760px) {
+      .flashcard-panel {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .flashcard-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .flashcard-add-form {
+        margin-left: 0;
+        box-shadow: none;
+      }
+
+      .flashcard {
+        min-height: 300px;
+      }
     }
 
     /* lesson list (condensed) */
@@ -1535,7 +1629,7 @@
 
   </main>
 
-  <script src="i18n.js?v=11"></script>
+  <script src="i18n.js?v=12"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -2089,44 +2183,66 @@
               </div>
             ` : ""}
 
-            <div class="flashcard-stage">
-              <div class="flashcard ${flashcardFlipped ? "flipped" : ""}" id="flashcardEl">
-                <div class="flashcard-face flashcard-front">
-                  ${hasEntries ? `
-                    ${entry.mastered ? `<span class="flashcard-mastered-pill">${armusT("studentDash.flashcardMasteredPill", "✓ Öğrenildi")}</span>` : ""}
-                    <span class="flashcard-tag">${armusEscapeHtml(flashcardCategoryLabel(entry.category || "Genel"))}</span>
-                    <span class="flashcard-label">${armusT("studentDash.flashcardWordLabel", "Kelime")}</span>
-                    <div class="flashcard-word">${armusEscapeHtml(entry.term)}</div>
-                    <span class="flashcard-hint">${armusT("studentDash.flashcardClickToFlip", "Çevirmek için karta tıkla")}</span>
-                  ` : `
-                    <div class="flashcard-empty">${vocabEntries.length === 0
-                      ? armusT("studentDash.flashcardEmptyNoCards", "Henüz kartın yok.<br>Aşağıdan ilk kelimeni ekle 👇")
-                      : armusT("studentDash.flashcardEmptyFiltered", "Bu filtreye uyan kart yok.")}</div>
-                  `}
+            <div class="flashcard-panel">
+              <div class="flashcard-grid">
+                <div class="flashcard-stage">
+                  <div class="flashcard ${flashcardFlipped ? "flipped" : ""}" id="flashcardEl">
+                    <div class="flashcard-face flashcard-front">
+                      ${hasEntries ? `
+                        ${entry.mastered ? `<span class="flashcard-mastered-pill">${armusT("studentDash.flashcardMasteredPill", "✓ Öğrenildi")}</span>` : ""}
+                        <span class="flashcard-tag">${armusEscapeHtml(flashcardCategoryLabel(entry.category || "Genel"))}</span>
+                        <span class="flashcard-label">${armusT("studentDash.flashcardWordLabel", "Kelime")}</span>
+                        <div class="flashcard-word">${armusEscapeHtml(entry.term)}</div>
+                        <span class="flashcard-hint">${armusT("studentDash.flashcardClickToFlip", "Çevirmek için karta tıkla")}</span>
+                      ` : `
+                        ${vocabEntries.length === 0 ? `
+                          <div class="flashcard-empty-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                          </div>
+                        ` : ""}
+                        <div class="flashcard-empty">${vocabEntries.length === 0
+                          ? armusT("studentDash.flashcardEmptyNoCards", "Henüz kartın yok.<br>İlk kelimeni ekleyerek başla")
+                          : armusT("studentDash.flashcardEmptyFiltered", "Bu filtreye uyan kart yok.")}</div>
+                      `}
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                      ${hasEntries ? `
+                        <span class="flashcard-label">${armusT("studentDash.flashcardMeaningLabel", "Anlamı")}</span>
+                        <div class="flashcard-word">${armusEscapeHtml(entry.meaning)}</div>
+                      ` : ""}
+                    </div>
+                  </div>
                 </div>
-                <div class="flashcard-face flashcard-back">
-                  ${hasEntries ? `
-                    <span class="flashcard-label">${armusT("studentDash.flashcardMeaningLabel", "Anlamı")}</span>
-                    <div class="flashcard-word">${armusEscapeHtml(entry.meaning)}</div>
-                  ` : ""}
-                </div>
+
+                <form class="flashcard-add-form" id="flashcardAddForm">
+                  <div class="flashcard-form-title">${armusT("studentDash.flashcardFormTitle", "Yeni Kart Ekle")}</div>
+                  <div class="flashcard-field">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    <input type="text" id="flashcardWordInput" placeholder="${armusT("studentDash.flashcardWordPlaceholder", "Kelime")}" required maxlength="80">
+                  </div>
+                  <div class="flashcard-field">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <input type="text" id="flashcardMeaningInput" placeholder="${armusT("studentDash.flashcardMeaningPlaceholder", "Anlamı")}" required maxlength="120">
+                  </div>
+                  <div class="flashcard-field">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    <input type="text" id="flashcardCategoryInput" placeholder="${armusT("studentDash.flashcardCategoryPlaceholder", "Kategori (örn. Seyahat)")}" maxlength="30" list="flashcardCategoryList">
+                  </div>
+                  <datalist id="flashcardCategoryList">${categories.map(c => `<option value="${armusEscapeHtml(c)}">`).join("")}</datalist>
+                  <button type="submit">
+                    ${armusT("studentDash.flashcardCreateBtn", "Kart Oluştur")}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                  </button>
+                </form>
               </div>
+
+              ${hasEntries ? `
+                <div class="flashcard-actions">
+                  <button type="button" class="flashcard-mastered-btn ${entry.mastered ? "on" : ""}" id="flashcardMasteredBtn">${entry.mastered ? armusT("studentDash.flashcardRelearn", "↺ Tekrar Öğreniyorum") : armusT("studentDash.flashcardLearned", "✓ Öğrendim")}</button>
+                  <button type="button" class="flashcard-delete-btn" id="flashcardDeleteBtn">${armusT("studentDash.flashcardDelete", "🗑 Sil")}</button>
+                </div>
+              ` : ""}
             </div>
-
-            ${hasEntries ? `
-              <div class="flashcard-actions">
-                <button type="button" class="flashcard-mastered-btn ${entry.mastered ? "on" : ""}" id="flashcardMasteredBtn">${entry.mastered ? armusT("studentDash.flashcardRelearn", "↺ Tekrar Öğreniyorum") : armusT("studentDash.flashcardLearned", "✓ Öğrendim")}</button>
-                <button type="button" class="flashcard-delete-btn" id="flashcardDeleteBtn">${armusT("studentDash.flashcardDelete", "🗑 Sil")}</button>
-              </div>
-            ` : ""}
-
-            <form class="flashcard-add-form" id="flashcardAddForm">
-              <input type="text" id="flashcardWordInput" placeholder="${armusT("studentDash.flashcardWordPlaceholder", "Kelime")}" required maxlength="80">
-              <input type="text" id="flashcardMeaningInput" placeholder="${armusT("studentDash.flashcardMeaningPlaceholder", "Anlamı")}" required maxlength="120">
-              <input type="text" id="flashcardCategoryInput" placeholder="${armusT("studentDash.flashcardCategoryPlaceholder", "Kategori (örn. Seyahat)")}" maxlength="30" list="flashcardCategoryList">
-              <datalist id="flashcardCategoryList">${categories.map(c => `<option value="${armusEscapeHtml(c)}">`).join("")}</datalist>
-              <button type="submit">${armusT("studentDash.flashcardCreateBtn", "Kart Oluştur")}</button>
-            </form>
           </div>
         `;
 
