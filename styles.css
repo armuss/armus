@@ -220,7 +220,15 @@ body {
   margin-right: 7px;
 }
 .hero h1 {
-  font-size: clamp(48px, 5vw, 76px);
+  /* Unbounded is much wider than the Playfair Display this was tuned
+     for - 76px no longer fit "İngilizce öğrenmenin" on one line within
+     the hero's half-width column (.hero's 1fr 1fr grid), wrapping the
+     two-line headline into four and pushing .hero-cta below the fold.
+     48px is the largest size that still reliably wraps to the original
+     two lines at real desktop widths - same value the mobile media
+     query below already uses, so this is now just a flat size rather
+     than a clamp(). */
+  font-size: 48px;
   line-height: 1.02;
   letter-spacing: -1px;
   margin: 18px 0;
