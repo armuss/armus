@@ -296,11 +296,6 @@
       font-size: 14px;
     }
 
-    .nav-delete-item {
-      color: var(--armus-faint) !important;
-      font-size: 12px !important;
-    }
-
     .nav-bell-empty {
       padding: 18px 12px;
       text-align: center;
@@ -1442,7 +1437,7 @@
             <a href="my-lessons.html" data-i18n="studentDash.navSchedule">Derslerim</a>
             <a href="teachers.html?favorites=1" data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</a>
             <a href="#referralBox" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
-            <button type="button" id="navDeleteAccountBtn" class="nav-delete-item" data-i18n="nav.deleteAccount">Hesabımı Sil</button>
+            <a href="settings.html" data-i18n="nav.settings">Ayarlar</a>
             <a href="sss.html" data-i18n="nav.help">Yardım</a>
             <hr>
             <button type="button" id="navLogoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
@@ -1714,26 +1709,6 @@
       document.getElementById("navLogoutBtn").addEventListener("click", async () => {
         await armusSignOut();
         window.location.reload();
-      });
-
-      document.getElementById("navDeleteAccountBtn").addEventListener("click", async () => {
-
-        if (!confirm(armusT("nav.deleteAccountConfirm", "Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz."))) return;
-
-        const btn = document.getElementById("navDeleteAccountBtn");
-        btn.disabled = true;
-        btn.textContent = armusT("nav.deleting", "Siliniyor...");
-
-        const result = await armusDeleteOwnAccount();
-
-        if (!result.ok) {
-          btn.disabled = false;
-          btn.textContent = armusT("nav.deleteAccount", "Hesabımı Sil");
-          alert(result.error);
-          return;
-        }
-
-        window.location.href = "index.html";
       });
 
       // ---- referral card: own shareable link + how many friends have

@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hesap Ayarları | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css?v=5">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV - identical to student-dashboard.html's Preply-style header,
+       kept in lockstep with it so the header looks/behaves the same on
+       every page a logged-in student can reach. */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: #0a0a0a;
+      color: #eee;
+      border-color: #303030;
+      font-weight: 700;
+      padding: 13px 22px;
+      border-radius: 11px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      font-family: inherit;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .icon-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .nav-refer-btn {
+      font-size: 12.5px;
+      padding: 9px 16px;
+      white-space: nowrap;
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: #e5484d;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .nav-dropdown-wrap {
+      position: relative;
+    }
+
+    .nav-avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid var(--armus-border);
+      cursor: pointer;
+      background: none;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .nav-avatar-btn .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      font-size: 13px;
+    }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      width: 270px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .14);
+      padding: 8px;
+      z-index: 60;
+    }
+
+    .nav-dropdown a,
+    .nav-dropdown button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--armus-ink);
+      background: none;
+      border: none;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .nav-dropdown a:hover,
+    .nav-dropdown button:hover {
+      background: var(--armus-panel-2);
+    }
+
+    .nav-dropdown hr {
+      border: none;
+      border-top: 1px solid var(--armus-border-soft);
+      margin: 6px 4px;
+    }
+
+    .nav-dropdown-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px 14px;
+    }
+
+    .nav-dropdown-head .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 13px;
+    }
+
+    .nav-dropdown-greeting {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .nav-bell-empty {
+      padding: 18px 12px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--armus-muted);
+    }
+
+    @media (max-width: 560px) {
+      .nav-utility { gap: 6px; }
+      .nav-refer-btn,
+      .nav-utility > a.icon-btn { display: none; }
+      .nav-dropdown { width: 240px; }
+      .logo { font-size: 24px; }
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: var(--armus-muted);
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .avatar {
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 48px 0 100px;
+      display: none;
+    }
+
+    .page-title {
+      font-size: 28px;
+      letter-spacing: -0.5px;
+      margin-bottom: 32px;
+    }
+
+    .settings-shell {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .settings-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: sticky;
+      top: 100px;
+    }
+
+    .settings-tab {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--armus-muted);
+      cursor: pointer;
+    }
+
+    .settings-tab:hover {
+      background: var(--armus-panel-2);
+      color: var(--armus-ink);
+    }
+
+    .settings-tab.active {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .settings-tab.danger {
+      color: #b3261e;
+    }
+
+    .settings-panel {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      padding: 36px;
+    }
+
+    .settings-section {
+      display: none;
+    }
+
+    .settings-section.active {
+      display: block;
+    }
+
+    .settings-section h2 {
+      font-size: 20px;
+      letter-spacing: -0.3px;
+      margin-bottom: 26px;
+    }
+
+    .photo-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .settings-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      font-size: 24px;
+    }
+
+    .photo-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--armus-ink);
+      background: transparent;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .upload-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .photo-note {
+      font-size: 12px;
+      color: var(--armus-muted);
+    }
+
+    /* FORM - same pattern as register.html's fields */
+
+    .field {
+      margin-bottom: 16px;
+      max-width: 400px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--armus-muted);
+      margin-bottom: 7px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--armus-gold-2);
+    }
+
+    .field input:disabled {
+      color: var(--armus-muted);
+      cursor: not-allowed;
+    }
+
+    .form-error {
+      display: none;
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #b3261e;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+      max-width: 400px;
+    }
+
+    .form-success {
+      display: none;
+      background: rgba(143, 214, 174, .1);
+      border: 1px solid rgba(143, 214, 174, .35);
+      color: #1f7a4d;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+      line-height: 1.6;
+      max-width: 400px;
+    }
+
+    .save-btn {
+      margin-top: 6px;
+      padding: 13px 24px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .save-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .email-note {
+      font-size: 12px;
+      color: var(--armus-muted);
+      max-width: 400px;
+      margin: -4px 0 18px;
+      line-height: 1.6;
+    }
+
+    .danger-box {
+      border: 1px solid rgba(220, 90, 90, .35);
+      border-radius: 14px;
+      padding: 20px;
+      max-width: 460px;
+    }
+
+    .danger-box p {
+      font-size: 13px;
+      color: var(--armus-muted);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .delete-btn {
+      padding: 12px 20px;
+      border: 1px solid rgba(220, 90, 90, .5);
+      border-radius: 12px;
+      background: none;
+      color: #b3261e;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background: rgba(220, 90, 90, .08);
+    }
+
+    .delete-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 760px) {
+      .settings-shell {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .settings-sidebar {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+      }
+
+      .settings-tab {
+        white-space: nowrap;
+      }
+
+      .settings-panel {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <div class="nav-utility" id="navUtility" style="display:none;">
+        <a class="btn nav-refer-btn" href="student-dashboard.html#referralBox" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="icon-btn" href="mesajlar.html" title="Mesajlar" aria-label="Mesajlar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        </a>
+        <a class="help-btn icon-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
+        <a class="icon-btn" href="teachers.html?favorites=1" title="Favori Öğretmenlerim" aria-label="Favori Öğretmenlerim">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+        </a>
+        <div class="nav-dropdown-wrap">
+          <button type="button" class="icon-btn" id="navBellBtn" title="Bildirimler" aria-label="Bildirimler" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="nav-badge" id="navBellBadge" style="display:none;"></span>
+          </button>
+          <div class="nav-dropdown" id="navBellDropdown" style="display:none;">
+            <div class="nav-bell-empty" data-i18n="studentDash.navBellEmpty">Henüz bildirimin yok.</div>
+          </div>
+        </div>
+        <div class="nav-dropdown-wrap">
+          <button type="button" class="nav-avatar-btn" id="navProfileBtn" aria-expanded="false">
+            <div class="avatar" id="navAvatar"></div>
+          </button>
+          <div class="nav-dropdown nav-profile-dropdown" id="navProfileDropdown" style="display:none;">
+            <div class="nav-dropdown-head">
+              <div class="avatar" id="navDropdownAvatar"></div>
+              <div class="nav-dropdown-greeting" id="navDropdownGreeting"></div>
+            </div>
+            <a href="student-dashboard.html" data-i18n="nav.myPanel">Panelim</a>
+            <a href="mesajlar.html" data-i18n="nav.messages">Mesajlar</a>
+            <a href="my-lessons.html" data-i18n="studentDash.navSchedule">Derslerim</a>
+            <a href="teachers.html?favorites=1" data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</a>
+            <a href="student-dashboard.html#referralBox" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
+            <a href="settings.html" data-i18n="nav.settings">Ayarlar</a>
+            <a href="sss.html" data-i18n="nav.help">Yardım</a>
+            <hr>
+            <button type="button" id="navLogoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
+          </div>
+        </div>
+      </div>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1 data-i18n="studentDash.gateTitle">Panelini görmek için giriş yap</h1>
+      <p data-i18n="studentDash.gateText">Derslerini, ilerlemeni ve önerileri görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html?next=settings.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=settings.html" data-i18n="nav.register">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="pageRoot">
+
+    <h1 class="page-title" data-i18n="settings.title">Hesap Ayarları</h1>
+
+    <div class="settings-shell">
+      <div class="settings-sidebar">
+        <button type="button" class="settings-tab active" data-tab="account" data-i18n="settings.tabAccount">Hesap</button>
+        <button type="button" class="settings-tab" data-tab="password" data-i18n="settings.tabPassword">Şifre</button>
+        <button type="button" class="settings-tab" data-tab="email" data-i18n="settings.tabEmail">E-posta</button>
+        <button type="button" class="settings-tab danger" data-tab="delete" data-i18n="settings.tabDelete">Hesabı Sil</button>
+      </div>
+
+      <div class="settings-panel">
+
+        <!-- ACCOUNT -->
+        <section class="settings-section active" id="section-account">
+          <h2 data-i18n="settings.tabAccount">Hesap</h2>
+
+          <div class="photo-row">
+            <div class="avatar settings-avatar" id="settingsAvatar"></div>
+            <div class="photo-actions">
+              <label class="upload-btn" for="photoInput" data-i18n="settings.uploadPhoto">Fotoğraf Yükle</label>
+              <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+              <span class="photo-note" data-i18n="settings.photoNote">JPG veya PNG, en fazla 5MB.</span>
+            </div>
+          </div>
+
+          <div class="form-error" id="accountError"></div>
+          <div class="form-success" id="accountSuccess"></div>
+
+          <form id="accountForm">
+            <div class="field">
+              <label for="nameInput" data-i18n="settings.nameLabel">Ad Soyad</label>
+              <input type="text" id="nameInput" autocomplete="name">
+            </div>
+            <button type="submit" class="save-btn" data-i18n="settings.saveChanges">Değişiklikleri Kaydet</button>
+          </form>
+        </section>
+
+        <!-- PASSWORD -->
+        <section class="settings-section" id="section-password">
+          <h2 data-i18n="settings.tabPassword">Şifre</h2>
+
+          <div class="form-error" id="passwordError"></div>
+          <div class="form-success" id="passwordSuccess"></div>
+
+          <form id="passwordForm">
+            <div class="field">
+              <label for="newPasswordInput" data-i18n="settings.newPasswordLabel">Yeni şifre</label>
+              <input type="password" id="newPasswordInput" autocomplete="new-password">
+            </div>
+            <div class="field">
+              <label for="confirmPasswordInput" data-i18n="settings.confirmPasswordLabel">Yeni şifreyi tekrar yaz</label>
+              <input type="password" id="confirmPasswordInput" autocomplete="new-password">
+            </div>
+            <button type="submit" class="save-btn" data-i18n="settings.saveChanges">Değişiklikleri Kaydet</button>
+          </form>
+        </section>
+
+        <!-- EMAIL -->
+        <section class="settings-section" id="section-email">
+          <h2 data-i18n="settings.tabEmail">E-posta</h2>
+
+          <div class="form-error" id="emailError"></div>
+          <div class="form-success" id="emailSuccess"></div>
+
+          <form id="emailForm">
+            <div class="field">
+              <label for="currentEmailInput" data-i18n="settings.currentEmailLabel">Mevcut e-posta</label>
+              <input type="email" id="currentEmailInput" disabled>
+            </div>
+            <div class="field">
+              <label for="newEmailInput" data-i18n="settings.newEmailLabel">Yeni e-posta</label>
+              <input type="email" id="newEmailInput" autocomplete="email">
+            </div>
+            <p class="email-note" data-i18n="settings.emailSaveNote">Değişiklik aktif olmadan önce yeni adresine bir onay bağlantısı göndereceğiz.</p>
+            <button type="submit" class="save-btn" data-i18n="settings.saveChanges">Değişiklikleri Kaydet</button>
+          </form>
+        </section>
+
+        <!-- DELETE ACCOUNT -->
+        <section class="settings-section" id="section-delete">
+          <h2 data-i18n="settings.deleteWarningTitle">Hesabını Sil</h2>
+
+          <div class="danger-box">
+            <p data-i18n="nav.deleteAccountConfirm">Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+            <button type="button" class="delete-btn" id="deleteAccountBtn" data-i18n="settings.deleteButton">Hesabımı Sil</button>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script src="i18n.js?v=10"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="site-settings.js?v=4"></script>
+  <script src="auth.js?v=5"></script>
+  <script>
+
+    const gate = document.getElementById("gate");
+    const pageRoot = document.getElementById("pageRoot");
+
+    function initialsOf(name) {
+      return armusEscapeHtml((name || "?")
+        .split(" ")
+        .map(part => part[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || "?");
+    }
+
+    function avatarInnerFor(photoUrl, name) {
+      return armusSafeUrl(photoUrl) ? `<img src="${armusSafeUrl(photoUrl)}" alt="">` : initialsOf(name);
+    }
+
+    let session = null;
+
+    (async function() {
+
+      session = await armusGetSession().catch(() => null);
+
+      if (!session) {
+        document.querySelector(".logo").outerHTML = '<a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>';
+        gate.style.display = "block";
+        return;
+      }
+
+      if (session.is_admin) {
+        window.location.href = "admin.html";
+        return;
+      }
+
+      if (session.role === "teacher") {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      pageRoot.style.display = "block";
+
+      document.getElementById("navAuthButtons").style.display = "none";
+      document.getElementById("navUtility").style.display = "flex";
+
+      const navAvatarInner = avatarInnerFor(session.photo_url, session.name);
+      document.getElementById("navAvatar").innerHTML = navAvatarInner;
+      document.getElementById("navDropdownAvatar").innerHTML = navAvatarInner;
+      document.getElementById("settingsAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
+
+      function renderNavGreeting() {
+        document.getElementById("navDropdownGreeting").textContent =
+          armusT("nav.greeting", "Merhaba, {name}").replace("{name}", armusCapitalizeName(session.name).split(" ")[0]);
+      }
+      renderNavGreeting();
+      document.addEventListener("armus:langchange", renderNavGreeting);
+
+      // one open dropdown at a time - opening either closes the other
+      const navDropdowns = [
+        { btn: document.getElementById("navBellBtn"), menu: document.getElementById("navBellDropdown") },
+        { btn: document.getElementById("navProfileBtn"), menu: document.getElementById("navProfileDropdown") },
+      ];
+      function closeNavDropdowns(except) {
+        navDropdowns.forEach(d => {
+          if (d.menu === except) return;
+          d.menu.style.display = "none";
+          d.btn.setAttribute("aria-expanded", "false");
+        });
+      }
+      navDropdowns.forEach(({ btn, menu }) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const opening = menu.style.display === "none";
+          closeNavDropdowns(opening ? menu : null);
+          menu.style.display = opening ? "block" : "none";
+          btn.setAttribute("aria-expanded", String(opening));
+        });
+      });
+      document.addEventListener("click", () => closeNavDropdowns(null));
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeNavDropdowns(null); });
+
+      document.getElementById("navLogoutBtn").addEventListener("click", async () => {
+        await armusSignOut();
+        window.location.reload();
+      });
+
+      // ---- tabs ----
+      const tabs = document.querySelectorAll(".settings-tab");
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          tabs.forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          document.querySelectorAll(".settings-section").forEach(s => s.classList.remove("active"));
+          document.getElementById(`section-${tab.dataset.tab}`).classList.add("active");
+        });
+      });
+
+      // ---- account: name ----
+      document.getElementById("nameInput").value = armusCapitalizeName(session.name);
+
+      // a nickname/single word used to pass this unnoticed before - same
+      // rule register.html enforces at signup, kept consistent here.
+      const namePattern = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
+
+      document.getElementById("accountForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorBox = document.getElementById("accountError");
+        const successBox = document.getElementById("accountSuccess");
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+
+        const name = document.getElementById("nameInput").value.trim();
+        if (!namePattern.test(name)) {
+          errorBox.textContent = armusT("register.errNameRequired", "Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil).");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        const btn = e.target.querySelector(".save-btn");
+        btn.disabled = true;
+        const updated = await armusUpdateOwnProfile({ name });
+        btn.disabled = false;
+
+        if (!updated) {
+          errorBox.textContent = armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        session.name = updated.name;
+        successBox.textContent = armusT("settings.savedSuccess", "Kaydedildi.");
+        successBox.style.display = "block";
+      });
+
+      // ---- account: photo upload (same pattern as apply-teacher.html's
+      // uploadToStorage - same bucket, any authenticated user can write
+      // to it per migration_12.sql, so no new storage policy is needed) ----
+      function uploadToStorage(file, folder) {
+        const rawExt = file.name.includes(".") ? file.name.split(".").pop() : "";
+        const ext = /^[a-zA-Z0-9]{1,10}$/.test(rawExt) ? rawExt.toLowerCase() : "bin";
+        const path = `${session.id}/${folder}-${Date.now()}.${ext}`;
+        return armusSupabase.storage
+          .from("teacher-uploads")
+          .upload(path, file, { upsert: true, contentType: file.type || undefined })
+          .then(({ error }) => {
+            if (error) throw new Error(error.message || armusT("settings.uploadFailed", "Dosya yüklenemedi."));
+            return armusSupabase.storage.from("teacher-uploads").getPublicUrl(path).data.publicUrl;
+          });
+      }
+
+      document.getElementById("photoInput").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        const errorBox = document.getElementById("accountError");
+        errorBox.style.display = "none";
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+          errorBox.textContent = armusT("settings.photoTooBig", "Dosya çok büyük (maks 5MB).");
+          errorBox.style.display = "block";
+          e.target.value = "";
+          return;
+        }
+
+        try {
+          const url = await uploadToStorage(file, "profile");
+          const updated = await armusUpdateOwnProfile({ photo_url: url });
+          if (!updated) throw new Error(armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene."));
+          session.photo_url = updated.photo_url;
+          const inner = avatarInnerFor(session.photo_url, session.name);
+          document.getElementById("settingsAvatar").innerHTML = inner;
+          document.getElementById("navAvatar").innerHTML = inner;
+          document.getElementById("navDropdownAvatar").innerHTML = inner;
+        } catch (err) {
+          errorBox.textContent = err.message;
+          errorBox.style.display = "block";
+        }
+      });
+
+      // ---- password ----
+      document.getElementById("passwordForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorBox = document.getElementById("passwordError");
+        const successBox = document.getElementById("passwordSuccess");
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+
+        const newPassword = document.getElementById("newPasswordInput").value;
+        const confirmPassword = document.getElementById("confirmPasswordInput").value;
+
+        if (newPassword.length < 6) {
+          errorBox.textContent = armusT("settings.errPasswordShort", "Şifre en az 6 karakter olmalı.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          errorBox.textContent = armusT("settings.errPasswordMismatch", "Şifreler eşleşmiyor.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        const btn = e.target.querySelector(".save-btn");
+        btn.disabled = true;
+        const { error } = await armusUpdatePassword(newPassword);
+        btn.disabled = false;
+
+        if (error) {
+          errorBox.textContent = error.message || armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        document.getElementById("passwordForm").reset();
+        successBox.textContent = armusT("settings.passwordSaved", "Şifren güncellendi.");
+        successBox.style.display = "block";
+      });
+
+      // ---- email ----
+      document.getElementById("currentEmailInput").value = session.email || "";
+
+      document.getElementById("emailForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorBox = document.getElementById("emailError");
+        const successBox = document.getElementById("emailSuccess");
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+
+        const newEmail = document.getElementById("newEmailInput").value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+          errorBox.textContent = armusT("settings.errEmailInvalid", "Lütfen geçerli bir e-posta adresi yaz.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        const btn = e.target.querySelector(".save-btn");
+        btn.disabled = true;
+        const { error } = await armusSupabase.auth.updateUser({ email: newEmail });
+        btn.disabled = false;
+
+        if (error) {
+          errorBox.textContent = error.message || armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        document.getElementById("newEmailInput").value = "";
+        successBox.textContent = armusT("settings.emailSaved", "Onay e-postası gönderildi. Değişikliği tamamlamak için gelen kutunu kontrol et.");
+        successBox.style.display = "block";
+      });
+
+      // ---- delete account (moved here from the student-dashboard nav
+      // dropdown, which now links to this page instead) ----
+      document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
+
+        if (!confirm(armusT("nav.deleteAccountConfirm", "Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz."))) return;
+
+        const btn = document.getElementById("deleteAccountBtn");
+        btn.disabled = true;
+        btn.textContent = armusT("nav.deleting", "Siliniyor...");
+
+        const result = await armusDeleteOwnAccount();
+
+        if (!result.ok) {
+          btn.disabled = false;
+          btn.textContent = armusT("settings.deleteButton", "Hesabımı Sil");
+          alert(result.error);
+          return;
+        }
+
+        window.location.href = "index.html";
+      });
+
+      if (typeof armusApplyTranslations === "function") armusApplyTranslations();
+    })();
+
+  </script>
+
+</body>
+</html>
