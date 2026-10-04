@@ -87,3 +87,199 @@ h1, h2 {
     mask-image: none;
   }
 }
+
+/* Global nav: Preply-style icon row + notification/profile dropdowns for
+   a logged-in student, injected by armusRenderNavAuth (auth.js) into
+   #navAuthButtons on every page that has it (index.html, mesajlar.html,
+   my-lessons.html, teacher.html, teachers.html, plus student-dashboard.html/
+   settings.html which build their own copy of this markup statically).
+   Classes are "gnav-" prefixed so they can never collide with a page's
+   own pre-existing class names (e.g. mesajlar.html already has its own,
+   differently-styled .icon-btn for the chat composer). */
+
+.gnav-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--armus-border);
+  color: var(--armus-muted);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.gnav-icon-btn:hover {
+  border-color: var(--armus-gold-2);
+  color: var(--armus-gold-text);
+}
+
+.gnav-icon-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.gnav-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gnav-dropdown-wrap {
+  position: relative;
+}
+
+.gnav-avatar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--armus-border);
+  cursor: pointer;
+  background: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.gnav-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--armus-silver-gradient);
+  color: #1c1c1e;
+  font-weight: 800;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.gnav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gnav-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 270px;
+  background: var(--armus-panel);
+  border: 1px solid var(--armus-border);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .14);
+  padding: 8px;
+  z-index: 60;
+  text-align: left;
+}
+
+.gnav-dropdown a,
+.gnav-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--armus-ink);
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.gnav-dropdown a:hover,
+.gnav-dropdown button:hover {
+  background: var(--armus-panel-2);
+}
+
+.gnav-dropdown hr {
+  border: none;
+  border-top: 1px solid var(--armus-border-soft);
+  margin: 6px 4px;
+}
+
+.gnav-dropdown-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 14px;
+}
+
+.gnav-dropdown-head .gnav-avatar {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+}
+
+.gnav-dropdown-greeting {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.gnav-bell-empty {
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--armus-muted);
+}
+
+.gnav-bell-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.gnav-bell-item:hover {
+  background: var(--armus-panel-2);
+}
+
+.gnav-bell-item strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gnav-bell-item span {
+  font-size: 12px;
+  color: var(--armus-muted);
+}
+
+.gnav-credit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--armus-border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--armus-gold-text);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  a.gnav-icon-btn { display: none; }
+  .gnav-dropdown { width: 240px; }
+}

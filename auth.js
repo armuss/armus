@@ -213,6 +213,206 @@ async function armusAdminUpdateProfile(profileId, updates) {
   return data;
 }
 
+// Collapsed-avatar / dropdown-head avatar markup shared by the global nav
+// (armusRenderStudentNav below) and any page that builds its own copy of
+// the same header statically (student-dashboard.html, settings.html keep
+// their own local copy of this logic, since their avatar also needs to
+// update instantly on a photo upload).
+function armusAvatarInitials(name) {
+  return armusEscapeHtml((name || "?")
+    .split(" ")
+    .map(part => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "?");
+}
+
+function armusAvatarInner(photoUrl, name) {
+  return armusSafeUrl(photoUrl) ? `<img src="${armusSafeUrl(photoUrl)}" alt="">` : armusAvatarInitials(name);
+}
+
+// Closes every open global-nav dropdown (bell, profile) except the one
+// passed in, if any - shared by the click-outside/Escape listeners below
+// and by each dropdown's own open toggle. Queried fresh every call
+// (rather than cached) since #navAuthButtons's innerHTML gets rebuilt on
+// every armusRenderNavAuth() re-run (e.g. a language toggle).
+function armusCloseGnavDropdowns(exceptMenu) {
+  document.querySelectorAll(".gnav-dropdown-wrap > .gnav-dropdown").forEach(menu => {
+    if (menu === exceptMenu) return;
+    menu.style.display = "none";
+    const btn = menu.previousElementSibling;
+    if (btn) btn.setAttribute("aria-expanded", "false");
+  });
+}
+document.addEventListener("click", () => armusCloseGnavDropdowns(null));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") armusCloseGnavDropdowns(null); });
+
+// ---- notification bell: no dedicated notifications system/table exists
+// yet, so this surfaces the two things ARMUS already tracks that
+// genuinely need the student's attention - unread messages and a lesson
+// starting soon (next 48h). Both are feature-detected (typeof check)
+// since not every page loads messages.js/bookings.js/reviews.js - a page
+// that doesn't still gets the bell icon, just with an always-empty
+// dropdown instead of a broken/missing function call.
+async function armusRenderGnavBell(session) {
+
+  const badge = document.getElementById("gnavBellBadge");
+  const dropdown = document.getElementById("gnavBellDropdown");
+  if (!badge || !dropdown) return;
+
+  const items = [];
+  let badgeCount = 0;
+
+  if (typeof armusGetConversations === "function") {
+    const conversations = await armusGetConversations().catch(() => []);
+    const unreadConvos = conversations.filter(c => c.unreadCount > 0);
+    badgeCount += unreadConvos.reduce((sum, c) => sum + c.unreadCount, 0);
+
+    unreadConvos.slice(0, 3).forEach(c => {
+      const preview = c.lastMessage
+        ? (c.lastMessage.body || armusT("studentDash.navBellAttachment", "📎 Ek gönderdi"))
+        : "";
+      items.push(`
+        <a class="gnav-bell-item" href="mesajlar.html">
+          <strong>${armusEscapeHtml(armusShortDisplayName(c.otherName))}</strong>
+          <span>${armusEscapeHtml(preview.length > 60 ? preview.slice(0, 60) + "…" : preview)}</span>
+        </a>
+      `);
+    });
+  }
+
+  if (typeof armusGetBookingsForStudent === "function" && typeof armusIsBookingPast === "function") {
+    const bookings = await armusGetBookingsForStudent(session.id).catch(() => []);
+    const soonCutoff = Date.now() + 48 * 3600 * 1000;
+    const soonBookings = bookings
+      .filter(b => !armusIsBookingPast(b))
+      .filter(b => armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone).getTime() <= soonCutoff)
+      .sort((a, b) => armusZonedTimeToUtc(a.date, a.time, a.teacherTimezone) - armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone));
+
+    badgeCount += soonBookings.length;
+
+    soonBookings.slice(0, 2).forEach(b => {
+      const when = armusFormatLessonWhen(b);
+      items.push(`
+        <a class="gnav-bell-item" href="class.html?booking=${b.id}">
+          <strong>${armusT("studentDash.navBellSoon", "Yaklaşan dersin")}</strong>
+          <span>${armusEscapeHtml(armusShortDisplayName(b.teacherName))} · ${when.dateLabel}, ${when.timeRange}</span>
+        </a>
+      `);
+    });
+  }
+
+  if (badgeCount > 0) {
+    badge.textContent = badgeCount > 9 ? "9+" : String(badgeCount);
+    badge.style.display = "flex";
+  } else {
+    badge.style.display = "none";
+  }
+
+  dropdown.innerHTML = items.length
+    ? items.join("")
+    : `<div class="gnav-bell-empty">${armusT("studentDash.navBellEmpty", "Henüz bildirimin yok.")}</div>`;
+}
+
+// Preply-style icon row + notification/profile dropdowns, injected into
+// #navAuthButtons for a logged-in student on every page that has it
+// (student-dashboard.html/settings.html build their own static copy of
+// this same header instead, since they need it visible before this
+// script's session check and already wire their own avatar-on-upload
+// updates - this is for every other page).
+async function armusRenderStudentNav(el, session, firstName) {
+
+  const avatarInner = armusAvatarInner(session.photo_url, session.name);
+
+  // a plain badge (not clickable, nothing to spend it on directly from
+  // here) showing how many free lessons a cancellation has earned them.
+  // Hover shows which teacher(s) they're tied to.
+  let creditBadge = "";
+  const { data: credits } = await armusSupabase
+    .from("lesson_credits")
+    .select("teacher_name")
+    .eq("student_id", session.id)
+    .eq("status", "available");
+
+  if (credits && credits.length > 0) {
+    const teacherList = armusEscapeHtml(credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", "));
+    const tooltip = armusT("nav.creditsTooltip", "Kullanılabilir ders hakkın: {teachers}").replace("{teachers}", teacherList);
+    const badgeText = armusT("nav.creditsBadge", "{n} ders hakkın var").replace("{n}", credits.length);
+    creditBadge = `<span class="gnav-credit-badge" title="${tooltip}">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+          <path d="M20 12v9H4v-9"></path>
+          <path d="M2 7h20v5H2z"></path>
+          <path d="M12 22V7"></path>
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+        </svg>
+        ${badgeText}
+      </span>`;
+  }
+
+  el.innerHTML = `
+    ${creditBadge}
+    <a class="gnav-icon-btn" href="mesajlar.html" title="${armusT("nav.messages", "Mesajlar")}" aria-label="${armusT("nav.messages", "Mesajlar")}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    </a>
+    <a class="gnav-icon-btn" href="teachers.html?favorites=1" title="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}" aria-label="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+    </a>
+    <div class="gnav-dropdown-wrap">
+      <button type="button" class="gnav-icon-btn" id="gnavBellBtn" title="${armusT("studentDash.navBellTitle", "Bildirimler")}" aria-label="${armusT("studentDash.navBellTitle", "Bildirimler")}" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="gnav-badge" id="gnavBellBadge" style="display:none;"></span>
+      </button>
+      <div class="gnav-dropdown" id="gnavBellDropdown" style="display:none;"></div>
+    </div>
+    <div class="gnav-dropdown-wrap">
+      <button type="button" class="gnav-avatar-btn" id="gnavProfileBtn" aria-expanded="false">
+        <div class="gnav-avatar">${avatarInner}</div>
+      </button>
+      <div class="gnav-dropdown" id="gnavProfileDropdown" style="display:none;">
+        <div class="gnav-dropdown-head">
+          <div class="gnav-avatar">${avatarInner}</div>
+          <div class="gnav-dropdown-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)}</div>
+        </div>
+        <a href="student-dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>
+        <a href="mesajlar.html">${armusT("nav.messages", "Mesajlar")}</a>
+        <a href="my-lessons.html">${armusT("studentDash.navSchedule", "Derslerim")}</a>
+        <a href="teachers.html?favorites=1">${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}</a>
+        <a href="student-dashboard.html#referralBox">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
+        <a href="settings.html">${armusT("nav.settings", "Ayarlar")}</a>
+        <a href="sss.html">${armusT("nav.help", "Yardım")}</a>
+        <hr>
+        <button type="button" id="gnavLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("gnavLogoutBtn").addEventListener("click", async () => {
+    await armusSignOut();
+    window.location.reload();
+  });
+
+  // delegated on `el` itself (not the buttons inside it) so this only
+  // ever needs wiring once per page load, even though armusRenderNavAuth
+  // rebuilds el's innerHTML from scratch on every language toggle
+  if (!el.dataset.armusGnavWired) {
+    el.dataset.armusGnavWired = "1";
+    el.addEventListener("click", (e) => {
+      const btn = e.target.closest(".gnav-dropdown-wrap > button");
+      if (!btn) return;
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      const opening = menu.style.display === "none" || !menu.style.display;
+      armusCloseGnavDropdowns(opening ? menu : null);
+      menu.style.display = opening ? "block" : "none";
+      btn.setAttribute("aria-expanded", String(opening));
+    });
+  }
+
+  armusRenderGnavBell(session);
+}
+
 async function armusRenderNavAuth() {
 
   const el = document.getElementById("navAuthButtons");
@@ -234,47 +434,19 @@ async function armusRenderNavAuth() {
       window.location.href = "index.html";
     });
 
+  } else if (session && session.role === "student") {
+
+    const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
+    await armusRenderStudentNav(el, session, firstName);
+
   } else if (session) {
 
     const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
-    const roleLabel = session.role === "teacher"
-      ? armusT("nav.roleTeacher", "Öğretmen")
-      : armusT("nav.roleStudent", "Öğrenci");
-    const dashboardLink = session.role === "teacher"
-      ? `<a class="btn" href="dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>`
-      : `<a class="btn" href="student-dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>`;
-
-    // students only - a plain badge (not clickable, nothing to spend it
-    // on directly from here) showing how many free lessons a cancellation
-    // has earned them. Hover shows which teacher(s) they're tied to.
-    let creditBadge = "";
-    if (session.role === "student") {
-      const { data: credits } = await armusSupabase
-        .from("lesson_credits")
-        .select("teacher_name")
-        .eq("student_id", session.id)
-        .eq("status", "available");
-
-      if (credits && credits.length > 0) {
-        const teacherList = armusEscapeHtml(credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", "));
-        const tooltip = armusT("nav.creditsTooltip", "Kullanılabilir ders hakkın: {teachers}").replace("{teachers}", teacherList);
-        const badgeText = armusT("nav.creditsBadge", "{n} ders hakkın var").replace("{n}", credits.length);
-        creditBadge = `<span title="${tooltip}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--armus-border);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--armus-gold-text);white-space:nowrap;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-              <path d="M20 12v9H4v-9"></path>
-              <path d="M2 7h20v5H2z"></path>
-              <path d="M12 22V7"></path>
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-            </svg>
-            ${badgeText}
-          </span>`;
-      }
-    }
+    const roleLabel = armusT("nav.roleTeacher", "Öğretmen");
+    const dashboardLink = `<a class="btn" href="dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>`;
 
     el.innerHTML = `
       ${dashboardLink}
-      ${creditBadge}
       <span class="nav-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)} <small>(${roleLabel})</small></span>
       <button class="btn" id="armusLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
       <button type="button" id="armusDeleteAccountBtn" style="background:none;border:none;color:var(--armus-faint);font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit;">${armusT("nav.deleteAccount", "Hesabımı Sil")}</button>
