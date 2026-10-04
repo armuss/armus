@@ -222,7 +222,7 @@ body {
 .hero h1 {
   font-size: clamp(48px, 5vw, 76px);
   line-height: 1.02;
-  letter-spacing: -4px;
+  letter-spacing: -1px;
   margin: 18px 0;
 }
 .hero h1 span {
@@ -478,7 +478,7 @@ body {
 .how h2 {
   font-size: 44px;
   line-height: 1.05;
-  letter-spacing: -2px;
+  letter-spacing: -0.5px;
   margin: 12px 0 45px;
 }
 .steps {
@@ -544,7 +544,7 @@ body {
 .teacher-cta h2 {
   font-size: 34px;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.5px;
   margin: 10px 0 12px;
 }
 .trial-copy .btn {
@@ -595,7 +595,7 @@ body {
 }
 .tcta-panel h2 {
   font-size: 40px;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.5px;
   margin: 14px 0 12px;
   line-height: 1.05;
 }
@@ -1224,7 +1224,7 @@ body {
 .promise-banner h2 {
   color: var(--armus-on-gold);
   font-size: 54px;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.5px;
   line-height: 1.05;
   margin: 0 0 14px;
 }
