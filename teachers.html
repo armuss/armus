@@ -71,12 +71,6 @@
       display: flex;
       align-items: center;
     }
-    /* .nav-links gets the auto margin (not justify-content:space-between
-       on the row) so it self-centers while nav-utility/nav-buttons stay
-       clustered flush against the right edge - matches index.html's nav. */
-    .nav-links {
-      margin: auto;
-    }
 
     .logo {
       font-size: 28px;
@@ -86,17 +80,6 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 30px;
-      color: var(--armus-muted);
-      font-size: 14px;
-    }
-
-    .nav-links a:hover {
-      color: var(--armus-ink);
     }
 
     .nav-buttons {
@@ -137,6 +120,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-left: auto;
       margin-right: 14px;
     }
 
@@ -782,20 +766,6 @@
     /* MOBILE */
 
     @media (max-width: 800px) {
-      .nav-links {
-        display: none;
-      }
-
-      /* .nav-links' own margin: auto was what pushed nav-utility/
-         nav-buttons flush against the right edge - with it hidden here,
-         nothing does that anymore, so the logo and EN/Giriş/Kayıt Ol just
-         sit left-packed with barely a gap between them. Giving
-         nav-utility its own margin-left: auto claims that space instead
-         (same fix as index.html's identical nav). */
-      .nav-utility {
-        margin-left: auto;
-      }
-
       .sort-wrap {
         margin-left: 0;
         width: 100%;
@@ -842,13 +812,6 @@
     <div class="nav-inner">
 
       <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-
-      <nav class="nav-links">
-        <a href="teachers.html" data-i18n="nav.teachers">Öğretmenler</a>
-        <a href="index.html#how" data-i18n="nav.how">Nasıl Çalışır?</a>
-        <a href="blog.html" data-i18n="nav.blog">Blog</a>
-        <a href="hakkimizda.html" data-i18n="nav.about">Hakkımızda</a>
-      </nav>
 
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
