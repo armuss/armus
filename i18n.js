@@ -78,6 +78,16 @@ const ARMUS_I18N_EN = {
   "favoritesPage.emptyText": "You haven't saved any teachers yet.",
   "favoritesPage.emptyCta": "Explore teachers →",
 
+  // referral.html
+  "referralPage.gateTitle": "Log in to invite a friend",
+  "referralPage.gateText": "You need an account before you can see your invite link.",
+  "referralPage.step1Title": "Share your link",
+  "referralPage.step1Text": "Share your own invite link with a friend",
+  "referralPage.step2Title": "They take their first lesson",
+  "referralPage.step2Text": "They sign up with your link and join their first lesson",
+  "referralPage.step3Title": "You earn your lesson",
+  "referralPage.step3Text": "You get a free lesson too",
+
   // index.html
   "index.eyebrow": "Turkey's English learning platform",
   "index.scrollIntro.title1": "Start with one teacher.",
