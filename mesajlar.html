@@ -1242,6 +1242,12 @@
 
     function appendMessage(message) {
 
+      // sending a message now appends it optimistically instead of
+      // waiting on its realtime echo (see armusSendMessage callers
+      // below) - that echo still arrives and calls this again with the
+      // same id, so skip it rather than rendering the bubble twice.
+      if (document.querySelector(`.msg-row[data-msg-id="${message.id}"]`)) return;
+
       messagesById[message.id] = message;
 
       const body = document.getElementById("threadBody");
@@ -1352,6 +1358,15 @@
           "messages.contactPolicyBlockedShort",
           "Bu mesaj gönderilemedi: telefon numarası, e-posta veya platform dışı iletişim bilgisi paylaşımı, resmi bir ders rezervasyonu olana kadar yasak."
         ));
+      } else if (!result) {
+        input.value = body;
+        showChatWarning(armusT("messages.sendFailed", "Mesaj gönderilemedi. Lütfen tekrar dene."));
+      } else {
+        // appended right away instead of waiting on this same message
+        // arriving back over the realtime channel - that echo still
+        // comes and calls appendMessage again, but with the same id, so
+        // the dedupe guard there skips it instead of a double bubble.
+        appendMessage(result);
       }
     });
 
@@ -1384,14 +1399,26 @@
       }
 
       hideChatWarning();
-      const uploaded = await armusUploadChatAttachment(file, activeConversationId);
+
+      // captured now, not re-read after the upload awaits below - the
+      // user could switch to a different conversation while a large
+      // video is still uploading, and the attachment belongs with the
+      // conversation it was picked for, not whichever one happens to be
+      // open once the upload finishes.
+      const conversationId = activeConversationId;
+      const uploaded = await armusUploadChatAttachment(file, conversationId);
 
       if (!uploaded) {
         showChatWarning(armusT("messages.fileFailed", "Dosya gönderilemedi. Lütfen tekrar dene."));
         return;
       }
 
-      await armusSendMessage(activeConversationId, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+      const result = await armusSendMessage(conversationId, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+      if (!result || result === "blocked") {
+        showChatWarning(armusT("messages.fileFailed", "Dosya gönderilemedi. Lütfen tekrar dene."));
+        return;
+      }
+      if (activeConversationId === conversationId) appendMessage(result);
     });
 
     // ---- voice messages ----
@@ -1437,6 +1464,13 @@
       recordingCancelled = false;
       mediaRecorder = new MediaRecorder(stream);
 
+      // captured now, at the moment recording STARTS, not re-read from
+      // the shared activeConversationId once onstop runs - a recording
+      // can run for up to two minutes, long enough for the user to open
+      // a different conversation before it finishes, and the voice
+      // message belongs with the conversation it was recorded for.
+      const conversationIdAtStart = activeConversationId;
+
       mediaRecorder.ondataavailable = event => {
         if (event.data.size > 0) recordedChunks.push(event.data);
       };
@@ -1450,7 +1484,12 @@
 
         const wasCancelled = recordingCancelled;
         recordingCancelled = false;
-        if (wasCancelled || recordedChunks.length === 0) return;
+        if (wasCancelled) return;
+
+        if (recordedChunks.length === 0) {
+          showChatWarning(armusT("messages.recordingTooShort", "Kayıt çok kısaydı, tekrar dene."));
+          return;
+        }
 
         const blob = new Blob(recordedChunks, { type: "audio/webm" });
         if (blob.size > 15 * 1024 * 1024) {
@@ -1459,14 +1498,23 @@
         }
 
         const file = new File([blob], "voice-message.webm", { type: "audio/webm" });
-        const uploaded = await armusUploadChatAttachment(file, activeConversationId);
+        const uploaded = await armusUploadChatAttachment(file, conversationIdAtStart);
 
         if (!uploaded) {
           showChatWarning(armusT("messages.voiceFailed", "Ses mesajı gönderilemedi. Lütfen tekrar dene."));
           return;
         }
 
-        await armusSendMessage(activeConversationId, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+        const result = await armusSendMessage(conversationIdAtStart, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+        if (!result || result === "blocked") {
+          showChatWarning(armusT("messages.voiceFailed", "Ses mesajı gönderilemedi. Lütfen tekrar dene."));
+          return;
+        }
+
+        // appended right away instead of waiting on this same message
+        // arriving back over the realtime channel - see appendMessage's
+        // dedupe guard for why that echo is safe to just ignore.
+        if (activeConversationId === conversationIdAtStart) appendMessage(result);
       };
 
       mediaRecorder.start();

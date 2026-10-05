@@ -533,9 +533,11 @@ const ARMUS_I18N_EN = {
   "messages.contactPolicyBlockedShort": "This message couldn't be sent: sharing phone numbers, email, or off-platform contact info isn't allowed until there's a confirmed lesson booking.",
   "messages.fileTooBig": "File is too large (max {mb}MB).",
   "messages.fileFailed": "Couldn't send the file. Please try again.",
+  "messages.sendFailed": "Couldn't send the message. Please try again.",
   "messages.fileTypeUnsupported": "This file type isn't supported. Try JPEG, PNG, GIF, WEBP, MP4 or WEBM.",
   "messages.micDenied": "Couldn't access the microphone. Please check your browser permissions.",
   "messages.recordingTooBig": "Voice recording is too large, try a shorter one.",
+  "messages.recordingTooShort": "Recording was too short, try again.",
   "messages.voiceFailed": "Couldn't send the voice message. Please try again.",
 
   // dashboard.html (teacher dashboard) - sidebar nav, top-level labels
