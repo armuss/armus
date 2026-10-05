@@ -517,6 +517,7 @@ const ARMUS_I18N_EN = {
   "messages.photo": "📷 Photo",
   "messages.video": "🎥 Video",
   "messages.voiceMessage": "🎤 Voice message",
+  "messages.playVoice": "Play voice message",
   "messages.message": "Message",
   "messages.edited": "(edited)",
   "messages.save": "Save",

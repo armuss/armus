@@ -364,11 +364,10 @@
     .msg-bubble {
       max-width: 70%;
       padding: 10px 14px;
-      border-radius: 14px;
+      border-radius: 20px 20px 20px 4px;
       font-size: 13.5px;
       line-height: 1.5;
       background: var(--armus-panel-2);
-      border: 1px solid var(--armus-border-soft);
     }
 
     .msg-attachment img,
@@ -380,9 +379,79 @@
       margin-bottom: 6px;
     }
 
-    .msg-attachment audio {
+    /* custom voice-message player - replaces the browser's native
+       <audio controls> element, which renders wildly differently (and
+       always plainly) across browsers and never matches the bubble. */
+    .voice-player {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       width: 220px;
-      margin-bottom: 4px;
+      max-width: 100%;
+    }
+
+    .voice-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      flex-shrink: 0;
+      background: var(--armus-gold-gradient);
+      color: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .voice-play-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .voice-play-btn .icon-play {
+      margin-left: 2px;
+    }
+
+    .voice-wave {
+      display: flex;
+      align-items: center;
+      gap: 2.5px;
+      height: 22px;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .voice-wave span {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--armus-faint);
+      flex-shrink: 0;
+      transition: background-color .1s linear;
+    }
+
+    .voice-wave span.played {
+      background: var(--armus-ink);
+    }
+
+    .msg-row.mine .voice-wave span {
+      background: rgba(255, 255, 255, .3);
+    }
+
+    .msg-row.mine .voice-wave span.played {
+      background: #fff;
+    }
+
+    .voice-duration {
+      font-size: 11px;
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .msg-row.mine .voice-duration {
+      color: rgba(255, 255, 255, .7);
     }
 
     .msg-edit-btn {
@@ -439,9 +508,9 @@
     }
 
     .msg-row.mine .msg-bubble {
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      border-color: transparent;
+      background: var(--armus-ink);
+      color: #fff;
+      border-radius: 20px 20px 4px 20px;
     }
 
     .msg-time {
@@ -798,6 +867,123 @@
 
     const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
 
+    // ---- voice message player: a decorative waveform (no real per-sample
+    // analysis of the audio, just a pleasant-looking bar pattern seeded by
+    // the message id so it's stable across re-renders) plus a real Audio
+    // object wired up after the bubble lands in the DOM. Replaces the
+    // browser's native <audio controls>, which looks different (and
+    // always plain) in every browser and never matches the bubble.
+    function buildVoiceWaveBars(seed) {
+      let h = 0;
+      for (let i = 0; i < String(seed).length; i++) h = (h * 31 + String(seed).charCodeAt(i)) >>> 0;
+      let bars = "";
+      for (let i = 0; i < 20; i++) {
+        h = (h * 1103515245 + 12345) >>> 0;
+        const height = 4 + Math.round(((h >>> 8) / 0x1000000) * 18);
+        bars += `<span style="height:${height}px"></span>`;
+      }
+      return bars;
+    }
+
+    function formatDuration(totalSeconds) {
+      const s = Math.max(0, Math.round(totalSeconds || 0));
+      const m = Math.floor(s / 60);
+      const sec = String(s % 60).padStart(2, "0");
+      return `${m}:${sec}`;
+    }
+
+    // only one voice message plays at a time - starting another pauses
+    // whichever one was already playing.
+    let activeVoicePlayer = null;
+
+    function stopActiveVoicePlayer() {
+      if (!activeVoicePlayer) return;
+      activeVoicePlayer.audio.pause();
+      activeVoicePlayer.iconPlay.style.display = "";
+      activeVoicePlayer.iconPause.style.display = "none";
+      activeVoicePlayer = null;
+    }
+
+    function wireVoicePlayers(scope) {
+      scope.querySelectorAll(".voice-player").forEach(playerEl => {
+        if (playerEl.dataset.wired) return;
+        playerEl.dataset.wired = "1";
+
+        const src = playerEl.dataset.audioSrc;
+        const btn = playerEl.querySelector(".voice-play-btn");
+        const iconPlay = btn.querySelector(".icon-play");
+        const iconPause = btn.querySelector(".icon-pause");
+        const wave = playerEl.querySelector(".voice-wave");
+        const bars = Array.from(wave.children);
+        const durationEl = playerEl.querySelector(".voice-duration");
+
+        let audio = null;
+
+        function ensureAudio() {
+          if (audio) return audio;
+          audio = new Audio(src);
+          audio.addEventListener("loadedmetadata", () => {
+            if (isFinite(audio.duration)) {
+              durationEl.textContent = formatDuration(audio.duration);
+              return;
+            }
+            // webm blobs recorded via MediaRecorder often report an
+            // Infinity duration until forced to compute it by seeking
+            // past the end - "durationchange" then fires with the real
+            // value, after which the seek is undone.
+            audio.currentTime = 1e10;
+            audio.addEventListener("durationchange", function onDurationChange() {
+              if (!isFinite(audio.duration)) return;
+              durationEl.textContent = formatDuration(audio.duration);
+              audio.currentTime = 0;
+              audio.removeEventListener("durationchange", onDurationChange);
+            });
+          });
+          audio.addEventListener("timeupdate", () => {
+            const frac = audio.duration ? audio.currentTime / audio.duration : 0;
+            const playedCount = Math.round(frac * bars.length);
+            bars.forEach((bar, i) => bar.classList.toggle("played", i < playedCount));
+          });
+          audio.addEventListener("ended", () => {
+            iconPlay.style.display = "";
+            iconPause.style.display = "none";
+            bars.forEach(bar => bar.classList.remove("played"));
+            activeVoicePlayer = null;
+          });
+          return audio;
+        }
+
+        function play() {
+          ensureAudio();
+          if (activeVoicePlayer && activeVoicePlayer.audio !== audio) stopActiveVoicePlayer();
+          audio.play();
+          iconPlay.style.display = "none";
+          iconPause.style.display = "";
+          activeVoicePlayer = { audio, iconPlay, iconPause };
+        }
+
+        function pause() {
+          if (audio) audio.pause();
+          iconPlay.style.display = "";
+          iconPause.style.display = "none";
+          if (activeVoicePlayer && activeVoicePlayer.audio === audio) activeVoicePlayer = null;
+        }
+
+        btn.addEventListener("click", () => {
+          if (audio && !audio.paused) pause();
+          else play();
+        });
+
+        wave.addEventListener("click", event => {
+          ensureAudio();
+          const rect = wave.getBoundingClientRect();
+          const frac = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+          if (isFinite(audio.duration)) audio.currentTime = frac * audio.duration;
+          if (audio.paused) play();
+        });
+      });
+    }
+
     const EDIT_WINDOW_MS = 2 * 60 * 1000;
 
     function canEditMessage(message) {
@@ -816,7 +1002,16 @@
       } else if (attachmentUrl && message.attachment_type === "video") {
         html += `<div class="msg-attachment"><video src="${attachmentUrl}" controls></video></div>`;
       } else if (attachmentUrl && message.attachment_type === "audio") {
-        html += `<div class="msg-attachment"><audio src="${attachmentUrl}" controls></audio></div>`;
+        html += `
+          <div class="voice-player" data-audio-src="${attachmentUrl}">
+            <button type="button" class="voice-play-btn" aria-label="${armusT("messages.playVoice", "Sesli mesajı oynat")}">
+              <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M6 5h4v14H6zM14 5h4v14h-4z"></path></svg>
+            </button>
+            <div class="voice-wave">${buildVoiceWaveBars(message.id)}</div>
+            <span class="voice-duration">0:00</span>
+          </div>
+        `;
       }
 
       if (message.body) html += escapeHtml(message.body);
@@ -884,6 +1079,8 @@
         row.querySelector(".msg-edit-btn").addEventListener("click", () => openEditForm(message, row));
       }
 
+      wireVoicePlayers(row);
+
       body.appendChild(row);
       body.scrollTop = body.scrollHeight;
     }
@@ -909,6 +1106,8 @@
       if (canEditMessage(message)) {
         row.querySelector(".msg-edit-btn").addEventListener("click", () => openEditForm(message, row));
       }
+
+      wireVoicePlayers(row);
     }
 
     async function loadThread(conversationId) {
