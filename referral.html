@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Arkadaşını Davet Et | ARMUS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css?v=7">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    h1, h2 {
+      font-family: "Unbounded", "Inter", sans-serif;
+    }
+
+    .container {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    /* NAV - same as favorites.html/my-lessons.html/mesajlar.html */
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(940px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-find-tutor {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--armus-ink);
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 8px 16px 8px 12px;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: 0.2s;
+    }
+
+    .nav-find-tutor:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .nav-find-tutor svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-block;
+      text-align: center;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: transparent;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-light {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* GATE */
+
+    .gate {
+      display: none;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .gate h1 {
+      font-size: 26px;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .gate p {
+      color: var(--armus-muted);
+      font-size: 14px;
+      margin-bottom: 26px;
+    }
+
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* PAGE */
+
+    main.container {
+      padding: 45px 0 90px;
+      display: none;
+    }
+
+    /* gold hero band */
+
+    .ref-hero {
+      background: var(--armus-gold-gradient);
+      border-radius: 24px;
+      padding: 40px 44px;
+      margin-bottom: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .ref-hero-title {
+      font-size: clamp(22px, 3vw, 28px);
+      font-weight: 800;
+      color: var(--armus-on-gold);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .ref-hero-sub {
+      font-size: 13.5px;
+      color: rgba(10, 10, 10, .68);
+      max-width: 380px;
+      line-height: 1.55;
+    }
+
+    .ref-hero-stat {
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .ref-hero-stat strong {
+      display: block;
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-size: 34px;
+      color: var(--armus-on-gold);
+    }
+
+    .ref-hero-stat span {
+      font-size: 11.5px;
+      color: rgba(10, 10, 10, .6);
+    }
+
+    /* link card */
+
+    .ref-link-card {
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 30px;
+    }
+
+    .ref-link-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ref-link-row input {
+      flex: 1;
+      min-width: 0;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13.5px;
+    }
+
+    .ref-link-row button {
+      flex-shrink: 0;
+      border: 1px solid #303030;
+      background: #0a0a0a;
+      color: #eee;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 0 20px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* 3-step explainer */
+
+    .ref-steps {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .ref-step {
+      flex: 1;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .ref-step-num {
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-size: 13px;
+      color: var(--armus-gold-3);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .ref-step strong {
+      display: block;
+      font-size: 13.5px;
+      margin-bottom: 4px;
+    }
+
+    .ref-step span {
+      font-size: 12px;
+      color: var(--armus-muted);
+    }
+
+    @media (max-width: 560px) {
+      .logo { font-size: 24px; }
+      .nav-utility { gap: 6px; }
+      .help-btn { display: none; }
+      .nav-find-tutor { padding: 8px; }
+      .nav-find-tutor span { display: none; }
+      .ref-hero { padding: 28px 24px; }
+      .ref-hero-stat { margin: 0 auto; }
+      .ref-link-row { flex-direction: column; }
+      .ref-link-row button { padding: 12px; }
+      .ref-steps { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="student-dashboard.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="teachers.html" class="nav-find-tutor" title="Öğretmen Bul" aria-label="Öğretmen Bul">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span data-i18n="nav.findTutor">Öğretmen Bul</span>
+      </a>
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
+      </div>
+      <div class="nav-buttons" id="navAuthButtons"></div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="gate" id="gate">
+      <h1 data-i18n="referralPage.gateTitle">Arkadaşını davet etmek için giriş yap</h1>
+      <p data-i18n="referralPage.gateText">Davet linkini görebilmek için önce bir hesabın olması gerekiyor.</p>
+      <div class="gate-actions">
+        <a class="btn" href="login.html?next=referral.html" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register.html?next=referral.html" data-i18n="nav.register">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="pageRoot">
+
+    <div class="ref-hero">
+      <div>
+        <div class="ref-hero-title" data-i18n="studentDash.referralTitle">Arkadaşını Davet Et</div>
+        <div class="ref-hero-sub" data-i18n="studentDash.referralCaption">Arkadaşın ilk dersini alınca, sen de aynı öğretmenle ücretsiz bir ders kazanırsın.</div>
+      </div>
+      <div class="ref-hero-stat">
+        <strong id="referralRewardCount">0</strong>
+        <span data-i18n="studentDash.referralRewardLabel">ücretsiz ders kazandın</span>
+      </div>
+    </div>
+
+    <div class="ref-link-card">
+      <div class="ref-link-row">
+        <input type="text" id="referralLinkInput" readonly>
+        <button type="button" id="referralCopyBtn" data-i18n="studentDash.referralCopy">Kopyala</button>
+      </div>
+    </div>
+
+    <div class="ref-steps">
+      <div class="ref-step">
+        <div class="ref-step-num">01</div>
+        <strong data-i18n="referralPage.step1Title">Linkini paylaş</strong>
+        <span data-i18n="referralPage.step1Text">Kendi davet linkini arkadaşınla paylaş</span>
+      </div>
+      <div class="ref-step">
+        <div class="ref-step-num">02</div>
+        <strong data-i18n="referralPage.step2Title">İlk dersini alsın</strong>
+        <span data-i18n="referralPage.step2Text">Linkle kayıt olup ilk dersine katılsın</span>
+      </div>
+      <div class="ref-step">
+        <div class="ref-step-num">03</div>
+        <strong data-i18n="referralPage.step3Title">Dersini kazan</strong>
+        <span data-i18n="referralPage.step3Text">Sen de ücretsiz bir ders kazanırsın</span>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="i18n.js?v=13"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="site-settings.js?v=4"></script>
+  <script src="auth.js?v=9"></script>
+  <script>
+
+    const gate = document.getElementById("gate");
+    const pageRoot = document.getElementById("pageRoot");
+
+    (async function() {
+
+      // caught so a slow/blocked Supabase SDK still reaches the static
+      // login gate below instead of leaving pageRoot's default state on screen
+      const session = await armusGetSession().catch(() => null);
+
+      if (!session) {
+        gate.style.display = "block";
+        return;
+      }
+
+      pageRoot.style.display = "block";
+
+      // best-effort - if migration_71.sql hasn't been run yet,
+      // referral_code is null and the referrals query 404s; both fail
+      // silently rather than breaking the rest of the page.
+      if (session.referral_code) {
+        document.getElementById("referralLinkInput").value =
+          `${location.origin}/register.html?ref=${session.referral_code}`;
+      }
+
+      armusSupabase
+        .from("referrals")
+        .select("id")
+        .eq("referrer_id", session.id)
+        .eq("status", "rewarded")
+        .then(({ data }) => {
+          document.getElementById("referralRewardCount").textContent = (data || []).length;
+        })
+        .catch(() => {});
+
+      document.getElementById("referralCopyBtn").addEventListener("click", async () => {
+        const input = document.getElementById("referralLinkInput");
+        if (!input.value) return;
+        try {
+          await navigator.clipboard.writeText(input.value);
+        } catch {
+          input.select();
+          document.execCommand("copy");
+        }
+        const btn = document.getElementById("referralCopyBtn");
+        const original = btn.textContent;
+        btn.textContent = armusT("studentDash.referralCopied", "Kopyalandı ✓");
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      });
+
+      if (typeof armusApplyTranslations === "function") armusApplyTranslations();
+
+    })();
+
+  </script>
+
+</body>
+</html>
