@@ -215,13 +215,101 @@
 
     .chat-shell {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 300px 1fr 260px;
       border: 1px solid var(--armus-border);
       border-radius: 20px;
       background: var(--armus-panel);
       overflow: hidden;
       height: 65vh;
       min-height: 480px;
+    }
+
+    /* CONTEXT PANEL - who you're talking to: their role/specialty (when
+       they're a teacher - armusFindMarketplaceTeacher returns null for a
+       student, so this whole section just stays empty when a teacher
+       account is the one viewing this page), your next lesson together
+       if any, and a quick way back to booking.html. */
+
+    .convo-context {
+      border-left: 1px solid var(--armus-border-soft);
+      background: var(--armus-panel-2);
+      padding: 26px 18px;
+      text-align: center;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .context-placeholder {
+      color: var(--armus-faint);
+      font-size: 12.5px;
+      margin-top: 40px;
+    }
+
+    .context-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      background: var(--armus-silver-gradient);
+      color: #1c1c1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      overflow: hidden;
+    }
+
+    .context-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .context-name {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .context-role {
+      font-size: 11.5px;
+      color: var(--armus-muted);
+      margin: 2px 0 18px;
+    }
+
+    .context-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+
+    .context-card strong {
+      display: block;
+      font-size: 11.5px;
+      margin-bottom: 2px;
+    }
+
+    .context-card span {
+      font-size: 11px;
+      color: var(--armus-muted);
+    }
+
+    .context-btn {
+      display: block;
+      width: 100%;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      margin-top: 6px;
+      text-decoration: none;
+      box-sizing: border-box;
     }
 
     /* CONVERSATION LIST */
@@ -639,6 +727,10 @@
         height: 60vh;
       }
 
+      .convo-context {
+        display: none;
+      }
+
       .nav-utility {
         gap: 6px;
       }
@@ -725,15 +817,23 @@
           <button type="submit" data-i18n="contact.submit">Gönder</button>
         </form>
       </div>
+
+      <div class="convo-context" id="convoContext">
+        <div class="context-placeholder" data-i18n="messages.contextPlaceholder">Bir sohbet seçtiğinde burada görünür.</div>
+      </div>
     </div>
 
   </main>
 
   <script src="i18n.js?v=13"></script>
+  <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=9"></script>
+  <script src="bookings.js?v=5"></script>
+  <script src="reviews.js?v=5"></script>
+  <script src="marketplace.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script>
 
@@ -806,6 +906,89 @@
       });
     }
 
+    // The booking (confirmed, not past) soonest due between the signed-in
+    // user and otherId, in whichever direction applies to their role -
+    // armusGetBookingsForStudent/Teacher only ever return the caller's
+    // own bookings, so this is already scoped to just the two of them.
+    async function findUpcomingLessonWith(otherId) {
+
+      if (!currentSession) return null;
+
+      const isTeacher = currentSession.role === "teacher";
+      const bookings = isTeacher
+        ? await armusGetBookingsForTeacher(currentSession.id)
+        : await armusGetBookingsForStudent(currentSession.id);
+
+      const matchKey = isTeacher ? "studentId" : "teacherId";
+      const upcoming = bookings
+        .filter(b => b[matchKey] === otherId && b.status !== "cancelled" && !armusIsBookingPast(b))
+        .sort((a, b) =>
+          armusZonedTimeToUtc(a.date, a.time, a.teacherTimezone) - armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone)
+        );
+
+      return upcoming[0] || null;
+    }
+
+    // Who you're talking to, in the third column: their teaching
+    // specialty and a "book again" shortcut when the other party is a
+    // teacher (armusFindMarketplaceTeacher returns null for a student,
+    // so a teacher account viewing their own inbox just gets the
+    // avatar/name/upcoming-lesson part), plus your next lesson together
+    // if either role has one booked.
+    async function renderConvoContext(conversationId, otherId, otherName, otherPhoto) {
+
+      const panel = document.getElementById("convoContext");
+      if (!panel) return;
+
+      const avatarInner = armusSafeUrl(otherPhoto)
+        ? `<img src="${armusSafeUrl(otherPhoto)}" alt="">`
+        : initials(otherName);
+
+      panel.innerHTML = `
+        <div class="context-avatar">${avatarInner}</div>
+        <div class="context-name">${escapeHtml(otherPartyDisplayName(otherName))}</div>
+        <div id="contextExtra"></div>
+      `;
+
+      const [teacher, upcoming] = await Promise.all([
+        armusFindMarketplaceTeacher(otherId, currentSession.id).catch(() => null),
+        findUpcomingLessonWith(otherId).catch(() => null),
+      ]);
+
+      if (activeConversationId !== conversationId) return;
+
+      const extra = document.getElementById("contextExtra");
+      if (!extra) return;
+
+      let html = "";
+
+      if (teacher && teacher.role) {
+        html += `<div class="context-role">${escapeHtml(teacher.role)}</div>`;
+      }
+
+      if (upcoming) {
+        const when = armusFormatLessonWhen(upcoming);
+        html += `
+          <div class="context-card">
+            <strong>${armusT("messages.contextUpcoming", "Yaklaşan Ders")}</strong>
+            <span>${when.dateLabel}, ${when.timeRange}</span>
+          </div>
+        `;
+      }
+
+      if (teacher) {
+        html += `
+          <div class="context-card">
+            <strong>${armusT("messages.contextTotalLessons", "Toplam Ders")}</strong>
+            <span>${escapeHtml(teacher.completedLessons)} ${armusT("teacherProfile.lessonsWord", "ders")}${teacher.rating ? ` · ★${teacher.rating}` : ""}</span>
+          </div>
+          <a class="context-btn" href="booking.html?teacher=${encodeURIComponent(otherId)}&type=trial">${armusT("messages.contextBookBtn", "Ders Rezervasyonu Yap")}</a>
+        `;
+      }
+
+      extra.innerHTML = html;
+    }
+
     async function openConversation(conversationId, otherName, otherPhoto, otherId) {
 
       activeConversationId = conversationId;
@@ -817,6 +1000,8 @@
       header.innerHTML = `${avatarInner}<span>${escapeHtml(otherPartyDisplayName(otherName))}</span>`;
 
       document.getElementById("threadForm").style.display = "flex";
+
+      renderConvoContext(conversationId, otherId, otherName, otherPhoto);
 
       // Everything below this point awaits at least once, so a second
       // openConversation() call (the user clicking another conversation
