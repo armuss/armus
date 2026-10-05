@@ -653,6 +653,36 @@
       text-overflow: ellipsis;
     }
 
+    /* role line + specialty badge are both single-line and clipped with
+       an ellipsis on purpose - a teacher's title/tag can be arbitrarily
+       long (self-registered teachers type their own), and every card in
+       the overlapping stack needs to stay the exact same height. */
+    .card-role {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--armus-muted);
+      margin: 0 0 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-specialty-badge {
+      display: block;
+      align-self: flex-start;
+      max-width: 100%;
+      background: var(--armus-ink);
+      color: #fff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-sizing: border-box;
+    }
+
     .tags {
       display: flex;
       flex-direction: column;
@@ -1004,6 +1034,8 @@
 
         <div class="card-mid">
           <a href="${teacherLink}" class="teacher-name">${armusEscapeHtml(armusShortDisplayName(teacher.name))}</a>
+          ${teacher.role ? `<div class="card-role">${armusEscapeHtml(teacher.role)}</div>` : ""}
+          ${teacher.tags && teacher.tags[0] ? `<span class="card-specialty-badge">${armusEscapeHtml(teacher.tags[0])}</span>` : ""}
           <div class="tags">
             <span class="tag">${armusEscapeHtml(teacher.completedLessons)} ${armusT("teacherProfile.lessonsWord", "ders")}</span>
             <span class="tag">${armusT("teacherProfile.studentsCount", "{n} öğrenci").replace("{n}", teacher.students)}</span>
