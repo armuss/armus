@@ -673,19 +673,46 @@
       height: 19px;
     }
 
-    .icon-btn.recording {
-      background: #c0392b;
-      border-color: #c0392b;
-      color: white;
-    }
+    /* RECORDING BAR - replaces the whole input row while recording a
+       voice message (instead of showing a thin status line above it,
+       with the mic/attach/textarea/send row still sitting there
+       underneath, doing nothing). */
 
-    .recording-indicator {
+    .recording-bar {
       display: none;
       align-items: center;
-      gap: 8px;
-      padding: 0 14px 10px;
-      font-size: 12px;
+      gap: 12px;
+      padding: 10px 14px;
+    }
+
+    .recording-cancel {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--armus-panel-2);
       color: #b3261e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .recording-cancel svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .recording-mid {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--armus-panel-2);
+      border-radius: 999px;
+      padding: 8px 16px;
     }
 
     .recording-dot {
@@ -693,6 +720,7 @@
       height: 8px;
       border-radius: 50%;
       background: #e74c3c;
+      flex-shrink: 0;
       animation: armus-pulse 1s infinite;
     }
 
@@ -701,14 +729,51 @@
       50% { opacity: .3; }
     }
 
-    .recording-indicator button {
-      border: none;
-      background: transparent;
-      color: #b3261e;
-      text-decoration: underline;
-      font-family: inherit;
+    .recording-wave {
+      display: flex;
+      align-items: center;
+      gap: 2.5px;
+      height: 20px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recording-wave span {
+      width: 2.5px;
+      border-radius: 2px;
+      background: #c23b2e;
+      animation: armus-wave-bounce .8s ease-in-out infinite;
+    }
+
+    @keyframes armus-wave-bounce {
+      0%, 100% { transform: scaleY(.35); }
+      50% { transform: scaleY(1); }
+    }
+
+    #recordingTimer {
       font-size: 12px;
+      font-weight: 700;
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .recording-send {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
       cursor: pointer;
+    }
+
+    .recording-send svg {
+      width: 18px;
+      height: 18px;
     }
 
     @media (max-width: 720px) {
@@ -800,10 +865,18 @@
           <div class="thread-placeholder" data-i18n="messages.threadPlaceholder">Yazışmalarını görmek için soldan bir kişi seç.</div>
         </div>
         <div class="chat-warning" id="chatWarning"></div>
-        <div class="recording-indicator" id="recordingIndicator">
-          <span class="recording-dot"></span>
-          <span id="recordingTimer">0:00</span>
-          <button type="button" id="cancelRecordingBtn" data-i18n="class.cancel">İptal</button>
+        <div class="recording-bar" id="recordingIndicator" style="display: none;">
+          <button type="button" id="cancelRecordingBtn" class="recording-cancel" title="İptal" data-i18n-title="class.cancel" aria-label="İptal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+          </button>
+          <div class="recording-mid">
+            <span class="recording-dot"></span>
+            <div class="recording-wave" id="recordingWave"></div>
+            <span id="recordingTimer">0:00</span>
+          </div>
+          <button type="button" id="sendRecordingBtn" class="recording-send" title="Gönder" data-i18n-title="contact.submit" aria-label="Gönder">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"></path></svg>
+          </button>
         </div>
         <form class="thread-input" id="threadForm" style="display: none;">
           <input type="file" id="attachInput" accept="image/*,video/*" hidden>
@@ -1429,6 +1502,18 @@
     let recordingTimerInterval = null;
     let micRequestInFlight = false;
 
+    // purely decorative - a staggered CSS animation per bar, not a real
+    // live audio-level readout, same reasoning as the sent voice
+    // message's own waveform (see buildVoiceWaveBars above).
+    function buildRecordingWaveBars() {
+      const wave = document.getElementById("recordingWave");
+      let bars = "";
+      for (let i = 0; i < 18; i++) {
+        bars += `<span style="height:${6 + (i % 5) * 3}px; animation-delay:${(i % 6) * 0.1}s;"></span>`;
+      }
+      wave.innerHTML = bars;
+    }
+
     document.getElementById("micBtn").addEventListener("click", async () => {
 
       if (!activeConversationId) return;
@@ -1480,7 +1565,7 @@
         stream.getTracks().forEach(track => track.stop());
         clearInterval(recordingTimerInterval);
         document.getElementById("recordingIndicator").style.display = "none";
-        document.getElementById("micBtn").classList.remove("recording");
+        document.getElementById("threadForm").style.display = "flex";
 
         const wasCancelled = recordingCancelled;
         recordingCancelled = false;
@@ -1518,7 +1603,8 @@
       };
 
       mediaRecorder.start();
-      document.getElementById("micBtn").classList.add("recording");
+      document.getElementById("threadForm").style.display = "none";
+      buildRecordingWaveBars();
       const indicator = document.getElementById("recordingIndicator");
       indicator.style.display = "flex";
 
@@ -1536,6 +1622,10 @@
       if (!mediaRecorder) return;
       recordingCancelled = true;
       mediaRecorder.stop();
+    });
+
+    document.getElementById("sendRecordingBtn").addEventListener("click", () => {
+      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
     });
 
     (async function() {
