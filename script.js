@@ -159,6 +159,12 @@ function armusInitScrollVideo(){
   // than just leaving it be - no reason to pay for it.
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 
+  // same for phones/tablets (also display:none in CSS, same breakpoint) -
+  // scroll-jacked video scrubbing kept showing blank frames on real
+  // devices even after priming it and adding a photo fallback, so it's
+  // desktop-only now rather than continuing to chase it there.
+  if(window.matchMedia('(max-width: 1024px)').matches)return;
+
   // iOS Safari in particular can leave a <video> showing nothing at all
   // (just .scroll-video-stage's own background-color, var(--armus-gold-3))
   // once script.js starts setting .currentTime on it, if the browser has
