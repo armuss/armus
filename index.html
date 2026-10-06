@@ -290,6 +290,21 @@
       }
     }
 
+    /* scroll-jacked video scrubbing kept being unreliable on real phones/
+       tablets (blank frames, both on first entering the section and mid-
+       scroll) even after priming the video and giving it a real photo
+       fallback - dropped for good on anything at or under tablet width
+       instead of continuing to chase it there. Desktop/web keeps it. */
+    @media (max-width: 1024px) {
+      .scroll-video {
+        display: none;
+      }
+      .scroll-video-spacer,
+      .scroll-video-spacer-top {
+        display: none;
+      }
+    }
+
   </style>
   <noscript>
     <style>
