@@ -776,6 +776,23 @@
       height: 18px;
     }
 
+    @media (max-width: 1000px) {
+      /* a 768px tablet still fit all 3 columns (300px list + 1fr thread +
+         260px context), leaving the thread barely wide enough for its own
+         composer - the textarea shrank to a few px and the send button
+         sat mostly hidden under the context panel. Drop the context panel
+         here, before the full single-column phone layout kicks in below,
+         so the list+thread 2-column view still gets real room on a tablet
+         instead of jumping straight to the stacked mobile layout. */
+      .chat-shell {
+        grid-template-columns: 300px 1fr;
+      }
+
+      .convo-context {
+        display: none;
+      }
+    }
+
     @media (max-width: 720px) {
       .chat-shell {
         grid-template-columns: 1fr;

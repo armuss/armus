@@ -1607,6 +1607,15 @@ document.addEventListener("DOMContentLoaded", () => {
         .armus-chat-panel { right: 12px; left: 12px; width: auto; bottom: 82px; }
         #armusChatRoot { right: 12px; bottom: 12px; }
       }
+      /* the fixed toggle button sits directly over whatever's at the
+         bottom of the page on a phone - several pages end (or have a
+         card/section edge) close enough to the viewport bottom that it
+         covered real content (a legal-text link, the last FAQ item, a
+         dashboard card's heading). Reserve enough body space on narrow
+         viewports that the button always has empty room to float in. */
+      @media (max-width: 760px) {
+        body { padding-bottom: 86px; }
+      }
     `;
     document.head.appendChild(style);
 

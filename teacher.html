@@ -654,6 +654,15 @@
       gap: 70px;
     }
 
+    /* grid items default to min-width:auto, which equals their content's
+       min-content size - the booking calendar's own min-content (7 columns
+       x 78px) was propagating up through this column and widening .content
+       itself instead of staying contained by .cal-week's own
+       overflow-x:auto, blowing the whole page open horizontally on phones */
+    .content > div {
+      min-width: 0;
+    }
+
     section {
       margin-bottom: 50px;
     }
