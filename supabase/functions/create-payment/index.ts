@@ -142,11 +142,41 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-// a plain "11111111111"-style placeholder is never valid - real Turkish
-// identity numbers can't start with 0, and this is the one loose format
-// check worth doing before sending it on to iyzico
-function looksLikeIdentityNumber(value: string) {
-  return /^[1-9][0-9]{10}$/.test(value);
+// mirrors bookings.js's armusNormalizeTurkishPhone - keep the two in sync.
+// "+90 555 112 51 21", "905551125121", "0555 223 21 23" and bare
+// "5551125121" are all the same number as far as the payer is concerned;
+// canonicalize to the "+90XXXXXXXXXX" iyzico's gsmNumber field actually
+// expects (a bare "05552232123" sent as-is made format-valid inputs die
+// at checkoutFormInitialize). Landlines (area codes starting 2/3/4) are
+// rejected on purpose - iyzico validates gsmNumber itself and would fail
+// the whole payment later with a worse error.
+function normalizeTurkishGsm(value: unknown): string | null {
+  let digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("90")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  if (!/^5\d{9}$/.test(digits)) return null;
+  return "+90" + digits;
+}
+
+// mirrors bookings.js's armusIsValidTurkishIdentityNumber - keep the two
+// in sync. T.C. Kimlik No's official MOD-10 scheme (nvi.gov.tr): 11
+// digits, the first never 0; the 10th digit is (7 * (sum of digits
+// 1,3,5,7,9) - sum of digits 2,4,6,8) mod 10 and the 11th is (sum of the
+// first 10) mod 10, which the algorithm also forces to be even. The old
+// format-only check here accepted pure garbage like "11111111111" and
+// sent it to iyzico as a real identity number. The ((x % 10) + 10) % 10
+// dance matters: 7*odd - even goes negative when the even-position
+// digits outweigh the odd ones (JS's % keeps the sign) and a raw -9
+// would wrongly fail against a real digit 1.
+function isValidTurkishIdentityNumber(value: unknown): boolean {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!/^[1-9][0-9]{10}$/.test(digits)) return false;
+  const d = digits.split("").map(Number);
+  const oddSum = d[0] + d[2] + d[4] + d[6] + d[8];
+  const evenSum = d[1] + d[3] + d[5] + d[7];
+  if (d[9] !== (((oddSum * 7 - evenSum) % 10) + 10) % 10) return false;
+  if (d[10] !== (oddSum + evenSum + d[9]) % 10) return false;
+  return d[10] % 2 === 0;
 }
 
 // mirrors cancel-booking/index.ts's armusZonedTimeToUtc - date/time here
@@ -505,7 +535,10 @@ Deno.serve(async (req) => {
           teacherEmail,
           "Yeni bir dersin var - ARMUS",
           bookingConfirmedEmailHtml(
-            teacherRealName, profile.name,
+            // teacherEmail is only ever set for a real teacher, whose name
+            // was already copied into teacherName - the || is for the type
+            // system, not a real fallback
+            teacherRealName || teacherName, profile.name,
             formatDateTimeLabel(lessonInstant, teacherTimezone), typeLabel, joinUrl,
           ),
         );
@@ -514,13 +547,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ bookedDirectly: true, creditApplied: true });
     }
 
-    const cleanPhone = String(phone || "").replace(/[^\d+]/g, "");
-    if (cleanPhone.replace(/\D/g, "").length < 10) {
-      return jsonResponse({ error: "Geçerli bir telefon numarası gir." }, 400);
+    const cleanPhone = normalizeTurkishGsm(phone);
+    if (!cleanPhone) {
+      return jsonResponse({ error: "Geçerli bir cep telefonu numarası gir." }, 400);
     }
 
     const cleanIdentity = String(identityNumber || "").trim();
-    if (!looksLikeIdentityNumber(cleanIdentity)) {
+    if (!isValidTurkishIdentityNumber(cleanIdentity)) {
       return jsonResponse({ error: "Geçerli bir T.C. kimlik numarası gir (11 haneli)." }, 400);
     }
 

@@ -734,7 +734,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=9"></script>
-  <script src="bookings.js?v=5"></script>
+  <script src="bookings.js?v=6"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=5"></script>
   <script>
@@ -1114,16 +1114,20 @@
         }
 
         const needsCard = cardAmount > 0;
-        const phone = document.getElementById("payerPhone").value.trim();
         const identityNumber = document.getElementById("payerIdentity").value.trim();
+        // normalize BEFORE validating: "+90 555 112 51 21", "0555 223 21 23"
+        // and bare "5551125121" all become the same "+90XXXXXXXXXX" iyzico
+        // wants - what gets sent to create-payment is this canonical form,
+        // not whatever the contacts app showed the payer.
+        const phone = armusNormalizeTurkishPhone(document.getElementById("payerPhone").value);
 
         if (needsCard) {
-          if (phone.replace(/\D/g, "").length < 10) {
-            confirmError.textContent = armusT("booking.invalidPhone", "Lütfen geçerli bir telefon numarası gir.");
+          if (!phone) {
+            confirmError.textContent = armusT("booking.invalidPhone", "Lütfen geçerli bir cep telefonu numarası gir.");
             confirmError.style.display = "block";
             return;
           }
-          if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
+          if (!armusIsValidTurkishIdentityNumber(identityNumber)) {
             confirmError.textContent = armusT("booking.invalidIdentity", "Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).");
             confirmError.style.display = "block";
             return;

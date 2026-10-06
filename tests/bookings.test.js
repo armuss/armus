@@ -197,3 +197,51 @@ test("armusFormatSlotTimeRangeForViewer - converts a teacher-local slot into the
   // as 01:00 the same day (11:00 UTC - 10h).
   assert.equal(run("Pacific/Honolulu"), "01:00 – 01:50");
 });
+
+// ---- armusNormalizeTurkishPhone ----------------------------------------
+// Every shape a payer actually types has to land on the one canonical
+// "+90XXXXXXXXXX" iyzico's gsmNumber expects - a bare "05552232123" sent
+// as-is is what made format-valid inputs die at checkoutFormInitialize.
+
+test("armusNormalizeTurkishPhone - every common input shape canonicalizes", () => {
+  assert.equal(ctx.armusNormalizeTurkishPhone("+90 555 112 51 21"), "+905551125121");
+  assert.equal(ctx.armusNormalizeTurkishPhone("905551125121"), "+905551125121");
+  assert.equal(ctx.armusNormalizeTurkishPhone("0555 223 21 23"), "+905552232123");
+  assert.equal(ctx.armusNormalizeTurkishPhone("5551125121"), "+905551125121");
+  // already canonical - idempotent
+  assert.equal(ctx.armusNormalizeTurkishPhone("+905551125121"), "+905551125121");
+});
+
+test("armusNormalizeTurkishPhone - rejects non-mobile and broken input", () => {
+  // landline area code - iyzico would fail the whole payment later anyway
+  assert.equal(ctx.armusNormalizeTurkishPhone("0212 555 12 12"), null);
+  assert.equal(ctx.armusNormalizeTurkishPhone("123"), null);
+  assert.equal(ctx.armusNormalizeTurkishPhone(""), null);
+  assert.equal(ctx.armusNormalizeTurkishPhone("not a phone"), null);
+});
+
+// ---- armusIsValidTurkishIdentityNumber ---------------------------------
+// nvi.gov.tr MOD-10 scheme. Vectors are constructed from the algorithm
+// itself (10th = (7*odd - even) mod 10, 11th = sum of first 10 mod 10).
+
+test("armusIsValidTurkishIdentityNumber - accepts checksum-correct numbers", () => {
+  // 10000000078: oddSum=1, evenSum=0 -> 10th=7; sum of first 10=8 -> 11th=8
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("10000000078"), true);
+  // 55511251274: oddSum=18, evenSum=9 -> 10th=(126-9)%10=7; sum=34 -> 11th=4
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("555 112 512 74"), true);
+  // 18080808058: oddSum=1, evenSum=32 -> 7*1-32=-25 -> ((-25%10)+10)%10=5;
+  // sum=38 -> 11th=8. Guards the negative-modulo quirk: a raw -25 % 10
+  // in JS is -5, which would wrongly reject this real-shaped number.
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("18080808058"), true);
+});
+
+test("armusIsValidTurkishIdentityNumber - rejects format-only fakes", () => {
+  // passed the old /^[1-9][0-9]{10}$/ check and went to iyzico as-is
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("11111111111"), false);
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("12345678901"), false);
+  // leading zero / wrong length / non-numeric
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("01000000078"), false);
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("1000000007"), false);
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber("100000000789"), false);
+  assert.equal(ctx.armusIsValidTurkishIdentityNumber(""), false);
+});

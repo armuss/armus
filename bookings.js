@@ -255,6 +255,48 @@ async function armusCancelBooking(bookingId) {
   return { ok: true, refunded: data.refunded, refundEligible: data.refundEligible };
 }
 
+// Turkish GSM normalization: "+90 555 112 51 21", "905551125121",
+// "0555 223 21 23" and bare "5551125121" are all the same number as far
+// as the payer is concerned - they just type whatever their contacts app
+// shows them. Returns the canonical "+90XXXXXXXXXX" iyzico's gsmNumber
+// field actually expects (a bare "05552232123" sent as-is is what made
+// format-valid inputs die at checkoutFormInitialize), or null when the
+// digits can't be one Turkish mobile number. Landlines (area codes
+// starting 2/3/4) are rejected on purpose - iyzico validates gsmNumber
+// itself and would fail the whole payment later with a worse error.
+// create-payment/index.ts mirrors this exact logic (Deno cannot import
+// this browser file) - keep the two in sync.
+function armusNormalizeTurkishPhone(raw) {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("90")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  if (!/^5\d{9}$/.test(digits)) return null;
+  return "+90" + digits;
+}
+
+// T.C. Kimlik No validity - the official MOD-10 scheme (nvi.gov.tr):
+// 11 digits, the first never 0; the 10th digit is
+// (7 * (sum of digits 1,3,5,7,9) - sum of digits 2,4,6,8) mod 10 and the
+// 11th is (sum of the first 10) mod 10, which the algorithm also forces
+// to be even. A format-only check (/^[1-9][0-9]{10}$/) accepted pure
+// garbage like "11111111111" and sent it to iyzico as a real identity
+// number. Lenient about surrounding formatting (spaces/dots) since that
+// is how people transcribe it, strict about the checksums. The
+// ((x % 10) + 10) % 10 dance matters: 7*odd - even goes negative when the
+// even-position digits outweigh the odd ones (JS's % keeps the sign) and
+// a raw -9 would wrongly fail against a real digit 1.
+// create-payment/index.ts mirrors this exact logic - keep the two in sync.
+function armusIsValidTurkishIdentityNumber(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (!/^[1-9][0-9]{10}$/.test(digits)) return false;
+  const d = digits.split("").map(Number);
+  const oddSum = d[0] + d[2] + d[4] + d[6] + d[8];
+  const evenSum = d[1] + d[3] + d[5] + d[7];
+  if (d[9] !== (((oddSum * 7 - evenSum) % 10) + 10) % 10) return false;
+  if (d[10] !== (oddSum + evenSum + d[9]) % 10) return false;
+  return d[10] % 2 === 0;
+}
+
 const ARMUS_LESSON_MINUTES = 50;
 
 // Same idea as armusFormatLessonWhen, but for a slot that isn't a saved
