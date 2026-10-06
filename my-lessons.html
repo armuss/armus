@@ -233,6 +233,50 @@
       gap: 16px;
     }
 
+    /* Only a.lesson-row (teacher confirmed still visible in the
+       marketplace - see the comment above the renderLessons loop) is
+       ever a link; a plain div.lesson-row (teacher hidden/banned, or
+       the lookup failed) stays inert, so this never promises a profile
+       that isn't actually there. Kept visually identical at rest -
+       the affordance only shows up on hover (gold ring on the avatar,
+       a small arrow next to the name) rather than changing the card's
+       resting appearance. */
+    a.lesson-row {
+      text-decoration: none;
+      color: inherit;
+      border-radius: 12px;
+      padding: 6px;
+      margin: -6px -6px 0;
+      transition: background 0.15s ease;
+    }
+
+    a.lesson-row:hover {
+      background: var(--armus-panel);
+    }
+
+    a.lesson-row:hover .avatar {
+      box-shadow: 0 0 0 3px var(--armus-gold-2);
+    }
+
+    a.lesson-row:hover .lesson-teacher-name {
+      color: var(--armus-gold-text);
+    }
+
+    .go-arrow {
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: 0.15s ease;
+      color: var(--armus-gold-text);
+      font-size: 16px;
+      margin-left: 2px;
+      display: inline-block;
+    }
+
+    a.lesson-row:hover .go-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
     .lesson-join {
       margin-top: 14px;
       padding-top: 14px;
@@ -460,6 +504,7 @@
       font-weight: 800;
       font-size: 15px;
       overflow: hidden;
+      transition: box-shadow 0.15s ease;
     }
 
     .avatar img {
@@ -475,6 +520,10 @@
     .lesson-teacher {
       font-weight: 700;
       font-size: 15px;
+    }
+
+    .lesson-teacher-name {
+      transition: color 0.15s ease;
     }
 
     .lesson-meta {
@@ -880,13 +929,21 @@
             const card = document.createElement("div");
             card.className = "lesson-card" + (isPast && !canJoinNow ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
 
+            // Only link the row through to the teacher's profile once
+            // armusFindMarketplaceTeacher (above) has actually confirmed
+            // they're still visible there - never promise a profile page
+            // for a teacher who's since been hidden/banned.
+            const rowTag = teacher ? "a" : "div";
+            const rowHrefAttr = teacher ? ` href="teacher?teacher=${encodeURIComponent(booking.teacherId)}"` : "";
+
             card.innerHTML = `
-              <div class="lesson-row">
+              <${rowTag} class="lesson-row"${rowHrefAttr}>
                 <div class="avatar">${avatarInner}</div>
                 <div class="lesson-info">
                   <div class="lesson-teacher">
-                    ${armusEscapeHtml(armusShortDisplayName(booking.teacherName))}
+                    <span class="lesson-teacher-name">${armusEscapeHtml(armusShortDisplayName(booking.teacherName))}</span>
                     <span class="lesson-type">${booking.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</span>
+                    ${teacher ? `<span class="go-arrow">→</span>` : ""}
                   </div>
                   <div class="lesson-meta">₺${booking.price} ${armusT("booking.perLesson", "/ 50 dakika")}${(isPast && !canJoinNow) ? armusT("myLessons.pastSuffix", " · geçti") : ""}</div>
                 </div>
@@ -894,7 +951,7 @@
                   <div class="lesson-date">${when.dateLabel}</div>
                   <div class="lesson-time">${when.timeRange}</div>
                 </div>
-              </div>
+              </${rowTag}>
               ${isCancelled ? `
                 <div class="lesson-cancel-badge">
                   ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}
