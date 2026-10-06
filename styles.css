@@ -995,13 +995,13 @@ body {
   }
 }
 @media (max-width: 900px) {
-  /* scroll-triggered fade/slide-in reads as unwanted motion on a phone -
-     same treatment as prefers-reduced-motion above, just gated on
-     viewport width instead of the OS-level setting. Placed after the
-     base .reveal/.teacher-card rules so it actually wins the cascade. */
+  /* on a phone, armusInitScrollScrubReveal (script.js) drives .reveal's
+     opacity/transform directly off the scroll position every frame, in
+     place of the desktop IntersectionObserver + fixed-duration CSS
+     transition - dropping the transition here is what makes that 1:1
+     with the gesture instead of visibly catching up a beat behind it.
+     Placed after the base .reveal rule so it actually wins the cascade. */
   .reveal {
-    opacity: 1;
-    transform: none;
     transition: none;
   }
   .teacher-card {
