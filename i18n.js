@@ -1134,7 +1134,7 @@ const ARMUS_I18N_EN = {
   "applyTeacher.photoRuleCenter": "Your face should be centered in the photo",
   "applyTeacher.photoRuleFrame": "Your head or shoulders shouldn't be cut off or spill outside the frame",
   "applyTeacher.uploadPhoto": "Upload photo",
-  "applyTeacher.photoUploadNote": "JPG or PNG, max 2MB, background must be plain white",
+  "applyTeacher.photoUploadNote": "JPG or PNG, background must be plain white. Large photos are shrunk automatically.",
   "applyTeacher.photoPreviewNote": "This is how it'll look on your profile and teacher card.",
   "applyTeacher.photoNeedsWhiteBg": "Your photo's background must be plain white. Please upload a photo taken in front of a white background.",
   "applyTeacher.photoReadFailed": "Couldn't read the photo file.",
