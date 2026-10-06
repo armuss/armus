@@ -1425,32 +1425,77 @@
 
     /* ---- earnings simulator ---- */
 
-    .simulator-box input[type="range"] {
-      width: 100%;
-      margin: 14px 0 10px;
-      accent-color: var(--armus-gold-2);
+    .simulator-box {
+      display: flex;
+      gap: 24px;
+      align-items: center;
     }
 
-    .simulator-result {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 12px;
+    .sim-dial-wrap {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      flex-shrink: 0;
     }
 
-    .simulator-result div {
-      background: var(--armus-panel-2, var(--armus-bg));
-      border-radius: 12px;
-      padding: 12px 14px;
+    .sim-dial-svg {
+      transform: rotate(-90deg);
     }
 
-    .simulator-result strong {
-      display: block;
-      font-size: 18px;
+    .sim-dial-arc {
+      transition: stroke-dashoffset .2s ease;
+    }
+
+    .sim-dial-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    .sim-dial-center strong {
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-size: 19px;
+      font-weight: 800;
       color: var(--armus-gold-text);
     }
 
-    .simulator-result span {
+    .sim-dial-center span {
+      font-size: 9.5px;
+      color: var(--armus-muted);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-top: 2px;
+    }
+
+    .simulator-box-right {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .simulator-box input[type="range"] {
+      width: 100%;
+      margin: 4px 0 14px;
+      accent-color: var(--armus-gold-2);
+    }
+
+    .sim-mini-stats {
+      display: flex;
+      gap: 20px;
+    }
+
+    .sim-mini-stat strong {
+      display: block;
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .sim-mini-stat span {
       font-size: 11px;
       color: var(--armus-muted);
     }
@@ -1609,8 +1654,14 @@
         grid-template-columns: 1fr;
       }
 
-      .simulator-result {
-        grid-template-columns: 1fr;
+      .simulator-box {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
+
+      .sim-dial-wrap {
+        align-self: center;
       }
 
       .goal-box-top,
@@ -1787,13 +1838,30 @@
           <summary><span data-i18n="teacherDash.simulatorHeading">Kazanç simülatörü</span><span class="chev">▸</span></summary>
           <div class="ov-details-body">
             <div class="simulator-box">
-              <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
-              <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
-              <div class="section-hint" id="simulatorLabel" style="margin: 0;">Şu anki tempoda devam</div>
-              <div class="simulator-result">
-                <div><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
-                <div><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
-                <div><strong id="simEarnings">₺0</strong><span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span></div>
+              <div class="sim-dial-wrap">
+                <svg class="sim-dial-svg" width="140" height="140" viewBox="0 0 140 140">
+                  <circle cx="70" cy="70" r="60" fill="none" stroke="var(--armus-panel-2)" stroke-width="12"/>
+                  <circle class="sim-dial-arc" id="simDialArc" cx="70" cy="70" r="60" fill="none" stroke="url(#simDialGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="376.99" stroke-dashoffset="376.99"/>
+                  <defs>
+                    <linearGradient id="simDialGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="var(--armus-gold-1)"/>
+                      <stop offset="100%" stop-color="var(--armus-gold-3)"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="sim-dial-center">
+                  <strong id="simEarnings">₺0</strong>
+                  <span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span>
+                </div>
+              </div>
+              <div class="simulator-box-right">
+                <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
+                <div class="section-hint" id="simulatorLabel" style="margin: 4px 0 0; font-weight: 700; color: var(--armus-ink);">Şu anki tempoda devam</div>
+                <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
+                <div class="sim-mini-stats">
+                  <div class="sim-mini-stat"><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
+                  <div class="sim-mini-stat"><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
+                </div>
               </div>
             </div>
           </div>
@@ -2657,6 +2725,14 @@
         document.getElementById("simHours").textContent = projectedTotalHours;
         document.getElementById("simRate").textContent = `%${projectedTier.rate}`;
         document.getElementById("simEarnings").textContent = `₺${Math.round(projectedNet)}`;
+
+        // the dial's fill tracks the slider itself (0-20 extra lessons/week)
+        // rather than some fabricated "progress toward a goal" - it's an
+        // honest echo of the one thing being dragged, not a fake metric.
+        const sliderMax = Number(simulatorSlider.max);
+        const dialCircumference = 376.99;
+        const dialArc = document.getElementById("simDialArc");
+        dialArc.style.strokeDashoffset = dialCircumference * (1 - extraPerWeek / sliderMax);
       }
 
       simulatorSlider.addEventListener("input", renderSimulator);
