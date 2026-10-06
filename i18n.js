@@ -233,8 +233,10 @@ const ARMUS_I18N_EN = {
   "about.storyTitle": "The ARMUS Story",
   "about.storyText1": "It all started with one question: why is finding the right English teacher in Turkey so hard? Our founders, Arman Chahargoli and Mustafa Gören, imagined a platform where students could move forward one-on-one with a teacher chosen for their goal, instead of a crowded classroom.",
   "about.storyText2": "Today, ARMUS has become Turkey's English-learning platform, matching thousands of students with the right teacher.",
-  "about.teamLabel": "OUR FOUNDING TEAM",
+  "about.teamLabel": "OUR TEAM",
   "about.teamTitle": "Meet the team.",
+  "about.programmerTitle": "Programmer",
+  "about.chiefOfStaffTitle": "Chief of Staff",
   "about.closingTitle": "Join our community too.",
   "about.closingCta": "Find Your Teacher →",
 

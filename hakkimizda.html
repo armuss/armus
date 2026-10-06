@@ -219,56 +219,12 @@
       object-fit: cover;
     }
 
-    /* FOUNDERS - small pill chips right under the video, pointing down
-       to the full team section at the bottom of the page */
-
-    .founders-duo {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin: 28px 0 90px;
-      flex-wrap: wrap;
-    }
-
-    .founder-pill {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--armus-panel-2);
-      border-radius: 60px;
-      padding: 8px 20px 8px 8px;
-    }
-
-    .founder-pill .av {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--armus-ink);
-      color: var(--armus-gold-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Unbounded";
-      font-weight: 800;
-      font-size: 13px;
-      flex-shrink: 0;
-    }
-
-    .founder-pill strong {
-      display: block;
-      font-size: 13.5px;
-    }
-
-    .founder-pill span {
-      color: var(--armus-muted);
-      font-size: 11.5px;
-    }
-
     /* PEOPLE TABS - Öğretmenler / Öğrenciler / Ekibimiz */
 
     .people-section {
       margin-bottom: 100px;
       text-align: center;
+      margin-top: 90px;
     }
 
     .people-section .label {
@@ -507,7 +463,7 @@
     @media (max-width: 700px) {
       .hero-band { padding: 50px 0 90px; }
       .video-overlap { margin-top: -56px; }
-      .founders-duo { margin-bottom: 60px; }
+      .people-section { margin-top: 60px; }
       .tab-panel { grid-template-columns: 1fr; text-align: center; }
       .tab-panel img { max-width: 220px; margin: 0 auto; }
       .story-section { grid-template-columns: 1fr; }
@@ -556,11 +512,6 @@
             <source src="avatars/classroom-full-reveal-v2.mp4" type="video/mp4">
           </video>
         </div>
-      </div>
-
-      <div class="founders-duo">
-        <div class="founder-pill"><div class="av">AC</div><div><strong>Arman Chahargoli</strong><span data-i18n="about.founderTitle">Founder</span></div></div>
-        <div class="founder-pill"><div class="av">MG</div><div><strong>Mustafa Gören</strong><span data-i18n="about.founderTitle">Founder</span></div></div>
       </div>
 
       <div class="people-section">
@@ -622,7 +573,7 @@
       </div>
 
       <div class="team-section">
-        <div class="label" data-i18n="about.teamLabel">KURUCU EKİBİMİZ</div>
+        <div class="label" data-i18n="about.teamLabel">EKİBİMİZ</div>
         <h2 data-i18n="about.teamTitle">Bizi tanıyın.</h2>
         <div class="team-grid">
           <div class="team-card">
@@ -634,6 +585,16 @@
             <div class="av">MG</div>
             <h4>Mustafa Gören</h4>
             <span data-i18n="about.founderTitle">Founder</span>
+          </div>
+          <div class="team-card">
+            <div class="av">EH</div>
+            <h4>Enes Hacısağır</h4>
+            <span data-i18n="about.programmerTitle">Programmer</span>
+          </div>
+          <div class="team-card">
+            <div class="av">AA</div>
+            <h4>Abdullah Akdağ</h4>
+            <span data-i18n="about.chiefOfStaffTitle">Chief of Staff</span>
           </div>
         </div>
       </div>
