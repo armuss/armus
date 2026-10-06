@@ -165,29 +165,10 @@
       font-weight: 600;
     }
 
-    .sidebar-bottom {
-      margin-top: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
     .back-link {
       color: var(--armus-muted);
       font-size: 12.5px;
       padding: 8px 12px;
-    }
-
-    .logout-btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--armus-border);
-      color: var(--armus-muted);
-      font-family: inherit;
-      font-size: 12.5px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      cursor: pointer;
     }
 
     .nav-utility {
@@ -1441,19 +1422,8 @@
         width: auto;
       }
 
-      .sidebar-bottom {
-        margin-top: 0;
-        margin-left: 6px;
-        flex-direction: row;
-      }
-
       .back-link {
         display: none;
-      }
-
-      .logout-btn {
-        width: auto;
-        white-space: nowrap;
       }
 
       main {
@@ -1521,16 +1491,6 @@
       <button class="nav-btn" data-panel="availability" data-i18n="teacherDash.navAvailability">Uygunluk</button>
       <button class="nav-btn" data-panel="profile" data-i18n="teacherDash.navProfile">Profil</button>
       <a class="nav-btn" href="mesajlar" data-i18n="nav.messages">Mesajlar</a>
-
-      <div class="sidebar-bottom">
-        <div class="nav-utility">
-          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          </a>
-        </div>
-        <button class="logout-btn" id="logoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
-      </div>
     </div>
 
     <main>
@@ -1553,6 +1513,12 @@
         <div class="online-toggle-wrap">
           <span class="online-toggle-label" id="onlineToggleLabel">Şu an müsait değilim</span>
           <button type="button" class="online-switch" id="onlineToggle" aria-label="Şu an müsaitim"></button>
+        </div>
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
         </div>
         <div class="nav-buttons" id="navAuthButtons"></div>
       </div>
@@ -1810,11 +1776,6 @@
     const REGISTER_BTN = () => `<a class="btn btn-light" href="register?role=teacher">${armusT("teacherDash.registerAsTeacher", "Öğretmen Olarak Kayıt Ol")}</a>`;
     const APPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher">${armusT("teacherDash.completeApplication", "Başvuruyu Tamamla")}</a>`;
     const REAPPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher">${armusT("teacherDash.reapply", "Tekrar Başvur")}</a>`;
-
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await armusSignOut();
-      window.location.href = "/";
-    });
 
     document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
 
