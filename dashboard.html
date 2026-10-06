@@ -404,73 +404,209 @@
       margin-top: 0;
     }
 
-    /* ---- overview panel: sidebar dossier + main content split ---- */
+    /* ---- overview panel: mesh-glow hero + icon stat row ---- */
 
-    .overview-grid {
-      display: grid;
-      grid-template-columns: 250px 1fr;
-      gap: 22px;
-      align-items: start;
+    .ov-hero {
+      position: relative;
+      border-radius: 24px;
+      padding: 26px 28px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      background: #0a0a0a;
+      color: #fff;
     }
 
-    .overview-grid > .ov-sidebar,
-    .overview-grid > .ov-main {
-      min-width: 0;
+    .ov-hero-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(50px);
+      opacity: .55;
+      pointer-events: none;
     }
 
-    .ov-sidebar {
-      position: sticky;
-      top: 20px;
+    .ov-hero-blob-1 {
+      width: 260px;
+      height: 260px;
+      background: var(--armus-gold-2);
+      top: -110px;
+      right: -50px;
+    }
+
+    .ov-hero-blob-2 {
+      width: 200px;
+      height: 200px;
+      background: var(--armus-gold-3);
+      bottom: -90px;
+      left: 8%;
+      opacity: .3;
+    }
+
+    .ov-hero-digest {
+      position: relative;
       display: flex;
-      flex-direction: column;
-      gap: 16px;
-      border: 1px solid var(--armus-border);
-      border-radius: 20px;
-      padding: 20px 18px;
-      background: var(--armus-panel-2, var(--armus-bg));
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #d8d8d8;
+      max-width: 58%;
     }
 
-    .ov-sidebar .badge-row {
-      flex-direction: column;
+    .ov-hero-digest .icon {
+      color: var(--armus-gold-text);
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .ov-hero-digest strong {
+      color: var(--armus-gold-text);
+    }
+
+    .ov-hero .badge-row {
+      position: relative;
+      margin-top: 14px;
       margin-bottom: 0;
     }
 
-    .ov-sidebar .badge-chip {
-      justify-content: flex-start;
+    .ov-hero .badge-chip {
+      background: rgba(255, 255, 255, .07);
+      border-color: rgba(255, 255, 255, .18);
+      color: #eee;
     }
 
-    .ov-sidebar-divider {
-      height: 1px;
-      background: var(--armus-border);
+    .ov-hero .badge-icon svg {
+      width: 14px;
+      height: 14px;
+      color: var(--armus-gold-text);
+      display: block;
     }
 
-    .badge-row:empty + .ov-sidebar-divider {
-      display: none;
+    .ov-spark-card {
+      position: absolute;
+      right: 28px;
+      top: 26px;
+      width: 260px;
+      background: rgba(255, 255, 255, .07);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 14px;
+      padding: 12px 14px;
     }
 
-    /* COMMISSION — a badge, not a literal progress gauge */
-
-    .ring-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+    .ov-spark-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #a8a8a8;
     }
 
-    .ring {
-      width: 76px;
-      height: 76px;
-      border-radius: 50%;
-      background: var(--armus-gold-gradient);
+    .ov-spark-value {
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    .ov-spark-svg {
+      margin-top: 6px;
+      display: block;
+    }
+
+    /* STATS */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--armus-panel);
+    }
+
+    .stat-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--armus-panel-2);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 10px;
     }
 
+    .stat-icon svg {
+      width: 16px;
+      height: 16px;
+      color: var(--armus-gold-3);
+    }
+
+    .stat strong {
+      display: block;
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 21px;
+      color: var(--armus-ink);
+    }
+
+    .stat span {
+      color: var(--armus-muted);
+      font-size: 11px;
+    }
+
+    /* ---- commission + goal, side by side ---- */
+
+    .ov-lower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .panel-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      padding: 20px 22px;
+    }
+
+    .panel-card h3 {
+      font-size: 14px;
+      margin: 0 0 12px;
+    }
+
+    .panel-card .goal-box-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* COMMISSION — a badge, not a literal progress gauge */
+
+    .ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ring {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
     .ring-inner {
-      width: 60px;
-      height: 60px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       background: var(--armus-panel-2, var(--armus-bg));
       display: flex;
@@ -485,60 +621,15 @@
       color: var(--armus-gold-text);
     }
 
-    .ring-card-label {
-      font-size: 11px;
+    .ring-wrap-range {
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .4px;
-      color: var(--armus-muted);
+      font-size: 13px;
     }
 
-    .ring-card-range {
-      display: block;
+    .ring-wrap-hint {
       font-size: 12px;
-      color: var(--armus-ink);
-      margin-top: 2px;
-    }
-
-    .ring-card-hint {
-      font-size: 11.5px;
       color: var(--armus-muted);
-      line-height: 1.6;
-      margin-top: 10px;
-    }
-
-    /* STATS — horizontal snap strip in the main column */
-
-    .stats {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      margin-bottom: 20px;
-      scroll-snap-type: x proximity;
-    }
-
-    .stat {
-      flex: 1 1 0;
-      min-width: 120px;
-      scroll-snap-align: start;
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 16px;
-      background: var(--armus-panel);
-    }
-
-    .stat strong {
-      display: block;
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-weight: 700;
-      font-size: 21px;
-      color: var(--armus-gold-text);
-    }
-
-    .stat span {
-      color: var(--armus-muted);
-      font-size: 11px;
+      margin-top: 3px;
     }
 
     /* ---- collapsible sections (goal / simulator / response) ---- */
@@ -1199,7 +1290,12 @@
     }
 
     .badge-chip .badge-icon {
-      font-size: 16px;
+      display: flex;
+    }
+
+    .badge-chip .badge-icon svg {
+      width: 15px;
+      height: 15px;
     }
 
     /* ---- income goal ---- */
@@ -1430,21 +1526,22 @@
         padding: 20px 16px 50px;
       }
 
-      .overview-grid {
-        grid-template-columns: 1fr;
+      .ov-hero-digest {
+        max-width: 100%;
       }
 
-      .ov-sidebar {
+      .ov-spark-card {
         position: static;
+        width: 100%;
+        margin-top: 14px;
       }
 
-      .ov-sidebar .badge-row {
-        flex-direction: row;
-        flex-wrap: wrap;
+      .stats {
+        grid-template-columns: 1fr 1fr;
       }
 
-      .stat {
-        min-width: 150px;
+      .ov-lower-grid {
+        grid-template-columns: 1fr;
       }
 
       .simulator-result {
@@ -1526,95 +1623,110 @@
       <div class="panel active" id="panel-overview">
         <h2 data-i18n="teacherDash.navOverview">Genel Bakış</h2>
 
-        <div class="overview-grid">
-          <aside class="ov-sidebar">
-            <div class="badge-row" id="badgeRow"></div>
+        <div class="ov-hero">
+          <div class="ov-hero-blob ov-hero-blob-1"></div>
+          <div class="ov-hero-blob ov-hero-blob-2"></div>
 
-            <div class="ov-sidebar-divider"></div>
+          <div class="ov-hero-digest">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+            <span id="digestCard"></span>
+          </div>
 
-            <div class="ring-card">
+          <div class="badge-row" id="badgeRow"></div>
+
+          <div class="ov-spark-card">
+            <div class="ov-spark-label"><span data-i18n="teacherDash.spark7Days">Son 7 gün</span></div>
+            <div class="ov-spark-value" id="sparkValue">₺0</div>
+            <svg class="ov-spark-svg" width="248" height="40" viewBox="0 0 248 40">
+              <polyline id="sparkPolyline" points="0,37 248,37" fill="none" stroke="#f6c649" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle id="sparkDot" cx="248" cy="37" r="4" fill="#f6c649"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg></div>
+            <strong id="statLessons">0</strong>
+            <span data-i18n="teacherDash.statLessons">Tamamlanan ders</span>
+          </div>
+          <div class="stat">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <strong id="statHours">0</strong>
+            <span data-i18n="teacherDash.statHours">Başarılı ders saati</span>
+          </div>
+          <div class="stat">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div>
+            <strong id="statEarnings">₺0</strong>
+            <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
+          </div>
+          <div class="stat">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg></div>
+            <strong id="statRating">—</strong>
+            <span data-i18n="teacherDash.statRating">Ortalama puan</span>
+          </div>
+        </div>
+
+        <div class="today-card" id="todayCard">
+          <h4 data-i18n="teacherDash.today">Bugün</h4>
+          <div id="todayList"></div>
+        </div>
+
+        <div class="ov-lower-grid">
+          <div class="panel-card">
+            <h3 data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</h3>
+            <div class="ring-wrap">
               <div class="ring">
                 <div class="ring-inner"><strong id="commissionRate">%30</strong></div>
               </div>
-              <span class="ring-card-label" data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</span>
-              <span class="ring-card-range" id="commissionRange">0–100 saat arası</span>
-              <p class="ring-card-hint" data-i18n="teacherDash.commissionHint">Daha çok ders ver, komisyonun düşsün.</p>
-            </div>
-          </aside>
-
-          <div class="ov-main">
-            <div class="digest-card" id="digestCard"></div>
-
-            <div class="stats">
-              <div class="stat">
-                <strong id="statLessons">0</strong>
-                <span data-i18n="teacherDash.statLessons">Tamamlanan ders</span>
-              </div>
-              <div class="stat">
-                <strong id="statHours">0</strong>
-                <span data-i18n="teacherDash.statHours">Başarılı ders saati</span>
-              </div>
-              <div class="stat">
-                <strong id="statEarnings">₺0</strong>
-                <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
-              </div>
-              <div class="stat">
-                <strong id="statRating">—</strong>
-                <span data-i18n="teacherDash.statRating">Ortalama puan</span>
+              <div>
+                <div class="ring-wrap-range" id="commissionRange">0–100 saat arası</div>
+                <div class="ring-wrap-hint" data-i18n="teacherDash.commissionHint">Daha çok ders ver, komisyonun düşsün.</div>
               </div>
             </div>
+          </div>
 
-            <div class="today-card" id="todayCard">
-              <h4 data-i18n="teacherDash.today">Bugün</h4>
-              <div id="todayList"></div>
+          <div class="panel-card">
+            <h3 data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</h3>
+            <div class="goal-box-top">
+              <span id="goalCaptionTop" data-i18n="teacherDash.goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
+              <div class="goal-inputs">
+                <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder">
+                <button type="button" id="saveGoalBtn" data-i18n="teacherDash.save">Kaydet</button>
+              </div>
             </div>
-
-            <details class="ov-details" open>
-              <summary><span data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</span><span class="chev">▸</span></summary>
-              <div class="ov-details-body">
-                <div class="goal-box">
-                  <div class="goal-box-top">
-                    <span id="goalCaptionTop" data-i18n="teacherDash.goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
-                    <div class="goal-inputs">
-                      <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder">
-                      <button type="button" id="saveGoalBtn" data-i18n="teacherDash.save">Kaydet</button>
-                    </div>
-                  </div>
-                  <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
-                  <div class="goal-caption" id="goalCaption"></div>
-                </div>
-              </div>
-            </details>
-
-            <details class="ov-details" open>
-              <summary><span data-i18n="teacherDash.simulatorHeading">Kazanç simülatörü</span><span class="chev">▸</span></summary>
-              <div class="ov-details-body">
-                <div class="simulator-box">
-                  <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
-                  <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
-                  <div class="section-hint" id="simulatorLabel" style="margin: 0;">Şu anki tempoda devam</div>
-                  <div class="simulator-result">
-                    <div><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
-                    <div><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
-                    <div><strong id="simEarnings">₺0</strong><span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span></div>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <details class="ov-details" open>
-              <summary><span data-i18n="teacherDash.responseTimeHeading">Mesajlara yanıt hızın</span><span class="chev">▸</span></summary>
-              <div class="ov-details-body">
-                <div class="response-card">
-                  <div>
-                    <strong id="responseTimeValue">—</strong>
-                    <p data-i18n="teacherDash.responseTimeText">Öğrencilerin mesajlarına ortalama yanıt süren. Ne kadar hızlı yanıt verirsen o kadar çok rezervasyon alma ihtimalin artar.</p>
-                  </div>
-                </div>
-              </div>
-            </details>
+            <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+            <div class="goal-caption" id="goalCaption"></div>
           </div>
         </div>
+
+        <details class="ov-details" open>
+          <summary><span data-i18n="teacherDash.simulatorHeading">Kazanç simülatörü</span><span class="chev">▸</span></summary>
+          <div class="ov-details-body">
+            <div class="simulator-box">
+              <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
+              <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
+              <div class="section-hint" id="simulatorLabel" style="margin: 0;">Şu anki tempoda devam</div>
+              <div class="simulator-result">
+                <div><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
+                <div><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
+                <div><strong id="simEarnings">₺0</strong><span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span></div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="ov-details" open>
+          <summary><span data-i18n="teacherDash.responseTimeHeading">Mesajlara yanıt hızın</span><span class="chev">▸</span></summary>
+          <div class="ov-details-body">
+            <div class="response-card">
+              <div>
+                <strong id="responseTimeValue">—</strong>
+                <p data-i18n="teacherDash.responseTimeText">Öğrencilerin mesajlarına ortalama yanıt süren. Ne kadar hızlı yanıt verirsen o kadar çok rezervasyon alma ihtimalin artar.</p>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
 
       <div class="panel" id="panel-bookings">
@@ -1727,7 +1839,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=15"></script>
+  <script src="i18n.js?v=16"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
@@ -2269,6 +2381,30 @@
       renderCommissionRange();
       document.addEventListener("armus:langchange", renderCommissionRange);
 
+      // ---- last-7-days earnings sparkline ----
+
+      const sparkDays = [];
+      for (let i = 6; i >= 0; i--) {
+        const dayKey = localDateKey(new Date(Date.now() - i * 86400000));
+        const dayGross = completedBookings
+          .filter(b => bookingLocalDateKey(b) === dayKey)
+          .reduce((sum, b) => sum + earnablePrice(b), 0);
+        sparkDays.push(Math.round(dayGross * (1 - tier.rate / 100)));
+      }
+      const sparkTotal = sparkDays.reduce((sum, v) => sum + v, 0);
+      document.getElementById("sparkValue").textContent = `₺${sparkTotal}`;
+      const sparkMax = Math.max(1, ...sparkDays);
+      const SPARK_W = 248, SPARK_H = 40, SPARK_PAD = 4;
+      const sparkPoints = sparkDays.map((v, i) => {
+        const x = (i / (sparkDays.length - 1)) * SPARK_W;
+        const y = SPARK_H - SPARK_PAD - (v / sparkMax) * (SPARK_H - SPARK_PAD * 2);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      document.getElementById("sparkPolyline").setAttribute("points", sparkPoints.join(" "));
+      const [lastX, lastY] = sparkPoints[sparkPoints.length - 1].split(",");
+      document.getElementById("sparkDot").setAttribute("cx", lastX);
+      document.getElementById("sparkDot").setAttribute("cy", lastY);
+
       // ---- weekly narrative digest ----
 
       const weekAgoKey = localDateKey(new Date(Date.now() - 7 * 86400000));
@@ -2303,7 +2439,7 @@
         }
         const firstName = armusEscapeHtml(armusCapitalizeName(user.name).split(" ")[0]);
         document.getElementById("digestCard").innerHTML =
-          armusT("teacherDash.digestGreeting", "👋 Merhaba {name}, ").replace("{name}", firstName) + digestParts.join(", ") + ".";
+          armusT("teacherDash.digestGreeting", "Merhaba {name}, ").replace("{name}", firstName) + digestParts.join(", ") + ".";
       }
       renderDigest();
       document.addEventListener("armus:langchange", renderDigest);
@@ -2332,24 +2468,40 @@
 
       // ---- achievement badges ----
 
+      // line-icon paths (24x24, stroke-based) standing in for the emoji
+      // each badge used to show - keeps the icon style consistent with
+      // the rest of the site's SVG icons instead of relying on whatever
+      // emoji font the viewer's OS happens to render.
+      const ARMUS_BADGE_ICON_PATHS = {
+        sparkles: '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>',
+        layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+        trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+        target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+        star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+        gem: '<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+      };
+      function armusBadgeIcon(name) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ARMUS_BADGE_ICON_PATHS[name]}</svg>`;
+      }
+
       function teacherBadges() {
         return [
-          { test: () => completedBookings.length >= 1, icon: "🎉", label: armusT("teacherDash.badgeFirstLesson", "İlk Ders") },
-          { test: () => completedBookings.length >= 10, icon: "🔟", label: armusT("teacherDash.badge10Lessons", "10 Ders Tamamlandı") },
-          { test: () => completedBookings.length >= 50, icon: "🏆", label: armusT("teacherDash.badge50Lessons", "50 Ders Tamamlandı") },
-          { test: () => completedBookings.length >= 100, icon: "💯", label: armusT("teacherDash.badge100Lessons", "100 Ders Tamamlandı") },
+          { test: () => completedBookings.length >= 1, icon: "sparkles", label: armusT("teacherDash.badgeFirstLesson", "İlk Ders") },
+          { test: () => completedBookings.length >= 10, icon: "layers", label: armusT("teacherDash.badge10Lessons", "10 Ders Tamamlandı") },
+          { test: () => completedBookings.length >= 50, icon: "trophy", label: armusT("teacherDash.badge50Lessons", "50 Ders Tamamlandı") },
+          { test: () => completedBookings.length >= 100, icon: "target", label: armusT("teacherDash.badge100Lessons", "100 Ders Tamamlandı") },
           {
             test: () => teacherReviews.length >= 5 && teacherReviews.slice(-5).every(r => r.stars === 5),
-            icon: "⭐", label: armusT("teacherDash.badge5StarStreak", "5 Yıldız Serisi"),
+            icon: "star", label: armusT("teacherDash.badge5StarStreak", "5 Yıldız Serisi"),
           },
-          { test: () => teacherReviews.length >= 1 && avgRating !== "—" && Number(avgRating) >= 4.8, icon: "💎", label: armusT("teacherDash.badgeTopRated", "Üstün Puan") },
+          { test: () => teacherReviews.length >= 1 && avgRating !== "—" && Number(avgRating) >= 4.8, icon: "gem", label: armusT("teacherDash.badgeTopRated", "Üstün Puan") },
         ];
       }
 
       function renderTeacherBadges() {
         const earnedBadges = teacherBadges().filter(b => b.test());
         document.getElementById("badgeRow").innerHTML = earnedBadges.map(b => `
-          <span class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</span>
+          <span class="badge-chip"><span class="badge-icon">${armusBadgeIcon(b.icon)}</span>${b.label}</span>
         `).join("");
       }
       renderTeacherBadges();
