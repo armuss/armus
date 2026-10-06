@@ -457,6 +457,75 @@ async function armusRenderStudentNav(el, session, firstName) {
   armusLinkLogoToPanel("student-dashboard");
 }
 
+// Same Preply-style icon row + notification/profile dropdown as
+// armusRenderStudentNav above, for a logged-in teacher instead - every
+// page that isn't dashboard.html itself (which builds its own sidebar
+// nav) used to fall back to the old plain Panelim/greeting/Çıkış Yap
+// button row here, the one piece of the site that never got the
+// redesign the student side already has. Trimmed to what actually
+// applies to a teacher: no Derslerim (lesson/booking management lives
+// in dashboard.html's own tabs, not a top-level page) or Favori
+// Öğretmenlerin (nothing for a teacher to favorite), and no credits
+// badge (that's a student-only concept - lesson_credits.student_id).
+async function armusRenderTeacherNav(el, session, firstName) {
+
+  const avatarInner = armusAvatarInner(session.photo_url, session.name);
+
+  el.innerHTML = `
+    <a class="btn gnav-refer-btn" href="referral">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
+    <a class="gnav-icon-btn" href="mesajlar" title="${armusT("nav.messages", "Mesajlar")}" aria-label="${armusT("nav.messages", "Mesajlar")}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    </a>
+    <div class="gnav-dropdown-wrap">
+      <button type="button" class="gnav-icon-btn" id="gnavBellBtn" title="${armusT("studentDash.navBellTitle", "Bildirimler")}" aria-label="${armusT("studentDash.navBellTitle", "Bildirimler")}" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="gnav-badge" id="gnavBellBadge" style="display:none;"></span>
+      </button>
+      <div class="gnav-dropdown" id="gnavBellDropdown" style="display:none;"></div>
+    </div>
+    <div class="gnav-dropdown-wrap">
+      <button type="button" class="gnav-avatar-btn" id="gnavProfileBtn" aria-expanded="false">
+        <div class="gnav-avatar">${avatarInner}</div>
+      </button>
+      <div class="gnav-dropdown" id="gnavProfileDropdown" style="display:none;">
+        <div class="gnav-dropdown-head">
+          <div class="gnav-avatar">${avatarInner}</div>
+          <div class="gnav-dropdown-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)} <small>(${armusT("nav.roleTeacher", "Öğretmen")})</small></div>
+        </div>
+        <a href="dashboard">${armusT("nav.myPanel", "Panelim")}</a>
+        <a href="mesajlar">${armusT("nav.messages", "Mesajlar")}</a>
+        <a href="referral">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
+        <a href="settings">${armusT("nav.settings", "Ayarlar")}</a>
+        <a href="sss">${armusT("nav.help", "Yardım")}</a>
+        <hr>
+        <button type="button" id="gnavLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("gnavLogoutBtn").addEventListener("click", async () => {
+    await armusSignOut();
+    window.location.reload();
+  });
+
+  if (!el.dataset.armusGnavWired) {
+    el.dataset.armusGnavWired = "1";
+    el.addEventListener("click", (e) => {
+      const btn = e.target.closest(".gnav-dropdown-wrap > button");
+      if (!btn) return;
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      const opening = menu.style.display === "none" || !menu.style.display;
+      armusCloseGnavDropdowns(opening ? menu : null);
+      menu.style.display = opening ? "block" : "none";
+      btn.setAttribute("aria-expanded", String(opening));
+    });
+  }
+
+  armusRenderGnavBell(session);
+  armusLinkLogoToPanel("dashboard");
+}
+
 async function armusRenderNavAuth() {
 
   const el = document.getElementById("navAuthButtons");
@@ -486,40 +555,7 @@ async function armusRenderNavAuth() {
   } else if (session) {
 
     const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
-    const roleLabel = armusT("nav.roleTeacher", "Öğretmen");
-    const dashboardLink = `<a class="btn" href="dashboard">${armusT("nav.myPanel", "Panelim")}</a>`;
-
-    el.innerHTML = `
-      ${dashboardLink}
-      <span class="nav-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)} <small>(${roleLabel})</small></span>
-      <button class="btn" id="armusLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
-      <button type="button" id="armusDeleteAccountBtn" style="background:none;border:none;color:var(--armus-faint);font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit;">${armusT("nav.deleteAccount", "Hesabımı Sil")}</button>
-    `;
-
-    document.getElementById("armusLogoutBtn").addEventListener("click", async () => {
-      await armusSignOut();
-      window.location.reload();
-    });
-
-    document.getElementById("armusDeleteAccountBtn").addEventListener("click", async () => {
-
-      if (!confirm(armusT("nav.deleteAccountConfirm", "Hesabını silmek istediğine emin misin? Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz."))) return;
-
-      const btn = document.getElementById("armusDeleteAccountBtn");
-      btn.disabled = true;
-      btn.textContent = armusT("nav.deleting", "Siliniyor...");
-
-      const result = await armusDeleteOwnAccount();
-
-      if (!result.ok) {
-        btn.disabled = false;
-        btn.textContent = armusT("nav.deleteAccount", "Hesabımı Sil");
-        alert(result.error);
-        return;
-      }
-
-      window.location.href = "/";
-    });
+    await armusRenderTeacherNav(el, session, firstName);
 
   } else {
 
