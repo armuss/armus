@@ -423,19 +423,127 @@
       margin-top: 0;
     }
 
-    /* STATS */
+    /* ---- overview panel: sidebar dossier + main content split ---- */
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .overview-grid > .ov-sidebar,
+    .overview-grid > .ov-main {
+      min-width: 0;
+    }
+
+    .ov-sidebar {
+      position: sticky;
+      top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: 1px solid var(--armus-border);
+      border-radius: 20px;
+      padding: 20px 18px;
+      background: var(--armus-panel-2, var(--armus-bg));
+    }
+
+    .ov-sidebar .badge-row {
+      flex-direction: column;
+      margin-bottom: 0;
+    }
+
+    .ov-sidebar .badge-chip {
+      justify-content: flex-start;
+    }
+
+    .ov-sidebar-divider {
+      height: 1px;
+      background: var(--armus-border);
+    }
+
+    .badge-row:empty + .ov-sidebar-divider {
+      display: none;
+    }
+
+    /* COMMISSION — a badge, not a literal progress gauge */
+
+    .ring-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .ring {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .ring-inner {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--armus-panel-2, var(--armus-bg));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-inner strong {
+      font-family: "Unbounded", "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--armus-gold-text);
+    }
+
+    .ring-card-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--armus-muted);
+    }
+
+    .ring-card-range {
+      display: block;
+      font-size: 12px;
+      color: var(--armus-ink);
+      margin-top: 2px;
+    }
+
+    .ring-card-hint {
+      font-size: 11.5px;
+      color: var(--armus-muted);
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    /* STATS — horizontal snap strip in the main column */
 
     .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
       gap: 12px;
-      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 20px;
+      scroll-snap-type: x proximity;
     }
 
     .stat {
+      flex: 1 1 0;
+      min-width: 120px;
+      scroll-snap-align: start;
       border: 1px solid var(--armus-border);
       border-radius: 16px;
-      padding: 18px;
+      padding: 16px;
       background: var(--armus-panel);
     }
 
@@ -452,30 +560,48 @@
       font-size: 11px;
     }
 
-    /* COMMISSION */
+    /* ---- collapsible sections (goal / simulator / response) ---- */
 
-    .commission-box {
+    .ov-details {
+      border: 1px solid var(--armus-border);
+      border-radius: 16px;
+      background: var(--armus-panel);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .ov-details > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--armus-ink);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 18px 22px;
-      background: var(--armus-panel);
     }
 
-    .commission-box div span {
-      display: block;
+    .ov-details > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .ov-details > summary .chev {
       color: var(--armus-muted);
       font-size: 12px;
-      margin-top: 4px;
+      transition: transform .18s ease;
     }
 
-    .commission-box strong {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-weight: 700;
-      font-size: 26px;
-      color: var(--armus-gold-text);
+    .ov-details[open] > summary .chev {
+      transform: rotate(90deg);
+    }
+
+    .ov-details[open] > summary {
+      border-bottom: 1px solid var(--armus-border-soft);
+    }
+
+    .ov-details-body {
+      padding: 16px 20px 20px;
     }
 
     /* FORM */
@@ -1091,14 +1217,6 @@
 
     /* ---- income goal ---- */
 
-    .goal-box {
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 18px 22px;
-      background: var(--armus-panel);
-      margin-bottom: 24px;
-    }
-
     .goal-box-top {
       display: flex;
       align-items: center;
@@ -1161,14 +1279,6 @@
 
     /* ---- earnings simulator ---- */
 
-    .simulator-box {
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 18px 22px;
-      background: var(--armus-panel);
-      margin-bottom: 24px;
-    }
-
     .simulator-box input[type="range"] {
       width: 100%;
       margin: 14px 0 10px;
@@ -1206,11 +1316,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 18px 22px;
-      background: var(--armus-panel);
-      margin-bottom: 24px;
     }
 
     .response-card strong {
@@ -1349,8 +1454,21 @@
         padding: 20px 16px 50px;
       }
 
-      .stats {
-        grid-template-columns: 1fr 1fr;
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ov-sidebar {
+        position: static;
+      }
+
+      .ov-sidebar .badge-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .stat {
+        min-width: 150px;
       }
 
       .simulator-result {
@@ -1435,75 +1553,93 @@
       <div class="panel active" id="panel-overview">
         <h2 data-i18n="teacherDash.navOverview">Genel Bakış</h2>
 
-        <div class="digest-card" id="digestCard"></div>
+        <div class="overview-grid">
+          <aside class="ov-sidebar">
+            <div class="badge-row" id="badgeRow"></div>
 
-        <div class="today-card" id="todayCard">
-          <h4 data-i18n="teacherDash.today">Bugün</h4>
-          <div id="todayList"></div>
-        </div>
+            <div class="ov-sidebar-divider"></div>
 
-        <div class="badge-row" id="badgeRow"></div>
-
-        <div class="stats">
-          <div class="stat">
-            <strong id="statLessons">0</strong>
-            <span data-i18n="teacherDash.statLessons">Tamamlanan ders</span>
-          </div>
-          <div class="stat">
-            <strong id="statHours">0</strong>
-            <span data-i18n="teacherDash.statHours">Başarılı ders saati</span>
-          </div>
-          <div class="stat">
-            <strong id="statEarnings">₺0</strong>
-            <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
-          </div>
-          <div class="stat">
-            <strong id="statRating">—</strong>
-            <span data-i18n="teacherDash.statRating">Ortalama puan</span>
-          </div>
-        </div>
-
-        <h3 data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</h3>
-        <div class="commission-box">
-          <div>
-            <strong id="commissionRate">%30</strong>
-            <span id="commissionRange">0–100 saat arası</span>
-          </div>
-          <div style="text-align: right;">
-            <span data-i18n="teacherDash.commissionHint">Daha çok ders ver, komisyonun düşsün.</span>
-          </div>
-        </div>
-
-        <h3 data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</h3>
-        <div class="goal-box">
-          <div class="goal-box-top">
-            <span id="goalCaptionTop" data-i18n="teacherDash.goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
-            <div class="goal-inputs">
-              <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder">
-              <button type="button" id="saveGoalBtn" data-i18n="teacherDash.save">Kaydet</button>
+            <div class="ring-card">
+              <div class="ring">
+                <div class="ring-inner"><strong id="commissionRate">%30</strong></div>
+              </div>
+              <span class="ring-card-label" data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</span>
+              <span class="ring-card-range" id="commissionRange">0–100 saat arası</span>
+              <p class="ring-card-hint" data-i18n="teacherDash.commissionHint">Daha çok ders ver, komisyonun düşsün.</p>
             </div>
-          </div>
-          <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
-          <div class="goal-caption" id="goalCaption"></div>
-        </div>
+          </aside>
 
-        <h3 data-i18n="teacherDash.simulatorHeading">Kazanç simülatörü</h3>
-        <div class="simulator-box">
-          <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
-          <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
-          <div class="section-hint" id="simulatorLabel" style="margin: 0;">Şu anki tempoda devam</div>
-          <div class="simulator-result">
-            <div><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
-            <div><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
-            <div><strong id="simEarnings">₺0</strong><span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span></div>
-          </div>
-        </div>
+          <div class="ov-main">
+            <div class="digest-card" id="digestCard"></div>
 
-        <h3 data-i18n="teacherDash.responseTimeHeading">Mesajlara yanıt hızın</h3>
-        <div class="response-card">
-          <div>
-            <strong id="responseTimeValue">—</strong>
-            <p data-i18n="teacherDash.responseTimeText">Öğrencilerin mesajlarına ortalama yanıt süren. Ne kadar hızlı yanıt verirsen o kadar çok rezervasyon alma ihtimalin artar.</p>
+            <div class="stats">
+              <div class="stat">
+                <strong id="statLessons">0</strong>
+                <span data-i18n="teacherDash.statLessons">Tamamlanan ders</span>
+              </div>
+              <div class="stat">
+                <strong id="statHours">0</strong>
+                <span data-i18n="teacherDash.statHours">Başarılı ders saati</span>
+              </div>
+              <div class="stat">
+                <strong id="statEarnings">₺0</strong>
+                <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
+              </div>
+              <div class="stat">
+                <strong id="statRating">—</strong>
+                <span data-i18n="teacherDash.statRating">Ortalama puan</span>
+              </div>
+            </div>
+
+            <div class="today-card" id="todayCard">
+              <h4 data-i18n="teacherDash.today">Bugün</h4>
+              <div id="todayList"></div>
+            </div>
+
+            <details class="ov-details" open>
+              <summary><span data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</span><span class="chev">▸</span></summary>
+              <div class="ov-details-body">
+                <div class="goal-box">
+                  <div class="goal-box-top">
+                    <span id="goalCaptionTop" data-i18n="teacherDash.goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
+                    <div class="goal-inputs">
+                      <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder">
+                      <button type="button" id="saveGoalBtn" data-i18n="teacherDash.save">Kaydet</button>
+                    </div>
+                  </div>
+                  <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+                  <div class="goal-caption" id="goalCaption"></div>
+                </div>
+              </div>
+            </details>
+
+            <details class="ov-details" open>
+              <summary><span data-i18n="teacherDash.simulatorHeading">Kazanç simülatörü</span><span class="chev">▸</span></summary>
+              <div class="ov-details-body">
+                <div class="simulator-box">
+                  <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.simulatorHint">Haftada kaç ders daha verebileceğini kaydır, aylık kazancının ve komisyon diliminin nasıl değişeceğini gör.</p>
+                  <input type="range" id="simulatorSlider" min="0" max="20" value="0" step="1">
+                  <div class="section-hint" id="simulatorLabel" style="margin: 0;">Şu anki tempoda devam</div>
+                  <div class="simulator-result">
+                    <div><strong id="simHours">0</strong><span data-i18n="teacherDash.simTotalHours">toplam saat</span></div>
+                    <div><strong id="simRate">%30</strong><span data-i18n="teacherDash.simCommissionTier">komisyon dilimi</span></div>
+                    <div><strong id="simEarnings">₺0</strong><span data-i18n="teacherDash.simEstimatedNet">tahmini aylık net</span></div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <details class="ov-details" open>
+              <summary><span data-i18n="teacherDash.responseTimeHeading">Mesajlara yanıt hızın</span><span class="chev">▸</span></summary>
+              <div class="ov-details-body">
+                <div class="response-card">
+                  <div>
+                    <strong id="responseTimeValue">—</strong>
+                    <p data-i18n="teacherDash.responseTimeText">Öğrencilerin mesajlarına ortalama yanıt süren. Ne kadar hızlı yanıt verirsen o kadar çok rezervasyon alma ihtimalin artar.</p>
+                  </div>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       </div>
