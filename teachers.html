@@ -14,13 +14,13 @@
 
   <title>Öğretmenler | ARMUS</title>
   <meta name="description" content="ARMUS'taki tüm İngilizce öğretmenlerini keşfet. Fiyata, uygunluğa ve uzmanlık alanına göre filtrele, sana uygun öğretmeni bul ve ücretsiz deneme dersi ayarla.">
-  <link rel="canonical" href="https://armus.com.tr/teachers.html">
+  <link rel="canonical" href="https://armus.com.tr/teachers">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ARMUS">
   <meta property="og:title" content="İngilizce Öğretmenleri | ARMUS">
   <meta property="og:description" content="Fiyata, uygunluğa ve uzmanlık alanına göre filtrele, sana uygun İngilizce öğretmenini bul.">
   <meta property="og:image" content="https://armus.com.tr/og-image.png">
-  <meta property="og:url" content="https://armus.com.tr/teachers.html">
+  <meta property="og:url" content="https://armus.com.tr/teachers">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -842,18 +842,18 @@
   <header class="navbar">
     <div class="nav-inner">
 
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
 
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
       </div>
 
       <div class="nav-buttons" id="navAuthButtons">
-        <a class="btn" href="login.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register" data-i18n="nav.register">Kayıt Ol</a>
       </div>
 
     </div>
@@ -1015,8 +1015,8 @@
 
     function renderTeacherCard(teacher) {
 
-      const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
-      const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
+      const teacherLink = `teacher?teacher=${encodeURIComponent(teacher.id)}`;
+      const bookingLink = `booking?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
       const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
       const avatarInner = armusSafeUrl(teacher.photo)
         ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`

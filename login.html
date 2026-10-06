@@ -14,7 +14,7 @@
 
   <title>Giriş Yap | ARMUS</title>
   <meta name="description" content="ARMUS hesabına giriş yap, derslerine ve mesajlarına eriş.">
-  <link rel="canonical" href="https://armus.com.tr/login.html">
+  <link rel="canonical" href="https://armus.com.tr/login">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,15 +239,15 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
       <div class="nav-right">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
-        <a href="index.html" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
+        <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
       </div>
     </div>
   </nav>
@@ -272,7 +272,7 @@
       </div>
 
       <div class="forgot-row">
-        <a href="sifre-sifirla.html" data-i18n="login.forgot">Şifremi unuttum</a>
+        <a href="sifre-sifirla" data-i18n="login.forgot">Şifremi unuttum</a>
       </div>
 
       <button type="submit" class="submit-btn" data-i18n="login.submit">Giriş Yap</button>
@@ -280,7 +280,7 @@
     </form>
 
     <div class="switch-note">
-      <span data-i18n="login.switchText">Hesabın yok mu?</span> <a href="register.html" id="switchToRegister" data-i18n="login.switchLink">Kayıt ol</a>
+      <span data-i18n="login.switchText">Hesabın yok mu?</span> <a href="register" id="switchToRegister" data-i18n="login.switchLink">Kayıt ol</a>
     </div>
 
   </main>
@@ -297,7 +297,7 @@
     const nextParam = new URLSearchParams(window.location.search).get("next");
     if (nextParam) {
       document.getElementById("switchToRegister").href =
-        `register.html?next=${encodeURIComponent(nextParam)}`;
+        `register?next=${encodeURIComponent(nextParam)}`;
     }
 
     const form = document.getElementById("loginForm");
@@ -326,17 +326,17 @@
       const session = await armusGetSession();
 
       if (session && session.is_admin) {
-        window.location.href = "admin.html";
+        window.location.href = "admin";
         return;
       }
 
       if (session && session.role === "teacher") {
-        window.location.href = "dashboard.html";
+        window.location.href = "dashboard";
         return;
       }
 
       const next = armusSafeNextUrl(new URLSearchParams(window.location.search).get("next"));
-      window.location.href = next || "student-dashboard.html";
+      window.location.href = next || "student-dashboard";
     });
 
   </script>

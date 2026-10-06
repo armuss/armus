@@ -1379,7 +1379,7 @@
   <!-- GATE: shown when logged out, logged in as a student, or the
        teacher account's application isn't approved yet -->
   <div class="gate" id="gate">
-    <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
     <h1 id="gateTitle">Bu panel öğretmenler için</h1>
     <p id="gateText">Bu paneli görmek için öğretmen hesabıyla giriş yapmalısın.</p>
     <div class="gate-actions" id="gateActions"></div>
@@ -1396,12 +1396,12 @@
       <button class="nav-btn" data-panel="bookings" data-i18n="teacherDash.navBookings">Rezervasyonlar</button>
       <button class="nav-btn" data-panel="availability" data-i18n="teacherDash.navAvailability">Uygunluk</button>
       <button class="nav-btn" data-panel="profile" data-i18n="teacherDash.navProfile">Profil</button>
-      <a class="nav-btn" href="mesajlar.html" data-i18n="nav.messages">Mesajlar</a>
+      <a class="nav-btn" href="mesajlar" data-i18n="nav.messages">Mesajlar</a>
 
       <div class="sidebar-bottom">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
@@ -1648,7 +1648,7 @@
     // this week/month's) can misfile a lesson into the wrong day/week/
     // month. Convert to the lesson's real instant first, then read the
     // VIEWER's (this teacher's) own CURRENT local calendar date off that -
-    // same fix already applied to student-dashboard.html's streak/goal.
+    // same fix already applied to student-dashboard's streak/goal.
     function bookingLocalDateKey(b) {
       return localDateKey(armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone));
     }
@@ -1663,14 +1663,14 @@
       gate.style.display = "flex";
     }
 
-    const LOGIN_BTN = () => `<a class="btn" href="login.html">${armusT("nav.login", "Giriş Yap")}</a>`;
-    const REGISTER_BTN = () => `<a class="btn btn-light" href="register.html?role=teacher">${armusT("teacherDash.registerAsTeacher", "Öğretmen Olarak Kayıt Ol")}</a>`;
-    const APPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher.html">${armusT("teacherDash.completeApplication", "Başvuruyu Tamamla")}</a>`;
-    const REAPPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher.html">${armusT("teacherDash.reapply", "Tekrar Başvur")}</a>`;
+    const LOGIN_BTN = () => `<a class="btn" href="login">${armusT("nav.login", "Giriş Yap")}</a>`;
+    const REGISTER_BTN = () => `<a class="btn btn-light" href="register?role=teacher">${armusT("teacherDash.registerAsTeacher", "Öğretmen Olarak Kayıt Ol")}</a>`;
+    const APPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher">${armusT("teacherDash.completeApplication", "Başvuruyu Tamamla")}</a>`;
+    const REAPPLY_BTN = () => `<a class="btn btn-light" href="apply-teacher">${armusT("teacherDash.reapply", "Tekrar Başvur")}</a>`;
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await armusSignOut();
-      window.location.href = "index.html";
+      window.location.href = "/";
     });
 
     document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
@@ -1690,7 +1690,7 @@
         return;
       }
 
-      window.location.href = "index.html";
+      window.location.href = "/";
     });
 
     document.querySelectorAll(".nav-btn[data-panel]").forEach(btn => {
@@ -1763,7 +1763,7 @@
         showGate(
           armusT("teacherDash.attendanceBannedTitle", "Hesabın kapatıldı"),
           armusT("teacherDash.attendanceBannedText", "Tekrarlanan, doğrulanmış devamsızlık nedeniyle hesabın kalıcı olarak kapatıldı. İtiraz etmek istersen bizimle iletişime geç."),
-          `<a class="btn" href="iletisim.html">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a>`
+          `<a class="btn" href="iletisim">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a>`
         );
 
       } else {
@@ -1797,7 +1797,7 @@
         title.textContent = armusT("teacherDash.attendanceBannedTitle", "Hesabın kapatıldı");
         body.innerHTML = `
           <p>${armusT("teacherDash.attendanceBannedText", "Tekrarlanan, doğrulanmış devamsızlık nedeniyle hesabın kalıcı olarak kapatıldı. İtiraz etmek istersen bizimle iletişime geç.")}</p>
-          <div class="attendance-modal-actions"><a class="btn" href="iletisim.html">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a></div>
+          <div class="attendance-modal-actions"><a class="btn" href="iletisim">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a></div>
         `;
 
       } else if (report && report.status === "open") {
@@ -2217,7 +2217,7 @@
               <span>${armusEscapeHtml(b.studentName)} · ${b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")}</span>
               <span class="today-when">
                 ${armusFormatTimeRange(b.time)}
-                ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class.html?booking=${b.id}">${armusT("teacherDash.joinShort", "🎥 Katıl")}</a>` : ""}
+                ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class?booking=${b.id}">${armusT("teacherDash.joinShort", "🎥 Katıl")}</a>` : ""}
               </span>
             </div>
           `).join("");
@@ -2415,7 +2415,7 @@
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
-                  ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class.html?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
+                  ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
                   ${(!isCancelled && !isPast) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
                 </div>
               </div>
@@ -2470,7 +2470,7 @@
         });
       }
 
-      // matches apply-teacher.html's own signup-time checks exactly (same
+      // matches apply-teacher's own signup-time checks exactly (same
       // 400-char bio minimum, same "price > 0" rule) - without this, an
       // already-approved teacher could submit a price of 0/negative or a
       // near-empty bio through pending_changes with no error shown here,
@@ -2531,7 +2531,7 @@
       // so changes here are instant, no admin approval needed. It's
       // reused here keyed by day-of-week (getDay() index, as a string
       // "0".."6") instead of a real date - a recurring weekly pattern,
-      // not date-specific. booking.html looks up the booked date's
+      // not date-specific. booking looks up the booked date's
       // day-of-week in this map, falling back to the older
       // weekly_availability array (set once during signup) if empty.
       //

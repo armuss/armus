@@ -50,7 +50,7 @@
       margin: auto;
     }
 
-    /* NAV - same as favorites.html/my-lessons.html/mesajlar.html */
+    /* NAV - same as favorites/my-lessons/mesajlar */
 
     nav {
       height: 76px;
@@ -335,11 +335,11 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="student-dashboard.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-      <a href="teachers.html" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
+      <a href="student-dashboard" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="teachers" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
       </div>
@@ -352,8 +352,8 @@
       <h1 data-i18n="referralPage.gateTitle">Arkadaşını davet etmek için giriş yap</h1>
       <p data-i18n="referralPage.gateText">Davet linkini görebilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=referral.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=referral.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login?next=referral" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register?next=referral" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -426,7 +426,7 @@
       // silently rather than breaking the rest of the page.
       if (session.referral_code) {
         document.getElementById("referralLinkInput").value =
-          `${location.origin}/register.html?ref=${session.referral_code}`;
+          `${location.origin}/register?ref=${session.referral_code}`;
       }
 
       armusSupabase

@@ -309,7 +309,7 @@
     }
 
     /* BOOKING CALENDAR PREVIEW (pick a slot right here, same picker as
-       booking.html - see armusSlotsForDate in bookings.js) */
+       booking - see armusSlotsForDate in bookings.js) */
 
     .calendar-note {
       color: var(--armus-muted);
@@ -779,18 +779,18 @@
   <nav>
     <div class="nav-inner">
 
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
 
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
       </div>
 
       <div class="nav-buttons" id="navAuthButtons">
-        <a class="btn" href="login.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register" data-i18n="nav.register">Kayıt Ol</a>
       </div>
 
     </div>
@@ -804,7 +804,7 @@
     <div class="not-found" id="notFound">
       <h1 data-i18n="teacherProfile.notFoundTitle">Öğretmen bulunamadı</h1>
       <p data-i18n="teacherProfile.notFoundText">Aradığın öğretmen profili mevcut değil ya da kaldırılmış olabilir.</p>
-      <a href="teachers.html" data-i18n="teacherProfile.backToTeachers">← Öğretmenlere dön</a>
+      <a href="teachers" data-i18n="teacherProfile.backToTeachers">← Öğretmenlere dön</a>
     </div>
 
 
@@ -846,7 +846,7 @@
 
 
           <!-- BOOKING CALENDAR PREVIEW - pick a slot right here; clicking
-               one takes the student straight to booking.html with that
+               one takes the student straight to booking with that
                date/time already selected, same picker/availability logic
                (armusSlotsForDate) as the dedicated booking flow. -->
 
@@ -1109,9 +1109,9 @@
       });
 
       // ---- booking calendar preview - pick a slot right here, then
-      // continue on booking.html with that date/time already chosen
-      // (same armusSlotsForDate availability logic as booking.html).
-      // Shows a week at a time (like booking.html's own picker, just laid
+      // continue on booking with that date/time already chosen
+      // (same armusSlotsForDate availability logic as booking).
+      // Shows a week at a time (like booking's own picker, just laid
       // out as 7 columns instead of one day at a time) with prev/next
       // buttons to page further out - calWeekOffset 0 is the week
       // starting today, 1 is the week after that, and so on; it never
@@ -1134,7 +1134,7 @@
       }
 
       // "today" here has to be the TEACHER's own calendar date, not the
-      // viewer's browser clock - see booking.html's own teacherTodayAnchor
+      // viewer's browser clock - see booking's own teacherTodayAnchor
       // for why anchoring to the viewer's "today" can open the week a
       // calendar day off from the teacher's and show an already-past
       // slot as bookable. Used only for calendar-date arithmetic below,
@@ -1204,7 +1204,7 @@
               btn.textContent = armusFormatSlotTimeRangeForViewer(dateKey, slot.time, teacher.timezone);
               btn.addEventListener("click", () => {
                 window.location.href =
-                  `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial&date=${dateKey}&time=${slot.time}`;
+                  `booking?teacher=${encodeURIComponent(teacher.id)}&type=trial&date=${dateKey}&time=${slot.time}`;
               });
               col.appendChild(btn);
             });
@@ -1310,10 +1310,10 @@
             messageBtn.style.display = "block";
 
             messageBtn.addEventListener("click", () => {
-              const target = `mesajlar.html?teacher=${encodeURIComponent(teacher.id)}`;
+              const target = `mesajlar?teacher=${encodeURIComponent(teacher.id)}`;
               window.location.href = session
                 ? target
-                : `login.html?next=${encodeURIComponent(target)}`;
+                : `login?next=${encodeURIComponent(target)}`;
             });
           }
         });
@@ -1468,11 +1468,11 @@
     })();
 
     function trialLesson() {
-      window.location.href = `booking.html?teacher=${encodeURIComponent(teacherId)}&type=trial`;
+      window.location.href = `booking?teacher=${encodeURIComponent(teacherId)}&type=trial`;
     }
 
     function bookLesson() {
-      window.location.href = `booking.html?teacher=${encodeURIComponent(teacherId)}&type=lesson`;
+      window.location.href = `booking?teacher=${encodeURIComponent(teacherId)}&type=lesson`;
     }
 
   </script>

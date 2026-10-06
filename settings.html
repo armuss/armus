@@ -50,7 +50,7 @@
       margin: auto;
     }
 
-    /* NAV - identical to student-dashboard.html's Preply-style header,
+    /* NAV - identical to student-dashboard's Preply-style header,
        kept in lockstep with it so the header looks/behaves the same on
        every page a logged-in student can reach. */
 
@@ -466,7 +466,7 @@
       color: var(--armus-muted);
     }
 
-    /* FORM - same pattern as register.html's fields */
+    /* FORM - same pattern as register's fields */
 
     .field {
       margin-bottom: 16px;
@@ -616,19 +616,19 @@
   <nav>
     <div class="nav-inner">
       <div class="nav-left">
-        <a href="student-dashboard.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-        <a href="teachers.html" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
+        <a href="student-dashboard" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+        <a href="teachers" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
       </div>
       <div class="nav-utility" id="navUtility" style="display:none;">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn icon-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn icon-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
-        <a class="btn nav-refer-btn" href="referral.html" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
-        <a class="icon-btn" href="mesajlar.html" title="Mesajlar" aria-label="Mesajlar">
+        <a class="btn nav-refer-btn" href="referral" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
+        <a class="icon-btn" href="mesajlar" title="Mesajlar" aria-label="Mesajlar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
         </a>
-        <a class="icon-btn" href="favorites.html" title="Favori Öğretmenlerim" aria-label="Favori Öğretmenlerim">
+        <a class="icon-btn" href="favorites" title="Favori Öğretmenlerim" aria-label="Favori Öğretmenlerim">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
         </a>
         <div class="nav-dropdown-wrap">
@@ -649,13 +649,13 @@
               <div class="avatar" id="navDropdownAvatar"></div>
               <div class="nav-dropdown-greeting" id="navDropdownGreeting"></div>
             </div>
-            <a href="student-dashboard.html" data-i18n="nav.myPanel">Panelim</a>
-            <a href="mesajlar.html" data-i18n="nav.messages">Mesajlar</a>
-            <a href="my-lessons.html" data-i18n="studentDash.navSchedule">Derslerim</a>
-            <a href="favorites.html" data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</a>
-            <a href="referral.html" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
-            <a href="settings.html" data-i18n="nav.settings">Ayarlar</a>
-            <a href="sss.html" data-i18n="nav.help">Yardım</a>
+            <a href="student-dashboard" data-i18n="nav.myPanel">Panelim</a>
+            <a href="mesajlar" data-i18n="nav.messages">Mesajlar</a>
+            <a href="my-lessons" data-i18n="studentDash.navSchedule">Derslerim</a>
+            <a href="favorites" data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</a>
+            <a href="referral" data-i18n="studentDash.navRefer">Arkadaşını Davet Et</a>
+            <a href="settings" data-i18n="nav.settings">Ayarlar</a>
+            <a href="sss" data-i18n="nav.help">Yardım</a>
             <hr>
             <button type="button" id="navLogoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
           </div>
@@ -670,8 +670,8 @@
       <h1 data-i18n="studentDash.gateTitle">Panelini görmek için giriş yap</h1>
       <p data-i18n="studentDash.gateText">Derslerini, ilerlemeni ve önerileri görebilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=settings.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=settings.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login?next=settings" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register?next=settings" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -802,18 +802,18 @@
       session = await armusGetSession().catch(() => null);
 
       if (!session) {
-        document.querySelector(".logo").outerHTML = '<a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>';
+        document.querySelector(".logo").outerHTML = '<a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>';
         gate.style.display = "block";
         return;
       }
 
       if (session.is_admin) {
-        window.location.href = "admin.html";
+        window.location.href = "admin";
         return;
       }
 
       if (session.role === "teacher") {
-        window.location.href = "dashboard.html";
+        window.location.href = "dashboard";
         return;
       }
 
@@ -878,7 +878,7 @@
       document.getElementById("nameInput").value = armusCapitalizeName(session.name);
 
       // a nickname/single word used to pass this unnoticed before - same
-      // rule register.html enforces at signup, kept consistent here.
+      // rule register enforces at signup, kept consistent here.
       const namePattern = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
 
       document.getElementById("accountForm").addEventListener("submit", async (e) => {
@@ -911,7 +911,7 @@
         successBox.style.display = "block";
       });
 
-      // ---- account: photo upload (same pattern as apply-teacher.html's
+      // ---- account: photo upload (same pattern as apply-teacher's
       // uploadToStorage - same bucket, any authenticated user can write
       // to it per migration_12.sql, so no new storage policy is needed) ----
       function uploadToStorage(file, folder) {
@@ -1046,7 +1046,7 @@
           return;
         }
 
-        window.location.href = "index.html";
+        window.location.href = "/";
       });
 
       if (typeof armusApplyTranslations === "function") armusApplyTranslations();

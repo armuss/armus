@@ -207,7 +207,7 @@
       margin-bottom: 30px;
     }
 
-    /* TEACHER GRID - same card look as teachers.html, laid out as a
+    /* TEACHER GRID - same card look as teachers, laid out as a
        plain grid instead of the browse page's overlapping card stack
        (that overlap effect only makes sense scrolling through a long
        list, not a short personal collection). */
@@ -416,11 +416,11 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="student-dashboard.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-      <a href="teachers.html" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
+      <a href="student-dashboard" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="teachers" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
       </div>
@@ -433,8 +433,8 @@
       <h1 data-i18n="favoritesPage.gateTitle">Favori öğretmenlerini görmek için giriş yap</h1>
       <p data-i18n="favoritesPage.gateText">Kaydettiğin öğretmenleri görebilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=favorites.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=favorites.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login?next=favorites" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register?next=favorites" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -449,7 +449,7 @@
     <div class="empty-state" id="emptyState">
       <svg class="heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
       <p data-i18n="favoritesPage.emptyText">Henüz favori öğretmenin yok.</p>
-      <a class="btn btn-light" href="teachers.html" data-i18n="favoritesPage.emptyCta">Öğretmenleri Keşfet →</a>
+      <a class="btn btn-light" href="teachers" data-i18n="favoritesPage.emptyCta">Öğretmenleri Keşfet →</a>
     </div>
 
   </main>
@@ -470,8 +470,8 @@
 
     function renderTeacherCard(teacher) {
 
-      const teacherLink = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
-      const bookingLink = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
+      const teacherLink = `teacher?teacher=${encodeURIComponent(teacher.id)}`;
+      const bookingLink = `booking?teacher=${encodeURIComponent(teacher.id)}&type=trial`;
       const ratingLabel = teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");
       const avatarInner = armusSafeUrl(teacher.photo)
         ? `<img src="${armusSafeUrl(teacher.photo)}" alt="">`

@@ -14,13 +14,13 @@
 
   <title>Öğretmen Başvurusu | ARMUS</title>
   <meta name="description" content="ARMUS'a İngilizce öğretmeni olarak katıl. Kendi programını belirle, online ders ver, kazancını takip et.">
-  <link rel="canonical" href="https://armus.com.tr/apply-teacher.html">
+  <link rel="canonical" href="https://armus.com.tr/apply-teacher">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ARMUS">
   <meta property="og:title" content="Öğretmen Başvurusu | ARMUS">
   <meta property="og:description" content="ARMUS'a İngilizce öğretmeni olarak katıl. Kendi programını belirle, online ders ver, kazancını takip et.">
   <meta property="og:image" content="https://armus.com.tr/og-image.png">
-  <meta property="og:url" content="https://armus.com.tr/apply-teacher.html">
+  <meta property="og:url" content="https://armus.com.tr/apply-teacher">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -679,15 +679,15 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
       <div class="nav-right">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
-        <a href="index.html" class="btn" data-i18n="nav.backHome">← Ana sayfa</a>
+        <a href="/" class="btn" data-i18n="nav.backHome">← Ana sayfa</a>
       </div>
     </div>
   </nav>
@@ -696,7 +696,7 @@
     <div class="gate" id="gate">
       <h1 data-i18n="applyTeacher.gateTitle">Bu sayfa öğretmenler için</h1>
       <p data-i18n="applyTeacher.gateText">Başvuru yapabilmen için önce öğretmen olarak kayıt olmalısın.</p>
-      <a class="btn btn-light" href="register.html?role=teacher" data-i18n="applyTeacher.gateCta">Öğretmen Olarak Kayıt Ol</a>
+      <a class="btn btn-light" href="register?role=teacher" data-i18n="applyTeacher.gateCta">Öğretmen Olarak Kayıt Ol</a>
     </div>
   </div>
 
@@ -938,7 +938,7 @@
           Bu başvuruda paylaştığım kimlik, iletişim, sertifika/eğitim ve
           video bilgilerimin, öğretmen başvurumu değerlendirmek ve
           onaylanırsam profilimi yayınlamak amacıyla işlenmesini
-          <a href="gizlilik-politikasi.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'na
+          <a href="gizlilik-politikasi" target="_blank" rel="noopener">Gizlilik Politikası</a>'na
           uygun şekilde kabul ediyorum.
         </span>
       </label>
@@ -960,7 +960,7 @@
         profilin Öğretmenler sayfasında yayına girecek ve bildirim
         alacaksın (panelinden de durumunu görebilirsin).
       </p>
-      <a class="btn btn-light" href="dashboard.html" data-i18n="applyTeacher.goToDashboard">Panelime git</a>
+      <a class="btn btn-light" href="dashboard" data-i18n="applyTeacher.goToDashboard">Panelime git</a>
     </div>
   </main>
 
@@ -1072,9 +1072,9 @@
       }
 
       // ---- weekly availability grid ----
-      // Same shape dashboard.html's grid saves: an array of 7 arrays of
+      // Same shape dashboard's grid saves: an array of 7 arrays of
       // "HH:MM" strings, indexed to match Date.prototype.getDay()
-      // (0 = Sunday ... 6 = Saturday) so booking.html needs no translation.
+      // (0 = Sunday ... 6 = Saturday) so booking needs no translation.
 
       const AVAIL_TIME_SLOTS = armusAllTimeSlots();
 
@@ -1146,7 +1146,7 @@
       }
 
       // converts weeklyState (display order) to the getDay()-indexed
-      // array the database and booking.html expect
+      // array the database and booking expect
       function getWeeklyAvailability() {
         const weeklyAvailability = [];
         AVAIL_DAY_ORDER.forEach((dayIndex, colIndex) => {
