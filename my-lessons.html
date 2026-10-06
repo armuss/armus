@@ -563,11 +563,11 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-      <a href="teachers.html" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="teachers" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
       </div>
@@ -580,8 +580,8 @@
       <h1 data-i18n="myLessons.gateTitle">Derslerini görmek için giriş yap</h1>
       <p data-i18n="myLessons.gateText">Rezervasyonlarını görebilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=my-lessons.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=my-lessons.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login?next=my-lessons" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register?next=my-lessons" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -595,7 +595,7 @@
 
     <div class="empty-state" id="emptyState">
       <p data-i18n="myLessons.emptyText">Henüz bir dersin yok.</p>
-      <a class="btn btn-light" href="teachers.html" data-i18n="myLessons.emptyCta">Öğretmen bul →</a>
+      <a class="btn btn-light" href="teachers" data-i18n="myLessons.emptyCta">Öğretmen bul →</a>
     </div>
 
   </main>
@@ -863,7 +863,7 @@
             // local calendar day off that - not compared as raw strings.
             const bookingLocalDateKey = localDateKey(armusZonedTimeToUtc(booking.date, booking.time, booking.teacherTimezone || "Europe/Istanbul"));
             // armusIsBookingPast flips true right at the lesson's scheduled
-            // end, but class.html (and armusCanJoinLessonNow) still admits
+            // end, but class (and armusCanJoinLessonNow) still admits
             // the student for ARMUS_JOIN_LATE_GRACE_MINUTES after that - so
             // isPast alone is NOT enough to decide whether to still show
             // the join button, or a running-late lesson's join button would
@@ -902,7 +902,7 @@
               ` : (canJoinNow || (!isPast && bookingLocalDateKey === todayKey)) ? `
                 <div class="lesson-join">
                   ${canJoinNow
-                    ? `<a class="join-btn" href="class.html?booking=${booking.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`
+                    ? `<a class="join-btn" href="class?booking=${booking.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`
                     : `<span class="join-hint">${armusT("myLessons.joinHint", "Ders saatinde bu kart üzerinden odaya katılabileceksin.")}</span>`}
                 </div>
               ` : ""}

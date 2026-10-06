@@ -584,15 +584,15 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
       <div class="nav-right">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
-        <a href="teachers.html" class="back" id="backLink" data-i18n="nav.backTeachers">← Öğretmenlere dön</a>
+        <a href="teachers" class="back" id="backLink" data-i18n="nav.backTeachers">← Öğretmenlere dön</a>
       </div>
     </div>
   </nav>
@@ -602,7 +602,7 @@
     <div class="not-found" id="notFound">
       <h1 data-i18n="booking.notFoundTitle">Öğretmen bulunamadı</h1>
       <p data-i18n="booking.notFoundText">Rezervasyon yapmak istediğin öğretmen mevcut değil.</p>
-      <a href="teachers.html" data-i18n="booking.notFoundLink">← Öğretmenlere dön</a>
+      <a href="teachers" data-i18n="booking.notFoundLink">← Öğretmenlere dön</a>
     </div>
   </div>
 
@@ -686,7 +686,7 @@
           <span data-i18n="booking.payerConsent">
             Telefon numaramın ve T.C. kimlik numaramın, bu rezervasyonu
             tamamlamak amacıyla ödeme sağlayıcımıza iletilmesini
-            <a href="gizlilik-politikasi.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'na
+            <a href="gizlilik-politikasi" target="_blank" rel="noopener">Gizlilik Politikası</a>'na
             uygun şekilde kabul ediyorum.
           </span>
         </label>
@@ -722,8 +722,8 @@
       </div>
 
       <div class="success-actions">
-        <a class="btn" href="my-lessons.html" data-i18n="booking.successMyLessons">Derslerimi gör</a>
-        <a class="btn btn-light" href="teachers.html" data-i18n="booking.successOtherTeachers">Diğer öğretmenlere bak</a>
+        <a class="btn" href="my-lessons" data-i18n="booking.successMyLessons">Derslerimi gör</a>
+        <a class="btn btn-light" href="teachers" data-i18n="booking.successOtherTeachers">Diğer öğretmenlere bak</a>
       </div>
     </div>
   </main>
@@ -743,7 +743,7 @@
     const teacherId = params.get("teacher");
     const bookingType = params.get("type") === "trial" ? "trial" : "lesson";
 
-    // came here from the calendar preview on teacher.html, which already
+    // came here from the calendar preview on teacher, which already
     // picked a date/time - skip straight to that slot instead of making
     // the student pick it again
     const preselectedDate = params.get("date");
@@ -778,19 +778,19 @@
 
       bookingRoot.style.display = "none";
 
-      const returnUrl = `booking.html?teacher=${encodeURIComponent(teacher.id)}&type=${bookingType}` +
+      const returnUrl = `booking?teacher=${encodeURIComponent(teacher.id)}&type=${bookingType}` +
         (preselectedDate ? `&date=${encodeURIComponent(preselectedDate)}` : "") +
         (preselectedTime ? `&time=${encodeURIComponent(preselectedTime)}` : "");
       document.getElementById("gateLoginLink").href =
-        `login.html?next=${encodeURIComponent(returnUrl)}`;
+        `login?next=${encodeURIComponent(returnUrl)}`;
       document.getElementById("gateRegisterLink").href =
-        `register.html?next=${encodeURIComponent(returnUrl)}`;
+        `register?next=${encodeURIComponent(returnUrl)}`;
 
       loginGate.style.display = "block";
 
     } else {
 
-      document.getElementById("backLink").href = `teacher.html?teacher=${encodeURIComponent(teacher.id)}`;
+      document.getElementById("backLink").href = `teacher?teacher=${encodeURIComponent(teacher.id)}`;
 
       const isTrial = bookingType === "trial";
 

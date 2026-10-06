@@ -246,15 +246,15 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
       <div class="nav-right">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
-        <a href="login.html" class="back" data-i18n="nav.backLogin">← Giriş sayfası</a>
+        <a href="login" class="back" data-i18n="nav.backLogin">← Giriş sayfası</a>
       </div>
     </div>
   </nav>
@@ -281,7 +281,7 @@
       </form>
 
       <div class="switch-note">
-        <span data-i18n="resetPw.rememberedText">Şifreni hatırladın mı?</span> <a href="login.html" data-i18n="resetPw.rememberedLink">Giriş yap</a>
+        <span data-i18n="resetPw.rememberedText">Şifreni hatırladın mı?</span> <a href="login" data-i18n="resetPw.rememberedLink">Giriş yap</a>
       </div>
     </div>
 
@@ -392,7 +392,7 @@
       updateSuccess.style.display = "block";
 
       await armusSignOut();
-      setTimeout(() => { window.location.href = "login.html"; }, 2500);
+      setTimeout(() => { window.location.href = "login"; }, 2500);
     });
 
     // Supabase fires this once the recovery link in the email has

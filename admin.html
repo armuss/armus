@@ -1127,10 +1127,10 @@
 <body>
 
   <div class="gate" id="gate">
-    <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
     <h1 id="gateTitle"></h1>
     <p id="gateText"></p>
-    <a class="gate-btn" href="login.html?next=admin.html" id="gateLink" data-i18n="admin.gateLoginBtn">Giriş yap</a>
+    <a class="gate-btn" href="login?next=admin" id="gateLink" data-i18n="admin.gateLoginBtn">Giriş yap</a>
   </div>
 
   <div class="shell" id="shell">
@@ -1159,7 +1159,7 @@
       <div class="sidebar-bottom">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
@@ -1512,7 +1512,7 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await armusSignOut();
-      window.location.href = "index.html";
+      window.location.href = "/";
     });
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
@@ -1572,8 +1572,8 @@
 
       // The attendance-protection system (migration_41.sql) can ban or
       // temporarily hide a teacher fully automatically, but until now
-      // nothing in admin.html ever showed that status here, or offered
-      // any way to reverse it - an admin reviewing an appeal (dashboard.html
+      // nothing in admin ever showed that status here, or offered
+      // any way to reverse it - an admin reviewing an appeal (dashboard
       // tells a hidden/banned teacher to "Bize Ulaş") had no way to do
       // anything about it except a manual SQL update outside the app.
       const isHiddenUntilActive = user.hidden_until && new Date(user.hidden_until) > new Date();
@@ -1600,7 +1600,7 @@
       } else if (user.hidden_from_new_students || isHiddenUntilActive) {
         actions += `<button class="btn btn-approve" data-account-action="unhide">${armusT("admin.removeHide", "Gizliliği Kaldır")}</button>`;
       }
-      actions += `<a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(user.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
+      actions += `<a class="btn" href="mesajlar?teacher=${encodeURIComponent(user.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
 
       const hasApplication = Boolean(user.status);
 
@@ -1940,7 +1940,7 @@
           <td>${count}</td>
           <td class="row-actions">
             <button class="btn" data-view-student="${s.id}">${armusT("admin.details", "Detaylar")}</button>
-            <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(s.id)}">${armusT("admin.messageBtn", "Mesaj")}</a>
+            <a class="btn" href="mesajlar?teacher=${encodeURIComponent(s.id)}">${armusT("admin.messageBtn", "Mesaj")}</a>
           </td>
         `;
         body.appendChild(tr);
@@ -2513,7 +2513,7 @@
               <div class="app-email">${armusEscapeHtml(teacher.email)}</div>
             </div>
             <div class="app-actions">
-              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
+              <a class="btn" href="mesajlar?teacher=${encodeURIComponent(teacher.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
             </div>
           </div>
           <div class="app-details">
@@ -2586,7 +2586,7 @@
                 <button class="btn btn-approve" data-attendance-status="${r.id}" data-new-status="upheld">${armusT("admin.attendanceUphold", "Doğrula")}</button>
                 <button class="btn btn-reject" data-attendance-status="${r.id}" data-new-status="dismissed">${armusT("admin.attendanceDismiss", "Reddet")}</button>
               ` : ""}
-              <a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(r.teacherId)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
+              <a class="btn" href="mesajlar?teacher=${encodeURIComponent(r.teacherId)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
             </div>
           </div>
           <div class="app-details">
@@ -2805,7 +2805,7 @@
               <div class="app-name">${armusEscapeHtml(r.student_name)}</div>
               <div class="app-email">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)} · ${armusT("admin.teacherColon", "öğretmen:")} ${armusEscapeHtml(teacher ? teacher.name : r.teacher_id)}</div>
             </div>
-            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar.html?teacher=${encodeURIComponent(teacher.id)}">${armusT("admin.messageTeacher", "Öğretmene Mesaj")}</a></div>` : ""}
+            ${teacher ? `<div class="app-actions"><a class="btn" href="mesajlar?teacher=${encodeURIComponent(teacher.id)}">${armusT("admin.messageTeacher", "Öğretmene Mesaj")}</a></div>` : ""}
           </div>
           <div class="app-details">
             <div class="app-full"><h4>${armusT("admin.testimonialQuote", "Yorum")}</h4><p>${armusEscapeHtml(r.comment) || "—"}</p></div>
@@ -2816,7 +2816,7 @@
     }
 
     // ---- commission / payout ledger ----
-    // Same tiering logic dashboard.html shows each teacher for themselves,
+    // Same tiering logic dashboard shows each teacher for themselves,
     // applied here across every teacher at once.
 
     const ADMIN_COMMISSION_RANGE_KEYS = [

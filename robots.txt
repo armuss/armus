@@ -1,12 +1,12 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /dashboard.html
-Disallow: /student-dashboard.html
-Disallow: /booking.html
-Disallow: /class.html
-Disallow: /mesajlar.html
-Disallow: /my-lessons.html
-Disallow: /sifre-sifirla.html
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /student-dashboard
+Disallow: /booking
+Disallow: /class
+Disallow: /mesajlar
+Disallow: /my-lessons
+Disallow: /sifre-sifirla
 
 Sitemap: https://armus.com.tr/sitemap.xml

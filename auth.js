@@ -28,15 +28,15 @@ function armusShortDisplayName(fullName) {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-// login.html/register.html redirect to ?next=... after a successful
+// login/register redirect to ?next=... after a successful
 // sign-in/sign-up, straight from the URL with no validation - an
-// attacker-crafted link like armus.com.tr/login.html?next=https://evil.example/phish
+// attacker-crafted link like armus.com.tr/login?next=https://evil.example/phish
 // looks legitimate (the domain really is armus.com.tr) and passes a
 // glance at the URL, but after the victim genuinely authenticates, this
 // silently bounces them to an attacker-controlled page (classic open
 // redirect, e.g. for a fake "session expired, re-enter your password"
 // page). Legitimate callers do sometimes pass a full absolute URL (e.g.
-// class.html uses window.location.href), so this can't just reject any
+// class uses window.location.href), so this can't just reject any
 // value with a scheme - it resolves the value and only accepts it if it
 // stays on ARMUS's own origin.
 function armusSafeNextUrl(value) {
@@ -69,11 +69,11 @@ async function armusSignOut() {
 
 // Sends a password-reset email (if that address has an account - Supabase
 // doesn't reveal either way, so neither do we). The link in that email
-// brings the user back to sifre-sifirla.html with a recovery session,
+// brings the user back to sifre-sifirla with a recovery session,
 // where armusUpdatePassword actually sets the new password.
 async function armusRequestPasswordReset(email) {
   return armusSupabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/sifre-sifirla.html`,
+    redirectTo: `${window.location.origin}/sifre-sifirla`,
   });
 }
 
@@ -139,7 +139,7 @@ function armusRefreshOwnTimezone(profile) {
 // A brand-new signup gets a fully active, usable Supabase Auth session
 // the instant armusSignUp() returns (send-verification-email/
 // verify-email-code both need that session's own JWT to know who
-// they're verifying) - register.html's 6-digit-code step was only ever
+// they're verifying) - register's 6-digit-code step was only ever
 // a UI suggestion the user could just navigate away from, never an
 // actual gate: nothing anywhere (this site's pages or any Edge
 // Function) ever checked email_verified before letting a session book,
@@ -166,16 +166,16 @@ function armusNeedsEmailVerification(profile) {
 // since armusRenderNavAuth exits immediately on any page without a
 // #navAuthButtons element (e.g. a page with no standard header) and
 // this gate has to hold everywhere, including exactly the pages most
-// worth reaching before verifying (class.html, booking.html, ...).
-// register.html/login.html are exempt: register.html is where
-// verification actually happens, and login.html never renders gated
+// worth reaching before verifying (class, booking, ...).
+// register/login are exempt: register is where
+// verification actually happens, and login never renders gated
 // content itself - whatever it redirects to after a successful sign-in
 // gets caught by this same check on its own next page load.
 async function armusEnforceEmailVerification() {
-  if (/(^|\/)(register|login)\.html$/.test(location.pathname)) return;
+  if (/(^|\/)(register|login)(\.html)?\/?$/.test(location.pathname)) return;
   const session = await armusGetSession().catch(() => null);
   if (!armusNeedsEmailVerification(session)) return;
-  window.location.href = "register.html?resume=1";
+  window.location.href = "register?resume=1";
 }
 document.addEventListener("DOMContentLoaded", armusEnforceEmailVerification);
 
@@ -215,7 +215,7 @@ async function armusAdminUpdateProfile(profileId, updates) {
 
 // Collapsed-avatar / dropdown-head avatar markup shared by the global nav
 // (armusRenderStudentNav below) and any page that builds its own copy of
-// the same header statically (student-dashboard.html, settings.html keep
+// the same header statically (student-dashboard, settings keep
 // their own local copy of this logic, since their avatar also needs to
 // update instantly on a photo upload).
 function armusAvatarInitials(name) {
@@ -234,8 +234,8 @@ function armusAvatarInner(photoUrl, name) {
 
 // Wherever a logged-in student is in their panel, clicking the ARMUS
 // mark top-left should take them back to their panel - most pages still
-// point it at index.html (my-lessons.html, teacher.html, teachers.html),
-// index.html's own points nowhere (href="#"), and mesajlar.html doesn't
+// point it at index.html (my-lessons, teacher, teachers),
+// index.html's own points nowhere (href="#"), and mesajlar doesn't
 // link it at all. Every page's header mark is ".logo" except index.html,
 // which uses ".brand" for both its header mark and an unrelated footer
 // mark - "header.nav a.brand" scopes to the header one there without
@@ -297,7 +297,7 @@ async function armusRenderGnavBell(session) {
         ? (c.lastMessage.body || armusT("studentDash.navBellAttachment", "📎 Ek gönderdi"))
         : "";
       items.push(`
-        <a class="gnav-bell-item" href="mesajlar.html">
+        <a class="gnav-bell-item" href="mesajlar">
           <strong>${armusEscapeHtml(armusShortDisplayName(c.otherName))}</strong>
           <span>${armusEscapeHtml(preview.length > 60 ? preview.slice(0, 60) + "…" : preview)}</span>
         </a>
@@ -318,7 +318,7 @@ async function armusRenderGnavBell(session) {
     soonBookings.slice(0, 2).forEach(b => {
       const when = armusFormatLessonWhen(b);
       items.push(`
-        <a class="gnav-bell-item" href="class.html?booking=${b.id}">
+        <a class="gnav-bell-item" href="class?booking=${b.id}">
           <strong>${armusT("studentDash.navBellSoon", "Yaklaşan dersin")}</strong>
           <span>${armusEscapeHtml(armusShortDisplayName(b.teacherName))} · ${when.dateLabel}, ${when.timeRange}</span>
         </a>
@@ -340,7 +340,7 @@ async function armusRenderGnavBell(session) {
 
 // Preply-style icon row + notification/profile dropdowns, injected into
 // #navAuthButtons for a logged-in student on every page that has it
-// (student-dashboard.html/settings.html build their own static copy of
+// (student-dashboard/settings build their own static copy of
 // this same header instead, since they need it visible before this
 // script's session check and already wire their own avatar-on-upload
 // updates - this is for every other page).
@@ -375,12 +375,12 @@ async function armusRenderStudentNav(el, session, firstName) {
   }
 
   el.innerHTML = `
-    <a class="btn gnav-refer-btn" href="referral.html">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
+    <a class="btn gnav-refer-btn" href="referral">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
     ${creditBadge}
-    <a class="gnav-icon-btn" href="mesajlar.html" title="${armusT("nav.messages", "Mesajlar")}" aria-label="${armusT("nav.messages", "Mesajlar")}">
+    <a class="gnav-icon-btn" href="mesajlar" title="${armusT("nav.messages", "Mesajlar")}" aria-label="${armusT("nav.messages", "Mesajlar")}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
     </a>
-    <a class="gnav-icon-btn" href="favorites.html" title="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}" aria-label="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}">
+    <a class="gnav-icon-btn" href="favorites" title="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}" aria-label="${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
     </a>
     <div class="gnav-dropdown-wrap">
@@ -399,13 +399,13 @@ async function armusRenderStudentNav(el, session, firstName) {
           <div class="gnav-avatar">${avatarInner}</div>
           <div class="gnav-dropdown-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)}</div>
         </div>
-        <a href="student-dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>
-        <a href="mesajlar.html">${armusT("nav.messages", "Mesajlar")}</a>
-        <a href="my-lessons.html">${armusT("studentDash.navSchedule", "Derslerim")}</a>
-        <a href="favorites.html">${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}</a>
-        <a href="referral.html">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
-        <a href="settings.html">${armusT("nav.settings", "Ayarlar")}</a>
-        <a href="sss.html">${armusT("nav.help", "Yardım")}</a>
+        <a href="student-dashboard">${armusT("nav.myPanel", "Panelim")}</a>
+        <a href="mesajlar">${armusT("nav.messages", "Mesajlar")}</a>
+        <a href="my-lessons">${armusT("studentDash.navSchedule", "Derslerim")}</a>
+        <a href="favorites">${armusT("studentDash.favTeachers", "Favori Öğretmenlerin")}</a>
+        <a href="referral">${armusT("studentDash.navRefer", "Arkadaşını Davet Et")}</a>
+        <a href="settings">${armusT("nav.settings", "Ayarlar")}</a>
+        <a href="sss">${armusT("nav.help", "Yardım")}</a>
         <hr>
         <button type="button" id="gnavLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
       </div>
@@ -435,7 +435,7 @@ async function armusRenderStudentNav(el, session, firstName) {
   }
 
   armusRenderGnavBell(session);
-  armusLinkLogoToPanel("student-dashboard.html");
+  armusLinkLogoToPanel("student-dashboard");
 }
 
 async function armusRenderNavAuth() {
@@ -449,14 +449,14 @@ async function armusRenderNavAuth() {
 
     const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
     el.innerHTML = `
-      <a class="btn" href="admin.html">${armusT("nav.adminPanel", "Admin Paneli")}</a>
+      <a class="btn" href="admin">${armusT("nav.adminPanel", "Admin Paneli")}</a>
       <span class="nav-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)} <small>(${armusT("nav.roleAdmin", "Admin")})</small></span>
       <button class="btn" id="armusLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
     `;
 
     document.getElementById("armusLogoutBtn").addEventListener("click", async () => {
       await armusSignOut();
-      window.location.href = "index.html";
+      window.location.href = "/";
     });
 
   } else if (session && session.role === "student") {
@@ -468,7 +468,7 @@ async function armusRenderNavAuth() {
 
     const firstName = armusEscapeHtml(armusCapitalizeName(session.name).split(" ")[0]);
     const roleLabel = armusT("nav.roleTeacher", "Öğretmen");
-    const dashboardLink = `<a class="btn" href="dashboard.html">${armusT("nav.myPanel", "Panelim")}</a>`;
+    const dashboardLink = `<a class="btn" href="dashboard">${armusT("nav.myPanel", "Panelim")}</a>`;
 
     el.innerHTML = `
       ${dashboardLink}
@@ -499,14 +499,14 @@ async function armusRenderNavAuth() {
         return;
       }
 
-      window.location.href = "index.html";
+      window.location.href = "/";
     });
 
   } else {
 
     el.innerHTML = `
-      <a class="btn" href="login.html" data-i18n="nav.login">Giriş Yap</a>
-      <a class="btn btn-light" href="register.html" data-i18n="nav.register">Kayıt Ol</a>
+      <a class="btn" href="login" data-i18n="nav.login">Giriş Yap</a>
+      <a class="btn btn-light" href="register" data-i18n="nav.register">Kayıt Ol</a>
     `;
   }
 

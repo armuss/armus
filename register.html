@@ -14,7 +14,7 @@
 
   <title>Kayıt Ol | ARMUS</title>
   <meta name="description" content="Ücretsiz ARMUS hesabı oluştur, sana uygun İngilizce öğretmenini bul ve ilk dersini ayarla.">
-  <link rel="canonical" href="https://armus.com.tr/register.html">
+  <link rel="canonical" href="https://armus.com.tr/register">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -305,15 +305,15 @@
 
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
       <div class="nav-right">
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
-        <a href="index.html" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
+        <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
       </div>
     </div>
   </nav>
@@ -388,15 +388,15 @@
       <button type="submit" class="submit-btn" id="submitBtn" data-i18n="register.submit">Hesap Oluştur</button>
 
       <p class="consent-note" data-i18n="register.consentNote">
-        Hesap oluşturarak <a href="kullanim-sartlari.html" target="_blank" rel="noopener">Kullanım Şartları</a>'nı
-        ve <a href="gizlilik-politikasi.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'nı
+        Hesap oluşturarak <a href="kullanim-sartlari" target="_blank" rel="noopener">Kullanım Şartları</a>'nı
+        ve <a href="gizlilik-politikasi" target="_blank" rel="noopener">Gizlilik Politikası</a>'nı
         kabul etmiş olursun.
       </p>
 
     </form>
 
     <div class="switch-note">
-      <span data-i18n="register.switchText">Zaten hesabın var mı?</span> <a href="login.html" id="switchToLogin" data-i18n="register.switchLink">Giriş yap</a>
+      <span data-i18n="register.switchText">Zaten hesabın var mı?</span> <a href="login" id="switchToLogin" data-i18n="register.switchLink">Giriş yap</a>
     </div>
 
     </div>
@@ -476,7 +476,7 @@
 
     if (nextParam) {
       document.getElementById("switchToLogin").href =
-        `login.html?next=${encodeURIComponent(nextParam)}`;
+        `login?next=${encodeURIComponent(nextParam)}`;
     }
 
     const form = document.getElementById("registerForm");
@@ -534,7 +534,7 @@
 
       if (error) {
         // Deliberately the same message whether or not this email is
-        // already registered - matching login.html/sifre-sifirla.html,
+        // already registered - matching login/sifre-sifirla,
         // which both avoid an "account exists" oracle. Branching the
         // copy on Supabase's "already registered" error let anyone
         // script signup attempts against a wordlist of emails and learn
@@ -571,9 +571,9 @@
 
     function proceedAfterVerification() {
       if (selectedRole === "teacher") {
-        window.location.href = "apply-teacher.html";
+        window.location.href = "apply-teacher";
       } else {
-        window.location.href = armusSafeNextUrl(nextParam) || "student-dashboard.html";
+        window.location.href = armusSafeNextUrl(nextParam) || "student-dashboard";
       }
     }
 
@@ -617,7 +617,7 @@
     // from the URL's ?role= above, which is meaningless for a resumed
     // session (there's no ?role= on this redirect) - overwritten here
     // from the real session's own role so proceedAfterVerification still
-    // sends a teacher to apply-teacher.html, not student-dashboard.html.
+    // sends a teacher to apply-teacher, not student-dashboard.
     if (searchParams.get("resume") === "1") {
       (async function resumeVerification() {
         const session = await armusGetSession().catch(() => null);

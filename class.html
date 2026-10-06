@@ -456,30 +456,30 @@
 <body>
 
   <div class="state-screen" id="gate">
-    <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
     <h1 id="gateTitle"></h1>
     <p id="gateText"></p>
     <div id="gateActions"></div>
   </div>
 
   <div class="state-screen" id="tooEarly">
-    <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
     <h1 data-i18n="class.tooEarlyTitle">Ders zamanı henüz gelmedi</h1>
     <p data-i18n="class.tooEarlyText">Bu odaya dersin başlamasına <strong id="minutesUntil"></strong> dakika kala girebilirsin.</p>
     <div class="lesson-meta" id="tooEarlyMeta"></div>
-    <a class="btn" id="tooEarlyBack" href="my-lessons.html" data-i18n="class.backToLessons">← Derslerime dön</a>
+    <a class="btn" id="tooEarlyBack" href="my-lessons" data-i18n="class.backToLessons">← Derslerime dön</a>
   </div>
 
   <div class="state-screen" id="tooLate">
-    <a href="index.html" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
     <h1 data-i18n="class.tooLateTitle">Bu ders sona erdi</h1>
     <p data-i18n="class.tooLateText">Bu dersin oda süresi doldu. Yeni bir ders için tekrar rezervasyon yapabilirsin.</p>
-    <a class="btn btn-light" id="tooLateBack" href="my-lessons.html" data-i18n="class.backToLessons">← Derslerime dön</a>
+    <a class="btn btn-light" id="tooLateBack" href="my-lessons" data-i18n="class.backToLessons">← Derslerime dön</a>
   </div>
 
   <div class="room" id="room">
     <div class="room-bar">
-      <a href="index.html" class="logo"><img src="logo-cream.png" alt="ARMUS" class="logo-img"></a>
+      <a href="/" class="logo"><img src="logo-cream.png" alt="ARMUS" class="logo-img"></a>
       <span class="lesson-with" id="lessonWith"></span>
       <button type="button" class="btn report-issue-btn" id="reportIssueBtn" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -572,7 +572,7 @@
         showGate(
           armusT("class.gateNoBookingTitle", "Ders odası bulunamadı"),
           armusT("class.gateNoBookingText", "Geçerli bir ders bağlantısıyla buraya gelmelisin."),
-          `<a class="btn btn-light" href="my-lessons.html">${armusT("class.backToLessonsPlain", "Derslerime dön")}</a>`
+          `<a class="btn btn-light" href="my-lessons">${armusT("class.backToLessonsPlain", "Derslerime dön")}</a>`
         );
         return;
       }
@@ -586,7 +586,7 @@
         showGate(
           armusT("class.gateLoginTitle", "Giriş yapmalısın"),
           armusT("class.gateLoginText", "Bu ders odasına girmek için hesabınla giriş yapmalısın."),
-          `<a class="btn btn-light" href="login.html?next=${encodeURIComponent(window.location.href)}">${armusT("nav.login", "Giriş Yap")}</a>`
+          `<a class="btn btn-light" href="login?next=${encodeURIComponent(window.location.href)}">${armusT("nav.login", "Giriş Yap")}</a>`
         );
         return;
       }
@@ -603,7 +603,7 @@
         showGate(
           armusT("class.gateNoAccessTitle", "Bu derse erişimin yok"),
           armusT("class.gateNoAccessText", "Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin."),
-          `<a class="btn btn-light" href="my-lessons.html">${armusT("class.backToLessonsPlain", "Derslerime dön")}</a>`
+          `<a class="btn btn-light" href="my-lessons">${armusT("class.backToLessonsPlain", "Derslerime dön")}</a>`
         );
         return;
       }
@@ -623,12 +623,12 @@
         showGate(
           armusT("class.gateNotParticipantTitle", "Bu canlı derse katılamazsın"),
           armusT("class.gateNotParticipantText", "Bu dersin öğrencisi ya da öğretmeni değilsin, bu yüzden canlı görüşmeye katılamazsın."),
-          `<a class="btn btn-light" href="admin.html">${armusT("class.backToAdmin", "← Yönetim paneline dön")}</a>`
+          `<a class="btn btn-light" href="admin">${armusT("class.backToAdmin", "← Yönetim paneline dön")}</a>`
         );
         return;
       }
 
-      const backHref = isTeacher ? "dashboard.html" : "my-lessons.html";
+      const backHref = isTeacher ? "dashboard" : "my-lessons";
       document.getElementById("tooEarlyBack").href = backHref;
       document.getElementById("tooLateBack").href = backHref;
 

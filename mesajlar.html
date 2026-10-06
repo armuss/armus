@@ -229,7 +229,7 @@
        they're a teacher - armusFindMarketplaceTeacher returns null for a
        student, so this whole section just stays empty when a teacher
        account is the one viewing this page), your next lesson together
-       if any, and a quick way back to booking.html. */
+       if any, and a quick way back to booking. */
 
     .convo-context {
       border-left: 1px solid var(--armus-border-soft);
@@ -848,10 +848,10 @@
   <nav>
     <div class="nav-inner">
       <span class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></span>
-      <a href="teachers.html" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
+      <a href="teachers" class="nav-find-tutor" data-i18n="nav.findTutor">Öğretmen Bul</a>
       <div class="nav-utility">
         <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-        <a class="help-btn" href="sss.html" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </a>
       </div>
@@ -864,8 +864,8 @@
       <h1 data-i18n="messages.gateTitle">Mesajlarını görmek için giriş yap</h1>
       <p data-i18n="messages.gateText">Öğretmenlerinle veya öğrencilerinle yazışabilmek için önce bir hesabın olması gerekiyor.</p>
       <div class="gate-actions">
-        <a class="btn" href="login.html?next=mesajlar.html" data-i18n="nav.login">Giriş Yap</a>
-        <a class="btn btn-light" href="register.html?next=mesajlar.html" data-i18n="nav.register">Kayıt Ol</a>
+        <a class="btn" href="login?next=mesajlar" data-i18n="nav.login">Giriş Yap</a>
+        <a class="btn btn-light" href="register?next=mesajlar" data-i18n="nav.register">Kayıt Ol</a>
       </div>
     </div>
   </div>
@@ -1073,7 +1073,7 @@
             <strong>${armusT("messages.contextTotalLessons", "Toplam Ders")}</strong>
             <span>${escapeHtml(teacher.completedLessons)} ${armusT("teacherProfile.lessonsWord", "ders")}${teacher.rating ? ` · ★${teacher.rating}` : ""}</span>
           </div>
-          <a class="context-btn" href="booking.html?teacher=${encodeURIComponent(otherId)}&type=trial">${armusT("messages.contextBookBtn", "Ders Rezervasyonu Yap")}</a>
+          <a class="context-btn" href="booking?teacher=${encodeURIComponent(otherId)}&type=trial">${armusT("messages.contextBookBtn", "Ders Rezervasyonu Yap")}</a>
         `;
       }
 

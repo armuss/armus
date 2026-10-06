@@ -42,7 +42,7 @@ const ARMUS_I18N_EN = {
   "nav.creditsBadge": "{n} lesson credits available",
   "nav.creditsTooltip": "Available lesson credits: {teachers}",
 
-  // settings.html
+  // settings
   "settings.title": "Account Settings",
   "settings.tabAccount": "Account",
   "settings.tabPassword": "Password",
@@ -69,7 +69,7 @@ const ARMUS_I18N_EN = {
   "settings.deleteWarningTitle": "Delete Your Account",
   "settings.deleteButton": "Delete My Account",
 
-  // favorites.html
+  // favorites
   "favoritesPage.eyebrow": "MY FAVORITES",
   "favoritesPage.title": "My Favorite Teachers",
   "favoritesPage.countTitle": "{n} Saved Teacher",
@@ -78,7 +78,7 @@ const ARMUS_I18N_EN = {
   "favoritesPage.emptyText": "You haven't saved any teachers yet.",
   "favoritesPage.emptyCta": "Explore teachers →",
 
-  // referral.html
+  // referral
   "referralPage.gateTitle": "Log in to invite a friend",
   "referralPage.gateText": "You need an account before you can see your invite link.",
   "referralPage.step1Title": "Share your link",
@@ -155,7 +155,7 @@ const ARMUS_I18N_EN = {
   "index.newsletterSuccess": "Thanks! You've been added to the list. ✓",
   "index.footer.copyright": "© 2026 ARMUS. All rights reserved.",
 
-  // login.html
+  // login
   "login.eyebrow": "WELCOME BACK",
   "login.title": "Log in",
   "login.emailLabel": "Email",
@@ -168,7 +168,7 @@ const ARMUS_I18N_EN = {
   "login.switchLink": "Sign up",
   "login.wrongCredentials": "Wrong email or password.",
 
-  // register.html
+  // register
   "register.eyebrow": "JOIN ARMUS",
   "register.title": "Create an account",
   "register.roleStudent": "As a student",
@@ -185,7 +185,7 @@ const ARMUS_I18N_EN = {
   "register.password2Label": "Confirm password",
   "register.password2Placeholder": "Re-type your password",
   "register.submit": "Create Account",
-  "register.consentNote": "By creating an account, you agree to our <a href=\"kullanim-sartlari.html\" target=\"_blank\" rel=\"noopener\">Terms of Use</a> and <a href=\"gizlilik-politikasi.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
+  "register.consentNote": "By creating an account, you agree to our <a href=\"kullanim-sartlari\" target=\"_blank\" rel=\"noopener\">Terms of Use</a> and <a href=\"gizlilik-politikasi\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
   "register.switchText": "Already have an account?",
   "register.switchLink": "Log in",
   "register.verifyEyebrow": "LAST STEP",
@@ -209,7 +209,7 @@ const ARMUS_I18N_EN = {
   "register.errCodeInvalid": "Couldn't verify the code. Try again.",
   "register.errCodeResendFailed": "Couldn't send the code.",
 
-  // hakkimizda.html
+  // hakkimizda
   "about.eyebrow": "ABOUT ARMUS",
   "about.heroTitle": "A two-person idea became a community of thousands of students.",
   "about.heroSubtitle": "The story behind ARMUS started with a simple question: why should finding the right English teacher be this hard?",
@@ -239,7 +239,7 @@ const ARMUS_I18N_EN = {
   "about.closingTitle": "Join our community too.",
   "about.closingCta": "Find Your Teacher →",
 
-  // how-it-works.html
+  // how-it-works
   "howItWorks.eyebrow": "DISCOVER THE PROCESS",
   "howItWorks.heroTitle": "A simple process, a lasting result.",
   "howItWorks.heroSubtitle": "Start with a trial lesson, move forward with a plan built for you, and watch your progress in your vocabulary vault and speaking tracker.",
@@ -264,7 +264,7 @@ const ARMUS_I18N_EN = {
   "howItWorks.ctaTitle": "Your process starts now.",
   "howItWorks.ctaButton": "Find Your Teacher →",
 
-  // iletisim.html
+  // iletisim
   "contact.eyebrow": "CONTACT",
   "contact.title": "Get in touch",
   "contact.intro": "Have a question, suggestion or complaint? Reach us using the info below or the form, and we'll get back to you as soon as we can.",
@@ -278,7 +278,7 @@ const ARMUS_I18N_EN = {
   "contact.submitting": "Sending...",
   "contact.sentMsg": "Your message was received, thanks! We'll get back to you as soon as we can.",
 
-  // gizlilik-politikasi.html
+  // gizlilik-politikasi
   "privacy.eyebrow": "LEGAL",
   "privacy.title": "Privacy Policy",
   "privacy.updated": "Last updated: 26.09.2026",
@@ -302,12 +302,12 @@ const ARMUS_I18N_EN = {
   "privacy.s4Title": "4. Where do we store your data?",
   "privacy.s4Text": "Your data is stored in a secure database hosted on Supabase's infrastructure, protected by row-level access rules (Row Level Security) - meaning every user can only access their own data, and other users' public information (like a teacher's profile) only to the extent the platform allows.",
   "privacy.s5Title": "5. Your rights (KVKK)",
-  "privacy.s5Text": "Under Turkey's Personal Data Protection Law No. 6698 (\"KVKK\"), you have the right to: learn whether your personal data is being processed; request information about it if it is; learn the purpose of processing and whether it's used accordingly; know the third parties, in Turkey or abroad, your data is shared with; request correction if it's processed incompletely or incorrectly; request its deletion or destruction once the reasons requiring it no longer apply; request that correction/deletion be reported to the third parties your data was shared with; object to a result that emerges to your detriment through analysis solely by automated systems; and claim compensation if you're harmed by unlawful processing. You can reach us through our <a href=\"iletisim.html\">contact page</a> to exercise these rights.",
+  "privacy.s5Text": "Under Turkey's Personal Data Protection Law No. 6698 (\"KVKK\"), you have the right to: learn whether your personal data is being processed; request information about it if it is; learn the purpose of processing and whether it's used accordingly; know the third parties, in Turkey or abroad, your data is shared with; request correction if it's processed incompletely or incorrectly; request its deletion or destruction once the reasons requiring it no longer apply; request that correction/deletion be reported to the third parties your data was shared with; object to a result that emerges to your detriment through analysis solely by automated systems; and claim compensation if you're harmed by unlawful processing. You can reach us through our <a href=\"iletisim\">contact page</a> to exercise these rights.",
   "privacy.s6Title": "6. Contact us",
-  "privacy.s6Text": "For questions about this privacy policy, you can reach us through our <a href=\"iletisim.html\">contact page</a>.",
+  "privacy.s6Text": "For questions about this privacy policy, you can reach us through our <a href=\"iletisim\">contact page</a>.",
   "privacy.note": "ARMUS is a continuously evolving platform, and we may update this policy from time to time. We'll try to notify you of significant changes. The current version always lives on this page.",
 
-  // kullanim-sartlari.html
+  // kullanim-sartlari
   "terms.eyebrow": "LEGAL",
   "terms.title": "Terms of Use",
   "terms.updated": "Last updated: 17.09.2026",
@@ -333,9 +333,9 @@ const ARMUS_I18N_EN = {
   "terms.s7Text": "The ARMUS platform is provided \"as is\"; uninterrupted or error-free operation is not guaranteed. Teachers are responsible for the quality of lessons given, and students for the quality of their own learning. ARMUS is not itself a party to the lesson between a teacher and a student - it provides the platform that connects them.",
   "terms.s8Title": "8. Changes",
   "terms.s8Text": "We may update these terms from time to time. We'll try to notify you of significant changes. The current version always lives on this page.",
-  "terms.note": "Questions about these terms? You can reach us through our <a href=\"iletisim.html\">contact page</a>.",
+  "terms.note": "Questions about these terms? You can reach us through our <a href=\"iletisim\">contact page</a>.",
 
-  // sss.html
+  // sss
   "faq.eyebrow": "HELP",
   "faq.title": "Frequently Asked Questions",
   "faq.intro": "The most common questions from students and teachers, answered. Can't find what you're looking for? Get in touch.",
@@ -368,13 +368,13 @@ const ARMUS_I18N_EN = {
   "faq.ctaText": "Couldn't find the answer you were looking for?",
   "faq.ctaBtn": "Contact us",
 
-  // 404.html
+  // 404
   "notFound.title": "We couldn't find this page",
   "notFound.text": "The page you're looking for may have moved, or never existed. You can head back to the homepage and continue from there.",
   "notFound.home": "Back to Homepage",
   "notFound.teachers": "See Teachers",
 
-  // sifre-sifirla.html
+  // sifre-sifirla
   "nav.backLogin": "← Back to login",
   "resetPw.eyebrow": "GET BACK TO YOUR ACCOUNT",
   "resetPw.title": "Reset your password",
@@ -401,7 +401,7 @@ const ARMUS_I18N_EN = {
   "resetPw.updating": "Updating...",
   "resetPw.linkExpired": "The link may have expired. Please try again.",
 
-  // booking.html (static shell only - dynamic slot/date/price text stays as rendered by JS)
+  // booking (static shell only - dynamic slot/date/price text stays as rendered by JS)
   "nav.backTeachers": "← Back to teachers",
   "booking.notFoundTitle": "Teacher not found",
   "booking.notFoundText": "The teacher you're trying to book doesn't exist.",
@@ -422,7 +422,7 @@ const ARMUS_I18N_EN = {
   "booking.confirmCreditApplied": "Free",
   "booking.payerPhoneLabel": "Phone number",
   "booking.payerIdentityLabel": "National ID number",
-  "booking.payerConsent": "I agree that my phone number and national ID number will be sent to our payment provider to complete this booking, in accordance with our <a href=\"gizlilik-politikasi.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
+  "booking.payerConsent": "I agree that my phone number and national ID number will be sent to our payment provider to complete this booking, in accordance with our <a href=\"gizlilik-politikasi\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
   "booking.consentRequired": "To continue, you need to agree to the processing of your ID and payment information.",
   "booking.confirmNote": "You'll be redirected to a secure payment page",
   "booking.noSlotsThisDate": "No free slots on this date, try another day.",
@@ -452,7 +452,7 @@ const ARMUS_I18N_EN = {
   "booking.paymentTimePassed": "The lesson time you picked passed before your payment finished. Your payment was converted into a lesson credit - you can pick a different time below.",
   "booking.creditNoLongerAvailable": "Your lesson credit was used elsewhere in the meantime. Please enter payment details to continue.",
 
-  // my-lessons.html (top-level shell only - individual lesson cards,
+  // my-lessons (top-level shell only - individual lesson cards,
   // review/dispute forms stay Turkish for now, see note in the code)
   "myLessons.gateTitle": "Log in to see your lessons",
   "myLessons.gateText": "You need an account before you can see your bookings.",
@@ -493,7 +493,7 @@ const ARMUS_I18N_EN = {
 
   // wallet.html (currently disabled/unreachable in production - top-level shell only)
 
-  // class.html (static state screens only - the live-lesson room bar has
+  // class (static state screens only - the live-lesson room bar has
   // no toggle of its own, but already-chosen language still applies)
   "class.tooEarlyTitle": "It's not time for your lesson yet",
   "class.tooEarlyText": "You can enter this room <strong id=\"minutesUntil\"></strong> minutes before your lesson starts.",
@@ -535,7 +535,7 @@ const ARMUS_I18N_EN = {
   "class.postClassNoteFor": "Note for",
   "class.postClassNotePlaceholder": "A short note about this student (only you see it)",
 
-  // mesajlar.html (top-level shell only - conversation list and chat
+  // mesajlar (top-level shell only - conversation list and chat
   // bubbles stay Turkish for now, see note in the code)
   "messages.gateTitle": "Log in to see your messages",
   "messages.gateText": "You need an account before you can message your teachers or students.",
@@ -572,7 +572,7 @@ const ARMUS_I18N_EN = {
   "messages.recordingTooShort": "Recording was too short, try again.",
   "messages.voiceFailed": "Couldn't send the voice message. Please try again.",
 
-  // dashboard.html (teacher dashboard) - sidebar nav, top-level labels
+  // dashboard (teacher dashboard) - sidebar nav, top-level labels
   // only; the dense stats/digest/booking-list panels stay Turkish
   "teacherDash.tag": "TEACHER PANEL",
   "teacherDash.navOverview": "Overview",
@@ -690,7 +690,7 @@ const ARMUS_I18N_EN = {
   "teacherDash.noBookingsYet": "No bookings yet. Your profile is visible on the Teachers page — once a student finds you and books a lesson, it'll be listed here.",
   "teacherDash.availabilityHint": "Click an empty area and drag down to add availability for that day. You can resize a block by dragging its top or bottom edge, move it by its body, or hover and delete it with ×. This schedule works by day of the week, not a specific date, and repeats every week. Changes apply instantly, no approval needed.",
 
-  // student-dashboard.html - sidebar/top-level labels only; the stats
+  // student-dashboard - sidebar/top-level labels only; the stats
   // row, confidence card, flashcards, lesson list, recommendations etc.
   // are all built from JS template literals and stay Turkish for now
   "studentDash.gateTitle": "Log in to see your dashboard",
@@ -783,7 +783,7 @@ const ARMUS_I18N_EN = {
   "studentDash.newTeacher": "New Teacher",
   "studentDash.viewProfile": "See Profile",
 
-  // admin.html - internal staff tool, not visitor-facing. Sidebar nav
+  // admin - internal staff tool, not visitor-facing. Sidebar nav
   // labels only; the many data tables/charts/panels stay Turkish since
   // the ARMUS team operating this page reads Turkish anyway.
   "admin.tag": "ADMIN PANEL",
@@ -803,7 +803,7 @@ const ARMUS_I18N_EN = {
   "admin.navCities": "Cities",
   "admin.navFlags": "Display Settings",
 
-  // admin.html panel bodies
+  // admin panel bodies
   "admin.overviewHeading": "Overview",
   "admin.trendHeading": "Last 6 months - booking trend",
   "admin.revenueTrendHeading": "Last 6 months - revenue trend",
@@ -1017,7 +1017,7 @@ const ARMUS_I18N_EN = {
   "admin.gateLoginBtn": "Log In",
   "admin.bulkSelectedCountZero": "0 applications selected",
 
-  // teacher.html (profile page) - calendar expand button
+  // teacher (profile page) - calendar expand button
   "teacherProfile.viewFullSchedule": "View full schedule",
   "teacherProfile.seoDescription": "Take private online English lessons with {name}. Check their profile, availability calendar, and start with a free trial lesson.",
   "teacherProfile.newTeacher": "New",
@@ -1069,7 +1069,7 @@ const ARMUS_I18N_EN = {
   "marketplace.noBioYet": "This teacher hasn't added a bio yet.",
   "marketplace.newExperience": "New",
 
-  // teachers.html (search/filter listing page)
+  // teachers (search/filter listing page)
   "teachersPage.heading": "Find your perfect English teacher.",
   "teachersPage.resultsCountInitial": "6 teachers found",
   "teachersPage.resultsCount": "{n} teachers found",
@@ -1104,7 +1104,7 @@ const ARMUS_I18N_EN = {
   "teachersPage.sendMessage": "Send Message",
   "teachersPage.perLesson": "/ lesson",
 
-  // apply-teacher.html (gate only - the application wizard itself isn't translated yet)
+  // apply-teacher (gate only - the application wizard itself isn't translated yet)
   "applyTeacher.gateTitle": "This page is for teachers",
   "applyTeacher.gateText": "You need to register as a teacher before you can apply.",
   "applyTeacher.gateCta": "Register as a Teacher",
@@ -1172,7 +1172,7 @@ const ARMUS_I18N_EN = {
   "applyTeacher.step8Title": "Pricing",
   "applyTeacher.step8Hint": "Set your rate for a 50-minute lesson. You can change this later from your dashboard.",
   "applyTeacher.lessonPrice": "Lesson price (₺)",
-  "applyTeacher.consentCheck": "I agree that the identity, contact, certificate/education and video information I've shared in this application will be processed to review my teacher application and, if approved, publish my profile, in accordance with our <a href=\"gizlilik-politikasi.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
+  "applyTeacher.consentCheck": "I agree that the identity, contact, certificate/education and video information I've shared in this application will be processed to review my teacher application and, if approved, publish my profile, in accordance with our <a href=\"gizlilik-politikasi\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
   "applyTeacher.backBtn": "← Back",
   "applyTeacher.nextBtn": "Next →",
   "applyTeacher.successTitle": "Your application was received",
@@ -1209,7 +1209,7 @@ const ARMUS_I18N_EN = {
   "applyTeacher.errUploadFailed": "A file couldn't be uploaded. Go back to that step and pick the file again.",
   "applyTeacher.errSubmitFailed": "Couldn't save your application. Please try again.",
 
-  // attendance reports (migration_41.sql) - see class.html, dashboard.html, admin.html
+  // attendance reports (migration_41.sql) - see class, dashboard, admin
   "class.reportIssueBtn": "Report",
   "class.reportModalTitle": "Reporting something about your teacher?",
   "class.reportModalText": "What do you want to report about your teacher?",
@@ -1272,7 +1272,7 @@ const ARMUS_I18N_EN = {
   "admin.attendanceStatusDismissed": "Dismissed",
   "admin.pulseAttendanceReport": "Attendance report: <strong>{teacher}</strong> - {type}",
 
-  // blog.html
+  // blog
   "blog.eyebrow": "BLOG",
   "blog.title": "Guides on learning English.",
   "blog.intro": "From exam prep to business English, daily speaking practice to English for kids - practical advice drawn from ARMUS teachers' experience.",
@@ -1383,7 +1383,7 @@ function armusT(key, trFallback) {
 }
 
 // A teacher's availability-status dropdown stores its raw Turkish label
-// as the value (marketplace.js, teacher.html's public display, the
+// as the value (marketplace.js, teacher's public display, the
 // dashboard's own <select>) - this translates that stored string for
 // display without touching what's actually saved to the database.
 const ARMUS_AVAILABILITY_STATUS_EN = {
@@ -1461,7 +1461,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // i18n.js is the one file already loaded on every single page, so the
 // capture lives here instead of adding a <script> tag to ~25 HTML files.
 // Not real APM (no source maps, no alerting) - just "make a recurring
-// error discoverable in admin.html instead of silent". Best-effort only:
+// error discoverable in admin instead of silent". Best-effort only:
 // never throws, never blocks anything, and caps itself so a
 // crash-looping bug can't flood the table.
 (function () {
@@ -1552,7 +1552,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("armusChatRoot")) return;
     // Visitor-facing support bubble - doesn't belong on the internal
     // admin panel, where it would just float over admin's own tools.
-    if (/(^|\/)admin\.html$/.test(location.pathname)) return;
+    if (/(^|\/)admin(\.html)?\/?$/.test(location.pathname)) return;
 
     const style = document.createElement("style");
     style.textContent = `
