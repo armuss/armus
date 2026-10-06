@@ -232,6 +232,23 @@ const ARMUS_I18N_EN = {
   "about.teacherBannerText": "Set your own price, build your own schedule, and find new students on ARMUS.",
   "about.teacherBannerCta": "Become a Teacher →",
 
+  // how-it-works.html
+  "howItWorks.heroTitle": "Learning English should be this easy.",
+  "howItWorks.heroSubtitle": "Find your teacher, start your lesson, move toward your goals - all on ARMUS.",
+  "howItWorks.heroCta": "Sign Up Free →",
+  "howItWorks.step1Badge": "Step 1",
+  "howItWorks.step2Badge": "Step 2",
+  "howItWorks.step3Badge": "Step 3",
+  "howItWorks.sarahRole": "IELTS Specialist",
+  "howItWorks.tile1Title": "A goal built for you",
+  "howItWorks.tile1Text": "Every plan is shaped around your level and your needs.",
+  "howItWorks.tile2Title": "A flexible schedule",
+  "howItWorks.tile2Text": "Take lessons whenever and as often as you want.",
+  "howItWorks.tile3Title": "Real conversation",
+  "howItWorks.tile3Text": "Learn to communicate fluently and naturally, not by memorizing.",
+  "howItWorks.ctaTitle": "Ready?",
+  "howItWorks.ctaButton": "Find Your Teacher →",
+
   // iletisim.html
   "contact.eyebrow": "CONTACT",
   "contact.title": "Get in touch",
