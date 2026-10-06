@@ -171,7 +171,14 @@
       top: 0;
       height: 100vh;
       overflow: hidden;
-      background: var(--armus-gold-3);
+      /* the flat gold-3 fallback showed through as a blank gold rectangle
+         on a real phone any time the <video> itself had no decoded frame
+         to paint for a moment (not just before the first frame - this
+         happened mid-scroll too, not only on initial load). The poster
+         photo sits underneath the video at all times now, so even a
+         brief gap shows a real (static) frame of the same scene instead
+         of a flat color block that reads as a broken page. */
+      background: var(--armus-gold-3) center/cover no-repeat url('avatars/classroom-full-reveal-poster.jpg');
       display: flex;
       align-items: center;
       justify-content: center;
