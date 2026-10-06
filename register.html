@@ -432,7 +432,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
 
-  <script src="auth.js?v=9"></script>
+  <script src="auth.js?v=10"></script>
   <script>
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -627,22 +627,8 @@
       })();
     }
 
-    // functions.invoke returns { data: null, error } for any non-2xx
-    // response, with the response body stashed on error.context - without
-    // parsing that, every failure (wrong code, expired code, resend
-    // cooldown, a server-side write failure) shows the same generic
-    // message and the reason the server actually gave is never seen.
-    async function armusEdgeErrorMessage(error) {
-      try {
-        if (error && error.context && typeof error.context.json === "function") {
-          const body = await error.context.json();
-          if (body && body.error) return body.error;
-        }
-      } catch {
-        // fall through to the generic message
-      }
-      return null;
-    }
+    // functions.invoke error bodies are parsed by armusEdgeErrorMessage
+    // (auth.js) so the server's real reason shows instead of a generic one.
 
     verifyForm.addEventListener("submit", async event => {
 

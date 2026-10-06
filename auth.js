@@ -51,6 +51,25 @@ function armusSafeNextUrl(value) {
   }
 }
 
+// functions.invoke returns { data: null, error } for any non-2xx response,
+// with the response body stashed on error.context - without parsing that,
+// every caller falls back to its own generic message while the specific
+// reason the server sent (a past slot, a taken slot, a rate limit, an
+// expired verification code) only ever lives in the console. Shared by
+// every page's Edge Function call sites (register, booking, cancel,
+// account deletion).
+async function armusEdgeErrorMessage(error) {
+  try {
+    if (error && error.context && typeof error.context.json === "function") {
+      const body = await error.context.json();
+      if (body && body.error) return body.error;
+    }
+  } catch {
+    // fall through - the caller uses its generic message
+  }
+  return null;
+}
+
 async function armusSignUp({ name, email, password, role, city }) {
   return armusSupabase.auth.signUp({
     email,
@@ -92,7 +111,7 @@ async function armusDeleteOwnAccount() {
   const { data, error } = await armusSupabase.functions.invoke("delete-account");
 
   if (error || !data || !data.ok) {
-    return { ok: false, error: (data && data.error) || "Hesap silinemedi. Lütfen tekrar dene." };
+    return { ok: false, error: (data && data.error) || (await armusEdgeErrorMessage(error)) || "Hesap silinemedi. Lütfen tekrar dene." };
   }
 
   await armusSupabase.auth.signOut();

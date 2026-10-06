@@ -249,7 +249,14 @@ async function armusCancelBooking(bookingId) {
   });
 
   if (error || !data || !data.ok) {
-    return { ok: false, error: (data && data.error) || "Rezervasyon iptal edilemedi." };
+    // armusEdgeErrorMessage (auth.js, not loaded in the test vm - hence
+    // the feature detect) unwraps error.context so the server's real
+    // reason ("Bu dersin zamanı geçti, iptal edilemez." etc) reaches the
+    // UI instead of every failure reading as the generic fallback.
+    const serverMessage = typeof armusEdgeErrorMessage === "function"
+      ? await armusEdgeErrorMessage(error)
+      : null;
+    return { ok: false, error: (data && data.error) || serverMessage || "Rezervasyon iptal edilemedi." };
   }
 
   return { ok: true, refunded: data.refunded, refundEligible: data.refundEligible };

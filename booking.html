@@ -733,8 +733,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
-  <script src="auth.js?v=9"></script>
-  <script src="bookings.js?v=6"></script>
+  <script src="auth.js?v=10"></script>
+  <script src="bookings.js?v=7"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=5"></script>
   <script>
@@ -1164,8 +1164,17 @@
         }
 
         if (error || !data || (!data.paymentPageUrl && !data.bookedDirectly)) {
+          // functions.invoke returns { data: null, error } for any non-2xx
+          // response with the server's JSON stashed on error.context -
+          // without parsing it, every specific create-payment rejection
+          // (a past/invalid slot, a slot taken mid-payment, the rate
+          // limit, an in-flight duplicate payment) showed the same
+          // generic "İşlem başlatılamadı" while the real reason only
+          // lived in the console.
           confirmError.textContent =
-            (data && data.error) || armusT("booking.genericError", "İşlem başlatılamadı. Lütfen tekrar dene.");
+            (await armusEdgeErrorMessage(error))
+            || (data && data.error)
+            || armusT("booking.genericError", "İşlem başlatılamadı. Lütfen tekrar dene.");
           confirmError.style.display = "block";
           confirmBtn.disabled = false;
           confirmBtn.textContent = originalBtnText;
