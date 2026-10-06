@@ -1190,55 +1190,34 @@
       opacity: .5;
     }
 
-    /* ---- online-now toggle ---- */
+    /* ---- automatic online-presence hint (migration_85.sql) ---- */
 
-    .online-toggle-wrap {
+    .presence-hint {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      background: rgba(62, 207, 122, .1);
+      border: 1px solid rgba(62, 207, 122, .3);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1f9955;
+    }
+
+    .presence-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3ecf7a;
+      flex-shrink: 0;
     }
 
     #navAuthButtons.nav-buttons {
       display: flex;
       align-items: center;
       gap: 10px;
-    }
-
-    .online-toggle-label {
-      font-size: 12.5px;
-      color: var(--armus-muted);
-    }
-
-    .online-switch {
-      position: relative;
-      width: 42px;
-      height: 24px;
-      flex-shrink: 0;
-      border-radius: 999px;
-      background: var(--armus-border);
-      border: none;
-      cursor: pointer;
-    }
-
-    .online-switch::after {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      transition: left .15s ease;
-    }
-
-    .online-switch.on {
-      background: #4caf7d;
-    }
-
-    .online-switch.on::after {
-      left: 21px;
     }
 
     /* ---- narrative digest ---- */
@@ -1674,7 +1653,7 @@
         flex-wrap: wrap;
       }
 
-      .online-toggle-wrap {
+      .presence-hint {
         margin-left: 0;
       }
     }
@@ -1741,9 +1720,9 @@
       </button>
 
       <div class="dash-header">
-        <div class="online-toggle-wrap">
-          <span class="online-toggle-label" id="onlineToggleLabel">Şu an müsait değilim</span>
-          <button type="button" class="online-switch" id="onlineToggle" aria-label="Şu an müsaitim"></button>
+        <div class="presence-hint">
+          <span class="presence-dot"></span>
+          <span data-i18n="teacherDash.presenceOnlineHint">Şu an çevrimiçi olarak görünüyorsun</span>
         </div>
         <div class="nav-utility">
           <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
@@ -1994,7 +1973,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
-  <script src="auth.js?v=10"></script>
+  <script src="auth.js?v=11"></script>
   <script src="bookings.js?v=7"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
@@ -2279,36 +2258,6 @@
       }
 
       renderPendingNotes();
-
-      // ---- online-now toggle ----
-      // is_online isn't one of the fields the approved-profile lock
-      // blocks, so this updates instantly - no admin approval needed,
-      // it's a live status flag, not marketplace listing content.
-
-      let isOnline = Boolean(user.is_online);
-      const onlineToggle = document.getElementById("onlineToggle");
-      const onlineToggleLabel = document.getElementById("onlineToggleLabel");
-
-      function renderOnlineToggle() {
-        onlineToggle.classList.toggle("on", isOnline);
-        onlineToggleLabel.textContent = armusT(
-          isOnline ? "teacherDash.availableNow" : "teacherDash.notAvailable",
-          isOnline ? "Şu an müsaitim" : "Şu an müsait değilim"
-        );
-      }
-      renderOnlineToggle();
-      document.addEventListener("armus:langchange", renderOnlineToggle);
-
-      onlineToggle.addEventListener("click", async () => {
-        const next = !isOnline;
-        onlineToggle.disabled = true;
-        const result = await armusUpdateOwnProfile({ is_online: next });
-        onlineToggle.disabled = false;
-        if (result !== false) {
-          isOnline = next;
-          renderOnlineToggle();
-        }
-      });
 
       const [incomingBookings, teacherReviews, teacherNotes, conversations, teacherCreditsRes] = await Promise.all([
         armusGetBookingsForTeacher(user.id),

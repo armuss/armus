@@ -600,6 +600,19 @@
       color: var(--armus-on-gold);
     }
 
+    /* migration_85.sql - activity-derived online status */
+    .online-dot {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3ecf7a;
+      border: 3px solid var(--armus-panel);
+      cursor: default;
+    }
+
     .fav-btn {
       position: absolute;
       left: 10px;
@@ -979,7 +992,7 @@
   <script src="i18n.js?v=16"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="favorites.js?v=4"></script>
-  <script src="auth.js?v=10"></script>
+  <script src="auth.js?v=11"></script>
   <script>
 
     // Everything in this block only needs teachers-data.js and favorites.js
@@ -1027,7 +1040,10 @@
         <button type="button" class="fav-btn" data-fav="${teacher.id}" aria-label="${armusT("teacherProfile.addToFavorites", "Favorilere ekle")}">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>
       </button>
-        <div class="avatar">${avatarInner}</div>
+        <div class="avatar">
+          ${avatarInner}
+          ${teacher.isOnline ? `<div class="online-dot" title="${armusT("teacherProfile.onlineNow", "Öğretmen şu an çevrimiçi")}"></div>` : ""}
+        </div>
         <div class="rating">${ratingLabel}</div>
 
         <div class="card-mid">
@@ -1317,7 +1333,7 @@
   <script src="site-settings.js?v=4"></script>
   <script src="bookings.js?v=7"></script>
   <script src="reviews.js?v=5"></script>
-  <script src="marketplace.js?v=5"></script>
+  <script src="marketplace.js?v=6"></script>
   <script>
 
     // real (self-registered) teachers need a Supabase round trip - merge

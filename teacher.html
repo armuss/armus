@@ -228,6 +228,11 @@
       margin-top: 24px;
     }
 
+    .mini-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
     .mini-avatar {
       width: 52px;
       height: 52px;
@@ -249,6 +254,18 @@
       object-fit: cover;
     }
 
+    .online-dot {
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #3ecf7a;
+      border: 2.5px solid var(--armus-bg);
+      cursor: default;
+    }
+
     .verified {
       display: inline-flex;
       align-items: center;
@@ -268,19 +285,6 @@
       color: var(--armus-muted);
       margin-top: 4px;
       font-size: 14px;
-    }
-
-    .online-badge {
-      display: inline-block;
-      margin-left: auto;
-      background: rgba(76, 175, 125, .12);
-      border: 1px solid rgba(76, 175, 125, .5);
-      color: #1f7a4d;
-      font-size: 11px;
-      font-weight: 700;
-      border-radius: 999px;
-      padding: 4px 11px;
-      white-space: nowrap;
     }
 
     .rating {
@@ -822,12 +826,14 @@
           <!-- NAME ROW -->
 
           <div class="name-row">
-            <div class="mini-avatar" id="avatar"></div>
+            <div class="mini-avatar-wrap">
+              <div class="mini-avatar" id="avatar"></div>
+              <div class="online-dot" id="onlineDot" style="display: none;" data-i18n-title="teacherProfile.onlineNow" title="Öğretmen şu an çevrimiçi"></div>
+            </div>
             <div>
               <h1 id="teacherName"></h1>
               <div class="role" id="teacherRole"></div>
             </div>
-            <span class="online-badge" id="onlineBadge" style="display: none;" data-i18n="teacherProfile.onlineNow">● Şu an müsait</span>
           </div>
 
           <div class="verified" data-i18n="teacherProfile.armusVerified">
@@ -1010,10 +1016,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
-  <script src="auth.js?v=10"></script>
+  <script src="auth.js?v=11"></script>
   <script src="bookings.js?v=7"></script>
   <script src="reviews.js?v=5"></script>
-  <script src="marketplace.js?v=5"></script>
+  <script src="marketplace.js?v=6"></script>
   <script src="messages.js?v=4"></script>
   <script>
 
@@ -1081,7 +1087,7 @@
 
       document.getElementById("teacherName").textContent = armusShortDisplayName(teacher.name);
       document.getElementById("teacherRole").textContent = teacher.role;
-      document.getElementById("onlineBadge").style.display = teacher.isOnline ? "inline-block" : "none";
+      document.getElementById("onlineDot").style.display = teacher.isOnline ? "block" : "none";
 
       function renderRatingHeader() {
         document.getElementById("ratingValue").textContent =

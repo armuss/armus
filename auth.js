@@ -134,6 +134,7 @@ async function armusGetSession() {
   if (error || !profile) return null;
 
   armusRefreshOwnTimezone(profile);
+  armusMaybeRefreshPresence(profile);
   return profile;
 }
 
@@ -154,6 +155,48 @@ function armusRefreshOwnTimezone(profile) {
     }
   } catch (err) {}
 }
+
+// migration_85.sql: replaces the old manual "Şu an müsaitim" toggle
+// (is_online - migration_10.sql) with an automatic, activity-derived
+// online status. A teacher reads as online to students for
+// ARMUS_PRESENCE_WINDOW_MS after profiles.last_active_at, so this just
+// has to keep that timestamp fresh while they're actually around -
+// called from every armusGetSession() (same best-effort, fire-and-forget
+// shape as armusRefreshOwnTimezone above), which fires on every page
+// load/navigation, plus the interval below for a teacher who stays on
+// one page a long time (e.g. a live lesson or a Mesajlar conversation)
+// without ever triggering a fresh armusGetSession() call on their own.
+// Throttled client-side so neither path writes more than once per
+// ARMUS_PRESENCE_REFRESH_MS, comfortably inside the window students see.
+const ARMUS_PRESENCE_WINDOW_MS = 5 * 60 * 1000;
+const ARMUS_PRESENCE_REFRESH_MS = 2 * 60 * 1000;
+let armusLastPresenceWriteAt = 0;
+
+function armusMaybeRefreshPresence(profile) {
+  if (!profile || profile.role !== "teacher") return;
+  const now = Date.now();
+  if (now - armusLastPresenceWriteAt < ARMUS_PRESENCE_REFRESH_MS) return;
+  armusLastPresenceWriteAt = now;
+  armusSupabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", profile.id).then(() => {});
+}
+
+// Whether lastActiveAt (profiles.last_active_at, read through
+// masked_profiles by a viewer other than the teacher themselves) is
+// recent enough to show the teacher as online right now.
+function armusIsTeacherOnline(lastActiveAt) {
+  if (!lastActiveAt) return false;
+  return Date.now() - new Date(lastActiveAt).getTime() < ARMUS_PRESENCE_WINDOW_MS;
+}
+
+// Keeps a logged-in teacher's presence fresh on a page they stay on for a
+// while without navigating anywhere (armusGetSession() on its own only
+// refreshes on page load). Runs everywhere, same as
+// armusEnforceEmailVerification below - armusMaybeRefreshPresence no-ops
+// immediately for a non-teacher or a logged-out visitor, so this is cheap
+// on every other kind of page too.
+document.addEventListener("DOMContentLoaded", () => {
+  setInterval(() => { armusGetSession().catch(() => null); }, ARMUS_PRESENCE_REFRESH_MS);
+});
 
 // A brand-new signup gets a fully active, usable Supabase Auth session
 // the instant armusSignUp() returns (send-verification-email/

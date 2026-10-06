@@ -73,7 +73,8 @@ function armusBuildTeacherFromParts(profile, rawReviews, stats) {
     availabilityDates: profile.availability_dates && typeof profile.availability_dates === "object"
       ? profile.availability_dates
       : {},
-    isOnline: Boolean(profile.is_online),
+    // migration_85.sql - activity-derived, not the old manual toggle.
+    isOnline: armusIsTeacherOnline(profile.last_active_at),
     // migration_37.sql - which IANA zone this teacher's own calendar grid
     // (weeklyAvailability/availabilityDates) is wall-clock time in.
     timezone: profile.timezone || "Europe/Istanbul",
