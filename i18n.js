@@ -235,7 +235,7 @@ const ARMUS_I18N_EN = {
   "about.teamLabel": "OUR TEAM",
   "about.teamTitle": "Meet the team.",
   "about.programmerTitle": "Programmer",
-  "about.chiefOfStaffTitle": "Chief of Staff",
+  "about.eduCoordinatorTitle": "Education Coordinator",
   "about.closingTitle": "Join our community too.",
   "about.closingCta": "Find Your Teacher →",
 
