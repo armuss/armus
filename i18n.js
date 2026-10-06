@@ -208,6 +208,7 @@ const ARMUS_I18N_EN = {
   "register.errCodeSendFailed": "Couldn't send the code. Try 'Resend code' again.",
   "register.errCodeInvalid": "Couldn't verify the code. Try again.",
   "register.errCodeResendFailed": "Couldn't send the code.",
+  "register.errCodeVerifyStuck": "Your code looked right but your account still reads as unverified. Refresh the page and try again; if it keeps happening, use 'Resend code'.",
 
   // hakkimizda
   "about.eyebrow": "ABOUT ARMUS",

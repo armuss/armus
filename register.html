@@ -426,7 +426,7 @@
 
   </main>
 
-  <script src="i18n.js?v=13"></script>
+  <script src="i18n.js?v=14"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
   <script src="supabase-config.js?v=4"></script>
@@ -627,6 +627,23 @@
       })();
     }
 
+    // functions.invoke returns { data: null, error } for any non-2xx
+    // response, with the response body stashed on error.context - without
+    // parsing that, every failure (wrong code, expired code, resend
+    // cooldown, a server-side write failure) shows the same generic
+    // message and the reason the server actually gave is never seen.
+    async function armusEdgeErrorMessage(error) {
+      try {
+        if (error && error.context && typeof error.context.json === "function") {
+          const body = await error.context.json();
+          if (body && body.error) return body.error;
+        }
+      } catch {
+        // fall through to the generic message
+      }
+      return null;
+    }
+
     verifyForm.addEventListener("submit", async event => {
 
       event.preventDefault();
@@ -640,7 +657,22 @@
       verifySubmitBtn.disabled = false;
 
       if (error || !data || !data.ok) {
-        verifyError.textContent = (data && data.error) || armusT("register.errCodeInvalid", "Kod doğrulanamadı. Tekrar dene.");
+        verifyError.textContent = (await armusEdgeErrorMessage(error)) || armusT("register.errCodeInvalid", "Kod doğrulanamadı. Tekrar dene.");
+        verifyError.style.display = "block";
+        return;
+      }
+
+      // data.ok used to be taken at face value and navigated away on -
+      // but if the Edge Function's own write ever fails silently, the
+      // session is still unverified, and proceeding sent the user into a
+      // bounce loop: the next page's armusEnforceEmailVerification
+      // redirected them straight back to register?resume=1, whose resume
+      // flow auto-sent yet another code. Confirm the flag really flipped
+      // before navigating anywhere; on a mismatch stay on this step with
+      // the error visible so the user can retry or resend from here.
+      const freshProfile = await armusGetSession().catch(() => null);
+      if (!freshProfile || !freshProfile.email_verified) {
+        verifyError.textContent = armusT("register.errCodeVerifyStuck", "Kodun doğru görünüyor ama hesabın hâlâ doğrulanmamış görünüyor. Sayfayı yenileyip tekrar dene, sorun sürerse 'Kodu tekrar gönder'i kullan.");
         verifyError.style.display = "block";
         return;
       }
@@ -660,7 +692,7 @@
         // Don't start the 45s cooldown for a send that never actually
         // went out (offline, the function erroring) - that would lock
         // the user out of retrying on top of the failure they already hit.
-        verifyError.textContent = (data && data.error) || armusT("register.errCodeResendFailed", "Kod gönderilemedi.");
+        verifyError.textContent = (await armusEdgeErrorMessage(error)) || (data && data.error) || armusT("register.errCodeResendFailed", "Kod gönderilemedi.");
         verifyError.style.display = "block";
         return;
       }

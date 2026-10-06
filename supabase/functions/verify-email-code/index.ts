@@ -92,7 +92,39 @@ Deno.serve(async (req) => {
     // write to email_verified that doesn't come through it, since a raw
     // client update to this column used to let anyone mark themselves
     // verified without ever receiving or entering a code.
-    await supabaseAdmin.rpc("mark_email_verified", { p_user_id: user.id });
+    //
+    // The RPC's result used to be ignored here: any failure (stale deploy
+    // still doing the raw update the lock trigger now rejects, a missing
+    // function on a fresh install, a permission problem) still reached
+    // the ok:true below. The client then redirected to the dashboard,
+    // armusEnforceEmailVerification bounced the still-unverified session
+    // straight back to register?resume=1, and that page's resume flow
+    // auto-sent a brand-new code - an endless verify-bounce loop the
+    // user could never escape, with the real error never shown anywhere.
+    const { error: verifyError } = await supabaseAdmin.rpc("mark_email_verified", { p_user_id: user.id });
+    if (verifyError) {
+      console.error("mark_email_verified failed", verifyError);
+      return jsonResponse({ error: "Kodun doğru ama doğrulama kaydedilemedi. Lütfen tekrar dene." }, 500);
+    }
+
+    // Belt and braces: only report success (and burn the code row) once
+    // email_verified is really on. The profile row could be missing
+    // entirely (handle_new_user failed at signup), in which case the RPC
+    // above "succeeds" while updating zero rows.
+    const { data: verifiedProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("email_verified")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!verifiedProfile?.email_verified) {
+      console.error("email_verified still false after mark_email_verified", { user_id: user.id });
+      return jsonResponse({ error: "Kodun doğru ama doğrulama kaydedilemedi. Lütfen tekrar dene." }, 500);
+    }
+
+    // Deleting the code row only now, after verification is confirmed -
+    // deleting it before meant a failed write still consumed the one
+    // valid code, leaving the account unverified and forcing a resend.
     await supabaseAdmin.from("email_verifications").delete().eq("id", verification.id);
 
     return jsonResponse({ ok: true });
