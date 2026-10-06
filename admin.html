@@ -1057,6 +1057,23 @@
         background: var(--armus-bg);
       }
 
+      /* no scrollbar is visible on most phones, so without this the tab
+         strip just looks like it ends mid-word with no hint that there's
+         more to swipe to - a sticky faded edge stays pinned to the
+         scrollport's right side as a permanent "more tabs" cue */
+      .sidebar::after {
+        content: "";
+        position: sticky;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 28px;
+        margin-left: auto;
+        flex-shrink: 0;
+        background: linear-gradient(to right, transparent, var(--armus-bg));
+        pointer-events: none;
+      }
+
       .sidebar .logo,
       .sidebar .tag {
         display: none;
