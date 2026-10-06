@@ -159,6 +159,17 @@ function armusInitScrollVideo(){
   // than just leaving it be - no reason to pay for it.
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 
+  // iOS Safari in particular can leave a <video> showing nothing at all
+  // (just .scroll-video-stage's own background-color, var(--armus-gold-3))
+  // once script.js starts setting .currentTime on it, if the browser has
+  // never actually decoded a frame yet - seeking alone doesn't reliably
+  // trigger that first decode on a video that's never been played. A
+  // muted+playsinline video is exempt from the user-gesture autoplay
+  // restriction in every major mobile browser, so priming it with one
+  // immediate play()+pause() (before any scroll-driven seeking happens)
+  // forces that first frame to actually render.
+  video.play().then(() => { video.pause(); }).catch(() => {});
+
   function smoothstep(edge0,edge1,x){
     const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
     return t*t*(3-2*t);
