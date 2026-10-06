@@ -213,7 +213,7 @@ const ARMUS_I18N_EN = {
   "about.eyebrow": "ABOUT ARMUS",
   "about.heroTitle": "A two-person idea became a community of thousands of students.",
   "about.heroSubtitle": "The story behind ARMUS started with a simple question: why should finding the right English teacher be this hard?",
-  "about.founderTitle": "Founder",
+  "about.founderTitle": "Co-Founder",
   "about.stat1": "active students",
   "about.stat2": "approved teachers",
   "about.stat3": "of students find practicing with a teacher helpful",
