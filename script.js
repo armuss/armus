@@ -48,18 +48,56 @@ function armusInitScrollScrubReveal(targets){
   const END=0.55;   // element's top at 55% down the viewport -> progress 1
   let ticking=false;
 
-  function update(){
-    ticking=false;
+  function apply(el){
     const vh=window.innerHeight;
     const startY=vh*START;
     const endY=vh*END;
-    list.forEach(el=>{
-      const top=el.getBoundingClientRect().top;
-      let progress=(startY-top)/(startY-endY);
-      progress=Math.max(0,Math.min(1,progress));
-      el.style.opacity=String(progress);
-      el.style.transform='translateY('+((1-progress)*36)+'px)';
+    const top=el.getBoundingClientRect().top;
+    let progress=(startY-top)/(startY-endY);
+    progress=Math.max(0,Math.min(1,progress));
+    el.style.opacity=String(progress);
+    el.style.transform='translateY('+((1-progress)*36)+'px)';
+  }
+
+  // Recomputing getBoundingClientRect for every .reveal target on every
+  // single scroll frame, for the whole page's lifetime, was real jank on
+  // real phones once a page had a dozen-plus of them - most are nowhere
+  // near the viewport at any given moment. An IntersectionObserver with a
+  // generous rootMargin tracks which ones are close enough to matter
+  // (browser-native, no per-frame layout read), so the scroll handler
+  // below only ever touches that small active set instead of every
+  // target on the page.
+  //
+  // No synchronous apply() call up front on the full list - deliberately
+  // left to the observer's own initial notification (it reports every
+  // newly-observed target's current state within the next frame or two,
+  // no visible delay). That initial notification is also what makes this
+  // correct for a target like .steps' mobile card carousel, where a card
+  // can sit well past the viewport's *vertical* threshold yet still be
+  // clipped out of view by its own horizontally-scrolling ancestor - the
+  // observer accounts for that ancestor clipping, a raw
+  // getBoundingClientRect() top does not. Writing an inline style from
+  // an upfront getBoundingClientRect() pass would have fought the CSS
+  // that intentionally forces those cards to stay opacity:1 at that
+  // breakpoint (see .steps article.reveal, styles.css) - skip the pre-
+  // call and a card the observer never reports as intersecting simply
+  // never gets an inline style, leaving that CSS override in full effect.
+  let active=[];
+  const nearObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        if(!active.includes(entry.target))active.push(entry.target);
+        apply(entry.target);
+      }else{
+        active=active.filter(el=>el!==entry.target);
+      }
     });
+  },{rootMargin:'50% 0px 50% 0px'});
+  list.forEach(el=>nearObserver.observe(el));
+
+  function update(){
+    ticking=false;
+    active.forEach(apply);
   }
 
   function onScroll(){
@@ -68,7 +106,6 @@ function armusInitScrollScrubReveal(targets){
     requestAnimationFrame(update);
   }
 
-  update();
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll);
 }
