@@ -181,18 +181,35 @@
       border-radius: 12px;
     }
 
-    /* OVERLAPPING CARD STACK */
+    /* OVERLAPPING CARD STACK - tap to spread the three cards apart */
+
+    .stack-hint {
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--armus-faint);
+      margin: 4px 0 18px;
+    }
 
     .stack-wrap {
       position: relative;
-      height: 500px;
-      margin: 20px auto 100px;
-      max-width: 400px;
+      width: min(940px, 100%);
+      height: 460px;
+      margin: 0 auto 100px;
+      cursor: pointer;
+    }
+
+    .stack-wrap:focus-visible {
+      outline: 2px solid var(--armus-gold-2);
+      outline-offset: 6px;
+      border-radius: 24px;
     }
 
     .stack-card {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 50%;
+      width: 280px;
+      height: 440px;
       background: var(--armus-panel);
       border: 1px solid var(--armus-border-soft);
       border-radius: 24px;
@@ -200,21 +217,51 @@
       box-shadow: 0 26px 54px rgba(35, 26, 10, .14);
       display: flex;
       flex-direction: column;
-    }
-
-    .stack-card.c2 {
-      transform: rotate(-7deg) translate(-24px, 14px);
-      z-index: 1;
-      background: var(--armus-panel-2);
-    }
-
-    .stack-card.c3 {
-      transform: rotate(6deg) translate(20px, 24px);
-      z-index: 0;
-      background: #fdf7e8;
+      transition: transform .5s cubic-bezier(.68, -0.55, .27, 1.4), opacity .3s ease, background-color .3s ease;
     }
 
     .stack-card.c1 {
+      transform: translateX(-50%) translate(0, 0) scale(1) rotate(0deg);
+      z-index: 3;
+      transition-delay: 0s;
+    }
+
+    .stack-card.c2 {
+      transform: translateX(-50%) translate(-26px, 16px) scale(.94) rotate(-6deg);
+      z-index: 2;
+      background: var(--armus-panel-2);
+      transition-delay: .12s;
+    }
+
+    .stack-card.c3 {
+      transform: translateX(-50%) translate(22px, 26px) scale(.94) rotate(6deg);
+      z-index: 1;
+      background: #fdf7e8;
+      transition-delay: .24s;
+    }
+
+    /* once spread apart there's no neighboring card left to contrast
+       against, so a plain white card (c1) all but disappears on the
+       white page background - give all three the same light panel
+       once unstacked instead of the stacked view's peek tints */
+    .stack-wrap.unstacked .c1,
+    .stack-wrap.unstacked .c2,
+    .stack-wrap.unstacked .c3 {
+      background: var(--armus-panel-2);
+    }
+
+    .stack-wrap.unstacked .c1 {
+      transform: translateX(-50%) translate(-310px, 0) scale(1) rotate(0deg);
+      z-index: 2;
+    }
+
+    .stack-wrap.unstacked .c2 {
+      transform: translateX(-50%) translate(0, 0) scale(1) rotate(0deg);
+      z-index: 3;
+    }
+
+    .stack-wrap.unstacked .c3 {
+      transform: translateX(-50%) translate(310px, 0) scale(1) rotate(0deg);
       z-index: 2;
     }
 
@@ -423,7 +470,11 @@
     }
 
     @media (max-width: 700px) {
-      .stack-wrap { max-width: 320px; height: 460px; }
+      /* the tap-to-spread interaction needs room the phone doesn't have -
+         show the three steps as a plain readable column instead */
+      .stack-hint { display: none; }
+      .stack-wrap { height: auto; cursor: default; display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
+      .stack-card { position: static; width: 100%; height: auto; transform: none !important; transition: none; }
       .tile-row { grid-template-columns: 1fr; }
       .stats-strip { flex-direction: column; gap: 22px; }
       .hiw-cta { padding: 40px 26px; }
@@ -451,33 +502,35 @@
   <main class="container">
 
     <div class="hiw-hero">
-      <div class="eyebrow" data-i18n="index.how.label">NASIL ÇALIŞIR?</div>
-      <h1 data-i18n="howItWorks.heroTitle">İngilizce öğrenmek bu kadar kolay olmalı.</h1>
-      <p data-i18n="howItWorks.heroSubtitle">Öğretmenini bul, derse başla, hedeflerine doğru ilerle — hepsi ARMUS'ta.</p>
-      <a class="btn" href="register.html" data-i18n="howItWorks.heroCta">Ücretsiz Kayıt Ol →</a>
+      <div class="eyebrow" data-i18n="howItWorks.eyebrow">SÜRECİ KEŞFET</div>
+      <h1 data-i18n="howItWorks.heroTitle">Süreç basit, sonuç kalıcı.</h1>
+      <p data-i18n="howItWorks.heroSubtitle">Deneme dersiyle başla, sana özel bir planla ilerle, gelişimini kelime kasanda ve konuşma takibinde gör.</p>
+      <a class="btn" href="register.html" data-i18n="howItWorks.heroCta">Hemen Başla →</a>
     </div>
 
-    <div class="stack-wrap">
-      <div class="stack-card c3">
-        <div class="pill" data-i18n="howItWorks.step3Badge">Adım 3</div>
-        <h3 data-i18n="index.how.step3.title">Her hafta ilerle.</h3>
-        <p data-i18n="index.how.step3.text">Kaç ders almak istediğini sen seç ve düzenli pratikle kalıcı özgüven kazan.</p>
-        <div class="visual-box"><img src="avatars/step3-progress-chart.jpg" alt=""></div>
-      </div>
-      <div class="stack-card c2">
-        <div class="pill" data-i18n="howItWorks.step2Badge">Adım 2</div>
-        <h3 data-i18n="index.how.step2.title">Derse başla.</h3>
-        <p data-i18n="index.how.step2.text">Öğretmenin her dersi senin hedeflerine göre kişiselleştirir, böylece ilerleme daha ilk dersten kişisel hissettirir.</p>
-        <div class="visual-box"><img src="avatars/step2-video-call.jpg" alt=""></div>
-      </div>
+    <div class="stack-hint" data-i18n="howItWorks.stackHint">Kartlara dokun, üç adımı birden oku</div>
+
+    <div class="stack-wrap" id="stackWrap" role="button" tabindex="0" aria-expanded="false" aria-label="Adımları genişlet">
       <div class="stack-card c1">
         <div class="pill" data-i18n="howItWorks.step1Badge">Adım 1</div>
-        <h3 data-i18n="index.how.step1.title">Öğretmenini bul.</h3>
-        <p data-i18n="index.how.step1.text">Seni motive edecek, zorlayacak ve hedeflerine ulaştıracak bir öğretmenle eşleştiriyoruz — ilk dersten akıcılığa kadar.</p>
+        <h3 data-i18n="howItWorks.step1Title">Profilleri incele, deneme dersiyle test et.</h3>
+        <p data-i18n="howItWorks.step1Text">Hedefine, seviyene ve bütçene göre filtrele; öğretmenin tanıtım videosunu izle. Karar vermeden önce düşük riskli bir deneme dersiyle uyumunuzu gör.</p>
         <div class="mtc">
           <img src="avatars/sarah.jpg" alt="">
           <div><strong>Sarah M. ★4.9</strong><small data-i18n="howItWorks.sarahRole">IELTS Uzmanı</small></div>
         </div>
+      </div>
+      <div class="stack-card c2">
+        <div class="pill" data-i18n="howItWorks.step2Badge">Adım 2</div>
+        <h3 data-i18n="howItWorks.step2Title">Sana özel bir planla derse gir.</h3>
+        <p data-i18n="howItWorks.step2Text">Öğretmenin, ders planını hedefine göre şekillendirir. Canlı görüntülü derste konuşma pratiği yapar, anında geri bildirim alırsın.</p>
+        <div class="visual-box"><img src="avatars/step2-video-call.jpg" alt=""></div>
+      </div>
+      <div class="stack-card c3">
+        <div class="pill" data-i18n="howItWorks.step3Badge">Adım 3</div>
+        <h3 data-i18n="howItWorks.step3Title">Kelime kasan ve konuşma takibinle ilerle.</h3>
+        <p data-i18n="howItWorks.step3Text">Her dersten sonra kelime kasana yeni kelimeler eklenir, konuşma özgüvenin takip edilir. Ders sıklığını istediğin an değiştirebilirsin.</p>
+        <div class="visual-box"><img src="avatars/step3-progress-chart.jpg" alt=""></div>
       </div>
     </div>
 
@@ -490,34 +543,53 @@
     <div class="tile-row">
       <div class="tile">
         <div class="ic"><img src="dolphin-mark-black.svg" alt=""></div>
-        <h4 data-i18n="howItWorks.tile1Title">Kişiye özel hedef</h4>
-        <p data-i18n="howItWorks.tile1Text">Her plan senin seviyene ve ihtiyacına göre şekillenir.</p>
+        <h4 data-i18n="howItWorks.tile1Title">Rastgele değil, doğru eşleşme</h4>
+        <p data-i18n="howItWorks.tile1Text">Seviyene, hedefine ve bütçene uygun filtrelerle seni gerçekten anlayan bir öğretmen bulursun.</p>
       </div>
       <div class="tile">
         <div class="ic"><img src="dolphin-mark-black.svg" alt=""></div>
-        <h4 data-i18n="howItWorks.tile2Title">Esnek program</h4>
-        <p data-i18n="howItWorks.tile2Text">İstediğin saatte, istediğin sıklıkta ders al.</p>
+        <h4 data-i18n="howItWorks.tile2Title">Gizli ücret yok</h4>
+        <p data-i18n="howItWorks.tile2Text">Öğretmen fiyatını kendi belirler, öğrenci tarafında sürpriz ek ücret olmaz.</p>
       </div>
       <div class="tile">
         <div class="ic"><img src="dolphin-mark-black.svg" alt=""></div>
-        <h4 data-i18n="howItWorks.tile3Title">Gerçek konuşma</h4>
-        <p data-i18n="howItWorks.tile3Text">Ezber değil, akıcı ve doğal iletişim öğren.</p>
+        <h4 data-i18n="howItWorks.tile3Title">Veriyle görünür ilerleme</h4>
+        <p data-i18n="howItWorks.tile3Text">Kelime kasan ve konuşma takibinle ne kadar geliştiğini gerçek verilerle görürsün.</p>
       </div>
     </div>
 
     <div class="testimonial">
       <div class="stars">★★★★★</div>
-      <p>"ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor."</p>
-      <div class="who">Zeynep A. — ARMUS öğrencisi</div>
+      <p>"Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim."</p>
+      <div class="who">Mehmet K. — ARMUS öğrencisi</div>
     </div>
 
     <div class="hiw-cta">
-      <h2 data-i18n="howItWorks.ctaTitle">Hazır mısın?</h2>
+      <h2 data-i18n="howItWorks.ctaTitle">Senin sürecin şimdi başlıyor.</h2>
       <a class="btn" href="teachers.html" data-i18n="howItWorks.ctaButton">Öğretmenini Bul →</a>
     </div>
 
   </main>
 
   <script src="i18n.js?v=13"></script>
+  <script>
+    (function () {
+      const stackWrap = document.getElementById("stackWrap");
+      if (!stackWrap) return;
+
+      function toggle() {
+        const open = stackWrap.classList.toggle("unstacked");
+        stackWrap.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+
+      stackWrap.addEventListener("click", toggle);
+      stackWrap.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggle();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
