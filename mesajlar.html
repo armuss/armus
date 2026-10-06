@@ -272,6 +272,12 @@
       font-weight: 800;
     }
 
+    .context-profile-link {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
     .context-role {
       font-size: 11.5px;
       color: var(--armus-muted);
@@ -417,6 +423,17 @@
       font-size: 12px;
       font-weight: 600;
       margin-left: auto;
+    }
+
+    .thread-header a.thread-header-profile-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      margin-left: 0;
+      text-decoration: none;
     }
 
     .thread-body {
@@ -1036,8 +1053,8 @@
         : initials(otherName);
 
       panel.innerHTML = `
-        <div class="context-avatar">${avatarInner}</div>
-        <div class="context-name">${escapeHtml(otherPartyDisplayName(otherName))}</div>
+        <div class="context-avatar" id="contextAvatar">${avatarInner}</div>
+        <div class="context-name" id="contextName">${escapeHtml(otherPartyDisplayName(otherName))}</div>
         <div id="contextExtra"></div>
       `;
 
@@ -1047,6 +1064,31 @@
       ]);
 
       if (activeConversationId !== conversationId) return;
+
+      // Only a confirmed teacher gets a profile to link to - the same
+      // gate the booking button and role line below already use (see the
+      // comment above this function).
+      if (teacher) {
+        const profileHref = `teacher?teacher=${encodeURIComponent(otherId)}`;
+        const avatarEl = document.getElementById("contextAvatar");
+        const nameEl = document.getElementById("contextName");
+        if (avatarEl && nameEl) {
+          const link = document.createElement("a");
+          link.href = profileHref;
+          link.className = "context-profile-link";
+          avatarEl.before(link);
+          link.appendChild(avatarEl);
+          link.appendChild(nameEl);
+        }
+        const header = document.getElementById("threadHeader");
+        if (header && !header.querySelector(".thread-header-profile-link")) {
+          const headerLink = document.createElement("a");
+          headerLink.href = profileHref;
+          headerLink.className = "thread-header-profile-link";
+          while (header.firstChild) headerLink.appendChild(header.firstChild);
+          header.appendChild(headerLink);
+        }
+      }
 
       const extra = document.getElementById("contextExtra");
       if (!extra) return;
