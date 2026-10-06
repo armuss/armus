@@ -2629,8 +2629,14 @@
 
       const weeksElapsedThisMonth = Math.max(1, now.getDate() / 7);
       const currentWeeklyPace = lessonsThisWeek || (completedBookings.filter(b => bookingLocalDateKey(b).startsWith(thisMonthKey)).length / weeksElapsedThisMonth);
-      const avgPrice = completedBookings.length
-        ? completedBookings.reduce((sum, b) => sum + earnablePrice(b), 0) / completedBookings.length
+      // completedBookings.length alone isn't enough to pick the computed
+      // average over the listed price - an unconverted trial earns ₺0
+      // (earnablePrice), so a teacher whose only completed lesson so far
+      // is a trial would otherwise divide by a nonzero count but sum to
+      // 0, silently zeroing the whole simulator instead of falling back.
+      const earnableBookings = completedBookings.filter(b => earnablePrice(b) > 0);
+      const avgPrice = earnableBookings.length
+        ? earnableBookings.reduce((sum, b) => sum + earnablePrice(b), 0) / earnableBookings.length
         : (user.price || 500);
 
       const simulatorSlider = document.getElementById("simulatorSlider");
