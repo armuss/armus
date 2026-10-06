@@ -218,7 +218,6 @@ const ARMUS_I18N_EN = {
   "about.stat2": "approved teachers",
   "about.stat3": "of students find practicing with a teacher helpful",
   "about.stat4": "provinces with students and teachers",
-  "about.peopleLabel": "OUR PEOPLE",
   "about.peopleTitle": "The three sides that make ARMUS work.",
   "about.tabTeacher": "Teachers",
   "about.tabStudent": "Students",
