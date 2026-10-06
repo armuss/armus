@@ -250,19 +250,24 @@
       background: var(--armus-panel-2);
     }
 
+    /* z-index deliberately stays at its stacked value (c1 on top, c2
+       behind it, c3 at the back) through the whole transition instead
+       of flipping to the spread-out order - z-index can't be animated,
+       so changing it here would make c2 instantly jump in front of c1
+       the moment you click, before either card has actually moved.
+       Keeping it constant makes c1 visibly peel off the top of the
+       stack first, exactly matching its 0-delay head start; the
+       spread-out end state has no overlap left for z-index to affect. */
     .stack-wrap.unstacked .c1 {
       transform: translateX(-50%) translate(-310px, 0) scale(1) rotate(0deg);
-      z-index: 2;
     }
 
     .stack-wrap.unstacked .c2 {
       transform: translateX(-50%) translate(0, 0) scale(1) rotate(0deg);
-      z-index: 3;
     }
 
     .stack-wrap.unstacked .c3 {
       transform: translateX(-50%) translate(310px, 0) scale(1) rotate(0deg);
-      z-index: 2;
     }
 
     .stack-card .pill {
