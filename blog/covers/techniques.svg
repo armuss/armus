@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500">
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffe066"/>
-      <stop offset="55%" stop-color="#ffd000"/>
-      <stop offset="100%" stop-color="#e6b800"/>
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
     </linearGradient>
   </defs>
   <rect width="1200" height="500" fill="url(#g)"/>
@@ -21,5 +21,5 @@
     <line x1="460" y1="255" x2="490" y2="250"/>
     <line x1="740" y1="255" x2="710" y2="250"/>
   </g>
-  <path d="M570 250 l20 25 l40 -55" fill="none" stroke="#e6b800" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M570 250 l20 25 l40 -55" fill="none" stroke="#dfac2e" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

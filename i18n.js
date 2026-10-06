@@ -1552,7 +1552,7 @@ document.addEventListener("DOMContentLoaded", () => {
       #armusChatRoot { position: fixed; right: 20px; bottom: 20px; z-index: 999; font-family: Inter, system-ui, sans-serif; }
       .armus-chat-toggle {
         width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
-        background: var(--armus-gold-gradient, linear-gradient(135deg, #ffe066, #ffd000 55%, #e6b800));
+        background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e));
         color: var(--armus-on-gold, #0a0a0a);
         box-shadow: 0 10px 30px rgba(35, 26, 10, 0.25);
         display: flex; align-items: center; justify-content: center;
@@ -1569,7 +1569,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       .armus-chat-panel.open { display: flex; }
       .armus-chat-head {
-        background: var(--armus-gold-gradient, linear-gradient(135deg, #ffe066, #ffd000 55%, #e6b800));
+        background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e));
         color: var(--armus-on-gold, #0a0a0a); padding: 16px 18px;
         display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
       }
@@ -1583,7 +1583,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .armus-chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--armus-panel-2, #f5f5f5); }
       .armus-chat-msg { max-width: 84%; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
       .armus-chat-msg.bot { align-self: flex-start; background: #fff; border: 1px solid var(--armus-border-soft, #ececec); color: var(--armus-ink, #0a0a0a); border-bottom-left-radius: 4px; }
-      .armus-chat-msg.user { align-self: flex-end; background: var(--armus-gold-gradient, linear-gradient(135deg, #ffe066, #ffd000 55%, #e6b800)); color: var(--armus-on-gold, #0a0a0a); border-bottom-right-radius: 4px; }
+      .armus-chat-msg.user { align-self: flex-end; background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e)); color: var(--armus-on-gold, #0a0a0a); border-bottom-right-radius: 4px; }
       .armus-chat-msg.error { align-self: flex-start; background: #fdeceb; border: 1px solid #f3b9b3; color: #8a2c22; }
       .armus-chat-typing { align-self: flex-start; display: flex; gap: 4px; padding: 12px 14px; }
       .armus-chat-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--armus-faint, #8f8f8f); animation: armus-chat-blink 1.2s infinite ease-in-out; }
@@ -1595,10 +1595,10 @@ document.addEventListener("DOMContentLoaded", () => {
         flex: 1; border: 1px solid var(--armus-border, #e2e2e2); border-radius: 12px; padding: 10px 12px;
         font: 13.5px Inter, system-ui, sans-serif; resize: none; max-height: 80px; color: var(--armus-ink, #0a0a0a);
       }
-      .armus-chat-input:focus { outline: none; border-color: var(--armus-gold-3, #e6b800); }
+      .armus-chat-input:focus { outline: none; border-color: var(--armus-gold-3, #dfac2e); }
       .armus-chat-send {
         border: none; border-radius: 12px; width: 40px; flex-shrink: 0; cursor: pointer;
-        background: var(--armus-gold-gradient, linear-gradient(135deg, #ffe066, #ffd000 55%, #e6b800));
+        background: var(--armus-gold-gradient, linear-gradient(135deg, #fee06d, #f6c649 55%, #dfac2e));
         color: var(--armus-on-gold, #0a0a0a); display: flex; align-items: center; justify-content: center;
       }
       .armus-chat-send:disabled { opacity: 0.5; cursor: default; }
