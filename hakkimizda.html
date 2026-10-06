@@ -471,7 +471,16 @@
       .team-grid { gap: 14px; }
       .team-card { width: calc(50% - 7px); padding: 20px 14px; }
       .closing-band { padding: 40px 24px; }
-      .tabs-head { flex-wrap: wrap; justify-content: center; }
+      .tabs-head {
+        max-width: 100%;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .tabs-head::-webkit-scrollbar { display: none; }
+      .tab-btn { flex-shrink: 0; }
     }
   </style>
 </head>
