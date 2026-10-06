@@ -8,13 +8,19 @@ document.querySelectorAll('.filter').forEach(btn=>{
 });
 
 // Scroll-triggered reveal: elements marked .reveal fade/slide in once
-// they enter the viewport.
+// they enter the viewport (desktop), or get scrubbed 1:1 with the
+// scroll gesture itself on a phone (see armusInitScrollScrubReveal).
 function armusInitScrollReveal(){
   const targets=document.querySelectorAll('.reveal');
   if(!targets.length)return;
   const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduceMotion||!('IntersectionObserver' in window)){
     targets.forEach(el=>el.classList.add('in-view'));
+    return;
+  }
+  const isMobile=window.matchMedia('(max-width: 900px)').matches;
+  if(isMobile){
+    armusInitScrollScrubReveal(targets);
     return;
   }
   const observer=new IntersectionObserver(entries=>{
@@ -27,6 +33,46 @@ function armusInitScrollReveal(){
   },{threshold:0.15,rootMargin:'0px 0px -60px 0px'});
   targets.forEach(el=>observer.observe(el));
 }
+
+// Ties each .reveal element's opacity/translateY directly to how far its
+// top has crossed a window near the bottom of the viewport, recomputed
+// every scroll tick - no CSS transition involved, so there's no fixed
+// duration/easing fighting the gesture: scroll down and it animates in
+// in lockstep with the finger, scroll back up and it animates back out.
+// Deliberately plain scroll+rAF instead of CSS scroll-driven animations
+// (animation-timeline: view()) since that's still unsupported on some
+// Android browsers still in real use (notably older Samsung Internet).
+function armusInitScrollScrubReveal(targets){
+  const list=Array.from(targets);
+  const START=0.92; // element's top at 92% down the viewport -> progress 0
+  const END=0.55;   // element's top at 55% down the viewport -> progress 1
+  let ticking=false;
+
+  function update(){
+    ticking=false;
+    const vh=window.innerHeight;
+    const startY=vh*START;
+    const endY=vh*END;
+    list.forEach(el=>{
+      const top=el.getBoundingClientRect().top;
+      let progress=(startY-top)/(startY-endY);
+      progress=Math.max(0,Math.min(1,progress));
+      el.style.opacity=String(progress);
+      el.style.transform='translateY('+((1-progress)*36)+'px)';
+    });
+  }
+
+  function onScroll(){
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(update);
+  }
+
+  update();
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+}
+
 armusInitScrollReveal();
 
 // Hero teacher-stack carousel: 4 persistent card elements cycle through
