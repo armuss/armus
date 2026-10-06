@@ -994,6 +994,20 @@ body {
     transition: none;
   }
 }
+@media (max-width: 900px) {
+  /* scroll-triggered fade/slide-in reads as unwanted motion on a phone -
+     same treatment as prefers-reduced-motion above, just gated on
+     viewport width instead of the OS-level setting. Placed after the
+     base .reveal/.teacher-card rules so it actually wins the cascade. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .teacher-card {
+    transition: none;
+  }
+}
 .teacher-card {
   transition:
     left 1s cubic-bezier(0.65, 0, 0.35, 1),

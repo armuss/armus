@@ -44,7 +44,10 @@ function armusInitHeroRotator(){
   if(cardEls.length<4)return;
 
   const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduceMotion)return;
+  // the whole stack is display:none on phones (replaced by
+  // .hero-mobile-photo), so there's nothing to animate there
+  const isMobile=window.matchMedia('(max-width: 900px)').matches;
+  if(reduceMotion||isMobile)return;
 
   function fillCard(article,teacher){
     const portrait=article.querySelector('.portrait');
