@@ -713,6 +713,11 @@
       cursor: pointer;
     }
 
+    .goal-inputs button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
     .goal-track {
       background: var(--armus-bg);
       border-radius: 999px;
@@ -799,6 +804,22 @@
     }
 
     .confidence-btn:hover {
+      border-color: var(--armus-gold-2);
+    }
+
+    .confidence-retry-btn {
+      margin-top: 8px;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-bg);
+      color: var(--armus-ink);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .confidence-retry-btn:hover {
       border-color: var(--armus-gold-2);
     }
 
@@ -2048,10 +2069,16 @@
       }
       renderGoal(goal);
 
-      document.getElementById("goalSaveBtn").addEventListener("click", async () => {
+      const goalSaveBtn = document.getElementById("goalSaveBtn");
+      goalSaveBtn.addEventListener("click", async () => {
         const value = Math.max(1, Math.min(30, Number(goalInput.value) || 3));
         const status = document.getElementById("goalSaveStatus");
+        // a double-click used to fire two armusUpdateOwnProfile calls
+        // racing each other, each with its own setTimeout clobbering the
+        // other's status text.
+        goalSaveBtn.disabled = true;
         const result = await armusUpdateOwnProfile({ weekly_lesson_goal: value });
+        goalSaveBtn.disabled = false;
         if (result === false) {
           status.textContent = armusT("studentDash.goalSaveFailed", "Kaydedilemedi");
         } else {
@@ -2136,7 +2163,24 @@
             const score = Number(btn.dataset.score);
             confidenceCard.innerHTML = `<div class="confidence-trend-text">${armusT("studentDash.saving", "Kaydediliyor...")}</div>`;
             const result = await armusAddConfidenceCheckin(session.id, pendingCheckinBooking.id, score);
-            if (result) confidenceCheckins.push(result);
+
+            // armusAddConfidenceCheckin returns false on failure - this
+            // used to fall straight into renderConfidenceTrend() either
+            // way, which on a failed FIRST checkin hides the whole
+            // widget (confidenceCheckins.length is still 0, nothing was
+            // pushed) and on any later one just silently renders the
+            // trend without the new point - either way the student's
+            // tap looked like it worked when it hadn't saved at all.
+            if (!result) {
+              confidenceCard.innerHTML = `
+                <div class="confidence-trend-text">${armusT("studentDash.confidenceCheckinFailed", "Kaydedilemedi. Lütfen tekrar dene.")}</div>
+                <button type="button" class="confidence-retry-btn">${armusT("studentDash.tryAgain", "Tekrar dene")}</button>
+              `;
+              confidenceCard.querySelector(".confidence-retry-btn").addEventListener("click", renderConfidencePrompt);
+              return;
+            }
+
+            confidenceCheckins.push(result);
             renderConfidenceTrend();
           });
         });
