@@ -927,6 +927,17 @@
     let activeConversationId = null;
     let activeConversationHasBooking = false;
 
+    // currentSession used to be fetched once at page load and reused for
+    // the rest of the visit - if the user signed out (or their account
+    // changed) in another tab while this page stayed open, every send/
+    // read here kept acting as that stale session until a request
+    // finally got rejected server-side. Reloading on a real sign-out is
+    // the simplest correct fix: it re-runs the init flow below, which
+    // re-fetches the session and shows the login gate if there's none.
+    armusSupabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") window.location.reload();
+    });
+
     // The other participant in any conversation here is a teacher exactly
     // when the logged-in user is a student (conversations are always
     // student<->teacher) - so their full name never shows, only "Ahmet Y.",
