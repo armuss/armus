@@ -578,7 +578,11 @@
       color: var(--armus-on-gold);
     }
 
-    /* migration_85.sql - activity-derived online status */
+    /* migration_85.sql - activity-derived online status. The checkmark
+       is a non-color indicator (WCAG 1.4.1) - the dot used to signal
+       "online" through its green fill alone, invisible to anyone who
+       can't distinguish that hue, with no accessible name at all since
+       title is hover-only. */
     .online-dot {
       position: absolute;
       left: 14px;
@@ -589,6 +593,14 @@
       background: #3ecf7a;
       border: 3px solid var(--armus-panel);
       cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .online-dot svg {
+      width: 8px;
+      height: 8px;
     }
 
     .fav-btn {
@@ -935,7 +947,7 @@
       </label>
 
       <div class="sort-wrap">
-        <select id="sortSelect">
+        <select id="sortSelect" aria-label="Sırala">
           <option value="default" data-i18n="teachersPage.sortRecommended">Önerilen</option>
           <option value="priceLow" data-i18n="teachersPage.sortPriceLow">En düşük fiyat</option>
           <option value="priceHigh" data-i18n="teachersPage.sortPriceHigh">En yüksek fiyat</option>
@@ -944,10 +956,11 @@
       </div>
 
       <div class="filter-search">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon" aria-hidden="true">🔍</span>
         <input
           type="text"
           id="searchInput"
+          aria-label="Öğretmen ara"
           placeholder="İsim, uzmanlık veya konu ara..."
           data-i18n-placeholder="teachersPage.searchPlaceholder"
         >
@@ -1001,6 +1014,20 @@
       panel.addEventListener("click", event => event.stopPropagation());
     });
 
+    // Shared by the initial card render and the 60s online-status
+    // refresh below - the checkmark is a non-color indicator (WCAG
+    // 1.4.1) and role="img"/aria-label give it a real accessible name
+    // instead of relying on title, which only ever reaches a sighted
+    // mouse user hovering it.
+    function onlineDotHtml() {
+      const label = armusT("teacherProfile.onlineNow", "Öğretmen şu an çevrimiçi");
+      return `
+        <div class="online-dot" role="img" aria-label="${label}" title="${label}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+      `;
+    }
+
     function renderTeacherCard(teacher) {
 
       const teacherLink = `teacher?teacher=${encodeURIComponent(teacher.id)}`;
@@ -1020,7 +1047,7 @@
       </button>
         <div class="avatar">
           ${avatarInner}
-          ${teacher.isOnline ? `<div class="online-dot" title="${armusT("teacherProfile.onlineNow", "Öğretmen şu an çevrimiçi")}"></div>` : ""}
+          ${teacher.isOnline ? onlineDotHtml() : ""}
         </div>
         <div class="rating">${ratingLabel}</div>
 
@@ -1040,12 +1067,20 @@
       `;
 
       const btn = article.querySelector(".fav-btn");
-      btn.classList.toggle("active", armusIsFavorite(btn.dataset.fav));
+      function renderFavBtnState(active) {
+        btn.classList.toggle("active", active);
+        btn.setAttribute(
+          "aria-label",
+          active
+            ? armusT("teacherProfile.removeFromFavorites", "Favorilerden çıkar")
+            : armusT("teacherProfile.addToFavorites", "Favorilere ekle")
+        );
+      }
+      renderFavBtnState(armusIsFavorite(btn.dataset.fav));
       btn.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
-        const nowFavorited = armusToggleFavorite(btn.dataset.fav);
-        btn.classList.toggle("active", nowFavorited);
+        renderFavBtnState(armusToggleFavorite(btn.dataset.fav));
         if (favoritesOnlyFilter.checked) updateTeachers();
       });
 
@@ -1347,7 +1382,7 @@
         const shouldBeOnline = armusIsTeacherOnline(teacher.lastActiveAt);
         const dot = avatar.querySelector(".online-dot");
         if (shouldBeOnline && !dot) {
-          avatar.insertAdjacentHTML("beforeend", `<div class="online-dot" title="${armusT("teacherProfile.onlineNow", "Öğretmen şu an çevrimiçi")}"></div>`);
+          avatar.insertAdjacentHTML("beforeend", onlineDotHtml());
         } else if (!shouldBeOnline && dot) {
           dot.remove();
         }

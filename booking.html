@@ -934,6 +934,9 @@
           const pill = document.createElement("div");
           pill.className = "date-pill" + (dateKey === selectedDate ? " selected" : "");
           pill.dataset.date = dateKey;
+          pill.setAttribute("role", "button");
+          pill.setAttribute("tabindex", "0");
+          pill.setAttribute("aria-pressed", dateKey === selectedDate ? "true" : "false");
           pill.innerHTML = `
             <span class="day-name">${dayNames[date.getDay()]}</span>
             <span class="day-num">${date.getDate()}</span>
@@ -941,16 +944,30 @@
 
           pill.addEventListener("click", () => {
 
-            document.querySelectorAll(".date-pill").forEach(p =>
-              p.classList.remove("selected")
-            );
+            document.querySelectorAll(".date-pill").forEach(p => {
+              p.classList.remove("selected");
+              p.setAttribute("aria-pressed", "false");
+            });
             pill.classList.add("selected");
+            pill.setAttribute("aria-pressed", "true");
 
             selectedDate = dateKey;
             selectedTime = null;
 
             confirmBox.style.display = "none";
             renderSlots(dateKey, date.getDay());
+          });
+
+          // neither the date pills nor the time slots below were
+          // keyboard-operable at all - plain divs with only a click
+          // listener, nothing a Tab/Enter-only user could reach or
+          // activate. role="button" + tabindex make them focusable;
+          // Enter/Space here mirrors a native button's own activation keys.
+          pill.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              pill.click();
+            }
           });
 
           dateRow.appendChild(pill);
@@ -983,16 +1000,31 @@
 
           if (slot.available) {
 
+            div.setAttribute("role", "button");
+            div.setAttribute("tabindex", "0");
+            div.setAttribute("aria-pressed", "false");
+
             div.addEventListener("click", () => {
 
-              document.querySelectorAll(".slot").forEach(s =>
-                s.classList.remove("selected")
-              );
+              document.querySelectorAll(".slot").forEach(s => {
+                s.classList.remove("selected");
+                s.setAttribute("aria-pressed", "false");
+              });
               div.classList.add("selected");
+              div.setAttribute("aria-pressed", "true");
 
               selectedTime = slot.time;
               showConfirm();
             });
+
+            div.addEventListener("keydown", (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                div.click();
+              }
+            });
+          } else {
+            div.setAttribute("aria-disabled", "true");
           }
 
           slotGrid.appendChild(div);
