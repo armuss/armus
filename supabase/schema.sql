@@ -222,6 +222,35 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- migration_90.sql: changing your email in Settings only ever updated
+-- auth.users.email (Supabase Auth's own updateUser({email}) flow, after
+-- confirmation) - profiles.email, the column every email-sending code
+-- path in this app actually reads, never followed, and was itself
+-- locked against a direct client write (email_lock below). From the
+-- moment someone confirmed a new email, every notification for that
+-- account silently kept going to the old, abandoned address forever.
+-- Reuses mark_email_verified's own bypass flag
+-- (armus.email_verification_update) to get past that same lock for
+-- this one legitimate, system-initiated write.
+create or replace function public.sync_profile_email()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.email is distinct from old.email then
+    perform set_config('armus.email_verification_update', 'on', true);
+    update public.profiles set email = new.email where id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_email_updated
+  after update of email on auth.users
+  for each row execute procedure public.sync_profile_email();
+
 -- === LESSON CREDITS =================================================
 -- Replaces "cancel = money back" with "cancel = a lesson owed back".
 -- cancel-booking grants one when a cancellation is refund-eligible (see
@@ -895,12 +924,45 @@ as $$
   );
 $$;
 
+-- migration_90.sql: this policy constrained which TEACHER could
+-- originate a conversation (is_messageable_teacher above) but placed no
+-- constraint at all on WHICH student a teacher could name - any
+-- approved teacher who knew (or guessed) a student's UUID could open an
+-- unsolicited conversation in that student's inbox with zero prior
+-- relationship. A student starting a new conversation with an eligible
+-- teacher (the normal "message a teacher for the first time" flow this
+-- whole policy exists for) still needs no prior relationship - only the
+-- teacher-initiated branch now requires one.
+create or replace function public.teacher_may_contact_student(target_student_id uuid, acting_teacher_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from profiles p
+    where p.id = target_student_id and p.role = 'student'
+  )
+  and (
+    public.is_admin()
+    or exists (
+      select 1 from bookings b
+      where b.student_id = target_student_id
+        and b.teacher_id = acting_teacher_id::text
+    )
+  );
+$$;
+
 create policy "conversations_insert_participant"
   on conversations for insert
   with check (
     (auth.uid() = student_id or auth.uid() = teacher_id)
-    and exists (select 1 from profiles p where p.id = student_id and p.role = 'student')
     and public.is_messageable_teacher(teacher_id)
+    and (
+      (auth.uid() = student_id and exists (select 1 from profiles p where p.id = student_id and p.role = 'student'))
+      or (auth.uid() = teacher_id and public.teacher_may_contact_student(student_id, teacher_id))
+    )
   );
 
 create policy "messages_select_participant"
