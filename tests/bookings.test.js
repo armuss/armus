@@ -136,6 +136,14 @@ test("armusTrialCountsAsEarned - only the earliest of several trials against the
   assert.equal(ctx.armusTrialCountsAsEarned(trial2, all, []), false, "a later duplicate trial should not double-count");
 });
 
+test("armusTrialCountsAsEarned - a cancelled first trial doesn't block a genuine later trial from being credited", () => {
+  const cancelledTrial = { id: "b1", type: "trial", studentId: "s1", teacherId: "t1", createdAt: "2026-01-01T00:00:00Z", status: "cancelled" };
+  const realTrial = { id: "b2", type: "trial", studentId: "s1", teacherId: "t1", createdAt: "2026-02-01T00:00:00Z", status: "confirmed" };
+  const realLesson = { id: "b3", type: "lesson", studentId: "s1", teacherId: "t1", status: "confirmed" };
+  const all = [cancelledTrial, realTrial, realLesson];
+  assert.equal(ctx.armusTrialCountsAsEarned(realTrial, all, []), true, "the real (non-cancelled) trial should be credited");
+});
+
 test("armusCommissionForHours - every tier boundary", () => {
   const cases = [
     [0, 30, 0], [99.9, 30, 0],
