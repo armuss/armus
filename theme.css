@@ -88,6 +88,19 @@ h1, h2 {
   }
 }
 
+/* once the write-on has played anywhere on the site this tab/session
+   (flagged by the inline script right after <head> on every page, before
+   first paint), skip it everywhere after that. Without this, moving
+   between our own pages - e.g. the teacher panel's Overview -> Mesajlar,
+   a real page load since Mesajlar isn't one of its in-page panels like
+   the others - made the logo "write itself" again on every hop, reading
+   as the page glitching/reloading instead of one continuous visit. */
+html.armus-logo-static .logo-img {
+  animation: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 /* Global nav: Preply-style icon row + notification/profile dropdowns for
    a logged-in student, injected by armusRenderNavAuth (auth.js) into
    #navAuthButtons on every page that has it (index.html, mesajlar.html,
