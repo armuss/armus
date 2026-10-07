@@ -523,6 +523,85 @@
       margin-top: 0;
     }
 
+    /* ---- message thread (admin-only read, dispute review) ---- */
+
+    .admin-msg-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .admin-msg-bubble {
+      padding: 12px 14px;
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 12px;
+      background: var(--armus-panel-2, var(--armus-panel));
+    }
+
+    .admin-msg-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 11.5px;
+      color: var(--armus-faint);
+    }
+
+    .admin-msg-meta strong {
+      color: var(--armus-ink);
+      font-size: 12.5px;
+    }
+
+    .admin-msg-edited-tag {
+      color: var(--armus-gold-text);
+      font-weight: 700;
+    }
+
+    .admin-msg-body {
+      font-size: 13.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .admin-msg-attachment {
+      font-size: 12px;
+      color: var(--armus-muted);
+      font-style: italic;
+    }
+
+    .admin-msg-history {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--armus-border-soft);
+    }
+
+    .admin-msg-history summary {
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--armus-gold-text);
+    }
+
+    .admin-msg-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .admin-msg-history-entry {
+      padding: 8px 10px;
+      background: rgba(246, 198, 73, .06);
+      border: 1px solid var(--armus-gold-2);
+      border-radius: 8px;
+      font-size: 12.5px;
+    }
+
+    .admin-msg-history-entry .admin-msg-meta {
+      margin-bottom: 4px;
+    }
+
     /* ---- availability mini grid ---- */
 
     .avail-grid {
@@ -1150,6 +1229,7 @@
       <button class="nav-btn" data-panel="testimonials" data-i18n="admin.navTestimonials">Anasayfa Yorumları</button>
       <button class="nav-btn" data-panel="attendance"><span data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</span> <span class="nav-badge" id="attendanceBadge"></span></button>
       <button class="nav-btn" data-panel="disputes"><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
+      <button class="nav-btn" data-panel="messages" data-i18n="admin.navMessages">Mesajlar</button>
       <button class="nav-btn" data-panel="reviews"><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
       <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
       <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
@@ -1380,6 +1460,29 @@
         <input type="text" class="admin-search" id="searchDisputes" placeholder="İsim veya konu ara..." data-i18n-placeholder="admin.searchNameTopic">
         <div id="disputesList"></div>
         <div class="empty-note" id="disputesEmpty" style="display: none;" data-i18n="admin.disputesEmpty">Bildirilmiş bir sorun yok.</div>
+      </div>
+
+      <div class="panel" id="panel-messages">
+        <h2 data-i18n="admin.navMessages">Mesajlar</h2>
+        <p class="section-hint" data-i18n="admin.messagesHint">
+          Bir öğrenci ile öğretmen arasındaki yazışmayı, bir şikayeti
+          incelerken buradan okuyabilirsin. Düzenlenmiş bir mesajın
+          önceki sürümleri de (kaç kez düzenlenmiş olursa olsun) ayrıca
+          görünür.
+        </p>
+        <input type="text" class="admin-search" id="searchMessages" placeholder="Öğrenci veya öğretmen ara..." data-i18n-placeholder="admin.searchStudentTeacher">
+        <table id="messagesTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colStudent">Öğrenci</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colStartDate">Başlangıç</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="messagesBody"></tbody>
+        </table>
+        <div class="empty-note" id="messagesEmpty" style="display: none;" data-i18n="admin.messagesEmpty">Henüz bir yazışma yok.</div>
       </div>
 
       <div class="panel" id="panel-reviews">
@@ -2001,6 +2104,125 @@
         document.getElementById("detailOverlay").classList.remove("visible");
       }
     });
+
+    // ---- messages (dispute review - migration_88.sql) ----
+
+    function renderMessagesPanel(conversations, profileById) {
+
+      const body = document.getElementById("messagesBody");
+      const empty = document.getElementById("messagesEmpty");
+      body.innerHTML = "";
+
+      if (conversations.length === 0) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      conversations.forEach(c => {
+        const student = profileById.get(c.student_id);
+        const teacher = profileById.get(c.teacher_id);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${armusEscapeHtml((student && student.name) || c.student_id)}</td>
+          <td>${armusEscapeHtml((teacher && teacher.name) || c.teacher_id)}</td>
+          <td>${new Date(c.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
+          <td class="row-actions">
+            <button class="btn" data-view-conversation="${c.id}">${armusT("admin.details", "Detaylar")}</button>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+
+      body.querySelectorAll("[data-view-conversation]").forEach(button => {
+        button.addEventListener("click", () => {
+          const convo = conversations.find(c => c.id === button.dataset.viewConversation);
+          if (convo) openConversationDetail(convo, profileById);
+        });
+      });
+    }
+
+    function attachmentPreviewLabel(type) {
+      if (type === "image") return armusT("messages.photo", "📷 Fotoğraf");
+      if (type === "video") return armusT("messages.video", "🎥 Video");
+      if (type === "audio") return armusT("messages.voiceMessage", "🎤 Sesli mesaj");
+      return "";
+    }
+
+    function renderAdminMsgVersion(senderLabel, timeLabel, body, attachmentType) {
+      return `
+        <div class="admin-msg-meta"><strong>${armusEscapeHtml(senderLabel)}</strong> · ${timeLabel}</div>
+        ${body ? `<div class="admin-msg-body">${armusEscapeHtml(body)}</div>` : ""}
+        ${attachmentType ? `<div class="admin-msg-attachment">${attachmentPreviewLabel(attachmentType)}</div>` : ""}
+      `;
+    }
+
+    // fetches and renders the full thread read-only, including every
+    // earlier version of any edited message (message_edit_history,
+    // migration_88.sql) - lazy per-conversation rather than loaded for
+    // every conversation up front in loadAll()
+    async function openConversationDetail(conversation, profileById) {
+
+      const student = profileById.get(conversation.student_id);
+      const teacher = profileById.get(conversation.teacher_id);
+      const studentLabel = (student && student.name) || armusT("admin.colStudent", "Öğrenci");
+      const teacherLabel = (teacher && teacher.name) || armusT("admin.colTeacher", "Öğretmen");
+
+      document.getElementById("detailTitle").textContent = `${studentLabel} ↔ ${teacherLabel}`;
+      document.getElementById("detailBody").innerHTML = `<p class="section-hint">${armusT("admin.loading", "Yükleniyor...")}</p>`;
+      document.getElementById("detailOverlay").classList.add("visible");
+
+      const [messagesRes, historyRes] = await Promise.all([
+        armusSupabase.from("messages").select("*").eq("conversation_id", conversation.id).order("created_at", { ascending: true }),
+        // all of it, filtered down to this conversation's messages client-side below -
+        // message_edit_history has no conversation_id of its own to filter by server-side
+        armusSupabase.from("message_edit_history").select("*").order("edited_at", { ascending: true }),
+      ]);
+
+      const messages = messagesRes.data || [];
+      const messageIds = new Set(messages.map(m => m.id));
+      const historyByMessage = new Map();
+      (historyRes.data || []).forEach(h => {
+        if (!messageIds.has(h.message_id)) return;
+        if (!historyByMessage.has(h.message_id)) historyByMessage.set(h.message_id, []);
+        historyByMessage.get(h.message_id).push(h);
+      });
+
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      const timeLabel = iso => new Date(iso).toLocaleString(lang);
+
+      if (messages.length === 0) {
+        document.getElementById("detailBody").innerHTML = `<p class="empty-note">${armusT("messages.emptyThread", "Henüz mesaj yok, ilk mesajı sen gönder.")}</p>`;
+        return;
+      }
+
+      document.getElementById("detailBody").innerHTML = `
+        <div class="admin-msg-thread">
+          ${messages.map(m => {
+            const senderLabel = m.sender_id === conversation.student_id ? studentLabel : teacherLabel;
+            const history = historyByMessage.get(m.id) || [];
+            return `
+              <div class="admin-msg-bubble">
+                ${renderAdminMsgVersion(senderLabel, timeLabel(m.created_at), m.body, m.attachment_type)}
+                ${m.edited_at ? `<span class="admin-msg-edited-tag">${armusT("admin.messageEdited", "düzenlendi")}</span>` : ""}
+                ${history.length ? `
+                  <details class="admin-msg-history">
+                    <summary>${armusT("admin.messageEditHistory", "Önceki sürümler")} (${history.length})</summary>
+                    <div class="admin-msg-history-list">
+                      ${history.map(h => `
+                        <div class="admin-msg-history-entry">
+                          ${renderAdminMsgVersion(senderLabel, timeLabel(h.edited_at), h.body, h.attachment_type)}
+                        </div>
+                      `).join("")}
+                    </div>
+                  </details>
+                ` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
 
     // month-key helper ("2026-09") shared by the overview stats and both
     // trend charts, so "this month"/"last month" always mean the same thing
@@ -3427,7 +3649,8 @@
     let armusAdminAttendanceReports = [];
     let armusAdminCredits = [];
     let armusAdminClientErrors = [];
-    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "" };
+    let armusAdminConversations = [];
+    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "" };
 
     function matchesSearch(value, term) {
       return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
@@ -3455,6 +3678,11 @@
         const studentName = (profileById.get(r.studentId) || {}).name || "";
         return matchesSearch(teacherName, armusAdminSearch.attendance) || matchesSearch(studentName, armusAdminSearch.attendance);
       });
+      const filteredConversations = armusAdminConversations.filter(c => {
+        const studentName = (profileById.get(c.student_id) || {}).name || "";
+        const teacherName = (profileById.get(c.teacher_id) || {}).name || "";
+        return matchesSearch(studentName, armusAdminSearch.messages) || matchesSearch(teacherName, armusAdminSearch.messages);
+      });
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
@@ -3470,6 +3698,7 @@
       renderErrorLogPanel(armusAdminClientErrors);
       renderTestimonialsPanel(armusAdminTestimonials);
       renderDisputesPanel(filteredDisputes);
+      renderMessagesPanel(filteredConversations, profileById);
       renderAttendancePanel(filteredAttendanceReports);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
@@ -3500,6 +3729,10 @@
       armusAdminSearch.students = e.target.value;
       renderAllFromState();
     });
+    document.getElementById("searchMessages").addEventListener("input", e => {
+      armusAdminSearch.messages = e.target.value;
+      renderAllFromState();
+    });
 
     document.getElementById("exportBookingsBtn").addEventListener("click", () => {
       const rows = armusAdminBookings
@@ -3526,7 +3759,7 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
@@ -3536,6 +3769,12 @@
         armusAdminGetAllAttendanceReports(),
         armusSupabase.from("lesson_credits").select("*"),
         armusSupabase.from("client_errors").select("*").order("created_at", { ascending: false }).limit(200),
+        // list only - the messages/message_edit_history themselves are
+        // fetched lazily per conversation (openConversationDetail) rather
+        // than all at once here, since a busy inbox's full message history
+        // could be large and the admin only ever needs to read one
+        // conversation at a time
+        armusSupabase.from("conversations").select("*").order("created_at", { ascending: false }),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -3552,6 +3791,7 @@
       // used by computeEarnings to tell whether a trial converted into a
       // real package purchase yet (see armusTrialCountsAsEarned)
       armusAdminCredits = creditsRes.data || [];
+      armusAdminConversations = conversationsRes.data || [];
 
       renderAllFromState();
     }

@@ -843,6 +843,13 @@ create policy "conversations_select_participant"
   on conversations for select
   using (auth.uid() = student_id or auth.uid() = teacher_id);
 
+-- migration_88.sql: lets an admin browse conversations for dispute
+-- investigation (admin.html's Mesajlar panel) - before this, only the
+-- two participants themselves could see a conversation existed at all.
+create policy "conversations_select_admin_all"
+  on conversations for select
+  using (public.is_admin());
+
 -- "a student and a real teacher" (see this table's own header comment)
 -- was never actually checked - only that the caller is one of the two
 -- named parties. Any authenticated user could set teacher_id (or
@@ -905,6 +912,13 @@ create policy "messages_select_participant"
         and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
     )
   );
+
+-- migration_88.sql: counterpart to conversations_select_admin_all above -
+-- an admin investigating a complaint needs to read the actual messages,
+-- not just know the conversation exists.
+create policy "messages_select_admin_all"
+  on messages for select
+  using (public.is_admin());
 
 -- rate-limited (migration_69.sql) - every insert fires a real Resend
 -- email via the messages_notify_new_message trigger with no debounce
@@ -982,9 +996,40 @@ create policy "messages_update_participant"
 -- a message look like the OTHER person wrote it, with no time limit and
 -- no trace. attachment_url/attachment_type had the same gap: unlike
 -- body, they weren't held to the sender-only/2-minute rule at all.
+--
+-- migration_88.sql: an edit used to just overwrite body/attachment_url/
+-- attachment_type in place - whatever it replaced was gone for good,
+-- even to an admin looking into a complaint. message_edit_history keeps
+-- what the message looked like right before each edit (one row per
+-- edit, so editing the same message three times leaves three rows
+-- behind it); messages.body etc. is still just the current text.
+-- Admin-only: a participant doesn't need their own edit trail surfaced
+-- back at them, only an admin investigating a dispute does.
+create table message_edit_history (
+  id uuid primary key default gen_random_uuid(),
+  message_id uuid not null references messages(id) on delete cascade,
+  body text not null default '',
+  attachment_url text,
+  attachment_type text,
+  edited_at timestamptz not null default now()
+);
+
+alter table message_edit_history enable row level security;
+
+create policy "message_edit_history_select_admin"
+  on message_edit_history for select
+  using (public.is_admin());
+
+-- security definer (migration_88.sql) so the insert into
+-- message_edit_history above runs with this function's own privileges -
+-- nobody but an admin should ever write into or read that table
+-- directly, so there's deliberately no client-facing insert policy on
+-- it for a participant to satisfy; this trigger is the only path in.
 create or replace function public.enforce_message_edit_rules()
 returns trigger
 language plpgsql
+security definer
+set search_path = public
 as $$
 begin
 
@@ -1008,6 +1053,9 @@ begin
     if old.created_at < now() - interval '2 minutes' then
       raise exception 'message_edit_expired: messages can only be edited within 2 minutes of sending';
     end if;
+
+    insert into message_edit_history (message_id, body, attachment_url, attachment_type, edited_at)
+    values (old.id, old.body, old.attachment_url, old.attachment_type, now());
 
     new.edited_at := now();
   end if;
