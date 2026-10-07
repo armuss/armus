@@ -211,8 +211,16 @@ function armusTrialCountsAsEarned(booking, allBookings, credits) {
   // single real lesson/credit, double- (or more-) counting one
   // conversion event into a teacher's earnings. Only the earliest trial
   // (by creation time) for this student-teacher pair is ever credited.
+  //
+  // Cancelled trials are excluded from that earliest-trial search: a
+  // cancelled first trial never converted anything, so it must never
+  // block a later, genuinely-converted trial with the same teacher from
+  // being the one that gets credited - otherwise a returning student's
+  // real second trial (after cancelling/rescheduling their first one)
+  // would leave this always pointing at the dead first trial, and the
+  // teacher would never get paid for the trial that actually happened.
   const earliestTrialId = (allBookings || [])
-    .filter(b => b.type === "trial" && b.studentId === booking.studentId && b.teacherId === booking.teacherId)
+    .filter(b => b.type === "trial" && b.studentId === booking.studentId && b.teacherId === booking.teacherId && b.status !== "cancelled")
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0]?.id;
 
   return booking.id === earliestTrialId;

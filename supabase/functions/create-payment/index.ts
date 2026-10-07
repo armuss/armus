@@ -230,6 +230,28 @@ function isSlotInTeacherAvailability(
   return false;
 }
 
+// Demo teachers (teachers-data.js) have no profiles row, so they have no
+// weekly_availability/availability_dates to check above - bookings.js's
+// armusSlotsForDate falls back, for exactly this case, to a deterministic
+// per-slot mock (hash of teacher id + date + time, 2 of every 3 slots
+// shown as available) so booking.html's picker still shows something.
+// That mock was never mirrored here, so a demo-teacher booking skipped
+// slot validation entirely - this function is reachable directly
+// (armusSupabase.functions.invoke) with any date/time at all, so anyone
+// could pay for a demo-teacher slot the picker itself marked as closed.
+// Mirrors bookings.js's armusHashCode exactly - keep the two in sync.
+function armusHashCode(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function isDemoSlotAvailable(teacherId: string, dateKey: string, time: string): boolean {
+  return armusHashCode(teacherId + dateKey + time) % 3 !== 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
@@ -340,6 +362,9 @@ Deno.serve(async (req) => {
 
     if (isDemoTeacher) {
       pricePerLesson = DEMO_TEACHER_PRICES[teacherId];
+      if (type !== "package" && !isDemoSlotAvailable(teacherId, String(date), String(time))) {
+        return jsonResponse({ error: "Öğretmen bu saatte müsait değil. Lütfen başka bir saat seç." }, 400);
+      }
     } else {
       const { data: teacherProfile } = await supabaseAdmin
         .from("profiles")
