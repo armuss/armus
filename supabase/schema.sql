@@ -915,6 +915,30 @@ create policy "messages_select_participant"
 -- could loop this insert to flood a specific person's inbox or burn
 -- through ARMUS's shared Resend quota. 120/hour is far above any real
 -- conversation's pace.
+--
+-- migration_87.sql: that cap used to be a bare subquery counting
+-- `messages` right here, inside a policy defined ON messages - Postgres
+-- refuses to plan a policy that scans the very table it protects in the
+-- same statement ("infinite recursion detected in policy for relation
+-- messages"), so EVERY insert failed, for every sender, not just ones
+-- over the limit. Moved the count into its own SECURITY DEFINER
+-- function below - a function call isn't inlined into the policy the
+-- way a bare subquery is, so this no longer reads as the table
+-- referencing itself.
+create or replace function public.messages_under_rate_limit()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select (
+    select count(*) from messages m2
+    where m2.sender_id = auth.uid()
+      and m2.created_at > now() - interval '1 hour'
+  ) < 120
+$$;
+
 create policy "messages_insert_own"
   on messages for insert
   with check (
@@ -930,11 +954,7 @@ create policy "messages_insert_own"
       where c.id = conversation_id
         and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
     )
-    and (
-      select count(*) from messages m2
-      where m2.sender_id = auth.uid()
-        and m2.created_at > now() - interval '1 hour'
-    ) < 120
+    and public.messages_under_rate_limit()
   );
 
 -- broad on purpose - the OTHER participant needs to update read_at to
