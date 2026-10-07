@@ -75,6 +75,12 @@ function armusBuildTeacherFromParts(profile, rawReviews, stats) {
       : {},
     // migration_85.sql - activity-derived, not the old manual toggle.
     isOnline: armusIsTeacherOnline(profile.last_active_at),
+    // kept alongside isOnline (not just folded into it) so a page that
+    // holds onto this teacher object for a while can recompute isOnline
+    // later purely from this timestamp - no extra fetch - instead of the
+    // dot being a one-time snapshot frozen at whatever it was when the
+    // page first loaded, right or wrong, for the rest of the visit.
+    lastActiveAt: profile.last_active_at || null,
     // migration_37.sql - which IANA zone this teacher's own calendar grid
     // (weeklyAvailability/availabilityDates) is wall-clock time in.
     timezone: profile.timezone || "Europe/Istanbul",

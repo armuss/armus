@@ -621,3 +621,17 @@ document.addEventListener("DOMContentLoaded", armusRenderNavAuth);
 // built from data-i18n attributes armusApplyTranslations() could just
 // re-swap), so a language toggle needs a full re-render to pick up
 document.addEventListener("armus:langchange", armusRenderNavAuth);
+
+// Nothing used to listen for the session itself changing, only for
+// DOMContentLoaded/language toggles - so signing out in one tab left
+// every other open tab showing the logged-in nav (avatar, "Panelim",
+// credit badge...) indefinitely; the first clue anything was wrong was
+// whatever the user tried to do next silently failing against RLS.
+// onAuthStateChange fires in every tab sharing this session (Supabase
+// propagates it via a storage event), so one listener here keeps all of
+// them in sync. TOKEN_REFRESHED/USER_UPDATED/etc. are ignored on purpose
+// - a full nav re-render (another armusGetSession() round trip) isn't
+// needed for those, only for an actual sign-in/sign-out.
+armusSupabase.auth.onAuthStateChange((event) => {
+  if (event === "SIGNED_IN" || event === "SIGNED_OUT") armusRenderNavAuth();
+});

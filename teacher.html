@@ -1064,6 +1064,15 @@
       document.getElementById("teacherRole").textContent = teacher.role;
       document.getElementById("onlineDot").style.display = teacher.isOnline ? "block" : "none";
 
+      // same one-time-snapshot problem as the marketplace grid's dots -
+      // re-derive periodically from the last_active_at timestamp already
+      // held in memory, no extra fetch, so the dot doesn't keep reading
+      // "online" for a teacher who's since gone offline while this
+      // profile stays open
+      setInterval(() => {
+        document.getElementById("onlineDot").style.display = armusIsTeacherOnline(teacher.lastActiveAt) ? "block" : "none";
+      }, 60 * 1000);
+
       function renderRatingHeader() {
         document.getElementById("ratingValue").textContent =
           teacher.rating ? `★ ${teacher.rating}` : armusT("teacherProfile.newTeacher", "Yeni");

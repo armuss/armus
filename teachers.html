@@ -1330,6 +1330,31 @@
 
   </script>
 
+  <script>
+    // Each card's online dot used to be a one-time snapshot from
+    // whatever isOnline was computed as when the teacher's data first
+    // loaded - a teacher who then went offline kept showing "online" for
+    // as long as the student stayed on this page. Re-derive it
+    // periodically straight from the last_active_at timestamp already
+    // held in memory (armusIsTeacherOnline is a pure, local time-window
+    // check) - no extra fetch, no re-render of anything else on the card.
+    setInterval(() => {
+      allTeachers.forEach(teacher => {
+        const card = document.querySelector(`[data-teacher-id="${CSS.escape(teacher.id)}"]`);
+        if (!card) return;
+        const avatar = card.querySelector(".avatar");
+        if (!avatar) return;
+        const shouldBeOnline = armusIsTeacherOnline(teacher.lastActiveAt);
+        const dot = avatar.querySelector(".online-dot");
+        if (shouldBeOnline && !dot) {
+          avatar.insertAdjacentHTML("beforeend", `<div class="online-dot" title="${armusT("teacherProfile.onlineNow", "Öğretmen şu an çevrimiçi")}"></div>`);
+        } else if (!shouldBeOnline && dot) {
+          dot.remove();
+        }
+      });
+    }, 60 * 1000);
+  </script>
+
   <script>armusRenderAnnouncementBanner();</script>
 </body>
 </html>
