@@ -276,6 +276,27 @@
       color: var(--armus-muted);
     }
 
+    .nav-bell-item {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    .nav-bell-item:hover {
+      background: var(--armus-panel-2);
+    }
+
+    .nav-bell-item strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .nav-bell-item span {
+      font-size: 12px;
+      color: var(--armus-muted);
+    }
+
     @media (max-width: 560px) {
       .nav-utility { gap: 6px; }
       .nav-refer-btn,
@@ -760,6 +781,9 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
+  <script src="bookings.js?v=7"></script>
+  <script src="reviews.js?v=5"></script>
+  <script src="messages.js?v=4"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -817,6 +841,70 @@
       }
       renderNavGreeting();
       document.addEventListener("armus:langchange", renderNavGreeting);
+
+      // ---- notification bell: this used to be a decorative icon with
+      // nothing behind it - the dropdown's "Henüz bildirimin yok." empty
+      // state was hardcoded in the markup and shown unconditionally, no
+      // matter how many unread messages or upcoming lessons the student
+      // actually had. Mirrors student-dashboard.html's own renderNavBell:
+      // no dedicated notifications system/table exists yet, so this
+      // surfaces the two things ARMUS already tracks that genuinely need
+      // the student's attention - unread messages and a lesson starting
+      // soon (next 48h).
+      (async function renderNavBell() {
+        const [allBookings, conversations] = await Promise.all([
+          armusGetBookingsForStudent(session.id),
+          armusGetConversations(),
+        ]);
+        const bookings = allBookings.filter(b => b.status !== "cancelled");
+        const upcomingBookings = bookings.filter(b => !armusIsBookingPast(b));
+
+        const unreadConvos = conversations.filter(c => c.unreadCount > 0);
+        const totalUnread = unreadConvos.reduce((sum, c) => sum + c.unreadCount, 0);
+
+        const soonCutoff = Date.now() + 48 * 3600 * 1000;
+        const soonBookings = upcomingBookings
+          .filter(b => armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone).getTime() <= soonCutoff)
+          .sort((a, b) => armusZonedTimeToUtc(a.date, a.time, a.teacherTimezone) - armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone));
+
+        const badge = document.getElementById("navBellBadge");
+        const badgeCount = totalUnread + soonBookings.length;
+        if (badgeCount > 0) {
+          badge.textContent = badgeCount > 9 ? "9+" : String(badgeCount);
+          badge.style.display = "flex";
+        } else {
+          badge.style.display = "none";
+        }
+
+        const items = [];
+
+        unreadConvos.slice(0, 3).forEach(c => {
+          const preview = c.lastMessage
+            ? (c.lastMessage.body || armusT("studentDash.navBellAttachment", "📎 Ek gönderdi"))
+            : "";
+          items.push(`
+            <a class="nav-bell-item" href="mesajlar">
+              <strong>${armusEscapeHtml(armusShortDisplayName(c.otherName))}</strong>
+              <span>${armusEscapeHtml(preview.length > 60 ? preview.slice(0, 60) + "…" : preview)}</span>
+            </a>
+          `);
+        });
+
+        soonBookings.slice(0, 2).forEach(b => {
+          const when = armusFormatLessonWhen(b);
+          items.push(`
+            <a class="nav-bell-item" href="class?booking=${b.id}">
+              <strong>${armusT("studentDash.navBellSoon", "Yaklaşan dersin")}</strong>
+              <span>${armusEscapeHtml(armusShortDisplayName(b.teacherName))} · ${when.dateLabel}, ${when.timeRange}</span>
+            </a>
+          `);
+        });
+
+        const dropdown = document.getElementById("navBellDropdown");
+        dropdown.innerHTML = items.length
+          ? items.join("")
+          : `<div class="nav-bell-empty">${armusT("studentDash.navBellEmpty", "Henüz bildirimin yok.")}</div>`;
+      })();
 
       // one open dropdown at a time - opening either closes the other
       const navDropdowns = [
