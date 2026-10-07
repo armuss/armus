@@ -146,6 +146,20 @@
       color: var(--armus-on-gold);
     }
 
+    /* the floating nav (.nav, 68px tall + 14px margin-top = 82px) sits
+       in normal document flow ahead of .hero-band, so at the top of the
+       page - before any scrolling - that 82px strip behind/around the
+       nav pill was still plain page background instead of gold. Pulling
+       the band's own background up behind the nav (negative margin,
+       same amount added back as padding so the actual hero content
+       keeps its original position) extends the gold all the way to the
+       very top, matching how the pill already looks once scrolled past
+       this point (translucent, blurred, gold showing through). */
+    .hero-band {
+      margin-top: -82px;
+      padding-top: 82px;
+    }
+
   </style>
   <noscript>
     <style>
