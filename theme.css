@@ -101,6 +101,59 @@ html.armus-logo-static .logo-img {
   mask-image: none;
 }
 
+/* Canonical button look, shared by every page - most pages only load
+   this file (theme.css), not styles.css (index.html's own stylesheet,
+   where this used to live only), so each one had ended up with its own
+   slightly-off local .btn/.btn-light copy (different font-weight,
+   border-radius, missing the hover lift) instead of actually matching
+   index.html. armusRenderNavAuth (auth.js) renders the same
+   .btn/.btn-light "Giriş Yap"/"Kayıt Ol" markup into every single page's
+   nav, so those drifted-apart local copies were the most visible symptom
+   - the login/register buttons looking different from one page to the
+   next for no reason. */
+.btn {
+  display: inline-block;
+  text-align: center;
+  background: transparent;
+  border: 1px solid var(--armus-border);
+  color: var(--armus-ink);
+  border-radius: 13px;
+  padding: 12px 18px;
+  font: 600 13px Inter;
+  cursor: pointer;
+  transition: 0.2s;
+  text-decoration: none;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn-light {
+  background: var(--armus-gold-gradient);
+  color: var(--armus-on-gold);
+}
+.btn-dark {
+  background: #0a0a0a;
+  color: #eee;
+  border: 1px solid #303030;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--armus-ink);
+  border: 1px solid var(--armus-silver-border-strong);
+}
+.btn-outline:hover {
+  border-color: var(--armus-silver-3);
+  background: rgba(111, 104, 88, 0.06);
+}
+.nav-greeting {
+  font-size: 13px;
+  color: var(--armus-muted);
+  margin-right: 4px;
+}
+.nav-greeting small {
+  color: var(--armus-faint);
+}
+
 /* Global nav: Preply-style icon row + notification/profile dropdowns for
    a logged-in student, injected by armusRenderNavAuth (auth.js) into
    #navAuthButtons on every page that has it (index.html, mesajlar.html,

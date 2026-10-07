@@ -108,28 +108,11 @@
       align-items: center;
     }
 
-    .btn {
-      display: inline-block;
-      text-align: center;
-      border: 1px solid var(--armus-border);
-      border-radius: 12px;
-      padding: 11px 18px;
-      background: transparent;
-      color: var(--armus-ink);
-      font-family: inherit;
-      font-size: 13px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .btn-light {
-      background: #0a0a0a;
-      color: #eee;
-      border-color: #303030;
-      font-weight: 700;
-      padding: 13px 22px;
-      border-radius: 11px;
-    }
+    /* .btn/.btn-light: canonical shared definition now lives in
+       theme.css (every page loads it) instead of being redefined here -
+       this copy was also just wrong (black background under a class
+       named "light", never matching the gold Kayıt Ol button used
+       everywhere else on the site). */
 
     .nav-utility {
       display: flex;

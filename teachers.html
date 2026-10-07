@@ -89,34 +89,11 @@
       gap: 10px;
     }
 
-    .btn {
-      display: inline-block;
-      text-align: center;
-      border: 1px solid var(--armus-border);
-      border-radius: 12px;
-      padding: 11px 18px;
-      background: transparent;
-      color: var(--armus-ink);
-      font-family: inherit;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .nav-greeting {
-      font-size: 13px;
-      color: var(--armus-muted);
-      margin-right: 4px;
-    }
-
-    .nav-greeting small {
-      color: var(--armus-faint);
-    }
-
-    .btn-light {
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      border-color: transparent;
-    }
+    /* .btn/.btn-light/.nav-greeting: canonical shared definition now
+       lives in theme.css (every page loads it) instead of being
+       redefined here - this copy had drifted from index.html's (no
+       hover lift, different border-radius/padding, no real font-weight
+       since font-family:inherit left it at body's default 400). */
 
     .nav-utility {
       display: flex;
