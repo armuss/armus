@@ -859,17 +859,41 @@ create policy "conversations_select_participant"
 -- be able to originate a new thread - except an admin, who legitimately
 -- messages a still-pending applicant straight from the review screen
 -- (admin.html's "Öğretmene Mesaj" button), so that path stays open.
+--
+-- migration_86.sql: that teacher eligibility check ran as a plain
+-- `exists (select ... from profiles p where p.id = teacher_id ...)`
+-- inside this WITH CHECK clause, which executes under the INSERTing
+-- user's own row-level security - and profiles_select_own only ever lets
+-- someone SELECT their *own* row. So for every ordinary student (the only
+-- caller this policy is actually meant to let through), that subquery
+-- could never see the teacher's row at all - filtered out before
+-- role/status/is_banned were even checked - and the whole policy
+-- evaluated to false unconditionally. No student could ever start a new
+-- conversation with any teacher. Moved the lookup into a SECURITY
+-- DEFINER function (same fix shape as public.is_admin() below) so it runs
+-- with the function owner's full visibility instead of the calling
+-- student's.
+create or replace function public.is_messageable_teacher(target_teacher_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from profiles p
+    where p.id = target_teacher_id
+      and p.role = 'teacher'
+      and (public.is_admin() or (p.status = 'approved' and coalesce(p.is_banned, false) = false))
+  );
+$$;
+
 create policy "conversations_insert_participant"
   on conversations for insert
   with check (
     (auth.uid() = student_id or auth.uid() = teacher_id)
     and exists (select 1 from profiles p where p.id = student_id and p.role = 'student')
-    and exists (
-      select 1 from profiles p
-      where p.id = teacher_id
-        and p.role = 'teacher'
-        and (public.is_admin() or (p.status = 'approved' and coalesce(p.is_banned, false) = false))
-    )
+    and public.is_messageable_teacher(teacher_id)
   );
 
 create policy "messages_select_participant"
