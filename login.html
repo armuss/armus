@@ -303,6 +303,7 @@
 
     const form = document.getElementById("loginForm");
     const errorBox = document.getElementById("formError");
+    const submitBtn = form.querySelector(".submit-btn");
 
     function showError(message) {
       errorBox.textContent = message;
@@ -317,14 +318,25 @@
       const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value;
 
+      // Nothing stopped a double-click (or repeated Enter) from firing
+      // this handler several times before the first armusSignIn() call
+      // even resolved - each one a separate, fully independent sign-in
+      // attempt racing the others.
+      submitBtn.disabled = true;
       const { error } = await armusSignIn({ email, password });
+      submitBtn.disabled = false;
 
       if (error) {
         showError(armusT("login.wrongCredentials", "E-posta veya şifre hatalı."));
         return;
       }
 
-      const session = await armusGetSession();
+      // armusGetSession() can throw (a network hiccup right after a
+      // successful sign-in) - unguarded, that left a student who just
+      // entered correct credentials on a blank page with no error and
+      // no redirect, having to guess what went wrong. Falling back to
+      // null here still gets them to student-dashboard below instead.
+      const session = await armusGetSession().catch(() => null);
 
       if (session && session.is_admin) {
         window.location.href = "admin";

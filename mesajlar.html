@@ -665,6 +665,11 @@
       height: 19px;
     }
 
+    .icon-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
     /* RECORDING BAR - replaces the whole input row while recording a
        voice message (instead of showing a thin status line above it,
        with the mic/attach/textarea/send row still sitting there
@@ -1556,6 +1561,14 @@
 
       hideChatWarning();
 
+      // nothing stopped another click from opening the file picker again
+      // (and starting a second, fully concurrent upload) while a large
+      // video was still uploading from the first pick - disabled for the
+      // whole upload+send round trip instead, re-enabled on every exit
+      // path below.
+      const attachBtn = document.getElementById("attachBtn");
+      attachBtn.disabled = true;
+
       // captured now, not re-read after the upload awaits below - the
       // user could switch to a different conversation while a large
       // video is still uploading, and the attachment belongs with the
@@ -1565,11 +1578,13 @@
       const uploaded = await armusUploadChatAttachment(file, conversationId);
 
       if (!uploaded) {
+        attachBtn.disabled = false;
         showChatWarning(armusT("messages.fileFailed", "Dosya gönderilemedi. Lütfen tekrar dene."));
         return;
       }
 
       const result = await armusSendMessage(conversationId, "", { attachmentUrl: uploaded.url, attachmentType: uploaded.type });
+      attachBtn.disabled = false;
       if (!result || result === "blocked") {
         showChatWarning(armusT("messages.fileFailed", "Dosya gönderilemedi. Lütfen tekrar dene."));
         return;

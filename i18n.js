@@ -754,6 +754,8 @@ const ARMUS_I18N_EN = {
   "studentDash.confidenceStable": " You're staying steady.",
   "studentDash.confidencePromptQ": "How was your lesson with {name}? How comfortable did you feel speaking?",
   "studentDash.saving": "Saving...",
+  "studentDash.confidenceCheckinFailed": "Couldn't save. Please try again.",
+  "studentDash.tryAgain": "Try again",
   "studentDash.flashcardCloseAria": "Kapat",
   "studentDash.flashcardAll": "All",
   "studentDash.flashcardHideMastered": "Only what I haven't learned yet",
