@@ -1112,6 +1112,38 @@
       activeConversationId = conversationId;
       hideChatWarning();
 
+      // Switching the realtime subscription right here, before any of
+      // the awaits below, instead of after loadThread() resolved like
+      // this used to: the old channel otherwise stayed subscribed
+      // through every one of those awaits, and its onInsert/onUpdate
+      // callbacks had no way to tell that the thread they were about to
+      // render into now belongs to a different conversation - a message
+      // landing in the conversation being LEFT during that window got
+      // appended straight into the conversation being ENTERED. Doing
+      // the switch first also closes the opposite gap: a message
+      // landing in the conversation being entered, in between now and
+      // loadThread()'s own snapshot query below, used to reach neither
+      // that snapshot nor a live subscription (which didn't exist yet)
+      // and would only show up after a later full reload. The
+      // activeConversationId check inside each callback is a second
+      // guard against the same bleed-through, in case a stale event
+      // from the just-removed channel is still in flight when it fires.
+      if (currentChannel) armusSupabase.removeChannel(currentChannel);
+      currentChannel = armusSubscribeToMessages(
+        conversationId,
+        message => {
+          if (activeConversationId !== conversationId) return;
+          appendMessage(message);
+          if (message.sender_id !== currentSession.id) {
+            armusMarkMessagesRead(conversationId, currentSession.id);
+          }
+        },
+        message => {
+          if (activeConversationId !== conversationId) return;
+          updateMessageInPlace(message);
+        }
+      );
+
       const header = document.getElementById("threadHeader");
       header.style.display = "flex";
       const avatarInner = armusSafeUrl(otherPhoto) ? `<img src="${armusSafeUrl(otherPhoto)}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;">` : "";
@@ -1135,18 +1167,6 @@
 
       await loadThread(conversationId);
       if (activeConversationId !== conversationId) return;
-
-      if (currentChannel) armusSupabase.removeChannel(currentChannel);
-      currentChannel = armusSubscribeToMessages(
-        conversationId,
-        message => {
-          appendMessage(message);
-          if (message.sender_id !== currentSession.id) {
-            armusMarkMessagesRead(conversationId, currentSession.id);
-          }
-        },
-        message => updateMessageInPlace(message)
-      );
 
       await armusMarkMessagesRead(conversationId, currentSession.id);
       if (activeConversationId !== conversationId) return;
@@ -1294,6 +1314,24 @@
         && Boolean(message.body)
         && (Date.now() - new Date(message.created_at).getTime()) < EDIT_WINDOW_MS;
     }
+
+    // canEditMessage() above is only ever checked once, at the moment a
+    // bubble is (re-)rendered - appendMessage/updateMessageInPlace never
+    // run again on their own once the 2-minute edit window actually
+    // expires, so the pencil icon stayed on screen (and clickable, just
+    // to fail server-side on messages_enforce_edit_rules - migration_20.sql)
+    // long after editing was really still possible. Sweeping the
+    // currently-rendered rows every few seconds and dropping the button
+    // the moment canEditMessage() turns false keeps it in sync with the
+    // same deadline the DB trigger enforces, without re-rendering
+    // anything else about the bubble.
+    setInterval(() => {
+      document.querySelectorAll(".msg-edit-btn").forEach(btn => {
+        const row = btn.closest(".msg-row");
+        const message = row && messagesById[row.dataset.msgId];
+        if (message && !canEditMessage(message)) btn.remove();
+      });
+    }, 10000);
 
     function buildBubbleContent(message) {
 

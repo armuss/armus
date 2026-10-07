@@ -233,10 +233,18 @@ async function armusUploadChatAttachment(file, conversationId) {
 }
 
 // Same heuristic the messages_block_contact_sharing DB trigger enforces
-// (migration_16.sql) - checked client-side too so a blocked message
-// shows a clear inline reason instead of a generic "couldn't send"
-// error. The trigger is the real enforcement (this can't be bypassed by
-// skipping the UI); this is just a friendlier first line.
+// (migration_16.sql, enforce_no_contact_sharing in schema.sql) - checked
+// client-side too so a blocked message shows a clear inline reason
+// instead of a generic "couldn't send" error. The trigger is the real
+// enforcement (this can't be bypassed by skipping the UI); this is just
+// a friendlier first line - it has to match the trigger's own regex, or
+// this "friendlier first line" drifts from what the server actually
+// does. It used to check a plain substring list instead, which blocked
+// ordinary words the trigger would've allowed outright (English
+// "instant"/"limousine" contain "insta"/"imo" as substrings - the
+// trigger only matches those as whole words) and, the other direction,
+// missed some Turkish phone-sharing inflections ("numarayla") the
+// trigger's unanchored "numaray"/"numaras" stems do catch.
 function armusMessageViolatesContactPolicy(text) {
 
   if (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) return true;
@@ -246,13 +254,9 @@ function armusMessageViolatesContactPolicy(text) {
   // "+90-532-111-22-33", etc. without flagging unrelated short numbers.
   if (/(\d[\s\-.()]{0,2}){7,}\d/.test(text)) return true;
 
-  const keywords = [
-    "whatsapp", "telegram", "instagram", "insta", "snapchat", "imo", "viber", "signal",
-    "numaram", "numarayı", "numarası", "telefonum", "e-posta", "eposta",
-    "gmail", "hotmail", "outlook",
-  ];
-  const lower = text.toLowerCase();
-  return keywords.some(kw => lower.includes(kw));
+  if (/whatsapp|telegram|instagram|\binsta\b|snapchat|\bimo\b|viber|signal|numaram|numaray|numaras|telefonum|e-?posta|eposta|gmail|hotmail|outlook/i.test(text)) return true;
+
+  return false;
 }
 
 // Whether the current user already has a confirmed (non-cancelled)
