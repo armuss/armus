@@ -229,6 +229,10 @@
       object-fit: cover;
     }
 
+    /* the checkmark is a non-color indicator (WCAG 1.4.1) - this dot
+       used to signal "online" through its green fill alone, with no
+       accessible name reaching anyone but a sighted mouse user hovering
+       its (hover-only) title. */
     .online-dot {
       position: absolute;
       bottom: 1px;
@@ -239,6 +243,14 @@
       background: #3ecf7a;
       border: 2.5px solid var(--armus-bg);
       cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .online-dot svg {
+      width: 7px;
+      height: 7px;
     }
 
     .verified {
@@ -803,7 +815,9 @@
           <div class="name-row">
             <div class="mini-avatar-wrap">
               <div class="mini-avatar" id="avatar"></div>
-              <div class="online-dot" id="onlineDot" style="display: none;" data-i18n-title="teacherProfile.onlineNow" title="Öğretmen şu an çevrimiçi"></div>
+              <div class="online-dot" id="onlineDot" role="img" style="display: none;" data-i18n-title="teacherProfile.onlineNow" aria-label="Öğretmen şu an çevrimiçi" title="Öğretmen şu an çevrimiçi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
             </div>
             <div>
               <h1 id="teacherName"></h1>
@@ -1062,7 +1076,7 @@
 
       document.getElementById("teacherName").textContent = armusShortDisplayName(teacher.name);
       document.getElementById("teacherRole").textContent = teacher.role;
-      document.getElementById("onlineDot").style.display = teacher.isOnline ? "block" : "none";
+      document.getElementById("onlineDot").style.display = teacher.isOnline ? "flex" : "none";
 
       // same one-time-snapshot problem as the marketplace grid's dots -
       // re-derive periodically from the last_active_at timestamp already
@@ -1070,7 +1084,7 @@
       // "online" for a teacher who's since gone offline while this
       // profile stays open
       setInterval(() => {
-        document.getElementById("onlineDot").style.display = armusIsTeacherOnline(teacher.lastActiveAt) ? "block" : "none";
+        document.getElementById("onlineDot").style.display = armusIsTeacherOnline(teacher.lastActiveAt) ? "flex" : "none";
       }, 60 * 1000);
 
       function renderRatingHeader() {
@@ -1254,6 +1268,17 @@
       function renderFavBtn(active) {
         favBtn.classList.toggle("active", active);
         favBtn.innerHTML = active ? HEART_FILLED_SVG : HEART_OUTLINE_SVG;
+        // aria-label/title used to always say "Favorilere ekle" (Add to
+        // favorites), even once the teacher actually was one - updating
+        // data-i18n-title (not just title directly) keeps it correct
+        // after a language switch too, since armusApplyTranslations
+        // re-reads that attribute to decide which key to show.
+        const key = active ? "teacherProfile.removeFromFavorites" : "teacherProfile.addToFavorites";
+        const trText = active ? "Favorilerden çıkar" : "Favorilere ekle";
+        favBtn.setAttribute("aria-label", armusT(key, trText));
+        favBtn.setAttribute("title", armusT(key, trText));
+        favBtn.dataset.i18nTitle = key;
+        favBtn.dataset.trTitle = trText;
       }
       renderFavBtn(armusIsFavorite(teacher.id));
       favBtn.addEventListener("click", () => {

@@ -453,7 +453,7 @@ async function armusRenderStudentNav(el, session, firstName) {
       <div class="gnav-dropdown" id="gnavBellDropdown" style="display:none;"></div>
     </div>
     <div class="gnav-dropdown-wrap">
-      <button type="button" class="gnav-avatar-btn" id="gnavProfileBtn" aria-expanded="false">
+      <button type="button" class="gnav-avatar-btn" id="gnavProfileBtn" aria-label="${armusT("nav.profileMenu", "Profil menüsü")}" aria-expanded="false">
         <div class="gnav-avatar">${avatarInner}</div>
       </button>
       <div class="gnav-dropdown" id="gnavProfileDropdown" style="display:none;">
@@ -527,7 +527,7 @@ async function armusRenderTeacherNav(el, session, firstName) {
       <div class="gnav-dropdown" id="gnavBellDropdown" style="display:none;"></div>
     </div>
     <div class="gnav-dropdown-wrap">
-      <button type="button" class="gnav-avatar-btn" id="gnavProfileBtn" aria-expanded="false">
+      <button type="button" class="gnav-avatar-btn" id="gnavProfileBtn" aria-label="${armusT("nav.profileMenu", "Profil menüsü")}" aria-expanded="false">
         <div class="gnav-avatar">${avatarInner}</div>
       </button>
       <div class="gnav-dropdown" id="gnavProfileDropdown" style="display:none;">

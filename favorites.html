@@ -465,7 +465,7 @@
       article.dataset.teacherId = teacher.id;
 
       article.innerHTML = `
-        <button type="button" class="fav-btn active" data-fav="${teacher.id}" aria-label="${armusT("teacherProfile.addToFavorites", "Favorilere ekle")}">
+        <button type="button" class="fav-btn active" data-fav="${teacher.id}" aria-label="${armusT("teacherProfile.removeFromFavorites", "Favorilerden çıkar")}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-linecap="round" d="M12 20.6s-7.14-4.35-9.9-8.36C.5 9.7 1 6.6 3.5 5.1c2.13-1.28 4.68-.72 6.2 1.04L12 8.6l2.3-2.46c1.52-1.76 4.07-2.32 6.2-1.04 2.5 1.5 3 4.6 1.4 7.14C19.14 16.25 12 20.6 12 20.6z"/></svg>
         </button>
         <div class="avatar">${avatarInner}</div>

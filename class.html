@@ -934,19 +934,42 @@
             postClassTitle.textContent = armusT("class.postClassReviewTitle", "Bu ders nasıldı?");
             let stars = 0;
             postClassBody.innerHTML = `
-              <div class="post-class-stars" id="postClassStars">
-                ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
+              <div class="post-class-stars" id="postClassStars" role="radiogroup" aria-label="${armusT("reviews.starRatingLabel", "Puan ver")}">
+                ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}" role="radio" aria-checked="false" aria-label="${armusT("reviews.starCount", "{n} yıldız").replace("{n}", n)}" tabindex="${n === 1 ? "0" : "-1"}">★</span>`).join("")}
               </div>
               <textarea id="postClassComment" placeholder="${armusT("class.postClassCommentPlaceholder", "İstersen kısa bir not bırak (opsiyonel)")}"></textarea>
             `;
             postClassSkip.hidden = false;
             postClassSave.hidden = false;
 
-            const starEls = postClassBody.querySelectorAll("[data-star]");
+            // same keyboard/accessible-name fix as my-lessons.html's star
+            // picker - was plain <span>s, click-only, no accessible name
+            // beyond a "★" glyph.
+            const starEls = Array.from(postClassBody.querySelectorAll("[data-star]"));
+            function selectStars(n, { focus } = {}) {
+              stars = n;
+              starEls.forEach(s => {
+                const starN = Number(s.dataset.star);
+                s.classList.toggle("active", starN <= n);
+                s.setAttribute("aria-checked", starN === n ? "true" : "false");
+                s.tabIndex = starN === n ? 0 : -1;
+              });
+              if (focus) starEls[n - 1].focus();
+            }
             starEls.forEach(el => {
-              el.addEventListener("click", () => {
-                stars = Number(el.dataset.star);
-                starEls.forEach(s => s.classList.toggle("active", Number(s.dataset.star) <= stars));
+              el.addEventListener("click", () => selectStars(Number(el.dataset.star)));
+              el.addEventListener("keydown", (e) => {
+                const current = Number(el.dataset.star);
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  selectStars(current);
+                } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  selectStars(Math.min(5, (stars || current) + 1), { focus: true });
+                } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                  e.preventDefault();
+                  selectStars(Math.max(1, (stars || current) - 1), { focus: true });
+                }
               });
             });
 

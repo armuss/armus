@@ -702,8 +702,8 @@
         wrap.innerHTML = `
           <button type="button" class="review-prompt-btn">${armusT("myLessons.reviewPromptBtn", "★ Bu dersi değerlendir")}</button>
           <div class="review-form">
-            <div class="star-picker">
-              ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}">★</span>`).join("")}
+            <div class="star-picker" role="radiogroup" aria-label="${armusT("reviews.starRatingLabel", "Puan ver")}">
+              ${[1, 2, 3, 4, 5].map(n => `<span data-star="${n}" role="radio" aria-checked="false" aria-label="${armusT("reviews.starCount", "{n} yıldız").replace("{n}", n)}" tabindex="${n === 1 ? "0" : "-1"}">★</span>`).join("")}
             </div>
             <textarea placeholder="${armusEscapeHtml(armusT("myLessons.reviewPlaceholder", "{name} ile dersin nasıldı?").replace("{name}", armusShortDisplayName(booking.teacherName)))}"></textarea>
             <button type="button" class="review-submit-btn">${armusT("contact.submit", "Gönder")}</button>
@@ -712,7 +712,7 @@
 
         const promptBtn = wrap.querySelector(".review-prompt-btn");
         const form = wrap.querySelector(".review-form");
-        const stars = wrap.querySelectorAll(".star-picker span");
+        const stars = Array.from(wrap.querySelectorAll(".star-picker span"));
         const textarea = wrap.querySelector("textarea");
         const submitBtn = wrap.querySelector(".review-submit-btn");
 
@@ -721,10 +721,38 @@
           form.style.display = "block";
         });
 
+        // the star picker used to be plain <span>s with only a click
+        // listener - no keyboard support, no accessible name beyond a
+        // "★" glyph, nothing announcing which rating was selected. Now
+        // a proper radiogroup: Enter/Space/click pick the focused star,
+        // arrow keys move (and pick) up/down the scale, and only the
+        // current value sits in the tab order (roving tabindex), same
+        // as any native radio group.
+        function selectStars(n, { focus } = {}) {
+          selectedStars = n;
+          stars.forEach(s => {
+            const starN = Number(s.dataset.star);
+            s.classList.toggle("active", starN <= n);
+            s.setAttribute("aria-checked", starN === n ? "true" : "false");
+            s.tabIndex = starN === n ? 0 : -1;
+          });
+          if (focus) stars[n - 1].focus();
+        }
+
         stars.forEach(star => {
-          star.addEventListener("click", () => {
-            selectedStars = Number(star.dataset.star);
-            stars.forEach(s => s.classList.toggle("active", Number(s.dataset.star) <= selectedStars));
+          star.addEventListener("click", () => selectStars(Number(star.dataset.star)));
+          star.addEventListener("keydown", (e) => {
+            const current = Number(star.dataset.star);
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectStars(current);
+            } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+              e.preventDefault();
+              selectStars(Math.min(5, (selectedStars || current) + 1), { focus: true });
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+              e.preventDefault();
+              selectStars(Math.max(1, (selectedStars || current) - 1), { focus: true });
+            }
           });
         });
 
