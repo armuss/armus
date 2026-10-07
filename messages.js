@@ -69,29 +69,34 @@ async function armusGetConversations() {
     c.student_id === session.id ? c.teacher_id : c.student_id
   );
 
-  const [{ data: profiles }, { data: allMessages }] = await Promise.all([
+  // migration_89.sql: each conversation's preview (last message) and
+  // unread count used to come from fetching EVERY message in EVERY one
+  // of the user's conversations, with no limit - this page runs on
+  // nearly every page load (the nav bell), so that downloaded a user's
+  // entire message history just to show an unread badge. The database
+  // now computes both directly, one row per conversation.
+  const [{ data: profiles }, { data: previews }] = await Promise.all([
     // masked_profiles (migration_59.sql) - a teacher's `name` already
     // comes back short-formed for a student viewer, so the real full
     // name never reaches the browser (a plain profiles.select used to
     // send it regardless of what mesajlar.html's own render-time
     // truncation did with it, visible to anyone via devtools).
     armusSupabase.from("masked_profiles").select("id, name, photo_url").in("id", otherIds),
-    armusSupabase
-      .from("messages")
-      .select("*")
-      .in("conversation_id", conversations.map(c => c.id))
-      .order("created_at", { ascending: true }),
+    armusSupabase.rpc("conversation_previews"),
   ]);
 
   const profileById = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+  const previewByConvo = Object.fromEntries((previews || []).map(p => [p.conversation_id, p]));
 
   return conversations
     .map(c => {
       const otherId = c.student_id === session.id ? c.teacher_id : c.student_id;
       const otherProfile = profileById[otherId] || { name: "Kullanıcı", photo_url: null };
-      const convoMessages = (allMessages || []).filter(m => m.conversation_id === c.id);
-      const lastMessage = convoMessages[convoMessages.length - 1] || null;
-      const unreadCount = convoMessages.filter(m => m.sender_id !== session.id && !m.read_at).length;
+      const preview = previewByConvo[c.id] || null;
+      const lastMessage = preview && preview.last_message_id
+        ? { id: preview.last_message_id, body: preview.last_message_body, attachment_type: preview.last_message_attachment_type, sender_id: preview.last_message_sender_id, created_at: preview.last_message_created_at }
+        : null;
+      const unreadCount = preview ? Number(preview.unread_count) : 0;
 
       return {
         id: c.id,

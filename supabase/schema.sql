@@ -1070,6 +1070,57 @@ create trigger messages_enforce_edit_rules
 
 alter publication supabase_realtime add table messages;
 
+-- migration_89.sql: armusGetConversations (messages.js) used to fetch
+-- EVERY message in every one of a user's conversations, with no limit,
+-- just to compute each conversation's preview (last message) and unread
+-- count for the nav bell/conversation list - which runs on nearly every
+-- page load. This computes both directly in the database per
+-- conversation via a lateral join instead. security invoker (the
+-- default) - relies on the normal conversations_select_participant/
+-- messages_select_participant RLS policies plus its own explicit WHERE,
+-- so a caller only ever sees their own conversations.
+create index if not exists messages_conversation_id_created_at_idx
+  on messages (conversation_id, created_at desc);
+
+create or replace function public.conversation_previews()
+returns table (
+  conversation_id uuid,
+  last_message_id uuid,
+  last_message_body text,
+  last_message_attachment_type text,
+  last_message_sender_id uuid,
+  last_message_created_at timestamptz,
+  unread_count bigint
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+  select
+    c.id as conversation_id,
+    lm.id, lm.body, lm.attachment_type, lm.sender_id, lm.created_at,
+    coalesce(uc.unread_count, 0)
+  from conversations c
+  left join lateral (
+    select m.id, m.body, m.attachment_type, m.sender_id, m.created_at
+    from messages m
+    where m.conversation_id = c.id
+    order by m.created_at desc
+    limit 1
+  ) lm on true
+  left join lateral (
+    select count(*) as unread_count
+    from messages m2
+    where m2.conversation_id = c.id
+      and m2.sender_id <> auth.uid()
+      and m2.read_at is null
+  ) uc on true
+  where c.student_id = auth.uid() or c.teacher_id = auth.uid();
+$$;
+
+grant execute on function public.conversation_previews() to anon, authenticated;
+
 -- migration_70.sql removed this policy. It used to let each side of a
 -- conversation read the other's raw profiles row so a teacher's inbox
 -- wouldn't fall back to a generic "Kullanıcı" label for a student who
