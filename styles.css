@@ -181,9 +181,10 @@ body {
   grid-template-columns: 1fr 1fr;
   align-items: start;
   gap: 20px;
-  /* generous top padding so the hero copy doesn't sit flush under the
-     floating nav header. */
-  padding: 96px 10px 40px;
+  /* just enough top padding to clear the floating nav header, not the
+     much larger gap this used to be (96px) before the hero band's own
+     background started reaching up behind that header too. */
+  padding: 48px 10px 40px;
 }
 .hero-band .eyebrow {
   color: var(--armus-on-gold);
