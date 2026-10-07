@@ -134,10 +134,15 @@ async function armusFilterVisibleTeachers(teachers, viewerId) {
 }
 
 // Demo teachers (teachers-data.js) have a fixed, hand-written reviews
-// list for marketing purposes - it was never a real reflection of
-// reviewCount/rating (those are decorative). Real students can still
+// list for marketing purposes - rating/reviewCount started out as pure
+// decoration, not tied to that list's length. Real students can still
 // book and review them though, so real reviews get added on top of the
-// hand-written ones rather than replacing them.
+// hand-written ones rather than replacing them - and rating/reviewCount
+// are blended with those real reviews below (weighted average for
+// rating against the hand-written baseline, a running total for
+// reviewCount) instead of staying frozen at the original decorative
+// numbers forever, no matter how a real student's actual experience
+// with that teacher turns out.
 async function armusEnrichDemoTeacherReviews(teacher) {
 
   const rawReviews = await armusGetReviewsForTeacher(teacher.id).catch(() => []);
@@ -150,7 +155,11 @@ async function armusEnrichDemoTeacherReviews(teacher) {
     date: r.createdAt,
   }));
 
-  return { ...teacher, reviews: liveReviews.concat(teacher.reviews) };
+  const liveStarsTotal = liveReviews.reduce((sum, r) => sum + (r.stars || 0), 0);
+  const reviewCount = teacher.reviewCount + liveReviews.length;
+  const rating = Math.round(((teacher.rating * teacher.reviewCount + liveStarsTotal) / reviewCount) * 10) / 10;
+
+  return { ...teacher, reviews: liveReviews.concat(teacher.reviews), rating, reviewCount };
 }
 
 // Only the real, self-registered teachers (a Supabase round trip). Kept
