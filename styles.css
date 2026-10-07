@@ -169,7 +169,11 @@ body {
    same color on both sides regardless of either section's actual
    rendered height. */
 .hero-band {
-  background: linear-gradient(180deg, var(--armus-gold-3) 0%, var(--armus-gold-2) 45%, var(--armus-gold-1) 100%);
+  /* fades out into the page background instead of cutting straight to
+     white at the section edge, and the extra padding-bottom gives that
+     fade room to play out below the hero content instead of overlapping it */
+  background: linear-gradient(180deg, var(--armus-gold-3) 0%, var(--armus-gold-2) 35%, var(--armus-gold-1) 60%, var(--armus-bg) 100%);
+  padding-bottom: 110px;
 }
 .hero {
   min-height: 500px;
