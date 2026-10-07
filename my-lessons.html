@@ -672,12 +672,18 @@
       const list = document.getElementById("lessonsList");
       const empty = document.getElementById("emptyState");
 
-      async function buildReviewBlock(booking) {
+      async function buildReviewBlock(booking, prefetchedReview) {
 
         const wrap = document.createElement("div");
         wrap.className = "review-block";
 
-        const existing = await armusGetReviewForBooking(booking.id).catch(() => null);
+        // the render loop below already fetched every past booking's
+        // review up front, in parallel - only re-fetch here when called
+        // without that (right after a review is submitted, where it has
+        // to be fresh)
+        const existing = prefetchedReview !== undefined
+          ? prefetchedReview
+          : await armusGetReviewForBooking(booking.id).catch(() => null);
 
         if (existing) {
 
@@ -871,9 +877,29 @@
           const localDateKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
           const todayKey = localDateKey(new Date());
 
+          // Batched, parallel prefetch instead of the old per-booking
+          // `await armusFindMarketplaceTeacher(...)`/`await armusGetReviewForBooking(...)`
+          // inside this loop - that fired once per booking, sequentially
+          // (awaited one at a time), so a student with N bookings paid
+          // for up to N sequential multi-query round trips just to open
+          // their own lesson list. Teachers are also deduped: a repeat
+          // booking with the same teacher reuses one fetch instead of
+          // refetching their whole profile+reviews+stats again.
+          const uniqueTeacherIds = [...new Set(bookings.map(b => b.teacherId))];
+          const teacherEntries = await Promise.all(
+            uniqueTeacherIds.map(id => armusFindMarketplaceTeacher(id, session.id).catch(() => null).then(t => [id, t]))
+          );
+          const teacherById = new Map(teacherEntries);
+
+          const pastBookingIds = bookings.filter(b => b.status !== "cancelled" && armusIsBookingPast(b)).map(b => b.id);
+          const reviewEntries = await Promise.all(
+            pastBookingIds.map(id => armusGetReviewForBooking(id).catch(() => null).then(r => [id, r]))
+          );
+          const reviewByBooking = new Map(reviewEntries);
+
           for (const booking of bookings) {
 
-            const teacher = await armusFindMarketplaceTeacher(booking.teacherId, session.id).catch(() => null);
+            const teacher = teacherById.get(booking.teacherId) || null;
             // armusIsBookingPast compares the lesson's real, timezone-aware
             // end time against now - not booking.date (wall-clock in the
             // TEACHER's own zone) against todayKey (a date in UTC), which
