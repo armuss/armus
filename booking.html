@@ -896,7 +896,6 @@
       const confirmBox = document.getElementById("confirmBox");
 
       let selectedDate = null;
-      let selectedDateLabel = "";
       let selectedTime = null;
 
       // "today" for the date picker has to be the TEACHER's own calendar
@@ -948,7 +947,6 @@
             pill.classList.add("selected");
 
             selectedDate = dateKey;
-            selectedDateLabel = armusFormatDateLabel(dateKey);
             selectedTime = null;
 
             confirmBox.style.display = "none";
@@ -961,7 +959,6 @@
       renderDateRow();
       document.addEventListener("armus:langchange", () => {
         renderDateRow();
-        if (selectedDate) selectedDateLabel = armusFormatDateLabel(selectedDate);
       });
 
       function renderSlots(dateKey, dayOfWeek) {
@@ -1029,7 +1026,7 @@
       function showConfirm() {
 
         document.getElementById("confirmTeacher").textContent = armusShortDisplayName(teacher.name);
-        document.getElementById("confirmDate").textContent = selectedDateLabel;
+        document.getElementById("confirmDate").textContent = armusFormatDateLabelForViewer(selectedDate, selectedTime, teacher.timezone);
         document.getElementById("confirmTime").textContent = armusFormatSlotTimeRangeForViewer(selectedDate, selectedTime, teacher.timezone);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
 
@@ -1184,7 +1181,7 @@
 
         if (data.bookedDirectly) {
           document.getElementById("successTeacher").textContent = armusShortDisplayName(teacher.name);
-          document.getElementById("successDate").textContent = selectedDateLabel;
+          document.getElementById("successDate").textContent = armusFormatDateLabelForViewer(selectedDate, selectedTime, teacher.timezone);
           document.getElementById("successTime").textContent = armusFormatSlotTimeRangeForViewer(selectedDate, selectedTime, teacher.timezone);
           bookingRoot.style.display = "none";
           document.getElementById("successView").style.display = "block";

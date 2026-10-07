@@ -325,6 +325,26 @@ function armusFormatSlotTimeRangeForViewer(dateKey, time, teacherTimezone) {
   return `${startLabel} – ${endLabel}`;
 }
 
+// Same idea as armusFormatSlotTimeRangeForViewer right above, but for the
+// DATE label that sits next to it on booking.html's confirm/success
+// screens - those used to pair this viewer-converted time with a DATE
+// read straight off the teacher-local dateKey (armusFormatDateLabel),
+// unconverted. For a teacher in a different timezone than the viewer,
+// a slot near midnight could then show a date and a time that don't
+// actually belong to the same real moment for the viewer - e.g. a slot
+// that's 23:00 for the teacher but 09:00 the NEXT day for the viewer
+// would show that later time next to the teacher's (earlier) date.
+// Converts through the same real UTC instant as the time field, then
+// reads the viewer's own local calendar date off that.
+function armusFormatDateLabelForViewer(dateKey, time, teacherTimezone) {
+  const start = armusZonedTimeToUtc(dateKey, time, teacherTimezone);
+  const months = armusMonthNames();
+  const days = armusDayNames();
+  return (typeof armusGetLang === "function" && armusGetLang() === "en")
+    ? `${months[start.getMonth()]} ${start.getDate()}, ${days[start.getDay()]}`
+    : `${start.getDate()} ${months[start.getMonth()]}, ${days[start.getDay()]}`;
+}
+
 // "10:00" -> "10:00 – 10:50"
 function armusFormatTimeRange(startTime, durationMinutes = ARMUS_LESSON_MINUTES) {
 
