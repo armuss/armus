@@ -5,15 +5,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
-import { canJoinLessonNow, getBookingsForStudent, type Booking } from '../../lib/bookings';
+import {
+  canJoinLessonNow,
+  formatLessonWhenForViewer,
+  getBookingsForStudent,
+  isBookingPast,
+  isBookingToday,
+  type Booking,
+} from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
 import { createDispute, getOwnDisputes, type Dispute } from '../../lib/disputes';
 import { colors, fonts, radius } from '../../lib/theme';
-
-function isPastBooking(booking: Booking) {
-  const todayKey = new Date().toISOString().slice(0, 10);
-  return booking.date < todayKey;
-}
 
 const DISPUTE_SUBJECTS = [
   'Öğretmen derse gelmedi',
@@ -171,9 +173,10 @@ export default function Lessons() {
           }
           renderItem={({ item }) => {
             const isCancelled = item.status === 'cancelled';
-            const isPast = isPastBooking(item);
+            const isPast = isBookingPast(item);
             const joinable = !isCancelled && !isPast && canJoinLessonNow(item);
-            const showHint = !isCancelled && !isPast && !joinable && item.date === new Date().toISOString().slice(0, 10);
+            const showHint = !isCancelled && !isPast && !joinable && isBookingToday(item);
+            const when = formatLessonWhenForViewer(item);
 
             return (
               <View style={styles.card}>
@@ -187,8 +190,8 @@ export default function Lessons() {
                 </View>
                 <Text style={styles.type}>{item.type}</Text>
                 <View style={styles.metaRow}>
-                  <Text style={styles.meta}>{item.dateLabel}</Text>
-                  <Text style={styles.meta}>{item.time}</Text>
+                  <Text style={styles.meta}>{when.dateLabel}</Text>
+                  <Text style={styles.meta}>{when.timeRange}</Text>
                   <Text style={styles.meta}>₺{item.price}</Text>
                 </View>
 

@@ -15,7 +15,15 @@ import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
-import { DAY_NAMES, MONTH_NAMES, formatTimeRange, getTeacherBusyTimes, slotsForDate, type BusyTime, type Slot } from '../../lib/bookings';
+import {
+  DAY_NAMES,
+  MONTH_NAMES,
+  formatLessonWhenForViewer,
+  getTeacherBusyTimes,
+  slotsForDate,
+  type BusyTime,
+  type Slot,
+} from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
 import { createPayment, hasCoveringCredit, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
@@ -110,6 +118,20 @@ export default function Booking() {
     if (!teacher || !selectedDateInfo) return [];
     return slotsForDate(teacher, selectedDateInfo.key, selectedDateInfo.date.getDay(), busyTimes);
   }, [teacher, selectedDateInfo, busyTimes]);
+
+  // Every teacher-local time shown to the student (slot grid, summary,
+  // success screen) converts through this - a slot picked in the
+  // teacher's own calendar grid, not the viewer's. A slot near midnight
+  // could otherwise pair a date read straight off the teacher-local
+  // dateKey with a time already converted to the viewer's zone, showing
+  // a date/time that don't actually belong to the same real moment -
+  // mirrors booking.html's identical fix (armusFormatDateLabelForViewer/
+  // armusFormatSlotTimeRangeForViewer, bookings.js) for the same reason.
+  function whenForViewer(dateKey: string, time: string) {
+    return teacher ? formatLessonWhenForViewer({ date: dateKey, time, teacherTimezone: teacher.timezone }) : null;
+  }
+
+  const selectedWhen = selectedDateInfo && selectedTime ? whenForViewer(selectedDateInfo.key, selectedTime) : null;
 
   function pickDate(key: string) {
     setSelectedDate(key);
@@ -215,6 +237,13 @@ export default function Booking() {
               setError(
                 'Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.'
               );
+            } else if (status === 'time_passed') {
+              setPhase('picking');
+              setSelectedTime(null);
+              refreshBusyTimes();
+              setError(
+                'Ödemen tamamlanana kadar seçtiğin ders saati geçti. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.'
+              );
             } else if (status === 'error') {
               setPhase('error');
             }
@@ -232,7 +261,7 @@ export default function Booking() {
         </View>
         <Text style={styles.successTitle}>Rezervasyon tamamlandı!</Text>
         <Text style={styles.successSubtitle}>
-          {shortDisplayName(teacher.name)} ile {selectedDateInfo?.label} · {selectedTime ? formatTimeRange(selectedTime) : ''}
+          {shortDisplayName(teacher.name)} ile {selectedWhen?.dateLabel} · {selectedWhen?.timeRange ?? ''}
         </Text>
         {creditApplied && <Text style={styles.creditNote}>Ders hakkınla ödeme yapılmadan tamamlandı.</Text>}
         <View style={{ width: '100%', marginTop: 28 }}>
@@ -323,7 +352,7 @@ export default function Booking() {
                         selectedTime === slot.time && styles.slotTextSelected,
                       ]}
                     >
-                      {formatTimeRange(slot.time)}
+                      {selectedDateInfo ? whenForViewer(selectedDateInfo.key, slot.time)?.timeRange : ''}
                     </Text>
                   </Pressable>
                 ))}
@@ -343,11 +372,11 @@ export default function Booking() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tarih</Text>
-              <Text style={styles.summaryValue}>{selectedDateInfo?.label}</Text>
+              <Text style={styles.summaryValue}>{selectedWhen?.dateLabel}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Saat</Text>
-              <Text style={styles.summaryValue}>{formatTimeRange(selectedTime)}</Text>
+              <Text style={styles.summaryValue}>{selectedWhen?.timeRange}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{hasCredit ? 'Ders hakkı' : 'Ücret'}</Text>

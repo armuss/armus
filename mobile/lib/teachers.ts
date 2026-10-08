@@ -5,6 +5,7 @@
  * site exactly. Only status === "approved" teachers are shown — "pending"
  * and "rejected" applicants stay hidden.
  */
+import { isBookingPast as isBookingTimingPast } from './bookings';
 import { supabase } from './supabase';
 import { TEACHERS, type Teacher } from './teachers-data';
 
@@ -15,10 +16,19 @@ function formatReviewerName(fullName: string) {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-// A booking counts once its scheduled date has passed.
+// A booking counts once the lesson's real end instant has passed - not
+// when its raw lesson_date (a wall-clock date in the TEACHER's own
+// timezone) is less than a UTC-based "today" string, which used to
+// disagree by a day right around midnight for a viewer/teacher pair in
+// different zones. These are raw snake_case DB rows (not the mapped
+// Booking type), so this adapts the three fields isBookingPast actually
+// needs instead of mapping the whole row first.
 function isBookingPast(booking: any) {
-  const todayKey = new Date().toISOString().slice(0, 10);
-  return booking.lesson_date < todayKey;
+  return isBookingTimingPast({
+    date: booking.lesson_date,
+    time: booking.lesson_time,
+    teacherTimezone: booking.teacher_timezone || 'Europe/Istanbul',
+  });
 }
 
 function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[]): Teacher {
@@ -49,6 +59,7 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[])
     name: profile.name,
     role: profile.title || 'İngilizce Öğretmeni',
     price: profile.price ?? 500,
+    timezone: profile.timezone || 'Europe/Istanbul',
     rating,
     reviewCount: reviews.length,
     tags: [profile.subject_taught || 'Genel İngilizce', 'Yeni Öğretmen'],

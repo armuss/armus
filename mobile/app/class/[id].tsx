@@ -7,7 +7,14 @@ import WebView from 'react-native-webview';
 import Button from '../../components/Button';
 import { getAttendanceReportForBooking, reportAttendanceIssue } from '../../lib/attendance';
 import { useAuth } from '../../lib/auth';
-import { canJoinLessonNow, formatTimeRange, getBookingById, lessonWindow, roomNameForBooking, type Booking } from '../../lib/bookings';
+import {
+  canJoinLessonNow,
+  formatLessonWhenForViewer,
+  getBookingById,
+  lessonWindow,
+  roomNameForBooking,
+  type Booking,
+} from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -255,10 +262,11 @@ export default function Class() {
   if (phase === 'tooEarly' && booking) {
     const isStudent = profile?.id === booking.studentId;
     const otherName = isStudent ? shortDisplayName(booking.teacherName) : booking.studentName;
+    const when = formatLessonWhenForViewer(booking);
     return (
       <Gate
         title="Henüz erken"
-        subtitle={`${otherName} ile ${booking.dateLabel}, ${formatTimeRange(booking.time)} — ${minutesUntil} dakika sonra katılabileceksin.`}
+        subtitle={`${otherName} ile ${when.dateLabel}, ${when.timeRange} — ${minutesUntil} dakika sonra katılabileceksin.`}
         buttonLabel="Derslerime dön"
         onPress={() => router.replace('/(tabs)/lessons')}
       />
@@ -300,7 +308,7 @@ export default function Class() {
       <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
         <Text style={styles.reviewTitle}>Bu ders gerçekleşti mi?</Text>
         <Text style={[styles.gateSubtitle, { marginBottom: 20 }]}>
-          {booking.dateLabel}, {formatTimeRange(booking.time)} için planlanan ders.
+          {formatLessonWhenForViewer(booking).dateLabel}, {formatLessonWhenForViewer(booking).timeRange} için planlanan ders.
         </Text>
         <View style={{ width: '100%', gap: 10 }}>
           <Button label="Evet, zamanında oldu" onPress={() => submitCheckin('yes')} loading={checkinBusy} />
@@ -367,7 +375,7 @@ export default function Class() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {otherName} ile ders · {formatTimeRange(booking.time)}
+          {otherName} ile ders · {formatLessonWhenForViewer(booking).timeRange}
         </Text>
         <Pressable onPress={handleLeave} style={styles.leaveBtn}>
           <Text style={styles.leaveBtnText}>Ayrıl</Text>
