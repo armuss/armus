@@ -120,22 +120,53 @@ async function armusDeleteOwnAccount() {
 
 // Returns the current user's full profile row (auth + application data
 // merged), or null if nobody is logged in.
+//
+// Cached for the lifetime of the page: armusRenderNavAuth and
+// armusEnforceEmailVerification below both call this unconditionally on
+// every single page load (two independent DOMContentLoaded listeners),
+// and most pages ALSO call it themselves for their own page-specific
+// session check - three full auth.getUser() + profiles round trips
+// firing at once for the exact same data, on nearly every page on the
+// site. Every caller within one page load now shares the same
+// in-flight/resolved promise instead. armusInvalidateSessionCache()
+// clears it for the one case that actually needs fresh data without a
+// full page reload - a live SIGNED_IN/SIGNED_OUT transition (see the
+// onAuthStateChange listener below); every other flow that changes who's
+// logged in (sign in/out/up, account deletion) does a window.location
+// navigation or reload right after, which resets this on its own.
+let armusSessionPromise = null;
+
+function armusInvalidateSessionCache() {
+  armusSessionPromise = null;
+}
+
 async function armusGetSession() {
+  if (!armusSessionPromise) {
+    // a rejected promise would otherwise stay cached for the rest of
+    // the page's life, turning one transient network error into every
+    // caller failing forever - clearing the cache on failure lets the
+    // next call retry fresh, same as the uncached version always could.
+    armusSessionPromise = (async () => {
+      const { data: { user } } = await armusSupabase.auth.getUser();
+      if (!user) return null;
 
-  const { data: { user } } = await armusSupabase.auth.getUser();
-  if (!user) return null;
+      const { data: profile, error } = await armusSupabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
-  const { data: profile, error } = await armusSupabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+      if (error || !profile) return null;
 
-  if (error || !profile) return null;
-
-  armusRefreshOwnTimezone(profile);
-  armusMaybeRefreshPresence(profile);
-  return profile;
+      armusRefreshOwnTimezone(profile);
+      armusMaybeRefreshPresence(profile);
+      return profile;
+    })().catch(err => {
+      armusSessionPromise = null;
+      throw err;
+    });
+  }
+  return armusSessionPromise;
 }
 
 // Keeps profiles.timezone (migration_37.sql) pointed at wherever this
@@ -190,12 +221,20 @@ function armusIsTeacherOnline(lastActiveAt) {
 
 // Keeps a logged-in teacher's presence fresh on a page they stay on for a
 // while without navigating anywhere (armusGetSession() on its own only
-// refreshes on page load). Runs everywhere, same as
-// armusEnforceEmailVerification below - armusMaybeRefreshPresence no-ops
-// immediately for a non-teacher or a logged-out visitor, so this is cheap
-// on every other kind of page too.
-document.addEventListener("DOMContentLoaded", () => {
-  setInterval(() => { armusGetSession().catch(() => null); }, ARMUS_PRESENCE_REFRESH_MS);
+// refreshes on page load). This used to call the full armusGetSession()
+// (an auth.getUser() round trip plus a profiles SELECT) every 2 minutes
+// on every single page - including every student and every logged-out
+// visitor, for whom armusMaybeRefreshPresence always no-ops anyway, and
+// including re-fetching data this already has. Checking the role once
+// up front and, for a teacher, writing presence directly off that same
+// profile from then on (armusMaybeRefreshPresence's own id/role never
+// changes mid-session) turns this into a single avoided-entirely setup
+// for everyone else, and a single lightweight UPDATE - no extra reads at
+// all - for a teacher who stays on one page a while.
+document.addEventListener("DOMContentLoaded", async () => {
+  const profile = await armusGetSession().catch(() => null);
+  if (!profile || profile.role !== "teacher") return;
+  setInterval(() => { armusMaybeRefreshPresence(profile); }, ARMUS_PRESENCE_REFRESH_MS);
 });
 
 // A brand-new signup gets a fully active, usable Supabase Auth session
@@ -633,5 +672,10 @@ document.addEventListener("armus:langchange", armusRenderNavAuth);
 // - a full nav re-render (another armusGetSession() round trip) isn't
 // needed for those, only for an actual sign-in/sign-out.
 armusSupabase.auth.onAuthStateChange((event) => {
-  if (event === "SIGNED_IN" || event === "SIGNED_OUT") armusRenderNavAuth();
+  if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+    // a real identity transition - the cached session (if any) is for
+    // whoever was signed in a moment ago, not anymore.
+    armusInvalidateSessionCache();
+    armusRenderNavAuth();
+  }
 });
