@@ -204,7 +204,13 @@ function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Dat
 const JOIN_EARLY_MINUTES = 15;
 const JOIN_LATE_GRACE_MINUTES = 15;
 
-export function lessonWindow(booking: Booking) {
+// Only the three fields lessonWindow/isBookingPast actually need - lets
+// both take a raw snake_case DB row (teachers.ts builds one of these
+// inline from lesson_date/lesson_time/teacher_timezone) without forcing
+// it through the full mapped Booking shape first.
+type BookingTiming = { date: string; time: string; teacherTimezone: string };
+
+export function lessonWindow(booking: BookingTiming) {
   const start = zonedTimeToUtc(booking.date, booking.time, booking.teacherTimezone);
   const end = new Date(start.getTime() + LESSON_MINUTES * 60000);
   const joinsFrom = new Date(start.getTime() - JOIN_EARLY_MINUTES * 60000);
@@ -212,8 +218,47 @@ export function lessonWindow(booking: Booking) {
   return { start, end, joinsFrom, joinsUntil };
 }
 
-export function canJoinLessonNow(booking: Booking) {
+export function canJoinLessonNow(booking: BookingTiming) {
   const { joinsFrom, joinsUntil } = lessonWindow(booking);
   const now = new Date();
   return now >= joinsFrom && now <= joinsUntil;
+}
+
+// A booking counts as "past" once the lesson's real end instant has
+// passed - not when booking.date (a wall-clock date in the TEACHER's own
+// timezone) is less than a UTC-based "today" string, which disagreed by
+// a day for any viewer whose local date had already turned over (or
+// hadn't yet) relative to UTC, right around midnight in either direction.
+export function isBookingPast(booking: BookingTiming): boolean {
+  return lessonWindow(booking).end.getTime() < Date.now();
+}
+
+// A booking's date/time, converted from the teacher's own local time
+// into the CURRENT VIEWER's own local time - what a student should
+// actually be shown when asked "when is this lesson", regardless of
+// which country either of them is in. Mirrors the web app's
+// armusFormatLessonWhen (bookings.js) exactly: start/end are real Date
+// instants, and every get*() call below already reads them back in the
+// device's own local timezone, with no extra conversion needed.
+export function formatLessonWhenForViewer(booking: BookingTiming) {
+  const { start, end } = lessonWindow(booking);
+  const dateLabel = `${start.getDate()} ${MONTH_NAMES[start.getMonth()]}, ${DAY_NAMES[start.getDay()]}`;
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const startLabel = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
+  const endLabel = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+  return { start, end, dateLabel, time: startLabel, timeRange: `${startLabel} – ${endLabel}` };
+}
+
+function isSameLocalDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+// Whether a booking's lesson starts on the VIEWER's own current local
+// calendar date - used to decide whether to show a "you can join later
+// today" hint. Comparing item.date (a wall-clock date in the TEACHER's
+// own timezone) against a UTC-based "today" string used to disagree by a
+// day for any viewer whose local date had already turned over (or
+// hadn't yet) relative to UTC.
+export function isBookingToday(booking: BookingTiming): boolean {
+  return isSameLocalDay(lessonWindow(booking).start, new Date());
 }

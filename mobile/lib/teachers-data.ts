@@ -11,6 +11,8 @@ export type Teacher = {
   name: string;
   role: string;
   price: number;
+  /** IANA zone the teacher's own availability grid/lesson times are in - demo teachers are always Europe/Istanbul, same as the web app. */
+  timezone: string;
   rating: number | null;
   reviewCount: number;
   tags: string[];
@@ -39,6 +41,7 @@ export const TEACHERS: Teacher[] = [
     name: 'Sarah M.',
     role: 'IELTS & Speaking Uzmanı',
     price: 800,
+    timezone: 'Europe/Istanbul',
     rating: 4.9,
     reviewCount: 127,
     tags: ['IELTS', 'Konuşma', 'İş İngilizcesi'],
@@ -68,6 +71,7 @@ export const TEACHERS: Teacher[] = [
     name: 'David K.',
     role: 'IELTS & YDS Uzmanı',
     price: 650,
+    timezone: 'Europe/Istanbul',
     rating: 4.8,
     reviewCount: 96,
     tags: ['IELTS', 'YDS', 'Konuşma'],
@@ -96,6 +100,7 @@ export const TEACHERS: Teacher[] = [
     name: 'Emily L.',
     role: 'English Speaking Teacher',
     price: 500,
+    timezone: 'Europe/Istanbul',
     rating: 4.9,
     reviewCount: 58,
     tags: ['Konuşma', 'Başlangıç'],
@@ -124,6 +129,7 @@ export const TEACHERS: Teacher[] = [
     name: 'Michael J.',
     role: 'TOEFL Uzmanı',
     price: 900,
+    timezone: 'Europe/Istanbul',
     rating: 5.0,
     reviewCount: 214,
     tags: ['TOEFL', 'Konuşma', 'İleri'],
@@ -152,6 +158,7 @@ export const TEACHERS: Teacher[] = [
     name: 'Anna P.',
     role: 'Business English Coach',
     price: 550,
+    timezone: 'Europe/Istanbul',
     rating: 4.7,
     reviewCount: 73,
     tags: ['İş İngilizcesi', 'Konuşma', 'Orta'],
@@ -180,6 +187,7 @@ export const TEACHERS: Teacher[] = [
     name: 'James W.',
     role: 'Exam Preparation Teacher',
     price: 700,
+    timezone: 'Europe/Istanbul',
     rating: 4.8,
     reviewCount: 102,
     tags: ['YDS', 'TOEFL', 'Orta'],
