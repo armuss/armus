@@ -10,10 +10,12 @@
 --
 -- Run this whole file once in Supabase Dashboard -> SQL Editor.
 
+drop policy if exists "conversations_select_admin_all" on conversations;
 create policy "conversations_select_admin_all"
   on conversations for select
   using (public.is_admin());
 
+drop policy if exists "messages_select_admin_all" on messages;
 create policy "messages_select_admin_all"
   on messages for select
   using (public.is_admin());
@@ -23,7 +25,7 @@ create policy "messages_select_admin_all"
 -- messages.body). Admin-only: a participant doesn't need their own
 -- edit trail surfaced back at them, only an admin investigating a
 -- complaint does.
-create table message_edit_history (
+create table if not exists message_edit_history (
   id uuid primary key default gen_random_uuid(),
   message_id uuid not null references messages(id) on delete cascade,
   body text not null default '',
@@ -34,6 +36,7 @@ create table message_edit_history (
 
 alter table message_edit_history enable row level security;
 
+drop policy if exists "message_edit_history_select_admin" on message_edit_history;
 create policy "message_edit_history_select_admin"
   on message_edit_history for select
   using (public.is_admin());
