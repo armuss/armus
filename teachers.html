@@ -378,6 +378,114 @@
       accent-color: var(--armus-gold-2);
     }
 
+    /* Availability filter panel - Preply-style icon grid of time blocks
+       plus a day-of-week picker, both toggleable multi-select */
+
+    .filter-panel-availability {
+      min-width: 260px;
+    }
+
+    @media (max-width: 600px) {
+      /* the availability dropdown's wider 3-column grid can run past the
+         right edge on a narrow screen when it's anchored (like every
+         other filter panel) to its own trigger's left edge - centering
+         it under the whole filter row instead keeps it on-screen
+         regardless of where that trigger happens to sit */
+      [data-dropdown="availability"] .filter-panel {
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100vw - 32px);
+        max-width: 320px;
+      }
+    }
+
+    .avail-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--armus-muted);
+      margin: 14px 0 8px;
+    }
+
+    .avail-section-label:first-child {
+      margin-top: 0;
+    }
+
+    .avail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .avail-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .avail-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 6px;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      background: var(--armus-bg);
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .avail-slot svg {
+      width: 18px;
+      height: 18px;
+      color: var(--armus-muted);
+    }
+
+    .avail-slot:hover {
+      border-color: var(--armus-silver-1);
+    }
+
+    .avail-slot.active {
+      border-color: var(--armus-gold-2);
+      background: var(--armus-gold-2);
+      color: var(--armus-on-gold);
+    }
+
+    .avail-slot.active svg {
+      color: var(--armus-on-gold);
+    }
+
+    .avail-days {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .avail-day {
+      padding: 7px 12px;
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      background: var(--armus-bg);
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .avail-day:hover {
+      border-color: var(--armus-silver-1);
+    }
+
+    .avail-day.active {
+      border-color: var(--armus-gold-2);
+      background: var(--armus-gold-2);
+      color: var(--armus-on-gold);
+    }
+
     .filter-price-value {
       text-align: center;
       font-size: 20px;
@@ -870,11 +978,23 @@
 
     <div class="filter-box-row">
 
-      <div class="filter-box filter-box-static">
-        <span class="filter-box-text">
-          <span class="filter-box-label" data-i18n="teachersPage.whatToLearn">Ne öğrenmek istiyorum</span>
-          <span class="filter-box-value" data-i18n="teachersPage.english">İngilizce</span>
-        </span>
+      <div class="filter-dropdown" data-dropdown="subject">
+        <button type="button" class="filter-trigger filter-box">
+          <span class="filter-box-text">
+            <span class="filter-box-label" data-i18n="teachersPage.whatToLearn">Ne öğrenmek istiyorum</span>
+            <span class="filter-box-value" id="subjectBoxValue" data-i18n="teachersPage.english">İngilizce</span>
+          </span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="filter-panel">
+          <label class="filter-option"><input type="radio" name="subject" value="English" class="subject-filter" checked> <span data-i18n="teachersPage.langEnglish">İngilizce</span></label>
+          <label class="filter-option"><input type="radio" name="subject" value="German" class="subject-filter"> <span data-i18n="teachersPage.langGerman">Almanca</span></label>
+          <label class="filter-option"><input type="radio" name="subject" value="French" class="subject-filter"> <span data-i18n="teachersPage.langFrench">Fransızca</span></label>
+          <label class="filter-option"><input type="radio" name="subject" value="Spanish" class="subject-filter"> <span data-i18n="teachersPage.langSpanish">İspanyolca</span></label>
+          <label class="filter-option"><input type="radio" name="subject" value="Russian" class="subject-filter"> <span data-i18n="teachersPage.langRussian">Rusça</span></label>
+          <label class="filter-option"><input type="radio" name="subject" value="Arabic" class="subject-filter"> <span data-i18n="teachersPage.langArabic">Arapça</span></label>
+          <label class="filter-option"><input type="radio" name="subject" value="Italian" class="subject-filter"> <span data-i18n="teachersPage.langItalian">İtalyanca</span></label>
+        </div>
       </div>
 
       <div class="filter-dropdown" data-dropdown="price">
@@ -938,6 +1058,60 @@
           <label class="filter-option"><input type="checkbox" value="TOEFL" class="filter"> TOEFL</label>
           <label class="filter-option"><input type="checkbox" value="YDS" class="filter"> YDS</label>
           <label class="filter-option"><input type="checkbox" value="İş İngilizcesi" class="filter"> <span data-i18n="teachersPage.typeBusinessEnglish">İş İngilizcesi</span></label>
+        </div>
+      </div>
+
+      <div class="filter-dropdown" data-dropdown="availability">
+        <button type="button" class="filter-trigger filter-pill"><span data-i18n="teachersPage.availability">Müsaitlik</span> <span class="chev">▾</span></button>
+        <div class="filter-panel filter-panel-availability">
+
+          <div class="avail-section-label" data-i18n="teachersPage.availDaytime">Gündüz</div>
+          <div class="avail-grid">
+            <button type="button" class="avail-slot" data-start="09:00" data-end="12:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+              <span>9-12</span>
+            </button>
+            <button type="button" class="avail-slot" data-start="12:00" data-end="15:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path></svg>
+              <span>12-15</span>
+            </button>
+            <button type="button" class="avail-slot" data-start="15:00" data-end="18:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18a9 9 0 0 1 18 0"></path><line x1="12" y1="2" x2="12" y2="9"></line><line x1="4.2" y1="7.2" x2="6.3" y2="9.3"></line><line x1="19.8" y1="7.2" x2="17.7" y2="9.3"></line><line x1="1" y1="18" x2="23" y2="18"></line></svg>
+              <span>15-18</span>
+            </button>
+          </div>
+
+          <div class="avail-section-label" data-i18n="teachersPage.availEveningNight">Akşam ve gece</div>
+          <div class="avail-grid">
+            <button type="button" class="avail-slot" data-start="18:00" data-end="21:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18a9 9 0 0 1 18 0"></path><line x1="1" y1="18" x2="23" y2="18"></line><path d="M8 18a4 4 0 0 1 8 0"></path></svg>
+              <span>18-21</span>
+            </button>
+            <button type="button" class="avail-slot" data-start="21:00" data-end="24:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+              <span>21-24</span>
+            </button>
+            <button type="button" class="avail-slot" data-start="00:00" data-end="03:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path><path d="M19 4v3M17.5 5.5h3"></path></svg>
+              <span>0-3</span>
+            </button>
+          </div>
+
+          <div class="avail-section-label" data-i18n="teachersPage.availMorning">Sabah</div>
+          <div class="avail-grid avail-grid-2">
+            <button type="button" class="avail-slot" data-start="03:00" data-end="06:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path><path d="M18 3l.8 1.6L20.4 5.4l-1.6.8L18 7.8l-.8-1.6L15.6 5.4l1.6-.8z"></path></svg>
+              <span>3-6</span>
+            </button>
+            <button type="button" class="avail-slot" data-start="06:00" data-end="09:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14" r="4"></circle><line x1="12" y1="1" x2="12" y2="4"></line><line x1="4.2" y1="7.2" x2="6.3" y2="9.3"></line><line x1="19.8" y1="7.2" x2="17.7" y2="9.3"></line><line x1="1" y1="14" x2="4" y2="14"></line><line x1="20" y1="14" x2="23" y2="14"></line></svg>
+              <span>6-9</span>
+            </button>
+          </div>
+
+          <div class="avail-section-label" data-i18n="teachersPage.availDays">Günler</div>
+          <div class="avail-days" id="availDays"></div>
+
         </div>
       </div>
 
@@ -1113,17 +1287,108 @@
     const filters = document.querySelectorAll(".filter");
     const levelFilters = document.querySelectorAll(".level-filter");
     const langFilters = document.querySelectorAll(".lang-filter");
+    const subjectFilters = document.querySelectorAll(".subject-filter");
     const priceMin = document.getElementById("priceMin");
     const priceMax = document.getElementById("priceMax");
     const priceRangeLabel = document.getElementById("priceRangeLabel");
     const priceRangeValue = document.getElementById("priceRangeValue");
     const levelBoxValue = document.getElementById("levelBoxValue");
     const langBoxValue = document.getElementById("langBoxValue");
+    const subjectBoxValue = document.getElementById("subjectBoxValue");
     const sortSelect = document.getElementById("sortSelect");
     const count = document.getElementById("resultsCount");
     const empty = document.getElementById("emptyState");
     const favoritesOnlyFilter = document.getElementById("favoritesOnlyFilter");
     const paginationEl = document.getElementById("pagination");
+
+    // ---- availability filter: time-of-day blocks + days of week ----
+    // Both multi-select (toggle), matching Preply's own availability
+    // picker - a teacher matches if ANY selected day has a free slot in
+    // ANY selected block (selecting nothing in either group means "don't
+    // filter on that dimension").
+    const selectedAvailBlocks = new Set(); // "HH:MM-HH:MM" strings
+    const selectedAvailDays = new Set(); // 0 (Sun) - 6 (Sat), armusDayNames() indexing
+
+    // bookings.js (armusDayNames) loads after this whole script block
+    // (see the <script src> order near the end of the file) - a local
+    // copy avoids depending on load order for just 7 short labels.
+    // Same strings/indexing (0=Sun..6=Sat) as bookings.js's own
+    // ARMUS_DAY_NAMES/ARMUS_DAY_NAMES_EN - keep them in sync.
+    const TEACHERS_DAY_NAMES_TR = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+    const TEACHERS_DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const availDaysEl = document.getElementById("availDays");
+    function renderAvailDays() {
+      const dayNames = (typeof armusGetLang === "function" && armusGetLang() === "en")
+        ? TEACHERS_DAY_NAMES_EN
+        : TEACHERS_DAY_NAMES_TR;
+      availDaysEl.innerHTML = "";
+      dayNames.forEach((label, dayIndex) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "avail-day" + (selectedAvailDays.has(dayIndex) ? " active" : "");
+        btn.textContent = label;
+        btn.addEventListener("click", () => {
+          if (selectedAvailDays.has(dayIndex)) selectedAvailDays.delete(dayIndex);
+          else selectedAvailDays.add(dayIndex);
+          btn.classList.toggle("active");
+          updateTeachers({ resetPage: true });
+        });
+        availDaysEl.appendChild(btn);
+      });
+    }
+    renderAvailDays();
+    document.addEventListener("armus:langchange", renderAvailDays);
+
+    document.querySelectorAll(".avail-slot").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = `${btn.dataset.start}-${btn.dataset.end}`;
+        if (selectedAvailBlocks.has(key)) selectedAvailBlocks.delete(key);
+        else selectedAvailBlocks.add(key);
+        btn.classList.toggle("active");
+        updateTeachers({ resetPage: true });
+      });
+    });
+
+    // A teacher matches a single day+block pair if their own availability
+    // grid (same precedence armusSlotsForDate/bookings.js uses: a saved
+    // availabilityDates grid wins over the older weeklyAvailability
+    // pattern) has any slot in [start, end). Returns null when the
+    // teacher has neither field set at all (every demo teacher, and a
+    // real teacher who hasn't configured their calendar yet) - there's
+    // no day-of-week pattern to check against (demo teachers only have a
+    // date-specific mock), so this filter can't honestly say yes or no
+    // for them; treated as a pass rather than hiding them over data this
+    // filter simply doesn't have.
+    function teacherMatchesDayBlock(teacher, dayOfWeek, start, end) {
+      let daySlots;
+      if (teacher.availabilityDates && teacher.availabilityDates._set === true) {
+        daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
+      } else if (teacher.weeklyAvailability) {
+        daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
+      } else {
+        return null;
+      }
+      return daySlots.some(time => time >= start && time < end);
+    }
+
+    function teacherMatchesAvailability(teacher) {
+      if (selectedAvailBlocks.size === 0 && selectedAvailDays.size === 0) return true;
+
+      const days = selectedAvailDays.size ? Array.from(selectedAvailDays) : [0, 1, 2, 3, 4, 5, 6];
+      const blocks = selectedAvailBlocks.size
+        ? Array.from(selectedAvailBlocks).map(key => key.split("-"))
+        : [["00:00", "24:00"]];
+
+      for (const day of days) {
+        for (const [start, end] of blocks) {
+          const result = teacherMatchesDayBlock(teacher, day, start, end);
+          if (result === null) return true; // no data to check - don't hide them over it
+          if (result === true) return true;
+        }
+      }
+      return false;
+    }
 
     // Only a handful of overlapping cards fit on screen at once - this is
     // a first pass, tune it once we've actually seen how many looks right.
@@ -1177,6 +1442,16 @@
       paginationEl.appendChild(next);
     }
 
+    const SUBJECT_LABELS = {
+      English: ["teachersPage.langEnglish", "İngilizce"],
+      German: ["teachersPage.langGerman", "Almanca"],
+      French: ["teachersPage.langFrench", "Fransızca"],
+      Spanish: ["teachersPage.langSpanish", "İspanyolca"],
+      Russian: ["teachersPage.langRussian", "Rusça"],
+      Arabic: ["teachersPage.langArabic", "Arapça"],
+      Italian: ["teachersPage.langItalian", "İtalyanca"],
+    };
+
     function updateTeachers(options) {
       const resetPage = options && options.resetPage;
       if (resetPage) currentPage = 1;
@@ -1208,6 +1483,8 @@
         .filter(input => input.checked)
         .map(input => input.value);
 
+      const selectedSubject = (Array.from(subjectFilters).find(input => input.checked) || {}).value || "English";
+
       let matches = allTeachers.filter(teacher => {
 
         const name = teacher.name.toLowerCase();
@@ -1236,13 +1513,23 @@
             languages.includes(lang.toLowerCase())
           );
 
+        // "English" matches ARMUS's whole current teacher base (every
+        // teacher here teaches/speaks English) same as before this
+        // dropdown became interactive - any other selected language only
+        // matches a teacher who actually lists it (teacher.languages,
+        // same field the Diller filter above already reads).
+        const matchesSubject =
+          selectedSubject === "English" || languages.includes(selectedSubject.toLowerCase());
+
         const matchesPrice =
           price >= minPrice && (maxPrice >= 1000 || price <= maxPrice);
 
         const matchesFavorites =
           !favoritesOnlyFilter.checked || armusIsFavorite(teacher.id);
 
-        return matchesSearch && matchesTags && matchesLevel && matchesLangs && matchesPrice && matchesFavorites;
+        const matchesAvailability = teacherMatchesAvailability(teacher);
+
+        return matchesSearch && matchesTags && matchesLevel && matchesLangs && matchesSubject && matchesPrice && matchesFavorites && matchesAvailability;
       });
 
 
@@ -1283,6 +1570,7 @@
       // reflect the picked values on the row-1 boxes themselves
       levelBoxValue.textContent = selectedLevels.length ? selectedLevels.join(", ") : armusT("teachersPage.all", "Tümü");
       langBoxValue.textContent = selectedLangs.length ? selectedLangs.join(", ") : armusT("teachersPage.all", "Tümü");
+      subjectBoxValue.textContent = armusT(...SUBJECT_LABELS[selectedSubject]);
 
       // reflect active state on the filter triggers themselves
       document.querySelector('[data-dropdown="type"] .filter-trigger')
@@ -1293,6 +1581,8 @@
         .classList.toggle("active-filter", selectedLangs.length > 0);
       document.querySelector('[data-dropdown="price"] .filter-trigger')
         .classList.toggle("active-filter", minPrice > 0 || maxPrice < 1000);
+      document.querySelector('[data-dropdown="availability"] .filter-trigger')
+        .classList.toggle("active-filter", selectedAvailBlocks.size > 0 || selectedAvailDays.size > 0);
 
       empty.style.display =
         matches.length === 0 ? "block" : "none";
@@ -1310,6 +1600,10 @@
     );
 
     langFilters.forEach(filter =>
+      filter.addEventListener("change", () => updateTeachers({ resetPage: true }))
+    );
+
+    subjectFilters.forEach(filter =>
       filter.addEventListener("change", () => updateTeachers({ resetPage: true }))
     );
 
