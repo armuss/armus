@@ -1306,28 +1306,23 @@
 
       // messaging only makes sense for real (self-registered) teachers -
       // demo teachers (teachers-data.js) have no real account to receive it.
-      // This session check is only for the secondary "Mesaj Gönder" button,
-      // so it runs in the background instead of being awaited - otherwise
-      // it holds up the About/Stats/Reviews sections below for an entire
-      // extra network round trip they have nothing to do with.
+      // Reuses viewerSession (already fetched above, for armusFindMarketplaceTeacher)
+      // instead of calling armusGetSession() again - this used to fetch
+      // the same session a second time (a second auth.getUser() +
+      // profiles round trip, plus re-running armusMaybeRefreshPresence)
+      // just to decide whether to show this one secondary button.
       const isDemoTeacher = TEACHERS.some(t => t.id === teacher.id);
 
-      if (!isDemoTeacher) {
+      if (!isDemoTeacher && (!viewerSession || viewerSession.role === "student")) {
 
-        armusGetSession().then(session => {
+        const messageBtn = document.getElementById("messageBtn");
+        messageBtn.style.display = "block";
 
-          if (!session || session.role === "student") {
-
-            const messageBtn = document.getElementById("messageBtn");
-            messageBtn.style.display = "block";
-
-            messageBtn.addEventListener("click", () => {
-              const target = `mesajlar?teacher=${encodeURIComponent(teacher.id)}`;
-              window.location.href = session
-                ? target
-                : `login?next=${encodeURIComponent(target)}`;
-            });
-          }
+        messageBtn.addEventListener("click", () => {
+          const target = `mesajlar?teacher=${encodeURIComponent(teacher.id)}`;
+          window.location.href = viewerSession
+            ? target
+            : `login?next=${encodeURIComponent(target)}`;
         });
       }
 

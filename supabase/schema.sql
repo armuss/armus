@@ -2303,6 +2303,31 @@ $$;
 
 grant execute on function public.teacher_marketplace_stats() to anon, authenticated;
 
+-- migration_91.sql: same reasoning as teacher_marketplace_stats above -
+-- the marketplace grid (armusGetRegisteredTeachers, marketplace.js) used
+-- to download the ENTIRE site-wide reviews table (masked_reviews.select("*") -
+-- every review's full comment and reviewer name, for every teacher) just
+-- to average two numbers per teacher card, which never shows a review's
+-- actual text. This aggregates server-side instead - a teacher's own
+-- profile page still fetches that one teacher's real reviews, where the
+-- text/name are actually shown.
+create or replace function public.teacher_review_stats()
+returns table (teacher_id text, avg_rating numeric, review_count bigint)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select
+    r.teacher_id,
+    round(avg(r.stars)::numeric, 1) as avg_rating,
+    count(*) as review_count
+  from reviews r
+  group by r.teacher_id;
+$$;
+
+grant execute on function public.teacher_review_stats() to anon, authenticated;
+
 -- === PUBLIC-SAFE PROFILE VIEW (name-masking) =========================
 -- "A teacher's full real name is never shown to a student" (see
 -- auth.js's armusShortDisplayName comment - it's there so a student

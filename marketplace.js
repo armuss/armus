@@ -185,7 +185,7 @@ async function armusGetRegisteredTeachers(viewerId) {
   // bookings_select_participant down to just the viewer's own bookings
   // (or nothing at all for a logged-out visitor), making these stats
   // wrong for almost everyone browsing the marketplace.
-  const [profilesRes, reviewsRes, statsRes] = await Promise.all([
+  const [profilesRes, reviewStatsRes, statsRes] = await Promise.all([
     // masked_profiles (migration_59.sql), not the raw profiles table -
     // it returns every column this file needs, with a teacher's `name`
     // already short-formed server-side, so the real full name is never
@@ -197,23 +197,32 @@ async function armusGetRegisteredTeachers(viewerId) {
       .select("*")
       .eq("role", "teacher")
       .eq("status", "approved"),
-    // masked_reviews (migration_67.sql), not the raw reviews table - see
-    // its comment above the masked_profiles call: same reasoning, for a
-    // reviewing student's real name instead of a teacher's.
-    armusSupabase.from("masked_reviews").select("*"),
+    // teacher_review_stats (migration_91.sql) aggregates server-side,
+    // same reasoning as teacher_marketplace_stats below - this grid only
+    // ever shows a per-teacher rating/count (ratingLabel in
+    // renderTeacherCard), never a review's actual text or reviewer name,
+    // so downloading the ENTIRE site-wide reviews table (every review's
+    // full comment and name, for every teacher) just to average two
+    // numbers per teacher was pure waste, and only gets worse as reviews
+    // accumulate site-wide. A teacher's own profile page
+    // (armusFindMarketplaceTeacher) still fetches that one teacher's
+    // real reviews, where the text/name are actually shown.
+    armusSupabase.rpc("teacher_review_stats"),
     armusSupabase.rpc("teacher_marketplace_stats"),
   ]);
 
   if (profilesRes.error || !profilesRes.data) return [];
 
-  const allReviews = (reviewsRes.data || []).map(armusMapReviewRow);
+  const reviewStatsByTeacherId = new Map((reviewStatsRes.data || []).map(s => [s.teacher_id, s]));
   const statsByTeacherId = new Map((statsRes.data || []).map(s => [s.teacher_id, s]));
 
-  const teachers = profilesRes.data.map(profile => armusBuildTeacherFromParts(
-    profile,
-    allReviews.filter(r => r.teacherId === profile.id),
-    statsByTeacherId.get(profile.id) || null
-  ));
+  const teachers = profilesRes.data.map(profile => {
+    const teacher = armusBuildTeacherFromParts(profile, [], statsByTeacherId.get(profile.id) || null);
+    const reviewStats = reviewStatsByTeacherId.get(profile.id);
+    teacher.rating = reviewStats ? Number(reviewStats.avg_rating) : null;
+    teacher.reviewCount = reviewStats ? Number(reviewStats.review_count) : 0;
+    return teacher;
+  });
 
   return armusFilterVisibleTeachers(teachers, viewerId);
 }

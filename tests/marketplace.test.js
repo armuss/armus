@@ -69,3 +69,66 @@ test("armusEnrichDemoTeacherReviews - several consistently low real reviews pull
   const expectedRating = Math.round(((4.9 * 127 + 1 + 1 + 1) / 130) * 10) / 10;
   assert.equal(enriched.rating, expectedRating);
 });
+
+// armusGetRegisteredTeachers (the marketplace grid) used to download the
+// ENTIRE site-wide reviews table (masked_reviews.select("*")) just to
+// compute a per-teacher rating/count the grid cards actually show -
+// replaced with the teacher_review_stats() RPC (migration_91.sql),
+// which aggregates server-side instead. This guards that the RPC's
+// result is correctly mapped onto each teacher's rating/reviewCount,
+// including a teacher with zero reviews (absent from the RPC's rows
+// entirely, since it's a group-by).
+test("armusGetRegisteredTeachers - maps teacher_review_stats onto each teacher's rating/reviewCount", async () => {
+  ctx.armusT = (key, fallback) => fallback;
+  ctx.armusIsTeacherOnline = () => false;
+  ctx.armusSupabase = {
+    from(table) {
+      assert.equal(table, "masked_profiles", "should query masked_profiles, not the raw profiles table");
+      return {
+        select() { return this; },
+        eq() { return this; },
+        then(resolve) {
+          resolve({
+            data: [
+              { id: "t1", name: "Teacher One", price: 500 },
+              { id: "t2", name: "Teacher Two", price: 600 },
+              { id: "t3", name: "No Reviews Yet", price: 700 },
+            ],
+            error: null,
+          });
+        },
+      };
+    },
+    rpc(name) {
+      if (name === "teacher_review_stats") {
+        return Promise.resolve({
+          data: [
+            { teacher_id: "t1", avg_rating: 4.7, review_count: 3 },
+            { teacher_id: "t2", avg_rating: 3.0, review_count: 1 },
+            // t3 intentionally absent - a teacher with zero reviews
+            // never appears in a group-by aggregate
+          ],
+          error: null,
+        });
+      }
+      if (name === "teacher_marketplace_stats") {
+        return Promise.resolve({ data: [], error: null });
+      }
+      return Promise.resolve({ data: [], error: null });
+    },
+  };
+
+  const teachers = await ctx.armusGetRegisteredTeachers();
+  const byId = Object.fromEntries(teachers.map(t => [t.id, t]));
+
+  assert.equal(byId.t1.rating, 4.7);
+  assert.equal(byId.t1.reviewCount, 3);
+  assert.equal(byId.t2.rating, 3.0);
+  assert.equal(byId.t2.reviewCount, 1);
+  assert.equal(byId.t3.rating, null, "a teacher with no reviews gets null rating, not 0 or NaN");
+  assert.equal(byId.t3.reviewCount, 0);
+
+  // the per-teacher review array itself stays empty on this path - the
+  // grid never shows individual review text, so none was ever fetched
+  assert.equal(byId.t1.reviews.length, 0);
+});

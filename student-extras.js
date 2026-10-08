@@ -9,13 +9,21 @@
 
 // ---- vocabulary vault ------------------------------------------------
 
+// 1000 is far above any real student's vocab deck (student-dashboard.html's
+// flashcard study/filter/mastery-count UI genuinely needs the whole
+// deck, unlike confidence check-ins below, so this isn't a page-size
+// limit for the UI - it's a sanity cap against this query growing
+// completely unbounded for an account that's been adding words for
+// years, same reasoning as every other "add order/limit" fix in this
+// codebase).
 async function armusGetVocabEntries(studentId) {
 
   const { data, error } = await armusSupabase
     .from("vocab_entries")
     .select("*")
     .eq("student_id", studentId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(1000);
 
   if (error) return [];
   return data;
@@ -56,16 +64,25 @@ async function armusSetVocabMastered(id, mastered) {
 
 // ---- speaking confidence check-ins -----------------------------------
 
+// student-dashboard.html's trend widget only ever shows the most recent
+// 10 (confidenceCheckins.slice(-10)) - this used to download every
+// check-in a student has ever made, unbounded, growing forever the
+// longer they use ARMUS, just to use the last 10 of it. Ordered
+// descending + capped at 100 (comfortably above what renderConfidenceTrend
+// needs, with headroom for the "does this past booking still need a
+// check-in" lookback too) then reversed back to the ascending order
+// every existing caller here already expects.
 async function armusGetConfidenceCheckins(studentId) {
 
   const { data, error } = await armusSupabase
     .from("confidence_checkins")
     .select("*")
     .eq("student_id", studentId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (error) return [];
-  return data;
+  return data.reverse();
 }
 
 // One check-in per booking (unique constraint) - returns the new row on
