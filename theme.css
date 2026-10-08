@@ -101,6 +101,29 @@ html.armus-logo-static .logo-img {
   mask-image: none;
 }
 
+/* index.html's big centered splash mark is its own one-time landing
+   moment (see index.html's inline comment by .logo-splash), not the
+   small in-place header write-on this session flag exists to silence -
+   it must still play every time someone lands on the homepage, even
+   after the flag was already set by an earlier page in the same tab,
+   or the splash's own fly-into-header script (index.html, setTimeout
+   1300ms) fires on top of a logo that already popped in fully formed
+   instead of having just finished writing itself. */
+html.armus-logo-static .logo-splash .logo-img {
+  --armus-logo-reveal: 0%;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(var(--armus-logo-reveal) - 14%), transparent var(--armus-logo-reveal));
+  mask-image: linear-gradient(to right, #000 calc(var(--armus-logo-reveal) - 14%), transparent var(--armus-logo-reveal));
+  animation: armus-logo-write 1.3s cubic-bezier(.34, 0, .24, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.armus-logo-static .logo-splash .logo-img {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
 /* Canonical button look, shared by every page - most pages only load
    this file (theme.css), not styles.css (index.html's own stylesheet,
    where this used to live only), so each one had ended up with its own
