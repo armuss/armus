@@ -2447,3 +2447,52 @@ select
 from public.reviews r;
 
 grant select on public.masked_reviews to anon, authenticated;
+
+-- === WITHDRAWAL REQUESTS (migration_93.sql) ============================
+-- A request queue for a teacher to cash out their earnings, not a real
+-- payment rail - ARMUS has no bank payout integration, so a request here
+-- just tells the admin team "this teacher wants ₺X sent to this IBAN";
+-- the actual bank transfer still happens manually, outside the app, same
+-- as every other admin-reviewed action in this codebase. The requested
+-- amount is NOT re-validated against the teacher's real lifetime
+-- earnings server-side - dashboard.html's own earnings-history math
+-- already applies the current commission tier retroactively as an
+-- estimate, and reproducing that (plus the trial-conversion logic) in a
+-- trigger would just be a second copy of the same approximation to keep
+-- in sync. The admin processing a request is the real check.
+create table withdrawal_requests (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null references profiles(id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  iban text not null,
+  iban_name text not null,
+  note text,
+  status text not null default 'pending' check (status in ('pending', 'paid', 'rejected')),
+  admin_note text,
+  requested_at timestamptz not null default now(),
+  processed_at timestamptz,
+  processed_by uuid references profiles(id)
+);
+
+alter table withdrawal_requests enable row level security;
+
+create index withdrawal_requests_teacher_id_idx on withdrawal_requests(teacher_id);
+create index withdrawal_requests_status_idx on withdrawal_requests(status);
+
+create policy "withdrawal_requests_select_own_or_admin"
+  on withdrawal_requests for select
+  using (auth.uid() = teacher_id or public.is_admin());
+
+create policy "withdrawal_requests_insert_own"
+  on withdrawal_requests for insert
+  with check (
+    auth.uid() = teacher_id
+    and status = 'pending'
+    and coalesce((select status from profiles where id = auth.uid()), '') = 'approved'
+    and coalesce((select is_banned from profiles where id = auth.uid()), false) = false
+  );
+
+create policy "withdrawal_requests_update_admin_only"
+  on withdrawal_requests for update
+  using (public.is_admin())
+  with check (public.is_admin());
