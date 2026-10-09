@@ -715,6 +715,47 @@
       padding: 16px 20px 20px;
     }
 
+    /* EARNINGS HISTORY */
+
+    .earnings-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .earnings-history-table th {
+      text-align: left;
+      color: var(--armus-muted);
+      font-weight: 600;
+      font-size: 11.5px;
+      padding: 0 10px 8px;
+      border-bottom: 1px solid var(--armus-border-soft);
+    }
+
+    .earnings-history-table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--armus-border-soft);
+    }
+
+    .earnings-history-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .earnings-history-table td:first-child {
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+
+    .earnings-history-table td:not(:first-child) {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .earnings-history-empty {
+      color: var(--armus-muted);
+      font-size: 13px;
+      padding: 4px 10px 16px;
+    }
+
     /* FORM */
 
     .field {
@@ -1900,6 +1941,25 @@
         </details>
 
         <details class="ov-details" open>
+          <summary><span data-i18n="teacherDash.earningsHistoryHeading">Kazanç Geçmişi</span><span class="chev">▸</span></summary>
+          <div class="ov-details-body">
+            <p class="section-hint" data-i18n="teacherDash.earningsHistoryHint">Tamamladığın derslerin aylık dökümü. Net tutar, şu anki komisyon oranınla hesaplanan bir tahmindir.</p>
+            <div class="earnings-history-empty" id="earningsHistoryEmpty" style="display: none;" data-i18n="teacherDash.earningsHistoryEmpty">Henüz tamamlanmış bir dersin yok.</div>
+            <table class="earnings-history-table" id="earningsHistoryTable">
+              <thead>
+                <tr>
+                  <th data-i18n="teacherDash.earningsHistoryMonthCol">Ay</th>
+                  <th data-i18n="teacherDash.earningsHistoryLessonsCol">Ders</th>
+                  <th data-i18n="teacherDash.earningsHistoryGrossCol">Brüt</th>
+                  <th data-i18n="teacherDash.earningsHistoryNetCol">Net (tahmini)</th>
+                </tr>
+              </thead>
+              <tbody id="earningsHistoryBody"></tbody>
+            </table>
+          </div>
+        </details>
+
+        <details class="ov-details" open>
           <summary><span data-i18n="teacherDash.responseTimeHeading">Mesajlara yanıt hızın</span><span class="chev">▸</span></summary>
           <div class="ov-details-body">
             <div class="response-card">
@@ -2625,6 +2685,40 @@
       }
       renderCommissionRange();
       document.addEventListener("armus:langchange", renderCommissionRange);
+
+      // ---- earnings history (grouped by month) - reuses completedBookings/
+      // earnablePrice/tier already computed above for "this month", so no
+      // extra network round trip. Net is an ESTIMATE using the CURRENT
+      // commission tier applied to every past month's gross, same as the
+      // "this month" stat already does - there's no stored per-booking
+      // commission snapshot to reproduce the rate that actually applied
+      // back when an older month's lessons were taught.
+      function renderEarningsHistory() {
+        const byMonth = new Map();
+        completedBookings.forEach(b => {
+          const monthKey = bookingLocalDateKey(b).slice(0, 7); // "YYYY-MM"
+          const entry = byMonth.get(monthKey) || { count: 0, gross: 0 };
+          entry.count += 1;
+          entry.gross += earnablePrice(b);
+          byMonth.set(monthKey, entry);
+        });
+
+        const months = armusMonthNames();
+        const rows = Array.from(byMonth.entries())
+          .sort((a, b) => b[0].localeCompare(a[0]))
+          .map(([monthKey, entry]) => {
+            const [year, month] = monthKey.split("-").map(Number);
+            const label = `${months[month - 1]} ${year}`;
+            const net = Math.round(entry.gross * (1 - tier.rate / 100));
+            return `<tr><td>${armusEscapeHtml(label)}</td><td>${entry.count}</td><td>₺${entry.gross}</td><td>₺${net}</td></tr>`;
+          });
+
+        document.getElementById("earningsHistoryBody").innerHTML = rows.join("");
+        document.getElementById("earningsHistoryTable").style.display = rows.length ? "table" : "none";
+        document.getElementById("earningsHistoryEmpty").style.display = rows.length ? "none" : "block";
+      }
+      renderEarningsHistory();
+      document.addEventListener("armus:langchange", renderEarningsHistory);
 
       // ---- last-7-days earnings sparkline ----
 
