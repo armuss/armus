@@ -754,6 +754,49 @@
       border-color: var(--armus-gold-2);
     }
 
+    /* LANGUAGES (mirrors apply-teacher.html's own language-row editor) */
+
+    .language-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .language-row input {
+      flex: 1;
+    }
+
+    .language-row select {
+      width: 130px;
+      flex-shrink: 0;
+    }
+
+    .remove-language-btn {
+      flex-shrink: 0;
+      width: 46px;
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--armus-muted);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .remove-language-btn:hover {
+      border-color: rgba(220, 90, 90, .5);
+      color: #b3261e;
+    }
+
+    .add-language-btn {
+      border: none;
+      background: transparent;
+      color: var(--armus-gold-text);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
     .save-btn {
       padding: 13px 24px;
       border: none;
@@ -777,6 +820,40 @@
 
     .save-status.visible {
       opacity: 1;
+    }
+
+    .profile-subsection {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--armus-border-soft);
+    }
+
+    .profile-subsection h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-error,
+    .form-success {
+      display: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 18px;
+      max-width: 400px;
+    }
+
+    .form-error {
+      background: rgba(220, 90, 90, .1);
+      border: 1px solid rgba(220, 90, 90, .35);
+      color: #b3261e;
+    }
+
+    .form-success {
+      background: rgba(143, 214, 174, .1);
+      border: 1px solid rgba(143, 214, 174, .35);
+      color: #1f7a4d;
+      line-height: 1.6;
     }
 
     .danger-zone {
@@ -1904,6 +1981,24 @@
           </div>
 
           <div class="field">
+            <label for="subject" data-i18n="applyTeacher.subject">Öğrettiğin konu</label>
+            <select id="subject">
+              <option value="Genel İngilizce" data-i18n="marketplace.generalEnglish">Genel İngilizce</option>
+              <option value="Konuşma" data-i18n="teachersPage.typeSpeaking">Konuşma</option>
+              <option value="IELTS">IELTS</option>
+              <option value="TOEFL">TOEFL</option>
+              <option value="YDS">YDS</option>
+              <option value="İş İngilizcesi" data-i18n="teachersPage.typeBusinessEnglish">İş İngilizcesi</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label data-i18n="applyTeacher.languagesSpoken">Konuştuğun diller</label>
+            <div id="dashLanguagesList"></div>
+            <button type="button" class="add-language-btn" id="dashAddLanguageBtn" data-i18n="applyTeacher.addLanguage">+ Başka bir dil ekle</button>
+          </div>
+
+          <div class="field">
             <label for="price" data-i18n="teacherDash.priceLabel">Ders ücreti (₺ / 50 dakika)</label>
             <input type="number" id="price" min="0" step="1">
           </div>
@@ -1926,6 +2021,23 @@
           <span class="save-status" id="saveStatus" data-i18n="teacherDash.saved">Kaydedildi ✓</span>
 
         </form>
+
+        <div class="profile-subsection">
+          <h3 data-i18n="settings.tabPassword">Şifre</h3>
+          <div class="form-error" id="passwordError"></div>
+          <div class="form-success" id="passwordSuccess"></div>
+          <form id="passwordForm">
+            <div class="field">
+              <label for="newPasswordInput" data-i18n="settings.newPasswordLabel">Yeni şifre</label>
+              <input type="password" id="newPasswordInput" autocomplete="new-password">
+            </div>
+            <div class="field">
+              <label for="confirmPasswordInput" data-i18n="settings.confirmPasswordLabel">Yeni şifreyi tekrar yaz</label>
+              <input type="password" id="confirmPasswordInput" autocomplete="new-password">
+            </div>
+            <button type="submit" class="save-btn" data-i18n="settings.saveChanges">Değişiklikleri Kaydet</button>
+          </form>
+        </div>
 
         <div class="danger-zone">
           <h3 data-i18n="teacherDash.dangerZone">Tehlikeli Bölge</h3>
@@ -2221,13 +2333,70 @@
       const pending = user.pending_changes || {};
 
       document.getElementById("title").value = pending.title ?? user.title ?? "";
+      document.getElementById("subject").value = pending.subject_taught ?? user.subject_taught ?? "Genel İngilizce";
       document.getElementById("price").value = pending.price ?? user.price ?? 500;
       document.getElementById("availability").value =
         pending.availability ?? user.availability ?? "Şu anda ders almaya uygun";
       document.getElementById("bio").value = pending.bio ?? user.bio ?? "";
 
+      // ---- languages taught (repeatable rows) - same shape and editor
+      // as apply-teacher.html's own languagesList, re-hosted here since
+      // migration_92.sql moved subject_taught/languages into the
+      // pending_changes + admin-approval path those other fields
+      // already use, instead of leaving an approved teacher with no way
+      // at all to fix a typo or add a language afterward.
+      const DASH_LANGUAGE_LEVELS = ["Ana dil", "C2", "C1", "B2", "B1", "A2", "A1"];
+      function dashLanguageLevelLabel(level) {
+        return level === "Ana dil" ? armusT("applyTeacher.nativeLevel", "Ana dil") : level;
+      }
+      const dashLanguagesList = document.getElementById("dashLanguagesList");
+
+      function addDashLanguageRow(language = "", level = "Ana dil") {
+        const row = document.createElement("div");
+        row.className = "language-row";
+        row.innerHTML = `
+          <input type="text" class="language-name" placeholder="${armusT("applyTeacher.languageNamePlaceholder", "Dil (örn. İngilizce)")}" value="${armusEscapeHtml(language)}">
+          <select class="language-level">
+            ${DASH_LANGUAGE_LEVELS.map(l => `<option value="${l}"${l === level ? " selected" : ""}>${dashLanguageLevelLabel(l)}</option>`).join("")}
+          </select>
+          <button type="button" class="remove-language-btn" aria-label="${armusT("applyTeacher.removeLanguage", "Dili kaldır")}">×</button>
+        `;
+
+        row.querySelector(".remove-language-btn").addEventListener("click", () => {
+          if (dashLanguagesList.children.length > 1) row.remove();
+        });
+
+        dashLanguagesList.appendChild(row);
+      }
+
+      function getDashLanguages() {
+        return Array.from(dashLanguagesList.querySelectorAll(".language-row"))
+          .map(row => ({
+            language: row.querySelector(".language-name").value.trim(),
+            level: row.querySelector(".language-level").value,
+          }))
+          .filter(l => l.language);
+      }
+
+      const initialLanguages = pending.languages ?? user.languages;
+      if (Array.isArray(initialLanguages) && initialLanguages.length) {
+        initialLanguages.forEach(l => addDashLanguageRow(l.language, l.level));
+      } else {
+        addDashLanguageRow();
+      }
+
+      document.getElementById("dashAddLanguageBtn").addEventListener("click", () => addDashLanguageRow());
+
+      document.addEventListener("armus:langchange", () => {
+        dashLanguagesList.querySelectorAll(".language-level").forEach(select => {
+          Array.from(select.options).forEach(opt => {
+            opt.textContent = dashLanguageLevelLabel(opt.value);
+          });
+        });
+      });
+
       function renderPendingNotes() {
-        const hasProfilePending = ["title", "price", "availability", "bio"]
+        const hasProfilePending = ["title", "price", "availability", "bio", "subject_taught", "languages"]
           .some(key => user.pending_changes && user.pending_changes[key] !== undefined);
 
         document.getElementById("profilePendingNote").style.display = hasProfilePending ? "block" : "none";
@@ -2849,9 +3018,19 @@
           return;
         }
 
+        const languagesValue = getDashLanguages();
+        if (languagesValue.length === 0) {
+          status.textContent = armusT("applyTeacher.errLanguageRequired", "En az bir dil ekle.");
+          status.classList.add("visible");
+          setTimeout(() => status.classList.remove("visible"), 2500);
+          return;
+        }
+
         const newPendingChanges = {
           ...(user.pending_changes || {}),
           title: document.getElementById("title").value.trim(),
+          subject_taught: document.getElementById("subject").value,
+          languages: languagesValue,
           price: priceValue,
           availability: document.getElementById("availability").value,
           bio: bioValue,
@@ -2869,6 +3048,47 @@
 
         status.classList.add("visible");
         setTimeout(() => status.classList.remove("visible"), 2500);
+      });
+
+      // ---- password (same armusUpdatePassword helper + validation as
+      // settings.html's own password form, just re-hosted here so a
+      // teacher doesn't have to leave their panel to change it) ----
+      document.getElementById("passwordForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const errorBox = document.getElementById("passwordError");
+        const successBox = document.getElementById("passwordSuccess");
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+
+        const newPassword = document.getElementById("newPasswordInput").value;
+        const confirmPassword = document.getElementById("confirmPasswordInput").value;
+
+        if (newPassword.length < 6) {
+          errorBox.textContent = armusT("settings.errPasswordShort", "Şifre en az 6 karakter olmalı.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          errorBox.textContent = armusT("settings.errPasswordMismatch", "Şifreler eşleşmiyor.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        const btn = event.target.querySelector(".save-btn");
+        btn.disabled = true;
+        const { error } = await armusUpdatePassword(newPassword);
+        btn.disabled = false;
+
+        if (error) {
+          errorBox.textContent = error.message || armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene.");
+          errorBox.style.display = "block";
+          return;
+        }
+
+        document.getElementById("passwordForm").reset();
+        successBox.textContent = armusT("settings.passwordSaved", "Şifren güncellendi.");
+        successBox.style.display = "block";
       });
 
       // ---- weekly availability timeline ----
