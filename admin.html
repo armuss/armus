@@ -1896,6 +1896,16 @@
       if (pc.bio !== undefined) {
         rows += `<div class="app-full"><h4>${armusT("admin.description", "Açıklama")}</h4><p><strong>${armusEscapeHtml(pc.bio)}</strong></p></div>`;
       }
+      if (pc.subject_taught !== undefined) {
+        rows += `<div><h4>${armusT("applyTeacher.subject", "Öğrettiğin konu")}</h4><p>${armusEscapeHtml(user.subject_taught) || "—"} → <strong>${armusEscapeHtml(pc.subject_taught)}</strong></p></div>`;
+      }
+      if (Array.isArray(pc.languages)) {
+        const oldLangs = (user.languages && user.languages.length)
+          ? user.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ")
+          : "—";
+        const newLangs = pc.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ") || "—";
+        rows += `<div class="app-full"><h4>${armusT("teacherProfile.languages", "Diller")}</h4><p>${oldLangs} → <strong>${newLangs}</strong></p></div>`;
+      }
       if (Array.isArray(pc.weekly_availability)) {
         rows += `<div class="app-full"><h4>${armusT("admin.newWeeklyAvailability", "Yeni haftalık uygunluk")}</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
       }

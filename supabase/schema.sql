@@ -650,24 +650,39 @@ begin
     raise exception 'attendance_lock: these fields can only be changed by the attendance-report system or an admin';
   end if;
 
+  -- migration_92.sql: subject_taught/languages moved here from the
+  -- flatly-locked credential block below - same admin-approval gate as
+  -- title/price/availability/bio, not an unrestricted write. They're
+  -- self-declared marketing copy like bio/title, not a verified
+  -- credential like the certificate/education fields below - they'd only
+  -- ended up flatly locked because they came from the same
+  -- application-form section as those, not from a deliberate decision
+  -- that they could never be edited. Before this, an approved teacher had
+  -- no way at all to fix a typo in their teaching languages or change
+  -- subject short of asking support for a raw DB edit, and
+  -- teachers.html's language filter depends on `languages` actually
+  -- reflecting what a teacher teaches.
   if old.status = 'approved' and (
     new.title is distinct from old.title
     or new.price is distinct from old.price
     or new.availability is distinct from old.availability
     or new.bio is distinct from old.bio
     or new.weekly_availability is distinct from old.weekly_availability
+    or new.subject_taught is distinct from old.subject_taught
+    or new.languages is distinct from old.languages
   ) then
     raise exception 'profile_locked: approved profile fields can only change through pending_changes + admin approval';
   end if;
 
   -- migration_80.sql: the rest of apply-teacher.html's application fields
   -- were never locked here at all, unlike title/price/bio/availability/
-  -- weekly_availability just above - armusUpdateOwnProfile has no field
-  -- allowlist (auth.js), so once approved a teacher could still rewrite
-  -- their own subject/certificate/education/video info with a bare
-  -- client update, completely bypassing the pending_changes + admin
-  -- review flow those other fields go through. That's the trust-critical
-  -- data admin.html's approval screen actually reviewed - a teacher could
+  -- weekly_availability/subject_taught/languages just above -
+  -- armusUpdateOwnProfile has no field allowlist (auth.js), so once
+  -- approved a teacher could still rewrite their own certificate/
+  -- education/video info with a bare client update, completely bypassing
+  -- the pending_changes + admin review flow those other fields go
+  -- through. That's the trust-critical, document-verified data
+  -- admin.html's approval screen actually reviewed - a teacher could
   -- silently swap in a fake certificate_file_url or claim a different
   -- university after being approved on the strength of the real one, with
   -- no admin ever seeing the change. No UI writes any of these fields for
@@ -677,8 +692,6 @@ begin
   -- escape hatch, unlike the fields above) matches current behavior.
   if old.status = 'approved' and (
     new.country is distinct from old.country
-    or new.subject_taught is distinct from old.subject_taught
-    or new.languages is distinct from old.languages
     or new.phone is distinct from old.phone
     or new.age_confirmed is distinct from old.age_confirmed
     or new.photo_url is distinct from old.photo_url
@@ -706,9 +719,9 @@ begin
   if new.pending_changes is distinct from old.pending_changes and new.pending_changes is not null then
     if exists (
       select 1 from jsonb_object_keys(new.pending_changes) as k
-      where k not in ('submitted_at', 'title', 'price', 'availability', 'bio', 'weekly_availability')
+      where k not in ('submitted_at', 'title', 'price', 'availability', 'bio', 'weekly_availability', 'subject_taught', 'languages')
     ) then
-      raise exception 'pending_changes_lock: pending_changes may only contain submitted_at, title, price, availability, bio, or weekly_availability';
+      raise exception 'pending_changes_lock: pending_changes may only contain submitted_at, title, price, availability, bio, weekly_availability, subject_taught, or languages';
     end if;
   end if;
 
