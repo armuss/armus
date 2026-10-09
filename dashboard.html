@@ -756,6 +756,29 @@
       padding: 4px 10px 16px;
     }
 
+    .withdraw-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .withdraw-status.pending {
+      background: rgba(223, 172, 46, .14);
+      color: var(--armus-gold-3);
+    }
+
+    .withdraw-status.paid {
+      background: rgba(34, 197, 94, .14);
+      color: #15803d;
+    }
+
+    .withdraw-status.rejected {
+      background: rgba(220, 90, 90, .12);
+      color: #b3261e;
+    }
+
     /* FORM */
 
     .field {
@@ -1792,6 +1815,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span data-i18n="teacherDash.navAvailability">Uygunluk</span>
       </button>
+      <button class="nav-btn" data-panel="financial">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
+        <span data-i18n="teacherDash.navFinancial">Finansal</span>
+      </button>
       <button class="nav-btn" data-panel="profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span data-i18n="teacherDash.navProfile">Profil</span>
@@ -2022,6 +2049,53 @@
 
         <button type="button" class="save-btn" id="saveAvailabilityBtn" data-i18n="teacherDash.save">Kaydet</button>
         <span class="save-status" id="availabilitySaveStatus" data-i18n="teacherDash.saved">Kaydedildi ✓</span>
+      </div>
+
+      <div class="panel" id="panel-financial">
+        <h2 data-i18n="teacherDash.navFinancial">Finansal</h2>
+        <p class="section-hint" data-i18n="teacherDash.financialHint">Kazandığın parayı IBAN'ına çekmek için bir talep gönder. ARMUS ekibi talebini inceleyip ödemeyi elden gönderir, bu yüzden işlem birkaç gün sürebilir.</p>
+
+        <div class="panel-card" style="max-width: 460px; margin-bottom: 24px;">
+          <h3 data-i18n="teacherDash.availableBalanceHeading">Çekilebilir bakiye (tahmini)</h3>
+          <div id="availableBalanceValue" style="font-family: 'Unbounded', 'Inter', sans-serif; font-size: 28px; font-weight: 800; margin: 8px 0;">₺0</div>
+          <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.availableBalanceHint">Bu rakam, tamamlanan derslerinden şu anki komisyon oranınla hesaplanan bir tahmindir; kesin tutarı ARMUS ekibi talebini incelerken doğrular.</p>
+        </div>
+
+        <form id="withdrawalForm" novalidate>
+          <div class="field">
+            <label for="withdrawAmount" data-i18n="teacherDash.withdrawAmountLabel">Çekmek istediğin tutar (₺)</label>
+            <input type="number" id="withdrawAmount" min="0" step="1">
+          </div>
+          <div class="field">
+            <label for="withdrawIban" data-i18n="teacherDash.withdrawIbanLabel">IBAN</label>
+            <input type="text" id="withdrawIban" placeholder="TR.." data-i18n-placeholder="teacherDash.withdrawIbanPlaceholder">
+          </div>
+          <div class="field">
+            <label for="withdrawIbanName" data-i18n="teacherDash.withdrawIbanNameLabel">Hesap sahibinin adı soyadı</label>
+            <input type="text" id="withdrawIbanName">
+          </div>
+          <div class="field">
+            <label for="withdrawNote" data-i18n="teacherDash.withdrawNoteLabel">Not (opsiyonel)</label>
+            <textarea id="withdrawNote" style="min-height: 60px;"></textarea>
+          </div>
+          <button type="submit" class="save-btn" data-i18n="teacherDash.withdrawSubmit">Talep Gönder</button>
+          <span class="save-status" id="withdrawStatus"></span>
+        </form>
+
+        <div class="profile-subsection">
+          <h3 data-i18n="teacherDash.withdrawHistoryHeading">Geçmiş Talepler</h3>
+          <div class="earnings-history-empty" id="withdrawHistoryEmpty" style="display: none;" data-i18n="teacherDash.withdrawHistoryEmpty">Henüz bir çekim talebin yok.</div>
+          <table class="earnings-history-table" id="withdrawHistoryTable">
+            <thead>
+              <tr>
+                <th data-i18n="teacherDash.withdrawHistoryDateCol">Tarih</th>
+                <th data-i18n="teacherDash.withdrawHistoryAmountCol">Tutar</th>
+                <th data-i18n="teacherDash.withdrawHistoryStatusCol">Durum</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawHistoryBody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="panel" id="panel-profile">
@@ -2719,6 +2793,99 @@
       }
       renderEarningsHistory();
       document.addEventListener("armus:langchange", renderEarningsHistory);
+
+      // ---- financial: withdrawal requests (Finansal tab) - a request
+      // queue, not a real payment rail (migration_93.sql); the "available
+      // balance" shown here is the same kind of current-tier estimate
+      // renderEarningsHistory already makes, minus whatever's already
+      // been requested (pending or paid - a rejected request frees the
+      // balance back up). The admin does the real check when processing.
+      const { data: withdrawalRows } = await armusSupabase
+        .from("withdrawal_requests")
+        .select("*")
+        .eq("teacher_id", user.id)
+        .order("requested_at", { ascending: false });
+      const withdrawalRequests = withdrawalRows || [];
+
+      const lifetimeGross = completedBookings.reduce((sum, b) => sum + earnablePrice(b), 0);
+      const lifetimeNetEstimate = Math.round(lifetimeGross * (1 - tier.rate / 100));
+      const claimedAmount = withdrawalRequests
+        .filter(w => w.status !== "rejected")
+        .reduce((sum, w) => sum + Number(w.amount), 0);
+      const availableBalance = Math.max(0, lifetimeNetEstimate - claimedAmount);
+      document.getElementById("availableBalanceValue").textContent = `₺${availableBalance}`;
+
+      const WITHDRAW_STATUS_LABELS = {
+        pending: () => armusT("teacherDash.withdrawStatusPending", "Beklemede"),
+        paid: () => armusT("teacherDash.withdrawStatusPaid", "Ödendi"),
+        rejected: () => armusT("teacherDash.withdrawStatusRejected", "Reddedildi"),
+      };
+
+      function renderWithdrawalHistory() {
+        const rows = withdrawalRequests.map(w => {
+          const dateLabel = armusFormatDateLabel(localDateKey(new Date(w.requested_at)));
+          const labelFn = WITHDRAW_STATUS_LABELS[w.status];
+          const statusLabel = labelFn ? labelFn() : w.status;
+          return `<tr><td>${armusEscapeHtml(dateLabel)}</td><td>₺${w.amount}</td><td><span class="withdraw-status ${armusEscapeHtml(w.status)}">${armusEscapeHtml(statusLabel)}</span></td></tr>`;
+        });
+        document.getElementById("withdrawHistoryBody").innerHTML = rows.join("");
+        document.getElementById("withdrawHistoryTable").style.display = rows.length ? "table" : "none";
+        document.getElementById("withdrawHistoryEmpty").style.display = rows.length ? "none" : "block";
+      }
+      renderWithdrawalHistory();
+      document.addEventListener("armus:langchange", renderWithdrawalHistory);
+
+      document.getElementById("withdrawalForm").addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const status = document.getElementById("withdrawStatus");
+        function showStatus(text) {
+          status.textContent = text;
+          status.classList.add("visible");
+          setTimeout(() => status.classList.remove("visible"), 3000);
+        }
+
+        const amount = Number(document.getElementById("withdrawAmount").value);
+        const iban = document.getElementById("withdrawIban").value.trim().replace(/\s+/g, "").toUpperCase();
+        const ibanName = document.getElementById("withdrawIbanName").value.trim();
+        const note = document.getElementById("withdrawNote").value.trim();
+
+        if (!amount || amount <= 0) {
+          showStatus(armusT("teacherDash.withdrawErrAmount", "Geçerli bir tutar gir."));
+          return;
+        }
+        if (amount > availableBalance) {
+          showStatus(armusT("teacherDash.withdrawErrTooMuch", "Bu tutar çekilebilir bakiyenden fazla."));
+          return;
+        }
+        if (!/^TR\d{24}$/.test(iban)) {
+          showStatus(armusT("teacherDash.withdrawErrIban", "Geçerli bir IBAN gir (TR ile başlayan 26 karakter)."));
+          return;
+        }
+        if (!ibanName) {
+          showStatus(armusT("teacherDash.withdrawErrIbanName", "Hesap sahibinin adını gir."));
+          return;
+        }
+
+        const btn = event.target.querySelector(".save-btn");
+        btn.disabled = true;
+        const { data, error } = await armusSupabase
+          .from("withdrawal_requests")
+          .insert({ teacher_id: user.id, amount, iban, iban_name: ibanName, note: note || null })
+          .select()
+          .single();
+        btn.disabled = false;
+
+        if (error || !data) {
+          showStatus(armusT("teacherDash.withdrawErrFailed", "Talep gönderilemedi. Lütfen tekrar dene."));
+          return;
+        }
+
+        withdrawalRequests.unshift(data);
+        renderWithdrawalHistory();
+        document.getElementById("withdrawalForm").reset();
+        showStatus(armusT("teacherDash.withdrawSuccess", "Talebin gönderildi ✓"));
+      });
 
       // ---- last-7-days earnings sparkline ----
 

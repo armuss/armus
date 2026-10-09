@@ -831,6 +831,23 @@
       color: #1f7a4d;
     }
 
+    /* ---- withdrawal request status badges ---- */
+
+    .app-badge.withdrawal-pending {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .app-badge.withdrawal-paid {
+      border-color: #4caf7d;
+      color: #1f7a4d;
+    }
+
+    .app-badge.withdrawal-rejected {
+      border-color: rgba(220, 90, 90, .5);
+      color: #b3261e;
+    }
+
     .attendance-card-icon {
       width: 15px;
       height: 15px;
@@ -1232,6 +1249,7 @@
       <button class="nav-btn" data-panel="messages" data-i18n="admin.navMessages">Mesajlar</button>
       <button class="nav-btn" data-panel="reviews"><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
       <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
+      <button class="nav-btn" data-panel="withdrawals"><span data-i18n="admin.navWithdrawals">Para Çekme Talepleri</span> <span class="nav-badge" id="withdrawalsBadge"></span></button>
       <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
       <button class="nav-btn" data-panel="demand" data-i18n="admin.navDemand">Talep Haritası</button>
       <button class="nav-btn" data-panel="cities" data-i18n="admin.navCities">Şehirler</button>
@@ -1518,6 +1536,34 @@
           <tbody id="earningsBody"></tbody>
         </table>
         <div class="empty-note" id="earningsEmpty" style="display: none;" data-i18n="admin.earningsEmpty">Henüz tamamlanan ders yok.</div>
+      </div>
+
+      <div class="panel" id="panel-withdrawals">
+        <h2 data-i18n="admin.navWithdrawals">Para Çekme Talepleri</h2>
+        <p class="section-hint" data-i18n="admin.withdrawalsHint">
+          Öğretmenlerin kazançlarını IBAN'larına çekmek için gönderdiği
+          talepler. ARMUS'un otomatik bir ödeme sistemi yok - tutarı
+          öğretmenin gerçek kazancıyla burada elle doğrulayıp havaleyi
+          kendin gönderdikten sonra "Ödendi" olarak işaretle, ya da geçersiz
+          bir talebi "Reddet" ile kapat.
+        </p>
+        <input type="text" class="admin-search" id="searchWithdrawals" placeholder="İsim ara..." data-i18n-placeholder="admin.searchName">
+        <table id="withdrawalsTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colAmount">Tutar</th>
+              <th data-i18n="admin.colIban">IBAN</th>
+              <th data-i18n="admin.colIbanName">Hesap Sahibi</th>
+              <th data-i18n="admin.colNote">Not</th>
+              <th data-i18n="admin.colStatus">Durum</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawalsBody"></tbody>
+        </table>
+        <div class="empty-note" id="withdrawalsEmpty" style="display: none;" data-i18n="admin.withdrawalsEmpty">Para çekme talebi yok.</div>
       </div>
 
       <div class="panel" id="panel-announcement">
@@ -2860,6 +2906,97 @@
       return teacher ? teacher.name : teacherId;
     }
 
+    // ---- withdrawal requests (migration_93.sql) ----
+    // A request queue, not a real payment rail - marking one "paid" here
+    // only records that the admin already sent the money by hand (bank
+    // transfer, outside the app); it doesn't trigger any transaction.
+
+    function withdrawalStatusLabels() {
+      return {
+        pending: armusT("admin.withdrawalStatusPending", "Beklemede"),
+        paid: armusT("admin.withdrawalStatusPaid", "Ödendi"),
+        rejected: armusT("admin.withdrawalStatusRejected", "Reddedildi"),
+      };
+    }
+
+    async function armusAdminResolveWithdrawalRequest(id, status) {
+      const session = await armusGetSession();
+      const { data, error } = await armusSupabase
+        .from("withdrawal_requests")
+        .update({ status, processed_at: new Date().toISOString(), processed_by: session ? session.id : null })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) return null;
+      return data;
+    }
+
+    function renderWithdrawalsPanel(requests, profileById) {
+      const body = document.getElementById("withdrawalsBody");
+      const empty = document.getElementById("withdrawalsEmpty");
+      const badge = document.getElementById("withdrawalsBadge");
+      body.innerHTML = "";
+
+      const pendingCount = requests.filter(w => w.status === "pending").length;
+      if (pendingCount) {
+        badge.textContent = pendingCount;
+        badge.classList.add("visible");
+      } else {
+        badge.classList.remove("visible");
+      }
+
+      if (!requests.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const statusLabels = withdrawalStatusLabels();
+
+      requests.forEach(w => {
+        const teacher = profileById.get(w.teacher_id);
+        const teacherLabel = teacher ? `${armusEscapeHtml(teacher.name)}<br><span class="app-email">${armusEscapeHtml(teacher.email)}</span>` : armusEscapeHtml(w.teacher_id);
+        const dateLabel = new Date(w.requested_at).toLocaleDateString();
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${dateLabel}</td>
+          <td>${teacherLabel}</td>
+          <td>₺${w.amount}</td>
+          <td>${armusEscapeHtml(w.iban)}</td>
+          <td>${armusEscapeHtml(w.iban_name)}</td>
+          <td>${w.note ? armusEscapeHtml(w.note) : "—"}</td>
+          <td><span class="app-badge withdrawal-${w.status}">${statusLabels[w.status] || w.status}</span></td>
+          <td>
+            ${w.status === "pending" ? `
+              <button class="btn btn-approve" data-withdrawal-action="${w.id}" data-new-status="paid">${armusT("admin.withdrawalMarkPaid", "Ödendi işaretle")}</button>
+              <button class="btn btn-reject" data-withdrawal-action="${w.id}" data-new-status="rejected">${armusT("admin.attendanceDismiss", "Reddet")}</button>
+            ` : "—"}
+          </td>
+        `;
+        body.appendChild(row);
+      });
+
+      body.querySelectorAll("[data-withdrawal-action]").forEach(button => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          const id = button.dataset.withdrawalAction;
+          const newStatus = button.dataset.newStatus;
+          const updated = await armusAdminResolveWithdrawalRequest(id, newStatus);
+          if (updated) {
+            armusAdminWithdrawalRequests = armusAdminWithdrawalRequests.map(x => x.id === id ? updated : x);
+            armusLogAdminAction(
+              newStatus === "paid" ? "withdrawal_paid" : "withdrawal_rejected",
+              "withdrawal_request", id, teacherIdLabel(updated.teacher_id)
+            );
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+    }
+
     // ---- testimonial live preview ----
 
     function updateTestimonialPreview() {
@@ -2986,6 +3123,11 @@
 
     document.getElementById("searchAttendance").addEventListener("input", e => {
       armusAdminSearch.attendance = e.target.value;
+      renderAllFromState();
+    });
+
+    document.getElementById("searchWithdrawals").addEventListener("input", e => {
+      armusAdminSearch.withdrawals = e.target.value;
       renderAllFromState();
     });
 
@@ -3660,7 +3802,8 @@
     let armusAdminCredits = [];
     let armusAdminClientErrors = [];
     let armusAdminConversations = [];
-    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "" };
+    let armusAdminWithdrawalRequests = [];
+    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "", withdrawals: "" };
 
     function matchesSearch(value, term) {
       return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
@@ -3693,6 +3836,11 @@
         const teacherName = (profileById.get(c.teacher_id) || {}).name || "";
         return matchesSearch(studentName, armusAdminSearch.messages) || matchesSearch(teacherName, armusAdminSearch.messages);
       });
+      const filteredWithdrawalRequests = armusAdminWithdrawalRequests.filter(w => {
+        const teacher = profileById.get(w.teacher_id);
+        return matchesSearch(teacher ? teacher.name : w.teacher_id, armusAdminSearch.withdrawals)
+          || matchesSearch(teacher ? teacher.email : "", armusAdminSearch.withdrawals);
+      });
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
@@ -3710,6 +3858,7 @@
       renderDisputesPanel(filteredDisputes);
       renderMessagesPanel(filteredConversations, profileById);
       renderAttendancePanel(filteredAttendanceReports);
+      renderWithdrawalsPanel(filteredWithdrawalRequests, profileById);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
@@ -3769,7 +3918,7 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
@@ -3785,6 +3934,7 @@
         // could be large and the admin only ever needs to read one
         // conversation at a time
         armusSupabase.from("conversations").select("*").order("created_at", { ascending: false }),
+        armusSupabase.from("withdrawal_requests").select("*").order("requested_at", { ascending: false }),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -3802,6 +3952,7 @@
       // real package purchase yet (see armusTrialCountsAsEarned)
       armusAdminCredits = creditsRes.data || [];
       armusAdminConversations = conversationsRes.data || [];
+      armusAdminWithdrawalRequests = withdrawalsRes.data || [];
 
       renderAllFromState();
     }
