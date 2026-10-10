@@ -149,6 +149,7 @@ const ARMUS_I18N_EN = {
   "index.footer.contact": "Contact",
   "index.footer.privacy": "Privacy Policy",
   "index.footer.terms": "Terms of Use",
+  "index.footer.status": "System Status",
   "index.footer.newsletter": "Join Our Newsletter",
   "index.footer.newsletterText": "Stay up to date on new features and offers.",
   "index.footer.newsletterPlaceholder": "Your email address",
