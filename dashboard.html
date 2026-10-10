@@ -1760,6 +1760,37 @@
       cursor: pointer;
     }
 
+    .student-group-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .block-toggle-btn {
+      border: 1px solid #c0392b55;
+      background: transparent;
+      color: #c0392b;
+      border-radius: 9px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+
+    .block-toggle-btn.is-blocked {
+      border-color: var(--armus-border);
+      color: var(--armus-muted);
+    }
+
+    .blocked-tag {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #c0392b;
+    }
+
     .note-box {
       display: none;
       margin-top: 12px;
@@ -2333,6 +2364,7 @@
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
+  <script src="teacher-blocks.js?v=1"></script>
   <script src="attendance.js?v=4"></script>
   <script>
 
@@ -2673,10 +2705,11 @@
 
       renderPendingNotes();
 
-      const [incomingBookings, teacherReviews, teacherNotes, conversations, teacherCreditsRes] = await Promise.all([
+      const [incomingBookings, teacherReviews, teacherNotes, blockedStudents, conversations, teacherCreditsRes] = await Promise.all([
         armusGetBookingsForTeacher(user.id),
         armusGetReviewsForTeacher(user.id),
         armusGetTeacherNotes(user.id),
+        armusGetBlockedStudents(user.id),
         armusGetConversations(),
         armusSupabase.from("lesson_credits").select("*").eq("teacher_id", user.id),
       ]);
@@ -3318,8 +3351,11 @@
 
           group.innerHTML = `
             <div class="student-group-head">
-              <strong>${armusEscapeHtml(studentBookings[0].studentName)}</strong>
-              <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? armusT("teacherDash.viewEditNote", "Notu Gör/Düzenle") : armusT("teacherDash.addNote", "Not Ekle")}</button>
+              <strong>${armusEscapeHtml(studentBookings[0].studentName)}${blockedStudents.has(studentId) ? `<span class="blocked-tag">${armusT("teacherDash.blockedTag", "🚫 Engellendi")}</span>` : ""}</strong>
+              <div class="student-group-actions">
+                <button type="button" class="note-toggle-btn" data-note-toggle>${existingNote && existingNote.note ? armusT("teacherDash.viewEditNote", "Notu Gör/Düzenle") : armusT("teacherDash.addNote", "Not Ekle")}</button>
+                <button type="button" class="block-toggle-btn${blockedStudents.has(studentId) ? " is-blocked" : ""}" data-block-toggle>${blockedStudents.has(studentId) ? armusT("teacherDash.unblockStudent", "Engeli Kaldır") : armusT("teacherDash.blockStudent", "Engelle")}</button>
+              </div>
             </div>
             ${studentBookings.map(booking => {
 
@@ -3370,6 +3406,38 @@
           const noteBox = group.querySelector("[data-note-box]");
           group.querySelector("[data-note-toggle]").addEventListener("click", () => {
             noteBox.style.display = noteBox.style.display === "block" ? "none" : "block";
+          });
+
+          group.querySelector("[data-block-toggle]").addEventListener("click", async () => {
+            const button = group.querySelector("[data-block-toggle]");
+            const isBlocked = button.classList.contains("is-blocked");
+
+            if (!isBlocked && !confirm(armusT("teacherDash.blockStudentConfirm", "Bu öğrenciyi engellemek istediğine emin misin? Bundan sonra seninle yeni bir ders rezervasyonu yapamaz."))) return;
+
+            button.disabled = true;
+            const ok = isBlocked
+              ? await armusUnblockStudent(user.id, studentId)
+              : await armusBlockStudent(user.id, studentId);
+            button.disabled = false;
+
+            if (!ok) {
+              alert(armusT("teacherDash.blockActionFailed", "İşlem başarısız oldu, tekrar dene."));
+              return;
+            }
+
+            const headStrong = group.querySelector(".student-group-head strong");
+            if (isBlocked) {
+              blockedStudents.delete(studentId);
+              button.classList.remove("is-blocked");
+              button.textContent = armusT("teacherDash.blockStudent", "Engelle");
+              const tag = headStrong.querySelector(".blocked-tag");
+              if (tag) tag.remove();
+            } else {
+              blockedStudents.add(studentId);
+              button.classList.add("is-blocked");
+              button.textContent = armusT("teacherDash.unblockStudent", "Engeli Kaldır");
+              headStrong.insertAdjacentHTML("beforeend", `<span class="blocked-tag">${armusT("teacherDash.blockedTag", "🚫 Engellendi")}</span>`);
+            }
           });
 
           group.querySelector("[data-save-note]").addEventListener("click", async () => {
