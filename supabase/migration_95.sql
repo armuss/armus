@@ -1,0 +1,21 @@
+-- ARMUS migration 95: a subscribable calendar (.ics) feed for teachers -
+-- "Takvim Senkronizasyonu" on dashboard.html's Uygunluk tab gives each
+-- teacher a URL they can paste into Google Calendar/Apple Calendar's
+-- "subscribe by URL" so their ARMUS lessons show up alongside everything
+-- else, auto-refreshing instead of a one-time export that goes stale the
+-- next time they get a booking.
+--
+-- A calendar app can't carry a Supabase session, so the feed is reached
+-- through an unauthenticated Edge Function (calendar-feed) instead of a
+-- normal RLS-guarded query - calendar_token is the unguessable secret in
+-- its place (same role sms/email "magic link" tokens play elsewhere: not
+-- a password, but long and random enough that only someone holding the
+-- URL itself can read that teacher's schedule). Deliberately NOT added to
+-- enforce_teacher_profile_lock's locked-field lists (migration_80.sql/
+-- migration_92.sql) - like is_online and availability_dates, a teacher
+-- needs to regenerate it (if the URL ever leaks) instantly from their own
+-- panel, with no admin approval step in the way of a security action.
+--
+-- Run this whole file once in Supabase Dashboard -> SQL Editor.
+
+alter table profiles add column if not exists calendar_token uuid not null default gen_random_uuid();

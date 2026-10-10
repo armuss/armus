@@ -726,6 +726,13 @@ const ARMUS_I18N_EN = {
   "teacherDash.prevWeek": "Previous week",
   "teacherDash.nextWeek": "Next week",
   "teacherDash.noBookingsYet": "No bookings yet. Your profile is visible on the Teachers page — once a student finds you and books a lesson, it'll be listed here.",
+  "teacherDash.calendarSyncHeading": "Calendar Sync",
+  "teacherDash.calendarSyncHint": "Add this link to Google Calendar or Apple Calendar as \"subscribe by URL\" - your lessons will show up there too, updating automatically.",
+  "teacherDash.copyLink": "Copy Link",
+  "teacherDash.regenerateLink": "Refresh Link (the old one stops working)",
+  "teacherDash.linkCopied": "Copied ✓",
+  "teacherDash.copyFailed": "Couldn't copy - select and copy the link manually.",
+  "teacherDash.linkRegenerated": "New link created ✓",
   "teacherDash.availabilityHint": "Click an empty area and drag down to add availability for that day. You can resize a block by dragging its top or bottom edge, move it by its body, or hover and delete it with ×. This schedule works by day of the week, not a specific date, and repeats every week. Changes apply instantly, no approval needed.",
 
   // student-dashboard - sidebar/top-level labels only; the stats

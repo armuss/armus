@@ -2520,3 +2520,13 @@ create policy "withdrawal_requests_update_admin_only"
   on withdrawal_requests for update
   using (public.is_admin())
   with check (public.is_admin());
+
+-- migration_95.sql: the unguessable secret in a teacher's subscribable
+-- calendar-feed URL (dashboard.html's Uygunluk tab) - a calendar app
+-- can't carry a Supabase session, so the feed is read through an
+-- unauthenticated Edge Function instead of RLS, with this token standing
+-- in for auth. Deliberately NOT added to enforce_teacher_profile_lock's
+-- locked-field lists - like is_online/availability_dates, a teacher needs
+-- to regenerate it instantly (if the URL ever leaks) with no admin
+-- approval step in the way of a security action.
+alter table profiles add column if not exists calendar_token uuid not null default gen_random_uuid();
