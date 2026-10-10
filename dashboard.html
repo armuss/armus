@@ -804,6 +804,52 @@
       line-height: 1.6;
     }
 
+    .calendar-feed-row {
+      display: flex;
+      gap: 8px;
+      max-width: 520px;
+      margin-bottom: 10px;
+    }
+
+    .calendar-feed-row input {
+      flex: 1;
+      min-width: 0;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      color: var(--armus-muted);
+      font-family: inherit;
+      font-size: 12.5px;
+    }
+
+    .calendar-feed-row button {
+      flex-shrink: 0;
+      padding: 11px 18px;
+      border: none;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .calendar-feed-regen {
+      border: none;
+      background: transparent;
+      color: var(--armus-muted);
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .calendar-feed-regen:hover {
+      color: var(--armus-gold-text);
+    }
+
     .view-public-profile-link {
       display: inline-flex;
       align-items: center;
@@ -2120,6 +2166,17 @@
 
         <button type="button" class="save-btn" id="saveAvailabilityBtn" data-i18n="teacherDash.save">Kaydet</button>
         <span class="save-status" id="availabilitySaveStatus" data-i18n="teacherDash.saved">Kaydedildi ✓</span>
+
+        <div class="profile-subsection">
+          <h3 data-i18n="teacherDash.calendarSyncHeading">Takvim Senkronizasyonu</h3>
+          <p class="section-hint" data-i18n="teacherDash.calendarSyncHint">Bu linki Google Takvim veya Apple Takvim'e "URL ile abone ol" olarak ekle - derslerin otomatik güncellenerek orada da görünür.</p>
+          <div class="calendar-feed-row">
+            <input type="text" id="calendarFeedUrl" readonly>
+            <button type="button" id="copyCalendarFeedBtn" data-i18n="teacherDash.copyLink">Linki Kopyala</button>
+          </div>
+          <button type="button" class="calendar-feed-regen" id="regenCalendarTokenBtn" data-i18n="teacherDash.regenerateLink">Linki Yenile (eskisi çalışmaz olur)</button>
+          <span class="save-status" id="calendarFeedStatus"></span>
+        </div>
       </div>
 
       <div class="panel" id="panel-financial">
@@ -3776,6 +3833,43 @@
       document.addEventListener("armus:langchange", () => {
         renderWeekHeader();
         renderTimeline();
+      });
+
+      // ---- calendar sync (migration_95.sql / calendar-feed Edge
+      // Function) - calendar_token is deliberately NOT behind
+      // enforce_teacher_profile_lock, so this writes it directly, same
+      // as availability_dates just above, no pending_changes/admin
+      // review needed to regenerate a leaked link.
+      function calendarFeedUrl() {
+        return `${ARMUS_SUPABASE_URL}/functions/v1/calendar-feed?teacher=${encodeURIComponent(user.id)}&token=${encodeURIComponent(user.calendar_token)}`;
+      }
+      document.getElementById("calendarFeedUrl").value = calendarFeedUrl();
+
+      function showCalendarFeedStatus(text) {
+        const status = document.getElementById("calendarFeedStatus");
+        status.textContent = text;
+        status.classList.add("visible");
+        setTimeout(() => status.classList.remove("visible"), 2500);
+      }
+
+      document.getElementById("copyCalendarFeedBtn").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(document.getElementById("calendarFeedUrl").value);
+          showCalendarFeedStatus(armusT("teacherDash.linkCopied", "Kopyalandı ✓"));
+        } catch (err) {
+          showCalendarFeedStatus(armusT("teacherDash.copyFailed", "Kopyalanamadı, linki elle seçip kopyala."));
+        }
+      });
+
+      document.getElementById("regenCalendarTokenBtn").addEventListener("click", async () => {
+        const result = await armusUpdateOwnProfile({ calendar_token: crypto.randomUUID() });
+        if (result === false) {
+          showCalendarFeedStatus(armusT("teacherDash.saveFailed", "Kaydedilemedi ✕"));
+          return;
+        }
+        user.calendar_token = result.calendar_token;
+        document.getElementById("calendarFeedUrl").value = calendarFeedUrl();
+        showCalendarFeedStatus(armusT("teacherDash.linkRegenerated", "Yeni link oluşturuldu ✓"));
       });
     }
 
