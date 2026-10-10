@@ -860,6 +860,8 @@ const ARMUS_I18N_EN = {
   "admin.overviewHeading": "Overview",
   "admin.trendHeading": "Last 6 months - booking trend",
   "admin.revenueTrendHeading": "Last 6 months - revenue trend",
+  "admin.cancellationTrendHeading": "Last 6 months - cancellation rate",
+  "admin.teacherGrowthHeading": "Last 6 months - new teacher applications",
   "admin.pulseHeading": "Live Feed",
   "admin.pulseLive": "● LIVE",
   "admin.pulseHint": "New bookings, sign-ups and reviews appear here the moment they happen - no need to refresh the page.",

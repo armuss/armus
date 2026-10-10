@@ -672,7 +672,7 @@
 
     /* ---- trend chart ---- */
 
-    #trendChart, #revenueTrendChart {
+    #trendChart, #revenueTrendChart, #cancellationTrendChart, #teacherGrowthChart {
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
       border-radius: 14px;
@@ -1276,6 +1276,10 @@
         <div id="trendChart"></div>
         <h3 data-i18n="admin.revenueTrendHeading">Son 6 ay - ciro trendi</h3>
         <div id="revenueTrendChart"></div>
+        <h3 data-i18n="admin.cancellationTrendHeading">Son 6 ay - iptal oranı</h3>
+        <div id="cancellationTrendChart"></div>
+        <h3 data-i18n="admin.teacherGrowthHeading">Son 6 ay - yeni öğretmen başvurusu</h3>
+        <div id="teacherGrowthChart"></div>
         <h3><span data-i18n="admin.pulseHeading">Canlı Akış</span> <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;" data-i18n="admin.pulseLive">● CANLI</span></h3>
         <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
@@ -2418,6 +2422,91 @@
         return `
           <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
           <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="11" style="fill:var(--armus-ink)">₺${total}</text>
+          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
+          ${bars}
+        </svg>
+      `;
+    }
+
+    // cancellation rate per month, last 6 months - same bucketing as
+    // renderTrendChart (by lesson_date month, regardless of past/future),
+    // since "will this month's bookings hold up" is as useful to see as
+    // "did they hold up" once the month is still in progress
+    function renderCancellationRateChart(bookings) {
+
+      const container = document.getElementById("cancellationTrendChart");
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
+        });
+      }
+
+      const rates = months.map(m => {
+        const monthBookings = bookings.filter(b => b.date.startsWith(m.key));
+        if (!monthBookings.length) return 0;
+        const cancelled = monthBookings.filter(b => b.status === "cancelled").length;
+        return Math.round((cancelled / monthBookings.length) * 100);
+      });
+      const max = Math.max(1, ...rates, 10);
+      const barWidth = 48, gap = 24, chartHeight = 130;
+      const width = months.length * (barWidth + gap);
+
+      const bars = rates.map((rate, i) => {
+        const h = rate ? Math.max(4, Math.round((rate / max) * (chartHeight - 24))) : 0;
+        const x = i * (barWidth + gap);
+        const y = chartHeight - h;
+        return `
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:#c0392b"></rect>
+          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">%${rate}</text>
+          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
+          ${bars}
+        </svg>
+      `;
+    }
+
+    // new teacher applications per month (role === "teacher", any status) -
+    // bucketed by created_at since profiles has no approved_at column, so
+    // this reads as "signups", not "approvals"
+    function renderTeacherGrowthChart(profiles) {
+
+      const container = document.getElementById("teacherGrowthChart");
+      const teacherSignups = profiles.filter(p => p.role === "teacher" && p.created_at);
+      const now = new Date();
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
+        });
+      }
+
+      const counts = months.map(m => teacherSignups.filter(p => armusMonthKey(p.created_at) === m.key).length);
+      const max = Math.max(1, ...counts);
+      const barWidth = 48, gap = 24, chartHeight = 130;
+      const width = months.length * (barWidth + gap);
+
+      const bars = counts.map((count, i) => {
+        const h = count ? Math.max(4, Math.round((count / max) * (chartHeight - 24))) : 0;
+        const x = i * (barWidth + gap);
+        const y = chartHeight - h;
+        return `
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
+          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">${count}</text>
           <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
         `;
       }).join("");
@@ -3846,6 +3935,8 @@
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
       renderTrendChart(armusAdminBookings);
       renderRevenueTrendChart(armusAdminBookings);
+      renderCancellationRateChart(armusAdminBookings);
+      renderTeacherGrowthChart(armusAdminProfiles);
       renderAtRiskPanel(computeAtRiskTeachers(teachers, armusAdminBookings, armusAdminReviews));
       renderBulkActionsBar();
       renderTeachersPanel(filteredTeachers);
