@@ -78,8 +78,29 @@ async function armusSignUp({ name, email, password, role, city }) {
   });
 }
 
+// Routed through login-with-throttle (migration_99.sql) instead of
+// calling armusSupabase.auth.signInWithPassword directly - that had no
+// limit at all on how many passwords could be tried against one email.
+// Keeps the same { error } return shape callers (login.html) already
+// expect; error.message is set on any failure, including the throttle's
+// own "too many attempts" response, so it's shown the same way a wrong
+// password is.
 async function armusSignIn({ email, password }) {
-  return armusSupabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await armusSupabase.functions.invoke("login-with-throttle", {
+    body: { email, password },
+  });
+
+  if (error || !data || !data.access_token) {
+    const message = (data && data.error) || (await armusEdgeErrorMessage(error)) || "E-posta veya şifre hatalı.";
+    return { error: { message } };
+  }
+
+  const { error: setSessionError } = await armusSupabase.auth.setSession({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+  });
+
+  return { error: setSessionError || null };
 }
 
 async function armusSignOut() {

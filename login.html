@@ -327,7 +327,11 @@
       submitBtn.disabled = false;
 
       if (error) {
-        showError(armusT("login.wrongCredentials", "E-posta veya şifre hatalı."));
+        // armusSignIn (auth.js) now routes through login-with-throttle,
+        // which can fail for a different reason than a wrong password
+        // (too many attempts, briefly) - show that specific message
+        // instead of always implying the password might be wrong.
+        showError(error.message || armusT("login.wrongCredentials", "E-posta veya şifre hatalı."));
         return;
       }
 
