@@ -377,6 +377,18 @@
       margin-bottom: 14px;
     }
 
+    .attendance-modal select {
+      width: 100%;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13.5px;
+      margin-bottom: 14px;
+    }
+
     .attendance-modal-actions {
       display: flex;
       gap: 10px;
@@ -2503,6 +2515,25 @@
     </div>
   </div>
 
+  <div class="attendance-modal-overlay" id="blockReasonModalOverlay" hidden>
+    <div class="attendance-modal">
+      <h2 data-i18n="teacherDash.blockReasonTitle">Öğrenciyi Engelle</h2>
+      <p data-i18n="teacherDash.blockReasonIntro">Engellersen bu öğrenci seninle yeni bir ders rezervasyonu yapamaz, sana mesaj gönderemez ve aranızdaki henüz başlamamış dersler otomatik iptal edilip kendisine ders hakkı olarak geri verilir.</p>
+      <select id="blockReasonSelect">
+        <option value="harassment" data-i18n="teacherDash.blockReasonHarassment">Taciz / uygunsuz davranış</option>
+        <option value="payment_bypass" data-i18n="teacherDash.blockReasonPaymentBypass">Platform dışında ödeme teklif etti</option>
+        <option value="scam" data-i18n="teacherDash.blockReasonScam">Dolandırıcılık şüphesi</option>
+        <option value="dont_want_to_teach" data-i18n="teacherDash.blockReasonDontWantToTeach">Bu öğrenciye ders vermek istemiyorum</option>
+        <option value="other" data-i18n="teacherDash.blockReasonOther">Diğer</option>
+      </select>
+      <textarea id="blockReasonNote" style="display:none;" data-i18n-placeholder="teacherDash.blockReasonNotePlaceholder" placeholder="Kısaca açıklar mısın? (isteğe bağlı)"></textarea>
+      <div class="attendance-modal-actions">
+        <button type="button" class="btn" id="blockReasonCancelBtn" data-i18n="class.cancel">İptal</button>
+        <button type="button" class="btn btn-light" id="blockReasonConfirmBtn" data-i18n="teacherDash.blockStudent">Engelle</button>
+      </div>
+    </div>
+  </div>
+
   <script src="i18n.js?v=16"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -2512,7 +2543,7 @@
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
-  <script src="teacher-blocks.js?v=1"></script>
+  <script src="teacher-blocks.js?v=2"></script>
   <script src="support-tickets.js?v=1"></script>
   <script src="push-notifications.js?v=1"></script>
   <script src="withdrawal-receipt.js?v=1"></script>
@@ -2665,6 +2696,53 @@
       "teacherDash.attendanceRulesText",
       "ARMUS kuralları: bir öğrenci dersine gelmediğini ya da geç kaldığını bildirdiğinde, incelenene kadar profilin yeni öğrencilerin aramasından gizlenir. Ekibimiz durumu değerlendirir. Tekrarlanan, doğrulanmış ihlaller daha ağır sonuçlar doğurur - toplamda 10 gelmeme profilinin tamamen kapatılmasına, bir ayda derslerinin %5'inden fazlasında geç kalman ise profilinin bir ay boyunca herkesten gizlenmesine yol açar."
     );
+
+    // Promise-based: resolves with { reason, note } once the teacher
+    // confirms, or null if they cancel. Reused for every "Engelle" click
+    // across every student-group card instead of one modal instance per
+    // card - the overlay/select/textarea only ever hold one in-flight
+    // choice at a time anyway.
+    function openBlockReasonModal() {
+      return new Promise(resolve => {
+        const overlay = document.getElementById("blockReasonModalOverlay");
+        const select = document.getElementById("blockReasonSelect");
+        const note = document.getElementById("blockReasonNote");
+        const confirmBtn = document.getElementById("blockReasonConfirmBtn");
+        const cancelBtn = document.getElementById("blockReasonCancelBtn");
+
+        select.value = "harassment";
+        note.value = "";
+        note.style.display = "none";
+        overlay.hidden = false;
+
+        function onSelectChange() {
+          note.style.display = select.value === "other" ? "block" : "none";
+        }
+
+        function cleanup() {
+          overlay.hidden = true;
+          select.removeEventListener("change", onSelectChange);
+          confirmBtn.removeEventListener("click", onConfirm);
+          cancelBtn.removeEventListener("click", onCancel);
+        }
+
+        function onConfirm() {
+          const reason = select.value;
+          const noteValue = note.value.trim();
+          cleanup();
+          resolve({ reason, note: noteValue });
+        }
+
+        function onCancel() {
+          cleanup();
+          resolve(null);
+        }
+
+        select.addEventListener("change", onSelectChange);
+        confirmBtn.addEventListener("click", onConfirm);
+        cancelBtn.addEventListener("click", onCancel);
+      });
+    }
 
     async function openAttendanceModal(user, report) {
 
@@ -3819,32 +3897,47 @@
           group.querySelector("[data-block-toggle]").addEventListener("click", async () => {
             const button = group.querySelector("[data-block-toggle]");
             const isBlocked = button.classList.contains("is-blocked");
-
-            if (!isBlocked && !confirm(armusT("teacherDash.blockStudentConfirm", "Bu öğrenciyi engellemek istediğine emin misin? Bundan sonra seninle yeni bir ders rezervasyonu yapamaz."))) return;
-
-            button.disabled = true;
-            const ok = isBlocked
-              ? await armusUnblockStudent(user.id, studentId)
-              : await armusBlockStudent(user.id, studentId);
-            button.disabled = false;
-
-            if (!ok) {
-              alert(armusT("teacherDash.blockActionFailed", "İşlem başarısız oldu, tekrar dene."));
-              return;
-            }
-
             const headStrong = group.querySelector(".student-group-head strong");
+
             if (isBlocked) {
+              if (!confirm(armusT("teacherDash.unblockStudentConfirm", "Bu öğrencinin engelini kaldırmak istediğine emin misin?"))) return;
+
+              button.disabled = true;
+              const ok = await armusUnblockStudent(user.id, studentId);
+              button.disabled = false;
+
+              if (!ok) {
+                alert(armusT("teacherDash.blockActionFailed", "İşlem başarısız oldu, tekrar dene."));
+                return;
+              }
+
               blockedStudents.delete(studentId);
               button.classList.remove("is-blocked");
               button.textContent = armusT("teacherDash.blockStudent", "Engelle");
               const tag = headStrong.querySelector(".blocked-tag");
               if (tag) tag.remove();
-            } else {
-              blockedStudents.add(studentId);
-              button.classList.add("is-blocked");
-              button.textContent = armusT("teacherDash.unblockStudent", "Engeli Kaldır");
-              headStrong.insertAdjacentHTML("beforeend", `<span class="blocked-tag">${armusT("teacherDash.blockedTag", "🚫 Engellendi")}</span>`);
+              return;
+            }
+
+            const picked = await openBlockReasonModal();
+            if (!picked) return;
+
+            button.disabled = true;
+            const result = await armusBlockStudent(user.id, studentId, picked.reason, picked.note);
+            button.disabled = false;
+
+            if (!result.ok) {
+              alert(armusT("teacherDash.blockActionFailed", "İşlem başarısız oldu, tekrar dene."));
+              return;
+            }
+
+            blockedStudents.add(studentId);
+            button.classList.add("is-blocked");
+            button.textContent = armusT("teacherDash.unblockStudent", "Engeli Kaldır");
+            headStrong.insertAdjacentHTML("beforeend", `<span class="blocked-tag">${armusT("teacherDash.blockedTag", "🚫 Engellendi")}</span>`);
+
+            if (result.cancelledCount > 0) {
+              alert(armusT("teacherDash.blockCancelledLessons", "Bu öğrenciyle aranızdaki {count} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.").replace("{count}", result.cancelledCount));
             }
           });
 

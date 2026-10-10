@@ -995,11 +995,15 @@ as $$
   );
 $$;
 
+-- migration_101.sql: added the is_pair_blocked check - a blocked student
+-- (or the teacher who blocked them) could otherwise still open a brand
+-- new conversation with each other.
 create policy "conversations_insert_participant"
   on conversations for insert
   with check (
     (auth.uid() = student_id or auth.uid() = teacher_id)
     and public.is_messageable_teacher(teacher_id)
+    and not public.is_pair_blocked(teacher_id, student_id)
     and (
       (auth.uid() = student_id and exists (select 1 from profiles p where p.id = student_id and p.role = 'student'))
       or (auth.uid() = teacher_id and public.teacher_may_contact_student(student_id, teacher_id))
@@ -1070,6 +1074,10 @@ create policy "messages_insert_own"
       select 1 from conversations c
       where c.id = conversation_id
         and (c.student_id = auth.uid() or c.teacher_id = auth.uid())
+        -- migration_101.sql: a blocked student (or the teacher who
+        -- blocked them) could otherwise keep messaging indefinitely in
+        -- a conversation that already existed before the block.
+        and not public.is_pair_blocked(c.teacher_id, c.student_id)
     )
     and public.messages_under_rate_limit()
   );
@@ -2610,6 +2618,14 @@ create table blocked_students (
   unique (teacher_id, student_id)
 );
 
+-- migration_101.sql: why the teacher blocked this student - required by
+-- the dashboard.html block modal going forward; nullable here only
+-- because it's a plain `alter table add column` on a table that may
+-- already have rows from before this existed.
+alter table blocked_students add column if not exists reason text
+  check (reason in ('harassment', 'payment_bypass', 'scam', 'dont_want_to_teach', 'other'));
+alter table blocked_students add column if not exists reason_note text;
+
 alter table blocked_students enable row level security;
 
 create policy "blocked_students_select_own"
@@ -2649,6 +2665,40 @@ $$;
 create trigger bookings_enforce_teacher_block
   before insert on bookings
   for each row execute procedure public.enforce_teacher_block();
+
+-- migration_101.sql: the booking trigger above only ever stopped a NEW
+-- booking - messaging (conversations_insert_participant/messages_insert_own,
+-- declared earlier in this file) never checked blocked_students at all,
+-- so a blocked student could still open a new conversation or keep
+-- messaging in an old one. These two functions close that gap (see the
+-- updated policies below) and give a blocked student a way to find out
+-- they're blocked (am_i_blocked_by - mesajlar.html calls this to show a
+-- clear notice instead of letting the message just silently fail).
+create or replace function public.is_pair_blocked(p_teacher_id uuid, p_student_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from blocked_students bs
+    where bs.teacher_id = p_teacher_id and bs.student_id = p_student_id
+  );
+$$;
+
+-- deliberately takes no student_id argument - always checks the CALLER
+-- (auth.uid()), so one student can never use this to learn whether some
+-- OTHER student is blocked.
+create or replace function public.am_i_blocked_by(p_teacher_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select public.is_pair_blocked(p_teacher_id, auth.uid());
+$$;
 
 -- === SUPPORT TICKETS (migration_97.sql) =================================
 -- An internal support ticket system between a teacher and the ARMUS

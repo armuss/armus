@@ -922,6 +922,7 @@
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script src="messages.js?v=4"></script>
+  <script src="teacher-blocks.js?v=2"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -931,6 +932,14 @@
     let currentChannel = null;
     let activeConversationId = null;
     let activeConversationHasBooking = false;
+    // migration_101.sql: whether the TEACHER on the active conversation
+    // has blocked the current (student) viewer - only ever computed for
+    // a student viewer (see openConversation), since a teacher already
+    // knows when they've blocked someone (dashboard.html shows it on
+    // their own student-group card). Sending is also enforced server
+    // side (messages_insert_own RLS) regardless of this flag - it only
+    // drives the warning banner and skips a doomed network round trip.
+    let activeConversationBlocked = false;
 
     // currentSession used to be fetched once at page load and reused for
     // the rest of the visit - if the user signed out (or their account
@@ -1169,6 +1178,17 @@
       const hasBooking = await armusHasBookingWithOtherParty(otherId);
       if (activeConversationId !== conversationId) return;
       activeConversationHasBooking = hasBooking;
+
+      activeConversationBlocked = currentSession.role === "student"
+        ? await armusAmIBlockedBy(otherId)
+        : false;
+      if (activeConversationId !== conversationId) return;
+      if (activeConversationBlocked) {
+        showChatWarning(armusT(
+          "messages.blockedByTeacher",
+          "Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın."
+        ));
+      }
 
       await loadThread(conversationId);
       if (activeConversationId !== conversationId) return;
@@ -1488,6 +1508,14 @@
 
       event.preventDefault();
       if (!activeConversationId) return;
+
+      if (activeConversationBlocked) {
+        showChatWarning(armusT(
+          "messages.blockedByTeacher",
+          "Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın."
+        ));
+        return;
+      }
 
       // recording a voice message? "Gönder" stops it and sends it,
       // instead of trying to submit the (empty) text box
