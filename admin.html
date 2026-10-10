@@ -848,6 +848,18 @@
       color: #b3261e;
     }
 
+    /* ---- support ticket status badges ---- */
+
+    .app-badge.ticket-open {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .app-badge.ticket-closed {
+      border-color: var(--armus-border);
+      color: var(--armus-muted);
+    }
+
     .attendance-card-icon {
       width: 15px;
       height: 15px;
@@ -1250,6 +1262,7 @@
       <button class="nav-btn" data-panel="reviews"><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
       <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
       <button class="nav-btn" data-panel="withdrawals"><span data-i18n="admin.navWithdrawals">Para Çekme Talepleri</span> <span class="nav-badge" id="withdrawalsBadge"></span></button>
+      <button class="nav-btn" data-panel="supporttickets"><span data-i18n="admin.navSupportTickets">Destek Talepleri</span> <span class="nav-badge" id="supportTicketsBadge"></span></button>
       <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
       <button class="nav-btn" data-panel="demand" data-i18n="admin.navDemand">Talep Haritası</button>
       <button class="nav-btn" data-panel="cities" data-i18n="admin.navCities">Şehirler</button>
@@ -1570,6 +1583,28 @@
         <div class="empty-note" id="withdrawalsEmpty" style="display: none;" data-i18n="admin.withdrawalsEmpty">Para çekme talebi yok.</div>
       </div>
 
+      <div class="panel" id="panel-supporttickets">
+        <h2 data-i18n="admin.navSupportTickets">Destek Talepleri</h2>
+        <p class="section-hint" data-i18n="admin.supportTicketsHint">
+          Öğretmenlerin ARMUS ekibine doğrudan gönderdiği destek talepleri.
+          Bir talebe yanıt yazmak ya da kapatmak için "Detaylar"a bas.
+        </p>
+        <input type="text" class="admin-search" id="searchSupportTickets" placeholder="İsim ara..." data-i18n-placeholder="admin.searchName">
+        <table id="supportTicketsTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colSupportSubject">Konu</th>
+              <th data-i18n="admin.colStatus">Durum</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="supportTicketsBody"></tbody>
+        </table>
+        <div class="empty-note" id="supportTicketsEmpty" style="display: none;" data-i18n="admin.supportTicketsEmpty">Destek talebi yok.</div>
+      </div>
+
       <div class="panel" id="panel-announcement">
         <h2 data-i18n="admin.navAnnouncement">Site Duyurusu</h2>
         <p class="section-hint" data-i18n="admin.announcementHint">
@@ -1652,6 +1687,7 @@
   <script src="testimonials.js?v=4"></script>
   <script src="disputes.js?v=4"></script>
   <script src="attendance.js?v=4"></script>
+  <script src="support-tickets.js?v=1"></script>
   <script src="site-settings.js?v=4"></script>
   <script>
 
@@ -2581,6 +2617,9 @@
         change_approve: armusT("admin.logChangeApproved", "Profil değişikliği onaylandı"),
         change_reject: armusT("admin.logChangeRejected", "Profil değişikliği reddedildi"),
         booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
+        support_ticket_reply: armusT("admin.logSupportTicketReply", "Destek talebine yanıt verildi"),
+        support_ticket_close: armusT("admin.logSupportTicketClosed", "Destek talebi kapatıldı"),
+        support_ticket_reopen: armusT("admin.logSupportTicketReopened", "Destek talebi yeniden açıldı"),
       };
 
       logs
@@ -3086,6 +3125,139 @@
       });
     }
 
+    // ---- support tickets (Destek Talepleri, migration_97.sql) - reuses
+    // the generic #detailOverlay/#detailBody modal that openConversationDetail
+    // already uses for the Mesajlar panel, with an added reply form and a
+    // close/reopen button since this thread (unlike a read-only message
+    // thread review) is one the admin actively writes into ----
+
+    function supportTicketStatusLabels() {
+      return {
+        open: armusT("admin.ticketStatusOpen", "Açık"),
+        closed: armusT("admin.ticketStatusClosed", "Kapalı"),
+      };
+    }
+
+    function renderSupportTicketsPanel(tickets, profileById) {
+      const body = document.getElementById("supportTicketsBody");
+      const empty = document.getElementById("supportTicketsEmpty");
+      const badge = document.getElementById("supportTicketsBadge");
+      body.innerHTML = "";
+
+      const openCount = tickets.filter(t => t.status === "open").length;
+      if (openCount) {
+        badge.textContent = openCount;
+        badge.classList.add("visible");
+      } else {
+        badge.classList.remove("visible");
+      }
+
+      if (!tickets.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const statusLabels = supportTicketStatusLabels();
+
+      tickets.forEach(t => {
+        const teacher = profileById.get(t.teacher_id);
+        const teacherLabel = teacher ? `${armusEscapeHtml(teacher.name)}<br><span class="app-email">${armusEscapeHtml(teacher.email)}</span>` : armusEscapeHtml(t.teacher_id);
+        const dateLabel = new Date(t.updated_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR");
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${dateLabel}</td>
+          <td>${teacherLabel}</td>
+          <td>${armusEscapeHtml(t.subject)}</td>
+          <td><span class="app-badge ticket-${t.status}">${statusLabels[t.status] || t.status}</span></td>
+          <td><button class="btn" data-view-ticket="${t.id}">${armusT("admin.details", "Detaylar")}</button></td>
+        `;
+        body.appendChild(row);
+      });
+
+      body.querySelectorAll("[data-view-ticket]").forEach(button => {
+        button.addEventListener("click", () => {
+          const ticket = tickets.find(t => t.id === button.dataset.viewTicket);
+          if (ticket) openTicketDetail(ticket, profileById);
+        });
+      });
+    }
+
+    async function openTicketDetail(ticket, profileById) {
+      const teacher = profileById.get(ticket.teacher_id);
+      const teacherLabel = (teacher && teacher.name) || armusT("admin.colTeacher", "Öğretmen");
+
+      document.getElementById("detailTitle").textContent = `${ticket.subject} — ${teacherLabel}`;
+      document.getElementById("detailBody").innerHTML = `<p class="section-hint">${armusT("admin.loading", "Yükleniyor...")}</p>`;
+      document.getElementById("detailOverlay").classList.add("visible");
+
+      const messages = await armusGetTicketMessages(ticket.id);
+      renderTicketDetailBody(ticket, messages, teacherLabel);
+    }
+
+    function renderTicketDetailBody(ticket, messages, teacherLabel) {
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      const timeLabel = iso => new Date(iso).toLocaleString(lang);
+
+      document.getElementById("detailBody").innerHTML = `
+        <div class="admin-msg-thread">
+          ${messages.map(m => `
+            <div class="admin-msg-bubble">
+              <div class="admin-msg-meta"><strong>${armusEscapeHtml(m.sender_role === "teacher" ? teacherLabel : armusT("admin.ticketYouArmus", "Sen (ARMUS)"))}</strong> · ${timeLabel(m.created_at)}</div>
+              <div class="admin-msg-body">${armusEscapeHtml(m.body)}</div>
+            </div>
+          `).join("")}
+        </div>
+        <form id="ticketReplyForm" style="margin-top: 16px;">
+          <textarea class="admin-search" id="ticketReplyBody" style="min-height: 70px; resize: vertical; margin-bottom: 10px;" placeholder="${armusT("admin.ticketReplyPlaceholder", "Yanıtını yaz...")}"></textarea>
+          <button type="submit" class="btn btn-approve">${armusT("admin.ticketReplySend", "Gönder")}</button>
+          <button type="button" class="btn" id="ticketToggleStatusBtn">${ticket.status === "closed" ? armusT("admin.ticketReopen", "Yeniden Aç") : armusT("admin.ticketClose", "Talebi Kapat")}</button>
+          <span class="save-status" id="ticketReplyStatus"></span>
+        </form>
+      `;
+
+      document.getElementById("ticketReplyForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const textarea = document.getElementById("ticketReplyBody");
+        const replyBody = textarea.value.trim();
+        if (!replyBody) return;
+
+        const session = await armusGetSession();
+        const btn = event.target.querySelector("button[type=submit]");
+        btn.disabled = true;
+        const newMsg = await armusSendTicketMessage(ticket.id, session.id, "admin", replyBody);
+        btn.disabled = false;
+
+        if (!newMsg) {
+          document.getElementById("ticketReplyStatus").textContent = armusT("admin.ticketReplyFailed", "Mesaj gönderilemedi.");
+          return;
+        }
+
+        messages.push(newMsg);
+        ticket.updated_at = newMsg.created_at;
+        armusAdminSupportTickets = armusAdminSupportTickets.map(t => t.id === ticket.id ? { ...t, updated_at: newMsg.created_at } : t);
+        armusLogAdminAction("support_ticket_reply", "support_ticket", ticket.id, teacherLabel);
+        renderTicketDetailBody(ticket, messages, teacherLabel);
+        renderAllFromState();
+      });
+
+      document.getElementById("ticketToggleStatusBtn").addEventListener("click", async () => {
+        const newStatus = ticket.status === "closed" ? "open" : "closed";
+        const btn = document.getElementById("ticketToggleStatusBtn");
+        btn.disabled = true;
+        const ok = await armusSetTicketStatus(ticket.id, newStatus);
+        btn.disabled = false;
+        if (!ok) return;
+
+        ticket.status = newStatus;
+        armusAdminSupportTickets = armusAdminSupportTickets.map(t => t.id === ticket.id ? { ...t, status: newStatus } : t);
+        armusLogAdminAction(newStatus === "closed" ? "support_ticket_close" : "support_ticket_reopen", "support_ticket", ticket.id, teacherLabel);
+        renderTicketDetailBody(ticket, messages, teacherLabel);
+        renderAllFromState();
+      });
+    }
+
     // ---- testimonial live preview ----
 
     function updateTestimonialPreview() {
@@ -3217,6 +3389,11 @@
 
     document.getElementById("searchWithdrawals").addEventListener("input", e => {
       armusAdminSearch.withdrawals = e.target.value;
+      renderAllFromState();
+    });
+
+    document.getElementById("searchSupportTickets").addEventListener("input", e => {
+      armusAdminSearch.supportTickets = e.target.value;
       renderAllFromState();
     });
 
@@ -3892,7 +4069,8 @@
     let armusAdminClientErrors = [];
     let armusAdminConversations = [];
     let armusAdminWithdrawalRequests = [];
-    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "", withdrawals: "" };
+    let armusAdminSupportTickets = [];
+    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "", withdrawals: "", supportTickets: "" };
 
     function matchesSearch(value, term) {
       return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
@@ -3930,6 +4108,11 @@
         return matchesSearch(teacher ? teacher.name : w.teacher_id, armusAdminSearch.withdrawals)
           || matchesSearch(teacher ? teacher.email : "", armusAdminSearch.withdrawals);
       });
+      const filteredSupportTickets = armusAdminSupportTickets.filter(t => {
+        const teacher = profileById.get(t.teacher_id);
+        return matchesSearch(teacher ? teacher.name : t.teacher_id, armusAdminSearch.supportTickets)
+          || matchesSearch(teacher ? teacher.email : "", armusAdminSearch.supportTickets);
+      });
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
@@ -3950,6 +4133,7 @@
       renderMessagesPanel(filteredConversations, profileById);
       renderAttendancePanel(filteredAttendanceReports);
       renderWithdrawalsPanel(filteredWithdrawalRequests, profileById);
+      renderSupportTicketsPanel(filteredSupportTickets, profileById);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
@@ -4009,7 +4193,7 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
@@ -4026,6 +4210,7 @@
         // conversation at a time
         armusSupabase.from("conversations").select("*").order("created_at", { ascending: false }),
         armusSupabase.from("withdrawal_requests").select("*").order("requested_at", { ascending: false }),
+        armusSupabase.from("support_tickets").select("*").order("updated_at", { ascending: false }),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -4044,6 +4229,7 @@
       armusAdminCredits = creditsRes.data || [];
       armusAdminConversations = conversationsRes.data || [];
       armusAdminWithdrawalRequests = withdrawalsRes.data || [];
+      armusAdminSupportTickets = supportTicketsRes.data || [];
 
       renderAllFromState();
     }

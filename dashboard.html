@@ -1791,6 +1791,97 @@
       color: #c0392b;
     }
 
+    .ticket-row {
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      background: var(--armus-panel);
+    }
+
+    .ticket-row-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .ticket-row-head strong {
+      flex: 1;
+      font-size: 14.5px;
+    }
+
+    .ticket-status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .ticket-status-badge.open {
+      color: #1f7a4d;
+      background: #1f7a4d1a;
+    }
+
+    .ticket-status-badge.closed {
+      color: var(--armus-muted);
+      background: var(--armus-border);
+    }
+
+    .ticket-updated {
+      font-size: 11.5px;
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .ticket-thread {
+      margin-top: 12px;
+      border-top: 1px solid var(--armus-border);
+      padding-top: 12px;
+    }
+
+    .ticket-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ticket-message {
+      max-width: 80%;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .ticket-message.own {
+      align-self: flex-end;
+      background: var(--armus-gold-text);
+      color: #1a1712;
+    }
+
+    .ticket-message.other {
+      align-self: flex-start;
+      background: var(--armus-border);
+    }
+
+    .ticket-message-meta {
+      font-size: 10.5px;
+      opacity: .75;
+      margin-bottom: 2px;
+    }
+
+    .ticket-reply-form textarea {
+      width: 100%;
+      min-height: 60px;
+      background: var(--armus-bg);
+      border: 1px solid var(--armus-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-family: inherit;
+      margin-bottom: 8px;
+    }
+
     .note-box {
       display: none;
       margin-top: 12px;
@@ -1962,6 +2053,10 @@
       <button class="nav-btn" data-panel="profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span data-i18n="teacherDash.navProfile">Profil</span>
+      </button>
+      <button class="nav-btn" data-panel="support">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        <span data-i18n="teacherDash.navSupport">Destek</span>
       </button>
       <a class="nav-btn" href="mesajlar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
@@ -2257,6 +2352,33 @@
         </div>
       </div>
 
+      <div class="panel" id="panel-support">
+        <h2 data-i18n="teacherDash.navSupport">Destek</h2>
+        <p class="section-hint" data-i18n="teacherDash.supportHint">Ödeme, hesap ya da başka bir sorunun için ARMUS ekibine doğrudan yaz.</p>
+
+        <button type="button" class="save-btn" id="newTicketBtn" data-i18n="teacherDash.newTicketBtn">Yeni Talep Aç</button>
+
+        <form id="newTicketForm" novalidate style="display: none; margin-top: 16px; max-width: 460px;">
+          <div class="field">
+            <label for="ticketSubject" data-i18n="teacherDash.ticketSubjectLabel">Konu</label>
+            <input type="text" id="ticketSubject" maxlength="200">
+          </div>
+          <div class="field">
+            <label for="ticketBody" data-i18n="teacherDash.ticketBodyLabel">Mesajın</label>
+            <textarea id="ticketBody" style="min-height: 90px;"></textarea>
+          </div>
+          <button type="submit" class="save-btn" data-i18n="teacherDash.ticketSubmit">Gönder</button>
+          <button type="button" class="note-toggle-btn" id="cancelNewTicketBtn" data-i18n="teacherDash.cancel">Vazgeç</button>
+          <span class="save-status" id="newTicketStatus"></span>
+        </form>
+
+        <div class="profile-subsection">
+          <h3 data-i18n="teacherDash.ticketsHeading">Taleplerin</h3>
+          <div class="earnings-history-empty" id="ticketsEmpty" style="display: none;" data-i18n="teacherDash.ticketsEmpty">Henüz bir destek talebin yok.</div>
+          <div id="ticketsList"></div>
+        </div>
+      </div>
+
       <div class="panel" id="panel-profile">
         <h2 data-i18n="teacherDash.editProfile">Profilini Düzenle</h2>
 
@@ -2365,6 +2487,7 @@
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
   <script src="teacher-blocks.js?v=1"></script>
+  <script src="support-tickets.js?v=1"></script>
   <script src="attendance.js?v=4"></script>
   <script>
 
@@ -3081,6 +3204,192 @@
         renderWithdrawalHistory();
         document.getElementById("withdrawalForm").reset();
         showStatus(armusT("teacherDash.withdrawSuccess", "Talebin gönderildi ✓"));
+      });
+
+      // ---- support tickets (Destek tab, migration_97.sql) - thread
+      // messages are fetched lazily per ticket, only when its row is
+      // expanded, same reasoning as conversations/messages in admin.html
+
+      const myTickets = await armusGetMyTickets(user.id);
+      const ticketMessagesByTicket = new Map();
+      const expandedTicketIds = new Set();
+
+      const TICKET_STATUS_LABELS = {
+        open: () => armusT("teacherDash.ticketStatusOpen", "Açık"),
+        closed: () => armusT("teacherDash.ticketStatusClosed", "Kapalı"),
+      };
+
+      function ticketUpdatedLabel(ticket) {
+        return armusFormatDateLabel(localDateKey(new Date(ticket.updated_at)));
+      }
+
+      async function renderTicketThread(ticket) {
+        const threadEl = document.querySelector(`[data-ticket-thread="${ticket.id}"]`);
+        if (!threadEl) return;
+
+        if (!ticketMessagesByTicket.has(ticket.id)) {
+          ticketMessagesByTicket.set(ticket.id, await armusGetTicketMessages(ticket.id));
+        }
+        const msgs = ticketMessagesByTicket.get(ticket.id);
+
+        threadEl.querySelector("[data-ticket-messages]").innerHTML = msgs.map(m => `
+          <div class="ticket-message ${m.sender_role === "teacher" ? "own" : "other"}">
+            <div class="ticket-message-meta">${m.sender_role === "teacher" ? armusT("teacherDash.ticketYou", "Sen") : armusT("teacherDash.ticketArmusTeam", "ARMUS Ekibi")} · ${new Date(m.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</div>
+            <div>${armusEscapeHtml(m.body)}</div>
+          </div>
+        `).join("");
+
+        const statusBtn = threadEl.querySelector("[data-ticket-toggle-status]");
+        statusBtn.textContent = ticket.status === "closed"
+          ? armusT("teacherDash.ticketReopen", "Yeniden Aç")
+          : armusT("teacherDash.ticketClose", "Talebi Kapat");
+      }
+
+      function renderTicketsList() {
+        const list = document.getElementById("ticketsList");
+        document.getElementById("ticketsEmpty").style.display = myTickets.length ? "none" : "block";
+
+        list.innerHTML = myTickets.map(ticket => {
+          const labelFn = TICKET_STATUS_LABELS[ticket.status];
+          const statusLabel = labelFn ? labelFn() : ticket.status;
+          return `
+            <div class="ticket-row">
+              <div class="ticket-row-head" data-ticket-toggle="${ticket.id}">
+                <strong>${armusEscapeHtml(ticket.subject)}</strong>
+                <span class="ticket-status-badge ${armusEscapeHtml(ticket.status)}">${armusEscapeHtml(statusLabel)}</span>
+                <span class="ticket-updated">${ticketUpdatedLabel(ticket)}</span>
+              </div>
+              <div class="ticket-thread" data-ticket-thread="${ticket.id}" style="display:${expandedTicketIds.has(ticket.id) ? "block" : "none"};">
+                <div class="ticket-messages" data-ticket-messages></div>
+                <form class="ticket-reply-form" data-ticket-reply="${ticket.id}">
+                  <textarea placeholder="${armusT("teacherDash.ticketReplyPlaceholder", "Yanıtını yaz...")}" required></textarea>
+                  <button type="submit" class="save-btn">${armusT("teacherDash.ticketReplySend", "Gönder")}</button>
+                </form>
+                <button type="button" class="note-toggle-btn" data-ticket-toggle-status="${ticket.id}" style="margin-top:8px;"></button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        list.querySelectorAll("[data-ticket-toggle]").forEach(head => {
+          head.addEventListener("click", async () => {
+            const id = head.dataset.ticketToggle;
+            const ticket = myTickets.find(t => t.id === id);
+            const threadEl = document.querySelector(`[data-ticket-thread="${id}"]`);
+            const willExpand = threadEl.style.display !== "block";
+            threadEl.style.display = willExpand ? "block" : "none";
+            if (willExpand) {
+              expandedTicketIds.add(id);
+              await renderTicketThread(ticket);
+            } else {
+              expandedTicketIds.delete(id);
+            }
+          });
+        });
+
+        list.querySelectorAll("[data-ticket-reply]").forEach(form => {
+          form.addEventListener("submit", async event => {
+            event.preventDefault();
+            const id = form.dataset.ticketReply;
+            const ticket = myTickets.find(t => t.id === id);
+            const textarea = form.querySelector("textarea");
+            const body = textarea.value.trim();
+            if (!body) return;
+
+            const btn = form.querySelector("button");
+            btn.disabled = true;
+            const newMsg = await armusSendTicketMessage(id, user.id, "teacher", body);
+            btn.disabled = false;
+
+            if (!newMsg) {
+              alert(armusT("teacherDash.ticketReplyFailed", "Mesaj gönderilemedi, tekrar dene."));
+              return;
+            }
+
+            textarea.value = "";
+            ticket.status = "open";
+            ticket.updated_at = newMsg.created_at;
+            if (!ticketMessagesByTicket.has(id)) ticketMessagesByTicket.set(id, []);
+            ticketMessagesByTicket.get(id).push(newMsg);
+            myTickets.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            expandedTicketIds.add(id);
+            renderTicketsList();
+          });
+        });
+
+        list.querySelectorAll("[data-ticket-toggle-status]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.ticketToggleStatus;
+            const ticket = myTickets.find(t => t.id === id);
+            const newStatus = ticket.status === "closed" ? "open" : "closed";
+
+            btn.disabled = true;
+            const ok = await armusSetTicketStatus(id, newStatus);
+            btn.disabled = false;
+
+            if (!ok) return;
+            ticket.status = newStatus;
+            expandedTicketIds.add(id);
+            renderTicketsList();
+          });
+        });
+
+        // re-apply expanded threads + render their messages after a full re-render
+        myTickets.forEach(ticket => {
+          if (expandedTicketIds.has(ticket.id)) renderTicketThread(ticket);
+        });
+      }
+      renderTicketsList();
+      document.addEventListener("armus:langchange", renderTicketsList);
+
+      document.getElementById("newTicketBtn").addEventListener("click", () => {
+        const form = document.getElementById("newTicketForm");
+        form.style.display = form.style.display === "block" ? "none" : "block";
+      });
+
+      document.getElementById("cancelNewTicketBtn").addEventListener("click", () => {
+        document.getElementById("newTicketForm").style.display = "none";
+        document.getElementById("newTicketForm").reset();
+      });
+
+      document.getElementById("newTicketForm").addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const status = document.getElementById("newTicketStatus");
+        function showTicketStatus(text) {
+          status.textContent = text;
+          status.classList.add("visible");
+          setTimeout(() => status.classList.remove("visible"), 3000);
+        }
+
+        const subject = document.getElementById("ticketSubject").value.trim();
+        const body = document.getElementById("ticketBody").value.trim();
+
+        if (!subject) {
+          showTicketStatus(armusT("teacherDash.ticketErrSubject", "Bir konu yaz."));
+          return;
+        }
+        if (!body) {
+          showTicketStatus(armusT("teacherDash.ticketErrBody", "Mesajını yaz."));
+          return;
+        }
+
+        const btn = event.target.querySelector(".save-btn");
+        btn.disabled = true;
+        const ticket = await armusCreateTicket(user.id, subject, body);
+        btn.disabled = false;
+
+        if (!ticket) {
+          showTicketStatus(armusT("teacherDash.ticketErrFailed", "Talep gönderilemedi, tekrar dene."));
+          return;
+        }
+
+        myTickets.unshift(ticket);
+        expandedTicketIds.add(ticket.id);
+        renderTicketsList();
+        document.getElementById("newTicketForm").reset();
+        document.getElementById("newTicketForm").style.display = "none";
+        showTicketStatus(armusT("teacherDash.ticketSuccess", "Talebin gönderildi ✓"));
       });
 
       // ---- last-7-days earnings sparkline ----
