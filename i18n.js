@@ -760,6 +760,15 @@ const ARMUS_I18N_EN = {
   "teacherDash.linkCopied": "Copied ✓",
   "teacherDash.copyFailed": "Couldn't copy - select and copy the link manually.",
   "teacherDash.linkRegenerated": "New link created ✓",
+  "teacherDash.pushHeading": "Notifications",
+  "teacherDash.pushHint": "Get a browser notification for a new booking or message, even when ARMUS isn't open.",
+  "teacherDash.pushUnsupported": "Your browser doesn't support this",
+  "teacherDash.pushDenied": "Notifications blocked (enable them in your browser settings)",
+  "teacherDash.pushEnable": "Turn On Notifications",
+  "teacherDash.pushDisable": "Turn Off Notifications",
+  "teacherDash.pushEnabled": "Notifications turned on ✓",
+  "teacherDash.pushDisabled": "Notifications turned off",
+  "teacherDash.pushFailed": "That didn't work. Check your browser permissions.",
   "teacherDash.availabilityHint": "Click an empty area and drag down to add availability for that day. You can resize a block by dragging its top or bottom edge, move it by its body, or hover and delete it with ×. This schedule works by day of the week, not a specific date, and repeats every week. Changes apply instantly, no approval needed.",
 
   // student-dashboard - sidebar/top-level labels only; the stats
