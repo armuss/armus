@@ -836,6 +836,97 @@
         font-size: 24px;
       }
     }
+
+    .report-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .report-modal-overlay[hidden] {
+      display: none;
+    }
+
+    .report-modal {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 18px;
+      padding: 28px;
+      width: min(420px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .report-modal h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      letter-spacing: -.4px;
+    }
+
+    .report-modal p {
+      font-size: 13.5px;
+      color: var(--armus-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .report-modal select,
+    .report-modal textarea {
+      width: 100%;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-size: 13.5px;
+      margin-bottom: 14px;
+    }
+
+    .report-modal textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .report-modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .report-modal-actions .btn {
+      flex: 1;
+    }
+
+    .msg-report-btn {
+      border: none;
+      background: transparent;
+      color: var(--armus-muted);
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .msg-report-btn:hover {
+      color: var(--armus-gold-text);
+    }
+
+    .msg-report-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .msg-reported-tag {
+      font-size: 11px;
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
   </style>
 </head>
 
@@ -912,6 +1003,23 @@
 
   </main>
 
+  <div class="report-modal-overlay" id="reportMessageModalOverlay" hidden>
+    <div class="report-modal">
+      <h2 data-i18n="messages.reportModalTitle">Mesajı Bildir</h2>
+      <p data-i18n="messages.reportModalIntro">Bu mesajı ARMUS ekibine neden bildiriyorsun?</p>
+      <select id="reportReasonSelect">
+        <option value="harassment" data-i18n="messages.reportReasonHarassment">Taciz / uygunsuz davranış</option>
+        <option value="spam" data-i18n="messages.reportReasonSpam">Spam / istenmeyen içerik</option>
+        <option value="other" data-i18n="messages.reportReasonOther">Diğer</option>
+      </select>
+      <textarea id="reportNote" style="display:none;" data-i18n-placeholder="messages.reportNotePlaceholder" placeholder="Kısaca açıklar mısın? (isteğe bağlı)"></textarea>
+      <div class="report-modal-actions">
+        <button type="button" class="btn" id="reportCancelBtn" data-i18n="class.cancel">İptal</button>
+        <button type="button" class="btn btn-light" id="reportConfirmBtn" data-i18n="messages.reportSubmit">Bildir</button>
+      </div>
+    </div>
+  </div>
+
   <script src="i18n.js?v=16"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
@@ -921,7 +1029,7 @@
   <script src="bookings.js?v=7"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
-  <script src="messages.js?v=4"></script>
+  <script src="messages.js?v=5"></script>
   <script src="teacher-blocks.js?v=2"></script>
   <script>
 
@@ -1190,6 +1298,9 @@
         ));
       }
 
+      reportedMessageIds = await armusGetMyReportedMessageIds(conversationId);
+      if (activeConversationId !== conversationId) return;
+
       await loadThread(conversationId);
       if (activeConversationId !== conversationId) return;
 
@@ -1199,6 +1310,11 @@
     }
 
     let messagesById = {};
+    // message_ids the CURRENT user has already reported, in the active
+    // conversation - re-fetched in openConversation (migration_102.sql),
+    // so the report button correctly stays hidden across a reload too,
+    // not just for the rest of this one session.
+    let reportedMessageIds = new Set();
 
     function escapeHtml(str) {
       const div = document.createElement("div");
@@ -1214,6 +1330,67 @@
     }
 
     const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+    const REPORT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="3"></line></svg>';
+
+    // Promise-based, same pattern as dashboard.html's own block-reason
+    // modal: resolves with { reason, note } once confirmed, or null if
+    // cancelled.
+    function openReportMessageModal() {
+      return new Promise(resolve => {
+        const overlay = document.getElementById("reportMessageModalOverlay");
+        const select = document.getElementById("reportReasonSelect");
+        const note = document.getElementById("reportNote");
+        const confirmBtn = document.getElementById("reportConfirmBtn");
+        const cancelBtn = document.getElementById("reportCancelBtn");
+
+        select.value = "harassment";
+        note.value = "";
+        note.style.display = "none";
+        overlay.hidden = false;
+
+        function onSelectChange() {
+          note.style.display = select.value === "other" ? "block" : "none";
+        }
+
+        function cleanup() {
+          overlay.hidden = true;
+          select.removeEventListener("change", onSelectChange);
+          confirmBtn.removeEventListener("click", onConfirm);
+          cancelBtn.removeEventListener("click", onCancel);
+        }
+
+        function onConfirm() {
+          const reason = select.value;
+          const noteValue = note.value.trim();
+          cleanup();
+          resolve({ reason, note: noteValue });
+        }
+
+        function onCancel() {
+          cleanup();
+          resolve(null);
+        }
+
+        select.addEventListener("change", onSelectChange);
+        confirmBtn.addEventListener("click", onConfirm);
+        cancelBtn.addEventListener("click", onCancel);
+      });
+    }
+
+    async function reportMessageFlow(message, row) {
+      const picked = await openReportMessageModal();
+      if (!picked) return;
+
+      const result = await armusReportMessage(message, picked.reason, picked.note);
+      if (result === false) {
+        alert(armusT("messages.reportFailed", "Bildirim gönderilemedi, tekrar dene."));
+        return;
+      }
+
+      reportedMessageIds.add(message.id);
+      const btn = row.querySelector(".msg-report-btn");
+      if (btn) btn.outerHTML = `<span class="msg-reported-tag">${armusT("messages.reportedTag", "Bildirildi")}</span>`;
+    }
 
     // ---- voice message player: a decorative waveform (no real per-sample
     // analysis of the audio, just a pleasant-looking bar pattern seeded by
@@ -1445,11 +1622,19 @@
           ${buildBubbleContent(message)}
         </div>
         ${canEditMessage(message) ? `<button type="button" class="msg-edit-btn" title="${armusT("messages.editTitle", "Düzenle")}">${EDIT_ICON_SVG}</button>` : ""}
+        ${!isMine ? (
+          reportedMessageIds.has(message.id)
+            ? `<span class="msg-reported-tag">${armusT("messages.reportedTag", "Bildirildi")}</span>`
+            : `<button type="button" class="msg-report-btn" title="${armusT("messages.reportTitle", "Mesajı bildir")}">${REPORT_ICON_SVG}</button>`
+        ) : ""}
       `;
 
       if (canEditMessage(message)) {
         row.querySelector(".msg-edit-btn").addEventListener("click", () => openEditForm(message, row));
       }
+
+      const reportBtn = row.querySelector(".msg-report-btn");
+      if (reportBtn) reportBtn.addEventListener("click", () => reportMessageFlow(message, row));
 
       wireVoicePlayers(row);
 
@@ -1473,11 +1658,19 @@
           ${buildBubbleContent(message)}
         </div>
         ${canEditMessage(message) ? `<button type="button" class="msg-edit-btn" title="${armusT("messages.editTitle", "Düzenle")}">${EDIT_ICON_SVG}</button>` : ""}
+        ${!isMine ? (
+          reportedMessageIds.has(message.id)
+            ? `<span class="msg-reported-tag">${armusT("messages.reportedTag", "Bildirildi")}</span>`
+            : `<button type="button" class="msg-report-btn" title="${armusT("messages.reportTitle", "Mesajı bildir")}">${REPORT_ICON_SVG}</button>`
+        ) : ""}
       `;
 
       if (canEditMessage(message)) {
         row.querySelector(".msg-edit-btn").addEventListener("click", () => openEditForm(message, row));
       }
+
+      const reportBtn = row.querySelector(".msg-report-btn");
+      if (reportBtn) reportBtn.addEventListener("click", () => reportMessageFlow(message, row));
 
       wireVoicePlayers(row);
     }

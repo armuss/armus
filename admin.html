@@ -1263,6 +1263,7 @@
       <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
       <button class="nav-btn" data-panel="withdrawals"><span data-i18n="admin.navWithdrawals">Para Çekme Talepleri</span> <span class="nav-badge" id="withdrawalsBadge"></span></button>
       <button class="nav-btn" data-panel="supporttickets"><span data-i18n="admin.navSupportTickets">Destek Talepleri</span> <span class="nav-badge" id="supportTicketsBadge"></span></button>
+      <button class="nav-btn" data-panel="messagereports"><span data-i18n="admin.navMessageReports">Mesaj Şikayetleri</span> <span class="nav-badge" id="messageReportsBadge"></span></button>
       <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
       <button class="nav-btn" data-panel="demand" data-i18n="admin.navDemand">Talep Haritası</button>
       <button class="nav-btn" data-panel="cities" data-i18n="admin.navCities">Şehirler</button>
@@ -1605,6 +1606,31 @@
         <div class="empty-note" id="supportTicketsEmpty" style="display: none;" data-i18n="admin.supportTicketsEmpty">Destek talebi yok.</div>
       </div>
 
+      <div class="panel" id="panel-messagereports">
+        <h2 data-i18n="admin.navMessageReports">Mesaj Şikayetleri</h2>
+        <p class="section-hint" data-i18n="admin.messageReportsHint">
+          Bir öğrenci veya öğretmenin, karşı tarafın bir mesajını taciz
+          veya spam olarak bildirmesi. İncelediğin bir şikayeti "Kapat"
+          butonuyla çözüldü olarak işaretle.
+        </p>
+        <input type="text" class="admin-search" id="searchMessageReports" placeholder="İsim ara..." data-i18n-placeholder="admin.searchName">
+        <table id="messageReportsTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colMessageReportReporter">Bildiren</th>
+              <th data-i18n="admin.colMessageReportReported">Bildirilen</th>
+              <th data-i18n="admin.colMessageReportReason">Sebep</th>
+              <th data-i18n="admin.colMessageReportMessage">Mesaj</th>
+              <th data-i18n="admin.colStatus">Durum</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="messageReportsBody"></tbody>
+        </table>
+        <div class="empty-note" id="messageReportsEmpty" style="display: none;" data-i18n="admin.messageReportsEmpty">Mesaj şikayeti yok.</div>
+      </div>
+
       <div class="panel" id="panel-announcement">
         <h2 data-i18n="admin.navAnnouncement">Site Duyurusu</h2>
         <p class="section-hint" data-i18n="admin.announcementHint">
@@ -1688,6 +1714,7 @@
   <script src="disputes.js?v=4"></script>
   <script src="attendance.js?v=4"></script>
   <script src="support-tickets.js?v=1"></script>
+  <script src="messages.js?v=5"></script>
   <script src="site-settings.js?v=4"></script>
   <script>
 
@@ -3184,6 +3211,102 @@
       });
     }
 
+    // ---- message reports (Mesaj Şikayetleri, migration_102.sql) - a
+    // student or teacher reporting one of the OTHER party's messages as
+    // harassment/spam, separate from the immediate self-service
+    // "Engelle" (block) feature. "Konuşmayı Gör" reuses the same
+    // #detailOverlay/openConversationDetail the Mesajlar panel already
+    // uses, so the admin reads the report in its full surrounding
+    // context instead of just the one reported message ----
+
+    function messageReportReasonLabels() {
+      return {
+        harassment: armusT("admin.messageReportReasonHarassment", "Taciz"),
+        spam: armusT("admin.messageReportReasonSpam", "Spam"),
+        other: armusT("admin.messageReportReasonOther", "Diğer"),
+      };
+    }
+
+    function messageReportStatusLabels() {
+      return {
+        open: armusT("admin.ticketStatusOpen", "Açık"),
+        resolved: armusT("admin.messageReportStatusResolved", "Çözüldü"),
+      };
+    }
+
+    function renderMessageReportsPanel(reports, profileById) {
+      const body = document.getElementById("messageReportsBody");
+      const empty = document.getElementById("messageReportsEmpty");
+      const badge = document.getElementById("messageReportsBadge");
+      body.innerHTML = "";
+
+      const openCount = reports.filter(r => r.status === "open").length;
+      if (openCount) {
+        badge.textContent = openCount;
+        badge.classList.add("visible");
+      } else {
+        badge.classList.remove("visible");
+      }
+
+      if (!reports.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const reasonLabels = messageReportReasonLabels();
+      const statusLabels = messageReportStatusLabels();
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+
+      reports.forEach(r => {
+        const reporter = profileById.get(r.reporter_id);
+        const reported = profileById.get(r.reported_user_id);
+        const reporterLabel = reporter ? armusEscapeHtml(reporter.name) : armusEscapeHtml(r.reporter_id);
+        const reportedLabel = reported ? armusEscapeHtml(reported.name) : armusEscapeHtml(r.reported_user_id);
+        const dateLabel = new Date(r.created_at).toLocaleDateString(lang);
+        const messageBody = (r.message && r.message.body) || armusT("admin.messageReportAttachmentOnly", "(sadece ek dosya)");
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${dateLabel}</td>
+          <td>${reporterLabel}</td>
+          <td>${reportedLabel}</td>
+          <td>${reasonLabels[r.reason] || r.reason}${r.note ? `<br><span class="app-email">${armusEscapeHtml(r.note)}</span>` : ""}</td>
+          <td class="app-email">${armusEscapeHtml(messageBody)}</td>
+          <td><span class="app-badge ticket-${r.status === "open" ? "open" : "closed"}">${statusLabels[r.status] || r.status}</span></td>
+          <td>
+            <button class="btn" data-view-report-conversation="${r.id}">${armusT("admin.details", "Detaylar")}</button>
+            ${r.status === "open" ? `<button class="btn" data-resolve-report="${r.id}">${armusT("admin.messageReportResolve", "Kapat")}</button>` : ""}
+          </td>
+        `;
+        body.appendChild(row);
+      });
+
+      body.querySelectorAll("[data-view-report-conversation]").forEach(button => {
+        button.addEventListener("click", () => {
+          const report = reports.find(r => r.id === button.dataset.viewReportConversation);
+          const conversation = report && armusAdminConversations.find(c => c.id === report.conversation_id);
+          if (conversation) openConversationDetail(conversation, profileById);
+        });
+      });
+
+      body.querySelectorAll("[data-resolve-report]").forEach(button => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          const ok = await armusAdminResolveMessageReport(button.dataset.resolveReport);
+          if (!ok) {
+            button.disabled = false;
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
+            return;
+          }
+          armusAdminMessageReports = armusAdminMessageReports.map(r =>
+            r.id === button.dataset.resolveReport ? { ...r, status: "resolved" } : r
+          );
+          renderAllFromState();
+        });
+      });
+    }
+
     async function openTicketDetail(ticket, profileById) {
       const teacher = profileById.get(ticket.teacher_id);
       const teacherLabel = (teacher && teacher.name) || armusT("admin.colTeacher", "Öğretmen");
@@ -4070,7 +4193,8 @@
     let armusAdminConversations = [];
     let armusAdminWithdrawalRequests = [];
     let armusAdminSupportTickets = [];
-    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "", withdrawals: "", supportTickets: "" };
+    let armusAdminMessageReports = [];
+    let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "", withdrawals: "", supportTickets: "", messageReports: "" };
 
     function matchesSearch(value, term) {
       return !term || String(value || "").toLowerCase().includes(term.toLowerCase());
@@ -4113,6 +4237,12 @@
         return matchesSearch(teacher ? teacher.name : t.teacher_id, armusAdminSearch.supportTickets)
           || matchesSearch(teacher ? teacher.email : "", armusAdminSearch.supportTickets);
       });
+      const filteredMessageReports = armusAdminMessageReports.filter(r => {
+        const reporter = profileById.get(r.reporter_id);
+        const reported = profileById.get(r.reported_user_id);
+        return matchesSearch(reporter ? reporter.name : "", armusAdminSearch.messageReports)
+          || matchesSearch(reported ? reported.name : "", armusAdminSearch.messageReports);
+      });
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
@@ -4134,6 +4264,7 @@
       renderAttendancePanel(filteredAttendanceReports);
       renderWithdrawalsPanel(filteredWithdrawalRequests, profileById);
       renderSupportTicketsPanel(filteredSupportTickets, profileById);
+      renderMessageReportsPanel(filteredMessageReports, profileById);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
@@ -4167,6 +4298,10 @@
       armusAdminSearch.messages = e.target.value;
       renderAllFromState();
     });
+    document.getElementById("searchMessageReports").addEventListener("input", e => {
+      armusAdminSearch.messageReports = e.target.value;
+      renderAllFromState();
+    });
 
     document.getElementById("exportBookingsBtn").addEventListener("click", () => {
       const rows = armusAdminBookings
@@ -4193,7 +4328,7 @@
 
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes] = await Promise.all([
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes, messageReportsRes] = await Promise.all([
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
@@ -4211,6 +4346,7 @@
         armusSupabase.from("conversations").select("*").order("created_at", { ascending: false }),
         armusSupabase.from("withdrawal_requests").select("*").order("requested_at", { ascending: false }),
         armusSupabase.from("support_tickets").select("*").order("updated_at", { ascending: false }),
+        armusAdminGetAllMessageReports(),
       ]);
 
       armusAdminProfiles = profilesRes.data || [];
@@ -4230,6 +4366,7 @@
       armusAdminConversations = conversationsRes.data || [];
       armusAdminWithdrawalRequests = withdrawalsRes.data || [];
       armusAdminSupportTickets = supportTicketsRes.data || [];
+      armusAdminMessageReports = messageReportsRes || [];
 
       renderAllFromState();
     }
