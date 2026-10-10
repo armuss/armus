@@ -86,8 +86,15 @@ async function armusSignUp({ name, email, password, role, city }) {
 // own "too many attempts" response, so it's shown the same way a wrong
 // password is.
 async function armusSignIn({ email, password }) {
+  // anon_key: the Edge Function's own Deno.env.get("SUPABASE_ANON_KEY")
+  // turned out NOT to be reliable for calling GoTrue's token endpoint
+  // directly (see login-with-throttle's own comment) - ARMUS_SUPABASE_ANON_KEY
+  // is already fully public (embedded in supabase-config.js, loaded on
+  // every page before this file), so sending it along costs nothing and
+  // guarantees the Edge Function uses the exact same key every other
+  // Supabase call on the site already works with.
   const { data, error } = await armusSupabase.functions.invoke("login-with-throttle", {
-    body: { email, password },
+    body: { email, password, anon_key: ARMUS_SUPABASE_ANON_KEY },
   });
 
   if (error || !data || !data.access_token) {
