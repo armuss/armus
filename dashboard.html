@@ -2352,6 +2352,7 @@
                 <th data-i18n="teacherDash.withdrawHistoryDateCol">Tarih</th>
                 <th data-i18n="teacherDash.withdrawHistoryAmountCol">Tutar</th>
                 <th data-i18n="teacherDash.withdrawHistoryStatusCol">Durum</th>
+                <th data-i18n="teacherDash.withdrawHistoryActionCol">Makbuz</th>
               </tr>
             </thead>
             <tbody id="withdrawHistoryBody"></tbody>
@@ -2496,6 +2497,7 @@
   <script src="teacher-blocks.js?v=1"></script>
   <script src="support-tickets.js?v=1"></script>
   <script src="push-notifications.js?v=1"></script>
+  <script src="withdrawal-receipt.js?v=1"></script>
   <script src="attendance.js?v=4"></script>
   <script>
 
@@ -3153,11 +3155,21 @@
           const dateLabel = armusFormatDateLabel(localDateKey(new Date(w.requested_at)));
           const labelFn = WITHDRAW_STATUS_LABELS[w.status];
           const statusLabel = labelFn ? labelFn() : w.status;
-          return `<tr><td>${armusEscapeHtml(dateLabel)}</td><td>₺${w.amount}</td><td><span class="withdraw-status ${armusEscapeHtml(w.status)}">${armusEscapeHtml(statusLabel)}</span></td></tr>`;
+          const actionCell = w.status === "paid"
+            ? `<button type="button" class="note-toggle-btn" data-receipt="${w.id}">${armusT("teacherDash.withdrawReceiptBtn", "Makbuzu Gör")}</button>`
+            : "—";
+          return `<tr><td>${armusEscapeHtml(dateLabel)}</td><td>₺${w.amount}</td><td><span class="withdraw-status ${armusEscapeHtml(w.status)}">${armusEscapeHtml(statusLabel)}</span></td><td>${actionCell}</td></tr>`;
         });
         document.getElementById("withdrawHistoryBody").innerHTML = rows.join("");
         document.getElementById("withdrawHistoryTable").style.display = rows.length ? "table" : "none";
         document.getElementById("withdrawHistoryEmpty").style.display = rows.length ? "none" : "block";
+
+        document.querySelectorAll("[data-receipt]").forEach(button => {
+          button.addEventListener("click", () => {
+            const w = withdrawalRequests.find(x => x.id === button.dataset.receipt);
+            if (w) armusOpenWithdrawalReceipt(w, user);
+          });
+        });
       }
       renderWithdrawalHistory();
       document.addEventListener("armus:langchange", renderWithdrawalHistory);
