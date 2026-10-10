@@ -141,6 +141,18 @@ async function armusAdminResolveAttendanceReport(reportId, status) {
   return armusMapAttendanceReportRow(data);
 }
 
+// The teacher's own self-service "make visible" action for the
+// trial-no-show escalation ladder (migration_100.sql) - mirrors
+// Preply's "Make visible" button. Returns the RPC's own result string:
+// "ok" | "not_eligible" | "ack_required" | "no_action".
+async function armusSelfUnhideFromNewStudents(ack) {
+
+  const { data, error } = await armusSupabase.rpc("self_unhide_from_new_students", { p_ack: !!ack });
+
+  if (error) return "no_action";
+  return data;
+}
+
 function armusMapAttendanceReportRow(row) {
   return {
     id: row.id,
