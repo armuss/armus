@@ -646,6 +646,10 @@ begin
     or new.hidden_until is distinct from old.hidden_until
     or new.is_banned is distinct from old.is_banned
     or new.banned_at is distinct from old.banned_at
+    or new.trial_noshow_count is distinct from old.trial_noshow_count
+    or new.trial_hidden_tier is distinct from old.trial_hidden_tier
+    or new.trial_unhide_eligible_at is distinct from old.trial_unhide_eligible_at
+    or new.trial_unhide_requires_ack is distinct from old.trial_unhide_requires_ack
   then
     raise exception 'attendance_lock: these fields can only be changed by the attendance-report system or an admin';
   end if;
@@ -1793,6 +1797,11 @@ declare
   month_end_local timestamptz;
   month_lesson_count integer;
   month_late_count integer;
+  booking_type text;
+  new_trial_count integer;
+  new_tier integer;
+  unhide_at timestamptz;
+  requires_ack boolean;
 begin
   if new.status is not distinct from old.status then
     return new;
@@ -1842,6 +1851,46 @@ begin
           update profiles
           set hidden_until = greatest(coalesce(hidden_until, now()), now() + interval '14 days')
           where id::text = new.teacher_id;
+        end if;
+      end if;
+
+      -- migration_100.sql: a SEPARATE, finer-grained ladder for a missed
+      -- TRIAL specifically (a new student's first impression) - counts
+      -- LIFETIME upheld trial no-shows and escalates per occurrence,
+      -- independent of (and in addition to) the flat thresholds just
+      -- above. Only ever hides from NEW students (hidden_from_new_students),
+      -- never the harsher hidden-from-everyone tier, and is only ever
+      -- cleared by the teacher's own action (self_unhide_from_new_students
+      -- below) once eligible - never automatically.
+      select b.type into booking_type from bookings b where b.id = new.booking_id;
+
+      if booking_type = 'trial' then
+        update profiles
+        set trial_noshow_count = trial_noshow_count + 1
+        where id::text = new.teacher_id
+        returning trial_noshow_count into new_trial_count;
+
+        if new_trial_count is not null then
+          new_tier := least(new_trial_count, 5);
+
+          unhide_at := case new_tier
+            when 1 then now()
+            when 2 then now() + interval '7 days'
+            when 3 then now() + interval '14 days'
+            when 4 then now() + interval '30 days'
+            else now() + interval '730 days'
+          end;
+          requires_ack := new_tier <= 2;
+
+          update profiles
+          set hidden_from_new_students = true,
+              hidden_reason = 'trial_no_show',
+              hidden_at = now(),
+              trial_hidden_tier = new_tier,
+              trial_unhide_eligible_at = unhide_at,
+              trial_unhide_requires_ack = requires_ack
+          where id::text = new.teacher_id
+            and coalesce(is_banned, false) = false;
         end if;
       end if;
 
@@ -2855,5 +2904,80 @@ begin
       and succeeded = false
       and id <> p_id;
   end if;
+end;
+$$;
+
+-- === TRIAL NO-SHOW ESCALATION LADDER (migration_100.sql) ================
+-- A Preply-style escalating penalty ladder specifically for TRIAL-lesson
+-- no-shows - a brand-new student's first impression. The existing
+-- attendance system above already hides a teacher from new students on
+-- any upheld no-show and escalates flat thresholds regardless of
+-- booking type (3-in-30-days -> hidden from EVERYONE 14 days,
+-- 10-lifetime -> permanent ban) - that stays exactly as it is, as the
+-- harsher backstop. This adds a SEPARATE, finer-grained, per-occurrence
+-- ladder that only counts upheld TRIAL no-shows and, same as the rest
+-- of this system, only ever hides the teacher from NEW students
+-- (existing students are never affected):
+--   1st upheld trial no-show: hidden until the teacher acknowledges
+--     (no time gate at all - available to clear immediately).
+--   2nd: hidden >= 7 days AND until acknowledged (whichever is later).
+--   3rd: hidden 14 days, then a self-service "make visible" action.
+--   4th: hidden 30 days, then self-service.
+--   5th and beyond: hidden 730 days (~2 years), then self-service.
+-- Getting re-shown is never automatic past tier 1 - the teacher must
+-- act (self_unhide_from_new_students below), same as Preply's "Make
+-- visible" button.
+alter table profiles add column if not exists trial_noshow_count integer not null default 0;
+alter table profiles add column if not exists trial_hidden_tier integer not null default 0;
+alter table profiles add column if not exists trial_unhide_eligible_at timestamptz;
+alter table profiles add column if not exists trial_unhide_requires_ack boolean not null default false;
+
+-- the teacher's own self-service "make visible" action (Preply's "Make
+-- visible" button) - returns 'ok' on success, 'not_eligible' if the
+-- wait isn't over yet, 'ack_required' if tier 1/2 needs p_ack=true
+-- first, or 'no_action' if this teacher isn't currently in a
+-- trial-no-show hide at all. SECURITY DEFINER + the trusted session
+-- flag so it can clear hidden_from_new_students despite
+-- enforce_teacher_profile_lock, but it only ever touches auth.uid()'s
+-- OWN row and only the trial-ladder fields - never is_banned/hidden_until
+-- (the harsher, non-self-service tiers).
+create or replace function public.self_unhide_from_new_students(p_ack boolean default false)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  t record;
+begin
+  select * into t from profiles where id = auth.uid();
+  if t is null then
+    return 'no_action';
+  end if;
+
+  if t.hidden_reason is distinct from 'trial_no_show' or t.trial_hidden_tier = 0 then
+    return 'no_action';
+  end if;
+
+  if t.trial_unhide_eligible_at is null or now() < t.trial_unhide_eligible_at then
+    return 'not_eligible';
+  end if;
+
+  if t.trial_unhide_requires_ack and not p_ack then
+    return 'ack_required';
+  end if;
+
+  perform set_config('armus.attendance_system_update', 'on', true);
+
+  update profiles
+  set hidden_from_new_students = false,
+      hidden_reason = null,
+      hidden_at = null,
+      trial_hidden_tier = 0,
+      trial_unhide_eligible_at = null,
+      trial_unhide_requires_ack = false
+  where id = auth.uid();
+
+  return 'ok';
 end;
 $$;

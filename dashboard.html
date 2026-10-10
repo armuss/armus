@@ -386,6 +386,24 @@
       flex: 1;
     }
 
+    .trial-ack-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12.5px;
+      color: var(--armus-muted);
+      line-height: 1.5;
+      margin-bottom: 14px;
+      cursor: pointer;
+    }
+
+    .trial-ack-row input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
     .avatar {
       width: 60px;
       height: 80px;
@@ -2498,7 +2516,7 @@
   <script src="support-tickets.js?v=1"></script>
   <script src="push-notifications.js?v=1"></script>
   <script src="withdrawal-receipt.js?v=1"></script>
-  <script src="attendance.js?v=4"></script>
+  <script src="attendance.js?v=5"></script>
   <script>
 
     // yyyy-mm-dd from a Date's own local year/month/day - never goes
@@ -2706,6 +2724,67 @@
           <div class="attendance-modal-actions"><button type="button" class="btn" id="attendanceModalCancel">${armusT("class.close", "Kapat")}</button></div>
         `;
         document.getElementById("attendanceModalCancel").addEventListener("click", () => { overlay.hidden = true; });
+
+      } else if (user.hidden_reason === "trial_no_show" && user.trial_hidden_tier > 0) {
+
+        const tier = user.trial_hidden_tier;
+        const eligibleAt = user.trial_unhide_eligible_at ? new Date(user.trial_unhide_eligible_at) : null;
+        const isEligible = eligibleAt && eligibleAt <= new Date();
+        const requiresAck = !!user.trial_unhide_requires_ack;
+        const dateLabel = eligibleAt ? eligibleAt.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR") : "";
+
+        title.textContent = armusT("teacherDash.trialNoShowTitle", "Profilin yeni öğrencilerden gizli (Deneme Dersi) — Seviye {tier}/5").replace("{tier}", tier);
+
+        const actionHtml = !isEligible
+          ? `<p class="rules-box">${armusT("teacherDash.trialNoShowWait", "{date} tarihinden sonra profilini tekrar görünür yapabilirsin.").replace("{date}", dateLabel)}</p>`
+          : requiresAck
+            ? `
+              <label class="trial-ack-row">
+                <input type="checkbox" id="trialAckCheckbox">
+                <span>${armusT("teacherDash.trialNoShowAckLabel", "Kurallarımızı okudum ve bundan sonra derslerime zamanında katılacağıma söz veriyorum.")}</span>
+              </label>
+              <div class="attendance-modal-actions">
+                <button type="button" class="btn btn-light" id="trialUnhideBtn" disabled>${armusT("teacherDash.trialNoShowMakeVisible", "Profilimi Görünür Yap")}</button>
+              </div>
+            `
+            : `
+              <div class="attendance-modal-actions">
+                <button type="button" class="btn btn-light" id="trialUnhideBtn">${armusT("teacherDash.trialNoShowMakeVisible", "Profilimi Görünür Yap")}</button>
+              </div>
+            `;
+
+        body.innerHTML = `
+          <p>${armusT("teacherDash.trialNoShowText", "Bu, doğrulanmış {count}. deneme dersine gelmeme bildirimin. Her tekrar, profilinin yeni öğrencilerden daha uzun süre gizlenmesine yol açar - mevcut öğrencilerin seni görmeye devam eder.").replace("{count}", user.trial_noshow_count || tier)}</p>
+          ${actionHtml}
+          <div class="attendance-modal-actions"><button type="button" class="btn" id="attendanceModalCancel">${armusT("class.close", "Kapat")}</button></div>
+        `;
+
+        document.getElementById("attendanceModalCancel").addEventListener("click", () => { overlay.hidden = true; });
+
+        if (requiresAck && isEligible) {
+          const checkbox = document.getElementById("trialAckCheckbox");
+          const unhideBtn = document.getElementById("trialUnhideBtn");
+          checkbox.addEventListener("change", () => { unhideBtn.disabled = !checkbox.checked; });
+        }
+
+        if (isEligible) {
+          document.getElementById("trialUnhideBtn").addEventListener("click", async () => {
+            const btn = document.getElementById("trialUnhideBtn");
+            btn.disabled = true;
+            const result = await armusSelfUnhideFromNewStudents(requiresAck);
+            if (result !== "ok") {
+              btn.disabled = false;
+              alert(armusT("teacherDash.trialNoShowFailed", "İşlem başarısız oldu. Lütfen tekrar dene."));
+              return;
+            }
+            overlay.hidden = true;
+            user.hidden_from_new_students = false;
+            user.hidden_reason = null;
+            user.trial_hidden_tier = 0;
+            user.trial_unhide_eligible_at = null;
+            await renderAttendanceBanner(user);
+          });
+        }
 
       } else {
 
