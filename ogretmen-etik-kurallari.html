@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <script>if("scrollRestoration" in history){history.scrollRestoration="manual";}</script>
+  <script>(function(){try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Öğretmen Etik Kuralları | ARMUS</title>
+  <meta name="description" content="ARMUS'ta öğretmen olarak ders vermenin etik kuralları: taahhüt, saygı, öğretim kalitesi ve yasaklanan davranışlar.">
+  <link rel="canonical" href="https://armus.com.tr/ogretmen-etik-kurallari">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css?v=8">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--armus-gold-text);
+      text-decoration: underline;
+    }
+
+    .container {
+      width: min(720px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(720px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .back {
+      color: var(--armus-muted);
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: var(--armus-ink);
+    }
+
+    main.container {
+      padding: 50px 0 100px;
+    }
+
+    .eyebrow {
+      color: var(--armus-muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 36px);
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .updated {
+      color: var(--armus-muted);
+      font-size: 12.5px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 36px 0 12px;
+      letter-spacing: -0.3px;
+    }
+
+    p, li {
+      color: var(--armus-ink);
+      font-size: 14.5px;
+      margin-bottom: 12px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin: 16px 0 24px;
+    }
+
+    @media (max-width: 560px) {
+      .pillar-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pillar-card {
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    .pillar-card h3 {
+      font-size: 14.5px;
+      letter-spacing: -0.2px;
+      margin-bottom: 6px;
+      color: var(--armus-gold-text);
+    }
+
+    .pillar-card p {
+      font-size: 13px;
+      color: var(--armus-muted);
+      margin-bottom: 0;
+    }
+
+    .note {
+      margin-top: 40px;
+      padding: 16px 18px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      color: var(--armus-muted);
+      font-size: 13px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <div class="nav-right">
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <div class="eyebrow" data-i18n="ethics.eyebrow">ÖĞRETMENLER İÇİN</div>
+    <h1 data-i18n="ethics.title">Öğretmen Etik Kuralları</h1>
+    <div class="updated" data-i18n="ethics.updated">Son güncelleme: 10.10.2026</div>
+
+    <p data-i18n="ethics.intro">
+      ARMUS'ta ders veren her öğretmen, aşağıdaki etik kurallara ve dört
+      temel ilkeye uymayı kabul eder. Bunlar, hem öğrencilerin güvenle ders
+      alabilmesi hem de senin kendi itibarını ve gelirini korumana yönelik
+      kurallardır. Bu sayfadaki kurallar Kullanım Şartları'nı tamamlar,
+      onun yerine geçmez.
+    </p>
+
+    <h2 data-i18n="ethics.pillarsTitle">Dört temel ilke</h2>
+
+    <div class="pillar-grid">
+      <div class="pillar-card">
+        <h3 data-i18n="ethics.pillar1Title">Taahhüt</h3>
+        <p data-i18n="ethics.pillar1Text">Kabul ettiğin her derse zamanında katıl. Tekrarlanan, doğrulanmış gelmemeler profilinin kademeli olarak gizlenmesine yol açar.</p>
+      </div>
+      <div class="pillar-card">
+        <h3 data-i18n="ethics.pillar2Title">Saygı</h3>
+        <p data-i18n="ethics.pillar2Text">Her öğrenciye saygılı, önyargısız ve profesyonel davran. Taciz veya uygunsuz davranışa sıfır tolerans vardır.</p>
+      </div>
+      <div class="pillar-card">
+        <h3 data-i18n="ethics.pillar3Title">Öğretim Kalitesi</h3>
+        <p data-i18n="ethics.pillar3Text">Her derse hazırlıklı gel ve öğrencinin seviyesine, hedefine ve öğrenme tarzına uygun bir yöntem izle.</p>
+      </div>
+      <div class="pillar-card">
+        <h3 data-i18n="ethics.pillar4Title">Tutku</h3>
+        <p data-i18n="ethics.pillar4Text">Öğretmeyi gerçekten önemseyen öğretmenler fark edilir. Kendini geliştir, geri bildirimi dinle ve öğrencinin ilerlemesini önemse.</p>
+      </div>
+    </div>
+
+    <h2 data-i18n="ethics.s1Title">1. Platform dışında ödeme veya iletişim bilgisi paylaşımı yasak</h2>
+    <p data-i18n="ethics.s1Text">
+      Bir öğrenciyi, resmi bir ders rezervasyonu olmadan platform dışında
+      ödeme yapmaya veya WhatsApp, Instagram, telefon numarası gibi
+      platform dışı bir kanala yönlendirmek yasaktır. ARMUS, bir ders
+      rezervasyonu gerçekleşene kadar bu tür bilgilerin mesajlarda
+      paylaşılmasını otomatik olarak engeller; bu engeli aşmaya çalışmak
+      (örneğin bilgiyi parçalara bölerek veya farklı şekilde yazarak
+      göndermek) de bu kuralın ihlalidir ve hesabının askıya alınmasına
+      yol açabilir.
+    </p>
+
+    <h2 data-i18n="ethics.s2Title">2. Dersleri zamanında, haklı bir sebep olmadan iptal etme</h2>
+    <p data-i18n="ethics.s2Text">
+      Kabul ettiğin bir dersi son dakika ve tekrarlanan şekilde iptal
+      etmek, öğrencinin zamanını ve güvenini boşa harcar. Gerçekten
+      zorunlu bir durumda dersi mümkün olan en kısa sürede iptal et ve
+      öğrenciyle yeni bir zaman için anlaşmaya çalış. Sık tekrarlanan
+      iptaller, deneme dersi gelmemeleri için geçerli olan kademeli
+      gizleme sistemine benzer şekilde değerlendirilebilir.
+    </p>
+
+    <h2 data-i18n="ethics.s3Title">3. Yanıltıcı fiyatlandırma yasak</h2>
+    <p data-i18n="ethics.s3Text">
+      Profilinde gösterdiğin ders ücreti, gerçekte talep ettiğin ücretle
+      aynı olmalıdır. Bir öğrenciye rezervasyon sonrası farklı (daha
+      yüksek) bir ücret talep etmek veya gizli ek ücretler eklemek
+      yasaktır.
+    </p>
+
+    <h2 data-i18n="ethics.s4Title">4. Birden fazla profil yasak</h2>
+    <p data-i18n="ethics.s4Text">
+      Her öğretmen ARMUS'ta tek bir hesap ve tek bir profille yer alır.
+      Farklı bilgilerle ikinci bir profil oluşturmak - örneğin reddedilen
+      bir başvurudan sonra veya bir yaptırımdan kaçınmak için - yasaktır.
+    </p>
+
+    <h2 data-i18n="ethics.s5Title">5. Taciz, ayrımcılık ve uygunsuz davranış yasak</h2>
+    <p data-i18n="ethics.s5Text">
+      Irk, cinsiyet, din, milliyet, yaş veya başka bir özelliğe dayalı
+      ayrımcılık; cinsel içerikli, tehditkâr veya küçük düşürücü mesajlar
+      ve her türlü taciz kesinlikle yasaktır. Bir öğrenci seninle uygunsuz
+      bir şekilde iletişime geçerse paneldeki "Engelle" butonunu
+      kullanabilir ve dilersen ARMUS'a bildirebilirsin; biz de aynı
+      standartları öğretmenlerden bekliyoruz.
+    </p>
+
+    <h2 data-i18n="ethics.s6Title">6. İhlal durumunda ne olur?</h2>
+    <p data-i18n="ethics.s6Text">
+      İhlalin ciddiyetine göre ARMUS ekibi bir uyarı verebilir, profilini
+      geçici olarak yeni öğrencilerin aramasından gizleyebilir veya
+      hesabını kalıcı olarak kapatabilir. Taciz, dolandırıcılık veya
+      tekrarlanan ciddi ihlaller, araştırma yapılmadan doğrudan hesap
+      kapatmaya yol açabilir.
+    </p>
+
+    <div class="note" data-i18n="ethics.note">
+      Bu kurallarla ilgili sorularının olması hâlinde
+      <a href="iletisim">bize ulaşabilirsin</a>. Platformun tüm
+      kurallarının tam metni için <a href="kullanim-sartlari">Kullanım
+      Şartları</a> sayfasına bakabilirsin.
+    </div>
+
+  </main>
+
+  <script src="i18n.js?v=16"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="logo-panel-link.js?v=1"></script>
+</body>
+</html>
