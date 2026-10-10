@@ -181,6 +181,83 @@ async function armusEditMessage(messageId, newBody) {
   return data;
 }
 
+// Reports one of the OTHER party's messages as harassment, spam, or
+// something else (migration_102.sql) - the slower "ARMUS looked into
+// it" channel, separate from the immediate self-service "Engelle"
+// (block) feature. message is a raw row from armusGetMessages/
+// appendMessage (needs id/conversation_id/sender_id). reason is
+// "harassment" | "spam" | "other". Returns "ok", "already_reported" (the
+// unique(message_id, reporter_id) constraint - this exact message was
+// already reported by this same person), or false on any other failure.
+async function armusReportMessage(message, reason, note) {
+
+  const session = await armusGetSession();
+  if (!session) return false;
+
+  const row = {
+    message_id: message.id,
+    conversation_id: message.conversation_id,
+    reporter_id: session.id,
+    reported_user_id: message.sender_id,
+    reason,
+  };
+  if (note) row.note = note;
+
+  const { error } = await armusSupabase.from("message_reports").insert(row);
+
+  if (error) return error.code === "23505" ? "already_reported" : false;
+  return "ok";
+}
+
+// Every message_id the current user has already reported in this one
+// conversation - mesajlar.html uses this so the report button correctly
+// stays hidden/replaced for an already-reported message across a reload,
+// not just for the rest of one session.
+async function armusGetMyReportedMessageIds(conversationId) {
+
+  const session = await armusGetSession();
+  if (!session) return new Set();
+
+  const { data, error } = await armusSupabase
+    .from("message_reports")
+    .select("message_id")
+    .eq("conversation_id", conversationId)
+    .eq("reporter_id", session.id);
+
+  if (error || !data) return new Set();
+  return new Set(data.map(r => r.message_id));
+}
+
+// Admin-only: every message report, with the reported message's own
+// body/attachment nested in - message_reports_select_own_or_admin (RLS)
+// is what actually enforces this, a non-admin caller only ever gets
+// their own reports back.
+async function armusAdminGetAllMessageReports() {
+
+  const { data, error } = await armusSupabase
+    .from("message_reports")
+    .select("*, message:messages(body, attachment_type, created_at)")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data;
+}
+
+// Admin-only: marks a report reviewed. Returns true on success, false
+// on failure.
+async function armusAdminResolveMessageReport(reportId) {
+
+  const session = await armusGetSession();
+  if (!session) return false;
+
+  const { error } = await armusSupabase
+    .from("message_reports")
+    .update({ status: "resolved", resolved_at: new Date().toISOString(), resolved_by: session.id })
+    .eq("id", reportId);
+
+  return !error;
+}
+
 // mirrors the chat-attachments storage bucket's real allowed_mime_types
 // (schema.sql) exactly - checking only the image/video/audio PREFIX (the
 // old behavior) let a file pass this client-side check and actually
