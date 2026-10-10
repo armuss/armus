@@ -2303,6 +2303,13 @@
           <button type="button" class="calendar-feed-regen" id="regenCalendarTokenBtn" data-i18n="teacherDash.regenerateLink">Linki Yenile (eskisi çalışmaz olur)</button>
           <span class="save-status" id="calendarFeedStatus"></span>
         </div>
+
+        <div class="profile-subsection">
+          <h3 data-i18n="teacherDash.pushHeading">Bildirimler</h3>
+          <p class="section-hint" data-i18n="teacherDash.pushHint">Yeni bir rezervasyon ya da mesaj geldiğinde, ARMUS sitesi kapalı olsa bile tarayıcından bildirim al.</p>
+          <button type="button" class="save-btn" id="pushToggleBtn"></button>
+          <span class="save-status" id="pushStatus"></span>
+        </div>
       </div>
 
       <div class="panel" id="panel-financial">
@@ -2488,6 +2495,7 @@
   <script src="teacher-notes.js?v=4"></script>
   <script src="teacher-blocks.js?v=1"></script>
   <script src="support-tickets.js?v=1"></script>
+  <script src="push-notifications.js?v=1"></script>
   <script src="attendance.js?v=4"></script>
   <script>
 
@@ -4247,6 +4255,58 @@
         user.calendar_token = result.calendar_token;
         document.getElementById("calendarFeedUrl").value = calendarFeedUrl();
         showCalendarFeedStatus(armusT("teacherDash.linkRegenerated", "Yeni link oluşturuldu ✓"));
+      });
+
+      // ---- push notifications (migration_98.sql / send-push-notification
+      // Edge Function + sw.js) - a real OS-level notification for a new
+      // booking or message, delivered even if ARMUS isn't open in any tab.
+      // Requires a secure context (HTTPS); on http/file:// pages
+      // navigator.serviceWorker is simply undefined, which
+      // armusPushSupported() treats the same as an unsupported browser.
+
+      function showPushStatus(text) {
+        const status = document.getElementById("pushStatus");
+        status.textContent = text;
+        status.classList.add("visible");
+        setTimeout(() => status.classList.remove("visible"), 2500);
+      }
+
+      async function renderPushToggle() {
+        const btn = document.getElementById("pushToggleBtn");
+        const state = await armusGetPushSubscriptionStatus();
+
+        if (state === "unsupported") {
+          btn.textContent = armusT("teacherDash.pushUnsupported", "Bu tarayıcı desteklemiyor");
+          btn.disabled = true;
+        } else if (state === "denied") {
+          btn.textContent = armusT("teacherDash.pushDenied", "Bildirimler engellendi (tarayıcı ayarlarından aç)");
+          btn.disabled = true;
+        } else if (state === "subscribed") {
+          btn.textContent = armusT("teacherDash.pushDisable", "Bildirimleri Kapat");
+          btn.disabled = false;
+          btn.dataset.pushState = "subscribed";
+        } else {
+          btn.textContent = armusT("teacherDash.pushEnable", "Bildirimleri Aç");
+          btn.disabled = false;
+          btn.dataset.pushState = "not-subscribed";
+        }
+      }
+      renderPushToggle();
+
+      document.getElementById("pushToggleBtn").addEventListener("click", async event => {
+        const btn = event.target;
+        btn.disabled = true;
+
+        const wasSubscribed = btn.dataset.pushState === "subscribed";
+        const ok = wasSubscribed
+          ? await armusDisablePushNotifications(user.id)
+          : await armusEnablePushNotifications(user.id);
+
+        showPushStatus(ok
+          ? armusT(wasSubscribed ? "teacherDash.pushDisabled" : "teacherDash.pushEnabled", wasSubscribed ? "Bildirimler kapatıldı" : "Bildirimler açıldı ✓")
+          : armusT("teacherDash.pushFailed", "İşlem başarısız oldu. Tarayıcı izinlerini kontrol et."));
+
+        await renderPushToggle();
       });
     }
 
