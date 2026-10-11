@@ -996,7 +996,7 @@
 
             let disputeBlock = null;
 
-            if (!isCancelled && !isPast) {
+            if (armusBookingCancellable(booking)) {
 
               const hoursUntil = (armusLessonWindow(booking).start - new Date()) / 3_600_000;
               const refundHint = hoursUntil >= 4

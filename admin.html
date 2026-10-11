@@ -2098,11 +2098,10 @@
         .slice()
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
         .forEach(b => {
-          const isPast = armusIsBookingPast(b);
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
             ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", b.refunded ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi") : "")
-            : isPast
+            : !armusBookingCancellable(b)
               ? "—"
               : `<button class="btn btn-reject" data-cancel-booking="${b.id}">${armusT("admin.cancelBtn", "İptal Et")}</button>`;
           const tr = document.createElement("tr");

@@ -527,9 +527,15 @@ Deno.serve(async (req) => {
 
         // 23505 = unique_violation - someone else booked this exact
         // teacher/date/time first (bookings_teacher_slot_unique, see
-        // migration_35.sql). Nothing was charged on this path (it's
-        // credit-covered), so it's safe to just ask them to pick again.
-        if (bookingError?.code === "23505") {
+        // migration_35.sql). AR001 = the bookings_enforce_no_overlap
+        // trigger (migration_103.sql) - someone else booked an
+        // OVERLAPPING but not identical slot (the lesson runs 50
+        // minutes on a 30-minute grid, so e.g. 10:00 and 10:30 overlap
+        // without ever colliding on the exact (date, time) the unique
+        // index checks). Nothing was charged on this path (it's
+        // credit-covered), so it's safe to just ask them to pick again
+        // either way.
+        if (bookingError?.code === "23505" || bookingError?.code === "AR001") {
           return jsonResponse({ error: "Bu saat başka bir öğrenci tarafından alındı. Lütfen başka bir saat seç." }, 409);
         }
         console.error("credit-covered booking insert failed", bookingError);

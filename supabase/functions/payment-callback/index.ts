@@ -404,12 +404,17 @@ Deno.serve(async (req) => {
     // 23505 = unique_violation - someone else grabbed this exact
     // teacher/date/time in the window between this student picking it
     // and iyzico confirming their charge (bookings_teacher_slot_unique,
-    // see migration_35.sql). The charge already succeeded, so rather
-    // than leaving this student's money in the manual paid_no_booking
-    // follow-up below, grant them a lesson credit right away - same
-    // mechanism cancel-booking uses - so they can immediately rebook a
-    // different time with nothing lost.
-    if (bookingError?.code === "23505" && !isPackage) {
+    // see migration_35.sql). AR001 = the bookings_enforce_no_overlap
+    // trigger (migration_103.sql) - someone else's booking OVERLAPS
+    // this slot without being identical to it (a lesson runs 50 minutes
+    // on a 30-minute grid, so e.g. 10:00 and 10:30 overlap without ever
+    // colliding on the exact (date, time) the unique index checks).
+    // Either way the charge already succeeded, so rather than leaving
+    // this student's money in the manual paid_no_booking follow-up
+    // below, grant them a lesson credit right away - same mechanism
+    // cancel-booking uses - so they can immediately rebook a different
+    // time with nothing lost.
+    if ((bookingError?.code === "23505" || bookingError?.code === "AR001") && !isPackage) {
       await supabaseAdmin.from("lesson_credits").insert({
         student_id: pending.student_id,
         teacher_id: pending.teacher_id,
