@@ -126,6 +126,53 @@ create unique index if not exists bookings_teacher_slot_unique
   on bookings (teacher_id, lesson_date, lesson_time)
   where status <> 'cancelled';
 
+-- migration_103.sql: the unique index above only ever stopped the EXACT
+-- same (teacher_id, lesson_date, lesson_time) tuple - a lesson runs 50
+-- minutes (ARMUS_LESSON_MINUTES, bookings.js) on a 30-minute slot grid,
+-- so a lesson at 10:00 (until 10:50) genuinely overlaps one at 10:30
+-- (10:30-11:20) without ever colliding on that exact tuple. A trigger,
+-- not an RLS policy, for the same reason as enforce_teacher_block below:
+-- bookings has no client-facing insert policy at all - every booking is
+-- written by a service-role Edge Function. Raises with a custom AR001
+-- SQLSTATE so create-payment/payment-callback can treat it exactly like
+-- the existing 23505 (exact-slot-taken) case.
+create or replace function public.enforce_no_overlapping_bookings()
+returns trigger
+language plpgsql
+as $$
+declare
+  lesson_minutes constant int := 50;
+  new_start timestamptz;
+  new_end timestamptz;
+begin
+
+  if new.status = 'cancelled' then
+    return new;
+  end if;
+
+  new_start := (new.lesson_date + new.lesson_time::time) at time zone new.teacher_timezone;
+  new_end := new_start + (lesson_minutes || ' minutes')::interval;
+
+  if exists (
+    select 1 from bookings b
+    where b.teacher_id = new.teacher_id
+      and b.id is distinct from new.id
+      and b.status <> 'cancelled'
+      and b.lesson_date between new.lesson_date - 1 and new.lesson_date + 1
+      and (b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone < new_end
+      and ((b.lesson_date + b.lesson_time::time) at time zone b.teacher_timezone) + (lesson_minutes || ' minutes')::interval > new_start
+  ) then
+    raise exception using errcode = 'AR001', message = 'overlapping_booking: bu ogretmenin bu saat araliginda baska bir dersi var';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger bookings_enforce_no_overlap
+  before insert on bookings
+  for each row execute procedure public.enforce_no_overlapping_bookings();
+
 -- === PENDING PAYMENTS ============================================
 -- Sits in front of "bookings": create-payment (Edge Function) writes a
 -- row here and sends the student to iyzico's hosted checkout; only

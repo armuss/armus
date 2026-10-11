@@ -3877,7 +3877,7 @@
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
-                  ${(!isCancelled && !isPast) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
+                  ${armusBookingCancellable(booking) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
                 </div>
               </div>
               `;

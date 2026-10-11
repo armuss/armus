@@ -396,6 +396,20 @@ function armusCanJoinLessonNow(booking) {
   return now >= joinsFrom && now <= joinsUntil;
 }
 
+// Whether a cancel button should even be shown for this booking - not
+// armusIsBookingPast (which only flips once the lesson has fully ENDED).
+// cancel-booking (Edge Function) itself refuses the moment the lesson
+// STARTS (`new Date() > lessonStart`), so for a confirmed booking's
+// entire 50-minute run time, the old `!isCancelled && !armusIsBookingPast(booking)`
+// check kept showing an enabled "Dersi İptal Et" button that was
+// guaranteed to fail server-side with "Bu dersin zamanı geçti, iptal
+// edilemez." - confusing for whoever clicked it mid-lesson. Mirrors the
+// backend's own rule exactly, so the button only ever appears when
+// cancelling could actually succeed.
+function armusBookingCancellable(booking) {
+  return booking.status !== "cancelled" && armusLessonWindow(booking).start > new Date();
+}
+
 // Every half-hour lesson start time in a day: "00:00", "00:30", ... "23:30".
 // Shared by the availability grids (apply-teacher.html, dashboard.html)
 // and the booking slot picker (booking.html) so they always agree on
@@ -434,11 +448,51 @@ function armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes) {
 
   const ALL_SLOTS = armusAllTimeSlots();
 
-  const takenTimes = new Set(
-    (busyTimes || [])
-      .filter(b => b.date === dateKey && b.status !== "cancelled")
-      .map(b => b.time)
-  );
+  // A lesson runs ARMUS_LESSON_MINUTES (50) on a 30-minute slot grid, so
+  // a slot booked at, say, 10:00 (running until 10:50) genuinely
+  // overlaps the 10:30 slot too (10:30-11:20) - it was only ever being
+  // marked taken itself, by exact (date, time) match, leaving every
+  // slot 30 minutes after an existing booking to show as "available"
+  // even though booking it would double-book that half hour. Two
+  // same-day slots overlap exactly when they're 0 or 30 minutes apart
+  // (60+ apart never overlaps on this grid) - pure wall-clock slot
+  // arithmetic, no timezone math needed for the same-day case. A slot
+  // near midnight can also overlap the ADJACENT calendar date's slot
+  // near the other end of the day, so busy times from the day before
+  // and after are considered too.
+  function minutesOf(time) {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  function shiftDateKey(key, deltaDays) {
+    const d = new Date(key + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + deltaDays);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const prevDateKey = shiftDateKey(dateKey, -1);
+  const nextDateKey = shiftDateKey(dateKey, 1);
+  const DAY_MINUTES = 24 * 60;
+
+  const busyMinutesByDate = new Map();
+  (busyTimes || []).forEach(b => {
+    if (b.status === "cancelled") return;
+    if (b.date !== dateKey && b.date !== prevDateKey && b.date !== nextDateKey) return;
+    if (!busyMinutesByDate.has(b.date)) busyMinutesByDate.set(b.date, []);
+    busyMinutesByDate.get(b.date).push(minutesOf(b.time));
+  });
+
+  function overlapsBusySlot(time) {
+    const m = minutesOf(time);
+    const sameDay = busyMinutesByDate.get(dateKey) || [];
+    if (sameDay.some(busyM => Math.abs(busyM - m) < ARMUS_LESSON_MINUTES)) return true;
+    const prevDay = busyMinutesByDate.get(prevDateKey) || [];
+    if (prevDay.some(busyM => Math.abs((busyM - DAY_MINUTES) - m) < ARMUS_LESSON_MINUTES)) return true;
+    const nextDay = busyMinutesByDate.get(nextDateKey) || [];
+    if (nextDay.some(busyM => Math.abs((busyM + DAY_MINUTES) - m) < ARMUS_LESSON_MINUTES)) return true;
+    return false;
+  }
 
   // the dashboard.html weekly timeline (a recurring day-of-week pattern,
   // not tied to a specific date) wins when the teacher has saved through
@@ -450,16 +504,16 @@ function armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes) {
   // mock for demo teachers with neither.
   if (teacher.availabilityDates && teacher.availabilityDates._set === true) {
     const daySlots = teacher.availabilityDates[String(dayOfWeek)] || [];
-    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
+    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !overlapsBusySlot(time) }));
   }
 
   if (teacher.weeklyAvailability) {
     const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
-    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
+    return ALL_SLOTS.map(time => ({ time, available: daySlots.includes(time) && !overlapsBusySlot(time) }));
   }
 
   return ALL_SLOTS.map(time => {
     const n = armusHashCode(teacher.id + dateKey + time);
-    return { time, available: n % 3 !== 0 && !takenTimes.has(time) };
+    return { time, available: n % 3 !== 0 && !overlapsBusySlot(time) };
   });
 }
