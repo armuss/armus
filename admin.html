@@ -1708,7 +1708,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=7"></script>
+  <script src="bookings.js?v=8"></script>
   <script src="reviews.js?v=5"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="disputes.js?v=4"></script>
@@ -2113,7 +2113,9 @@
         .forEach(b => {
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
-            ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", b.refunded ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi") : "")
+            ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", b.refunded
+              ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi")
+              : (b.lateCancel ? armusT("admin.lateCancelSuffix", " · son dakika iptali (ücretli)") : ""))
             : !armusBookingCancellable(b)
               ? "—"
               : `<button class="btn btn-reject" data-cancel-booking="${b.id}">${armusT("admin.cancelBtn", "İptal Et")}</button>`;
@@ -3616,22 +3618,27 @@
           const teacherBookings = bookings.filter(b => b.teacherId === teacher.id && b.status !== "cancelled");
           const completed = teacherBookings.filter(armusIsBookingPast);
           const hours = Math.round((completed.length * 50 / 60) * 10) / 10;
+          // migration_105.sql "Cancelled and Paid": regular lessons the
+          // student cancelled inside the 12-hour window are owed to the
+          // teacher once their time passes - in gross/payout, not in taught
+          // hours (same split as dashboard.html, so the two always agree)
+          const paidLateCancels = bookings.filter(b => b.teacherId === teacher.id && armusIsPaidLateCancel(b) && armusIsBookingPast(b));
           // an unconverted trial's price stays with ARMUS, not the
           // teacher's gross, until the student buys a package with them
           // (see armusTrialCountsAsEarned)
           const teacherCredits = (credits || []).filter(c => c.teacher_id === teacher.id);
-          const gross = completed.reduce(
+          const gross = completed.concat(paidLateCancels).reduce(
             (sum, b) => sum + (armusTrialCountsAsEarned(b, teacherBookings, teacherCredits) ? (b.price || 0) : 0),
             0
           );
           const tier = commissionForHours(hours);
           const commission = Math.round(gross * (tier.rate / 100));
           return {
-            teacher, completedCount: completed.length, hours, gross,
+            teacher, completedCount: completed.length, lateCancelCount: paidLateCancels.length, hours, gross,
             tier, commission, payout: gross - commission,
           };
         })
-        .filter(row => row.completedCount > 0)
+        .filter(row => row.completedCount > 0 || row.lateCancelCount > 0)
         .sort((a, b) => b.gross - a.gross);
     }
 

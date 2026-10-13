@@ -102,14 +102,21 @@ alter table bookings add column if not exists reminder_sent boolean not null def
 alter table bookings add column if not exists review_email_sent boolean not null default false;
 
 -- soft-cancellation (see cancel-booking Edge Function) - a student
--- cancelling >= 4 hours before the lesson gets a full iyzico refund, a
--- teacher/admin cancelling always does, a late student cancellation
--- does not. No client-facing update policy touches these columns; only
--- cancel-booking (service role) ever writes them.
+-- cancelling >= 12 hours before the lesson gets it back as a lesson
+-- credit, a teacher/admin cancelling always does, a late student
+-- cancellation does not. No client-facing update policy touches these
+-- columns; only cancel-booking (service role) ever writes them.
 alter table bookings add column if not exists status text not null default 'confirmed' check (status in ('confirmed', 'cancelled'));
 alter table bookings add column if not exists cancelled_at timestamptz;
 alter table bookings add column if not exists cancelled_by text check (cancelled_by in ('student', 'teacher', 'admin'));
 alter table bookings add column if not exists refunded boolean not null default false;
+-- migration_105.sql: "Cancelled and Paid" - the student cancelled inside
+-- the 12-hour window, so nothing went back to them and a regular lesson
+-- is paid to the teacher as if it had happened (dashboard.html/admin.html
+-- earnings; a late-cancelled trial's fee stays with ARMUS, same as any
+-- unconverted trial). Not backfilled - earlier late cancellations
+-- happened under the old policy, where the teacher wasn't paid.
+alter table bookings add column if not exists late_cancel boolean not null default false;
 
 -- which IANA zone lesson_date/lesson_time (above) is wall-clock time IN -
 -- a snapshot of the teacher's profiles.timezone at booking time (see
@@ -3210,7 +3217,6 @@ set search_path = public
 as $$
 declare
   b record;
-  was_paid boolean;
   cancelled_ids uuid[] := '{}';
 begin
   for b in
@@ -3221,14 +3227,21 @@ begin
       and ((lesson_date + lesson_time::time) at time zone teacher_timezone) > now()
     returning id, student_id, teacher_id, teacher_name
   loop
-    select exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded')
-        or exists (select 1 from lesson_credits c where c.used_booking_id = b.id and c.status = 'used')
-      into was_paid;
-
-    if was_paid then
+    -- same rule as cancel-booking: a card-paid lesson comes back as a
+    -- new credit with this teacher; a credit-paid one gets that SAME
+    -- credit back (never a freshly minted one - see cancel-booking's
+    -- header for why)
+    if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
       insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
       values (b.student_id, b.teacher_id, b.teacher_name, b.id);
       update bookings set refunded = true where id = b.id;
+    else
+      update lesson_credits
+      set status = 'available', used_booking_id = null, used_at = null
+      where used_booking_id = b.id and status = 'used';
+      if found then
+        update bookings set refunded = true where id = b.id;
+      end if;
     end if;
 
     cancelled_ids := cancelled_ids || b.id;

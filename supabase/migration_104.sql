@@ -468,7 +468,6 @@ set search_path = public
 as $$
 declare
   b record;
-  was_paid boolean;
   cancelled_ids uuid[] := '{}';
 begin
   for b in
@@ -479,17 +478,21 @@ begin
       and ((lesson_date + lesson_time::time) at time zone teacher_timezone) > now()
     returning id, student_id, teacher_id, teacher_name
   loop
-    -- same refund rule as cancel-booking for a teacher/admin
-    -- cancellation: a credit back whenever the lesson was actually paid
-    -- for, by card (pending_payments) or with an earlier credit
-    select exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded')
-        or exists (select 1 from lesson_credits c where c.used_booking_id = b.id and c.status = 'used')
-      into was_paid;
-
-    if was_paid then
+    -- same rule as cancel-booking: a card-paid lesson comes back as a
+    -- new credit with this teacher; a credit-paid one gets that SAME
+    -- credit back (never a freshly minted one - see cancel-booking's
+    -- header for why)
+    if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
       insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
       values (b.student_id, b.teacher_id, b.teacher_name, b.id);
       update bookings set refunded = true where id = b.id;
+    else
+      update lesson_credits
+      set status = 'available', used_booking_id = null, used_at = null
+      where used_booking_id = b.id and status = 'used';
+      if found then
+        update bookings set refunded = true where id = b.id;
+      end if;
     end if;
 
     cancelled_ids := cancelled_ids || b.id;

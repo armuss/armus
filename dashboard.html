@@ -2539,7 +2539,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=7"></script>
+  <script src="bookings.js?v=8"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
@@ -3213,6 +3213,15 @@
       const totalHours = Math.round((completedBookings.length * 50 / 60) * 10) / 10;
       const tier = commissionForHours(totalHours);
 
+      // migration_105.sql "Cancelled and Paid": a regular lesson the
+      // student cancelled inside the 12-hour window is paid to the teacher
+      // once its scheduled time passes, same as a taught one - it counts
+      // toward earnings below, but not toward taught hours/lessons above
+      // (nothing was actually taught, so it doesn't move the commission tier)
+      const earnedBookings = completedBookings.concat(
+        incomingBookings.filter(b => armusIsPaidLateCancel(b) && armusIsBookingPast(b))
+      );
+
       // an unconverted trial's price doesn't count as earnings yet - see
       // armusTrialCountsAsEarned
       function earnablePrice(b) {
@@ -3221,7 +3230,7 @@
 
       const now = new Date();
       const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const grossThisMonth = completedBookings
+      const grossThisMonth = earnedBookings
         .filter(b => bookingLocalDateKey(b).startsWith(thisMonthKey))
         .reduce((sum, b) => sum + earnablePrice(b), 0);
       const netThisMonth = Math.round(grossThisMonth * (1 - tier.rate / 100));
@@ -3250,10 +3259,11 @@
       // back when an older month's lessons were taught.
       function renderEarningsHistory() {
         const byMonth = new Map();
-        completedBookings.forEach(b => {
+        earnedBookings.forEach(b => {
           const monthKey = bookingLocalDateKey(b).slice(0, 7); // "YYYY-MM"
           const entry = byMonth.get(monthKey) || { count: 0, gross: 0 };
-          entry.count += 1;
+          // a paid late cancellation adds to the money, not the lesson count
+          if (!armusIsPaidLateCancel(b)) entry.count += 1;
           entry.gross += earnablePrice(b);
           byMonth.set(monthKey, entry);
         });
@@ -3316,7 +3326,7 @@
         .order("requested_at", { ascending: false });
       const withdrawalRequests = withdrawalRows || [];
 
-      const lifetimeGross = completedBookings.reduce((sum, b) => sum + earnablePrice(b), 0);
+      const lifetimeGross = earnedBookings.reduce((sum, b) => sum + earnablePrice(b), 0);
       const lifetimeNetEstimate = Math.round(lifetimeGross * (1 - tier.rate / 100));
       const claimedAmount = withdrawalRequests
         .filter(w => w.status !== "rejected")
@@ -3869,6 +3879,7 @@
             ${studentBookings.map(booking => {
 
               const isCancelled = booking.status === "cancelled";
+              const isPaidLateCancel = armusIsPaidLateCancel(booking);
               const isPast = armusIsBookingPast(booking);
               const review = reviewByBookingId[booking.id];
               const net = Math.round(booking.price * (1 - tier.rate / 100));
@@ -3876,13 +3887,22 @@
               const tags = [
                 firstBookingIdByStudent.has(booking.id) ? `<span class="booking-tag tag-first">${armusT("teacherDash.tagFirstLesson", "🟢 İlk Ders")}</span>` : "",
                 booking.type === "trial" ? `<span class="booking-tag tag-trial">${armusT("teacherDash.tagTrial", "🔵 Deneme Dersi")}</span>` : `<span class="booking-tag tag-lesson">${armusT("teacherDash.tagLesson", "🟣 Ders")}</span>`,
-                isCancelled ? `<span class="booking-tag tag-cancelled">${armusT("teacherDash.tagCancelled", "⊘ İptal edildi")}</span>` : (isPast ? `<span class="booking-tag tag-done">${armusT("teacherDash.tagCompleted", "✓ Tamamlandı")}</span>` : `<span class="booking-tag tag-upcoming">${armusT("teacherDash.tagUpcoming", "🕒 Yaklaşıyor")}</span>`),
+                isCancelled
+                  ? `<span class="booking-tag tag-cancelled">${booking.lateCancel ? armusT("teacherDash.tagLateCancelled", "⊘ Son dakika iptali") : armusT("teacherDash.tagCancelled", "⊘ İptal edildi")}</span>`
+                  : (isPast ? `<span class="booking-tag tag-done">${armusT("teacherDash.tagCompleted", "✓ Tamamlandı")}</span>` : `<span class="booking-tag tag-upcoming">${armusT("teacherDash.tagUpcoming", "🕒 Yaklaşıyor")}</span>`),
                 review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
               ].join("");
 
               const countsAsEarned = armusTrialCountsAsEarned(booking, activeBookings, teacherCredits);
 
-              const earningHtml = isCancelled
+              // "Cancelled and Paid" (migration_105.sql): the student cancelled
+              // this regular lesson inside the 12-hour window - paid to the
+              // teacher once its time passes, same as a taught lesson
+              const earningHtml = isPaidLateCancel
+                ? (isPast
+                  ? `${armusT("teacherDash.earningLateCancelEarned", "Yine de ücreti sana ödendi:")} <strong>₺${net}</strong> <span style="opacity:.7;">${armusT("teacherDash.earningEarnedHint", "(₺{price} - %{rate} komisyon)").replace("{price}", booking.price).replace("{rate}", tier.rate)}</span>`
+                  : `${armusT("teacherDash.earningLateCancelPending", "Yine de ücreti sana ödenecek:")} <strong>₺${booking.price}</strong> <span style="opacity:.7;">${armusT("teacherDash.earningLateCancelPendingHint", "(öğrenci derse 12 saatten az kala iptal etti)")}</span>`)
+                : isCancelled
                 ? `${armusT("teacherDash.earningCancelled", "İptal edildi")}${booking.refunded ? armusT("teacherDash.earningCancelledCredit", " · öğrenciye ders hakkı eklendi") : ""}`
                 : !countsAsEarned
                   ? `${armusT("teacherDash.earningStaysOnArmus", "ARMUS'ta kalıyor")} <span style="opacity:.7;">${armusT("teacherDash.earningStaysOnArmusHint", "(öğrenci bir paket alırsa kazancına döner)")}</span>`
@@ -3895,7 +3915,7 @@
                 <div>
                   <strong>${armusEscapeHtml(booking.studentName)}</strong>
                   <div class="booking-tags">${tags}</div>
-                  <div class="booking-earning${(isPast && countsAsEarned) || isCancelled ? "" : " pending"}">${earningHtml}</div>
+                  <div class="booking-earning${(isPast && countsAsEarned) || (isCancelled && !(isPaidLateCancel && !isPast)) ? "" : " pending"}">${earningHtml}</div>
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
