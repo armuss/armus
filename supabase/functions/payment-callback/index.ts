@@ -413,8 +413,13 @@ Deno.serve(async (req) => {
     // this student's money in the manual paid_no_booking follow-up
     // below, grant them a lesson credit right away - same mechanism
     // cancel-booking uses - so they can immediately rebook a different
-    // time with nothing lost.
-    if ((bookingError?.code === "23505" || bookingError?.code === "AR001") && !isPackage) {
+    // time with nothing lost. AR002 (bookings_enforce_teacher_not_banned,
+    // migration_104.sql) is the rare case of the teacher's account being
+    // closed while this student was still on iyzico's checkout page - no
+    // lesson with them can be created anymore, so it gets the same
+    // credit-instead outcome (reusing the slot_taken state rather than a
+    // dedicated one for something this rare).
+    if ((bookingError?.code === "23505" || bookingError?.code === "AR001" || bookingError?.code === "AR002") && !isPackage) {
       await supabaseAdmin.from("lesson_credits").insert({
         student_id: pending.student_id,
         teacher_id: pending.teacher_id,

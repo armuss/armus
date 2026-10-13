@@ -2858,11 +2858,34 @@
             overlay.hidden = true;
             user.hidden_from_new_students = false;
             user.hidden_reason = null;
+            user.penalty_hide_reason = null;
             user.trial_hidden_tier = 0;
             user.trial_unhide_eligible_at = null;
             await renderAttendanceBanner(user);
           });
         }
+
+      } else if ((user.penalty_hide_reason === "no_show" || user.penalty_hide_reason === "late")
+        && !(user.hidden_until && new Date(user.hidden_until) > new Date())) {
+
+        // a single upheld regular report (migration_104.sql's
+        // penalty_hide_reason) - hidden from NEW students only, until an
+        // admin clears it. The generic branch below describes the
+        // hidden-from-everyone escalation instead, which isn't this.
+        const penaltyTypeLabel = user.penalty_hide_reason === "no_show"
+          ? armusT("teacherDash.attendancePenaltyTypeNoShow", "derse gelmeme")
+          : armusT("teacherDash.attendancePenaltyTypeLate", "derse geç kalma");
+
+        title.textContent = armusT("teacherDash.attendancePenaltyTitle", "Profilin yeni öğrencilerden gizli");
+        body.innerHTML = `
+          <p>${armusT("teacherDash.attendancePenaltyText", "Hakkındaki bir {type} bildirimi ekibimiz tarafından doğrulandı. Bu yüzden profilin yeni öğrencilerin aramasından gizli - mevcut öğrencilerin seni görmeye ve ders almaya devam ediyor. Bu gizlilik ekibimiz kaldırana kadar sürer; itiraz etmek ya da durumu konuşmak istersen bize ulaş.").replace("{type}", penaltyTypeLabel)}</p>
+          <div class="rules-box">${ATTENDANCE_RULES_TEXT()}</div>
+          <div class="attendance-modal-actions">
+            <a class="btn btn-light" href="iletisim">${armusT("teacherDash.contactUs", "Bize Ulaş")}</a>
+            <button type="button" class="btn" id="attendanceModalCancel">${armusT("class.close", "Kapat")}</button>
+          </div>
+        `;
+        document.getElementById("attendanceModalCancel").addEventListener("click", () => { overlay.hidden = true; });
 
       } else {
 

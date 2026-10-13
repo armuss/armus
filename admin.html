@@ -1937,9 +1937,22 @@
         button.addEventListener("click", async () => {
           button.disabled = true;
           const isUnban = button.dataset.accountAction === "unban";
+          // unhide clears the standing penalty too (migration_104.sql) -
+          // otherwise the next report filed against this teacher would put
+          // them straight back under the old penalty, and a stale
+          // trial-ladder tier would keep showing on their dashboard
           const updates = isUnban
             ? { is_banned: false }
-            : { hidden_from_new_students: false, hidden_until: null };
+            : {
+              hidden_from_new_students: false,
+              hidden_until: null,
+              hidden_reason: null,
+              hidden_at: null,
+              penalty_hide_reason: null,
+              trial_hidden_tier: 0,
+              trial_unhide_eligible_at: null,
+              trial_unhide_requires_ack: false,
+            };
           const updated = await armusAdminUpdateProfile(user.id, updates);
           if (updated) {
             applyProfileUpdate(updated);

@@ -394,6 +394,14 @@ alter table profiles add column if not exists hidden_at timestamptz;
 alter table profiles add column if not exists hidden_until timestamptz;
 alter table profiles add column if not exists is_banned boolean not null default false;
 alter table profiles add column if not exists banned_at timestamptz;
+-- migration_104.sql: the penalty actually in force, tracked separately
+-- from "a report is waiting for review" (which hidden_from_new_students
+-- alone used to stand for too) - null (none), 'trial_no_show'
+-- (self-service, see the TRIAL NO-SHOW ESCALATION LADDER section), or
+-- 'no_show'/'late' (an upheld regular report, until an admin clears it).
+-- See handle_attendance_report_resolution for how the two combine.
+alter table profiles add column if not exists penalty_hide_reason text
+  check (penalty_hide_reason is null or penalty_hide_reason in ('no_show', 'late', 'trial_no_show'));
 
 create table email_verifications (
   id uuid primary key default gen_random_uuid(),
@@ -697,6 +705,7 @@ begin
     or new.trial_hidden_tier is distinct from old.trial_hidden_tier
     or new.trial_unhide_eligible_at is distinct from old.trial_unhide_eligible_at
     or new.trial_unhide_requires_ack is distinct from old.trial_unhide_requires_ack
+    or new.penalty_hide_reason is distinct from old.penalty_hide_reason
   then
     raise exception 'attendance_lock: these fields can only be changed by the attendance-report system or an admin';
   end if;
@@ -1861,7 +1870,13 @@ create trigger attendance_reports_before_update
 
 -- runs as the reporting STUDENT's own request, so it sets a session-local
 -- flag enforce_teacher_profile_lock checks to let this one specific,
--- trusted write through without needing to be an admin
+-- trusted write through without needing to be an admin.
+--
+-- migration_104.sql: hidden_reason keeps showing the standing penalty if
+-- one is already in force - it used to be overwritten with the new
+-- report's type every time, which erased 'trial_no_show' and left a
+-- teacher mid-way through the trial ladder unable to ever clear their
+-- own hide again, even after this new report was dismissed.
 create or replace function public.handle_new_attendance_report()
 returns trigger
 language plpgsql
@@ -1873,7 +1888,7 @@ begin
 
   update profiles
   set hidden_from_new_students = true,
-      hidden_reason = new.type,
+      hidden_reason = coalesce(penalty_hide_reason, new.type),
       hidden_at = now()
   where id::text = new.teacher_id
     and coalesce(is_banned, false) = false;
@@ -1920,24 +1935,33 @@ begin
   perform set_config('armus.attendance_system_update', 'on', true);
 
   if new.status = 'dismissed' then
-    -- false alarm - unhide, unless something ELSE is still pending or
-    -- was separately upheld. The comment above always described this as
-    -- checking upheld reports too, but the condition itself only ever
-    -- checked 'open'/'explained' - dismissing one report could unhide a
-    -- teacher who still had a completely separate, confirmed-real upheld
-    -- violation on record, as long as that upheld report hadn't itself
-    -- crossed the 14/30-day hidden_until escalation threshold (which the
-    -- coalesce(hidden_until, now()) <= now() check below does still
-    -- protect once escalated - this was specifically the gap for a
-    -- teacher's first upheld report, before escalation kicks in).
-    if not exists (
+    -- another report still waiting for review keeps the hide in place
+    if exists (
       select 1 from attendance_reports
-      where teacher_id = new.teacher_id and status in ('open', 'explained', 'upheld') and id <> new.id
+      where teacher_id = new.teacher_id and status in ('open', 'explained') and id <> new.id
     ) then
-      update profiles
-      set hidden_from_new_students = false, hidden_reason = null, hidden_at = null
-      where id::text = new.teacher_id and coalesce(hidden_until, now()) <= now();
+      return new;
     end if;
+
+    -- migration_104.sql: nothing else pending - back to whatever penalty
+    -- is actually in force (penalty_hide_reason), independent of this
+    -- false alarm. This used to refuse to unhide anyone with an upheld
+    -- report ANYWHERE in their history, including one long since served
+    -- (a tier-1 trial hide is cleared the same day) or already lifted by
+    -- an admin - so for any teacher with a past upheld report, a later
+    -- false alarm, once dismissed, left them hidden from new students
+    -- indefinitely. An active hidden_until (the hidden-from-everyone
+    -- escalation) is its own column with its own expiry and is left
+    -- alone; every path that sets it also sets a penalty, so the old
+    -- "coalesce(hidden_until, now()) <= now()" guard here is no longer
+    -- needed (and it's what stranded a teacher whose false alarm was
+    -- dismissed DURING an escalation - nothing ever came back to unhide
+    -- them after it expired).
+    update profiles
+    set hidden_from_new_students = (penalty_hide_reason is not null),
+        hidden_reason = penalty_hide_reason,
+        hidden_at = case when penalty_hide_reason is null then null else hidden_at end
+    where id::text = new.teacher_id;
     return new;
   end if;
 
@@ -1992,9 +2016,13 @@ begin
           end;
           requires_ack := new_tier <= 2;
 
+          -- migration_104.sql: records the penalty, but never downgrades
+          -- an admin-only regular penalty already in force into this
+          -- self-service one
           update profiles
           set hidden_from_new_students = true,
-              hidden_reason = 'trial_no_show',
+              penalty_hide_reason = case when penalty_hide_reason in ('no_show', 'late') then penalty_hide_reason else 'trial_no_show' end,
+              hidden_reason = case when penalty_hide_reason in ('no_show', 'late') then penalty_hide_reason else 'trial_no_show' end,
               hidden_at = now(),
               trial_hidden_tier = new_tier,
               trial_unhide_eligible_at = unhide_at,
@@ -2002,6 +2030,16 @@ begin
           where id::text = new.teacher_id
             and coalesce(is_banned, false) = false;
         end if;
+      else
+        -- migration_104.sql: a regular (non-trial) upheld no-show keeps
+        -- the teacher hidden from new students until an admin clears it
+        -- - the existing behavior, now recorded as a penalty instead of
+        -- only implied by the report having been pending
+        update profiles
+        set hidden_from_new_students = true,
+            penalty_hide_reason = 'no_show',
+            hidden_reason = 'no_show'
+        where id::text = new.teacher_id;
       end if;
 
     elsif new.type = 'late' then
@@ -2031,6 +2069,13 @@ begin
         set hidden_until = greatest(coalesce(hidden_until, now()), now() + interval '30 days')
         where id::text = new.teacher_id;
       end if;
+
+      -- migration_104.sql: same as a regular upheld no-show above
+      update profiles
+      set hidden_from_new_students = true,
+          penalty_hide_reason = 'late',
+          hidden_reason = 'late'
+      where id::text = new.teacher_id;
 
     end if;
 
@@ -3107,8 +3152,19 @@ begin
     return 'no_action';
   end if;
 
-  if t.hidden_reason is distinct from 'trial_no_show' or t.trial_hidden_tier = 0 then
+  -- migration_104.sql: reads the penalty itself, not hidden_reason
+  if t.penalty_hide_reason is distinct from 'trial_no_show' or t.trial_hidden_tier = 0 then
     return 'no_action';
+  end if;
+
+  -- migration_104.sql: a report still waiting for review keeps the hide
+  -- in place (dashboard.html never even offers the button then - this
+  -- closes the direct-RPC path to escaping a pending report's hide early)
+  if exists (
+    select 1 from attendance_reports
+    where teacher_id = auth.uid()::text and status in ('open', 'explained')
+  ) then
+    return 'not_eligible';
   end if;
 
   if t.trial_unhide_eligible_at is null or now() < t.trial_unhide_eligible_at then
@@ -3125,6 +3181,7 @@ begin
   set hidden_from_new_students = false,
       hidden_reason = null,
       hidden_at = null,
+      penalty_hide_reason = null,
       trial_hidden_tier = 0,
       trial_unhide_eligible_at = null,
       trial_unhide_requires_ack = false
@@ -3133,3 +3190,89 @@ begin
   return 'ok';
 end;
 $$;
+
+-- === BAN -> CANCEL UPCOMING LESSONS (migration_104.sql) =================
+-- A teacher banned by the 10-upheld-no-shows rule (handle_attendance_report_resolution)
+-- used to keep every lesson they already had booked: students still saw
+-- them in my-lessons.html with a working "Derse Katıl" button and could
+-- join class.html's room with someone ARMUS had just closed for not
+-- showing up. The ban itself now cancels every not-yet-started confirmed
+-- lesson for that teacher - same outcome as a teacher/admin cancelling
+-- each by hand through cancel-booking: a lesson credit back whenever the
+-- lesson was actually paid for (card or an earlier credit), plus an email
+-- to each student (notify-lessons-cancelled Edge Function - Verify JWT
+-- off, same TRIGGER_SECRET header as the other trigger-fired functions).
+create or replace function public.cancel_banned_teacher_future_lessons()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  b record;
+  was_paid boolean;
+  cancelled_ids uuid[] := '{}';
+begin
+  for b in
+    update bookings
+    set status = 'cancelled', cancelled_at = now(), cancelled_by = 'admin'
+    where teacher_id = new.id::text
+      and status = 'confirmed'
+      and ((lesson_date + lesson_time::time) at time zone teacher_timezone) > now()
+    returning id, student_id, teacher_id, teacher_name
+  loop
+    select exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded')
+        or exists (select 1 from lesson_credits c where c.used_booking_id = b.id and c.status = 'used')
+      into was_paid;
+
+    if was_paid then
+      insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
+      values (b.student_id, b.teacher_id, b.teacher_name, b.id);
+      update bookings set refunded = true where id = b.id;
+    end if;
+
+    cancelled_ids := cancelled_ids || b.id;
+  end loop;
+
+  if coalesce(array_length(cancelled_ids, 1), 0) > 0 then
+    perform net.http_post(
+      url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/notify-lessons-cancelled',
+      headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+      body := jsonb_build_object('booking_ids', to_jsonb(cancelled_ids), 'reason', 'teacher_banned')
+    );
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger profiles_cancel_lessons_on_ban
+  after update on profiles
+  for each row
+  when (coalesce(old.is_banned, false) = false and new.is_banned = true)
+  execute procedure public.cancel_banned_teacher_future_lessons();
+
+-- a checkout that started before the ban and finishes after it would
+-- otherwise still create a booking nothing ever cancels - payment-callback
+-- (and create-payment's credit path) treat AR002 like a taken slot: no
+-- booking, a lesson credit instead.
+create or replace function public.enforce_teacher_not_banned()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (
+    select 1 from profiles p
+    where p.id::text = new.teacher_id and coalesce(p.is_banned, false)
+  ) then
+    raise exception using errcode = 'AR002', message = 'teacher_banned: bu ogretmenin hesabi kapatildi';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger bookings_enforce_teacher_not_banned
+  before insert on bookings
+  for each row execute procedure public.enforce_teacher_not_banned();
