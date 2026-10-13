@@ -191,6 +191,19 @@
       margin-bottom: 30px;
     }
 
+    .lessons-section-title {
+      color: var(--armus-muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin: 26px 0 12px;
+    }
+
+    .lessons-section-title:first-child {
+      margin-top: 0;
+    }
+
     /* LESSON CARD */
 
     .lesson-card {
@@ -668,9 +681,13 @@
       // the grace window) ends up buried under every already-completed
       // lesson. Re-sort here: not-yet-past lessons first (soonest first),
       // then past ones (most recent first).
+      // A cancelled lesson goes to the past/history side too, even while its
+      // date is still ahead (Preply: an in-time cancel leaves the upcoming
+      // list, a late one shows under Past as "Cancelled and Paid").
+      const inHistory = b => b.status === "cancelled" || (armusIsBookingPast(b) && !armusCanJoinLessonNow(b));
       bookings.sort((a, b) => {
-        const aPast = armusIsBookingPast(a) && !armusCanJoinLessonNow(a);
-        const bPast = armusIsBookingPast(b) && !armusCanJoinLessonNow(b);
+        const aPast = inHistory(a);
+        const bPast = inHistory(b);
         if (aPast !== bPast) return aPast ? 1 : -1;
         const aStart = armusZonedTimeToUtc(a.date, a.time, a.teacherTimezone || "Europe/Istanbul").getTime();
         const bStart = armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone || "Europe/Istanbul").getTime();
@@ -932,7 +949,22 @@
           );
           const reviewByBooking = new Map(reviewEntries);
 
+          // "Yaklaşan" / "Geçmiş" headings, same split as the sort above
+          const upcomingHeading = document.createElement("div");
+          upcomingHeading.className = "lessons-section-title";
+          upcomingHeading.textContent = armusT("myLessons.sectionUpcoming", "Yaklaşan dersler");
+          const historyHeading = document.createElement("div");
+          historyHeading.className = "lessons-section-title";
+          historyHeading.textContent = armusT("myLessons.sectionHistory", "Geçmiş");
+          if (bookings.some(b => !inHistory(b))) list.appendChild(upcomingHeading);
+          let historyHeadingShown = false;
+
           for (const booking of bookings) {
+
+            if (!historyHeadingShown && inHistory(booking)) {
+              list.appendChild(historyHeading);
+              historyHeadingShown = true;
+            }
 
             const teacher = teacherById.get(booking.teacherId) || null;
             // armusIsBookingPast compares the lesson's real, timezone-aware
@@ -1056,6 +1088,14 @@
                   </div>
                 `;
                 if (disputeBlock) disputeBlock.remove();
+
+                // the lesson leaves the upcoming list right away - newest
+                // entry at the top of history, as a reload would order it
+                card.classList.add("lesson-cancelled");
+                if (!historyHeading.isConnected) list.appendChild(historyHeading);
+                historyHeading.after(card);
+                // that was the last upcoming lesson - drop the empty heading
+                if (historyHeading.previousElementSibling === upcomingHeading) upcomingHeading.remove();
               });
 
               card.appendChild(cancelWrap);
