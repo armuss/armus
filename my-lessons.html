@@ -630,7 +630,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=7"></script>
+  <script src="bookings.js?v=8"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script src="disputes.js?v=4"></script>
@@ -638,6 +638,13 @@
 
     const gate = document.getElementById("gate");
     const pageRoot = document.getElementById("pageRoot");
+
+    // Preply's "Cancelled and Paid" (migration_105.sql): the student
+    // cancelled inside the 12-hour window, so nothing came back to them
+    function lateCancelBadgeOr(isLateCancel, otherwiseHtml) {
+      if (!isLateCancel) return otherwiseHtml;
+      return `${armusT("myLessons.cancelledPaid", "⊘ İptal edildi ve ücretlendirildi")}${armusT("myLessons.cancelledPaidSuffix", " · derse 12 saatten az kala iptal edildiği için ders hakkı iade edilmedi")}`;
+    }
 
     (async function() {
 
@@ -983,7 +990,7 @@
               </${rowTag}>
               ${isCancelled ? `
                 <div class="lesson-cancel-badge">
-                  ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}
+                  ${lateCancelBadgeOr(booking.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}`)}
                 </div>
               ` : (canJoinNow || (!isPast && bookingLocalDateKey === todayKey)) ? `
                 <div class="lesson-join">
@@ -998,10 +1005,16 @@
 
             if (armusBookingCancellable(booking)) {
 
-              const hoursUntil = (armusLessonWindow(booking).start - new Date()) / 3_600_000;
-              const refundHint = hoursUntil >= 4
-                ? armusT("myLessons.refundHintYes", "İptal edersen bu öğretmenle (veya bir deneme dersi için başka biriyle) kullanabileceğin bir ders hakkı kazanırsın")
-                : armusT("myLessons.refundHintNo", "Derse 4 saatten az kaldığı için ders hakkı kazanılmaz");
+              // Preply's 12-hour rule (cancel-booking's FREE_CANCEL_HOURS):
+              // in time, the lesson goes back to the student's balance;
+              // inside the window nothing comes back, and a regular
+              // lesson is paid to the teacher since their time was reserved
+              const lateCancelMessage = () => booking.type === "trial"
+                ? armusT("myLessons.refundHintNoTrial", "Derse 12 saatten az kaldı: iptal edersen deneme dersi bakiyene geri eklenmez")
+                : armusT("myLessons.refundHintNo", "Derse 12 saatten az kaldı: iptal edersen ders hakkı iade edilmez ve ücret öğretmene ödenir (saati senin için ayrılmıştı)");
+              const refundHint = armusHoursUntilLesson(booking) >= ARMUS_FREE_CANCEL_HOURS
+                ? armusT("myLessons.refundHintYes", "Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir - bu öğretmenle ya da başka bir öğretmenle deneme dersi için kullanabilirsin")
+                : lateCancelMessage();
 
               const cancelWrap = document.createElement("div");
               cancelWrap.className = "lesson-cancel-wrap";
@@ -1012,10 +1025,16 @@
 
               cancelWrap.querySelector(".lesson-cancel-btn").addEventListener("click", async () => {
 
-                const confirmMsg = armusT("myLessons.cancelConfirm", "{name} ile {date}, {time} dersini iptal etmek istediğine emin misin?")
+                let confirmMsg = armusT("myLessons.cancelConfirm", "{name} ile {date}, {time} dersini iptal etmek istediğine emin misin?")
                   .replace("{name}", armusShortDisplayName(booking.teacherName))
                   .replace("{date}", when.dateLabel)
                   .replace("{time}", when.timeRange);
+                // re-checked at click time, not taken from the hint rendered
+                // when the page loaded - the page may have stayed open
+                // across the 12-hour line since then
+                if (armusHoursUntilLesson(booking) < ARMUS_FREE_CANCEL_HOURS) {
+                  confirmMsg += "\n\n" + armusT("myLessons.cancelConfirmLateWarning", "Dikkat:") + " " + lateCancelMessage() + ".";
+                }
                 if (!confirm(confirmMsg)) return;
 
                 const btn = cancelWrap.querySelector(".lesson-cancel-btn");
@@ -1033,7 +1052,7 @@
 
                 cancelWrap.outerHTML = `
                   <div class="lesson-cancel-badge">
-                    ${armusT("myLessons.cancelled", "⊘ İptal edildi")}${result.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi")}
+                    ${lateCancelBadgeOr(result.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${result.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi")}`)}
                   </div>
                 `;
                 if (disputeBlock) disputeBlock.remove();

@@ -115,6 +115,7 @@ function armusMapBookingRow(row) {
     status: row.status || "confirmed",
     cancelledBy: row.cancelled_by,
     refunded: row.refunded,
+    lateCancel: row.late_cancel === true,
     createdAt: row.created_at,
   };
 }
@@ -267,7 +268,7 @@ async function armusCancelBooking(bookingId) {
     return { ok: false, error: (data && data.error) || serverMessage || "Rezervasyon iptal edilemedi." };
   }
 
-  return { ok: true, refunded: data.refunded, refundEligible: data.refundEligible };
+  return { ok: true, refunded: data.refunded, refundEligible: data.refundEligible, lateCancel: !!data.lateCancel };
 }
 
 // Turkish GSM normalization: "+90 555 112 51 21", "905551125121",
@@ -408,6 +409,26 @@ function armusCanJoinLessonNow(booking) {
 // cancelling could actually succeed.
 function armusBookingCancellable(booking) {
   return booking.status !== "cancelled" && armusLessonWindow(booking).start > new Date();
+}
+
+// Preply's cancellation window: a student cancelling at least this many
+// hours before the lesson gets it back as a lesson credit; inside it,
+// nothing comes back. Mirrors cancel-booking's own FREE_CANCEL_HOURS -
+// keep the two in sync.
+const ARMUS_FREE_CANCEL_HOURS = 12;
+
+function armusHoursUntilLesson(booking) {
+  return (armusLessonWindow(booking).start - new Date()) / 3_600_000;
+}
+
+// "Cancelled and Paid" (migration_105.sql): the student cancelled a
+// REGULAR lesson inside the 12-hour window, so the teacher is paid for
+// the reserved time exactly as if it had happened - counted in their
+// earnings (not their taught hours) by dashboard.html and admin.html.
+// A late-cancelled trial isn't: its fee stays with ARMUS, same as any
+// trial that never converted (armusTrialCountsAsEarned).
+function armusIsPaidLateCancel(booking) {
+  return booking.status === "cancelled" && booking.lateCancel === true && booking.type === "lesson";
 }
 
 // Every half-hour lesson start time in a day: "00:00", "00:30", ... "23:30".

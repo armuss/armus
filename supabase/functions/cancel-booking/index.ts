@@ -5,22 +5,30 @@
 // through this one function so a credit is never skipped just because
 // cancellation happened from a different panel.
 //
-// Policy:
-//   - admin cancels: always a full credit (platform-side decision)
-//   - teacher cancels: always a full credit (not the student's fault)
-//   - student cancels >= 4 hours before the lesson: full credit
-//   - student cancels < 4 hours before the lesson: no credit, but the
-//     booking is still cancelled (frees the slot either way)
-// A booking with no successful payment on file (pre-payment-system
-// bookings, a payment that never completed) simply has nothing to
-// credit - it still gets cancelled normally. A lesson that was itself
-// booked for free with an existing credit is different: when the
-// STUDENT cancels that one themselves, it still gets nothing (that's
-// what stops a student from farming free lessons by repeatedly cancelling a
-// credit-covered booking) - but when the TEACHER or an ADMIN cancels
-// it, the credit that funded it comes back, matching the "always a
-// full credit" policy above (it was never the student's fault, so a
-// credit-funded booking is no different from a paid one here).
+// Policy (Preply's cancellation policy, 12-hour window):
+//   - admin cancels: the lesson always goes back to the student's balance
+//   - teacher cancels: always goes back too (not the student's fault)
+//   - student cancels >= 12 hours before the lesson: goes back to their
+//     balance, the teacher isn't paid
+//   - student cancels < 12 hours before the lesson: "Cancelled and Paid"
+//     (bookings.late_cancel, migration_105.sql) - nothing goes back, and
+//     a regular lesson is paid to the teacher exactly as if it had
+//     happened, since their time was reserved (a late-cancelled TRIAL
+//     follows the existing trial rule - its fee stays with ARMUS). The
+//     booking is still cancelled either way, which frees the slot.
+// "Goes back to the balance" means: a card-paid lesson grants a new
+// lesson credit tied to that teacher; a lesson that was itself paid
+// for with a credit gets THAT SAME credit back (status flipped back to
+// available), never a freshly minted one. Restoring rather than minting
+// is what makes it safe to refund a credit-paid lesson even when the
+// STUDENT cancels it (this used to give them nothing, to stop credit
+// "farming"): a credit tied to teacher A, spent on a trial with teacher
+// B, would otherwise come back as a brand-new credit tied to B - good
+// for a full lesson with B - turning a cheap teacher's credit into an
+// expensive teacher's lesson. Getting the original credit back can never
+// be worth more than what was spent. A booking with no successful
+// payment on file (pre-payment-system bookings) simply has nothing to
+// give back - it still gets cancelled normally.
 //
 // Also sends a cancellation email (RESEND_API_KEY, EMAIL_FROM secrets,
 // same as the other Edge Functions) to whichever participant did NOT
@@ -34,7 +42,9 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const FREE_CANCEL_HOURS = 4;
+// mirrored by bookings.js's ARMUS_FREE_CANCEL_HOURS (my-lessons.html's
+// refund hint) - keep the two in sync
+const FREE_CANCEL_HOURS = 12;
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
@@ -119,7 +129,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 // Europe/Istanbul, which has none) - the standard "double conversion"
 // trick: format a UTC guess back in the target zone, see how far off the
 // wall-clock reading is, and shift by that difference. Without this, the
-// "lesson already passed" check and the 4-hour free-cancellation window
+// "lesson already passed" check and the free-cancellation window
 // below were computed as if lesson_date/lesson_time were UTC, which for
 // an Europe/Istanbul (UTC+3) teacher put both about 3 hours later than
 // the real lesson time.
@@ -234,9 +244,18 @@ Deno.serve(async (req) => {
     // cancelled booking silently refunded twice. This update affecting
     // no row means another request already won the race and this one
     // stops here, before anything gets credited.
+    // "Cancelled and Paid" - a student cancelling inside the 12-hour
+    // window (see this file's header)
+    const lateCancel = cancelledBy === "student" && !refundEligible;
+
     const { data: claimedBooking } = await supabaseAdmin
       .from("bookings")
-      .update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: cancelledBy })
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: cancelledBy,
+        late_cancel: lateCancel,
+      })
       .eq("id", booking.id)
       .eq("status", "confirmed")
       .select()
@@ -246,53 +265,58 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Bu rezervasyon zaten iptal edilmiş." }, 400);
     }
 
-    const { data: payment } = await supabaseAdmin
-      .from("pending_payments")
-      .select("*")
-      .eq("booking_id", booking.id)
-      .eq("status", "succeeded")
-      .maybeSingle();
-
-    // a credit-covered booking never gets a pending_payments row (see
-    // this file's header) - so when the canceller is the teacher or an
-    // admin, check whether an existing lesson_credits row was spent on
-    // THIS booking, so that credit can come back. Only for a non-student
-    // canceller: looking this up for a student cancellation would reopen
-    // the farming loophole the header warns about.
-    const { data: consumedCredit } = (!payment && cancelledBy !== "student")
-      ? await supabaseAdmin
-        .from("lesson_credits")
-        .select("id")
-        .eq("used_booking_id", booking.id)
-        .eq("status", "used")
-        .maybeSingle()
-      : { data: null };
-
     let refunded = false;
 
-    if (refundEligible && (payment?.status === "succeeded" || consumedCredit)) {
-      const { error: creditError } = await supabaseAdmin.from("lesson_credits").insert({
-        student_id: booking.student_id,
-        teacher_id: booking.teacher_id,
-        teacher_name: booking.teacher_name,
-        source_booking_id: booking.id,
-      });
+    if (refundEligible) {
+      const { data: payment } = await supabaseAdmin
+        .from("pending_payments")
+        .select("id")
+        .eq("booking_id", booking.id)
+        .eq("status", "succeeded")
+        .maybeSingle();
 
-      if (creditError) {
-        console.error("lesson credit grant failed", creditError);
+      if (payment) {
+        // card-paid: the lesson goes back as a new credit with this teacher
+        const { error: creditError } = await supabaseAdmin.from("lesson_credits").insert({
+          student_id: booking.student_id,
+          teacher_id: booking.teacher_id,
+          teacher_name: booking.teacher_name,
+          source_booking_id: booking.id,
+        });
+        if (creditError) console.error("lesson credit grant failed", creditError);
+        else refunded = true;
       } else {
-        refunded = true;
+        // credit-paid (no pending_payments row - see this file's header):
+        // the very credit that paid for it comes back. Conditional on it
+        // still being "used" by THIS booking, so two racing calls can't
+        // both count it as restored.
+        const { data: restoredCredit, error: restoreError } = await supabaseAdmin
+          .from("lesson_credits")
+          .update({ status: "available", used_booking_id: null, used_at: null })
+          .eq("used_booking_id", booking.id)
+          .eq("status", "used")
+          .select("id")
+          .maybeSingle();
+        if (restoreError) console.error("lesson credit restore failed", restoreError);
+        else if (restoredCredit) refunded = true;
+      }
+
+      if (refunded) {
         await supabaseAdmin.from("bookings").update({ refunded: true }).eq("id", booking.id);
       }
     }
 
     const studentNote = refunded
-      ? "Bu ders için bir ders hakkı kazandın, dilediğin zaman kullanabilirsin."
+      ? "Bu ders ders hakkı olarak bakiyene geri eklendi, dilediğin zaman kullanabilirsin."
       : (cancelledBy === "student"
-        ? "Derse 4 saatten az kaldığı için ders hakkı kazanılmadı."
+        ? "Derse 12 saatten az kaldığı için ders hakkı iade edilmedi."
         : "Bu ders için bir şey ödemene gerek kalmadı.");
     const teacherNote = cancelledBy === "student"
-      ? "Bu saatin artık boş, başka bir öğrenci rezervasyon yapabilir."
+      ? (lateCancel
+        ? (booking.type === "trial"
+          ? "Öğrenci derse 12 saatten az kala iptal etti. Bu saatin artık boş, başka bir öğrenci rezervasyon yapabilir."
+          : "Öğrenci derse 12 saatten az kala iptal ettiği için bu dersin ücreti sana ödenecek. Bu saatin artık boş, başka bir öğrenci rezervasyon yapabilir.")
+        : "Bu saatin artık boş, başka bir öğrenci rezervasyon yapabilir.")
       : "İptalin kaydedildi.";
 
     const [{ data: studentProfile }, teacherProfileRes] = await Promise.all([
@@ -327,7 +351,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    return jsonResponse({ ok: true, refunded, refundEligible });
+    return jsonResponse({ ok: true, refunded, refundEligible, lateCancel });
 
   } catch (err) {
     console.error(err);

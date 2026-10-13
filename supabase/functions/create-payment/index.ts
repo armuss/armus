@@ -209,21 +209,36 @@ function isHalfHourSlot(timeStr: string) {
 }
 
 // mirrors bookings.js's armusSlotsForDate: a teacher's per-date grid
-// (availability_dates, keyed by day-of-week string) wins when set,
-// otherwise their older weekly_availability array (indexed by
-// day-of-week number). A teacher with neither set has never declared
-// any working hours at all, so nothing is bookable for them.
+// (availability_dates, keyed by day-of-week string) wins only once the
+// teacher has saved through dashboard.html's editor at least once (the
+// _set sentinel it writes), otherwise their older weekly_availability
+// array (indexed by day-of-week number). A teacher with neither set has
+// never declared any working hours at all, so nothing is bookable.
+//
+// This used to decide on Object.keys(availability_dates).length instead
+// of _set - the exact rule #202 replaced everywhere else (the picker,
+// dashboard.html, mobile) but missed here. availability_dates briefly
+// had a real-date-keyed shape before migration_19.sql (never
+// backfilled), so a teacher set up back then still has a nonempty
+// object with no _set and no "0".."6" keys: the picker correctly fell
+// back to weekly_availability and showed real open slots, while this
+// treated the stale object as authoritative, found no day-of-week key,
+// and rejected every single booking for that teacher with "Öğretmen bu
+// saatte müsait değil".
 function isSlotInTeacherAvailability(
   weeklyAvailability: unknown,
   availabilityDates: unknown,
   dayOfWeek: number,
   time: string,
 ): boolean {
-  if (availabilityDates && typeof availabilityDates === "object" && Object.keys(availabilityDates as object).length) {
-    const daySlots = (availabilityDates as Record<string, string[]>)[String(dayOfWeek)] || [];
+  if (
+    availabilityDates && typeof availabilityDates === "object" &&
+    (availabilityDates as Record<string, unknown>)._set === true
+  ) {
+    const daySlots = (availabilityDates as Record<string, unknown>)[String(dayOfWeek)];
     return Array.isArray(daySlots) && daySlots.includes(time);
   }
-  if (Array.isArray(weeklyAvailability) && weeklyAvailability.length) {
+  if (Array.isArray(weeklyAvailability)) {
     const daySlots = weeklyAvailability[dayOfWeek];
     return Array.isArray(daySlots) && daySlots.includes(time);
   }
@@ -537,6 +552,13 @@ Deno.serve(async (req) => {
         // either way.
         if (bookingError?.code === "23505" || bookingError?.code === "AR001") {
           return jsonResponse({ error: "Bu saat başka bir öğrenci tarafından alındı. Lütfen başka bir saat seç." }, 409);
+        }
+        // AR002 = bookings_enforce_teacher_not_banned (migration_104.sql):
+        // the teacher's account was closed in the instant between this
+        // request's own is_banned check above and this insert. The credit
+        // was already released back above, nothing was charged.
+        if (bookingError?.code === "AR002") {
+          return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
         }
         console.error("credit-covered booking insert failed", bookingError);
         return jsonResponse({ error: "Rezervasyon oluşturulamadı." }, 500);
