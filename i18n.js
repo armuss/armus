@@ -409,6 +409,8 @@ const ARMUS_I18N_EN = {
   "faq.a17": "Yes, you can cancel from the \"My Lessons\" page any time before the lesson starts. If you cancel at least 12 hours before the lesson, it goes back to your balance; you can use that credit with the same teacher, or for a trial lesson with another teacher. If you cancel less than 12 hours before the lesson, it's marked \"Cancelled and paid\" and no credit is returned - the teacher reserved that hour for you, so the fee is paid to them. If the teacher or ARMUS cancels a lesson, you always get a full lesson credit.",
   "faq.q18": "What happens if a student cancels my lesson at the last minute?",
   "faq.a18": "If a student cancels a regular lesson less than 12 hours before it starts, you're paid for it since you reserved that hour for them: once the lesson time has passed, it's added to the earnings on your panel (it doesn't count toward your completed teaching hours). Trial lessons are the exception - the fee for a trial lesson cancelled at the last minute stays with ARMUS. If the student cancels more than 12 hours ahead, they get their lesson credit back.",
+  "faq.q19": "Why don't I see the \"Cancel Lesson\" button?",
+  "faq.a19": "A lesson can only be cancelled before it starts - the button disappears once the lesson time arrives, or if the lesson was already cancelled. If the lesson took place and something didn't go as planned, use the \"Report an issue\" button under that lesson on the \"My Lessons\" page.",
   "faq.ctaText": "Couldn't find the answer you were looking for?",
   "faq.ctaBtn": "Contact us",
 
@@ -539,6 +541,8 @@ const ARMUS_I18N_EN = {
   "myLessons.refundHintNoTrial": "Less than 12 hours to go: if you cancel, the trial lesson won't go back to your balance",
   "myLessons.cancelConfirmLateWarning": "Heads up:",
   "myLessons.cancelledPaid": "⊘ Cancelled and paid",
+  "myLessons.sectionUpcoming": "Upcoming lessons",
+  "myLessons.sectionHistory": "Past",
   "myLessons.cancelledPaidSuffix": " · cancelled less than 12 hours before the lesson, so no credit was returned",
   "myLessons.cancelConfirm": "Are you sure you want to cancel your lesson with {name} on {date} at {time}?",
 
