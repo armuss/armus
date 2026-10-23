@@ -1548,6 +1548,51 @@
       font-weight: 400;
     }
 
+    .propose-btn-sm {
+      display: inline-block;
+      border: 1px solid var(--armus-border);
+      border-radius: 8px;
+      padding: 4px 11px;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .propose-btn-sm.primary {
+      border-color: transparent;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .propose-btn-sm:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .booking-reschedule {
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cancel-allowance {
+      font-size: 12.5px;
+      color: var(--armus-muted);
+      margin: 0 0 14px;
+    }
+
+    .cancel-allowance strong {
+      color: var(--armus-ink);
+    }
+
     .cancel-btn-sm {
       display: inline-block;
       border: 1px solid rgba(220, 90, 90, .4);
@@ -2292,6 +2337,7 @@
           </div>
         </div>
 
+        <p class="cancel-allowance" id="cancelAllowance" hidden></p>
         <div id="incomingBookings"></div>
         <div class="empty-state" id="incomingEmpty" data-i18n="teacherDash.noBookingsYet">
           Henüz rezervasyon yok. Profilin Öğretmenler listesinde
@@ -2539,7 +2585,8 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=9"></script>
+  <script src="bookings.js?v=10"></script>
+  <script src="reschedule.js?v=1"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
@@ -3845,6 +3892,24 @@
       renderResponseTime();
       document.addEventListener("armus:langchange", renderResponseTime);
 
+      // ---- monthly cancellation allowance (migration_107.sql) ----
+      const teacherTimezone = user.timezone || "Europe/Istanbul";
+      const cancelsLeft = () => Math.max(0, ARMUS_TEACHER_MONTHLY_CANCEL_LIMIT - armusTeacherCancelsThisMonth(incomingBookings, teacherTimezone));
+      function renderCancelAllowance() {
+        const el = document.getElementById("cancelAllowance");
+        el.innerHTML = armusT("teacherDash.cancelAllowance", "Bu ay kalan iptal hakkın: <strong>{left} / {limit}</strong> · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan - iptal hakkından düşmez.")
+          .replace("{left}", cancelsLeft())
+          .replace("{limit}", ARMUS_TEACHER_MONTHLY_CANCEL_LIMIT);
+        el.hidden = incomingBookings.length === 0;
+      }
+      renderCancelAllowance();
+      document.addEventListener("armus:langchange", renderCancelAllowance);
+
+      // open "move this lesson" requests on lessons that can still move
+      const pendingRescheduleByBooking = await armusGetPendingRescheduleRequests(
+        activeBookings.filter(armusBookingCancellable).map(b => b.id)
+      ).catch(() => ({}));
+
       // ---- bookings grouped by student, with private notes ----
 
       if (incomingBookings.length === 0) {
@@ -3860,6 +3925,20 @@
         });
 
         const reviewByBookingId = Object.fromEntries(teacherReviews.map(r => [r.bookingId, r]));
+
+        // an open request on this lesson: the student's (answer it) or
+        // this teacher's own proposal (withdraw it)
+        function rescheduleHtml(booking) {
+          const req = pendingRescheduleByBooking[booking.id];
+          if (!req || !armusBookingCancellable(booking)) return "";
+          const slot = armusEscapeHtml(armusFormatRescheduleSlot(req.newDate, req.newTime, booking.teacherTimezone));
+          return req.requestedBy === "student"
+            ? `<div class="booking-reschedule">${armusT("teacherDash.studentRequestedTime", "Öğrenci yeni bir saat istedi:")} <strong>${slot}</strong>
+                 <button type="button" class="propose-btn-sm primary" data-rs-accept="${req.id}">${armusT("teacherDash.rescheduleAccept", "Kabul Et")}</button>
+                 <button type="button" class="propose-btn-sm" data-rs-decline="${req.id}">${armusT("teacherDash.rescheduleDecline", "Reddet")}</button></div>`
+            : `<div class="booking-reschedule">${armusT("teacherDash.proposalPending", "Önerin öğrenci onayı bekliyor:")} <strong>${slot}</strong>
+                 <button type="button" class="propose-btn-sm" data-rs-withdraw="${req.id}">${armusT("teacherDash.rescheduleWithdraw", "Geri Çek")}</button></div>`;
+        }
 
         bookingsByStudent.forEach((studentBookings, studentId) => {
 
@@ -3919,10 +3998,12 @@
                   <strong>${armusEscapeHtml(booking.studentName)}</strong>
                   <div class="booking-tags">${tags}</div>
                   <div class="booking-earning${(isPast && countsAsEarned) || (isCancelled && !(isPaidLateCancel && !isPast)) ? "" : " pending"}">${earningHtml}</div>
+                  ${rescheduleHtml(booking)}
                 </div>
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
+                  ${armusBookingCancellable(booking) && !pendingRescheduleByBooking[booking.id] ? `<br><button type="button" class="propose-btn-sm" data-propose-booking="${booking.id}">${armusT("teacherDash.proposeTime", "Saat Öner")}</button>` : ""}
                   ${armusBookingCancellable(booking) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
                 </div>
               </div>
@@ -3999,10 +4080,64 @@
             setTimeout(() => status.classList.remove("visible"), 2000);
           });
 
+          const rescheduleAction = (selector, call) => {
+            group.querySelectorAll(selector).forEach(button => {
+              button.addEventListener("click", async () => {
+                button.disabled = true;
+                const result = await call(button);
+                if (!result.ok) {
+                  alert(result.error);
+                  button.disabled = false;
+                  return;
+                }
+                window.location.reload();
+              });
+            });
+          };
+          rescheduleAction("[data-rs-accept]", b => armusRespondReschedule(b.dataset.rsAccept, true));
+          rescheduleAction("[data-rs-decline]", b => armusRespondReschedule(b.dataset.rsDecline, false));
+          rescheduleAction("[data-rs-withdraw]", b => armusWithdrawReschedule(b.dataset.rsWithdraw));
+
+          group.querySelectorAll("[data-propose-booking]").forEach(button => {
+            button.addEventListener("click", async () => {
+              const booking = incomingBookings.find(b => b.id === button.dataset.proposeBooking);
+              if (!booking) return;
+              const pick = await armusOpenReschedulePicker({
+                teacher: null,
+                timeZone: booking.teacherTimezone || teacherTimezone,
+                busyTimes: activeBookings,
+                current: { date: booking.date, time: booking.time },
+                title: armusT("teacherDash.proposeTitle", "Öğrencine yeni bir saat öner"),
+                note: armusT("teacherDash.proposeNote", "Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez."),
+                confirmLabel: armusT("teacherDash.proposeConfirm", "Bu Saati Öner"),
+              });
+              if (!pick) return;
+              button.disabled = true;
+              const result = await armusRescheduleBooking(booking.id, pick.date, pick.time);
+              if (!result.ok) {
+                alert(result.error);
+                button.disabled = false;
+                return;
+              }
+              window.location.reload();
+            });
+          });
+
           group.querySelectorAll("[data-cancel-booking]").forEach(button => {
             button.addEventListener("click", async () => {
 
-              if (!confirm(armusT("teacherDash.cancelBookingConfirm", "Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir."))) return;
+              // migration_107.sql: 3 of the teacher's own cancellations per
+              // month (cancelling a blocked student's lessons doesn't count)
+              const counts = !blockedStudents.has(studentId);
+              if (counts && cancelsLeft() <= 0) {
+                alert(armusT("teacherDash.cancelLimitReached", "Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz."));
+                return;
+              }
+              let confirmMsg = armusT("teacherDash.cancelBookingConfirm", "Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.");
+              if (counts) {
+                confirmMsg += "\n\n" + armusT("teacherDash.cancelBookingConfirmLimit", "Bu iptal, bu ayki iptal hakkından düşer (kalan: {left}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.").replace("{left}", cancelsLeft());
+              }
+              if (!confirm(confirmMsg)) return;
 
               button.disabled = true;
               button.textContent = armusT("teacherDash.cancelling", "İptal ediliyor...");

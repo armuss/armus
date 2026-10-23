@@ -117,6 +117,8 @@ function armusMapBookingRow(row) {
     refunded: row.refunded,
     lateCancel: row.late_cancel === true,
     teacherNoShow: row.teacher_no_show === true,
+    cancelledAt: row.cancelled_at || null,
+    countsAsTeacherCancel: row.counts_as_teacher_cancel === true,
     createdAt: row.created_at,
   };
 }
@@ -272,6 +274,57 @@ async function armusCancelBooking(bookingId) {
   return { ok: true, refunded: data.refunded, refundEligible: data.refundEligible, lateCancel: !!data.lateCancel };
 }
 
+// ---- rescheduling (reschedule-booking Edge Function, migration_107.sql) ----
+// Returns { ok: true, ...data } or { ok: false, error } - same shape as
+// armusCancelBooking above.
+async function armusInvokeReschedule(body, fallbackError) {
+  const { data, error } = await armusSupabase.functions.invoke("reschedule-booking", { body });
+  if (error || !data || !data.ok) {
+    const serverMessage = typeof armusEdgeErrorMessage === "function"
+      ? await armusEdgeErrorMessage(error)
+      : null;
+    return { ok: false, error: (data && data.error) || serverMessage || fallbackError };
+  }
+  return { ok: true, ...data };
+}
+
+// { ok, applied } - applied: the lesson moved right away (student, 12+
+// hours ahead); otherwise a request now waits for the other side
+function armusRescheduleBooking(bookingId, newDate, newTime) {
+  return armusInvokeReschedule(
+    { action: "request", booking_id: bookingId, new_date: newDate, new_time: newTime },
+    "Dersin saati değiştirilemedi.",
+  );
+}
+
+function armusRespondReschedule(requestId, accept) {
+  return armusInvokeReschedule({ action: "respond", request_id: requestId, accept: !!accept }, "İsteğe yanıt verilemedi.");
+}
+
+function armusWithdrawReschedule(requestId) {
+  return armusInvokeReschedule({ action: "withdraw", request_id: requestId }, "İstek geri çekilemedi.");
+}
+
+// open requests on these bookings (RLS: only the lesson's own student,
+// teacher or an admin ever gets rows back), keyed by booking id
+async function armusGetPendingRescheduleRequests(bookingIds) {
+  const ids = (bookingIds || []).filter(Boolean);
+  if (!ids.length) return {};
+  const { data, error } = await armusSupabase
+    .from("reschedule_requests")
+    .select("*")
+    .in("booking_id", ids)
+    .eq("status", "pending");
+  if (error || !data) return {};
+  return Object.fromEntries(data.map(r => [r.booking_id, {
+    id: r.id,
+    bookingId: r.booking_id,
+    requestedBy: r.requested_by,
+    newDate: r.new_date,
+    newTime: r.new_time,
+  }]));
+}
+
 // Turkish GSM normalization: "+90 555 112 51 21", "905551125121",
 // "0555 223 21 23" and bare "5551125121" are all the same number as far
 // as the payer is concerned - they just type whatever their contacts app
@@ -420,6 +473,22 @@ const ARMUS_FREE_CANCEL_HOURS = 12;
 
 function armusHoursUntilLesson(booking) {
   return (armusLessonWindow(booking).start - new Date()) / 3_600_000;
+}
+
+// A teacher can cancel at most this many of their own lessons per
+// calendar month (in their own timezone) - migration_107.sql's
+// bookings_enforce_teacher_cancel_limit trigger is the real gate; this
+// only lets dashboard.html show what's left.
+const ARMUS_TEACHER_MONTHLY_CANCEL_LIMIT = 3;
+
+function armusTeacherCancelsThisMonth(bookings, timeZone) {
+  const monthKey = d => new Intl.DateTimeFormat("en-CA", {
+    timeZone: timeZone || "Europe/Istanbul", year: "numeric", month: "2-digit",
+  }).format(d);
+  const current = monthKey(new Date());
+  return (bookings || []).filter(b =>
+    b.countsAsTeacherCancel && b.cancelledAt && monthKey(new Date(b.cancelledAt)) === current
+  ).length;
 }
 
 // "Cancelled and Paid" (migration_105.sql): the student cancelled a

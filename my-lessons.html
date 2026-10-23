@@ -290,6 +290,48 @@
       font-size: 12.5px;
     }
 
+    .lesson-reschedule-btn {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .lesson-reschedule-btn.primary {
+      border-color: transparent;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .lesson-reschedule-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .lesson-reschedule {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--armus-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 14px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    .lesson-reschedule-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .lesson-cancel-wrap {
       margin-top: 14px;
       padding-top: 14px;
@@ -643,7 +685,8 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=9"></script>
+  <script src="bookings.js?v=10"></script>
+  <script src="reschedule.js?v=1"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script src="disputes.js?v=4"></script>
@@ -955,6 +998,12 @@
           );
           const reviewByBooking = new Map(reviewEntries);
 
+          // open "move this lesson" requests (reschedule-booking,
+          // migration_107.sql) on lessons that can still move
+          const pendingRescheduleByBooking = await armusGetPendingRescheduleRequests(
+            bookings.filter(armusBookingCancellable).map(b => b.id)
+          ).catch(() => ({}));
+
           // "Yaklaşan" / "Geçmiş" headings, same split as the sort above
           const upcomingHeading = document.createElement("div");
           upcomingHeading.className = "lessons-section-title";
@@ -1054,12 +1103,84 @@
                 ? armusT("myLessons.refundHintYes", "Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir - bu öğretmenle ya da başka bir öğretmenle deneme dersi için kullanabilirsin")
                 : lateCancelMessage();
 
+              // ---- moving the lesson (Preply-style rescheduling) ----
+              const pendingReschedule = pendingRescheduleByBooking[booking.id];
+              let rescheduleBlock = null;
+              if (pendingReschedule) {
+                const newSlotLabel = armusEscapeHtml(armusFormatRescheduleSlot(pendingReschedule.newDate, pendingReschedule.newTime, booking.teacherTimezone));
+                rescheduleBlock = document.createElement("div");
+                rescheduleBlock.className = "lesson-reschedule";
+                rescheduleBlock.innerHTML = pendingReschedule.requestedBy === "teacher"
+                  ? `<span>${armusT("myLessons.teacherProposedTime", "Öğretmenin bu ders için yeni bir saat önerdi:")} <strong>${newSlotLabel}</strong></span>
+                     <span class="lesson-reschedule-actions">
+                       <button type="button" class="lesson-reschedule-btn primary" data-rs-accept>${armusT("myLessons.rescheduleAccept", "Kabul Et")}</button>
+                       <button type="button" class="lesson-reschedule-btn" data-rs-decline>${armusT("myLessons.rescheduleDecline", "Reddet")}</button>
+                     </span>`
+                  : `<span>${armusT("myLessons.rescheduleRequested", "Saat değişikliği isteğin öğretmen onayı bekliyor:")} <strong>${newSlotLabel}</strong></span>
+                     <span class="lesson-reschedule-actions">
+                       <button type="button" class="lesson-reschedule-btn" data-rs-withdraw>${armusT("myLessons.rescheduleWithdraw", "İsteği Geri Çek")}</button>
+                     </span>`;
+                const act = async (button, call) => {
+                  rescheduleBlock.querySelectorAll("button").forEach(b => { b.disabled = true; });
+                  const result = await call();
+                  if (!result.ok) {
+                    alert(result.error);
+                    rescheduleBlock.querySelectorAll("button").forEach(b => { b.disabled = false; });
+                    return;
+                  }
+                  location.reload();
+                };
+                rescheduleBlock.querySelector("[data-rs-accept]")?.addEventListener("click", e => act(e.currentTarget, () => armusRespondReschedule(pendingReschedule.id, true)));
+                rescheduleBlock.querySelector("[data-rs-decline]")?.addEventListener("click", e => act(e.currentTarget, () => armusRespondReschedule(pendingReschedule.id, false)));
+                rescheduleBlock.querySelector("[data-rs-withdraw]")?.addEventListener("click", e => act(e.currentTarget, () => armusWithdrawReschedule(pendingReschedule.id)));
+                card.appendChild(rescheduleBlock);
+              }
+
+              // the teacher's open hours are needed to offer new times - not
+              // available when the teacher is no longer listed; a teacher's
+              // own pending proposal gets answered first
+              const canReschedule = !!teacher && !(pendingReschedule && pendingReschedule.requestedBy === "teacher");
+
               const cancelWrap = document.createElement("div");
               cancelWrap.className = "lesson-cancel-wrap";
               cancelWrap.innerHTML = `
+                ${canReschedule ? `<button type="button" class="lesson-reschedule-btn" data-reschedule>${armusT("myLessons.rescheduleBtn", "Saati Değiştir")}</button>` : ""}
                 <button type="button" class="lesson-cancel-btn">${armusT("myLessons.cancelBtn", "Dersi İptal Et")}</button>
                 <span class="lesson-cancel-hint">${refundHint}</span>
               `;
+
+              cancelWrap.querySelector("[data-reschedule]")?.addEventListener("click", async (e) => {
+                const btn = e.currentTarget;
+                btn.disabled = true;
+                const busy = await armusGetTeacherBusyTimes(booking.teacherId).catch(() => []);
+                btn.disabled = false;
+                // re-checked now, not when the page loaded
+                const late = armusHoursUntilLesson(booking) < ARMUS_FREE_CANCEL_HOURS;
+                const pick = await armusOpenReschedulePicker({
+                  teacher,
+                  timeZone: booking.teacherTimezone || teacher.timezone,
+                  busyTimes: busy,
+                  current: { date: booking.date, time: booking.time },
+                  title: armusT("myLessons.rescheduleTitle", "Dersin için yeni bir saat seç"),
+                  note: late
+                    ? armusT("myLessons.rescheduleLateNote", "Derse 12 saatten az kaldı: seçtiğin saat öğretmenin onayına gönderilir. Ders başlayana kadar onaylamazsa ders eski saatinde kalır.")
+                    : armusT("myLessons.rescheduleNote", "Dersin hemen yeni saate taşınır - ücret değişmez, öğretmenine e-posta ile haber verilir."),
+                  confirmLabel: late
+                    ? armusT("myLessons.rescheduleSendRequest", "Öğretmene İstek Gönder")
+                    : armusT("myLessons.rescheduleConfirm", "Dersi Bu Saate Taşı"),
+                });
+                if (!pick) return;
+                btn.disabled = true;
+                btn.textContent = armusT("myLessons.rescheduling", "Gönderiliyor...");
+                const result = await armusRescheduleBooking(booking.id, pick.date, pick.time);
+                if (!result.ok) {
+                  alert(result.error);
+                  btn.disabled = false;
+                  btn.textContent = armusT("myLessons.rescheduleBtn", "Saati Değiştir");
+                  return;
+                }
+                location.reload();
+              });
 
               cancelWrap.querySelector(".lesson-cancel-btn").addEventListener("click", async () => {
 
@@ -1094,6 +1215,7 @@
                   </div>
                 `;
                 if (disputeBlock) disputeBlock.remove();
+                if (rescheduleBlock) rescheduleBlock.remove();
 
                 // the lesson leaves the upcoming list right away - newest
                 // entry at the top of history, as a reload would order it
