@@ -16,6 +16,10 @@
 //     happened, since their time was reserved (a late-cancelled TRIAL
 //     follows the existing trial rule - its fee stays with ARMUS). The
 //     booking is still cancelled either way, which frees the slot.
+// A teacher can cancel at most 3 lessons per calendar month
+// (migration_107.sql's bookings_enforce_teacher_cancel_limit refuses the
+// 4th with AR003). Cancelling the lessons of a student the teacher is
+// blocking (teacher-blocks.js) doesn't count - see counts_as_teacher_cancel.
 // "Goes back to the balance" means: a card-paid lesson grants a new
 // lesson credit tied to that teacher; a lesson that was itself paid
 // for with a credit gets THAT SAME credit back (status flipped back to
@@ -248,18 +252,40 @@ Deno.serve(async (req) => {
     // window (see this file's header)
     const lateCancel = cancelledBy === "student" && !refundEligible;
 
-    const { data: claimedBooking } = await supabaseAdmin
+    // migration_107.sql: a teacher's own cancellation counts toward their
+    // monthly cap - unless they're blocking this student (teacher-blocks.js
+    // inserts the block first, then cancels the pair's lessons)
+    let countsAsTeacherCancel = false;
+    if (cancelledBy === "teacher") {
+      const { data: block } = await supabaseAdmin
+        .from("blocked_students")
+        .select("id")
+        .eq("teacher_id", user.id)
+        .eq("student_id", booking.student_id)
+        .maybeSingle();
+      countsAsTeacherCancel = !block;
+    }
+
+    const { data: claimedBooking, error: claimError } = await supabaseAdmin
       .from("bookings")
       .update({
         status: "cancelled",
         cancelled_at: new Date().toISOString(),
         cancelled_by: cancelledBy,
         late_cancel: lateCancel,
+        counts_as_teacher_cancel: countsAsTeacherCancel,
       })
       .eq("id", booking.id)
       .eq("status", "confirmed")
       .select()
       .maybeSingle();
+
+    if (claimError?.code === "AR003") {
+      return jsonResponse({
+        error: "Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.",
+        limitReached: true,
+      }, 409);
+    }
 
     if (!claimedBooking) {
       return jsonResponse({ error: "Bu rezervasyon zaten iptal edilmiş." }, 400);
