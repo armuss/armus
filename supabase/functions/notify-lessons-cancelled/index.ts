@@ -1,10 +1,14 @@
 // ARMUS - emails each affected student when their lessons are cancelled
-// by the system rather than by a person. Today that's one case: a
-// teacher's account being closed by the attendance system (10 upheld
-// no-shows), which cancels every one of that teacher's upcoming lessons
-// in the same transaction - see migration_104.sql's
-// profiles_cancel_lessons_on_ban trigger, the only caller. Never called
-// by the site itself.
+// by the system rather than by a person. Never called by the site
+// itself. Two callers, each passing its own reason:
+//   - "teacher_banned": a teacher's account was closed by the attendance
+//     system (10 upheld no-shows), which cancels every one of that
+//     teacher's upcoming lessons (migration_104.sql's
+//     profiles_cancel_lessons_on_ban trigger)
+//   - "teacher_no_show": an admin upheld a student's report that the
+//     teacher never showed up, which cancels that lesson and gives it
+//     back to the student (migration_106.sql's
+//     handle_attendance_report_resolution)
 //
 // IMPORTANT: after deploying this function, go to its Settings and turn
 // OFF "Verify JWT" (Enforce JWT Verification) - the trigger's HTTP call
@@ -113,9 +117,20 @@ function noteFor(reason: string, refunded: boolean) {
       ? "Öğretmenin hesabı kapatıldığı için bu ders iptal edildi. Bu ders için bir ders hakkı kazandın - başka bir öğretmenle deneme dersi almak için kullanabilirsin."
       : "Öğretmenin hesabı kapatıldığı için bu ders iptal edildi.";
   }
+  if (reason === "teacher_no_show") {
+    return refunded
+      ? "Öğretmenin bu derse gelmediği doğrulandı. Ders, ders hakkı olarak bakiyene geri eklendi - aynı öğretmenle ya da başka bir öğretmenle deneme dersi için kullanabilirsin."
+      : "Öğretmenin bu derse gelmediği doğrulandı.";
+  }
   return refunded
     ? "Bu ders iptal edildi. Bu ders için bir ders hakkı kazandın."
     : "Bu ders iptal edildi.";
+}
+
+function subjectFor(reason: string) {
+  return reason === "teacher_no_show"
+    ? "Dersin iade edildi - ARMUS"
+    : "Bir dersin iptal edildi - ARMUS";
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -172,7 +187,7 @@ Deno.serve(async (req) => {
       const lessonStart = armusZonedTimeToUtc(b.lesson_date, b.lesson_time, b.teacher_timezone);
       await sendEmail(
         student.email,
-        "Bir dersin iptal edildi - ARMUS",
+        subjectFor(reason),
         cancelledEmailHtml(
           student.name,
           shortDisplayName(b.teacher_name),

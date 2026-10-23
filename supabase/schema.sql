@@ -117,6 +117,11 @@ alter table bookings add column if not exists refunded boolean not null default 
 -- unconverted trial). Not backfilled - earlier late cancellations
 -- happened under the old policy, where the teacher wasn't paid.
 alter table bookings add column if not exists late_cancel boolean not null default false;
+-- migration_106.sql: an upheld teacher no-show report cancelled this
+-- lesson and returned it to the student (handle_attendance_report_resolution
+-- -> refund_teacher_no_show_lesson) - it never happened, so it's out of
+-- the teacher's pay too. Lets my-lessons/dashboard/admin say why.
+alter table bookings add column if not exists teacher_no_show boolean not null default false;
 
 -- which IANA zone lesson_date/lesson_time (above) is wall-clock time IN -
 -- a snapshot of the teacher's profiles.timezone at booking time (see
@@ -1908,6 +1913,75 @@ create trigger attendance_reports_after_insert
   after insert on attendance_reports
   for each row execute procedure public.handle_new_attendance_report();
 
+-- migration_106.sql: cancels one no-show lesson and returns it to the
+-- student, same rule as cancel-booking for a teacher/admin cancellation
+-- (card-paid -> a new lesson credit with that teacher, credit-paid ->
+-- that SAME credit back). Returns true only when THIS call did it (the
+-- booking was still confirmed), so the caller knows whether to email.
+-- Never callable by a client: it would let anyone "refund" any booking
+-- they could name.
+create or replace function public.refund_teacher_no_show_lesson(p_booking_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  b record;
+begin
+  update bookings
+  set status = 'cancelled', cancelled_at = now(), cancelled_by = 'admin', teacher_no_show = true
+  where id = p_booking_id and status = 'confirmed'
+  returning id, student_id, teacher_id, teacher_name into b;
+
+  if not found then
+    return false;
+  end if;
+
+  if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
+    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
+    values (b.student_id, b.teacher_id, b.teacher_name, b.id);
+    update bookings set refunded = true where id = b.id;
+  else
+    update lesson_credits
+    set status = 'available', used_booking_id = null, used_at = null
+    where used_booking_id = b.id and status = 'used';
+    if found then
+      update bookings set refunded = true where id = b.id;
+    end if;
+  end if;
+
+  return true;
+end;
+$$;
+
+revoke all on function public.refund_teacher_no_show_lesson(uuid) from public, anon, authenticated;
+
+-- migration_106.sql: emails the students (notify-lessons-cancelled caps
+-- one call at 500 ids)
+create or replace function public.notify_teacher_no_show_refunds(p_booking_ids uuid[])
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  n integer := coalesce(array_length(p_booking_ids, 1), 0);
+  i integer := 1;
+begin
+  while i <= n loop
+    perform net.http_post(
+      url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/notify-lessons-cancelled',
+      headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+      body := jsonb_build_object('booking_ids', to_jsonb(p_booking_ids[i:i + 499]), 'reason', 'teacher_no_show')
+    );
+    i := i + 500;
+  end loop;
+end;
+$$;
+
+revoke all on function public.notify_teacher_no_show_refunds(uuid[]) from public, anon, authenticated;
+
 -- escalates (or clears) once an admin resolves a report. The "late"
 -- branch measures "this calendar month" in the reported teacher's own
 -- timezone (migration_42.sql), not the database's session timezone, and
@@ -1975,6 +2049,13 @@ begin
   if new.status = 'upheld' then
 
     if new.type = 'no_show' then
+
+      -- migration_106.sql: the lesson never happened - back to the
+      -- student, out of the teacher's pay (it used to stay "confirmed"
+      -- and count as a completed, paid lesson)
+      if public.refund_teacher_no_show_lesson(new.booking_id) then
+        perform public.notify_teacher_no_show_refunds(array[new.booking_id]);
+      end if;
 
       select count(*) into total_no_shows
       from attendance_reports
