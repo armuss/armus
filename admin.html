@@ -1708,7 +1708,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=8"></script>
+  <script src="bookings.js?v=9"></script>
   <script src="reviews.js?v=5"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="disputes.js?v=4"></script>
@@ -2113,9 +2113,11 @@
         .forEach(b => {
           const isCancelled = b.status === "cancelled";
           const actionCell = isCancelled
-            ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", b.refunded
-              ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi")
-              : (b.lateCancel ? armusT("admin.lateCancelSuffix", " · son dakika iptali (ücretli)") : ""))
+            ? armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}",
+              (b.teacherNoShow ? armusT("admin.teacherNoShowSuffix", " · öğretmen gelmedi") : "")
+              + (b.refunded
+                ? armusT("admin.creditAddedSuffix", " · ders hakkı eklendi")
+                : (b.lateCancel ? armusT("admin.lateCancelSuffix", " · son dakika iptali (ücretli)") : "")))
             : !armusBookingCancellable(b)
               ? "—"
               : `<button class="btn btn-reject" data-cancel-booking="${b.id}">${armusT("admin.cancelBtn", "İptal Et")}</button>`;
@@ -3050,9 +3052,15 @@
 
       list.querySelectorAll("[data-attendance-status]").forEach(button => {
         button.addEventListener("click", async () => {
-          button.disabled = true;
           const id = button.dataset.attendanceStatus;
           const newStatus = button.dataset.newStatus;
+          // migration_106.sql: upholding a no-show moves money - make that explicit
+          const report = armusAdminAttendanceReports.find(x => x.id === id);
+          if (newStatus === "upheld" && report && report.type === "no_show"
+            && !confirm(armusT("admin.attendanceUpholdNoShowConfirm", "Doğrularsan bu ders iptal edilir, öğrenciye ders hakkı olarak iade edilir ve öğretmene ödenmez. Devam edilsin mi?"))) {
+            return;
+          }
+          button.disabled = true;
           const updated = await armusAdminResolveAttendanceReport(id, newStatus);
           if (updated) {
             armusAdminAttendanceReports = armusAdminAttendanceReports.map(x => x.id === id ? updated : x);

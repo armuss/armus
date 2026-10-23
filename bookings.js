@@ -116,6 +116,7 @@ function armusMapBookingRow(row) {
     cancelledBy: row.cancelled_by,
     refunded: row.refunded,
     lateCancel: row.late_cancel === true,
+    teacherNoShow: row.teacher_no_show === true,
     createdAt: row.created_at,
   };
 }

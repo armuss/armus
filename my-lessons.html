@@ -643,7 +643,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=8"></script>
+  <script src="bookings.js?v=9"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script src="disputes.js?v=4"></script>
@@ -657,6 +657,12 @@
     function lateCancelBadgeOr(isLateCancel, otherwiseHtml) {
       if (!isLateCancel) return otherwiseHtml;
       return `${armusT("myLessons.cancelledPaid", "⊘ İptal edildi ve ücretlendirildi")}${armusT("myLessons.cancelledPaidSuffix", " · derse 12 saatten az kala iptal edildiği için ders hakkı iade edilmedi")}`;
+    }
+
+    // migration_106.sql: an admin confirmed the teacher never showed up,
+    // so the lesson was cancelled and given back to the student
+    function teacherNoShowBadge(booking) {
+      return `${armusT("myLessons.teacherNoShow", "⊘ Öğretmen derse gelmedi")}${booking.refunded ? armusT("myLessons.teacherNoShowRefunded", " · Ders hakkın iade edildi") : ""}`;
     }
 
     (async function() {
@@ -1022,7 +1028,7 @@
               </${rowTag}>
               ${isCancelled ? `
                 <div class="lesson-cancel-badge">
-                  ${lateCancelBadgeOr(booking.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}`)}
+                  ${booking.teacherNoShow ? teacherNoShowBadge(booking) : lateCancelBadgeOr(booking.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}`)}
                 </div>
               ` : (canJoinNow || (!isPast && bookingLocalDateKey === todayKey)) ? `
                 <div class="lesson-join">

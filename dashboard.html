@@ -2539,7 +2539,7 @@
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=11"></script>
-  <script src="bookings.js?v=8"></script>
+  <script src="bookings.js?v=9"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
@@ -2694,7 +2694,7 @@
 
     const ATTENDANCE_RULES_TEXT = () => armusT(
       "teacherDash.attendanceRulesText",
-      "ARMUS kuralları: bir öğrenci dersine gelmediğini ya da geç kaldığını bildirdiğinde, incelenene kadar profilin yeni öğrencilerin aramasından gizlenir. Ekibimiz durumu değerlendirir. Tekrarlanan, doğrulanmış ihlaller daha ağır sonuçlar doğurur - toplamda 10 gelmeme profilinin tamamen kapatılmasına, bir ayda derslerinin %5'inden fazlasında geç kalman ise profilinin bir ay boyunca herkesten gizlenmesine yol açar."
+      "ARMUS kuralları: bir öğrenci dersine gelmediğini ya da geç kaldığını bildirdiğinde, incelenene kadar profilin yeni öğrencilerin aramasından gizlenir. Ekibimiz durumu değerlendirir. Gelmediğin doğrulanan bir dersin ücreti sana ödenmez, ders öğrenciye iade edilir. Tekrarlanan, doğrulanmış ihlaller daha ağır sonuçlar doğurur - toplamda 10 gelmeme profilinin tamamen kapatılmasına, bir ayda derslerinin %5'inden fazlasında geç kalman ise profilinin bir ay boyunca herkesten gizlenmesine yol açar."
     );
 
     // Promise-based: resolves with { reason, note } once the teacher
@@ -3888,7 +3888,7 @@
                 firstBookingIdByStudent.has(booking.id) ? `<span class="booking-tag tag-first">${armusT("teacherDash.tagFirstLesson", "🟢 İlk Ders")}</span>` : "",
                 booking.type === "trial" ? `<span class="booking-tag tag-trial">${armusT("teacherDash.tagTrial", "🔵 Deneme Dersi")}</span>` : `<span class="booking-tag tag-lesson">${armusT("teacherDash.tagLesson", "🟣 Ders")}</span>`,
                 isCancelled
-                  ? `<span class="booking-tag tag-cancelled">${booking.lateCancel ? armusT("teacherDash.tagLateCancelled", "⊘ Son dakika iptali") : armusT("teacherDash.tagCancelled", "⊘ İptal edildi")}</span>`
+                  ? `<span class="booking-tag tag-cancelled">${booking.teacherNoShow ? armusT("teacherDash.tagTeacherNoShow", "⊘ Gelmedin (doğrulandı)") : booking.lateCancel ? armusT("teacherDash.tagLateCancelled", "⊘ Son dakika iptali") : armusT("teacherDash.tagCancelled", "⊘ İptal edildi")}</span>`
                   : (isPast ? `<span class="booking-tag tag-done">${armusT("teacherDash.tagCompleted", "✓ Tamamlandı")}</span>` : `<span class="booking-tag tag-upcoming">${armusT("teacherDash.tagUpcoming", "🕒 Yaklaşıyor")}</span>`),
                 review ? `<span class="booking-tag tag-review">★ ${review.stars}</span>` : "",
               ].join("");
@@ -3902,6 +3902,9 @@
                 ? (isPast
                   ? `${armusT("teacherDash.earningLateCancelEarned", "Yine de ücreti sana ödendi:")} <strong>₺${net}</strong> <span style="opacity:.7;">${armusT("teacherDash.earningEarnedHint", "(₺{price} - %{rate} komisyon)").replace("{price}", booking.price).replace("{rate}", tier.rate)}</span>`
                   : `${armusT("teacherDash.earningLateCancelPending", "Yine de ücreti sana ödenecek:")} <strong>₺${booking.price}</strong> <span style="opacity:.7;">${armusT("teacherDash.earningLateCancelPendingHint", "(öğrenci derse 12 saatten az kala iptal etti)")}</span>`)
+                // migration_106.sql: an upheld no-show - never paid
+                : booking.teacherNoShow
+                ? `${armusT("teacherDash.earningTeacherNoShow", "Ödenmedi")} <span style="opacity:.7;">${armusT("teacherDash.earningTeacherNoShowHint", "(derse gelmediğin doğrulandı, ders öğrenciye iade edildi)")}</span>`
                 : isCancelled
                 ? `${armusT("teacherDash.earningCancelled", "İptal edildi")}${booking.refunded ? armusT("teacherDash.earningCancelledCredit", " · öğrenciye ders hakkı eklendi") : ""}`
                 : !countsAsEarned

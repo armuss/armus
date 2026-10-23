@@ -97,11 +97,21 @@ test("armusSlotsForDate - falls back to weeklyAvailability when availabilityDate
 });
 
 test("armusSlotsForDate - an already-booked (busy) time is never offered, even if the teacher's grid allows it", () => {
-  const teacher = { id: "t1", weeklyAvailability: { 1: ["10:00", "10:30"] } };
+  const teacher = { id: "t1", weeklyAvailability: { 1: ["10:00", "11:00"] } };
   const busy = [{ date: "2026-09-28", time: "10:00" }];
   const slots = ctx.armusSlotsForDate(teacher, "2026-09-28", 1, busy);
   const available = plain(slots.filter(s => s.available).map(s => s.time));
-  assert.deepEqual(available, ["10:30"]);
+  assert.deepEqual(available, ["11:00"]);
+});
+
+// a lesson runs 50 minutes on a 30-minute grid (migration_103.sql), so a
+// 10:00 booking also rules out 09:30 and 10:30
+test("armusSlotsForDate - slots overlapping a booked lesson are not offered", () => {
+  const teacher = { id: "t1", weeklyAvailability: { 1: ["09:00", "09:30", "10:00", "10:30", "11:00"] } };
+  const busy = [{ date: "2026-09-28", time: "10:00" }];
+  const slots = ctx.armusSlotsForDate(teacher, "2026-09-28", 1, busy);
+  const available = plain(slots.filter(s => s.available).map(s => s.time));
+  assert.deepEqual(available, ["09:00", "11:00"]);
 });
 
 test("armusSlotsForDate - a cancelled busy row doesn't block the slot", () => {
