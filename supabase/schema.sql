@@ -339,6 +339,12 @@ create table lesson_credits (
   used_at timestamptz
 );
 
+-- migration_108.sql: a credit the student got because the TEACHER failed
+-- them (an upheld no-show, or the teacher's account being closed) is good
+-- for any lesson with any teacher, not just a trial elsewhere
+-- (create-payment). Set only by the database itself.
+alter table lesson_credits add column if not exists any_teacher boolean not null default false;
+
 alter table lesson_credits enable row level security;
 
 create policy "lesson_credits_select_own" on lesson_credits
@@ -1942,13 +1948,15 @@ begin
     return false;
   end if;
 
+  -- same rule as cancel-booking for a teacher/admin cancellation, except
+  -- the credit is good with any teacher (migration_108.sql)
   if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
-    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
-    values (b.student_id, b.teacher_id, b.teacher_name, b.id);
+    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id, any_teacher)
+    values (b.student_id, b.teacher_id, b.teacher_name, b.id, true);
     update bookings set refunded = true where id = b.id;
   else
     update lesson_credits
-    set status = 'available', used_booking_id = null, used_at = null
+    set status = 'available', used_booking_id = null, used_at = null, any_teacher = true
     where used_booking_id = b.id and status = 'used';
     if found then
       update bookings set refunded = true where id = b.id;
@@ -3313,16 +3321,15 @@ begin
     returning id, student_id, teacher_id, teacher_name
   loop
     -- same rule as cancel-booking: a card-paid lesson comes back as a
-    -- new credit with this teacher; a credit-paid one gets that SAME
-    -- credit back (never a freshly minted one - see cancel-booking's
-    -- header for why)
+    -- new credit; a credit-paid one gets that SAME credit back - either
+    -- way good with any teacher (migration_108.sql)
     if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
-      insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
-      values (b.student_id, b.teacher_id, b.teacher_name, b.id);
+      insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id, any_teacher)
+      values (b.student_id, b.teacher_id, b.teacher_name, b.id, true);
       update bookings set refunded = true where id = b.id;
     else
       update lesson_credits
-      set status = 'available', used_booking_id = null, used_at = null
+      set status = 'available', used_booking_id = null, used_at = null, any_teacher = true
       where used_booking_id = b.id and status = 'used';
       if found then
         update bookings set refunded = true where id = b.id;
@@ -3331,6 +3338,13 @@ begin
 
     cancelled_ids := cancelled_ids || b.id;
   end loop;
+
+  -- whatever the students still hold with this teacher (the rest of a
+  -- package, an earlier cancellation's credit) can't be used with them
+  -- anymore - make it good with anyone
+  update lesson_credits
+  set any_teacher = true
+  where teacher_id = new.id::text and status = 'available';
 
   if coalesce(array_length(cancelled_ids, 1), 0) > 0 then
     perform net.http_post(

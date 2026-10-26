@@ -424,6 +424,9 @@ Deno.serve(async (req) => {
         student_id: pending.student_id,
         teacher_id: pending.teacher_id,
         teacher_name: pending.teacher_name,
+        // migration_108.sql: a banned teacher can't be booked again - the
+        // credit has to be good with anyone
+        any_teacher: bookingError?.code === "AR002",
       });
       // 'slot_taken' (migration_84.sql), not 'paid_no_booking' - this is
       // a fully resolved outcome (credit already granted), not a stuck

@@ -735,7 +735,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
-  <script src="auth.js?v=11"></script>
+  <script src="auth.js?v=12"></script>
   <script src="bookings.js?v=10"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
@@ -1033,8 +1033,9 @@
       }
 
       // A lesson credit (from a cancellation, see cancel-booking) covers
-      // this booking fully if it's tied to this same teacher, or if it's
-      // any credit at all and this is a trial lesson - see migration_28.sql
+      // this booking fully if it's tied to this same teacher, if it's an
+      // any_teacher credit, or if it's any credit at all and this is a
+      // trial lesson - see migration_28.sql / migration_108.sql
       // and create-payment, which re-checks this server-side regardless of
       // what's computed here. Falls back to no credits (not a stuck page)
       // if this fails - worst case the student just pays full price and
@@ -1049,10 +1050,13 @@
         availableCredits = result.data || [];
       } catch (err) {}
 
-      let creditApplies = !!(availableCredits && availableCredits.length > 0 && (
-        availableCredits.some((c) => c.teacher_id === teacher.id) ||
+      // migration_108.sql: an any_teacher credit (the student's teacher
+      // didn't show up / was banned) covers any lesson with anyone
+      const creditCoversThis = (list) => list.length > 0 && (
+        list.some((c) => c.teacher_id === teacher.id || c.any_teacher === true) ||
         bookingType === "trial"
-      ));
+      );
+      let creditApplies = creditCoversThis(availableCredits || []);
 
       let cardAmount = creditApplies ? 0 : teacher.price;
 
@@ -1119,9 +1123,7 @@
               .eq("student_id", session.id)
               .eq("status", "available");
             const freshCredits = result.data || [];
-            stillHasCredit = freshCredits.some((c) => c.teacher_id === teacher.id) || bookingType === "trial"
-              ? freshCredits.length > 0
-              : false;
+            stillHasCredit = creditCoversThis(freshCredits);
           } catch (err) {
             // re-check itself failed - trust the snapshot rather than
             // blocking the student entirely

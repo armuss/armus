@@ -14,9 +14,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title id="pageTitle">Öğretmen Profili | ARMUS</title>
-  <meta id="pageDescription" name="description" content="ARMUS'ta İngilizce öğretmenlerinin profillerini incele, müsaitlik takvimlerine bak ve ücretsiz deneme dersi rezervasyonu yap.">
+  <meta id="pageDescription" name="description" content="ARMUS'ta İngilizce öğretmenlerinin profillerini incele, müsaitlik takvimlerine bak ve deneme dersi rezervasyonu yap.">
   <meta id="ogTitle" property="og:title" content="Öğretmen Profili | ARMUS">
-  <meta id="ogDescription" property="og:description" content="ARMUS'ta İngilizce öğretmenlerinin profillerini incele, müsaitlik takvimlerine bak ve ücretsiz deneme dersi rezervasyonu yap.">
+  <meta id="ogDescription" property="og:description" content="ARMUS'ta İngilizce öğretmenlerinin profillerini incele, müsaitlik takvimlerine bak ve deneme dersi rezervasyonu yap.">
   <meta id="ogImage" property="og:image" content="https://armus.com.tr/og-image.png">
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="ARMUS">
@@ -1005,7 +1005,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
-  <script src="auth.js?v=11"></script>
+  <script src="auth.js?v=12"></script>
   <script src="bookings.js?v=10"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
@@ -1045,7 +1045,7 @@
 
       const teacherDisplayName = armusShortDisplayName(teacher.name);
       const seoTitle = `${teacherDisplayName} | ARMUS`;
-      const seoDescription = armusT("teacherProfile.seoDescription", "{name} ile online birebir İngilizce dersi al. Profilini incele, müsaitlik takvimine bak, ücretsiz deneme dersiyle başla.").replace("{name}", teacherDisplayName);
+      const seoDescription = armusT("teacherProfile.seoDescription", "{name} ile online birebir İngilizce dersi al. Profilini incele, müsaitlik takvimine bak, bir deneme dersiyle başla.").replace("{name}", teacherDisplayName);
       // og:image has to be an absolute URL for link-preview crawlers to
       // fetch it - demo teachers' photos are relative paths ("avatars/
       // sarah.jpg"), real teachers' are already-absolute Supabase Storage
