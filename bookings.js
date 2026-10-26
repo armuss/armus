@@ -201,10 +201,14 @@ function armusTrialCountsAsEarned(booking, allBookings, credits) {
     b.status !== "cancelled"
   );
 
+  // a package bought with this teacher (migration_110.sql's source;
+  // older rows only had "no source booking" to go on, which also caught
+  // paid-but-slot-taken credits). A refunded package never converted.
   const hasConversionCredit = (credits || []).some(c =>
     c.student_id === booking.studentId &&
     c.teacher_id === booking.teacherId &&
-    !c.source_booking_id
+    (c.source === "package" || (!c.source && !c.source_booking_id)) &&
+    c.status !== "refunded"
   );
 
   if (!hasRealLesson && !hasConversionCredit) return false;
@@ -228,6 +232,85 @@ function armusTrialCountsAsEarned(booking, allBookings, credits) {
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0]?.id;
 
   return booking.id === earliestTrialId;
+}
+
+// migration_110.sql: one trial per teacher. A trial counts as taken
+// unless it was cancelled with nothing lost - a late cancellation still
+// counts. bookings: this student's mapped rows. The bookings_enforce_one_trial
+// trigger is the real gate; this only lets the pages offer a regular
+// lesson instead of a trial that would be refused.
+function armusHasTakenTrialWith(bookings, teacherId) {
+  return (bookings || []).some(b =>
+    b.teacherId === teacherId &&
+    b.type === "trial" &&
+    (b.status !== "cancelled" || b.lateCancel)
+  );
+}
+
+// migration_110.sql: what one lesson credit covers. Mirrors create-payment's
+// creditCoverage/pickCreditForBooking exactly - keep them in sync
+// (booking.html shows what this says, create-payment decides).
+//   - its own teacher: any lesson, at the price paid for it (value) - a
+//     later price rise costs the student nothing, and that's what the
+//     teacher is paid for it
+//   - another teacher: a trial only, worth `value` - a dearer trial needs
+//     the difference by card (topUp), a cheaper one leaves the rest unused
+//     (leftover, not paid back)
+//   - moved over from a stranded package (transferred_at): worth `value`
+//     with its new teacher, for any lesson
+//   - value null (older credits that couldn't be matched to a payment):
+//     covers the lesson in full
+// Returns null when the credit doesn't apply, else
+// { credit, bookingPrice, topUp, leftover }.
+const ARMUS_MIN_TOPUP = 1;
+
+function armusCreditCoverage(credit, teacherId, type, price) {
+  const sameTeacher = credit.teacher_id === teacherId;
+  if (!sameTeacher && type !== "trial") return null;
+  if (credit.value === null || credit.value === undefined) {
+    return { credit, bookingPrice: price, topUp: 0, leftover: 0 };
+  }
+  const value = Number(credit.value);
+  if (sameTeacher && !credit.transferred_at) {
+    return { credit, bookingPrice: value, topUp: 0, leftover: 0 };
+  }
+  const topUp = Math.round((price - value) * 100) / 100;
+  if (topUp >= ARMUS_MIN_TOPUP) return { credit, bookingPrice: price, topUp, leftover: 0 };
+  return { credit, bookingPrice: price, topUp: 0, leftover: Math.max(0, Math.round((value - price) * 100) / 100) };
+}
+
+// The credit create-payment will use: one that needs nothing by card
+// first, then the teacher's own, then the closest fit, then the oldest.
+function armusPickCreditForBooking(credits, teacherId, type, price) {
+  const rank = o => [
+    o.topUp > 0 ? 1 : 0,
+    o.credit.teacher_id === teacherId ? 0 : 1,
+    o.topUp > 0 ? o.topUp : o.leftover,
+    new Date(o.credit.created_at || 0).getTime(),
+  ];
+  const options = (credits || [])
+    .map(c => armusCreditCoverage(c, teacherId, type, price))
+    .filter(Boolean)
+    .sort((a, b) => {
+      const ra = rank(a), rb = rank(b);
+      for (let i = 0; i < ra.length; i++) if (ra[i] !== rb[i]) return ra[i] - rb[i];
+      return 0;
+    });
+  return options[0] || null;
+}
+
+// A lesson's earnings become withdrawable this many days after it ends,
+// so a no-show report or complaint can be settled before the money goes
+// out. Withdrawals are checked by hand (migration_93.sql), so this is
+// what dashboard.html offers and what admin.html shows as payable.
+const ARMUS_PAYOUT_HOLD_DAYS = 7;
+
+function armusPayoutReleaseAt(booking) {
+  return new Date(armusLessonWindow(booking).end.getTime() + ARMUS_PAYOUT_HOLD_DAYS * 86_400_000);
+}
+
+function armusIsPayoutReleased(booking, now = new Date()) {
+  return armusPayoutReleaseAt(booking) <= now;
 }
 
 // The commission tier a teacher's payout is computed at, by their total

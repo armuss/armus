@@ -263,3 +263,85 @@ test("armusIsValidTurkishIdentityNumber - rejects format-only fakes", () => {
   assert.equal(ctx.armusIsValidTurkishIdentityNumber("100000000789"), false);
   assert.equal(ctx.armusIsValidTurkishIdentityNumber(""), false);
 });
+
+// ---- migration_110.sql: one trial per teacher, what a credit is worth,
+// the 7-day payout hold. create-payment mirrors armusCreditCoverage /
+// armusPickCreditForBooking - these pin the shared rules.
+
+test("armusHasTakenTrialWith - a trial counts unless cancelled with nothing lost", () => {
+  const t = "teacher-1";
+  assert.equal(ctx.armusHasTakenTrialWith([], t), false);
+  assert.equal(ctx.armusHasTakenTrialWith([{ teacherId: t, type: "trial", status: "confirmed" }], t), true);
+  assert.equal(ctx.armusHasTakenTrialWith([{ teacherId: t, type: "trial", status: "cancelled", lateCancel: false }], t), false);
+  assert.equal(ctx.armusHasTakenTrialWith([{ teacherId: t, type: "trial", status: "cancelled", lateCancel: true }], t), true);
+  assert.equal(ctx.armusHasTakenTrialWith([{ teacherId: t, type: "lesson", status: "confirmed" }], t), false);
+  assert.equal(ctx.armusHasTakenTrialWith([{ teacherId: "other", type: "trial", status: "confirmed" }], t), false);
+});
+
+test("armusCreditCoverage - own teacher: any lesson, at the price paid for it", () => {
+  const c = { teacher_id: "A", value: 250 };
+  assert.deepEqual(plain(ctx.armusCreditCoverage(c, "A", "lesson", 300)), { credit: c, bookingPrice: 250, topUp: 0, leftover: 0 });
+  assert.equal(ctx.armusCreditCoverage(c, "A", "trial", 300).topUp, 0);
+});
+
+test("armusCreditCoverage - another teacher: trial only, worth its value", () => {
+  const c = { teacher_id: "A", value: 300 };
+  assert.equal(ctx.armusCreditCoverage(c, "B", "lesson", 900), null);
+  const dearer = ctx.armusCreditCoverage(c, "B", "trial", 900);
+  assert.equal(dearer.topUp, 600);
+  assert.equal(dearer.bookingPrice, 900);
+  const cheaper = ctx.armusCreditCoverage({ teacher_id: "A", value: 1000 }, "B", "trial", 900);
+  assert.equal(cheaper.topUp, 0);
+  assert.equal(cheaper.leftover, 100);
+  assert.equal(cheaper.bookingPrice, 900);
+  // under ₺1 of difference isn't worth a card payment
+  assert.equal(ctx.armusCreditCoverage({ teacher_id: "A", value: 899.5 }, "B", "trial", 900).topUp, 0);
+});
+
+test("armusCreditCoverage - a moved package lesson follows its value with the new teacher", () => {
+  const moved = { teacher_id: "B", value: 300, transferred_at: "2026-10-20T00:00:00Z" };
+  assert.equal(ctx.armusCreditCoverage(moved, "B", "lesson", 900).topUp, 600);
+  assert.equal(ctx.armusCreditCoverage(moved, "B", "lesson", 250).leftover, 50);
+});
+
+test("armusCreditCoverage - an older credit with no value covers in full", () => {
+  const old = { teacher_id: "A", value: null };
+  assert.deepEqual(plain(ctx.armusCreditCoverage(old, "B", "trial", 900)), { credit: old, bookingPrice: 900, topUp: 0, leftover: 0 });
+});
+
+test("armusPickCreditForBooking - nothing by card first, then own teacher, then closest fit", () => {
+  const credits = [
+    { id: "a", teacher_id: "A", value: 500, created_at: "2026-10-01" },
+    { id: "c", teacher_id: "C", value: 1000, created_at: "2026-10-02" },
+    { id: "d", teacher_id: "D", value: 950, created_at: "2026-10-03" },
+  ];
+  assert.equal(ctx.armusPickCreditForBooking(credits, "B", "trial", 900).credit.id, "d");
+  const short = [
+    { id: "a", teacher_id: "A", value: 500, created_at: "2026-10-01" },
+    { id: "c", teacher_id: "C", value: 700, created_at: "2026-10-02" },
+  ];
+  const pick = ctx.armusPickCreditForBooking(short, "B", "trial", 900);
+  assert.equal(pick.credit.id, "c");
+  assert.equal(pick.topUp, 200);
+  const own = [...credits, { id: "b", teacher_id: "B", value: 900, created_at: "2026-10-05" }];
+  assert.equal(ctx.armusPickCreditForBooking(own, "B", "lesson", 900).credit.id, "b");
+  assert.equal(ctx.armusPickCreditForBooking(credits, "B", "lesson", 900), null);
+});
+
+test("armusIsPayoutReleased - 7 days after the lesson ends", () => {
+  const booking = { date: "2026-10-01", time: "10:00", teacherTimezone: "Europe/Istanbul" };
+  // 10:00 Istanbul = 07:00Z, ends 07:50Z, released 7 days later
+  assert.equal(ctx.armusPayoutReleaseAt(booking).toISOString(), "2026-10-08T07:50:00.000Z");
+  assert.equal(ctx.armusIsPayoutReleased(booking, new Date("2026-10-08T07:49:00Z")), false);
+  assert.equal(ctx.armusIsPayoutReleased(booking, new Date("2026-10-08T07:50:00Z")), true);
+});
+
+test("armusTrialCountsAsEarned - a package counts as conversion, a slot-taken credit or a refunded package doesn't", () => {
+  const trial = { id: "t1", type: "trial", studentId: "s", teacherId: "A", status: "confirmed", createdAt: "2026-10-01" };
+  const all = [trial];
+  assert.equal(ctx.armusTrialCountsAsEarned(trial, all, [{ student_id: "s", teacher_id: "A", source: "package", status: "available" }]), true);
+  assert.equal(ctx.armusTrialCountsAsEarned(trial, all, [{ student_id: "s", teacher_id: "A", source: "payment_issue", status: "available" }]), false);
+  assert.equal(ctx.armusTrialCountsAsEarned(trial, all, [{ student_id: "s", teacher_id: "A", source: "package", status: "refunded" }]), false);
+  // older rows without a source: "no source booking" still means a package
+  assert.equal(ctx.armusTrialCountsAsEarned(trial, all, [{ student_id: "s", teacher_id: "A", source_booking_id: null }]), true);
+});

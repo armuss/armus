@@ -4,7 +4,11 @@
 //   - "teacher_banned": a teacher's account was closed by the attendance
 //     system (10 upheld no-shows), which cancels every one of that
 //     teacher's upcoming lessons (migration_104.sql's
-//     profiles_cancel_lessons_on_ban trigger)
+//     profiles_cancel_lessons_on_ban trigger). migration_110.sql also
+//     passes teacher_id: students with unused package lessons with that
+//     teacher are told they can get them refunded or move them to another
+//     teacher (my-lessons.html) - in the lesson email, or in one of its
+//     own when they had nothing booked.
 //   - "teacher_no_show": an admin upheld a student's report that the
 //     teacher never showed up, which cancels that lesson and gives it
 //     back to the student (migration_106.sql's
@@ -127,6 +131,24 @@ function noteFor(reason: string, refunded: boolean) {
     : "Bu ders iptal edildi.";
 }
 
+const PACKAGE_NOTE = "Paketinden kalan dersler için \"Derslerim\" sayfasından para iadesi isteyebilir ya da paketini başka bir öğretmene aktarabilirsin.";
+
+function packageEmailHtml(recipientName: string, teacherName: string, lessons: number) {
+  return `
+  <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
+    <div style="max-width:440px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
+      <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
+      <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 10px;">
+        <strong style="color:#f4f4f2;">${escapeHtml(teacherName)}</strong> artık ARMUS'ta ders vermiyor.
+        Paketinden <strong style="color:#e8c777;">${lessons} dersin</strong> kaldı.
+      </p>
+      <p style="color:#a3a3a6;font-size:12.5px;line-height:1.6;margin:0 0 22px;">${escapeHtml(PACKAGE_NOTE)}</p>
+      <a href="${SITE_URL}/my-lessons.html" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Derslerimi Gör</a>
+    </div>
+  </div>`;
+}
+
 function subjectFor(reason: string) {
   return reason === "teacher_no_show"
     ? "Dersin iade edildi - ARMUS"
@@ -155,7 +177,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const bookingIds = Array.isArray(body.booking_ids) ? body.booking_ids.filter(isUuid).slice(0, 500) : [];
     const reason = typeof body.reason === "string" ? body.reason : "";
-    if (!bookingIds.length) {
+    const bannedTeacherId = reason === "teacher_banned" && isUuid(body.teacher_id) ? body.teacher_id : null;
+    if (!bookingIds.length && !bannedTeacherId) {
       return new Response("missing booking_ids", { status: 400 });
     }
 
@@ -164,27 +187,59 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: bookings } = await supabaseAdmin
-      .from("bookings")
-      .select("id, student_id, teacher_name, lesson_date, lesson_time, teacher_timezone, status, refunded")
-      .in("id", bookingIds);
+    const { data: bookings } = bookingIds.length
+      ? await supabaseAdmin
+          .from("bookings")
+          .select("id, student_id, teacher_name, lesson_date, lesson_time, teacher_timezone, status, refunded")
+          .in("id", bookingIds)
+      : { data: [] };
 
     // only ever email about a booking that really is cancelled - a stale or
     // replayed call can never tell a student their still-live lesson is off
     const cancelled = (bookings || []).filter((b) => b.status === "cancelled");
-    if (!cancelled.length) return new Response("skip", { status: 200 });
 
-    const studentIds = [...new Set(cancelled.map((b) => b.student_id))];
+    // unused package lessons with a teacher who really is banned now
+    const packageLessonsByStudent = new Map<string, { lessons: number; teacherName: string }>();
+    if (bannedTeacherId) {
+      const { data: bannedTeacher } = await supabaseAdmin
+        .from("profiles")
+        .select("is_banned")
+        .eq("id", bannedTeacherId)
+        .maybeSingle();
+      if (bannedTeacher?.is_banned) {
+        const { data: packageCredits } = await supabaseAdmin
+          .from("lesson_credits")
+          .select("student_id, teacher_name")
+          .eq("teacher_id", bannedTeacherId)
+          .eq("source", "package")
+          .eq("status", "available");
+        for (const c of packageCredits || []) {
+          const entry = packageLessonsByStudent.get(c.student_id) || { lessons: 0, teacherName: c.teacher_name };
+          entry.lessons += 1;
+          packageLessonsByStudent.set(c.student_id, entry);
+        }
+      }
+    }
+
+    if (!cancelled.length && !packageLessonsByStudent.size) return new Response("skip", { status: 200 });
+
+    const studentIds = [...new Set([...cancelled.map((b) => b.student_id), ...packageLessonsByStudent.keys()])];
     const { data: students } = await supabaseAdmin
       .from("profiles")
       .select("id, email, name, timezone")
       .in("id", studentIds);
     const studentById = new Map((students || []).map((s) => [s.id, s]));
 
+    const toldAboutPackage = new Set<string>();
     for (const b of cancelled) {
       const student = studentById.get(b.student_id);
       if (!student?.email) continue;
       const lessonStart = armusZonedTimeToUtc(b.lesson_date, b.lesson_time, b.teacher_timezone);
+      let note = noteFor(reason, !!b.refunded);
+      if (packageLessonsByStudent.has(b.student_id)) {
+        note += " " + PACKAGE_NOTE;
+        toldAboutPackage.add(b.student_id);
+      }
       await sendEmail(
         student.email,
         subjectFor(reason),
@@ -192,8 +247,19 @@ Deno.serve(async (req) => {
           student.name,
           shortDisplayName(b.teacher_name),
           formatDateTimeLabel(lessonStart, student.timezone),
-          noteFor(reason, !!b.refunded),
+          note,
         ),
+      );
+    }
+
+    for (const [studentId, entry] of packageLessonsByStudent) {
+      if (toldAboutPackage.has(studentId)) continue;
+      const student = studentById.get(studentId);
+      if (!student?.email) continue;
+      await sendEmail(
+        student.email,
+        "Paket derslerin hakkında - ARMUS",
+        packageEmailHtml(student.name, shortDisplayName(entry.teacherName), entry.lessons),
       );
     }
 

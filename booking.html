@@ -498,6 +498,29 @@
       margin-top: 13px;
     }
 
+    /* what a lesson credit covers here (migration_110.sql) */
+    .credit-note {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--armus-ink);
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-gold-2);
+    }
+
+    .trial-taken-notice {
+      margin-bottom: 22px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--armus-ink);
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-gold-2);
+    }
+
     /* SUCCESS */
 
     .success {
@@ -623,6 +646,7 @@
   <main class="container" id="bookingRoot">
 
     <div class="payment-notice" id="paymentNotice" style="display: none;"></div>
+    <div class="trial-taken-notice" id="trialTakenNotice" style="display: none;" data-i18n="booking.trialTakenNotice">Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her öğretmenle bir kez alınabilir.</div>
 
     <div class="eyebrow" id="flowLabel">REZERVASYON</div>
     <h1 id="flowTitle">Ders zamanını seç</h1>
@@ -674,8 +698,13 @@
       </div>
       <div class="confirm-row" id="confirmCreditRow" style="display: none;">
         <span data-i18n="booking.confirmCreditRow">Ders hakkınla</span>
-        <strong id="confirmCreditApplied" style="color: var(--armus-gold-text);" data-i18n="booking.confirmCreditApplied">Ücretsiz</strong>
+        <strong id="confirmCreditApplied" style="color: var(--armus-gold-text);">Ücretsiz</strong>
       </div>
+      <div class="confirm-row" id="confirmTopUpRow" style="display: none;">
+        <span data-i18n="booking.confirmTopUpRow">Kartla ödenecek fark</span>
+        <strong id="confirmTopUpAmount"></strong>
+      </div>
+      <div class="credit-note" id="creditNote" style="display: none;"></div>
 
       <div class="payer-fields" id="payerFields">
         <label for="payerPhone" data-i18n="booking.payerPhoneLabel">Telefon numarası</label>
@@ -730,13 +759,13 @@
     </div>
   </main>
 
-  <script src="i18n.js?v=16"></script>
+  <script src="i18n.js?v=17"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=10"></script>
+  <script src="bookings.js?v=11"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script>
@@ -793,6 +822,30 @@
     } else {
 
       document.getElementById("backLink").href = `teacher?teacher=${encodeURIComponent(teacher.id)}`;
+
+      // one trial per teacher (migration_110.sql) - a second one would
+      // only be refused at "Onayla", so offer the regular lesson right away
+      if (bookingType === "trial" && !params.get("payment")) {
+        let earlierTrials = [];
+        try {
+          const result = await armusSupabase
+            .from("bookings")
+            .select("teacher_id, type, status, late_cancel")
+            .eq("student_id", session.id)
+            .eq("teacher_id", teacher.id)
+            .eq("type", "trial");
+          earlierTrials = (result.data || []).map(r => ({ teacherId: r.teacher_id, type: r.type, status: r.status || "confirmed", lateCancel: r.late_cancel === true }));
+        } catch (err) {}
+        if (armusHasTakenTrialWith(earlierTrials, teacher.id)) {
+          params.set("type", "lesson");
+          params.set("trial_taken", "1");
+          window.location.replace(`booking?${params.toString()}`);
+          return;
+        }
+      }
+      if (params.get("trial_taken") === "1" && bookingType === "lesson") {
+        document.getElementById("trialTakenNotice").style.display = "block";
+      }
 
       const isTrial = bookingType === "trial";
 
@@ -1033,29 +1086,78 @@
       }
 
       // A lesson credit (from a cancellation, see cancel-booking) covers
-      // this booking fully if it's tied to this same teacher, or if it's
-      // any credit at all and this is a trial lesson - see migration_28.sql
-      // and create-payment, which re-checks this server-side regardless of
-      // what's computed here. Falls back to no credits (not a stuck page)
-      // if this fails - worst case the student just pays full price and
-      // create-payment's own re-check still applies any real credit.
-      let availableCredits = [];
-      try {
-        const result = await armusSupabase
-          .from("lesson_credits")
-          .select("*")
-          .eq("student_id", session.id)
-          .eq("status", "available");
-        availableCredits = result.data || [];
-      } catch (err) {}
+      // this booking if it's tied to this same teacher, or if this is a
+      // trial lesson - up to what the credit is worth (migration_110.sql,
+      // armusPickCreditForBooking): a dearer trial is topped up by card, a
+      // cheaper one leaves the rest unused. create-payment re-checks this
+      // server-side regardless of what's computed here. Falls back to no
+      // credits (not a stuck page) if this fails - worst case the student
+      // just pays full price and create-payment's own re-check still
+      // applies any real credit.
+      async function fetchAvailableCredits() {
+        try {
+          const result = await armusSupabase
+            .from("lesson_credits")
+            .select("*")
+            .eq("student_id", session.id)
+            .eq("status", "available");
+          return result.data || [];
+        } catch (err) {
+          return null;
+        }
+      }
 
-      const creditCoversThis = (list) => list.length > 0 && (
-        list.some((c) => c.teacher_id === teacher.id) ||
-        bookingType === "trial"
-      );
-      let creditApplies = creditCoversThis(availableCredits || []);
+      const pickCredit = (list) => armusPickCreditForBooking(list || [], teacher.id, bookingType, Number(teacher.price));
+      const coverageMode = (c) => !c ? "none" : (c.topUp > 0 ? "topup" : "full");
 
-      let cardAmount = creditApplies ? 0 : teacher.price;
+      let coverage = pickCredit(await fetchAvailableCredits());
+      // what goes to the card: nothing, the difference, or the full price
+      let cardAmount = coverage ? coverage.topUp : teacher.price;
+
+      const formatMoney = (amount) => `₺${Number(amount).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR", { maximumFractionDigits: 2 })}`;
+
+      function renderCoverage() {
+        const mode = coverageMode(coverage);
+        const creditRow = document.getElementById("confirmCreditRow");
+        const topUpRow = document.getElementById("confirmTopUpRow");
+        const note = document.getElementById("creditNote");
+        creditRow.style.display = mode === "none" ? "none" : "flex";
+        topUpRow.style.display = mode === "topup" ? "flex" : "none";
+        document.getElementById("payerFields").style.display = mode === "full" ? "none" : "";
+        note.style.display = "none";
+
+        if (mode === "full") {
+          document.getElementById("confirmCreditApplied").textContent = armusT("booking.confirmCreditApplied", "Ücretsiz");
+          document.getElementById("confirmNote").textContent =
+            armusT("booking.creditConfirmNote", "Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak");
+          confirmBtn.textContent = armusT("booking.completeBookingBtn", "Rezervasyonu Tamamla");
+          if (coverage.leftover > 0) {
+            note.textContent = armusT("booking.creditLeftoverNote", "Bu ders hakkı {value} değerinde, bu ders {price}. Ders hakkın dersi tamamen karşılıyor; aradaki {leftover} iade edilmez.")
+              .replace("{value}", formatMoney(coverage.credit.value))
+              .replace("{price}", formatMoney(teacher.price))
+              .replace("{leftover}", formatMoney(coverage.leftover));
+            note.style.display = "block";
+          }
+        } else if (mode === "topup") {
+          document.getElementById("confirmCreditApplied").textContent = `−${formatMoney(coverage.credit.value)}`;
+          document.getElementById("confirmTopUpAmount").textContent = formatMoney(coverage.topUp);
+          note.textContent = armusT("booking.creditTopUpNote", "Ders hakkın {value} değerinde, bu ders {price}. Ders hakkın {value} kısmını karşılıyor, kalan {topUp} kartla ödenir.")
+            .replaceAll("{value}", formatMoney(coverage.credit.value))
+            .replace("{price}", formatMoney(teacher.price))
+            .replace("{topUp}", formatMoney(coverage.topUp));
+          note.style.display = "block";
+          document.getElementById("confirmNote").textContent =
+            armusT("booking.confirmNote", "Güvenli ödeme sayfasına yönlendirileceksin");
+          confirmBtn.textContent = armusT("booking.payTopUpBtn", "Farkı Öde ({amount})").replace("{amount}", formatMoney(coverage.topUp));
+        } else {
+          document.getElementById("confirmNote").textContent =
+            armusT("booking.confirmNote", "Güvenli ödeme sayfasına yönlendirileceksin");
+          renderConfirmBtn();
+        }
+      }
+      document.addEventListener("armus:langchange", () => {
+        if (confirmBox.style.display === "block") renderCoverage();
+      });
 
       function showConfirm() {
 
@@ -1064,13 +1166,7 @@
         document.getElementById("confirmTime").textContent = armusFormatSlotTimeRangeForViewer(selectedDate, selectedTime, teacher.timezone);
         document.getElementById("confirmPrice").textContent = `₺${teacher.price}`;
 
-        if (creditApplies) {
-          document.getElementById("confirmCreditRow").style.display = "flex";
-          document.getElementById("payerFields").style.display = "none";
-          document.getElementById("confirmNote").textContent =
-            armusT("booking.creditConfirmNote", "Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak");
-          confirmBtn.textContent = armusT("booking.completeBookingBtn", "Rezervasyonu Tamamla");
-        }
+        renderCoverage();
 
         confirmBox.style.display = "block";
         confirmBox.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1101,45 +1197,34 @@
         const confirmError = document.getElementById("confirmError");
         confirmError.style.display = "none";
 
-        // availableCredits/creditApplies were snapshotted once at page
-        // load - if this student's credit got consumed somewhere else
-        // (another open tab, cancel-booking racing in) before this
-        // click, the payer fields are still hidden (showConfirm hid
-        // them based on that stale snapshot) and submitting now would
-        // send create-payment an empty phone/identityNumber, which it
-        // rejects - leaving the student stuck on an error with no way
-        // to see or fill in the fields that would fix it, short of a
-        // full page refresh. Re-check right before submitting instead
-        // of trusting the snapshot.
-        if (creditApplies) {
-          let stillHasCredit = true;
-          try {
-            const result = await armusSupabase
-              .from("lesson_credits")
-              .select("*")
-              .eq("student_id", session.id)
-              .eq("status", "available");
-            const freshCredits = result.data || [];
-            stillHasCredit = creditCoversThis(freshCredits);
-          } catch (err) {
-            // re-check itself failed - trust the snapshot rather than
-            // blocking the student entirely
-          }
-
-          if (!stillHasCredit) {
-            creditApplies = false;
-            cardAmount = teacher.price;
-            document.getElementById("confirmCreditRow").style.display = "none";
-            document.getElementById("payerFields").style.display = "block";
-            document.getElementById("confirmNote").textContent =
-              armusT("booking.confirmNote", "Güvenli ödeme sayfasına yönlendirileceksin");
-            renderConfirmBtn();
-            confirmError.textContent = armusT(
-              "booking.creditNoLongerAvailable",
-              "Ders hakkın bu arada kullanıldı. Devam etmek için ödeme bilgilerini gir."
-            );
-            confirmError.style.display = "block";
-            return;
+        // the credit picture was snapshotted once at page load - if this
+        // student's credit got consumed somewhere else (another open tab,
+        // cancel-booking racing in) before this click, the payer fields
+        // may still be hidden (renderCoverage hid them based on that stale
+        // snapshot) and submitting now would send create-payment an empty
+        // phone/identityNumber, which it rejects - leaving the student
+        // stuck on an error with no way to see or fill in the fields that
+        // would fix it, short of a full page refresh. Re-check right
+        // before submitting instead of trusting the snapshot; if what the
+        // card pays changed, show the new picture first.
+        if (coverage) {
+          const freshCredits = await fetchAvailableCredits();
+          // the re-check itself failed - trust the snapshot rather than
+          // blocking the student entirely
+          if (freshCredits) {
+            const fresh = pickCredit(freshCredits);
+            const changed = coverageMode(fresh) !== coverageMode(coverage) || (fresh && fresh.topUp !== coverage.topUp);
+            if (changed) {
+              coverage = fresh;
+              cardAmount = coverage ? coverage.topUp : teacher.price;
+              renderCoverage();
+              confirmError.textContent = armusT(
+                "booking.creditNoLongerAvailable",
+                "Ders hakkın bu arada kullanıldı. Devam etmek için ödeme bilgilerini gir."
+              );
+              confirmError.style.display = "block";
+              return;
+            }
           }
         }
 
@@ -1208,6 +1293,15 @@
           confirmError.style.display = "block";
           confirmBtn.disabled = false;
           confirmBtn.textContent = originalBtnText;
+          // a trial with this teacher got booked in the meantime (another
+          // tab) - same switch to a regular lesson as on page load
+          if (bookingType === "trial" && /deneme dersi aldın|already had a trial/i.test(confirmError.textContent)) {
+            const switchLink = document.createElement("a");
+            switchLink.href = `booking?teacher=${encodeURIComponent(teacher.id)}&type=lesson&trial_taken=1&date=${encodeURIComponent(selectedDate)}&time=${encodeURIComponent(selectedTime)}`;
+            switchLink.textContent = " " + armusT("booking.bookAsLessonLink", "Normal ders olarak devam et →");
+            switchLink.style.color = "var(--armus-gold-text)";
+            confirmError.appendChild(switchLink);
+          }
           return;
         }
 

@@ -204,6 +204,68 @@
       margin-top: 0;
     }
 
+    /* PACKAGE LESSONS WHOSE TEACHER CAN'T TEACH THIS STUDENT ANYMORE
+       (migration_110.sql) - refund or move them */
+
+    .package-notice {
+      padding: 18px;
+      margin-bottom: 14px;
+      border-radius: 18px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-gold-2);
+    }
+
+    .package-notice h3 {
+      font-size: 14px;
+      margin: 0 0 6px;
+      text-wrap: balance;
+    }
+
+    .package-notice p {
+      color: var(--armus-muted);
+      font-size: 12.5px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .package-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .package-transfer {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--armus-border-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .package-transfer select {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel);
+      color: var(--armus-ink);
+      max-width: 100%;
+    }
+
+    .package-status {
+      margin-top: 10px;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--armus-gold-text);
+    }
+
+    .package-status.error {
+      color: #b3261e;
+    }
+
     /* LESSON CARD */
 
     .lesson-card {
@@ -670,6 +732,8 @@
     <div class="eyebrow" data-i18n="myLessons.eyebrow">DERSLERİM</div>
     <h1 data-i18n="myLessons.title">Rezervasyonların</h1>
 
+    <div id="packageNotices"></div>
+
     <div id="lessonsList"></div>
 
     <div class="empty-state" id="emptyState">
@@ -679,13 +743,13 @@
 
   </main>
 
-  <script src="i18n.js?v=16"></script>
+  <script src="i18n.js?v=17"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=10"></script>
+  <script src="bookings.js?v=11"></script>
   <script src="reschedule.js?v=1"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
@@ -708,6 +772,133 @@
       return `${armusT("myLessons.teacherNoShow", "⊘ Öğretmen derse gelmedi")}${booking.refunded ? armusT("myLessons.teacherNoShowRefunded", " · Ders hakkın iade edildi") : ""}`;
     }
 
+    // migration_110.sql: package lessons whose teacher can't teach this
+    // student anymore (banned, blocking them, account closed) - refund
+    // them to the card or move them to another teacher (package-credits)
+    const formatMoney = (amount) => `₺${Number(amount).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR", { maximumFractionDigits: 2 })}`;
+
+    async function renderStrandedPackages(viewerId) {
+      const wrap = document.getElementById("packageNotices");
+      let groups = [];
+      try {
+        const { data } = await armusSupabase.rpc("my_stranded_package_credits");
+        groups = data || [];
+      } catch (err) {}
+      wrap.innerHTML = "";
+      if (!groups.length) return;
+
+      let teachers = null;
+      const loadTeachers = async () => {
+        if (!teachers) teachers = await armusGetRegisteredTeachers(viewerId).catch(() => []);
+        return teachers;
+      };
+
+      groups.forEach(group => {
+        const card = document.createElement("div");
+        card.className = "package-notice";
+        const teacherShort = armusShortDisplayName(group.teacher_name);
+        const perLesson = group.lessons ? Number(group.total_value) / group.lessons : 0;
+
+        function render() {
+          card.innerHTML = `
+            <h3>${armusEscapeHtml(armusT("myLessons.packageStrandedTitle", "{teacher} artık sana ders veremiyor").replace("{teacher}", teacherShort))}</h3>
+            <p>${armusEscapeHtml(armusT("myLessons.packageStrandedText", "Paketinden {n} ders kaldı ({total}). Bu dersleri kartına iade ettirebilir ya da başka bir öğretmene aktarabilirsin.")
+              .replace("{n}", group.lessons).replace("{total}", formatMoney(group.total_value)))}</p>
+            <div class="package-actions">
+              ${group.refundable
+                ? `<button type="button" class="lesson-reschedule-btn primary" data-action="refund">${armusEscapeHtml(armusT("myLessons.packageRefundBtn", "Paramı İade Et ({total})").replace("{total}", formatMoney(group.total_value)))}</button>`
+                : ""}
+              <button type="button" class="lesson-reschedule-btn" data-action="transfer">${armusEscapeHtml(armusT("myLessons.packageTransferBtn", "Başka Öğretmene Aktar"))}</button>
+            </div>
+            ${group.refundable ? "" : `<p style="margin-top:10px;">${armusT("myLessons.packageRefundSupport", "Bu paketin iadesi otomatik yapılamıyor - iade istersen <a href=\"iletisim\">destek ekibimize yaz</a>.")}</p>`}
+            <div class="package-status" style="display:none;"></div>
+          `;
+          const status = card.querySelector(".package-status");
+          const showStatus = (text, isError) => {
+            status.textContent = text;
+            status.classList.toggle("error", !!isError);
+            status.style.display = "block";
+          };
+
+          const refundBtn = card.querySelector('[data-action="refund"]');
+          if (refundBtn) refundBtn.addEventListener("click", async () => {
+            const ask = armusT("myLessons.packageRefundConfirm", "{total} ödeme yaptığın karta iade edilecek ve bu {n} ders bakiyenden silinecek. Onaylıyor musun?")
+              .replace("{total}", formatMoney(group.total_value)).replace("{n}", group.lessons);
+            if (!window.confirm(ask)) return;
+            refundBtn.disabled = true;
+            let data, error;
+            try {
+              ({ data, error } = await armusSupabase.functions.invoke("package-credits", { body: { action: "refund", teacher_id: group.teacher_id } }));
+            } catch (err) { error = err; }
+            if (error || !data || !data.ok) {
+              refundBtn.disabled = false;
+              showStatus((await armusEdgeErrorMessage(error)) || (data && data.error) || armusT("myLessons.packageActionFailed", "İşlem yapılamadı. Lütfen tekrar dene."), true);
+              return;
+            }
+            card.innerHTML = `<p class="package-status">${armusEscapeHtml(armusT("myLessons.packageRefunded", "{n} dersin ücreti ({total}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.")
+              .replace("{n}", data.refundedLessons).replace("{total}", formatMoney(data.refundedAmount)))}</p>`;
+          });
+
+          card.querySelector('[data-action="transfer"]').addEventListener("click", async (event) => {
+            const button = event.currentTarget;
+            if (card.querySelector(".package-transfer")) return;
+            button.disabled = true;
+            const list = (await loadTeachers()).filter(t => t.id !== group.teacher_id && Number(t.price) > 0);
+            button.disabled = false;
+            const box = document.createElement("div");
+            box.className = "package-transfer";
+            box.innerHTML = `
+              <label style="font-size:12.5px;font-weight:600;">${armusEscapeHtml(armusT("myLessons.packageTransferPick", "Paketini hangi öğretmenle kullanmak istersin?"))}</label>
+              <select>
+                <option value="">${armusEscapeHtml(armusT("myLessons.packageTransferChoose", "Öğretmen seç"))}</option>
+                ${list.map(t => `<option value="${armusEscapeHtml(t.id)}">${armusEscapeHtml(armusShortDisplayName(t.name))} - ${formatMoney(t.price)}</option>`).join("")}
+              </select>
+              <p class="package-transfer-hint"></p>
+              <div class="package-actions" style="margin-top:0;">
+                <button type="button" class="lesson-reschedule-btn primary" disabled>${armusEscapeHtml(armusT("myLessons.packageTransferConfirm", "Paketi Aktar"))}</button>
+              </div>
+            `;
+            card.insertBefore(box, status);
+            const select = box.querySelector("select");
+            const hint = box.querySelector(".package-transfer-hint");
+            const confirmTransfer = box.querySelector("button");
+            select.addEventListener("change", () => {
+              const t = list.find(x => x.id === select.value);
+              confirmTransfer.disabled = !t;
+              if (!t) { hint.textContent = ""; return; }
+              const price = Number(t.price);
+              const diff = Math.round((price - perLesson) * 100) / 100;
+              hint.textContent = diff >= 1
+                ? armusT("myLessons.packageTransferDearer", "Her dersin {value} değerinde, bu öğretmenin ders ücreti {price}. Her derste aradaki {diff} farkı kartla ödersin.")
+                    .replaceAll("{value}", formatMoney(perLesson)).replace("{price}", formatMoney(price)).replace("{diff}", formatMoney(diff))
+                : (diff <= -1
+                  ? armusT("myLessons.packageTransferCheaper", "Her dersin {value} değerinde, bu öğretmenin ders ücreti {price}. Her ders tamamen karşılanır; aradaki {diff} iade edilmez.")
+                      .replace("{value}", formatMoney(perLesson)).replace("{price}", formatMoney(price)).replace("{diff}", formatMoney(-diff))
+                  : armusT("myLessons.packageTransferSame", "Her dersin bu öğretmenle tamamen karşılanır."));
+            });
+            confirmTransfer.addEventListener("click", async () => {
+              confirmTransfer.disabled = true;
+              let data, error;
+              try {
+                ({ data, error } = await armusSupabase.functions.invoke("package-credits", { body: { action: "transfer", teacher_id: group.teacher_id, new_teacher_id: select.value } }));
+              } catch (err) { error = err; }
+              if (error || !data || !data.ok) {
+                confirmTransfer.disabled = false;
+                showStatus((await armusEdgeErrorMessage(error)) || (data && data.error) || armusT("myLessons.packageActionFailed", "İşlem yapılamadı. Lütfen tekrar dene."), true);
+                return;
+              }
+              card.innerHTML = `<p class="package-status">${armusEscapeHtml(armusT("myLessons.packageTransferred", "{n} dersin {teacher} ile kullanılabilir. Rezervasyonu öğretmenin profilinden yapabilirsin.")
+                .replace("{n}", data.transferred).replace("{teacher}", data.teacherName))}</p>
+                <div class="package-actions"><a class="lesson-reschedule-btn primary" style="text-decoration:none;" href="teacher?teacher=${encodeURIComponent(select.value)}">${armusEscapeHtml(armusT("myLessons.packageGoToTeacher", "Öğretmenin Profiline Git →"))}</a></div>`;
+            });
+          });
+        }
+
+        render();
+        wrap.appendChild(card);
+      });
+    }
+
     (async function() {
 
     // caught so a slow/blocked Supabase SDK still reaches the static
@@ -721,6 +912,8 @@
     } else {
 
       pageRoot.style.display = "block";
+
+      renderStrandedPackages(session.id);
 
       const bookings = await armusGetBookingsForStudent(session.id);
       // armusGetBookingsForStudent sorts strictly ascending by date/time

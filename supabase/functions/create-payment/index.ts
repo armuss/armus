@@ -5,12 +5,19 @@
 //
 // Called from booking.html (armusSupabase.functions.invoke("create-payment", ...))
 // right when the student clicks "Onayla", or from the app's package-offer
-// screen after a trial lesson. Two outcomes for a booking:
-//   - an available credit covers this booking (same teacher as the
-//     credit, or any teacher if this is a trial lesson): the booking is
-//     created directly, right here, with no iyzico step at all and no
-//     charge - response is { bookedDirectly: true, creditApplied: true }
+// screen after a trial lesson. Three outcomes for a booking:
+//   - an available credit covers this booking (pickCreditForBooking -
+//     same teacher as the credit, or a trial with anyone; migration_110.sql
+//     adds what the credit is worth): the booking is created directly,
+//     right here, with no iyzico step at all and no charge - response is
+//     { bookedDirectly: true, creditApplied: true }
+//   - a credit covers part of it (a trial with a teacher dearer than the
+//     credit is worth): the difference goes to the card, the credit is
+//     held ('reserved') until payment-callback settles it
 //   - no matching credit: unchanged, full price charged to the card
+// One trial per teacher (migration_110.sql): a second one is refused up
+// front with { trialAlreadyTaken: true } so booking.html can offer a
+// regular lesson instead.
 // Either way nothing is written to the real "bookings" table for a card
 // payment - a pending_payments row is created instead, and the booking
 // itself is only created by payment-callback once iyzico confirms the
@@ -267,6 +274,57 @@ function isDemoSlotAvailable(teacherId: string, dateKey: string, time: string): 
   return armusHashCode(teacherId + dateKey + time) % 3 !== 0;
 }
 
+// migration_110.sql: what one lesson credit covers. Mirrors bookings.js's
+// armusCreditCoverage/armusPickCreditForBooking exactly - keep them in
+// sync (booking.html shows what those say, this decides).
+//   - its own teacher: any lesson, at the price paid for it (value)
+//   - another teacher: a trial only, worth `value` - a dearer trial needs
+//     the difference by card (topUp), a cheaper one leaves the rest unused
+//   - moved over from a stranded package (transferred_at): worth `value`
+//     with its new teacher, for any lesson
+//   - value null (older credits that couldn't be matched to a payment):
+//     covers the lesson in full
+const MIN_TOPUP = 1;
+
+type CreditCoverage = { credit: any; bookingPrice: number; topUp: number; leftover: number };
+
+function creditCoverage(credit: any, teacherId: string, type: string, price: number): CreditCoverage | null {
+  const sameTeacher = credit.teacher_id === teacherId;
+  if (!sameTeacher && type !== "trial") return null;
+  if (credit.value === null || credit.value === undefined) {
+    return { credit, bookingPrice: price, topUp: 0, leftover: 0 };
+  }
+  const value = Number(credit.value);
+  if (sameTeacher && !credit.transferred_at) {
+    return { credit, bookingPrice: value, topUp: 0, leftover: 0 };
+  }
+  const topUp = Math.round((price - value) * 100) / 100;
+  if (topUp >= MIN_TOPUP) return { credit, bookingPrice: price, topUp, leftover: 0 };
+  return { credit, bookingPrice: price, topUp: 0, leftover: Math.max(0, Math.round((value - price) * 100) / 100) };
+}
+
+// one that needs nothing by card first, then the teacher's own, then the
+// closest fit, then the oldest
+function pickCreditForBooking(credits: any[], teacherId: string, type: string, price: number): CreditCoverage | null {
+  const rank = (o: CreditCoverage) => [
+    o.topUp > 0 ? 1 : 0,
+    o.credit.teacher_id === teacherId ? 0 : 1,
+    o.topUp > 0 ? o.topUp : o.leftover,
+    new Date(o.credit.created_at || 0).getTime(),
+  ];
+  const options = (credits || [])
+    .map((c) => creditCoverage(c, teacherId, type, price))
+    .filter((o): o is CreditCoverage => o !== null)
+    .sort((a, b) => {
+      const ra = rank(a), rb = rank(b);
+      for (let i = 0; i < ra.length; i++) if (ra[i] !== rb[i]) return ra[i] - rb[i];
+      return 0;
+    });
+  return options[0] || null;
+}
+
+const TRIAL_TAKEN_ERROR = "Bu öğretmenle daha önce deneme dersi aldın. Aynı öğretmenle normal ders rezerve edebilirsin.";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
@@ -456,6 +514,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // one trial per teacher (migration_110.sql's has_taken_trial - the
+    // bookings_enforce_one_trial trigger is the real gate; this just
+    // refuses before any card step instead of after)
+    if (type === "trial") {
+      const { data: earlierTrials } = await supabaseAdmin
+        .from("bookings")
+        .select("id, status, late_cancel")
+        .eq("student_id", user.id)
+        .eq("teacher_id", teacherId)
+        .eq("type", "trial");
+      if ((earlierTrials || []).some((b: any) => b.status !== "cancelled" || b.late_cancel === true)) {
+        return jsonResponse({ error: TRIAL_TAKEN_ERROR, trialAlreadyTaken: true }, 409);
+      }
+    }
+
     const numericPrice = type === "package" ? pricePerLesson * numericQuantity : pricePerLesson;
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
       return jsonResponse({ error: "Geçersiz fiyat." }, 400);
@@ -468,7 +541,8 @@ Deno.serve(async (req) => {
 
     // does an available lesson credit cover this booking? Same teacher as
     // the credit covers any lesson type; a credit from a different teacher
-    // only covers a trial lesson (see migration_28.sql). Packages are
+    // only covers a trial lesson (see migration_28.sql), up to what it's
+    // worth (migration_110.sql, pickCreditForBooking). Packages are
     // always a real charge - never covered by an existing credit, since
     // buying a package is what CREATES credits, not what consumes them.
     const { data: credits } = type !== "package"
@@ -480,15 +554,15 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: true })
       : { data: null };
 
-    let appliedCredit = (credits || []).find((c: any) => c.teacher_id === teacherId) || null;
-    if (!appliedCredit && type === "trial" && credits && credits.length > 0) {
-      appliedCredit = credits[0];
-    }
+    const coverage = type !== "package" ? pickCreditForBooking(credits || [], teacherId, type, numericPrice) : null;
+    const appliedCredit = coverage && coverage.topUp === 0 ? coverage.credit : null;
+    // a credit worth less than this trial: it pays its part, the card the rest
+    const topUpCredit = coverage && coverage.topUp > 0 ? coverage.credit : null;
 
     // a credit covers this booking - book it now, no card charge, no
     // iyzico step, and deliberately no pending_payments row at all (see
     // this file's header comment for why that matters)
-    if (appliedCredit) {
+    if (appliedCredit && coverage) {
 
       // Claim the credit with a conditional update (status must still be
       // "available") BEFORE creating the booking, instead of trusting the
@@ -526,7 +600,10 @@ Deno.serve(async (req) => {
           lesson_date: date,
           lesson_time: time,
           teacher_timezone: teacherTimezone,
-          price: numericPrice,
+          // what this lesson was paid for: the credit's own value with its
+          // teacher (a price rise since doesn't cost the student), the
+          // teacher's price otherwise
+          price: coverage.bookingPrice,
         })
         .select()
         .single();
@@ -559,6 +636,11 @@ Deno.serve(async (req) => {
         // was already released back above, nothing was charged.
         if (bookingError?.code === "AR002") {
           return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
+        }
+        // AR005 = bookings_enforce_one_trial (migration_110.sql): another
+        // request booked a trial with this teacher in the meantime
+        if (bookingError?.code === "AR005") {
+          return jsonResponse({ error: TRIAL_TAKEN_ERROR, trialAlreadyTaken: true }, 409);
         }
         console.error("credit-covered booking insert failed", bookingError);
         return jsonResponse({ error: "Rezervasyon oluşturulamadı." }, 500);
@@ -641,6 +723,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Bu işlem için zaten bir ödemen devam ediyor. Diğer sekmeyi tamamla ya da birkaç dakika sonra tekrar dene." }, 409);
     }
 
+    // with a top-up, the card only pays the difference; booking_price is
+    // what the lesson itself costs (payment-callback books it at that)
+    const chargeAmount = topUpCredit && coverage ? coverage.topUp : numericPrice;
+
     const { data: pending, error: pendingError } = await supabaseAdmin
       .from("pending_payments")
       .insert({
@@ -653,7 +739,9 @@ Deno.serve(async (req) => {
         lesson_date: type === "package" ? null : date,
         lesson_time: type === "package" ? null : time,
         quantity: type === "package" ? numericQuantity : null,
-        price: numericPrice,
+        price: chargeAmount,
+        booking_price: topUpCredit && coverage ? coverage.bookingPrice : null,
+        credit_id: topUpCredit ? topUpCredit.id : null,
         status: "pending",
       })
       .select()
@@ -664,14 +752,42 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Ödeme başlatılamadı." }, 500);
     }
 
+    // hold the credit while the student is on iyzico's page - conditional
+    // on it still being available, same race as the credit-covered path.
+    // payment-callback (or its reconcile run, if the student never comes
+    // back) uses it or hands it back.
+    if (topUpCredit) {
+      const { data: reservedCredit } = await supabaseAdmin
+        .from("lesson_credits")
+        .update({ status: "reserved", reserved_payment_id: pending.id })
+        .eq("id", topUpCredit.id)
+        .eq("status", "available")
+        .select()
+        .maybeSingle();
+      if (!reservedCredit) {
+        await supabaseAdmin.from("pending_payments").update({ status: "failed" }).eq("id", pending.id);
+        return jsonResponse({ error: "Bu kredi az önce kullanıldı. Lütfen sayfayı yenileyip tekrar dene." }, 409);
+      }
+    }
+
+    const releaseTopUpCredit = async () => {
+      if (!topUpCredit) return;
+      await supabaseAdmin
+        .from("lesson_credits")
+        .update({ status: "available", reserved_payment_id: null })
+        .eq("id", topUpCredit.id)
+        .eq("reserved_payment_id", pending.id)
+        .eq("status", "reserved");
+    };
+
     const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-callback`;
     const addressLine = profile.city || "Türkiye";
 
     const iyzicoRequest = {
       locale: Iyzipay.LOCALE.TR,
       conversationId,
-      price: numericPrice.toFixed(2),
-      paidPrice: numericPrice.toFixed(2),
+      price: chargeAmount.toFixed(2),
+      paidPrice: chargeAmount.toFixed(2),
       currency: Iyzipay.CURRENCY.TRY,
       basketId: pending.id,
       paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
@@ -714,14 +830,16 @@ Deno.serve(async (req) => {
           id: pending.id,
           name: type === "package"
             ? `${numericQuantity} Ders Paketi - ${teacherName}`
-            : `${type === "trial" ? "Deneme Dersi" : "Ders"} - ${teacherName}`,
+            : `${type === "trial" ? "Deneme Dersi" : "Ders"}${topUpCredit ? " (ders hakkı farkı)" : ""} - ${teacherName}`,
           category1: "Eğitim",
           itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
-          price: numericPrice.toFixed(2),
+          price: chargeAmount.toFixed(2),
         },
       ],
     };
 
+    // a throw here (network) leaves the row pending with no token - the
+    // reconcile run expires it and hands a held credit back
     const result: any = await new Promise((resolve, reject) => {
       iyzipay.checkoutFormInitialize.create(iyzicoRequest, (err: unknown, res: unknown) => {
         if (err) reject(err); else resolve(res);
@@ -730,6 +848,7 @@ Deno.serve(async (req) => {
 
     if (result.status !== "success") {
       await supabaseAdmin.from("pending_payments").update({ status: "failed" }).eq("id", pending.id);
+      await releaseTopUpCredit();
       console.error("iyzico initialize failed", result);
       return jsonResponse({ error: result.errorMessage || "Ödeme başlatılamadı." }, 500);
     }

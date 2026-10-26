@@ -944,6 +944,7 @@
 
             <button
               class="primary"
+              id="trialLessonBtn"
               onclick="trialLesson()"
               data-i18n="teacherProfile.trialLessonBtn">
               Deneme Dersi Al
@@ -999,14 +1000,14 @@
   </main>
 
 
-  <script src="i18n.js?v=16"></script>
+  <script src="i18n.js?v=17"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="favorites.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=10"></script>
+  <script src="bookings.js?v=11"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script src="messages.js?v=4"></script>
@@ -1017,6 +1018,8 @@
 
     const profileRoot = document.getElementById("profileRoot");
     const notFound = document.getElementById("notFound");
+
+    let viewerTrialTaken = false;
 
     (async function() {
 
@@ -1042,6 +1045,23 @@
       // already taken by another student - fetched once up front so the
       // per-day render loop is never itself async
       const busyTimes = await armusGetTeacherBusyTimes(teacher.id).catch(() => []);
+
+      // one trial per teacher (migration_110.sql): a student who's had
+      // theirs with this teacher gets "Book a Lesson" only, and the
+      // calendar's slots book a regular lesson
+      if (viewerId) {
+        try {
+          const result = await armusSupabase
+            .from("bookings")
+            .select("teacher_id, type, status, late_cancel")
+            .eq("student_id", viewerId)
+            .eq("teacher_id", teacher.id)
+            .eq("type", "trial");
+          const earlierTrials = (result.data || []).map(r => ({ teacherId: r.teacher_id, type: r.type, status: r.status || "confirmed", lateCancel: r.late_cancel === true }));
+          viewerTrialTaken = armusHasTakenTrialWith(earlierTrials, teacher.id);
+        } catch (err) {}
+        if (viewerTrialTaken) document.getElementById("trialLessonBtn").style.display = "none";
+      }
 
       const teacherDisplayName = armusShortDisplayName(teacher.name);
       const seoTitle = `${teacherDisplayName} | ARMUS`;
@@ -1205,7 +1225,7 @@
               btn.textContent = armusFormatSlotTimeRangeForViewer(dateKey, slot.time, teacher.timezone);
               btn.addEventListener("click", () => {
                 window.location.href =
-                  `booking?teacher=${encodeURIComponent(teacher.id)}&type=trial&date=${dateKey}&time=${slot.time}`;
+                  `booking?teacher=${encodeURIComponent(teacher.id)}&type=${viewerTrialTaken ? "lesson" : "trial"}&date=${dateKey}&time=${slot.time}`;
               });
               col.appendChild(btn);
             });
@@ -1475,7 +1495,7 @@
     })();
 
     function trialLesson() {
-      window.location.href = `booking?teacher=${encodeURIComponent(teacherId)}&type=trial`;
+      window.location.href = `booking?teacher=${encodeURIComponent(teacherId)}&type=${viewerTrialTaken ? "lesson" : "trial"}`;
     }
 
     function bookLesson() {

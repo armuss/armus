@@ -237,10 +237,20 @@ create table pending_payments (
   -- made - the buyer got a lesson credit instead; 'paid_no_booking' is
   -- reserved for a genuine write failure that still needs manual
   -- follow-up.
+  -- 'expired' (migration_110.sql): the reconcile run found this checkout
+  -- never paid (see payment-callback)
   status text not null default 'pending'
-    check (status in ('pending', 'processing', 'succeeded', 'failed', 'paid_no_booking', 'slot_taken', 'time_passed')),
+    check (status in ('pending', 'processing', 'succeeded', 'failed', 'paid_no_booking', 'slot_taken', 'time_passed', 'expired')),
   booking_id uuid references bookings(id),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- migration_110.sql: a card top-up on a lesson credit charges only the
+  -- difference (price); booking_price is what the lesson itself costs.
+  -- credit_id (the credit it tops up) is added after lesson_credits below.
+  booking_price numeric,
+  -- the armus-reconcile-payments cron looks at each unsettled row once
+  last_reconciled_at timestamptz,
+  -- package lessons refunded to the card (package-credits)
+  refunded_amount numeric not null default 0
 );
 
 alter table pending_payments enable row level security;
@@ -332,12 +342,35 @@ create table lesson_credits (
   student_id uuid not null references profiles(id) on delete cascade,
   teacher_id text not null,
   teacher_name text not null,
-  status text not null default 'available' check (status in ('available', 'used')),
+  -- migration_110.sql: 'reserved' while a card top-up for it is being
+  -- paid (reserved_payment_id), 'refunded' once a package lesson's share
+  -- went back to the card (package-credits)
+  status text not null default 'available',
   source_booking_id uuid references bookings(id) on delete set null,
   used_booking_id uuid references bookings(id) on delete set null,
   created_at timestamptz not null default now(),
-  used_at timestamptz
+  used_at timestamptz,
+  -- migration_110.sql: what this lesson was paid for. With its own teacher
+  -- it covers a lesson at this price; with another teacher (a trial) it's
+  -- worth this much - a dearer trial is topped up by card. null = an older
+  -- credit that couldn't be matched to a payment: covers in full.
+  value numeric,
+  -- where it came from: 'package', 'refund' (a lesson that came back),
+  -- 'payment_issue' (paid, but the booking couldn't be made), 'referral'
+  source text,
+  -- the payment behind it (a package's, for refunds)
+  pending_payment_id uuid references pending_payments(id) on delete set null,
+  reserved_payment_id uuid references pending_payments(id) on delete set null,
+  -- moved from a stranded package to another teacher: worth `value`
+  -- with them (not price-locked like a credit with its own teacher)
+  transferred_at timestamptz,
+  refunded_at timestamptz,
+  constraint lesson_credits_status_check check (status in ('available', 'used', 'reserved', 'refunded')),
+  constraint lesson_credits_value_check check (value is null or value >= 0),
+  constraint lesson_credits_source_check check (source is null or source in ('package', 'refund', 'payment_issue', 'referral'))
 );
+
+alter table pending_payments add column credit_id uuid references lesson_credits(id) on delete set null;
 
 alter table lesson_credits enable row level security;
 
@@ -605,9 +638,10 @@ begin
     and status = 'pending'
   returning referrer_id into v_referrer_id;
 
+  -- migration_110.sql: the reward records what it's worth, like every other credit
   if v_referrer_id is not null then
-    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
-    values (v_referrer_id, new.teacher_id, new.teacher_name, new.id);
+    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id, value, source)
+    values (v_referrer_id, new.teacher_id, new.teacher_name, new.id, new.price, 'referral');
   end if;
 
   return new;
@@ -1917,14 +1951,16 @@ create trigger attendance_reports_after_insert
   after insert on attendance_reports
   for each row execute procedure public.handle_new_attendance_report();
 
--- migration_106.sql: cancels one no-show lesson and returns it to the
--- student, same rule as cancel-booking for a teacher/admin cancellation
--- (card-paid -> a new lesson credit with that teacher, credit-paid ->
--- that SAME credit back). Returns true only when THIS call did it (the
--- booking was still confirmed), so the caller knows whether to email.
--- Never callable by a client: it would let anyone "refund" any booking
--- they could name.
-create or replace function public.refund_teacher_no_show_lesson(p_booking_id uuid)
+-- migration_110.sql: giving a cancelled lesson back.
+-- One rule for every refund-eligible cancellation (cancel-booking, an
+-- upheld teacher no-show, a ban). The caller has already cancelled the
+-- booking. Returns true when something went back to the student.
+--   - card top-up on a credit (pending_payments.credit_id): that credit
+--     comes back worth the whole lesson (its value + the card part),
+--     tied to this lesson's teacher
+--   - card-paid: a new credit with this teacher, worth what was paid
+--   - credit-paid: that same credit back, unchanged
+create or replace function public.refund_booking_to_credit(p_booking_id uuid)
 returns boolean
 language plpgsql
 security definer
@@ -1932,29 +1968,74 @@ set search_path = public
 as $$
 declare
   b record;
+  p record;
+  done boolean := false;
+begin
+  select id, student_id, teacher_id, teacher_name, price into b from bookings where id = p_booking_id;
+  if not found then
+    return false;
+  end if;
+
+  select * into p from pending_payments
+  where booking_id = b.id and status = 'succeeded'
+  order by created_at desc
+  limit 1;
+
+  if p.id is not null and p.credit_id is not null then
+    update lesson_credits
+    set status = 'available', used_booking_id = null, used_at = null,
+        value = coalesce(value, 0) + p.price,
+        teacher_id = b.teacher_id, teacher_name = b.teacher_name,
+        transferred_at = null
+    where id = p.credit_id and used_booking_id = b.id and status = 'used';
+    done := found;
+  elsif p.id is not null then
+    if not exists (
+      select 1 from lesson_credits
+      where source_booking_id = b.id and student_id = b.student_id and source = 'refund'
+    ) then
+      insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id, value, source, pending_payment_id)
+      values (b.student_id, b.teacher_id, b.teacher_name, b.id, p.price, 'refund', p.id);
+      done := true;
+    end if;
+  else
+    update lesson_credits
+    set status = 'available', used_booking_id = null, used_at = null
+    where used_booking_id = b.id and status = 'used';
+    done := found;
+  end if;
+
+  if done then
+    update bookings set refunded = true where id = b.id;
+  end if;
+
+  return done;
+end;
+$$;
+
+revoke all on function public.refund_booking_to_credit(uuid) from public, anon, authenticated;
+
+-- migration_106.sql: cancels one no-show lesson and returns it to the
+-- student (refund_booking_to_credit above). Returns true only when THIS
+-- call did it (the booking was still confirmed), so the caller knows
+-- whether to email. Never callable by a client: it would let anyone
+-- "refund" any booking they could name.
+create or replace function public.refund_teacher_no_show_lesson(p_booking_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
 begin
   update bookings
   set status = 'cancelled', cancelled_at = now(), cancelled_by = 'admin', teacher_no_show = true
-  where id = p_booking_id and status = 'confirmed'
-  returning id, student_id, teacher_id, teacher_name into b;
+  where id = p_booking_id and status = 'confirmed';
 
   if not found then
     return false;
   end if;
 
-  if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
-    insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
-    values (b.student_id, b.teacher_id, b.teacher_name, b.id);
-    update bookings set refunded = true where id = b.id;
-  else
-    update lesson_credits
-    set status = 'available', used_booking_id = null, used_at = null
-    where used_booking_id = b.id and status = 'used';
-    if found then
-      update bookings set refunded = true where id = b.id;
-    end if;
-  end if;
-
+  perform public.refund_booking_to_credit(p_booking_id);
   return true;
 end;
 $$;
@@ -2578,6 +2659,32 @@ select cron.schedule(
     and b.status = 'confirmed'
     and ((b.lesson_date + b.lesson_time::time + interval '50 minutes') at time zone b.teacher_timezone)
         between now() - interval '40 minutes' and now() - interval '10 minutes'
+  $$
+);
+
+-- === RECONCILE PAYMENTS (migration_110.sql) ===========================
+-- Settles checkouts whose callback never came (the student closed the tab
+-- after paying, a network blip).
+-- iyzico's checkout token lives 30 minutes, so 35 minutes after a
+-- checkout started its outcome is final. Each row is looked at once
+-- (last_reconciled_at); the call is only made when there's something to
+-- look at. payment-callback must keep "Verify JWT" OFF (iyzico calls it).
+select cron.schedule(
+  'armus-reconcile-payments',
+  '*/15 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/payment-callback',
+    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    body := '{"action": "reconcile"}'::jsonb
+  )
+  where exists (
+    select 1 from pending_payments
+    where status in ('pending', 'failed')
+      and last_reconciled_at is null
+      and created_at < now() - interval '35 minutes'
+      and created_at > now() - interval '48 hours'
+  )
   $$
 );
 
@@ -3291,9 +3398,11 @@ $$;
 -- showing up. The ban itself now cancels every not-yet-started confirmed
 -- lesson for that teacher - same outcome as a teacher/admin cancelling
 -- each by hand through cancel-booking: a lesson credit back whenever the
--- lesson was actually paid for (card or an earlier credit), plus an email
+-- lesson was actually paid for (refund_booking_to_credit), plus an email
 -- to each student (notify-lessons-cancelled Edge Function - Verify JWT
 -- off, same TRIGGER_SECRET header as the other trigger-fired functions).
+-- migration_110.sql: students with unused package lessons with this
+-- teacher are told too (refund or move them - my-lessons.html).
 create or replace function public.cancel_banned_teacher_future_lessons()
 returns trigger
 language plpgsql
@@ -3310,33 +3419,23 @@ begin
     where teacher_id = new.id::text
       and status = 'confirmed'
       and ((lesson_date + lesson_time::time) at time zone teacher_timezone) > now()
-    returning id, student_id, teacher_id, teacher_name
+    returning id
   loop
-    -- same rule as cancel-booking: a card-paid lesson comes back as a
-    -- new credit with this teacher; a credit-paid one gets that SAME
-    -- credit back (never a freshly minted one - see cancel-booking's
-    -- header for why)
-    if exists (select 1 from pending_payments p where p.booking_id = b.id and p.status = 'succeeded') then
-      insert into lesson_credits (student_id, teacher_id, teacher_name, source_booking_id)
-      values (b.student_id, b.teacher_id, b.teacher_name, b.id);
-      update bookings set refunded = true where id = b.id;
-    else
-      update lesson_credits
-      set status = 'available', used_booking_id = null, used_at = null
-      where used_booking_id = b.id and status = 'used';
-      if found then
-        update bookings set refunded = true where id = b.id;
-      end if;
-    end if;
-
+    perform public.refund_booking_to_credit(b.id);
     cancelled_ids := cancelled_ids || b.id;
   end loop;
 
-  if coalesce(array_length(cancelled_ids, 1), 0) > 0 then
+  -- students holding package lessons with this teacher hear about it too
+  -- (refund or move them - my-lessons.html), even with nothing booked
+  if coalesce(array_length(cancelled_ids, 1), 0) > 0
+     or exists (
+       select 1 from lesson_credits
+       where teacher_id = new.id::text and source = 'package' and status = 'available'
+     ) then
     perform net.http_post(
       url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/notify-lessons-cancelled',
       headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
-      body := jsonb_build_object('booking_ids', to_jsonb(cancelled_ids), 'reason', 'teacher_banned')
+      body := jsonb_build_object('booking_ids', to_jsonb(cancelled_ids), 'reason', 'teacher_banned', 'teacher_id', new.id)
     );
   end if;
 
@@ -3374,6 +3473,111 @@ $$;
 create trigger bookings_enforce_teacher_not_banned
   before insert on bookings
   for each row execute procedure public.enforce_teacher_not_banned();
+
+-- === ONE TRIAL PER TEACHER (migration_110.sql) ========================
+-- A trial is only paid to the teacher if the student carries on with
+-- them, so a student booking trial after trial with one teacher had them
+-- working for free. A trial counts as taken unless it was cancelled with
+-- nothing lost (a late cancellation still counts). AR005, like AR001/AR002:
+-- create-payment refuses before any card step, payment-callback books a
+-- paid trial that hits it as a regular lesson instead.
+
+create or replace function public.has_taken_trial(p_student_id uuid, p_teacher_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from bookings b
+    where b.student_id = p_student_id
+      and b.teacher_id = p_teacher_id
+      and b.type = 'trial'
+      and (b.status <> 'cancelled' or coalesce(b.late_cancel, false))
+  );
+$$;
+
+revoke all on function public.has_taken_trial(uuid, text) from public, anon, authenticated;
+
+create or replace function public.enforce_one_trial_per_teacher()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.type <> 'trial' or new.status = 'cancelled' then
+    return new;
+  end if;
+
+  -- two checkouts for the same pair finishing at once would both pass
+  -- the check below without this
+  perform pg_advisory_xact_lock(hashtextextended('armus-trial:' || new.student_id::text || ':' || new.teacher_id, 0));
+
+  if public.has_taken_trial(new.student_id, new.teacher_id) then
+    raise exception using errcode = 'AR005', message = 'trial_already_taken: bu ogrenci bu ogretmenle zaten deneme dersi aldi';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger bookings_enforce_one_trial
+  before insert on bookings
+  for each row execute procedure public.enforce_one_trial_per_teacher();
+
+-- === STRANDED PACKAGE LESSONS (migration_110.sql) =====================
+-- Package lessons (source = 'package') still on the balance whose teacher
+-- can't teach this student anymore: banned, blocking them, or no longer
+-- an approved teacher. A teacher who's only hidden for review isn't
+-- stranded - that ends one way or the other.
+create or replace function public.stranded_package_credits(p_student_id uuid, p_teacher_id text default null)
+returns setof lesson_credits
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select c.* from lesson_credits c
+  left join profiles t on t.id::text = c.teacher_id
+  where c.student_id = p_student_id
+    and c.status = 'available'
+    and c.source = 'package'
+    and (p_teacher_id is null or c.teacher_id = p_teacher_id)
+    and (
+      t.id is null
+      or coalesce(t.is_banned, false)
+      or coalesce(t.status, '') <> 'approved'
+      or exists (
+        select 1 from blocked_students bs
+        where bs.teacher_id::text = c.teacher_id and bs.student_id = c.student_id
+      )
+    );
+$$;
+
+revoke all on function public.stranded_package_credits(uuid, text) from public, anon, authenticated;
+
+-- what my-lessons.html shows: one row per teacher
+create or replace function public.my_stranded_package_credits()
+returns table (teacher_id text, teacher_name text, lessons integer, total_value numeric, refundable boolean)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select c.teacher_id,
+         max(c.teacher_name),
+         count(*)::integer,
+         coalesce(sum(c.value), 0),
+         bool_and(c.value is not null and p.iyzico_payment_transaction_id is not null)
+  from public.stranded_package_credits(auth.uid()) c
+  left join pending_payments p on p.id = c.pending_payment_id
+  group by c.teacher_id;
+$$;
+
+revoke all on function public.my_stranded_package_credits() from public, anon;
+grant execute on function public.my_stranded_package_credits() to authenticated;
 
 -- === RESCHEDULING + TEACHER CANCELLATION CAP (migration_107.sql) ======
 -- Moving a lesson (reschedule-booking Edge Function): a student 12+

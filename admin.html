@@ -1537,7 +1537,9 @@
         <p class="section-hint" data-i18n="admin.earningsHint">
           Her öğretmenin tamamlanan derslerden elde ettiği ciro, komisyon
           dilimi ve ARMUS'un aldığı komisyon. Dilimler ana sayfadaki
-          komisyon oranlarıyla aynıdır.
+          komisyon oranlarıyla aynıdır. Bir dersin ücreti dersten 7 gün
+          sonra ödenebilir olur; para çekme talebini "Ödenebilir" sütununa
+          göre kontrol et.
         </p>
         <table id="earningsTable">
           <thead>
@@ -1549,6 +1551,8 @@
               <th data-i18n="admin.colCommissionTier">Komisyon dilimi</th>
               <th data-i18n="admin.colArmusCommission">ARMUS komisyonu</th>
               <th data-i18n="admin.colTeacherShare">Öğretmen payı</th>
+              <th data-i18n="admin.colPayableNow">Ödenebilir</th>
+              <th data-i18n="admin.colOnHold">Beklemede (7 gün)</th>
             </tr>
           </thead>
           <tbody id="earningsBody"></tbody>
@@ -1704,11 +1708,11 @@
 
   </div>
 
-  <script src="i18n.js?v=16"></script>
+  <script src="i18n.js?v=17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=10"></script>
+  <script src="bookings.js?v=11"></script>
   <script src="reviews.js?v=5"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="disputes.js?v=4"></script>
@@ -3635,15 +3639,20 @@
           // teacher's gross, until the student buys a package with them
           // (see armusTrialCountsAsEarned)
           const teacherCredits = (credits || []).filter(c => c.teacher_id === teacher.id);
-          const gross = completed.concat(paidLateCancels).reduce(
-            (sum, b) => sum + (armusTrialCountsAsEarned(b, teacherBookings, teacherCredits) ? (b.price || 0) : 0),
-            0
-          );
+          const earnable = b => armusTrialCountsAsEarned(b, teacherBookings, teacherCredits) ? (b.price || 0) : 0;
+          const earned = completed.concat(paidLateCancels);
+          const gross = earned.reduce((sum, b) => sum + earnable(b), 0);
           const tier = commissionForHours(hours);
           const commission = Math.round(gross * (tier.rate / 100));
+          // ARMUS_PAYOUT_HOLD_DAYS (bookings.js): a lesson's share becomes
+          // payable 7 days after it ends - same split as dashboard.html's
+          // withdrawable balance
+          const heldGross = earned.filter(b => !armusIsPayoutReleased(b)).reduce((sum, b) => sum + earnable(b), 0);
+          const heldPayout = Math.round(heldGross * (1 - tier.rate / 100));
           return {
             teacher, completedCount: completed.length, lateCancelCount: paidLateCancels.length, hours, gross,
             tier, commission, payout: gross - commission,
+            payableNow: (gross - commission) - heldPayout, heldPayout,
           };
         })
         .filter(row => row.completedCount > 0 || row.lateCancelCount > 0)
@@ -3671,6 +3680,8 @@
           <td>%${row.tier.rate} <span style="color:var(--armus-muted);">(${row.tier.range})</span></td>
           <td>₺${row.commission}</td>
           <td>₺${row.payout}</td>
+          <td>₺${row.payableNow}</td>
+          <td>₺${row.heldPayout}</td>
         `;
         body.appendChild(tr);
       });
