@@ -20,10 +20,13 @@
 // (migration_107.sql's bookings_enforce_teacher_cancel_limit refuses the
 // 4th with AR003). Cancelling the lessons of a student the teacher is
 // blocking (teacher-blocks.js) doesn't count - see counts_as_teacher_cancel.
-// "Goes back to the balance" means: a card-paid lesson grants a new
-// lesson credit tied to that teacher; a lesson that was itself paid
-// for with a credit gets THAT SAME credit back (status flipped back to
-// available), never a freshly minted one. Restoring rather than minting
+// "Goes back to the balance" means (migration_110.sql's
+// refund_booking_to_credit, which this calls): a card-paid lesson grants
+// a new lesson credit tied to that teacher, worth what was paid; a lesson
+// that was itself paid for with a credit gets THAT SAME credit back
+// (status flipped back to available), never a freshly minted one; a
+// credit topped up by card gets that credit back worth the whole lesson,
+// tied to this lesson's teacher. Restoring rather than minting
 // is what makes it safe to refund a credit-paid lesson even when the
 // STUDENT cancels it (this used to give them nothing, to stop credit
 // "farming"): a credit tied to teacher A, spent on a trial with teacher
@@ -294,49 +297,40 @@ Deno.serve(async (req) => {
     let refunded = false;
 
     if (refundEligible) {
-      const { data: payment } = await supabaseAdmin
-        .from("pending_payments")
-        .select("id")
-        .eq("booking_id", booking.id)
-        .eq("status", "succeeded")
-        .maybeSingle();
+      // migration_110.sql's refund_booking_to_credit - the same rule an
+      // upheld no-show and a ban use: card-paid -> a new credit with this
+      // teacher worth what was paid; credit-paid -> that same credit back
+      // (conditional on it still being "used" by THIS booking, so two
+      // racing calls can't both count it); a card top-up on a credit ->
+      // that credit back worth the whole lesson, with this teacher.
+      const { data: done, error: refundError } = await supabaseAdmin
+        .rpc("refund_booking_to_credit", { p_booking_id: booking.id });
+      if (refundError) console.error("lesson credit refund failed", refundError);
+      else refunded = done === true;
+    }
 
-      if (payment) {
-        // card-paid: the lesson goes back as a new credit with this teacher
-        const { error: creditError } = await supabaseAdmin.from("lesson_credits").insert({
-          student_id: booking.student_id,
-          teacher_id: booking.teacher_id,
-          teacher_name: booking.teacher_name,
-          source_booking_id: booking.id,
-        });
-        if (creditError) console.error("lesson credit grant failed", creditError);
-        else refunded = true;
-      } else {
-        // credit-paid (no pending_payments row - see this file's header):
-        // the very credit that paid for it comes back. Conditional on it
-        // still being "used" by THIS booking, so two racing calls can't
-        // both count it as restored.
-        const { data: restoredCredit, error: restoreError } = await supabaseAdmin
-          .from("lesson_credits")
-          .update({ status: "available", used_booking_id: null, used_at: null })
-          .eq("used_booking_id", booking.id)
-          .eq("status", "used")
-          .select("id")
-          .maybeSingle();
-        if (restoreError) console.error("lesson credit restore failed", restoreError);
-        else if (restoredCredit) refunded = true;
-      }
-
-      if (refunded) {
-        await supabaseAdmin.from("bookings").update({ refunded: true }).eq("id", booking.id);
+    // blocking a student cancels their lessons through here; package
+    // lessons with this teacher can't be used anymore, so say what the
+    // student can do with them (migration_110.sql, my-lessons.html)
+    let strandedPackageNote = "";
+    if (cancelledBy === "teacher" && !countsAsTeacherCancel) {
+      const { count: packageLessons } = await supabaseAdmin
+        .from("lesson_credits")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", booking.student_id)
+        .eq("teacher_id", booking.teacher_id)
+        .eq("source", "package")
+        .eq("status", "available");
+      if (packageLessons) {
+        strandedPackageNote = ` Bu öğretmenle paketinden kalan ${packageLessons} ders için "Derslerim" sayfasından para iadesi isteyebilir ya da paketini başka bir öğretmene aktarabilirsin.`;
       }
     }
 
-    const studentNote = refunded
+    const studentNote = (refunded
       ? "Bu ders ders hakkı olarak bakiyene geri eklendi, dilediğin zaman kullanabilirsin."
       : (cancelledBy === "student"
         ? "Derse 12 saatten az kaldığı için ders hakkı iade edilmedi."
-        : "Bu ders için bir şey ödemene gerek kalmadı.");
+        : "Bu ders için bir şey ödemene gerek kalmadı.")) + strandedPackageNote;
     const teacherNote = cancelledBy === "student"
       ? (lateCancel
         ? (booking.type === "trial"

@@ -2396,6 +2396,7 @@
           <h3 data-i18n="teacherDash.availableBalanceHeading">Çekilebilir bakiye (tahmini)</h3>
           <div id="availableBalanceValue" style="font-family: 'Unbounded', 'Inter', sans-serif; font-size: 28px; font-weight: 800; margin: 8px 0;">₺0</div>
           <p class="section-hint" style="margin-bottom: 0;" data-i18n="teacherDash.availableBalanceHint">Bu rakam, tamamlanan derslerinden şu anki komisyon oranınla hesaplanan bir tahmindir; kesin tutarı ARMUS ekibi talebini incelerken doğrular.</p>
+          <p class="section-hint" id="heldBalanceNote" style="margin: 10px 0 0; display: none;"></p>
         </div>
 
         <form id="withdrawalForm" novalidate>
@@ -2580,12 +2581,12 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=16"></script>
+  <script src="i18n.js?v=17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=10"></script>
+  <script src="bookings.js?v=11"></script>
   <script src="reschedule.js?v=1"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
@@ -3373,13 +3374,35 @@
         .order("requested_at", { ascending: false });
       const withdrawalRequests = withdrawalRows || [];
 
-      const lifetimeGross = earnedBookings.reduce((sum, b) => sum + earnablePrice(b), 0);
+      // a lesson's earnings wait ARMUS_PAYOUT_HOLD_DAYS (7) after it ends
+      // before they can be withdrawn - room for a no-show report or a
+      // complaint to be settled first
+      const releasedEarned = earnedBookings.filter(b => armusIsPayoutReleased(b));
+      const heldEarned = earnedBookings.filter(b => !armusIsPayoutReleased(b));
+      const lifetimeGross = releasedEarned.reduce((sum, b) => sum + earnablePrice(b), 0);
       const lifetimeNetEstimate = Math.round(lifetimeGross * (1 - tier.rate / 100));
+      const heldNetEstimate = Math.round(heldEarned.reduce((sum, b) => sum + earnablePrice(b), 0) * (1 - tier.rate / 100));
       const claimedAmount = withdrawalRequests
         .filter(w => w.status !== "rejected")
         .reduce((sum, w) => sum + Number(w.amount), 0);
       const availableBalance = Math.max(0, lifetimeNetEstimate - claimedAmount);
       document.getElementById("availableBalanceValue").textContent = `₺${availableBalance}`;
+
+      function renderHeldBalance() {
+        const note = document.getElementById("heldBalanceNote");
+        if (heldNetEstimate <= 0) { note.style.display = "none"; return; }
+        const nextRelease = heldEarned
+          .filter(b => earnablePrice(b) > 0)
+          .map(b => armusPayoutReleaseAt(b))
+          .sort((a, b) => a - b)[0];
+        note.textContent = armusT("teacherDash.heldBalanceNote", "Bekleyen: ₺{amount}. Son {days} günün derslerinden gelir, her dersin ücreti dersten {days} gün sonra çekilebilir olur (sıradaki: {date}).")
+          .replace("{amount}", heldNetEstimate)
+          .replaceAll("{days}", ARMUS_PAYOUT_HOLD_DAYS)
+          .replace("{date}", nextRelease ? nextRelease.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { day: "numeric", month: "short" }) : "—");
+        note.style.display = "block";
+      }
+      renderHeldBalance();
+      document.addEventListener("armus:langchange", renderHeldBalance);
 
       const WITHDRAW_STATUS_LABELS = {
         pending: () => armusT("teacherDash.withdrawStatusPending", "Beklemede"),
