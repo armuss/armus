@@ -7,8 +7,7 @@
 // right when the student clicks "Onayla", or from the app's package-offer
 // screen after a trial lesson. Two outcomes for a booking:
 //   - an available credit covers this booking (same teacher as the
-//     credit, any teacher if this is a trial lesson, or any teacher for
-//     any lesson with an any_teacher credit): the booking is
+//     credit, or any teacher if this is a trial lesson): the booking is
 //     created directly, right here, with no iyzico step at all and no
 //     charge - response is { bookedDirectly: true, creditApplied: true }
 //   - no matching credit: unchanged, full price charged to the card
@@ -469,12 +468,9 @@ Deno.serve(async (req) => {
 
     // does an available lesson credit cover this booking? Same teacher as
     // the credit covers any lesson type; a credit from a different teacher
-    // only covers a trial lesson (see migration_28.sql) - unless it's an
-    // any_teacher credit (migration_108.sql: the student got it because
-    // their teacher didn't show up or was banned), which covers any lesson
-    // with any teacher. Packages are always a real charge - never covered
-    // by an existing credit, since buying a package is what CREATES
-    // credits, not what consumes them.
+    // only covers a trial lesson (see migration_28.sql). Packages are
+    // always a real charge - never covered by an existing credit, since
+    // buying a package is what CREATES credits, not what consumes them.
     const { data: credits } = type !== "package"
       ? await supabaseAdmin
           .from("lesson_credits")
@@ -484,15 +480,10 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: true })
       : { data: null };
 
-    // most restricted credit first, so the flexible ones stay for where
-    // only they work: this teacher's own -> (a trial) one tied to another
-    // teacher -> an any_teacher one
-    const creditList = credits || [];
-    const appliedCredit =
-      creditList.find((c: any) => c.teacher_id === teacherId)
-      || (type === "trial" ? creditList.find((c: any) => !c.any_teacher) : undefined)
-      || creditList.find((c: any) => c.any_teacher === true)
-      || null;
+    let appliedCredit = (credits || []).find((c: any) => c.teacher_id === teacherId) || null;
+    if (!appliedCredit && type === "trial" && credits && credits.length > 0) {
+      appliedCredit = credits[0];
+    }
 
     // a credit covers this booking - book it now, no card charge, no
     // iyzico step, and deliberately no pending_payments row at all (see
