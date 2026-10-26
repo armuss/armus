@@ -483,15 +483,12 @@ async function armusRenderStudentNav(el, session, firstName) {
   let creditBadge = "";
   const { data: credits } = await armusSupabase
     .from("lesson_credits")
-    .select("teacher_name, any_teacher")
+    .select("teacher_name")
     .eq("student_id", session.id)
     .eq("status", "available");
 
   if (credits && credits.length > 0) {
-    // migration_108.sql: an any_teacher credit isn't tied to anyone
-    const teacherList = armusEscapeHtml(credits.map((c) => c.any_teacher
-      ? armusT("nav.creditsAnyTeacher", "herhangi bir öğretmen")
-      : armusShortDisplayName(c.teacher_name)).join(", "));
+    const teacherList = armusEscapeHtml(credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", "));
     const tooltip = armusT("nav.creditsTooltip", "Kullanılabilir ders hakkın: {teachers}").replace("{teachers}", teacherList);
     const badgeText = armusT("nav.creditsBadge", "{n} ders hakkın var").replace("{n}", credits.length);
     creditBadge = `<span class="gnav-credit-badge" title="${tooltip}">

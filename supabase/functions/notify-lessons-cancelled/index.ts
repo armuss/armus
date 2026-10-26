@@ -108,14 +108,18 @@ function cancelledEmailHtml(recipientName: string, otherName: string, whenLabel:
 
 function noteFor(reason: string, refunded: boolean) {
   if (reason === "teacher_banned") {
-    // migration_108.sql: this credit is good with any teacher
+    // the credit is tied to this teacher, and they can't be booked
+    // anymore - so in practice it covers a trial lesson with someone
+    // else (create-payment's own credit rules). Saying so plainly beats
+    // a generic "you got a credit" the student then can't use the way
+    // they'd expect.
     return refunded
-      ? "Öğretmenin hesabı kapatıldığı için bu ders iptal edildi. Bu ders için bir ders hakkı kazandın - dilediğin öğretmenle ders almak için kullanabilirsin."
+      ? "Öğretmenin hesabı kapatıldığı için bu ders iptal edildi. Bu ders için bir ders hakkı kazandın - başka bir öğretmenle deneme dersi almak için kullanabilirsin."
       : "Öğretmenin hesabı kapatıldığı için bu ders iptal edildi.";
   }
   if (reason === "teacher_no_show") {
     return refunded
-      ? "Öğretmenin bu derse gelmediği doğrulandı. Ders, ders hakkı olarak bakiyene geri eklendi - dilediğin öğretmenle ders almak için kullanabilirsin."
+      ? "Öğretmenin bu derse gelmediği doğrulandı. Ders, ders hakkı olarak bakiyene geri eklendi - aynı öğretmenle ya da başka bir öğretmenle deneme dersi için kullanabilirsin."
       : "Öğretmenin bu derse gelmediği doğrulandı.";
   }
   return refunded
