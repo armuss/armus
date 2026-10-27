@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { unregisterPushNotifications } from './push';
 import { supabase } from './supabase';
 
 export type Profile = {
@@ -11,6 +12,8 @@ export type Profile = {
   is_admin: boolean;
   city: string | null;
   photo_url: string | null;
+  // IANA zone - a teacher's lesson times are wall-clock in it
+  timezone?: string | null;
 };
 
 type AuthState = {
@@ -70,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         signOut: async () => {
+          // while still signed in - the token row is the user's own (RLS)
+          await unregisterPushNotifications();
           await supabase.auth.signOut();
         },
         refreshProfile: async () => {

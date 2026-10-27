@@ -3,6 +3,7 @@ import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +22,31 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetting, setResetting] = useState(false);
+
+  // Same as the site's "Şifremi unuttum" (auth.js armusRequestPasswordReset):
+  // the email's link opens armus.com.tr/sifre-sifirla, where the new
+  // password is set - then the student signs in here with it.
+  async function handleForgotPassword() {
+    setError('');
+    setResetMessage('');
+    const trimmed = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError('Şifreni sıfırlamak için önce e-posta adresini yaz.');
+      return;
+    }
+    setResetting(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: 'https://armus.com.tr/sifre-sifirla',
+    });
+    setResetting(false);
+    if (resetError) {
+      setError('Sıfırlama e-postası gönderilemedi. Lütfen biraz sonra tekrar dene.');
+      return;
+    }
+    setResetMessage('Şifre sıfırlama bağlantısını e-postana gönderdik. Bağlantıdan yeni şifreni belirleyip buradan giriş yapabilirsin.');
+  }
 
   async function handleLogin() {
     setError('');
@@ -75,7 +101,12 @@ export default function Login() {
             />
           </View>
 
+          <Pressable onPress={handleForgotPassword} disabled={resetting} hitSlop={8} style={styles.forgotRow}>
+            <Text style={styles.forgotText}>{resetting ? 'Gönderiliyor…' : 'Şifremi unuttum'}</Text>
+          </Pressable>
+
           {!!error && <Text style={styles.error}>{error}</Text>}
+          {!!resetMessage && <Text style={styles.resetMessage}>{resetMessage}</Text>}
 
           <View style={{ marginTop: 8 }}>
             <Button label="Giriş Yap" onPress={handleLogin} loading={loading} />
@@ -94,6 +125,23 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
+  forgotRow: {
+    alignSelf: 'flex-end',
+    marginTop: -6,
+    marginBottom: 12,
+  },
+  forgotText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 13,
+    color: colors.goldText,
+  },
+  resetMessage: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.success,
+    marginBottom: 12,
+  },
   screen: {
     flex: 1,
     backgroundColor: colors.bg,

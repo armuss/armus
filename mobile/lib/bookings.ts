@@ -1,3 +1,4 @@
+import { invokeEdge } from './edge';
 import { supabase } from './supabase';
 
 export type Booking = {
@@ -13,7 +14,23 @@ export type Booking = {
   teacherTimezone: string;
   price: number;
   status: string;
+  cancelledBy: string | null;
+  cancelledAt: string | null;
+  refunded: boolean;
+  // "Cancelled and Paid" (migration_105.sql): the student cancelled
+  // inside the 12-hour window, nothing came back
+  lateCancel: boolean;
+  // an upheld teacher no-show (migration_106.sql)
+  teacherNoShow: boolean;
+  // a teacher's own cancellation counted toward their monthly cap
+  // (migration_107.sql)
+  countsAsTeacherCancel: boolean;
+  createdAt: string | null;
 };
+
+export function lessonTypeLabel(type: string) {
+  return type === 'trial' ? 'Deneme Dersi' : 'Ders';
+}
 
 export const DAY_NAMES = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 export const MONTH_NAMES = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
@@ -57,7 +74,7 @@ function hashCode(str: string) {
 }
 
 export type Slot = { time: string; available: boolean };
-export type BusyTime = { date: string; time: string };
+export type BusyTime = { date: string; time: string; status?: string };
 
 // The web app used to key this same precedence check off
 // Object.keys(availabilityDates).length - which can't tell "teacher never
@@ -85,23 +102,61 @@ export function slotsForDate(
   busyTimes?: BusyTime[]
 ): Slot[] {
   const allSlots = allTimeSlots();
-  const takenTimes = new Set((busyTimes || []).filter((b) => b.date === dateKey).map((b) => b.time));
+
+  // A lesson runs 50 minutes on a 30-minute grid, so a lesson booked at
+  // 10:00 (until 10:50) also overlaps the 10:30 slot - an exact-time match
+  // alone left every slot 30 minutes after a booking looking open, and
+  // booking it only failed server-side (AR001). Same-day slots overlap when
+  // they're 0 or 30 minutes apart; a slot near midnight can also overlap
+  // the adjacent date's. Mirrors armusSlotsForDate (bookings.js) exactly.
+  const minutesOf = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const shiftDateKey = (key: string, deltaDays: number) => {
+    const d = new Date(key + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + deltaDays);
+    return d.toISOString().slice(0, 10);
+  };
+  const prevDateKey = shiftDateKey(dateKey, -1);
+  const nextDateKey = shiftDateKey(dateKey, 1);
+  const DAY_MINUTES = 24 * 60;
+  const busyMinutesByDate = new Map<string, number[]>();
+  (busyTimes || []).forEach((b) => {
+    if (b.status === 'cancelled') return;
+    if (b.date !== dateKey && b.date !== prevDateKey && b.date !== nextDateKey) return;
+    busyMinutesByDate.set(b.date, [...(busyMinutesByDate.get(b.date) || []), minutesOf(b.time)]);
+  });
+  const overlapsBusySlot = (time: string) => {
+    const m = minutesOf(time);
+    if ((busyMinutesByDate.get(dateKey) || []).some((busyM) => Math.abs(busyM - m) < LESSON_MINUTES)) return true;
+    if ((busyMinutesByDate.get(prevDateKey) || []).some((busyM) => Math.abs(busyM - DAY_MINUTES - m) < LESSON_MINUTES)) return true;
+    if ((busyMinutesByDate.get(nextDateKey) || []).some((busyM) => Math.abs(busyM + DAY_MINUTES - m) < LESSON_MINUTES)) return true;
+    return false;
+  };
 
   if (teacher.availabilityDates && teacher.availabilityDates._set === true) {
     const daySlots = (teacher.availabilityDates[String(dayOfWeek)] as string[] | undefined) || [];
-    return allSlots.map((time) => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
+    return allSlots.map((time) => ({ time, available: daySlots.includes(time) && !overlapsBusySlot(time) }));
   }
 
   if (teacher.weeklyAvailability) {
     const daySlots = teacher.weeklyAvailability[dayOfWeek] || [];
-    return allSlots.map((time) => ({ time, available: daySlots.includes(time) && !takenTimes.has(time) }));
+    return allSlots.map((time) => ({ time, available: daySlots.includes(time) && !overlapsBusySlot(time) }));
   }
 
   return allSlots.map((time) => {
     const n = hashCode(teacher.id + dateKey + time);
-    return { time, available: n % 3 !== 0 && !takenTimes.has(time) };
+    return { time, available: n % 3 !== 0 && !overlapsBusySlot(time) };
   });
 }
+
+// Every half-hour slot open, for "any free time of the teacher's own"
+// (a teacher proposing a new time for a lesson)
+export const ANY_TIME_AVAILABILITY: AvailabilityDates = Object.assign(
+  { _set: true },
+  ...[0, 1, 2, 3, 4, 5, 6].map((d) => ({ [d]: allTimeSlots() }))
+);
 
 // Every non-cancelled booking's date+time for a teacher, with no student
 // identity attached (see get-teacher-busy-times's own header comment for
@@ -127,6 +182,13 @@ function mapBookingRow(row: any): Booking {
     teacherTimezone: row.teacher_timezone || 'Europe/Istanbul',
     price: row.price,
     status: row.status || 'confirmed',
+    cancelledBy: row.cancelled_by ?? null,
+    cancelledAt: row.cancelled_at ?? null,
+    refunded: row.refunded === true,
+    lateCancel: row.late_cancel === true,
+    teacherNoShow: row.teacher_no_show === true,
+    countsAsTeacherCancel: row.counts_as_teacher_cancel === true,
+    createdAt: row.created_at ?? null,
   };
 }
 
@@ -183,7 +245,7 @@ export function roomNameForBooking(bookingId: string) {
 // off by exactly the timezone difference - shown "too early" for a
 // lesson already in progress, or let into/locked out of the room hours
 // off from the real scheduled time.
-function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
+export function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
   const guess = new Date(`${dateStr}T${timeStr}:00Z`);
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat('en-US', {
@@ -261,4 +323,130 @@ function isSameLocalDay(a: Date, b: Date) {
 // hadn't yet) relative to UTC.
 export function isBookingToday(booking: BookingTiming): boolean {
   return isSameLocalDay(lessonWindow(booking).start, new Date());
+}
+
+// "today" as a calendar date in the given timezone (the teacher's - lesson
+// dates are wall-clock dates in it). A plain local Date, only for
+// calendar arithmetic. Mirrors armusTeacherToday (reschedule.js).
+export function todayIn(timeZone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timeZone || 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(new Date()).map((p) => [p.type, p.value])
+  );
+  return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+}
+
+export function localDateKey(date: Date) {
+  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+}
+
+// ---- cancelling (cancel-booking Edge Function) ----------------------------
+
+// Preply's 12-hour window - mirrors cancel-booking's FREE_CANCEL_HOURS
+export const FREE_CANCEL_HOURS = 12;
+// migration_107.sql's bookings_enforce_teacher_cancel_limit is the real gate
+export const TEACHER_MONTHLY_CANCEL_LIMIT = 3;
+
+export function hoursUntilLesson(booking: BookingTiming) {
+  return (lessonWindow(booking).start.getTime() - Date.now()) / 3_600_000;
+}
+
+// cancel-booking refuses the moment the lesson STARTS, so the buttons go
+// away then too (not only once it has ended)
+export function bookingCancellable(booking: BookingTiming & { status: string }) {
+  return booking.status !== 'cancelled' && lessonWindow(booking).start.getTime() > Date.now();
+}
+
+// a regular lesson the student cancelled inside the 12-hour window: paid
+// to the teacher once its time passes
+export function isPaidLateCancel(booking: Booking) {
+  return booking.status === 'cancelled' && booking.lateCancel && booking.type === 'lesson';
+}
+
+// this calendar month's own cancellations, in the teacher's timezone
+export function teacherCancelsThisMonth(bookings: Booking[], timeZone: string) {
+  const monthKey = (d: Date) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || 'Europe/Istanbul', year: 'numeric', month: '2-digit' }).format(d);
+  const current = monthKey(new Date());
+  return bookings.filter((b) => b.countsAsTeacherCancel && b.cancelledAt && monthKey(new Date(b.cancelledAt)) === current).length;
+}
+
+export async function cancelBooking(
+  bookingId: string
+): Promise<{ ok: true; refunded: boolean; lateCancel: boolean } | { ok: false; error: string; limitReached?: boolean }> {
+  const result = await invokeEdge('cancel-booking', { booking_id: bookingId });
+  if (!result.ok) {
+    return { ok: false, error: result.error || 'Ders iptal edilemedi. Lütfen tekrar dene.', limitReached: !!result.body?.limitReached };
+  }
+  return { ok: true, refunded: !!result.data.refunded, lateCancel: !!result.data.lateCancel };
+}
+
+// ---- moving a lesson (reschedule-booking Edge Function, migration_107.sql) --
+
+export type RescheduleRequest = {
+  id: string;
+  bookingId: string;
+  requestedBy: 'student' | 'teacher';
+  newDate: string;
+  newTime: string;
+};
+
+// open requests on these bookings (RLS: only the lesson's own student,
+// teacher or an admin gets rows back), keyed by booking id
+export async function getPendingRescheduleRequests(bookingIds: string[]): Promise<Record<string, RescheduleRequest>> {
+  const ids = bookingIds.filter(Boolean);
+  if (!ids.length) return {};
+  const { data, error } = await supabase.from('reschedule_requests').select('*').in('booking_id', ids).eq('status', 'pending');
+  if (error || !data) return {};
+  return Object.fromEntries(
+    data.map((r: any) => [
+      r.booking_id,
+      { id: r.id, bookingId: r.booking_id, requestedBy: r.requested_by, newDate: r.new_date, newTime: r.new_time },
+    ])
+  );
+}
+
+async function invokeReschedule(body: Record<string, unknown>, fallback: string) {
+  const result = await invokeEdge('reschedule-booking', body);
+  if (!result.ok) return { ok: false as const, error: result.error || fallback };
+  return { ok: true as const, applied: !!result.data.applied };
+}
+
+// applied: the lesson moved right away (student, 12+ hours ahead);
+// otherwise a request now waits for the other side
+export function rescheduleBooking(bookingId: string, newDate: string, newTime: string) {
+  return invokeReschedule(
+    { action: 'request', booking_id: bookingId, new_date: newDate, new_time: newTime },
+    'Dersin saati değiştirilemedi.'
+  );
+}
+
+export function respondReschedule(requestId: string, accept: boolean) {
+  return invokeReschedule({ action: 'respond', request_id: requestId, accept }, 'İsteğe yanıt verilemedi.');
+}
+
+export function withdrawReschedule(requestId: string) {
+  return invokeReschedule({ action: 'withdraw', request_id: requestId }, 'İstek geri çekilemedi.');
+}
+
+// "14 Eki, Çar · 15:00 – 15:50" in the viewer's own time
+export function formatRescheduleSlot(dateKey: string, time: string, teacherTimezone: string) {
+  const when = formatLessonWhenForViewer({ date: dateKey, time, teacherTimezone });
+  return `${when.dateLabel} · ${when.timeRange}`;
+}
+
+// "2 gün 4 saat" / "3 saat 20 dakika" / "12 dakika" until a moment
+export function formatTimeUntil(target: Date) {
+  return formatMinutes(Math.ceil((target.getTime() - Date.now()) / 60000));
+}
+
+export function formatMinutes(minutesFromNow: number) {
+  const totalMinutes = Math.max(0, minutesFromNow);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return hours > 0 ? `${days} gün ${hours} saat` : `${days} gün`;
+  if (hours > 0) return minutes > 0 ? `${hours} saat ${minutes} dakika` : `${hours} saat`;
+  return `${minutes} dakika`;
 }

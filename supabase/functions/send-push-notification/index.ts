@@ -10,7 +10,15 @@
 //
 // Fired by two triggers (migration_98.sql): bookings_notify_push (a new
 // booking) and notify_new_message (a new message, alongside the
-// existing email trigger) - never called directly by the site.
+// existing email trigger), and by send-lesson-reminder ("lesson_reminder",
+// both sides of a lesson starting within the hour) - never called
+// directly by the site.
+//
+// Also reaches the ARMUS phone app: every phone signed in to the
+// recipient's account (expo_push_tokens, migration_111.sql) gets the
+// same notification through Expo's push service, with data.path - the
+// app screen a tap opens. Browser push and phone push are independent:
+// without the VAPID secrets only the phones get it.
 //
 // IMPORTANT: after deploying this function, go to its Settings and turn
 // OFF "Verify JWT" (Enforce JWT Verification) - the trigger's HTTP call
@@ -27,6 +35,8 @@
 //   TRIGGER_SECRET - already configured for the other trigger-fired
 //     functions, reused here as-is
 // Optional:
+//   EXPO_ACCESS_TOKEN - only if "enhanced push security" is turned on for
+//     the app in Expo's dashboard
 //   SITE_URL - defaults to "https://armus.com.tr"
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -35,10 +45,19 @@ const TRIGGER_SECRET = Deno.env.get("TRIGGER_SECRET") ?? "";
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:support@armus.com.tr";
+const EXPO_ACCESS_TOKEN = Deno.env.get("EXPO_ACCESS_TOKEN") ?? "";
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://armus.com.tr").replace(/\/$/, "");
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+// A teacher's full name is never shown to a student (see
+// send-lesson-reminder's copy) - "Ahmet Y." instead.
+function shortDisplayName(fullName: string) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || "Öğretmen";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
 // ==== RFC8291/RFC8292 Web Push, pure Web Crypto ====
@@ -167,74 +186,76 @@ async function sendWebPush(
   });
 }
 
-Deno.serve(async (req) => {
-  try {
-    if (!TRIGGER_SECRET || req.headers.get("x-armus-trigger-secret") !== TRIGGER_SECRET) {
-      return new Response("unauthorized", { status: 401 });
+// One notification, one person.
+// url: where the browser notification opens; path: the app screen.
+type Notice = { userId: string; title: string; body: string; url: string; path: string };
+
+// Expo's push service takes up to 100 messages per request and answers
+// with one ticket per message, in the same order.
+async function sendExpoPush(supabaseAdmin: any, notices: Notice[]) {
+  const userIds = [...new Set(notices.map((n) => n.userId))];
+  const { data: tokens } = await supabaseAdmin
+    .from("expo_push_tokens").select("token, user_id").in("user_id", userIds);
+  if (!tokens || !tokens.length) return;
+
+  const messages = notices.flatMap((n) =>
+    tokens.filter((t: any) => t.user_id === n.userId).map((t: any) => ({
+      to: t.token,
+      title: n.title,
+      body: n.body,
+      data: { path: n.path },
+      sound: "default",
+      channelId: "default",
+      priority: "high",
+    }))
+  );
+
+  for (let i = 0; i < messages.length; i += 100) {
+    const batch = messages.slice(i, i + 100);
+    try {
+      const resp = await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(EXPO_ACCESS_TOKEN ? { Authorization: `Bearer ${EXPO_ACCESS_TOKEN}` } : {}),
+        },
+        body: JSON.stringify(batch),
+      });
+      if (!resp.ok) {
+        console.error("expo push failed", resp.status, await resp.text());
+        continue;
+      }
+      const result = await resp.json().catch(() => ({}));
+      const tickets: any[] = Array.isArray(result?.data) ? result.data : [];
+      // the app was uninstalled / the token is no longer valid - stop
+      // sending to it (same as a 404/410 browser subscription below)
+      const gone = tickets
+        .map((ticket, j) => (ticket?.details?.error === "DeviceNotRegistered" ? batch[j]?.to : null))
+        .filter(Boolean);
+      if (gone.length) await supabaseAdmin.from("expo_push_tokens").delete().in("token", gone);
+      tickets.forEach((ticket, j) => {
+        if (ticket?.status === "error" && ticket?.details?.error !== "DeviceNotRegistered") {
+          console.error("expo push ticket error", batch[j]?.to, ticket.message);
+        }
+      });
+    } catch (err) {
+      console.error("expo push threw", err);
     }
-    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-      return new Response("push not configured", { status: 200 });
-    }
+  }
+}
 
-    const body = await req.json().catch(() => ({}));
+async function sendBrowserPush(supabaseAdmin: any, notices: Notice[]) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
-    let targetUserId: string | null = null;
-    let title = "ARMUS";
-    let notifBody = "";
-    let url = `${SITE_URL}/dashboard.html`;
-
-    if (body.type === "booking_new") {
-      const { data: booking } = await supabaseAdmin
-        .from("bookings").select("*").eq("id", body.booking_id).maybeSingle();
-
-      if (!booking || !isUuid(booking.teacher_id)) return new Response("skip", { status: 200 });
-
-      targetUserId = booking.teacher_id;
-      title = "Yeni ders rezervasyonu";
-      notifBody = `${booking.student_name} - ${booking.lesson_date} ${booking.lesson_time}`;
-      url = `${SITE_URL}/dashboard.html?panel=bookings`;
-
-    } else if (body.type === "message_new") {
-      const { data: message } = await supabaseAdmin
-        .from("messages").select("*").eq("id", body.message_id).maybeSingle();
-
-      if (!message) return new Response("skip", { status: 200 });
-
-      const { data: conversation } = await supabaseAdmin
-        .from("conversations").select("student_id, teacher_id").eq("id", message.conversation_id).maybeSingle();
-
-      if (!conversation) return new Response("skip", { status: 200 });
-
-      targetUserId = conversation.student_id === message.sender_id
-        ? conversation.teacher_id
-        : conversation.student_id;
-
-      const { data: sender } = await supabaseAdmin
-        .from("profiles").select("name").eq("id", message.sender_id).maybeSingle();
-
-      title = `${sender?.name || "Bir kullanıcı"} sana mesaj gönderdi`;
-      notifBody = message.body ? message.body.slice(0, 120) : "Yeni bir mesaj";
-      url = `${SITE_URL}/mesajlar.html`;
-
-    } else {
-      return new Response("unknown type", { status: 200 });
-    }
-
-    if (!targetUserId) return new Response("skip", { status: 200 });
-
+  for (const n of notices) {
     const { data: subscriptions } = await supabaseAdmin
-      .from("push_subscriptions").select("*").eq("user_id", targetUserId);
+      .from("push_subscriptions").select("*").eq("user_id", n.userId);
+    if (!subscriptions || !subscriptions.length) continue;
 
-    if (!subscriptions || !subscriptions.length) return new Response("no subscriptions", { status: 200 });
-
-    await Promise.all(subscriptions.map(async (sub) => {
+    await Promise.all(subscriptions.map(async (sub: any) => {
       try {
-        const resp = await sendWebPush(sub, { title, body: notifBody, url });
+        const resp = await sendWebPush(sub, { title: n.title, body: n.body, url: n.url });
         // 404/410 = the push service says this subscription is gone for
         // good (browser uninstalled, storage cleared, etc) - clean it up
         // so it doesn't keep getting retried on every future notification
@@ -247,6 +268,102 @@ Deno.serve(async (req) => {
         console.error("push send threw", sub.endpoint, err);
       }
     }));
+  }
+}
+
+Deno.serve(async (req) => {
+  try {
+    if (!TRIGGER_SECRET || req.headers.get("x-armus-trigger-secret") !== TRIGGER_SECRET) {
+      return new Response("unauthorized", { status: 401 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const notices: Notice[] = [];
+
+    if (body.type === "booking_new") {
+      const { data: booking } = await supabaseAdmin
+        .from("bookings").select("*").eq("id", body.booking_id).maybeSingle();
+
+      if (!booking || !isUuid(booking.teacher_id)) return new Response("skip", { status: 200 });
+
+      notices.push({
+        userId: booking.teacher_id,
+        title: "Yeni ders rezervasyonu",
+        body: `${booking.student_name} - ${booking.lesson_date} ${booking.lesson_time}`,
+        url: `${SITE_URL}/dashboard.html?panel=bookings`,
+        // the teacher's "Bugün" tab lists every upcoming lesson
+        path: "/",
+      });
+
+    } else if (body.type === "message_new") {
+      const { data: message } = await supabaseAdmin
+        .from("messages").select("*").eq("id", body.message_id).maybeSingle();
+
+      if (!message) return new Response("skip", { status: 200 });
+
+      const { data: conversation } = await supabaseAdmin
+        .from("conversations").select("student_id, teacher_id").eq("id", message.conversation_id).maybeSingle();
+
+      if (!conversation) return new Response("skip", { status: 200 });
+
+      const fromTeacher = conversation.teacher_id === message.sender_id;
+      const targetUserId = fromTeacher ? conversation.student_id : conversation.teacher_id;
+      if (!targetUserId) return new Response("skip", { status: 200 });
+
+      const { data: sender } = await supabaseAdmin
+        .from("profiles").select("name").eq("id", message.sender_id).maybeSingle();
+
+      const senderName = sender?.name ? (fromTeacher ? shortDisplayName(sender.name) : sender.name) : "Bir kullanıcı";
+      notices.push({
+        userId: targetUserId,
+        title: `${senderName} sana mesaj gönderdi`,
+        body: message.body ? message.body.slice(0, 120) : "Yeni bir mesaj",
+        url: `${SITE_URL}/mesajlar.html`,
+        path: `/chat/${message.conversation_id}?otherName=${encodeURIComponent(senderName)}`,
+      });
+
+    } else if (body.type === "lesson_reminder") {
+      const { data: booking } = await supabaseAdmin
+        .from("bookings").select("*").eq("id", body.booking_id).maybeSingle();
+
+      if (!booking || booking.status !== "confirmed") return new Response("skip", { status: 200 });
+
+      // sent 50-70 minutes before the lesson (send-lesson-reminder) - "in
+      // about an hour" instead of a clock time, which would be the
+      // teacher's zone and could be wrong for the student
+      const url = `${SITE_URL}/class.html?booking=${booking.id}`;
+      if (booking.student_id) {
+        notices.push({
+          userId: booking.student_id,
+          title: "Dersin yaklaşıyor",
+          body: `${shortDisplayName(booking.teacher_name)} ile dersin yaklaşık 1 saat sonra başlıyor.`,
+          url,
+          path: "/lessons",
+        });
+      }
+      if (isUuid(booking.teacher_id)) {
+        notices.push({
+          userId: booking.teacher_id,
+          title: "Dersin yaklaşıyor",
+          body: `${booking.student_name} ile dersin yaklaşık 1 saat sonra başlıyor.`,
+          url,
+          path: "/",
+        });
+      }
+
+    } else {
+      return new Response("unknown type", { status: 200 });
+    }
+
+    if (!notices.length) return new Response("skip", { status: 200 });
+
+    await Promise.all([sendExpoPush(supabaseAdmin, notices), sendBrowserPush(supabaseAdmin, notices)]);
 
     return new Response("sent", { status: 200 });
 

@@ -10,6 +10,7 @@ import { useAuth } from '../../lib/auth';
 import {
   canJoinLessonNow,
   formatLessonWhenForViewer,
+  formatMinutes,
   getBookingById,
   lessonWindow,
   roomNameForBooking,
@@ -37,6 +38,11 @@ function formatClock(ms: number) {
 export default function Class() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
+
+  // a teacher's lessons live on the "Bugün" tab, a student's on "Derslerim"
+  function goBackToLessons() {
+    router.replace(profile?.role === 'teacher' ? '/(tabs)' : '/(tabs)/lessons');
+  }
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -157,7 +163,7 @@ export default function Class() {
     if (!booking || !profile) return;
 
     if (profile.id !== booking.studentId) {
-      router.replace('/(tabs)/lessons');
+      goBackToLessons();
       return;
     }
 
@@ -169,7 +175,7 @@ export default function Class() {
     if (existingReport) {
       const existingReview = await getReviewForBooking(booking.id);
       if (existingReview) {
-        router.replace('/(tabs)/lessons');
+        goBackToLessons();
         return;
       }
       setPhase('review');
@@ -185,7 +191,7 @@ export default function Class() {
     if (type === 'yes') {
       const existing = await getReviewForBooking(booking.id);
       if (existing) {
-        router.replace('/(tabs)/lessons');
+        goBackToLessons();
         return;
       }
       setPhase('review');
@@ -208,7 +214,7 @@ export default function Class() {
     }
     // nothing to rate for a lesson that didn't properly happen - same as
     // web, a filed no_show/late report skips straight to leaving.
-    router.replace('/(tabs)/lessons');
+    goBackToLessons();
   }
 
   async function submitReview() {
@@ -226,7 +232,7 @@ export default function Class() {
       });
     }
     setSavingReview(false);
-    router.replace('/(tabs)/lessons');
+    goBackToLessons();
   }
 
   if (phase === 'loading') {
@@ -243,7 +249,7 @@ export default function Class() {
         title="Bu derse erişimin yok"
         subtitle="Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin."
         buttonLabel="Derslerime dön"
-        onPress={() => router.replace('/(tabs)/lessons')}
+        onPress={() => goBackToLessons()}
       />
     );
   }
@@ -254,7 +260,7 @@ export default function Class() {
         title="Bu ders iptal edildi"
         subtitle="Bu ders artık gerçekleşmeyecek."
         buttonLabel="← Geri dön"
-        onPress={() => router.replace('/(tabs)/lessons')}
+        onPress={() => goBackToLessons()}
       />
     );
   }
@@ -266,9 +272,9 @@ export default function Class() {
     return (
       <Gate
         title="Henüz erken"
-        subtitle={`${otherName} ile ${when.dateLabel}, ${when.timeRange} — ${minutesUntil} dakika sonra katılabileceksin.`}
+        subtitle={`${otherName} ile ${when.dateLabel}, ${when.timeRange} — ${formatMinutes(minutesUntil)} sonra katılabileceksin.`}
         buttonLabel="Derslerime dön"
-        onPress={() => router.replace('/(tabs)/lessons')}
+        onPress={() => goBackToLessons()}
       />
     );
   }
@@ -279,7 +285,7 @@ export default function Class() {
         title="Bu dersin katılım süresi doldu"
         subtitle="Ders saati ve sonrasındaki katılım penceresi geçti."
         buttonLabel="Derslerime dön"
-        onPress={() => router.replace('/(tabs)/lessons')}
+        onPress={() => goBackToLessons()}
       />
     );
   }
@@ -296,7 +302,7 @@ export default function Class() {
           <Text style={styles.gateSubtitle}>Lütfen tekrar dene.</Text>
           <View style={{ width: '100%', marginTop: 20, gap: 10 }}>
             <Button label="Tekrar dene" onPress={() => setCheckinError(false)} />
-            <Pressable onPress={() => router.replace('/(tabs)/lessons')}>
+            <Pressable onPress={() => goBackToLessons()}>
               <Text style={styles.skipText}>Atla</Text>
             </Pressable>
           </View>
@@ -354,7 +360,7 @@ export default function Class() {
         />
         <View style={{ width: '100%', marginTop: 20, gap: 10 }}>
           <Button label="Gönder" onPress={submitReview} loading={savingReview} />
-          <Pressable onPress={() => router.replace('/(tabs)/lessons')}>
+          <Pressable onPress={() => goBackToLessons()}>
             <Text style={styles.skipText}>Atla</Text>
           </Pressable>
         </View>

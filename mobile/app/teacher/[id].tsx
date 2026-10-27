@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
+import { hasTakenTrialWith } from '../../lib/credits';
 import { shortDisplayName } from '../../lib/displayName';
 import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
@@ -19,10 +20,26 @@ export default function TeacherDetail() {
   const [loading, setLoading] = useState(true);
   const [messaging, setMessaging] = useState(false);
   const [isFav, setIsFav] = useState(false);
+  // one trial per teacher (migration_110.sql) - after it, regular lessons
+  const [trialTaken, setTrialTaken] = useState(false);
 
   useEffect(() => {
     checkIsFavorite(id).then(setIsFav);
   }, [id]);
+
+  useEffect(() => {
+    if (!profile || profile.role !== 'student') return;
+    hasTakenTrialWith(profile.id, id).then(setTrialTaken);
+  }, [profile, id]);
+
+  function book(type: 'trial' | 'lesson') {
+    if (!teacher) return;
+    if (!profile) {
+      router.push('/(auth)/login');
+      return;
+    }
+    router.push({ pathname: '/booking/[id]', params: { id: teacher.id, type } });
+  }
 
   async function handleToggleFavorite() {
     const next = await toggleFavorite(id);
@@ -164,14 +181,16 @@ export default function TeacherDetail() {
           <Text style={styles.priceUnit}>/ ders</Text>
         </View>
         <View style={{ flex: 1, marginLeft: 16 }}>
-          <Button
-            label="Deneme Dersi Al"
-            onPress={() =>
-              profile
-                ? router.push({ pathname: '/booking/[id]', params: { id: teacher.id, type: 'trial' } })
-                : router.push('/(auth)/login')
-            }
-          />
+          {trialTaken ? (
+            <Button label="Ders Rezerve Et" onPress={() => book('lesson')} />
+          ) : (
+            <>
+              <Button label="Deneme Dersi Al" onPress={() => book('trial')} />
+              <Pressable onPress={() => book('lesson')} hitSlop={8} style={styles.lessonLink}>
+                <Text style={styles.lessonLinkText}>ya da normal ders rezerve et</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -371,6 +390,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyExtraBold,
     fontSize: 20,
     color: colors.ink,
+  },
+  lessonLink: {
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  lessonLinkText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 12.5,
+    color: colors.goldText,
   },
   priceUnit: {
     fontFamily: fonts.body,

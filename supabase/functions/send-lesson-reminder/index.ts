@@ -22,7 +22,9 @@
 //   TRIGGER_SECRET - shared with the armus-lesson-reminders cron job -
 //     make sure the cron job's HTTP call sends it as the
 //     x-armus-trigger-secret header (see send-review-reminder's cron
-//     migration, migration_65.sql, for the pattern to copy)
+//     migration, migration_65.sql, for the pattern to copy). Also sent on
+//     to send-push-notification, which pushes the same reminder to both
+//     sides' phones (and browsers).
 // Optional:
 //   EMAIL_FROM - defaults to "ARMUS <onboarding@resend.dev>"
 //   SITE_URL - defaults to "https://armus.com.tr", but set it explicitly
@@ -237,6 +239,20 @@ Deno.serve(async (req) => {
     if (!allSent) {
       await supabaseAdmin.from("bookings").update({ reminder_sent: false }).eq("id", bookingId);
       return new Response("partial failure, will retry", { status: 200 });
+    }
+
+    // the phone/browser notification goes out once, with the run that
+    // got every email through - a failed run above is retried by the
+    // next cron run, which would otherwise push a second time
+    try {
+      const pushResp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-armus-trigger-secret": TRIGGER_SECRET },
+        body: JSON.stringify({ type: "lesson_reminder", booking_id: booking.id }),
+      });
+      if (!pushResp.ok) console.error("reminder push failed", pushResp.status, await pushResp.text());
+    } catch (err) {
+      console.error("reminder push threw", err);
     }
 
     return new Response("sent", { status: 200 });
