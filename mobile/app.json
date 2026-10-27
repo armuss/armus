@@ -2,6 +2,7 @@
   "expo": {
     "name": "ARMUS",
     "slug": "armus",
+    "owner": "xodeshes-team",
     "scheme": "armus",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -33,6 +34,11 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": ["expo-router", ["expo-notifications", { "color": "#e0a916" }]]
+    "plugins": ["expo-router", ["expo-notifications", { "color": "#e0a916" }]],
+    "extra": {
+      "eas": {
+        "projectId": "a98f1a60-a9cc-4a3f-bae2-dff55825d12c"
+      }
+    }
   }
 }
