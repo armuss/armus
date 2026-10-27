@@ -20,12 +20,22 @@ import {
   MONTH_NAMES,
   formatLessonWhenForViewer,
   getTeacherBusyTimes,
+  lessonTypeLabel,
   slotsForDate,
+  zonedTimeToUtc,
   type BusyTime,
   type Slot,
 } from '../../lib/bookings';
+import {
+  formatMoney,
+  getAvailableCredits,
+  hasTakenTrialWith,
+  pickCreditForBooking,
+  type CreditCoverage,
+  type LessonCredit,
+} from '../../lib/credits';
 import { shortDisplayName } from '../../lib/displayName';
-import { createPayment, hasCoveringCredit, parsePaymentRedirect } from '../../lib/payments';
+import { createPayment, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -55,12 +65,15 @@ type Phase = 'picking' | 'checkout' | 'success' | 'error';
 
 export default function Booking() {
   const { id, type: typeParam } = useLocalSearchParams<{ id: string; type?: string }>();
-  const type = typeParam === 'lesson' ? 'lesson' : 'trial';
   const { profile } = useAuth();
+  // one trial per teacher (migration_110.sql): a student who's had theirs
+  // with this teacher is switched to a regular lesson, with a notice
+  const [type, setType] = useState<'trial' | 'lesson'>(typeParam === 'lesson' ? 'lesson' : 'trial');
+  const [trialTakenNotice, setTrialTakenNotice] = useState(false);
 
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasCredit, setHasCredit] = useState(false);
+  const [credits, setCredits] = useState<LessonCredit[]>([]);
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>([]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -88,8 +101,26 @@ export default function Booking() {
 
   useEffect(() => {
     if (!profile || !teacher) return;
-    hasCoveringCredit(profile.id, teacher.id, type === 'trial').then(setHasCredit);
+    getAvailableCredits(profile.id).then((list) => setCredits(list || []));
+    if (type === 'trial') {
+      hasTakenTrialWith(profile.id, teacher.id).then((taken) => {
+        if (taken) {
+          setType('lesson');
+          setTrialTakenNotice(true);
+        }
+      });
+    }
   }, [profile, teacher, type]);
+
+  // what a lesson credit covers here (migration_110.sql): all of it, or
+  // part of it with the difference by card - create-payment decides the
+  // same way
+  const coverage: CreditCoverage | null = useMemo(
+    () => (teacher ? pickCreditForBooking(credits, teacher.id, type, Number(teacher.price)) : null),
+    [credits, teacher, type]
+  );
+  const coversAll = !!coverage && coverage.topUp === 0;
+  const needsCard = !coversAll;
 
   // Without this, the picker can't tell a slot someone else already took
   // apart from a genuinely open one - it would show as pickable right up
@@ -116,7 +147,13 @@ export default function Booking() {
 
   const slots: Slot[] = useMemo(() => {
     if (!teacher || !selectedDateInfo) return [];
-    return slotsForDate(teacher, selectedDateInfo.key, selectedDateInfo.date.getDay(), busyTimes);
+    // a time that has already started today can't be booked (create-payment
+    // refuses it) - grey it out rather than let it fail at "Ödemeye Geç"
+    const now = Date.now();
+    return slotsForDate(teacher, selectedDateInfo.key, selectedDateInfo.date.getDay(), busyTimes).map((slot) => ({
+      ...slot,
+      available: slot.available && zonedTimeToUtc(selectedDateInfo.key, slot.time, teacher.timezone).getTime() > now,
+    }));
   }, [teacher, selectedDateInfo, busyTimes]);
 
   // Every teacher-local time shown to the student (slot grid, summary,
@@ -154,7 +191,20 @@ export default function Booking() {
   async function handleConfirm() {
     if (!teacher || !profile || !selectedDate || !selectedTime || submitting) return;
 
-    const needsCard = !hasCredit;
+    // the credit picture was read when the screen opened - if a credit got
+    // used somewhere else since (another device), the card fields may be
+    // hidden while the card is now needed. Re-check right before paying.
+    const fresh = await getAvailableCredits(profile.id);
+    if (fresh) {
+      const freshCoverage = pickCreditForBooking(fresh, teacher.id, type, Number(teacher.price));
+      const mode = (c: CreditCoverage | null) => (!c ? 'none' : c.topUp > 0 ? `topup-${c.topUp}` : 'full');
+      if (mode(freshCoverage) !== mode(coverage)) {
+        setCredits(fresh);
+        setError('Ders hakkın bu arada kullanıldı. Devam etmek için aşağıdaki bilgileri kontrol et.');
+        return;
+      }
+    }
+
     if (needsCard) {
       if (phone.replace(/\D/g, '').length < 10) {
         setError('Lütfen geçerli bir telefon numarası gir.');
@@ -181,6 +231,12 @@ export default function Booking() {
     setSubmitting(false);
 
     if (!result.ok) {
+      if (result.trialAlreadyTaken && type === 'trial') {
+        setType('lesson');
+        setTrialTakenNotice(true);
+        setError('');
+        return;
+      }
       setError(result.error);
       return;
     }
@@ -308,6 +364,16 @@ export default function Booking() {
           <Text style={styles.price}>₺{teacher.price}</Text>
         </View>
 
+        <View style={styles.typeChip}>
+          <Text style={styles.typeChipText}>{lessonTypeLabel(type)}</Text>
+        </View>
+        {trialTakenNotice && (
+          <Text style={styles.notice}>
+            Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her
+            öğretmenle bir kez alınabilir.
+          </Text>
+        )}
+
         <Text style={styles.sectionTitle}>Tarih seç</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateRow}>
           {DATE_OPTIONS.map((d) => (
@@ -379,12 +445,40 @@ export default function Booking() {
               <Text style={styles.summaryValue}>{selectedWhen?.timeRange}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{hasCredit ? 'Ders hakkı' : 'Ücret'}</Text>
-              <Text style={styles.summaryValue}>{hasCredit ? 'Uygulanacak' : `₺${teacher.price}`}</Text>
+              <Text style={styles.summaryLabel}>Ücret</Text>
+              <Text style={styles.summaryValue}>₺{teacher.price}</Text>
             </View>
+            {coverage && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Ders hakkınla</Text>
+                <Text style={[styles.summaryValue, { color: colors.goldText }]}>
+                  {coversAll ? 'Ücretsiz' : `−${formatMoney(coverage.credit.value ?? 0)}`}
+                </Text>
+              </View>
+            )}
+            {coverage && !coversAll && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Kartla ödenecek fark</Text>
+                <Text style={styles.summaryValue}>{formatMoney(coverage.topUp)}</Text>
+              </View>
+            )}
 
-            {hasCredit ? (
-              <Text style={styles.creditNote}>Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak.</Text>
+            {coverage && !coversAll && (
+              <Text style={styles.creditNote}>
+                Ders hakkın {formatMoney(coverage.credit.value ?? 0)} değerinde, bu ders {formatMoney(teacher.price)}. Ders hakkın{' '}
+                {formatMoney(coverage.credit.value ?? 0)} kısmını karşılıyor, kalan {formatMoney(coverage.topUp)} kartla ödenir.
+              </Text>
+            )}
+            {coversAll ? (
+              <>
+                <Text style={styles.creditNote}>Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak.</Text>
+                {!!coverage && coverage.leftover > 0 && (
+                  <Text style={styles.creditNote}>
+                    Bu ders hakkı {formatMoney(coverage.credit.value ?? 0)} değerinde, bu ders {formatMoney(teacher.price)}. Ders hakkın
+                    dersi tamamen karşılıyor; aradaki {formatMoney(coverage.leftover)} iade edilmez.
+                  </Text>
+                )}
+              </>
             ) : (
               <>
                 <View style={styles.field}>
@@ -416,7 +510,15 @@ export default function Booking() {
             {!!error && <Text style={styles.error}>{error}</Text>}
 
             <Button
-              label={hasCredit ? 'Rezervasyonu Tamamla' : submitting ? 'Yönlendiriliyor…' : 'Ödemeye Geç'}
+              label={
+                coversAll
+                  ? 'Rezervasyonu Tamamla'
+                  : submitting
+                    ? 'Yönlendiriliyor…'
+                    : coverage
+                      ? `Farkı Öde (${formatMoney(coverage.topUp)})`
+                      : 'Ödemeye Geç'
+              }
               onPress={handleConfirm}
               loading={submitting}
             />
@@ -497,6 +599,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     marginBottom: 12,
+  },
+  typeChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.panel2,
+    borderRadius: radius.pill,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    marginTop: -12,
+    marginBottom: 18,
+  },
+  typeChipText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  notice: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.ink,
+    backgroundColor: '#fff8e6',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.gold2,
+    padding: 12,
+    marginTop: -6,
+    marginBottom: 20,
   },
   dateRow: {
     gap: 10,

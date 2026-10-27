@@ -65,7 +65,12 @@ export default function Profile() {
           </View>
         </View>
 
-        <View style={{ marginTop: 16, width: '100%' }}>
+        {profile?.role === 'teacher' && (
+          <View style={{ marginTop: 16, width: '100%' }}>
+            <Button label="Kazançlarım" onPress={() => router.push('/earnings')} />
+          </View>
+        )}
+        <View style={{ marginTop: profile?.role === 'teacher' ? 12 : 16, width: '100%' }}>
           <Button label="Profili Düzenle" variant="outline" onPress={() => router.push('/profile/edit')} />
         </View>
         <View style={{ marginTop: 12, width: '100%' }}>
