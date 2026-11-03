@@ -10,6 +10,7 @@ export type CreatePaymentParams =
       price: number;
       phone: string;
       identityNumber: string;
+      withdrawalConsent: boolean;
     }
   | {
       teacherId: string;
@@ -19,6 +20,7 @@ export type CreatePaymentParams =
       price: number;
       phone: string;
       identityNumber: string;
+      withdrawalConsent: boolean;
     };
 
 export type CreatePaymentResult =
@@ -30,6 +32,8 @@ export type CreatePaymentResult =
 // (or a lesson-credit redemption) is ever started from. Mirrors
 // booking.html's confirmBtn handler. trialAlreadyTaken: one trial per
 // teacher (migration_110.sql) - book a regular lesson instead.
+// withdrawalConsent (migration_112.sql): a card payment needs the
+// student's consent that the right of withdrawal ends once a lesson starts.
 export async function createPayment(params: CreatePaymentParams): Promise<CreatePaymentResult> {
   const result = await invokeEdge('create-payment', params as unknown as Record<string, unknown>);
   if (!result.ok) {

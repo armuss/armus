@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
+import WithdrawalConsent from '../../components/WithdrawalConsent';
 import { useAuth } from '../../lib/auth';
 import {
   DAY_NAMES,
@@ -80,6 +81,7 @@ export default function Booking() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [identityNumber, setIdentityNumber] = useState('');
+  const [withdrawalConsent, setWithdrawalConsent] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -214,6 +216,10 @@ export default function Booking() {
         setError('Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).');
         return;
       }
+      if (!withdrawalConsent) {
+        setError('Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin.');
+        return;
+      }
     }
 
     setError('');
@@ -227,6 +233,7 @@ export default function Booking() {
       price: teacher.price,
       phone,
       identityNumber,
+      withdrawalConsent: needsCard && withdrawalConsent,
     });
     setSubmitting(false);
 
@@ -504,6 +511,7 @@ export default function Booking() {
                     style={styles.input}
                   />
                 </View>
+                <WithdrawalConsent checked={withdrawalConsent} onChange={setWithdrawalConsent} />
               </>
             )}
 

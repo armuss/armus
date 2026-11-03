@@ -266,6 +266,181 @@
       color: #b3261e;
     }
 
+    /* ACCOUNT NOTICE, CREDITS, PACKAGE WITHDRAWAL, STUCK CREDITS
+       (migration_112.sql) */
+
+    .account-notice {
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(220, 90, 90, .35);
+      background: rgba(220, 90, 90, .06);
+      color: #8f1f19;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .credits-panel {
+      padding: 18px;
+      margin-bottom: 14px;
+      border-radius: 18px;
+      background: var(--armus-panel-2);
+      border: 1px solid var(--armus-border);
+    }
+
+    .credits-panel h3 {
+      font-size: 14px;
+      margin: 0 0 10px;
+    }
+
+    .credits-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .credits-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .credits-list .credit-expiry {
+      color: var(--armus-muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .credits-list .credit-expiry.soon {
+      color: #b3261e;
+      font-weight: 600;
+    }
+
+    .credits-hint {
+      margin: 10px 0 0;
+      color: var(--armus-faint);
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+
+    /* "DID THIS LESSON HAPPEN?" - attendance.js's shared flow */
+
+    .checkin-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--armus-gold-2);
+      background: var(--armus-panel);
+    }
+
+    .checkin-box h4 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+    }
+
+    .checkin-box p {
+      margin: 0 0 10px;
+      color: var(--armus-muted);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    .checkin-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .checkin-choice {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      border: 1px solid var(--armus-border);
+      background: var(--armus-panel-2);
+      color: inherit;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .checkin-choice:hover:not(:disabled) {
+      border-color: var(--armus-gold-2);
+    }
+
+    .checkin-choice:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .checkin-choice svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: #d9822b;
+    }
+
+    .checkin-input {
+      width: 100%;
+      max-width: 160px;
+      box-sizing: border-box;
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      background: var(--armus-panel-2);
+      color: inherit;
+      margin-bottom: 10px;
+    }
+
+    .lesson-report-status {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--armus-border-soft);
+      color: var(--armus-muted);
+      font-size: 12.5px;
+    }
+
+    .lesson-report-status strong {
+      color: var(--armus-ink);
+    }
+
+    .lesson-extra-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .text-link-btn {
+      border: none;
+      background: none;
+      padding: 0;
+      color: var(--armus-faint);
+      font-family: inherit;
+      font-size: 11.5px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .text-link-btn:hover {
+      color: var(--armus-muted);
+    }
+
+    .lesson-card.is-target {
+      border-color: var(--armus-gold-2);
+      box-shadow: 0 0 0 3px rgba(224, 169, 22, .18);
+    }
+
     /* LESSON CARD */
 
     .lesson-card {
@@ -732,7 +907,11 @@
     <div class="eyebrow" data-i18n="myLessons.eyebrow">DERSLERİM</div>
     <h1 data-i18n="myLessons.title">Rezervasyonların</h1>
 
+    <div id="accountNotice"></div>
+
     <div id="packageNotices"></div>
+
+    <div id="creditsPanel"></div>
 
     <div id="lessonsList"></div>
 
@@ -743,17 +922,18 @@
 
   </main>
 
-  <script src="i18n.js?v=17"></script>
+  <script src="i18n.js?v=18"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=11"></script>
+  <script src="bookings.js?v=12"></script>
   <script src="reschedule.js?v=1"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
   <script src="disputes.js?v=4"></script>
+  <script src="attendance.js?v=6"></script>
   <script>
 
     const gate = document.getElementById("gate");
@@ -770,6 +950,12 @@
     // so the lesson was cancelled and given back to the student
     function teacherNoShowBadge(booking) {
       return `${armusT("myLessons.teacherNoShow", "⊘ Öğretmen derse gelmedi")}${booking.refunded ? armusT("myLessons.teacherNoShowRefunded", " · Ders hakkın iade edildi") : ""}`;
+    }
+
+    // migration_112.sql: an admin confirmed a technical problem on the
+    // teacher's side cut the lesson short
+    function technicalIssueBadge(booking) {
+      return `${armusT("myLessons.technicalIssue", "⊘ Teknik sorun nedeniyle iptal edildi")}${booking.refunded ? armusT("myLessons.teacherNoShowRefunded", " · Ders hakkın iade edildi") : ""}`;
     }
 
     // migration_110.sql: package lessons whose teacher can't teach this
@@ -899,6 +1085,150 @@
       });
     }
 
+    // migration_112.sql: a closed or locked account says so up top
+    async function renderAccountNotice(viewerId) {
+      const wrap = document.getElementById("accountNotice");
+      let profile = null;
+      try {
+        const { data } = await armusSupabase.from("profiles").select("is_banned, account_locked").eq("id", viewerId).maybeSingle();
+        profile = data;
+      } catch (err) {}
+      wrap.innerHTML = "";
+      if (!profile || (!profile.is_banned && !profile.account_locked)) return;
+      const box = document.createElement("div");
+      box.className = "account-notice";
+      box.innerHTML = profile.is_banned
+        ? armusT("myLessons.accountBanned", "Hesabın kapatıldı. Planlanmış derslerin iptal edildi ve ders hakların geçersiz hale geldi. Bir yanlışlık olduğunu düşünüyorsan <a href=\"iletisim\">destek ekibimize yaz</a>.")
+        : armusT("myLessons.accountLocked", "Hesabın inceleme nedeniyle geçici olarak kilitli: şu anda ders alamaz ve mesaj gönderemezsin. Bilgi için <a href=\"iletisim\">destek ekibimize yaz</a>.");
+      wrap.appendChild(box);
+    }
+
+    const formatDay = (iso) => new Date(iso).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { day: "numeric", month: "long", year: "numeric" });
+
+    async function invokePackageCredits(body) {
+      let data, error;
+      try {
+        ({ data, error } = await armusSupabase.functions.invoke("package-credits", { body }));
+      } catch (err) { error = err; }
+      if (error || !data || !data.ok) {
+        return { ok: false, error: (await armusEdgeErrorMessage(error)) || (data && data.error) || armusT("myLessons.packageActionFailed", "İşlem yapılamadı. Lütfen tekrar dene.") };
+      }
+      return data;
+    }
+
+    // migration_112.sql: lesson credits with their expiry, packages that can
+    // still be withdrawn (14 days, nothing used), credits stuck with a
+    // teacher who can't teach this student anymore (refund after 30 days)
+    async function renderCreditsPanel(viewerId) {
+      const wrap = document.getElementById("creditsPanel");
+      let credits = [], withdrawable = [], stuck = [];
+      try {
+        const [creditsRes, withdrawRes, stuckRes] = await Promise.all([
+          armusSupabase.from("lesson_credits").select("id, teacher_id, teacher_name, value, expires_at, source").eq("student_id", viewerId).eq("status", "available").order("expires_at", { ascending: true }),
+          armusSupabase.rpc("my_withdrawable_packages"),
+          armusSupabase.rpc("my_stranded_lesson_credits"),
+        ]);
+        credits = creditsRes.data || [];
+        withdrawable = withdrawRes.data || [];
+        stuck = stuckRes.data || [];
+      } catch (err) {}
+      wrap.innerHTML = "";
+
+      withdrawable.forEach(pkg => {
+        const card = document.createElement("div");
+        card.className = "package-notice";
+        card.innerHTML = `
+          <h3>${armusEscapeHtml(armusT("myLessons.withdrawTitle", "Paketini iptal edebilirsin"))}</h3>
+          <p>${armusEscapeHtml(armusT("myLessons.withdrawText", "{teacher} ile aldığın {n} derslik paketten henüz ders kullanmadın. {date} tarihine kadar paketi iptal edip ödediğin {price} tutarın tamamını geri alabilirsin. Paketteki ilk ders başladığında bu hak sona erer.")
+            .replace("{teacher}", armusShortDisplayName(pkg.teacher_name)).replace("{n}", pkg.lessons).replace("{date}", formatDay(pkg.withdraw_until)).replace("{price}", formatMoney(pkg.price)))}</p>
+          <div class="package-actions"><button type="button" class="lesson-reschedule-btn">${armusEscapeHtml(armusT("myLessons.withdrawBtn", "Paketi İptal Et"))}</button></div>
+          <div class="package-status" style="display:none;"></div>
+        `;
+        const btn = card.querySelector("button");
+        const status = card.querySelector(".package-status");
+        btn.addEventListener("click", async () => {
+          const ask = armusT("myLessons.withdrawConfirm", "{n} derslik paketin iptal edilecek ve {price} ödeme yaptığın karta iade edilecek. Onaylıyor musun?")
+            .replace("{n}", pkg.lessons).replace("{price}", formatMoney(pkg.price));
+          if (!window.confirm(ask)) return;
+          btn.disabled = true;
+          const result = await invokePackageCredits({ action: "withdraw", payment_id: pkg.payment_id });
+          if (!result.ok) {
+            btn.disabled = false;
+            status.textContent = result.error;
+            status.classList.add("error");
+            status.style.display = "block";
+            return;
+          }
+          card.innerHTML = `<p class="package-status">${armusEscapeHtml(armusT("myLessons.withdrawDone", "Paketin iptal edildi, {price} kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.").replace("{price}", formatMoney(result.refundedAmount)))}</p>`;
+          renderCreditsPanel(viewerId);
+        });
+        wrap.appendChild(card);
+      });
+
+      stuck.forEach(group => {
+        const refundableNow = group.refundable && new Date(group.refundable_from) <= new Date();
+        const card = document.createElement("div");
+        card.className = "package-notice";
+        card.innerHTML = `
+          <h3>${armusEscapeHtml(armusT("myLessons.packageStrandedTitle", "{teacher} artık sana ders veremiyor").replace("{teacher}", armusShortDisplayName(group.teacher_name)))}</h3>
+          <p>${armusEscapeHtml(armusT("myLessons.stuckCreditsText", "Bu öğretmenle {n} ders hakkın var ({total}). Bu haklar başka bir öğretmenle deneme dersi için kullanılabilir.")
+            .replace("{n}", group.lessons).replace("{total}", formatMoney(group.total_value)))}
+            ${group.refundable
+              ? armusEscapeHtml(refundableNow
+                ? armusT("myLessons.stuckCreditsRefundNow", "İstersen ödediğin tutarı kartına iade ettirebilirsin.")
+                : armusT("myLessons.stuckCreditsRefundLater", "{date} tarihinden itibaren istersen ödediğin tutarı kartına iade ettirebilirsin.").replace("{date}", formatDay(group.refundable_from)))
+              : armusT("myLessons.packageRefundSupport", "Bu paketin iadesi otomatik yapılamıyor - iade istersen <a href=\"iletisim\">destek ekibimize yaz</a>.")}</p>
+          ${refundableNow ? `<div class="package-actions"><button type="button" class="lesson-reschedule-btn">${armusEscapeHtml(armusT("myLessons.packageRefundBtn", "Paramı İade Et ({total})").replace("{total}", formatMoney(group.total_value)))}</button></div>` : ""}
+          <div class="package-status" style="display:none;"></div>
+        `;
+        const btn = card.querySelector("button");
+        const status = card.querySelector(".package-status");
+        if (btn) btn.addEventListener("click", async () => {
+          const ask = armusT("myLessons.stuckCreditsConfirm", "{n} ders hakkının ücreti ödeme yaptığın karta iade edilecek ve bu haklar bakiyenden silinecek. Onaylıyor musun?").replace("{n}", group.lessons);
+          if (!window.confirm(ask)) return;
+          btn.disabled = true;
+          const result = await invokePackageCredits({ action: "refund_credits", teacher_id: group.teacher_id });
+          if (!result.ok) {
+            btn.disabled = false;
+            status.textContent = result.error;
+            status.classList.add("error");
+            status.style.display = "block";
+            return;
+          }
+          card.innerHTML = `<p class="package-status">${armusEscapeHtml(armusT("myLessons.packageRefunded", "{n} dersin ücreti ({total}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.")
+            .replace("{n}", result.refundedLessons).replace("{total}", formatMoney(result.refundedAmount)))}</p>`;
+          renderCreditsPanel(viewerId);
+        });
+        wrap.appendChild(card);
+      });
+
+      if (!credits.length) return;
+      // one line per teacher: how many, and when the first one runs out
+      const byTeacher = new Map();
+      credits.forEach(c => {
+        const g = byTeacher.get(c.teacher_id) || { name: c.teacher_name, count: 0, firstExpiry: c.expires_at };
+        g.count++;
+        if (c.expires_at && (!g.firstExpiry || c.expires_at < g.firstExpiry)) g.firstExpiry = c.expires_at;
+        byTeacher.set(c.teacher_id, g);
+      });
+      const soonLimit = Date.now() + 14 * 86_400_000;
+      const panel = document.createElement("div");
+      panel.className = "credits-panel";
+      panel.innerHTML = `
+        <h3>${armusEscapeHtml(armusT("myLessons.creditsTitle", "Ders hakların"))}</h3>
+        <ul class="credits-list">
+          ${[...byTeacher.values()].map(g => `
+            <li>
+              <span>${armusEscapeHtml(armusShortDisplayName(g.name))} · ${armusEscapeHtml(armusT("myLessons.creditsCount", "{n} ders hakkı").replace("{n}", g.count))}</span>
+              ${g.firstExpiry ? `<span class="credit-expiry${new Date(g.firstExpiry).getTime() < soonLimit ? " soon" : ""}">${armusEscapeHtml(armusT("myLessons.creditsExpiry", "son gün {date}").replace("{date}", formatDay(g.firstExpiry)))}</span>` : ""}
+            </li>
+          `).join("")}
+        </ul>
+        <p class="credits-hint">${armusEscapeHtml(armusT("myLessons.creditsHint", "Ders hakları alındıktan 6 ay sonra geçersiz olur. Aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir; rezervasyonda otomatik uygulanır."))}</p>
+      `;
+      wrap.appendChild(panel);
+    }
+
     (async function() {
 
     // caught so a slow/blocked Supabase SDK still reaches the static
@@ -914,6 +1244,8 @@
       pageRoot.style.display = "block";
 
       renderStrandedPackages(session.id);
+      renderAccountNotice(session.id);
+      renderCreditsPanel(session.id);
 
       const bookings = await armusGetBookingsForStudent(session.id);
       // armusGetBookingsForStudent sorts strictly ascending by date/time
@@ -1152,6 +1484,75 @@
         return wrap;
       }
 
+      // ---- "did this lesson happen?" (migration_112.sql) - from the end
+      // of the lesson until 24 hours after, unless a report is already in
+      // or the student already said yes ----
+
+      const CHECKIN_OK_KEY = id => "armus_checkin_ok_" + id;
+
+      function checkinOpen(booking) {
+        const end = armusLessonWindow(booking).end.getTime();
+        const now = Date.now();
+        if (now < end || now > end + ARMUS_REPORT_WINDOW_HOURS * 3_600_000) return false;
+        try { if (localStorage.getItem(CHECKIN_OK_KEY(booking.id)) === "1") return false; } catch (err) {}
+        return true;
+      }
+
+      function buildReportStatus(report) {
+        const el = document.createElement("div");
+        el.className = "lesson-report-status";
+        const typeLabel = {
+          no_show: armusT("myLessons.reportTypeNoShow", "Öğretmen gelmedi"),
+          late: armusT("myLessons.reportTypeLate", "Öğretmen geç geldi") + (report.lateMinutes ? ` (${report.lateMinutes} ${armusT("myLessons.minutesShort", "dk")})` : ""),
+          technical: armusT("myLessons.reportTypeTechnical", "Teknik sorun"),
+        }[report.type] || report.type;
+        const statusLabel = report.status === "upheld"
+          ? armusT("myLessons.reportUpheld", "Doğrulandı")
+          : report.status === "dismissed"
+            ? armusT("myLessons.reportDismissed", "Reddedildi")
+            : armusT("myLessons.reportPending", "İnceleniyor");
+        el.innerHTML = `${armusT("myLessons.reportStatus", "Bildirimin:")} <strong>${armusEscapeHtml(typeLabel)}</strong> · ${armusEscapeHtml(statusLabel)}`;
+        return el;
+      }
+
+      function buildCheckinBox(booking) {
+        const box = document.createElement("div");
+        box.className = "checkin-box";
+        box.innerHTML = `
+          <h4>${armusT("myLessons.checkinTitle", "Bu ders gerçekleşti mi?")}</h4>
+          <p>${armusT("myLessons.checkinText", "Bir sorun olduysa dersten sonraki 24 saat içinde bildirebilirsin. Bildirim gelmezse ders yapılmış sayılır ve ücreti öğretmene ödenir.")}</p>
+          <div data-flow></div>
+        `;
+        armusRenderAttendanceFlow(box.querySelector("[data-flow]"), {
+          booking,
+          studentId: session.id,
+          askHappened: true,
+          ui: {
+            options: "checkin-options",
+            actions: "package-actions",
+            choice: "checkin-choice",
+            primary: "lesson-reschedule-btn primary",
+            secondary: "lesson-reschedule-btn",
+            input: "checkin-input",
+          },
+          onHappened: () => {
+            try { localStorage.setItem(CHECKIN_OK_KEY(booking.id), "1"); } catch (err) {}
+            box.remove();
+          },
+          onFiled: (report, message) => {
+            const status = buildReportStatus(report);
+            const note = document.createElement("div");
+            note.className = "package-status";
+            note.textContent = message;
+            status.appendChild(note);
+            box.replaceWith(status);
+          },
+        });
+        return box;
+      }
+
+      const isRealTeacherId = id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ""));
+
       async function renderLessons() {
 
         list.innerHTML = "";
@@ -1196,6 +1597,19 @@
           const pendingRescheduleByBooking = await armusGetPendingRescheduleRequests(
             bookings.filter(armusBookingCancellable).map(b => b.id)
           ).catch(() => ({}));
+          // migration_112.sql: how many times each lesson already moved
+          const rescheduleCounts = await armusGetRescheduleCounts(
+            bookings.filter(armusBookingCancellable).map(b => b.id)
+          ).catch(() => ({}));
+
+          // reports already filed on past lessons (one per lesson)
+          const reportByBooking = new Map();
+          if (pastBookingIds.length) {
+            try {
+              const { data: reportRows } = await armusSupabase.from("attendance_reports").select("*").in("booking_id", pastBookingIds);
+              (reportRows || []).forEach(r => reportByBooking.set(r.booking_id, armusMapAttendanceReportRow(r)));
+            } catch (err) {}
+          }
 
           // "Yaklaşan" / "Geçmiş" headings, same split as the sort above
           const upcomingHeading = document.createElement("div");
@@ -1244,6 +1658,7 @@
 
             const card = document.createElement("div");
             card.className = "lesson-card" + (isPast && !canJoinNow ? " lesson-past" : "") + (isCancelled ? " lesson-cancelled" : "");
+            card.dataset.bookingId = booking.id;
 
             // Only link the row through to the teacher's profile once
             // armusFindMarketplaceTeacher (above) has actually confirmed
@@ -1270,7 +1685,7 @@
               </${rowTag}>
               ${isCancelled ? `
                 <div class="lesson-cancel-badge">
-                  ${booking.teacherNoShow ? teacherNoShowBadge(booking) : lateCancelBadgeOr(booking.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}`)}
+                  ${booking.teacherNoShow ? teacherNoShowBadge(booking) : booking.technicalIssue ? technicalIssueBadge(booking) : lateCancelBadgeOr(booking.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${booking.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : (booking.cancelledBy === "student" ? armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi") : "")}`)}
                 </div>
               ` : (canJoinNow || (!isPast && bookingLocalDateKey === todayKey)) ? `
                 <div class="lesson-join">
@@ -1332,7 +1747,9 @@
               // the teacher's open hours are needed to offer new times - not
               // available when the teacher is no longer listed; a teacher's
               // own pending proposal gets answered first
-              const canReschedule = !!teacher && !(pendingReschedule && pendingReschedule.requestedBy === "teacher");
+              // migration_112.sql: a lesson can be moved at most 2 times
+              const moveLimitReached = (rescheduleCounts[booking.id]?.studentMoves || 0) >= ARMUS_MAX_STUDENT_MOVES;
+              const canReschedule = !!teacher && !moveLimitReached && !(pendingReschedule && pendingReschedule.requestedBy === "teacher");
 
               const cancelWrap = document.createElement("div");
               cancelWrap.className = "lesson-cancel-wrap";
@@ -1340,6 +1757,7 @@
                 ${canReschedule ? `<button type="button" class="lesson-reschedule-btn" data-reschedule>${armusT("myLessons.rescheduleBtn", "Saati Değiştir")}</button>` : ""}
                 <button type="button" class="lesson-cancel-btn">${armusT("myLessons.cancelBtn", "Dersi İptal Et")}</button>
                 <span class="lesson-cancel-hint">${refundHint}</span>
+                ${moveLimitReached ? `<span class="lesson-cancel-hint">${armusT("myLessons.moveLimitReached", "Bu ders 2 kez taşındı - bir ders en fazla 2 kez taşınabilir.")}</span>` : ""}
               `;
 
               cancelWrap.querySelector("[data-reschedule]")?.addEventListener("click", async (e) => {
@@ -1423,11 +1841,29 @@
             }
 
             if (isPast && !isCancelled) {
+              const report = reportByBooking.get(booking.id);
+              if (report) card.appendChild(buildReportStatus(report));
+              else if (checkinOpen(booking)) card.appendChild(buildCheckinBox(booking));
               card.appendChild(await buildReviewBlock(booking));
             }
             if (!isCancelled) {
               disputeBlock = buildDisputeBlock(booking);
               card.appendChild(disputeBlock);
+            }
+
+            // migration_112.sql: a student can report a teacher to the
+            // admin (teacher_reports) - real teachers only
+            if (isRealTeacherId(booking.teacherId)) {
+              const extra = document.createElement("div");
+              extra.className = "lesson-extra-actions";
+              extra.innerHTML = `<button type="button" class="text-link-btn">${armusT("myLessons.reportTeacher", "Öğretmeni şikayet et")}</button>`;
+              extra.querySelector("button").addEventListener("click", () => armusOpenTeacherReportModal({
+                teacherId: booking.teacherId,
+                teacherName: armusShortDisplayName(booking.teacherName),
+                reporterId: session.id,
+                bookingId: booking.id,
+              }));
+              card.appendChild(extra);
             }
 
             list.appendChild(card);
@@ -1437,6 +1873,18 @@
 
       await renderLessons();
       document.addEventListener("armus:langchange", renderLessons);
+
+      // from the after-lesson email: ?checkin=<id> / ?review=<id>
+      const params = new URLSearchParams(location.search);
+      const targetId = params.get("checkin") || params.get("review");
+      if (targetId) {
+        const targetCard = [...list.querySelectorAll(".lesson-card")].find(c => c.dataset.bookingId === targetId);
+        if (targetCard) {
+          targetCard.classList.add("is-target");
+          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (params.get("review")) targetCard.querySelector(".review-prompt-btn")?.click();
+        }
+      }
     }
 
     })();

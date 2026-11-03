@@ -29,6 +29,12 @@
 // credit (cancel-booking only grants one when there's a real payment on
 // file for the booking being cancelled).
 //
+// migration_112.sql: a card payment needs the student's consent that the
+// right of withdrawal ends once a lesson starts (body.withdrawalConsent,
+// stored as pending_payments.withdrawal_consent_at); the buyer's IP is
+// stored for fraud checks. A banned or locked (chargeback) account can't
+// book or pay at all.
+//
 // type: "package" (migration_29.sql) always goes to card - it's what a
 // student buys after a trial to lock in weekly lessons with that same
 // teacher. It's a single charge, not a real recurring subscription (no
@@ -325,6 +331,14 @@ function pickCreditForBooking(credits: any[], teacherId: string, type: string, p
 
 const TRIAL_TAKEN_ERROR = "Bu öğretmenle daha önce deneme dersi aldın. Aynı öğretmenle normal ders rezerve edebilirsin.";
 
+const ACCOUNT_LOCKED_ERROR = "Hesabın şu anda inceleme nedeniyle kilitli, bu yüzden ders alamazsın. Bilgi için destek ekibimize yazabilirsin.";
+
+// the last x-forwarded-for entry - the one our own edge network appended
+// (the first is whatever the caller sent; see the buyer.ip note below)
+function trustedClientIp(req: Request) {
+  return req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
 
@@ -343,15 +357,22 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("name, email, city, timezone")
+      .select("name, email, city, timezone, is_banned, account_locked")
       .eq("id", user.id)
       .single();
 
     if (!profile) return jsonResponse({ error: "Profil bulunamadı." }, 400);
+    if (profile.is_banned) {
+      return jsonResponse({ error: "Hesabın kapatıldığı için ders alamazsın." }, 403);
+    }
+    if (profile.account_locked) {
+      return jsonResponse({ error: ACCOUNT_LOCKED_ERROR, accountLocked: true }, 403);
+    }
 
     const body = await req.json().catch(() => ({}));
     let { teacherId, teacherName } = body;
     const { type, date, time, phone, identityNumber, quantity } = body;
+    const withdrawalConsent = body.withdrawalConsent === true;
 
     if (type !== "trial" && type !== "lesson" && type !== "package") {
       return jsonResponse({ error: "Geçersiz ders tipi." }, 400);
@@ -642,6 +663,10 @@ Deno.serve(async (req) => {
         if (bookingError?.code === "AR005") {
           return jsonResponse({ error: TRIAL_TAKEN_ERROR, trialAlreadyTaken: true }, 409);
         }
+        // AR007 = bookings_enforce_student_can_book (migration_112.sql)
+        if (bookingError?.code === "AR007") {
+          return jsonResponse({ error: ACCOUNT_LOCKED_ERROR, accountLocked: true }, 403);
+        }
         console.error("credit-covered booking insert failed", bookingError);
         return jsonResponse({ error: "Rezervasyon oluşturulamadı." }, 500);
       }
@@ -727,6 +752,10 @@ Deno.serve(async (req) => {
     // what the lesson itself costs (payment-callback books it at that)
     const chargeAmount = topUpCredit && coverage ? coverage.topUp : numericPrice;
 
+    if (!withdrawalConsent) {
+      return jsonResponse({ error: "Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin.", consentRequired: true }, 400);
+    }
+
     const { data: pending, error: pendingError } = await supabaseAdmin
       .from("pending_payments")
       .insert({
@@ -743,6 +772,8 @@ Deno.serve(async (req) => {
         booking_price: topUpCredit && coverage ? coverage.bookingPrice : null,
         credit_id: topUpCredit ? topUpCredit.id : null,
         status: "pending",
+        withdrawal_consent_at: new Date().toISOString(),
+        client_ip: trustedClientIp(req),
       })
       .select()
       .single();

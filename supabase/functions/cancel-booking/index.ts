@@ -18,8 +18,11 @@
 //     booking is still cancelled either way, which frees the slot.
 // A teacher can cancel at most 3 lessons per calendar month
 // (migration_107.sql's bookings_enforce_teacher_cancel_limit refuses the
-// 4th with AR003). Cancelling the lessons of a student the teacher is
-// blocking (teacher-blocks.js) doesn't count - see counts_as_teacher_cancel.
+// 4th with AR003). A teacher's cancellation less than 12 hours before
+// the lesson counts as 2 (bookings.cancel_weight, migration_112.sql).
+// Cancelling the lessons of a student the teacher is blocking
+// (teacher-blocks.js) doesn't count - see counts_as_teacher_cancel -
+// unless they unblock within 30 days (migration_112.sql).
 // "Goes back to the balance" means (migration_110.sql's
 // refund_booking_to_credit, which this calls): a card-paid lesson grants
 // a new lesson credit tied to that teacher, worth what was paid; a lesson
@@ -225,14 +228,14 @@ Deno.serve(async (req) => {
 
     let cancelledBy: string;
     let refundEligible: boolean;
+    const hoursUntilLesson = (lessonStart.getTime() - Date.now()) / 3_600_000;
 
     if (isAdmin) {
       cancelledBy = "admin";
       refundEligible = true;
     } else if (isStudent) {
       cancelledBy = "student";
-      const hoursUntil = (lessonStart.getTime() - Date.now()) / 3_600_000;
-      refundEligible = hoursUntil >= FREE_CANCEL_HOURS;
+      refundEligible = hoursUntilLesson >= FREE_CANCEL_HOURS;
     } else {
       cancelledBy = "teacher";
       refundEligible = true;
@@ -259,6 +262,8 @@ Deno.serve(async (req) => {
     // monthly cap - unless they're blocking this student (teacher-blocks.js
     // inserts the block first, then cancels the pair's lessons)
     let countsAsTeacherCancel = false;
+    // migration_112.sql: a teacher's last-minute cancellation weighs 2
+    const cancelWeight = cancelledBy === "teacher" && hoursUntilLesson < FREE_CANCEL_HOURS ? 2 : 1;
     if (cancelledBy === "teacher") {
       const { data: block } = await supabaseAdmin
         .from("blocked_students")
@@ -277,6 +282,7 @@ Deno.serve(async (req) => {
         cancelled_by: cancelledBy,
         late_cancel: lateCancel,
         counts_as_teacher_cancel: countsAsTeacherCancel,
+        cancel_weight: cancelWeight,
       })
       .eq("id", booking.id)
       .eq("status", "confirmed")
@@ -285,7 +291,9 @@ Deno.serve(async (req) => {
 
     if (claimError?.code === "AR003") {
       return jsonResponse({
-        error: "Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.",
+        error: cancelWeight === 2
+          ? "Derse 12 saatten az kala yapılan iptal 2 iptal hakkı sayılır ve bu ay bunun için yeterli hakkın kalmadı (ayda en fazla 3). Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz."
+          : "Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.",
         limitReached: true,
       }, 409);
     }

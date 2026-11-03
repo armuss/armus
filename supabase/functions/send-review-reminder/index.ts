@@ -1,5 +1,8 @@
-// ARMUS - emails the student a "leave a review" prompt a bit after their
-// lesson ends, via Resend. Called by the armus-review-reminders cron job
+// ARMUS - emails the student "did your lesson happen?" a bit after their
+// lesson ends, via Resend (migration_112.sql: Preply's rule - a problem
+// can be reported until 24 hours after the lesson; without a report the
+// lesson counts as held and the teacher is paid). "Yes" leads to the
+// review, "No / there was a problem" to my-lessons.html's check-in. Called by the armus-review-reminders cron job
 // (migration_64.sql) roughly 10-40 minutes after each lesson ends -
 // never called directly by the site itself.
 //
@@ -47,17 +50,19 @@ function shortDisplayName(fullName: string) {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-function reviewEmailHtml(recipientName: string, teacherName: string) {
+function checkinEmailHtml(recipientName: string, teacherName: string, bookingId: string) {
   return `
   <div style="background:#0d0d0f;padding:40px 20px;font-family:Arial,sans-serif;">
     <div style="max-width:440px;margin:0 auto;background:#1a1712;border:1px solid #2e2a22;border-radius:16px;padding:32px;text-align:center;">
       <div style="font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#e8c777,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:24px;">ARMUS</div>
       <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
       <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
-        <strong style="color:#f4f4f2;">${escapeHtml(teacherName)}</strong> ile dersin nasıldı?
-        Birkaç saniyeni ayırıp değerlendirirsen hem diğer öğrencilere yardımcı olursun hem de öğretmenine geri bildirim vermiş olursun.
+        <strong style="color:#f4f4f2;">${escapeHtml(teacherName)}</strong> ile dersin gerçekleşti mi?
+        Her şey yolundaysa birkaç saniyeni ayırıp dersi değerlendirebilirsin.
       </p>
-      <a href="${SITE_URL}/my-lessons.html" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">★ Dersi Değerlendir</a>
+      <a href="${SITE_URL}/my-lessons.html?review=${encodeURIComponent(bookingId)}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;margin:0 4px 10px;">✓ Evet, Değerlendir</a>
+      <a href="${SITE_URL}/my-lessons.html?checkin=${encodeURIComponent(bookingId)}" style="display:inline-block;border:1px solid #4a4436;color:#f4f4f2;font-size:14px;font-weight:700;padding:12px 22px;border-radius:12px;text-decoration:none;margin:0 4px 10px;">Hayır / Bir Sorun Oldu</a>
+      <p style="color:#66666a;font-size:11px;line-height:1.5;margin:18px 0 0;">Öğretmen gelmediyse, geç kaldıysa ya da teknik bir sorun olduysa dersten sonraki 24 saat içinde bildirebilirsin. Bildirim gelmezse ders yapılmış sayılır.</p>
     </div>
   </div>`;
 }
@@ -134,8 +139,8 @@ Deno.serve(async (req) => {
 
     const ok = await sendEmail(
       studentProfile.email,
-      "Dersin nasıldı? - ARMUS",
-      reviewEmailHtml(studentProfile.name, shortDisplayName(booking.teacher_name)),
+      "Dersin gerçekleşti mi? - ARMUS",
+      checkinEmailHtml(studentProfile.name, shortDisplayName(booking.teacher_name), booking.id),
     );
 
     // a genuine send failure (Resend down, rate limited) shouldn't

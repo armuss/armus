@@ -2581,12 +2581,12 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=17"></script>
+  <script src="i18n.js?v=18"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=11"></script>
+  <script src="bookings.js?v=12"></script>
   <script src="reschedule.js?v=1"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
@@ -2595,7 +2595,7 @@
   <script src="support-tickets.js?v=1"></script>
   <script src="push-notifications.js?v=1"></script>
   <script src="withdrawal-receipt.js?v=1"></script>
-  <script src="attendance.js?v=5"></script>
+  <script src="attendance.js?v=6"></script>
   <script>
 
     // yyyy-mm-dd from a Date's own local year/month/day - never goes
@@ -2742,7 +2742,7 @@
 
     const ATTENDANCE_RULES_TEXT = () => armusT(
       "teacherDash.attendanceRulesText",
-      "ARMUS kuralları: bir öğrenci dersine gelmediğini ya da geç kaldığını bildirdiğinde, incelenene kadar profilin yeni öğrencilerin aramasından gizlenir. Ekibimiz durumu değerlendirir. Gelmediğin doğrulanan bir dersin ücreti sana ödenmez, ders öğrenciye iade edilir. Tekrarlanan, doğrulanmış ihlaller daha ağır sonuçlar doğurur - toplamda 10 gelmeme profilinin tamamen kapatılmasına, bir ayda derslerinin %5'inden fazlasında geç kalman ise profilinin bir ay boyunca herkesten gizlenmesine yol açar."
+      "ARMUS kuralları: bir öğrenci dersine gelmediğini bildirdiğinde, incelenene kadar profilin yeni öğrencilerin aramasından gizlenir. Ekibimiz ders kayıtlarına (kimin derse ne zaman girdiğine) bakarak değerlendirir. Gelmediğin doğrulanan bir dersin ücreti sana ödenmez, ders öğrenciye iade edilir; derse hiç girmediysen öğrenci de girmemiş olsa bile ders gelmedi sayılır. 15 dakikaya kadar geç kalmak uyarıdır; daha fazla geç kalırsan öğrenci dersi yapılmamış saydırabilir. Senin tarafındaki teknik bir sorun yüzünden ders 25 dakikadan az yapılabildiyse ders öğrenciye iade edilir (ceza değildir). Tekrarlanan, doğrulanmış ihlaller daha ağır sonuçlar doğurur - 30 günde 3 gelmeme profilinin 14 gün herkesten gizlenmesine ve hesabının incelenmesine, toplamda 10 gelmeme profilinin tamamen kapatılmasına, bir ayda derslerinin %5'inden fazlasında geç kalman ise profilinin bir ay boyunca herkesten gizlenmesine yol açar."
     );
 
     // Promise-based: resolves with { reason, note } once the teacher
@@ -2800,7 +2800,9 @@
 
       const typeLabel = report && report.type === "no_show"
         ? armusT("teacherDash.attendanceTypeNoShow", "derse gelmedin")
-        : armusT("teacherDash.attendanceTypeLate", "derse geç kaldın");
+        : report && report.type === "technical"
+          ? armusT("teacherDash.attendanceTypeTechnical", "senin tarafında teknik bir sorun yaşandığını")
+          : armusT("teacherDash.attendanceTypeLate", "derse geç kaldın");
 
       if (user.is_banned) {
 
@@ -2814,7 +2816,9 @@
 
         title.textContent = armusT("teacherDash.attendanceExplainTitle", "Bir öğrenci bir şey bildirdi");
         body.innerHTML = `
-          <p>${armusT("teacherDash.attendanceExplainText", "Bir öğrenci {type} bildirdi. Bu yüzden profilin şu anda yeni öğrencilerin aramasından gizli.").replace("{type}", typeLabel)}</p>
+          <p>${(report.type === "no_show"
+            ? armusT("teacherDash.attendanceExplainText", "Bir öğrenci {type} bildirdi. Bu yüzden profilin şu anda yeni öğrencilerin aramasından gizli.")
+            : armusT("teacherDash.attendanceExplainTextNoHide", "Bir öğrenci {type} bildirdi. Profilin gizlenmedi; ekibimiz inceleyecek. İstersen açıklamanı yaz.")).replace("{type}", typeLabel)}</p>
           <div class="rules-box">${ATTENDANCE_RULES_TEXT()}</div>
           <textarea id="attendanceExplanationInput" placeholder="${armusT("teacherDash.attendanceExplainPlaceholder", "Ne oldu? Kısaca açıkla...")}"></textarea>
           <div class="attendance-modal-actions">
@@ -2953,17 +2957,23 @@
 
       const banner = document.getElementById("attendanceBanner");
       const isHiddenUntilActive = user.hidden_until && new Date(user.hidden_until) > new Date();
+      const isHidden = user.is_banned || user.hidden_from_new_students || isHiddenUntilActive;
 
-      if (!user.is_banned && !user.hidden_from_new_students && !isHiddenUntilActive) {
+      // migration_112.sql: a late or technical-problem report doesn't hide
+      // the teacher, but they still get to explain it
+      const report = await armusGetLatestOwnAttendanceReport(user.id);
+      const hasOpenReport = report && report.status === "open";
+
+      if (!isHidden && !hasOpenReport) {
         banner.hidden = true;
         return;
       }
 
-      const report = await armusGetLatestOwnAttendanceReport(user.id);
-
       document.getElementById("attendanceBannerTitle").textContent = user.is_banned
         ? armusT("teacherDash.bannerBannedTitle", "Hesabın kapatıldı")
-        : armusT("teacherDash.bannerHiddenTitle", "Profilin yeni öğrencilerden gizli");
+        : isHidden
+          ? armusT("teacherDash.bannerHiddenTitle", "Profilin yeni öğrencilerden gizli")
+          : armusT("teacherDash.bannerReportTitle", "Bir dersinle ilgili bildirim var");
 
       document.getElementById("attendanceBannerSub").textContent = user.is_banned
         ? armusT("teacherDash.bannerBannedSub", "Detaylar için tıkla")
@@ -3392,7 +3402,7 @@
         const note = document.getElementById("heldBalanceNote");
         if (heldNetEstimate <= 0) { note.style.display = "none"; return; }
         const nextRelease = heldEarned
-          .filter(b => earnablePrice(b) > 0)
+          .filter(b => earnablePrice(b) > 0 && !b.payoutHold)
           .map(b => armusPayoutReleaseAt(b))
           .sort((a, b) => a - b)[0];
         note.textContent = armusT("teacherDash.heldBalanceNote", "Bekleyen: ₺{amount}. Son {days} günün derslerinden gelir, her dersin ücreti dersten {days} gün sonra çekilebilir olur (sıradaki: {date}).")
@@ -3920,7 +3930,7 @@
       const cancelsLeft = () => Math.max(0, ARMUS_TEACHER_MONTHLY_CANCEL_LIMIT - armusTeacherCancelsThisMonth(incomingBookings, teacherTimezone));
       function renderCancelAllowance() {
         const el = document.getElementById("cancelAllowance");
-        el.innerHTML = armusT("teacherDash.cancelAllowance", "Bu ay kalan iptal hakkın: <strong>{left} / {limit}</strong> · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan - iptal hakkından düşmez.")
+        el.innerHTML = armusT("teacherDash.cancelAllowance", "Bu ay kalan iptal hakkın: <strong>{left} / {limit}</strong> · Derse 12 saatten az kala yapılan iptal 2 hak sayılır. Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan - iptal hakkından düşmez.")
           .replace("{left}", cancelsLeft())
           .replace("{limit}", ARMUS_TEACHER_MONTHLY_CANCEL_LIMIT);
         el.hidden = incomingBookings.length === 0;
@@ -3932,6 +3942,11 @@
       const pendingRescheduleByBooking = await armusGetPendingRescheduleRequests(
         activeBookings.filter(armusBookingCancellable).map(b => b.id)
       ).catch(() => ({}));
+      // migration_112.sql: at most 2 new-time proposals per lesson
+      const rescheduleCounts = await armusGetRescheduleCounts(
+        activeBookings.filter(armusBookingCancellable).map(b => b.id)
+      ).catch(() => ({}));
+      const proposalsLeft = id => ARMUS_MAX_TEACHER_PROPOSALS - (rescheduleCounts[id]?.teacherProposals || 0);
 
       // ---- bookings grouped by student, with private notes ----
 
@@ -4026,7 +4041,7 @@
                 <div class="booking-when">
                   ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
-                  ${armusBookingCancellable(booking) && !pendingRescheduleByBooking[booking.id] ? `<br><button type="button" class="propose-btn-sm" data-propose-booking="${booking.id}">${armusT("teacherDash.proposeTime", "Saat Öner")}</button>` : ""}
+                  ${armusBookingCancellable(booking) && !pendingRescheduleByBooking[booking.id] && proposalsLeft(booking.id) > 0 ? `<br><button type="button" class="propose-btn-sm" data-propose-booking="${booking.id}">${armusT("teacherDash.proposeTime", "Saat Öner")}</button>` : ""}
                   ${armusBookingCancellable(booking) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
                 </div>
               </div>
@@ -4131,7 +4146,8 @@
                 busyTimes: activeBookings,
                 current: { date: booking.date, time: booking.time },
                 title: armusT("teacherDash.proposeTitle", "Öğrencine yeni bir saat öner"),
-                note: armusT("teacherDash.proposeNote", "Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez."),
+                note: armusT("teacherDash.proposeNote", "Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez.")
+                  + " " + armusT("teacherDash.proposeLimitNote", "Bir ders için en fazla 2 kez saat önerebilirsin (kalan: {left}).").replace("{left}", proposalsLeft(booking.id)),
                 confirmLabel: armusT("teacherDash.proposeConfirm", "Bu Saati Öner"),
               });
               if (!pick) return;
@@ -4152,13 +4168,20 @@
               // migration_107.sql: 3 of the teacher's own cancellations per
               // month (cancelling a blocked student's lessons doesn't count)
               const counts = !blockedStudents.has(studentId);
-              if (counts && cancelsLeft() <= 0) {
-                alert(armusT("teacherDash.cancelLimitReached", "Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz."));
+              // migration_112.sql: less than 12 hours before the lesson it weighs 2
+              const cancelBooking = incomingBookings.find(b => b.id === button.dataset.cancelBooking);
+              const weight = cancelBooking && armusHoursUntilLesson(cancelBooking) < ARMUS_FREE_CANCEL_HOURS ? 2 : 1;
+              if (counts && cancelsLeft() < weight) {
+                alert(weight === 2 && cancelsLeft() > 0
+                  ? armusT("teacherDash.cancelLimitReachedLate", "Derse 12 saatten az kala yapılan iptal 2 iptal hakkı sayılır ve bu ay bunun için yeterli hakkın kalmadı. Öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.")
+                  : armusT("teacherDash.cancelLimitReached", "Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine \"Saat Öner\" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz."));
                 return;
               }
               let confirmMsg = armusT("teacherDash.cancelBookingConfirm", "Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.");
               if (counts) {
-                confirmMsg += "\n\n" + armusT("teacherDash.cancelBookingConfirmLimit", "Bu iptal, bu ayki iptal hakkından düşer (kalan: {left}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.").replace("{left}", cancelsLeft());
+                confirmMsg += "\n\n" + (weight === 2
+                  ? armusT("teacherDash.cancelBookingConfirmLimitLate", "Derse 12 saatten az kaldığı için bu iptal, bu ayki iptal hakkından 2 hak düşer (kalan: {left}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.")
+                  : armusT("teacherDash.cancelBookingConfirmLimit", "Bu iptal, bu ayki iptal hakkından düşer (kalan: {left}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.")).replace("{left}", cancelsLeft());
               }
               if (!confirm(confirmMsg)) return;
 

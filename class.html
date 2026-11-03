@@ -511,29 +511,17 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=17"></script>
+  <script src="i18n.js?v=18"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=11"></script>
+  <script src="bookings.js?v=12"></script>
   <script src="reviews.js?v=5"></script>
-  <script src="attendance.js?v=4"></script>
+  <script src="attendance.js?v=6"></script>
   <script src="teacher-notes.js?v=4"></script>
   <script src="student-extras.js?v=4"></script>
   <script src="https://meet.jit.si/external_api.js"></script>
   <script>
-
-    // Reads the "how many minutes late" number input the way the min=1/
-    // max=180 attributes on it promise, which the browser only enforces on
-    // a real form submit - a plain .value read here does neither, so an
-    // explicit "0" (falsy) used to be discarded as if the field were left
-    // empty instead of being sent as 0, and an out-of-range or negative
-    // number typed directly in went through unvalidated.
-    function parseLateMinutes(rawValue) {
-      const n = Number(rawValue);
-      if (rawValue === "" || !Number.isFinite(n)) return null;
-      return Math.min(180, Math.max(1, Math.round(n)));
-    }
 
     const gate = document.getElementById("gate");
     const tooEarly = document.getElementById("tooEarly");
@@ -716,13 +704,28 @@
         `;
       }
 
+      // ---- who was in the room (lesson_presence, migration_112.sql) ----
+      // a heartbeat about once a minute while this person is actually in
+      // the call - the admin looks at it when a lesson is reported
+      let heartbeatTimer = null;
+      function stopHeartbeat() {
+        if (heartbeatTimer) clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+      if (jitsiApi) {
+        jitsiApi.addEventListener("videoConferenceJoined", () => {
+          stopHeartbeat();
+          armusLessonHeartbeat(booking.id);
+          heartbeatTimer = setInterval(() => armusLessonHeartbeat(booking.id), 60000);
+        });
+        jitsiApi.addEventListener("videoConferenceLeft", stopHeartbeat);
+      }
+
       // ---- report a no-show / late teacher, right from inside the
       // room - a student shouldn't have to sit through the whole lesson
       // (or even wait for the "leave" flow) to flag that the teacher
       // never joined ----
 
-      const WARNING_TRIANGLE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
-      const CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
 
       const attendanceReportOverlay = document.getElementById("attendanceReportOverlay");
       const attendanceReportBody = document.getElementById("attendanceReportBody");
@@ -742,30 +745,6 @@
         attendanceReportOverlay.hidden = true;
       }
 
-      async function submitAttendanceReport(type, lateMinutes) {
-        attendanceReportBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
-        const result = await armusReportAttendanceIssue({
-          bookingId: booking.id,
-          teacherId: booking.teacherId,
-          studentId: session.id,
-          type,
-          lateMinutes,
-        });
-        if (!result) {
-          attendanceReportBody.innerHTML = `
-            <p>${armusT("class.reportFailed", "Bildirim gönderilemedi. Lütfen tekrar dene.")}</p>
-            <div class="post-class-actions"><button type="button" class="btn btn-light" data-close>${armusT("class.close", "Kapat")}</button></div>
-          `;
-          attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
-          return;
-        }
-        attendanceReportBody.innerHTML = `
-          <p>${armusT("class.reportSent", "Bildirimin alındı. Öğretmenin profili yeni öğrencilerden geçici olarak gizlendi ve ekibimiz inceleyecek.")}</p>
-          <div class="post-class-actions"><button type="button" class="btn btn-light" data-close>${armusT("class.close", "Kapat")}</button></div>
-        `;
-        attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
-      }
-
       async function openAttendanceReportModal() {
 
         const existing = await armusGetAttendanceReportForBooking(booking.id);
@@ -780,40 +759,25 @@
           return;
         }
 
-        const noShowReady = noShowReportReady();
-
-        attendanceReportBody.innerHTML = `
-          <p>${armusT("class.reportModalText", "Öğretmenle ilgili ne bildirmek istiyorsun?")}</p>
-          <div class="attendance-report-options">
-            <button type="button" class="btn btn-light" data-report="no_show" ${noShowReady ? "" : "disabled"}>${WARNING_TRIANGLE_SVG}<span>${armusT("class.reportNoShow", "Öğretmen derse hiç gelmedi")}</span></button>
-            <button type="button" class="btn btn-light" data-report="late">${CLOCK_SVG}<span>${armusT("class.reportLate", "Öğretmen geç geldi")}</span></button>
-          </div>
-          ${noShowReady ? "" : `<p>${armusT("class.reportNoShowTooSoon", "Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.")}</p>`}
-          <button type="button" class="btn" data-close style="width:100%;">${armusT("class.cancel", "İptal")}</button>
-        `;
-
-        attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
-
-        if (noShowReady) {
-          attendanceReportBody.querySelector('[data-report="no_show"]').addEventListener("click", () => {
-            submitAttendanceReport("no_show");
-          });
-        }
-
-        attendanceReportBody.querySelector('[data-report="late"]').addEventListener("click", () => {
-          attendanceReportBody.innerHTML = `
-            <p>${armusT("class.reportLateMinutesText", "Kaç dakika geç kaldı? (opsiyonel)")}</p>
-            <input type="number" min="1" max="180" id="lateMinutesInput" placeholder="${armusT("class.reportLateMinutesPlaceholder", "Örn. 10")}">
-            <div class="post-class-actions">
-              <button type="button" class="btn" data-close>${armusT("class.cancel", "İptal")}</button>
-              <button type="button" class="btn btn-light" data-submit-late>${armusT("class.reportSend", "Gönder")}</button>
-            </div>
-          `;
-          attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
-          attendanceReportBody.querySelector("[data-submit-late]").addEventListener("click", () => {
-            const minutes = parseLateMinutes(document.getElementById("lateMinutesInput").value);
-            submitAttendanceReport("late", minutes);
-          });
+        // late / no-show / technical problem - attendance.js's shared flow
+        // (migration_112.sql's rules)
+        attendanceReportBody.innerHTML = "";
+        const intro = document.createElement("p");
+        intro.textContent = armusT("class.reportModalText", "Öğretmenle ilgili ne bildirmek istiyorsun?");
+        const flow = document.createElement("div");
+        attendanceReportBody.append(intro, flow);
+        armusRenderAttendanceFlow(flow, {
+          booking,
+          studentId: session.id,
+          noShowReady: noShowReportReady(),
+          onCancel: closeAttendanceReportModal,
+          onFiled: (report, message) => {
+            attendanceReportBody.innerHTML = `
+              <p>${message}</p>
+              <div class="post-class-actions"><button type="button" class="btn btn-light" data-close>${armusT("class.close", "Kapat")}</button></div>
+            `;
+            attendanceReportBody.querySelector("[data-close]").addEventListener("click", closeAttendanceReportModal);
+          },
         });
 
         attendanceReportOverlay.hidden = false;
@@ -922,6 +886,7 @@
         postClassOpened = true;
 
         clearInterval(progressInterval);
+        stopHeartbeat();
         try { jitsiApi.dispose(); } catch (err) {}
 
         if (isStudent) {
@@ -1007,80 +972,35 @@
             renderReviewStep();
           } else {
 
-            const noShowReady = noShowReportReady();
-
             postClassTitle.textContent = armusT("class.checkinTitle", "Bu ders gerçekleşti mi?");
-            postClassBody.innerHTML = `
-              <p>${armusT("class.checkinText", "{date}, {time} için planlanan ders.").replace("{date}", when.dateLabel).replace("{time}", when.timeRange)}</p>
-              <div class="attendance-report-options">
-                <button type="button" class="btn btn-light" data-checkin="yes">${armusT("class.checkinYes", "Evet, zamanında oldu")}</button>
-                <button type="button" class="btn btn-light" data-checkin="late">${CLOCK_SVG}<span>${armusT("class.checkinLate", "Evet ama öğretmen geç geldi")}</span></button>
-                <button type="button" class="btn btn-light" data-checkin="no_show" ${noShowReady ? "" : "disabled"}>${WARNING_TRIANGLE_SVG}<span>${armusT("class.checkinNoShow", "Hayır, öğretmen gelmedi")}</span></button>
-              </div>
-              ${noShowReady ? "" : `<p>${armusT("class.reportNoShowTooSoon", "Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.")}</p>`}
-            `;
+            postClassBody.innerHTML = "";
+            const intro = document.createElement("p");
+            intro.textContent = armusT("class.checkinText", "{date}, {time} için planlanan ders.").replace("{date}", when.dateLabel).replace("{time}", when.timeRange);
+            const flow = document.createElement("div");
+            postClassBody.append(intro, flow);
             postClassSkip.hidden = true;
             postClassSave.hidden = true;
 
-            postClassBody.querySelector('[data-checkin="yes"]').addEventListener("click", renderReviewStep);
-
-            // armusReportAttendanceIssue can fail (a dropped connection, a
-            // report that snuck in for this booking from another tab,
-            // etc) - silently moving on regardless, as this used to,
-            // meant the student walked away thinking a "the teacher
-            // didn't show up" report was filed when nothing was actually
-            // saved. Both branches below now check the result and let
-            // the student retry instead.
-            function renderCheckinReportFailed(retry) {
-              postClassBody.innerHTML = `
-                <p>${armusT("class.reportFailed", "Bildirim gönderilemedi. Lütfen tekrar dene.")}</p>
-                <div class="post-class-actions">
-                  <button type="button" class="btn" data-skip>${armusT("class.skip", "Atla")}</button>
-                  <button type="button" class="btn btn-light" data-retry>${armusT("class.reportRetry", "Tekrar dene")}</button>
-                </div>
-              `;
-              postClassBody.querySelector("[data-retry]").addEventListener("click", retry);
-              postClassBody.querySelector("[data-skip]").addEventListener("click", finishAndLeave);
-            }
-
-            if (noShowReady) {
-              async function submitCheckinNoShow() {
-                postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
-                const result = await armusReportAttendanceIssue({
-                  bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "no_show",
-                });
-                if (!result) {
-                  renderCheckinReportFailed(submitCheckinNoShow);
+            // the shared flow (attendance.js): "yes" moves on to the star
+            // rating; a late start that was still held does too; anything
+            // else (not held, technical problem) just confirms and leaves
+            armusRenderAttendanceFlow(flow, {
+              booking,
+              studentId: session.id,
+              noShowReady: noShowReportReady(),
+              askHappened: true,
+              onHappened: renderReviewStep,
+              onFiled: (report, message) => {
+                if (report.type === "late") {
+                  renderReviewStep();
                   return;
                 }
-                finishAndLeave();
-              }
-              postClassBody.querySelector('[data-checkin="no_show"]').addEventListener("click", submitCheckinNoShow);
-            }
-
-            postClassBody.querySelector('[data-checkin="late"]').addEventListener("click", () => {
-              postClassBody.innerHTML = `
-                <p>${armusT("class.reportLateMinutesText", "Kaç dakika geç kaldı? (opsiyonel)")}</p>
-                <input type="number" min="1" max="180" id="checkinLateMinutes" placeholder="${armusT("class.reportLateMinutesPlaceholder", "Örn. 10")}">
-                <div class="post-class-actions">
-                  <button type="button" class="btn btn-light" data-continue>${armusT("class.continueBtn", "Devam Et")}</button>
-                </div>
-              `;
-              postClassBody.querySelector("[data-continue]").addEventListener("click", () => {
-                const minutes = parseLateMinutes(document.getElementById("checkinLateMinutes").value);
-                async function submitCheckinLate() {
-                  postClassBody.innerHTML = `<p>${armusT("class.reportSending", "Gönderiliyor...")}</p>`;
-                  const result = await armusReportAttendanceIssue({
-                    bookingId: booking.id, teacherId: booking.teacherId, studentId: session.id, type: "late", lateMinutes: minutes,
-                  });
-                  if (!result) {
-                    renderCheckinReportFailed(submitCheckinLate);
-                    return;
-                  }
-                  renderReviewStep();
-                }
-                submitCheckinLate();
-              });
+                postClassBody.innerHTML = `
+                  <p>${message}</p>
+                  <div class="post-class-actions"><button type="button" class="btn btn-light" data-leave>${armusT("class.leave", "Çık")}</button></div>
+                `;
+                postClassBody.querySelector("[data-leave]").addEventListener("click", finishAndLeave);
+              },
             });
           }
 

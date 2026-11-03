@@ -119,6 +119,9 @@ function armusMapBookingRow(row) {
     teacherNoShow: row.teacher_no_show === true,
     cancelledAt: row.cancelled_at || null,
     countsAsTeacherCancel: row.counts_as_teacher_cancel === true,
+    cancelWeight: Number(row.cancel_weight) || 1,
+    technicalIssue: row.technical_issue === true,
+    payoutHold: row.payout_hold === true,
     createdAt: row.created_at,
   };
 }
@@ -309,7 +312,10 @@ function armusPayoutReleaseAt(booking) {
   return new Date(armusLessonWindow(booking).end.getTime() + ARMUS_PAYOUT_HOLD_DAYS * 86_400_000);
 }
 
+// migration_112.sql: a lesson whose payment got a chargeback isn't paid
+// out until the admin settles it (bookings.payout_hold)
 function armusIsPayoutReleased(booking, now = new Date()) {
+  if (booking.payoutHold) return false;
   return armusPayoutReleaseAt(booking) <= now;
 }
 
@@ -406,6 +412,29 @@ async function armusGetPendingRescheduleRequests(bookingIds) {
     newDate: r.new_date,
     newTime: r.new_time,
   }]));
+}
+
+// migration_112.sql's limits: a student can move one lesson at most 2
+// times, a teacher can propose a new time at most 2 times per lesson.
+const ARMUS_MAX_STUDENT_MOVES = 2;
+const ARMUS_MAX_TEACHER_PROPOSALS = 2;
+
+// { [bookingId]: { studentMoves, teacherProposals } }
+async function armusGetRescheduleCounts(bookingIds) {
+  const ids = (bookingIds || []).filter(Boolean);
+  if (!ids.length) return {};
+  const { data, error } = await armusSupabase
+    .from("reschedule_requests")
+    .select("booking_id, requested_by, status")
+    .in("booking_id", ids);
+  if (error || !data) return {};
+  const counts = {};
+  data.forEach(r => {
+    const c = counts[r.booking_id] = counts[r.booking_id] || { studentMoves: 0, teacherProposals: 0 };
+    if (r.requested_by === "student" && r.status === "accepted") c.studentMoves++;
+    if (r.requested_by === "teacher") c.teacherProposals++;
+  });
+  return counts;
 }
 
 // Turkish GSM normalization: "+90 555 112 51 21", "905551125121",
@@ -569,9 +598,10 @@ function armusTeacherCancelsThisMonth(bookings, timeZone) {
     timeZone: timeZone || "Europe/Istanbul", year: "numeric", month: "2-digit",
   }).format(d);
   const current = monthKey(new Date());
-  return (bookings || []).filter(b =>
-    b.countsAsTeacherCancel && b.cancelledAt && monthKey(new Date(b.cancelledAt)) === current
-  ).length;
+  // migration_112.sql: one less than 12 hours before the lesson counts 2
+  return (bookings || [])
+    .filter(b => b.countsAsTeacherCancel && b.cancelledAt && monthKey(new Date(b.cancelledAt)) === current)
+    .reduce((sum, b) => sum + (b.cancelWeight || 1), 0);
 }
 
 // "Cancelled and Paid" (migration_105.sql): the student cancelled a

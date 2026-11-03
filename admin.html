@@ -1264,6 +1264,9 @@
       <button class="nav-btn" data-panel="withdrawals"><span data-i18n="admin.navWithdrawals">Para Çekme Talepleri</span> <span class="nav-badge" id="withdrawalsBadge"></span></button>
       <button class="nav-btn" data-panel="supporttickets"><span data-i18n="admin.navSupportTickets">Destek Talepleri</span> <span class="nav-badge" id="supportTicketsBadge"></span></button>
       <button class="nav-btn" data-panel="messagereports"><span data-i18n="admin.navMessageReports">Mesaj Şikayetleri</span> <span class="nav-badge" id="messageReportsBadge"></span></button>
+      <button class="nav-btn" data-panel="teacherreports"><span data-i18n="admin.navTeacherReports">Öğretmen Şikayetleri</span> <span class="nav-badge" id="teacherReportsBadge"></span></button>
+      <button class="nav-btn" data-panel="payments" data-i18n="admin.navPayments">Ödemeler ve İtirazlar</button>
+      <button class="nav-btn" data-panel="fraud" data-i18n="admin.navFraud">Şüpheli Hesaplar</button>
       <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
       <button class="nav-btn" data-panel="demand" data-i18n="admin.navDemand">Talep Haritası</button>
       <button class="nav-btn" data-panel="cities" data-i18n="admin.navCities">Şehirler</button>
@@ -1476,10 +1479,15 @@
       <div class="panel" id="panel-attendance">
         <h2 data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</h2>
         <p class="section-hint" data-i18n="admin.attendanceHint">
-          Bir öğrencinin bir dersle ilgili "öğretmen gelmedi" ya da "öğretmen
-          geç kaldı" bildirimleri burada listelenir. Bir bildirim geldiği an
-          öğretmenin profili yeni öğrencilerin aramasından otomatik gizlenir;
-          burada "Doğrula" ya da "Reddet" seçerek bunu sonuçlandırman gerekir.
+          Bir öğrencinin bir dersle ilgili "öğretmen gelmedi", "öğretmen geç
+          kaldı" ya da "teknik sorun" bildirimleri burada listelenir. Her
+          kartta iki tarafın derse ne zaman girip ne kadar kaldığı görünür.
+          "Gelmedi" bildirimi geldiği an öğretmenin profili yeni öğrencilerden
+          gizlenir. Kural: öğretmen derse hiç girmediyse - öğrenci de girmemiş
+          olsa bile - gelmedi sayılır. Geç kalma (15 dk'ya kadar) uyarıdır;
+          öğretmen tarafındaki teknik sorunda ders 25 dk'dan az yapıldıysa
+          "Doğrula" dersi öğrenciye iade eder. Uydurma bir bildirimi "Asılsız"
+          ile kapat: öğrenci uyarılır, 3. asılsız bildirimde hesabı kapanır.
         </p>
         <input type="text" class="admin-search" id="searchAttendance" placeholder="İsim ara..." data-i18n-placeholder="admin.searchName">
         <div id="attendanceList"></div>
@@ -1635,6 +1643,87 @@
         <div class="empty-note" id="messageReportsEmpty" style="display: none;" data-i18n="admin.messageReportsEmpty">Mesaj şikayeti yok.</div>
       </div>
 
+      <div class="panel" id="panel-teacherreports">
+        <h2 data-i18n="admin.navTeacherReports">Öğretmen Şikayetleri</h2>
+        <p class="section-hint" data-i18n="admin.teacherReportsHint">
+          Öğrencilerin bir öğretmen hakkındaki şikayetleri (ders kartından ya da
+          öğretmen profilinden). Öğretmen kimin şikayet ettiğini görmez. İncelediğin
+          bir şikayeti, istersen bir not ekleyerek kapat.
+        </p>
+        <table id="teacherReportsTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colMessageReportReporter">Bildiren</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colMessageReportReason">Sebep</th>
+              <th data-i18n="admin.colTeacherReportNote">Not</th>
+              <th data-i18n="admin.colStatus">Durum</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="teacherReportsBody"></tbody>
+        </table>
+        <div class="empty-note" id="teacherReportsEmpty" style="display: none;" data-i18n="admin.teacherReportsEmpty">Öğretmen şikayeti yok.</div>
+      </div>
+
+      <div class="panel" id="panel-payments">
+        <h2 data-i18n="admin.navPayments">Ödemeler ve İtirazlar</h2>
+        <p class="section-hint" data-i18n="admin.paymentsHint">
+          Bir öğrencinin bankası ödemeye itiraz ettiğinde (chargeback) ödemeyi
+          burada bul ve "İtiraz Geldi" de: öğrencinin hesabı kilitlenir (ders
+          alamaz, mesaj gönderemez) ve o ödemenin derslerinin öğretmen ücreti
+          bekletilir. "Kanıt" iyzico'ya gönderebileceğin özeti (ders saatleri,
+          kimin derse ne kadar girdiği, değerlendirme) açar. Sonuç gelince
+          "Kazanıldı" ya da "Kaybedildi" seç.
+        </p>
+        <div class="panel-toolbar">
+          <input type="text" class="admin-search" id="searchPayments" placeholder="Öğrenci e-postası, isim ya da iyzico ödeme numarası" data-i18n-placeholder="admin.searchPayments">
+          <button class="btn" id="searchPaymentsBtn" data-i18n="admin.searchBtn">Ara</button>
+          <button class="btn" id="listChargebacksBtn" data-i18n="admin.listChargebacks">İtirazları Göster</button>
+        </div>
+        <table id="paymentsTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colDate">Tarih</th>
+              <th data-i18n="admin.colStudent">Öğrenci</th>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colType">Tür</th>
+              <th data-i18n="admin.colPrice">Ücret</th>
+              <th data-i18n="admin.colPaymentRef">iyzico / Kart</th>
+              <th data-i18n="admin.colStatus">Durum</th>
+              <th data-i18n="admin.colAction">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsBody"></tbody>
+        </table>
+        <div class="empty-note" id="paymentsEmpty" data-i18n="admin.paymentsEmpty">Aramak için yukarıya bir e-posta, isim ya da ödeme numarası yaz.</div>
+      </div>
+
+      <div class="panel" id="panel-fraud">
+        <h2 data-i18n="admin.navFraud">Şüpheli Hesaplar</h2>
+        <p class="section-hint" data-i18n="admin.fraudHint">
+          Bir öğretmenle öğrencisinin aynı IP adresinden giriş yapması (ya da
+          ödeme yapması) ve aynı kartın aynı öğretmenin birden fazla öğrenci
+          hesabında kullanılması - öğretmenin sahte hesapla kendine ders/yorum
+          alması olabilir. Bunlar kanıt değil, bakılması gereken işaretlerdir
+          (aynı evde yaşayan aile üyeleri de aynı IP'yi kullanır).
+        </p>
+        <table id="fraudTable">
+          <thead>
+            <tr>
+              <th data-i18n="admin.colTeacher">Öğretmen</th>
+              <th data-i18n="admin.colStudent">Öğrenci</th>
+              <th data-i18n="admin.colFraudReason">İşaret</th>
+              <th data-i18n="admin.colFraudDetail">Detay</th>
+              <th data-i18n="admin.colFraudLastSeen">Son görülme</th>
+            </tr>
+          </thead>
+          <tbody id="fraudBody"></tbody>
+        </table>
+        <div class="empty-note" id="fraudEmpty" style="display: none;" data-i18n="admin.fraudEmpty">Şüpheli bir eşleşme yok.</div>
+      </div>
+
       <div class="panel" id="panel-announcement">
         <h2 data-i18n="admin.navAnnouncement">Site Duyurusu</h2>
         <p class="section-hint" data-i18n="admin.announcementHint">
@@ -1708,15 +1797,15 @@
 
   </div>
 
-  <script src="i18n.js?v=17"></script>
+  <script src="i18n.js?v=18"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=13"></script>
-  <script src="bookings.js?v=11"></script>
+  <script src="bookings.js?v=12"></script>
   <script src="reviews.js?v=5"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="disputes.js?v=4"></script>
-  <script src="attendance.js?v=4"></script>
+  <script src="attendance.js?v=6"></script>
   <script src="support-tickets.js?v=1"></script>
   <script src="messages.js?v=5"></script>
   <script src="site-settings.js?v=4"></script>
@@ -1804,6 +1893,11 @@
       } else if (user.hidden_from_new_students || isHiddenUntilActive) {
         statusExtraBadges += `<span class="app-badge hidden-status">${armusT("admin.hiddenBadge", "Yeni öğrencilerden gizli")}</span>`;
       }
+      // migration_112.sql: 3 upheld no-shows in 30 days
+      const banSuggested = !user.is_banned && user.ban_suggested_at && (Date.now() - new Date(user.ban_suggested_at).getTime()) < 30 * 86_400_000;
+      if (banSuggested) {
+        statusExtraBadges += `<span class="app-badge banned">${armusT("admin.banSuggestedBadge", "⚠ Ban önerisi: 30 günde 3 gelmeme")}</span>`;
+      }
 
       let actions = "";
       if (user.status === "pending") {
@@ -1820,6 +1914,12 @@
         actions += `<button class="btn btn-approve" data-account-action="unban">${armusT("admin.removeBan", "Banı Kaldır")}</button>`;
       } else if (user.hidden_from_new_students || isHiddenUntilActive) {
         actions += `<button class="btn btn-approve" data-account-action="unhide">${armusT("admin.removeHide", "Gizliliği Kaldır")}</button>`;
+      }
+      if (banSuggested) {
+        actions += `<button class="btn" data-account-action="clear_suggestion">${armusT("admin.clearBanSuggestion", "Öneriyi Kapat")}</button>`;
+      }
+      if (!user.is_banned && user.status === "approved") {
+        actions += `<button class="btn btn-reject" data-account-action="ban">${armusT("admin.banAccount", "Hesabı Kapat")}</button>`;
       }
       actions += `<a class="btn" href="mesajlar?teacher=${encodeURIComponent(user.id)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>`;
 
@@ -1939,8 +2039,24 @@
 
       card.querySelectorAll("[data-account-action]").forEach(button => {
         button.addEventListener("click", async () => {
+          const accountAction = button.dataset.accountAction;
+          // migration_112.sql: closing an account / clearing a ban suggestion
+          if (accountAction === "ban" || accountAction === "clear_suggestion") {
+            if (accountAction === "ban" && !confirm(armusT("admin.banTeacherConfirm", "{name} hesabı kapatılsın mı? Gelecekteki dersleri iptal edilir ve öğrencilerine ders hakkı iade edilir.").replace("{name}", user.name))) return;
+            button.disabled = true;
+            const updated = await armusAdminUpdateProfile(user.id, accountAction === "ban"
+              ? { is_banned: true, banned_at: new Date().toISOString(), ban_suggested_at: null }
+              : { ban_suggested_at: null });
+            if (updated) {
+              armusLogAdminAction(accountAction === "ban" ? "profile_ban" : "profile_clear_ban_suggestion", "profile", user.id, user.name);
+              await loadAll();
+            } else {
+              button.disabled = false;
+            }
+            return;
+          }
           button.disabled = true;
-          const isUnban = button.dataset.accountAction === "unban";
+          const isUnban = accountAction === "unban";
           // unhide clears the standing penalty too (migration_104.sql) -
           // otherwise the next report filed against this teacher would put
           // them straight back under the old penalty, and a stale
@@ -2180,17 +2296,47 @@
         const count = bookings.filter(b => b.studentId === s.id).length;
         const tr = document.createElement("tr");
         tr.dataset.id = s.id;
+        // migration_112.sql: closed (banned) / locked (chargeback) accounts
+        const statusBadge = s.is_banned
+          ? ` <span class="app-badge banned">${armusT("admin.bannedBadge", "⊘ Banlı")}</span>`
+          : s.account_locked ? ` <span class="app-badge hidden-status">${armusT("admin.lockedBadge", "Kilitli")}</span>` : "";
+        const accountBtn = s.is_banned
+          ? `<button class="btn" data-student-account="unban" data-student-id="${s.id}">${armusT("admin.removeBan", "Banı Kaldır")}</button>`
+          : `${s.account_locked ? `<button class="btn" data-student-account="unlock" data-student-id="${s.id}">${armusT("admin.unlockAccount", "Kilidi Aç")}</button>` : ""}<button class="btn btn-reject" data-student-account="ban" data-student-id="${s.id}">${armusT("admin.banAccount", "Hesabı Kapat")}</button>`;
         tr.innerHTML = `
-          <td>${armusEscapeHtml(s.name)}</td>
+          <td>${armusEscapeHtml(s.name)}${statusBadge}</td>
           <td>${armusEscapeHtml(s.email)}</td>
           <td>${new Date(s.created_at).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
           <td>${count}</td>
           <td class="row-actions">
             <button class="btn" data-view-student="${s.id}">${armusT("admin.details", "Detaylar")}</button>
             <a class="btn" href="mesajlar?teacher=${encodeURIComponent(s.id)}">${armusT("admin.messageBtn", "Mesaj")}</a>
+            ${accountBtn}
           </td>
         `;
         body.appendChild(tr);
+      });
+
+      body.querySelectorAll("[data-student-account]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const student = students.find(x => x.id === button.dataset.studentId);
+          if (!student) return;
+          const action = button.dataset.studentAccount;
+          if (action === "ban" && !confirm(armusT("admin.banStudentConfirm", "{name} hesabı kapatılsın mı? Kullanım şartları gereği planlanmış dersleri iadesiz iptal edilir ve tüm ders hakları geçersiz olur. Bu geri alınamaz (ban kaldırılsa da ders hakları geri gelmez).").replace("{name}", student.name))) return;
+          button.disabled = true;
+          const updates = action === "ban"
+            ? { is_banned: true, banned_at: new Date().toISOString() }
+            : action === "unban"
+              ? { is_banned: false }
+              : { account_locked: false, account_locked_reason: null, account_locked_at: null };
+          const updated = await armusAdminUpdateProfile(student.id, updates);
+          if (updated) {
+            armusLogAdminAction(`student_${action}`, "profile", student.id, student.name);
+            await loadAll();
+          } else {
+            button.disabled = false;
+          }
+        });
       });
 
       body.querySelectorAll("[data-view-student]").forEach(button => {
@@ -3019,10 +3165,8 @@
         const student = profileById.get(r.studentId);
         const teacherName = teacher ? teacher.name : r.teacherId;
         const studentName = student ? student.name : r.studentId;
-        const icon = r.type === "no_show" ? ATTENDANCE_WARNING_SVG : ATTENDANCE_CLOCK_SVG;
-        const typeLabel = r.type === "no_show"
-          ? armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
-          : armusT("admin.attendanceTypeLate", "Derse geç kaldı") + (r.lateMinutes ? ` (${r.lateMinutes} dk)` : "");
+        const icon = r.type === "late" ? ATTENDANCE_CLOCK_SVG : ATTENDANCE_WARNING_SVG;
+        const typeLabel = attendanceTypeLabel(r);
         const canResolve = r.status !== "upheld" && r.status !== "dismissed";
 
         const card = document.createElement("div");
@@ -3034,16 +3178,22 @@
               <div class="app-name">${icon}${armusEscapeHtml(teacherName)} - ${typeLabel}</div>
               <div class="app-email">${armusT("admin.attendanceReportedBy", "Bildiren:")} ${armusEscapeHtml(studentName)}</div>
               <span class="app-badge attendance-${r.status}">${statusLabels[r.status] || r.status}</span>
+              ${r.falseReport ? `<span class="app-badge banned">${armusT("admin.attendanceFalseBadge", "Asılsız")}</span>` : ""}
             </div>
             <div class="app-actions">
               ${canResolve ? `
                 <button class="btn btn-approve" data-attendance-status="${r.id}" data-new-status="upheld">${armusT("admin.attendanceUphold", "Doğrula")}</button>
                 <button class="btn btn-reject" data-attendance-status="${r.id}" data-new-status="dismissed">${armusT("admin.attendanceDismiss", "Reddet")}</button>
+                <button class="btn btn-reject" data-attendance-status="${r.id}" data-new-status="dismissed" data-false-report="1">${armusT("admin.attendanceFalse", "Asılsız")}</button>
               ` : ""}
               <a class="btn" href="mesajlar?teacher=${encodeURIComponent(r.teacherId)}">${armusT("teachersPage.sendMessage", "Mesaj Gönder")}</a>
             </div>
           </div>
           <div class="app-details">
+            <div class="app-full">
+              <h4>${armusT("admin.attendancePresence", "Derse kim, ne zaman girdi?")}</h4>
+              <p>${attendancePresenceHtml(r)}</p>
+            </div>
             ${r.studentNote ? `<div class="app-full"><h4>${armusT("admin.attendanceStudentNote", "Öğrencinin notu")}</h4><p>${armusEscapeHtml(r.studentNote)}</p></div>` : ""}
             <div class="app-full">
               <h4>${armusT("admin.attendanceTeacherExplanation", "Öğretmenin açıklaması")}</h4>
@@ -3058,14 +3208,24 @@
         button.addEventListener("click", async () => {
           const id = button.dataset.attendanceStatus;
           const newStatus = button.dataset.newStatus;
+          const falseReport = button.dataset.falseReport === "1";
           // migration_106.sql: upholding a no-show moves money - make that explicit
           const report = armusAdminAttendanceReports.find(x => x.id === id);
           if (newStatus === "upheld" && report && report.type === "no_show"
             && !confirm(armusT("admin.attendanceUpholdNoShowConfirm", "Doğrularsan bu ders iptal edilir, öğrenciye ders hakkı olarak iade edilir ve öğretmene ödenmez. Devam edilsin mi?"))) {
             return;
           }
+          // migration_112.sql
+          if (newStatus === "upheld" && report && report.type === "technical" && report.techSide === "teacher" && (report.minutesHeld ?? 0) < 25
+            && !confirm(armusT("admin.attendanceUpholdTechConfirm", "Doğrularsan bu ders iptal edilir, öğrenciye ders hakkı olarak iade edilir ve öğretmene ödenmez (öğretmene ceza verilmez). Devam edilsin mi?"))) {
+            return;
+          }
+          if (falseReport
+            && !confirm(armusT("admin.attendanceFalseConfirm", "Bu bildirim asılsız olarak kapatılır ve öğrenciye uyarı e-postası gider. 3. asılsız bildiriminde öğrencinin hesabı kapanır ve ders hakları yanar. Devam edilsin mi?"))) {
+            return;
+          }
           button.disabled = true;
-          const updated = await armusAdminResolveAttendanceReport(id, newStatus);
+          const updated = await armusAdminResolveAttendanceReport(id, newStatus, falseReport);
           if (updated) {
             armusAdminAttendanceReports = armusAdminAttendanceReports.map(x => x.id === id ? updated : x);
             armusLogAdminAction(
@@ -3080,6 +3240,38 @@
           }
         });
       });
+    }
+
+    // migration_112.sql: technical problems, a long wait counted as not held
+    function attendanceTypeLabel(r) {
+      if (r.type === "technical") {
+        const side = r.techSide === "teacher"
+          ? armusT("admin.attendanceTechTeacherSide", "öğretmen tarafı")
+          : armusT("admin.attendanceTechStudentSide", "öğrenci tarafı");
+        return `${armusT("admin.attendanceTypeTechnical", "Teknik sorun")} (${side}${r.minutesHeld !== null ? ` · ${armusT("admin.attendanceMinutesHeld", "{n} dk yapıldı").replace("{n}", r.minutesHeld)}` : ""})`;
+      }
+      if (r.type === "no_show") {
+        return armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
+          + (r.lateMinutes ? ` (${armusT("admin.attendanceLateNotHeld", "{n} dk geç geldi, öğrenci yapılmamış saydırdı").replace("{n}", r.lateMinutes)})` : "");
+      }
+      return armusT("admin.attendanceTypeLate", "Derse geç kaldı") + (r.lateMinutes ? ` (${r.lateMinutes} dk)` : "");
+    }
+
+    // who was actually in the class room (lesson_presence) - the evidence
+    // for a "the teacher never came" report
+    function attendancePresenceHtml(r) {
+      const booking = armusAdminBookings.find(b => b.id === r.bookingId);
+      const presence = armusAdminPresence[r.bookingId] || {};
+      const start = booking ? armusLessonWindow(booking).start : null;
+      const line = (label, p) => {
+        if (!p) return `${label}: <strong>${armusT("admin.presenceNever", "derse hiç girmedi")}</strong>`;
+        const first = new Date(p.firstSeenAt);
+        const offset = start ? Math.round((first - start) / 60000) : null;
+        const when = first.toLocaleTimeString(armusGetLang() === "en" ? "en-US" : "tr-TR", { hour: "2-digit", minute: "2-digit" });
+        const rel = offset === null ? "" : offset <= 0 ? ` (${armusT("admin.presenceOnTime", "zamanında")})` : ` (+${offset} ${armusT("admin.minutesShort", "dk")})`;
+        return `${label}: ${when}${rel} ${armusT("admin.presenceJoined", "girdi")} · ~${p.minutes} ${armusT("admin.minutesShort", "dk")} ${armusT("admin.presenceStayed", "kaldı")}`;
+      };
+      return `${line(armusT("admin.colTeacher", "Öğretmen"), presence.teacher)}<br>${line(armusT("admin.colStudent", "Öğrenci"), presence.student)}`;
     }
 
     function teacherIdLabel(teacherId) {
@@ -3259,6 +3451,237 @@
         resolved: armusT("admin.messageReportStatusResolved", "Çözüldü"),
       };
     }
+
+    // ---- teacher reports (teacher_reports, migration_112.sql) ----
+
+    function renderTeacherReportsPanel(reports, profileById) {
+      const body = document.getElementById("teacherReportsBody");
+      const empty = document.getElementById("teacherReportsEmpty");
+      const badge = document.getElementById("teacherReportsBadge");
+      body.innerHTML = "";
+
+      const openCount = reports.filter(r => r.status === "open").length;
+      badge.textContent = openCount || "";
+      badge.classList.toggle("visible", openCount > 0);
+
+      if (!reports.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const reasons = armusTeacherReportReasons();
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      reports.forEach(r => {
+        const reporter = profileById.get(r.reporter_id);
+        const teacher = profileById.get(r.teacher_id);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${new Date(r.created_at).toLocaleDateString(lang)}</td>
+          <td>${armusEscapeHtml(reporter ? reporter.name : r.reporter_id)}</td>
+          <td>${armusEscapeHtml(teacher ? teacher.name : r.teacher_id)}</td>
+          <td>${armusEscapeHtml(reasons[r.reason] || r.reason)}</td>
+          <td>${armusEscapeHtml(r.note || "")}${r.admin_note ? `<br><em>${armusT("admin.teacherReportAdminNote", "Yönetici notu:")} ${armusEscapeHtml(r.admin_note)}</em>` : ""}</td>
+          <td>${r.status === "open" ? armusT("admin.messageReportStatusOpen", "Açık") : armusT("admin.messageReportStatusResolved", "Çözüldü")}</td>
+          <td class="row-actions">
+            ${r.status === "open" ? `<button class="btn" data-resolve-teacher-report="${r.id}">${armusT("admin.messageReportResolve", "Kapat")}</button>` : ""}
+            <a class="btn" href="mesajlar?teacher=${encodeURIComponent(r.teacher_id)}">${armusT("admin.messageBtn", "Mesaj")}</a>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+
+      body.querySelectorAll("[data-resolve-teacher-report]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const note = prompt(armusT("admin.teacherReportResolvePrompt", "Kapatma notu (isteğe bağlı) - ne yaptın?"), "");
+          if (note === null) return;
+          button.disabled = true;
+          const updated = await armusAdminResolveTeacherReport(button.dataset.resolveTeacherReport, note.trim());
+          if (updated) {
+            armusAdminTeacherReports = armusAdminTeacherReports.map(x => x.id === updated.id ? updated : x);
+            armusLogAdminAction("teacher_report_resolved", "teacher_report", updated.id, teacherIdLabel(updated.teacher_id));
+            renderAllFromState();
+          } else {
+            button.disabled = false;
+          }
+        });
+      });
+    }
+
+    // ---- payments and chargebacks (migration_112.sql) ----
+
+    let armusAdminPaymentsQuery = "";
+
+    async function searchPayments(query) {
+      armusAdminPaymentsQuery = query;
+      const body = document.getElementById("paymentsBody");
+      const empty = document.getElementById("paymentsEmpty");
+      body.innerHTML = "";
+      empty.style.display = "block";
+      empty.textContent = armusT("admin.loading", "Yükleniyor...");
+      const { data, error } = await armusSupabase.rpc("admin_find_payments", { p_query: query });
+      if (error) {
+        empty.textContent = armusT("admin.paymentsError", "Ödemeler yüklenemedi.");
+        return;
+      }
+      renderPaymentsTable(data || []);
+    }
+
+    function renderPaymentsTable(rows) {
+      const body = document.getElementById("paymentsBody");
+      const empty = document.getElementById("paymentsEmpty");
+      body.innerHTML = "";
+      if (!rows.length) {
+        empty.style.display = "block";
+        empty.textContent = armusT("admin.paymentsNone", "Bu aramayla eşleşen ödeme yok.");
+        return;
+      }
+      empty.style.display = "none";
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      const typeLabels = {
+        trial: armusT("admin.trialLessonType", "Deneme Dersi"),
+        lesson: armusT("admin.regularLessonType", "Ders"),
+        package: armusT("admin.packageType", "Paket"),
+      };
+      rows.forEach(p => {
+        const status = p.chargeback_at
+          ? (p.chargeback_outcome === "won"
+            ? armusT("admin.chargebackWon", "İtiraz kazanıldı")
+            : p.chargeback_outcome === "lost"
+              ? armusT("admin.chargebackLost", "İtiraz kaybedildi")
+              : armusT("admin.chargebackOpen", "İtiraz açık"))
+          : (Number(p.refunded_amount) > 0 ? armusT("admin.paymentRefunded", "İade: ₺{n}").replace("{n}", p.refunded_amount) : armusT("admin.paymentOk", "Ödendi"));
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${new Date(p.created_at).toLocaleDateString(lang)}</td>
+          <td>${armusEscapeHtml(p.student_name || "")}<br><small>${armusEscapeHtml(p.student_email || "")}</small></td>
+          <td>${armusEscapeHtml(p.teacher_name || "")}</td>
+          <td>${typeLabels[p.type] || armusEscapeHtml(p.type)}${p.lesson_date ? `<br><small>${armusEscapeHtml(p.lesson_date)} ${armusEscapeHtml(p.lesson_time || "")}</small>` : ""}</td>
+          <td>₺${armusEscapeHtml(String(p.price))}</td>
+          <td><small>${armusEscapeHtml(p.iyzico_payment_id || "—")}<br>${armusEscapeHtml(p.card_fingerprint || "")}</small></td>
+          <td>${status}${p.chargeback_note ? `<br><small>${armusEscapeHtml(p.chargeback_note)}</small>` : ""}</td>
+          <td class="row-actions">
+            ${!p.chargeback_at ? `<button class="btn btn-reject" data-payment-action="chargeback" data-payment-id="${p.id}">${armusT("admin.chargebackRecord", "İtiraz Geldi")}</button>` : ""}
+            ${p.chargeback_at && !p.chargeback_outcome ? `
+              <button class="btn btn-approve" data-payment-action="won" data-payment-id="${p.id}">${armusT("admin.chargebackMarkWon", "Kazanıldı")}</button>
+              <button class="btn btn-reject" data-payment-action="lost" data-payment-id="${p.id}">${armusT("admin.chargebackMarkLost", "Kaybedildi")}</button>
+            ` : ""}
+            <button class="btn" data-payment-action="evidence" data-payment-id="${p.id}">${armusT("admin.chargebackEvidence", "Kanıt")}</button>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+
+      body.querySelectorAll("[data-payment-action]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.paymentId;
+          const action = button.dataset.paymentAction;
+          if (action === "evidence") {
+            openChargebackEvidence(id);
+            return;
+          }
+          let rpcName, args;
+          if (action === "chargeback") {
+            const note = prompt(armusT("admin.chargebackNotePrompt", "Bankanın itiraz sebebi / iyzico bildirimi (not):"), "");
+            if (note === null) return;
+            if (!confirm(armusT("admin.chargebackConfirm", "Öğrencinin hesabı kilitlenecek (ders alamaz, mesaj gönderemez) ve bu ödemenin derslerinin öğretmen ücreti bekletilecek. Devam edilsin mi?"))) return;
+            rpcName = "admin_record_chargeback";
+            args = { p_payment_id: id, p_note: note.trim() || null };
+          } else {
+            const ask = action === "won"
+              ? armusT("admin.chargebackWonConfirm", "İtiraz kazanıldı: öğretmen ücreti serbest bırakılır, başka açık itirazı yoksa öğrencinin kilidi açılır. Devam?")
+              : armusT("admin.chargebackLostConfirm", "İtiraz kaybedildi: bu ödemenin dersleri öğretmene ödenmez, paketten kalan ders hakları silinir, öğrencinin hesabı kilitli kalır. Devam?");
+            if (!confirm(ask)) return;
+            rpcName = "admin_resolve_chargeback";
+            args = { p_payment_id: id, p_outcome: action };
+          }
+          button.disabled = true;
+          const { error } = await armusSupabase.rpc(rpcName, args);
+          if (error) {
+            alert(armusT("admin.actionFailed", "İşlem yapılamadı: ") + error.message);
+            button.disabled = false;
+            return;
+          }
+          armusLogAdminAction(`payment_${action}`, "payment", id, "");
+          await searchPayments(armusAdminPaymentsQuery);
+          await loadAll();
+        });
+      });
+    }
+
+    async function openChargebackEvidence(paymentId) {
+      const { data, error } = await armusSupabase.rpc("admin_chargeback_evidence", { p_payment_id: paymentId });
+      if (error || !data) {
+        alert(armusT("admin.chargebackEvidenceFailed", "Kanıt özeti yüklenemedi."));
+        return;
+      }
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      const fmt = iso => iso ? new Date(iso).toLocaleString(lang) : "—";
+      const pay = data.payment || {};
+      const student = data.student || {};
+      const lessons = (data.lessons || []).map(l => `
+        <tr>
+          <td>${armusEscapeHtml(l.date)} ${armusEscapeHtml(l.time)} <small>(${armusEscapeHtml(l.timezone || "")})</small></td>
+          <td>${armusEscapeHtml(l.teacher_name || "")}</td>
+          <td>${armusEscapeHtml(l.status)}</td>
+          <td>${(l.presence || []).map(p => `${p.role === "teacher" ? armusT("admin.colTeacher", "Öğretmen") : armusT("admin.colStudent", "Öğrenci")}: ${fmt(p.first_seen_at)} · ~${p.minutes} dk`).join("<br>") || armusT("admin.presenceNoneRecorded", "kayıt yok")}</td>
+          <td>${l.report ? armusEscapeHtml(`${l.report.type} · ${l.report.status}`) : "—"}</td>
+          <td>${l.review ? `${"★".repeat(l.review.stars)} ${armusEscapeHtml(l.review.comment || "")}` : "—"}</td>
+        </tr>
+      `).join("");
+      document.getElementById("detailTitle").textContent = armusT("admin.chargebackEvidenceTitle", "Ödeme itirazı kanıt özeti");
+      document.getElementById("detailBody").innerHTML = `
+        <div class="app-details" style="margin-bottom:16px;">
+          <div><h4>${armusT("admin.colStudent", "Öğrenci")}</h4><p>${armusEscapeHtml(student.name || "")}<br>${armusEscapeHtml(student.email || "")}<br>${armusT("admin.memberSince", "Üyelik:")} ${fmt(student.created_at)}</p></div>
+          <div><h4>${armusT("admin.paymentLabel", "Ödeme")}</h4><p>₺${armusEscapeHtml(String(pay.price))} · ${armusEscapeHtml(pay.type || "")}<br>${fmt(pay.created_at)}<br>iyzico: ${armusEscapeHtml(pay.iyzico_payment_id || "—")}<br>${armusT("admin.cardLabel", "Kart:")} ${armusEscapeHtml(pay.card_fingerprint || "—")}<br>${armusT("admin.consentLabel", "Cayma onayı:")} ${fmt(pay.withdrawal_consent_at)}</p></div>
+        </div>
+        <table>
+          <thead><tr><th>${armusT("admin.colDate", "Tarih")}</th><th>${armusT("admin.colTeacher", "Öğretmen")}</th><th>${armusT("admin.colStatus", "Durum")}</th><th>${armusT("admin.attendancePresence", "Derse kim, ne zaman girdi?")}</th><th>${armusT("admin.colReport", "Bildirim")}</th><th>${armusT("admin.colReview", "Değerlendirme")}</th></tr></thead>
+          <tbody>${lessons || `<tr><td colspan="6" class="empty-note">${armusT("admin.noLessonsForPayment", "Bu ödemeyle henüz ders yapılmamış.")}</td></tr>`}</tbody>
+        </table>
+        <p style="margin-top:14px;font-size:12px;color:var(--armus-muted);">${armusT("admin.messagesBetween", "Öğrenci ile öğretmen arasındaki mesaj sayısı:")} ${Number(data.messages_between) || 0}</p>
+        <button class="btn" type="button" onclick="window.print()" style="margin-top:10px;">${armusT("admin.printEvidence", "Yazdır / PDF olarak kaydet")}</button>
+      `;
+      document.getElementById("detailOverlay").classList.add("visible");
+    }
+
+    document.getElementById("searchPaymentsBtn").addEventListener("click", () => {
+      searchPayments(document.getElementById("searchPayments").value.trim());
+    });
+    document.getElementById("searchPayments").addEventListener("keydown", e => {
+      if (e.key === "Enter") searchPayments(e.currentTarget.value.trim());
+    });
+    document.getElementById("listChargebacksBtn").addEventListener("click", () => searchPayments("chargeback"));
+
+    // ---- fraud flags (admin_fraud_flags, migration_112.sql) ----
+
+    async function loadFraudFlags() {
+      const body = document.getElementById("fraudBody");
+      const empty = document.getElementById("fraudEmpty");
+      body.innerHTML = "";
+      const { data, error } = await armusSupabase.rpc("admin_fraud_flags");
+      const rows = error ? [] : (data || []);
+      empty.style.display = rows.length ? "none" : "block";
+      if (error) empty.textContent = armusT("admin.fraudError", "İşaretler yüklenemedi.");
+      const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      const reasonLabels = {
+        same_ip: armusT("admin.fraudSameIp", "Aynı IP adresi"),
+        shared_card: armusT("admin.fraudSharedCard", "Aynı kart, birden fazla öğrenci hesabı"),
+      };
+      rows.forEach(f => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${armusEscapeHtml(f.teacher_name || f.teacher_id)}</td>
+          <td>${armusEscapeHtml(f.student_name || f.student_id)}</td>
+          <td>${reasonLabels[f.reason] || armusEscapeHtml(f.reason)}</td>
+          <td><small>${armusEscapeHtml(f.detail || "")}</small></td>
+          <td>${f.last_seen ? new Date(f.last_seen).toLocaleString(lang) : "—"}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    document.querySelector('.nav-btn[data-panel="fraud"]').addEventListener("click", loadFraudFlags);
 
     function renderMessageReportsPanel(reports, profileById) {
       const body = document.getElementById("messageReportsBody");
@@ -4232,6 +4655,9 @@
     let armusAdminWithdrawalRequests = [];
     let armusAdminSupportTickets = [];
     let armusAdminMessageReports = [];
+    // migration_112.sql
+    let armusAdminTeacherReports = [];
+    let armusAdminPresence = {};
     let armusAdminSearch = { teachers: "", bookings: "", students: "", disputes: "", attendance: "", messages: "", withdrawals: "", supportTickets: "", messageReports: "" };
 
     function matchesSearch(value, term) {
@@ -4303,6 +4729,7 @@
       renderWithdrawalsPanel(filteredWithdrawalRequests, profileById);
       renderSupportTicketsPanel(filteredSupportTickets, profileById);
       renderMessageReportsPanel(filteredMessageReports, profileById);
+      renderTeacherReportsPanel(armusAdminTeacherReports, profileById);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
@@ -4386,6 +4813,12 @@
         armusSupabase.from("support_tickets").select("*").order("updated_at", { ascending: false }),
         armusAdminGetAllMessageReports(),
       ]);
+      const [teacherReportsRes, presenceRes] = await Promise.all([
+        armusAdminGetTeacherReports().catch(() => []),
+        armusGetLessonPresence((attendanceRes || []).map(r => r.bookingId)).catch(() => ({})),
+      ]);
+      armusAdminTeacherReports = teacherReportsRes || [];
+      armusAdminPresence = presenceRes || {};
 
       armusAdminProfiles = profilesRes.data || [];
       armusAdminBookings = (bookingsRaw.data || []).map(armusMapBookingRow);

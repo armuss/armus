@@ -252,9 +252,16 @@ async function settlePaidCheckout(supabaseAdmin: any, pending: any, result: any)
   const transactionId = Array.isArray(result.itemTransactions) && result.itemTransactions[0]
     ? result.itemTransactions[0].paymentTransactionId
     : null;
+  // migration_112.sql: the card's first 6 + last 4 digits (all iyzico
+  // gives back) - one card behind several student accounts of the same
+  // teacher is a fraud flag (admin_fraud_flags)
+  const cardFingerprint = result.binNumber && result.lastFourDigits
+    ? `${result.binNumber}-${result.lastFourDigits}`
+    : null;
   const paidFields = {
     iyzico_payment_id: result.paymentId ?? null,
     iyzico_payment_transaction_id: transactionId,
+    card_fingerprint: cardFingerprint,
   };
 
   if (isPackage) {
@@ -426,8 +433,9 @@ async function settlePaidCheckout(supabaseAdmin: any, pending: any, result: any)
     // lesson with them can be created anymore, so it gets the same
     // credit-instead outcome (reusing the slot_taken state rather than a
     // dedicated one for something this rare). AR005 here is a top-up
-    // trial refused by the one-trial rule.
-    if (["23505", "AR001", "AR002", "AR005"].includes(bookingError?.code)) {
+    // trial refused by the one-trial rule; AR007 (migration_112.sql) the
+    // student's account was locked while they were paying.
+    if (["23505", "AR001", "AR002", "AR005", "AR007"].includes(bookingError?.code)) {
       await creditForUnbookedPayment(supabaseAdmin, pending);
       // 'slot_taken' (migration_84.sql), not 'paid_no_booking' - this is
       // a fully resolved outcome (credit already granted), not a stuck
