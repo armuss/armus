@@ -18,6 +18,7 @@ import {
 } from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
+import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 
 type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'checkin' | 'review';
@@ -152,6 +153,19 @@ export default function Class() {
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, [phase]);
+
+  // who was in the lesson room (lesson_presence, migration_112.sql) - a
+  // heartbeat about once a minute while the room is open, the same as
+  // class.html; the admin looks at it when a lesson is reported
+  useEffect(() => {
+    if (phase !== 'room' || !booking) return;
+    const beat = () => {
+      supabase.rpc('lesson_heartbeat', { p_booking_id: booking.id }).then(() => {}, () => {});
+    };
+    beat();
+    const interval = setInterval(beat, 60000);
+    return () => clearInterval(interval);
+  }, [phase, booking]);
 
   const [checkinBusy, setCheckinBusy] = useState(false);
   const [checkinError, setCheckinError] = useState(false);

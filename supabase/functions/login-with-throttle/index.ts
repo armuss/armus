@@ -26,6 +26,11 @@
 // (embedded in every page's supabase-config.js), so this costs nothing,
 // and it's guaranteed to be the exact same key every other Supabase call
 // on the site already authenticates successfully with.
+//
+// migration_112.sql: every successful sign-in is recorded with its IP
+// (sign_in_events, kept 90 days) - a teacher and a student of theirs
+// signing in from the same IP is a fraud flag for the admin
+// (admin_fraud_flags). Never blocks the sign-in itself.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -102,6 +107,19 @@ Deno.serve(async (req) => {
 
     if (!succeeded) {
       return jsonResponse({ error: "E-posta veya şifre hatalı." }, 400);
+    }
+
+    // the last x-forwarded-for entry is the one our own edge network added
+    // (the first is whatever the caller claims) - same as create-payment
+    const ip = req.headers.get("x-forwarded-for")?.split(",").pop()?.trim();
+    const signedInUserId = tokenData?.user?.id;
+    if (ip && signedInUserId) {
+      const { error: signInLogError } = await supabaseAdmin.from("sign_in_events").insert({
+        user_id: signedInUserId,
+        ip,
+        user_agent: (req.headers.get("user-agent") || "").slice(0, 300) || null,
+      });
+      if (signInLogError) console.error("sign_in_events insert failed", signInLogError);
     }
 
     return jsonResponse({

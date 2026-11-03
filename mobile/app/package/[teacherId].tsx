@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
+import WithdrawalConsent from '../../components/WithdrawalConsent';
 import { shortDisplayName } from '../../lib/displayName';
 import { createPayment, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
@@ -36,6 +37,7 @@ export default function PackageOffer() {
   const [selected, setSelected] = useState<PackageOption | null>(null);
   const [phone, setPhone] = useState('');
   const [identityNumber, setIdentityNumber] = useState('');
+  const [withdrawalConsent, setWithdrawalConsent] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
@@ -74,6 +76,10 @@ export default function PackageOffer() {
       setError('Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).');
       return;
     }
+    if (!withdrawalConsent) {
+      setError('Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin.');
+      return;
+    }
 
     setError('');
     setSubmitting(true);
@@ -85,6 +91,7 @@ export default function PackageOffer() {
       price: selected.totalPrice,
       phone,
       identityNumber,
+      withdrawalConsent: withdrawalConsent,
     });
     setSubmitting(false);
 
@@ -215,6 +222,8 @@ export default function PackageOffer() {
                 style={styles.input}
               />
             </View>
+
+            <WithdrawalConsent checked={withdrawalConsent} onChange={setWithdrawalConsent} />
 
             {!!error && <Text style={styles.error}>{error}</Text>}
 

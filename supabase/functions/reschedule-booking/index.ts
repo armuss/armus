@@ -12,6 +12,10 @@
 //       accepts/declines (any free time - it's the teacher's own time)
 //   "respond"  { request_id, accept }  - the OTHER party answers
 //   "withdraw" { request_id }          - the requester takes it back
+// Limits (migration_112.sql, enforce_reschedule_limits - AR006): a
+// student can move one lesson at most 2 times; a teacher can propose a
+// new time at most 2 times per lesson. If the student declines, the
+// lesson stays at its time.
 // A request nobody answers before the lesson starts just lapses - the
 // lesson stays where it was (apply_booking_reschedule refuses a lesson
 // that already started).
@@ -170,6 +174,10 @@ function jsonResponse(body: unknown, status = 200) {
 
 const MSG_SLOT_TAKEN = "Bu saat az önce doldu ya da öğretmenin başka bir dersiyle çakışıyor. Lütfen başka bir saat seç.";
 const MSG_NOT_MOVABLE = "Bu dersin saati artık değiştirilemez (ders başladı ya da iptal edildi).";
+const MAX_STUDENT_MOVES = 2;
+const MAX_TEACHER_PROPOSALS = 2;
+const MSG_MOVE_LIMIT = "Bu ders zaten 2 kez taşındı. Bir ders en fazla 2 kez taşınabilir.";
+const MSG_PROPOSAL_LIMIT = "Bu ders için en fazla 2 kez yeni saat önerebilirsin. Öğrencin kabul etmezse ders kendi saatinde yapılır.";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
@@ -221,8 +229,9 @@ Deno.serve(async (req) => {
       return { profile: await loadProfile(booking.student_id), ctaPath: "my-lessons.html", ctaLabel: "Derslerimi Gör" };
     }
 
-    function mapApplyError(error: any) {
+    function mapApplyError(error: any, role?: string) {
       if (error?.code === "AR001" || error?.code === "23505") return jsonResponse({ error: MSG_SLOT_TAKEN }, 409);
+      if (error?.code === "AR006") return jsonResponse({ error: role === "teacher" ? MSG_PROPOSAL_LIMIT : MSG_MOVE_LIMIT, limitReached: true }, 409);
       if (error?.code === "AR004") return jsonResponse({ error: MSG_NOT_MOVABLE }, 400);
       console.error("apply_booking_reschedule failed", error);
       return jsonResponse({ error: "Dersin saati değiştirilemedi." }, 500);
@@ -293,6 +302,22 @@ Deno.serve(async (req) => {
       if (overlaps) return jsonResponse({ error: MSG_SLOT_TAKEN }, 409);
 
       const hoursUntil = (lessonStart.getTime() - Date.now()) / 3_600_000;
+
+      // checked before anything is touched (the requester's own open
+      // request would otherwise be withdrawn for nothing)
+      const { data: history } = await supabaseAdmin
+        .from("reschedule_requests")
+        .select("requested_by, status")
+        .eq("booking_id", booking.id);
+      const studentMoves = (history || []).filter((r: any) => r.requested_by === "student" && r.status === "accepted").length;
+      const teacherProposals = (history || []).filter((r: any) => r.requested_by === "teacher").length;
+      if (isStudent && studentMoves >= MAX_STUDENT_MOVES) {
+        return jsonResponse({ error: MSG_MOVE_LIMIT, limitReached: true }, 409);
+      }
+      if (!isStudent && teacherProposals >= MAX_TEACHER_PROPOSALS) {
+        return jsonResponse({ error: MSG_PROPOSAL_LIMIT, limitReached: true }, 409);
+      }
+
       const other = await counterpart(booking, role);
 
       // student, in time: moved right now
@@ -301,7 +326,7 @@ Deno.serve(async (req) => {
           p_booking_id: booking.id, p_new_date: newDate, p_new_time: newTime,
           p_request_id: null, p_requested_by: "student", p_requester_id: user.id,
         });
-        if (error) return mapApplyError(error);
+        if (error) return mapApplyError(error, role);
 
         if (other.profile?.email) {
           await sendEmail(
@@ -348,6 +373,7 @@ Deno.serve(async (req) => {
         if (insertError?.code === "23505") {
           return jsonResponse({ error: "Bu ders için zaten bekleyen bir saat değişikliği isteği var." }, 409);
         }
+        if (insertError?.code === "AR006") return mapApplyError(insertError, role);
         console.error("reschedule request insert failed", insertError);
         return jsonResponse({ error: "İstek gönderilemedi." }, 500);
       }

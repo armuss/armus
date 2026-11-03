@@ -225,8 +225,10 @@
       <li data-i18n="privacy.s1Li3">Ders geçmişi, rezervasyon bilgileri ve öğrenci değerlendirmeleri</li>
       <li data-i18n="privacy.s1Li4">Ödeme yaparken: telefon numaran ve T.C. kimlik numaran, ödemeni
         işlemek üzere ödeme sağlayıcımız iyzico'ya iletilir; bu bilgileri
-        kendi veritabanımızda saklamayız. Kart bilgilerin hiçbir zaman
-        bize ulaşmaz, doğrudan iyzico üzerinden işlenir.</li>
+        kendi veritabanımızda saklamayız. Kart numaranın tamamı hiçbir
+        zaman bize ulaşmaz, doğrudan iyzico üzerinden işlenir; iyzico'nun
+        bize ilettiği kartın ilk 6 ve son 4 hanesini dolandırıcılığı ve
+        haksız ödeme itirazlarını önlemek için saklarız.</li>
       <li data-i18n="privacy.s1Li5">İletişim formu üzerinden bize ulaştığında, kötüye kullanımı
         (örneğin otomatik spam) önlemek amacıyla IP adresini 30 gün
         boyunca saklarız, ardından kaydından kaldırırız.</li>
@@ -235,6 +237,13 @@
         mesajını, verdiğimiz yanıtı ve IP adresini kaydederiz (IP adresi
         30 gün sonra kayıttan kaldırılır); giriş yapmış durumdaysan bu
         kayıt hesabınla ilişkilendirilir.</li>
+      <li data-i18n="privacy.s1Li7">Giriş yaptığında ve ödeme başlattığında, hesap güvenliği ve
+        sahte hesapların tespiti amacıyla IP adresini kaydederiz; giriş
+        kayıtları 90 gün sonra silinir.</li>
+      <li data-i18n="privacy.s1Li8">Ders odasına girdiğinde, derse ne zaman girdiğini ve ne kadar
+        kaldığını kaydederiz; bu kayıt sadece dersle ilgili bir bildirim,
+        anlaşmazlık ya da ödeme itirazı incelenirken kullanılır. Görüntü
+        ve ses kaydedilmez.</li>
     </ul>
 
     <h2 data-i18n="privacy.s2Title">2. Verilerini neden işliyoruz?</h2>
@@ -297,7 +306,7 @@
 
   </main>
 
-  <script src="i18n.js?v=17"></script>
+  <script src="i18n.js?v=18"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="logo-panel-link.js?v=1"></script>
 </body>
