@@ -188,6 +188,7 @@ async function armusGetSession() {
 
       armusRefreshOwnTimezone(profile);
       armusMaybeRefreshPresence(profile);
+      armusClaimPendingLevelTest();
       return profile;
     })().catch(err => {
       armusSessionPromise = null;
@@ -195,6 +196,32 @@ async function armusGetSession() {
     });
   }
   return armusSessionPromise;
+}
+
+// A level test taken while signed out (seviye-testi.html) left its id and
+// claim token in this browser; once someone is signed in here, attach it
+// to their account (claim_level_test, migration_114.sql). Best-effort and
+// silent like the two refreshes above: the key goes once the server has
+// answered (yes or no) or after 7 days, and stays for a retry if the call
+// itself failed.
+function armusClaimPendingLevelTest() {
+  let pending = null;
+  try {
+    pending = JSON.parse(localStorage.getItem("armusPendingLevelTest") || "null");
+  } catch (e) {
+    pending = null;
+  }
+  if (!pending || !pending.id || !pending.token) return;
+  const drop = () => {
+    try { localStorage.removeItem("armusPendingLevelTest"); } catch (e) {}
+  };
+  if (!pending.at || Date.now() - pending.at > 7 * 24 * 3600 * 1000) {
+    drop();
+    return;
+  }
+  armusSupabase.rpc("claim_level_test", { p_id: pending.id, p_token: pending.token })
+    .then(({ error }) => { if (!error) drop(); })
+    .catch(() => {});
 }
 
 // Keeps profiles.timezone (migration_37.sql) pointed at wherever this

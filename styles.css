@@ -251,6 +251,19 @@ body {
   gap: 10px;
   margin-top: 28px;
 }
+/* the free level test, under the hero CTA (seviye-testi.html) */
+.hero-test-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--armus-on-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.hero-test-link b {
+  font-weight: 700;
+}
 /* mobile-only hero photo, replacing the desktop teacher-stack visual
    (hidden here, shown under the 900px breakpoint below) - lives inside
    .hero-copy so the gold .hero-band background wraps all the way around
