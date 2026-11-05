@@ -1859,7 +1859,7 @@ const ARMUS_I18N_EN = {
   "levelTest.faq3a": "It's a quick first check; it doesn't measure speaking or listening. Your teacher confirms your level with you in the first lesson.",
   "levelTest.faq4q": "What happens next?",
   "levelTest.faq4a": "You see your level, your skill scores and advice for your goal; if you like, you can save the result to your account.",
-  "nav.levelTest": "Level Test",
+  "nav.levelTest": "Level Test <span class=\"nav-free\">Free</span>",
   "levelTest.heroEyebrow": "FREE ENGLISH LEVEL TEST",
   "levelTest.heroTitle": "Which step are you on? Find out <em>in 10 minutes</em>.",
   "levelTest.heroSub": "Six steps from A1 to C2. 20 short questions put you on the right step and tell you what to work on to reach the next one.",
