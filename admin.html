@@ -296,6 +296,77 @@
       font-size: 11.5px;
     }
 
+    /* ---- growth (migration_113.sql) ---- */
+
+    .growth-stats .stat-card span {
+      display: block;
+    }
+
+    .growth-stats .stat-card .stat-label {
+      color: var(--armus-ink);
+      font-size: 12.5px;
+      font-weight: 600;
+      margin: 6px 0 4px;
+    }
+
+    .growth-stats .stat-card .growth-chip {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .growth-stats .stat-card .growth-chip.good {
+      background: rgba(31, 122, 77, .14);
+      color: #2e9e66;
+    }
+
+    .growth-stats .stat-card .growth-chip.bad {
+      background: rgba(179, 38, 30, .14);
+      color: #d9534a;
+    }
+
+    .growth-scroll {
+      overflow-x: auto;
+      margin-bottom: 8px;
+    }
+
+    .growth-scroll table {
+      min-width: 980px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .growth-scroll td:first-child {
+      white-space: nowrap;
+    }
+
+    .growth-scroll td small,
+    .growth-muted {
+      color: var(--armus-muted);
+    }
+
+    .spend-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .spend-form .admin-search {
+      margin-bottom: 0;
+      width: auto;
+    }
+
+    #spendAmount {
+      max-width: 150px;
+    }
+
+    #spendNote {
+      flex: 1 1 220px;
+    }
+
     /* ---- tables ---- */
 
     table {
@@ -1249,6 +1320,7 @@
       <span class="tag" data-i18n="admin.tag">ADMIN PANELİ</span>
 
       <button class="nav-btn active" data-panel="overview" data-i18n="admin.navOverview">Genel Bakış</button>
+      <button class="nav-btn" data-panel="growth" data-i18n="admin.navGrowth">Büyüme</button>
       <button class="nav-btn" data-panel="teachers" data-i18n="admin.navTeachers">Öğretmenler</button>
       <button class="nav-btn" data-panel="changes"><span data-i18n="admin.navChanges">Profil Değişiklikleri</span> <span class="nav-badge" id="changesBadge"></span></button>
       <button class="nav-btn" data-panel="bookings" data-i18n="admin.navBookings">Rezervasyonlar</button>
@@ -1301,6 +1373,74 @@
         <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
         <div id="livePulse" class="live-pulse"></div>
         <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+      </div>
+
+      <div class="panel" id="panel-growth">
+        <div class="panel-toolbar">
+          <h2 data-i18n="admin.navGrowth">Büyüme</h2>
+          <select class="admin-search" id="growthPeriod" style="max-width: 160px;">
+            <option value="6" data-i18n="admin.growthLast6">Son 6 ay</option>
+            <option value="12" data-i18n="admin.growthLast12">Son 12 ay</option>
+          </select>
+        </div>
+        <p class="section-hint" data-i18n="admin.growthHint">
+          ARMUS'un işe yarayıp yaramadığını gösteren üç sayı: deneme dersinden
+          sonra devam eden öğrenciler, düzenli derse başlayıp bir sonraki ay da
+          devam edenler ve ödeme yapan bir öğrenciyi getirmenin maliyeti. Aylar
+          İstanbul saatine göredir.
+        </p>
+        <div class="stat-grid growth-stats" id="growthStats"></div>
+        <p class="section-hint" data-i18n="admin.growthAffordHint">
+          Karşılanabilir maliyet: komisyon %15'e indiğinde iyzico kesintisi ve
+          KDV düşülünce ARMUS'a, öğrencinin ödediğinin kabaca %10'u kalır. Bir
+          öğrenciyi getirmek bundan pahalıysa reklam zarar ettiriyor demektir.
+          Ortalama ödeme, öğrenciler devam ettikçe artar.
+        </p>
+        <div class="empty-note" id="growthError" style="display: none;" data-i18n="admin.growthError">Büyüme verileri yüklenemedi.</div>
+
+        <h3 data-i18n="admin.growthMonthly">Aylara göre</h3>
+        <div class="growth-scroll">
+          <table id="growthTable">
+            <thead>
+              <tr>
+                <th data-i18n="admin.colMonth">Ay</th>
+                <th data-i18n="admin.colSignups">Yeni kayıt</th>
+                <th data-i18n="admin.colTrials">Deneme dersi</th>
+                <th data-i18n="admin.colConvertedSame">Aynı öğretmenle devam</th>
+                <th data-i18n="admin.colConvertedAny">Herhangi bir öğretmenle devam</th>
+                <th data-i18n="admin.colCohort">Düzenli derse başlayan</th>
+                <th data-i18n="admin.colRetained">Sonraki ay da devam</th>
+                <th data-i18n="admin.colNewPaying">Yeni ödeme yapan</th>
+                <th data-i18n="admin.colCashIn">Kartla tahsilat</th>
+                <th data-i18n="admin.colSpend">Reklam</th>
+                <th data-i18n="admin.colCostPerStudent">Öğrenci başı maliyet</th>
+              </tr>
+            </thead>
+            <tbody id="growthBody"></tbody>
+          </table>
+        </div>
+        <p class="section-hint" data-i18n="admin.growthTableHint">
+          Deneme dersi: yapılmış (iptal edilmemiş ve bitmiş) deneme dersleri,
+          her öğrenci-öğretmen çifti için bir kez. Devam: sonrasında normal bir
+          ders ya da paket. Sonraki ay da devam: o ay ilk düzenli dersini alan
+          öğrencilerden bir sonraki ayda da düzenli dersi olanlar; "sürüyor"
+          yazan aylar henüz bitmedi, oran artabilir. Tahsilat: kartla alınan
+          ödemeler, iadeler düşülmüş.
+        </p>
+
+        <h3 data-i18n="admin.spendHeading">Reklam harcaması</h3>
+        <p class="section-hint" data-i18n="admin.spendHint">
+          Her ay reklama (Instagram, Google, influencer vb.) harcadığın toplam
+          tutarı gir. Öğrenci başı maliyet bununla hesaplanır. Tutarı boş
+          bırakıp kaydedersen o ayın kaydı silinir.
+        </p>
+        <div class="spend-form">
+          <select class="admin-search" id="spendMonth"></select>
+          <input class="admin-search" type="number" id="spendAmount" min="0" step="1" placeholder="Tutar (₺)" data-i18n-placeholder="admin.spendAmountPlaceholder">
+          <input class="admin-search" type="text" id="spendNote" maxlength="200" placeholder="Not (örn. Instagram reklamı)" data-i18n-placeholder="admin.spendNotePlaceholder">
+          <button class="btn btn-approve" id="saveSpendBtn" data-i18n="admin.saveBtn">Kaydet</button>
+        </div>
+        <div class="section-hint" id="spendMsg" style="margin-top: 10px;"></div>
       </div>
 
       <div class="panel" id="panel-teachers">
@@ -1797,7 +1937,7 @@
 
   </div>
 
-  <script src="i18n.js?v=18"></script>
+  <script src="i18n.js?v=19"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=13"></script>
@@ -3682,6 +3822,169 @@
     }
 
     document.querySelector('.nav-btn[data-panel="fraud"]').addEventListener("click", loadFraudFlags);
+
+    // ---- growth (admin_growth_metrics / admin_set_marketing_spend, migration_113.sql) ----
+
+    let growthData = null;
+
+    function growthLocale() {
+      return armusGetLang() === "en" ? "en-US" : "tr-TR";
+    }
+
+    function growthMoney(value) {
+      if (value === null || value === undefined) return "—";
+      return Number(value).toLocaleString(growthLocale(), { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+    }
+
+    function growthPct(part, whole) {
+      if (!whole) return null;
+      const p = Math.round((part / whole) * 100);
+      return armusGetLang() === "en" ? `${p}%` : `%${p}`;
+    }
+
+    function growthRatio(part, whole) {
+      if (!whole) return `<span class="growth-muted">—</span>`;
+      return `${part} / ${whole} <small>(${growthPct(part, whole)})</small>`;
+    }
+
+    function growthMonthLabel(month) {
+      return new Date(`${month}T00:00:00`).toLocaleDateString(growthLocale(), { month: "long", year: "numeric" });
+    }
+
+    function renderGrowth(data) {
+      const totals = data.totals || {};
+      const avgPaid = data.avg_paid_per_student === null ? null : Number(data.avg_paid_per_student);
+      const affordable = avgPaid === null ? null : avgPaid * 0.10;
+      const costPerStudent = totals.new_paying_with_spend ? Number(totals.spend) / totals.new_paying_with_spend : null;
+
+      let costChip = "";
+      if (costPerStudent !== null && affordable !== null) {
+        costChip = costPerStudent <= affordable
+          ? `<span class="growth-chip good">${armusT("admin.growthCostOk", "Karşılanabilir")}</span>`
+          : `<span class="growth-chip bad">${armusT("admin.growthCostHigh", "Maliyet yüksek")}</span>`;
+      }
+
+      const cards = [
+        {
+          value: growthPct(totals.converted_same, totals.trials) ?? "—",
+          label: armusT("admin.growthConvLabel", "Deneme dersinden sonra aynı öğretmenle devam"),
+          sub: totals.trials
+            ? armusT("admin.growthConvSub", "{n} / {m} deneme dersi · herhangi bir öğretmenle: {any}")
+                .replace("{n}", totals.converted_same).replace("{m}", totals.trials).replace("{any}", growthPct(totals.converted_any, totals.trials))
+            : armusT("admin.growthNoTrials", "Bu dönemde yapılmış deneme dersi yok"),
+        },
+        {
+          value: growthPct(totals.retained, totals.cohort) ?? "—",
+          label: armusT("admin.growthRetLabel", "Düzenli derse başlayıp sonraki ay da devam eden"),
+          sub: totals.cohort
+            ? armusT("admin.growthRetSub", "{n} / {m} öğrenci (biten aylar)").replace("{n}", totals.retained).replace("{m}", totals.cohort)
+            : armusT("admin.growthNoCohort", "Henüz biten bir ay yok"),
+        },
+        {
+          value: costPerStudent === null ? "—" : growthMoney(costPerStudent),
+          label: armusT("admin.growthCostLabel", "Ödeme yapan bir öğrenciyi getirme maliyeti"),
+          sub: costPerStudent === null
+            ? (Number(totals.spend) > 0
+              ? armusT("admin.growthNoPaying", "Reklam girilen aylarda yeni ödeme yapan öğrenci yok")
+              : armusT("admin.growthNoSpend", "Aşağıdan reklam harcamasını gir"))
+            : armusT("admin.growthCostSub", "{spend} reklam / {n} yeni öğrenci").replace("{spend}", growthMoney(totals.spend)).replace("{n}", totals.new_paying_with_spend),
+          chip: costChip,
+        },
+        {
+          value: growthMoney(avgPaid),
+          label: armusT("admin.growthAvgLabel", "Öğrenci başına ortalama ödeme (tüm zamanlar)"),
+          sub: avgPaid === null
+            ? armusT("admin.growthNoPayments", "Henüz kartla ödeme yok")
+            : armusT("admin.growthAvgSub", "{n} öğrenci · karşılanabilir maliyet ≈ {afford}").replace("{n}", data.paying_students).replace("{afford}", growthMoney(affordable)),
+        },
+      ];
+
+      document.getElementById("growthStats").innerHTML = cards.map(c => `
+        <div class="stat-card">
+          <strong>${c.value}</strong>
+          <span class="stat-label">${c.label}</span>
+          <span>${c.sub}</span>
+          ${c.chip || ""}
+        </div>
+      `).join("");
+
+      const running = armusT("admin.growthRunning", "sürüyor");
+      document.getElementById("growthBody").innerHTML = (data.months || []).slice().reverse().map(m => `
+        <tr>
+          <td>${growthMonthLabel(m.month)}</td>
+          <td>${m.signups}</td>
+          <td>${m.trials}</td>
+          <td>${growthRatio(m.converted_same, m.trials)}</td>
+          <td>${growthRatio(m.converted_any, m.trials)}</td>
+          <td>${m.cohort}</td>
+          <td>${growthRatio(m.retained, m.cohort)}${m.cohort && !m.cohort_complete ? ` <small>· ${running}</small>` : ""}</td>
+          <td>${m.new_paying}</td>
+          <td>${growthMoney(m.cash_in)}</td>
+          <td>${m.spend === null ? `<span class="growth-muted">—</span>` : growthMoney(m.spend)}${m.spend_note ? `<br><small>${armusEscapeHtml(m.spend_note)}</small>` : ""}</td>
+          <td>${m.spend !== null && m.new_paying ? growthMoney(Number(m.spend) / m.new_paying) : `<span class="growth-muted">—</span>`}</td>
+        </tr>
+      `).join("");
+
+      const select = document.getElementById("spendMonth");
+      const keep = select.value;
+      select.innerHTML = (data.months || []).slice().reverse().map(m => `<option value="${m.month}">${growthMonthLabel(m.month)}</option>`).join("");
+      if (keep && [...select.options].some(o => o.value === keep)) select.value = keep;
+      fillSpendInputs();
+    }
+
+    function fillSpendInputs() {
+      const month = (growthData?.months || []).find(m => m.month === document.getElementById("spendMonth").value);
+      document.getElementById("spendAmount").value = month && month.spend !== null ? Number(month.spend) : "";
+      document.getElementById("spendNote").value = month?.spend_note || "";
+    }
+
+    async function loadGrowth() {
+      const errorEl = document.getElementById("growthError");
+      errorEl.style.display = "none";
+      const { data, error } = await armusSupabase.rpc("admin_growth_metrics", { p_months: Number(document.getElementById("growthPeriod").value) || 6 });
+      if (error || !data) {
+        growthData = null;
+        errorEl.style.display = "block";
+        document.getElementById("growthStats").innerHTML = "";
+        document.getElementById("growthBody").innerHTML = "";
+        return;
+      }
+      growthData = data;
+      renderGrowth(data);
+    }
+
+    document.querySelector('.nav-btn[data-panel="growth"]').addEventListener("click", loadGrowth);
+    document.getElementById("growthPeriod").addEventListener("change", loadGrowth);
+    document.getElementById("spendMonth").addEventListener("change", () => {
+      document.getElementById("spendMsg").textContent = "";
+      fillSpendInputs();
+    });
+
+    document.getElementById("saveSpendBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("saveSpendBtn");
+      const msg = document.getElementById("spendMsg");
+      const raw = document.getElementById("spendAmount").value.trim();
+      const amount = raw === "" ? null : Number(raw);
+      if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+        msg.textContent = armusT("admin.spendInvalid", "Tutar 0 ya da daha büyük bir sayı olmalı.");
+        return;
+      }
+      btn.disabled = true;
+      const { error } = await armusSupabase.rpc("admin_set_marketing_spend", {
+        p_month: document.getElementById("spendMonth").value,
+        p_amount: amount,
+        p_note: document.getElementById("spendNote").value.trim() || null,
+      });
+      btn.disabled = false;
+      if (error) {
+        msg.textContent = armusT("admin.spendError", "Kaydedilemedi, tekrar dene.");
+        return;
+      }
+      msg.textContent = amount === null
+        ? armusT("admin.spendCleared", "Bu ayın reklam kaydı silindi.")
+        : armusT("admin.spendSaved", "Kaydedildi.");
+      loadGrowth();
+    });
 
     function renderMessageReportsPanel(reports, profileById) {
       const body = document.getElementById("messageReportsBody");
