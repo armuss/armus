@@ -48,6 +48,11 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 // shared with the armus-reconcile-payments cron (migration_110.sql)
 const TRIGGER_SECRET = Deno.env.get("TRIGGER_SECRET") ?? "";
 const FROM_EMAIL = Deno.env.get("EMAIL_FROM") ?? "ARMUS <onboarding@resend.dev>";
+// Who sold the lesson, as on on-bilgilendirme-formu.html and
+// mesafeli-satis-sozlesmesi.html - the buyer's confirmation email has to
+// carry it (Mesafeli Sozlesmeler Yonetmeligi: the contract is confirmed
+// to the consumer on a durable medium, i.e. this email).
+const SELLER_LINE = "[ŞİRKET ÜNVANI], [ADRES]";
 
 const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 const MONTH_NAMES = [
@@ -130,7 +135,26 @@ function emailShell(bodyHtml: string) {
   </div>`;
 }
 
-function bookingConfirmedEmailHtml(recipientName: string, otherName: string, whenLabel: string, typeLabel: string, joinUrl: string) {
+function formatTry(amount: number) {
+  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(amount);
+}
+
+// The student's copy of a card purchase: what they paid, who sold it,
+// and the two documents they accepted at checkout (booking.html's
+// withdrawalConsent box). Never on the teacher's copy.
+function contractNoticeHtml(paidAmount: number) {
+  return `
+    <p style="color:#8a8a8e;font-size:11.5px;line-height:1.6;margin:24px 0 0;padding-top:16px;border-top:1px solid #2e2a22;text-align:left;">
+      Ödenen tutar (vergiler dahil): <strong style="color:#f4f4f2;">${formatTry(paidAmount)}</strong><br>
+      Satıcı: ${escapeHtml(SELLER_LINE)} · armus.support@gmail.com<br>
+      Bu e-posta, satın aldığın ders hizmetine ilişkin mesafeli satış sözleşmesinin kurulduğunu teyit eder.
+      Cayma hakkı ve iade koşulları
+      <a href="${SITE_URL}/on-bilgilendirme-formu" style="color:#e8c777;">Ön Bilgilendirme Formu</a> ve
+      <a href="${SITE_URL}/mesafeli-satis-sozlesmesi" style="color:#e8c777;">Mesafeli Satış Sözleşmesi</a>'nde yer alır.
+    </p>`;
+}
+
+function bookingConfirmedEmailHtml(recipientName: string, otherName: string, whenLabel: string, typeLabel: string, joinUrl: string, paidAmount?: number) {
   return emailShell(`
     <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
     <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
@@ -139,10 +163,11 @@ function bookingConfirmedEmailHtml(recipientName: string, otherName: string, whe
     </p>
     <a href="${joinUrl}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Derslerimi Gör</a>
     <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Ders saatine kadar hazır olman gerekmez, bağlantı ders başladığında açılacak.</p>
+    ${paidAmount !== undefined ? contractNoticeHtml(paidAmount) : ""}
   `);
 }
 
-function packagePurchasedEmailHtml(recipientName: string, teacherName: string, quantity: number, dashboardUrl: string) {
+function packagePurchasedEmailHtml(recipientName: string, teacherName: string, quantity: number, dashboardUrl: string, paidAmount: number) {
   return emailShell(`
     <p style="color:#f4f4f2;font-size:14px;margin:0 0 6px;">Merhaba ${escapeHtml(recipientName)},</p>
     <p style="color:#a3a3a6;font-size:13px;line-height:1.6;margin:0 0 22px;">
@@ -150,7 +175,8 @@ function packagePurchasedEmailHtml(recipientName: string, teacherName: string, q
       <strong style="color:#e8c777;">${quantity} derslik</strong> paketin satın alındı.
     </p>
     <a href="${dashboardUrl}" style="display:inline-block;background:linear-gradient(90deg,#e8c777,#b8860b);color:#1c1c1e;font-size:14px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;">Ders Rezervasyonu Yap</a>
-    <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Ders haklarını dilediğin zaman kullanabilirsin.</p>
+    <p style="color:#66666a;font-size:11px;margin:26px 0 0;">Ders hakların satın alma tarihinden itibaren 6 ay geçerlidir.</p>
+    ${contractNoticeHtml(paidAmount)}
   `);
 }
 
@@ -307,7 +333,7 @@ async function settlePaidCheckout(supabaseAdmin: any, pending: any, result: any)
       await sendEmail(
         buyerProfile.email,
         "Paketin satın alındı - ARMUS",
-        packagePurchasedEmailHtml(buyerProfile.name, pending.teacher_name, quantity, `${SITE_URL}/my-lessons.html`),
+        packagePurchasedEmailHtml(buyerProfile.name, pending.teacher_name, quantity, `${SITE_URL}/my-lessons.html`, Number(pending.price)),
       );
     }
 
@@ -493,6 +519,7 @@ async function settlePaidCheckout(supabaseAdmin: any, pending: any, result: any)
       bookingConfirmedEmailHtml(
         studentProfile.name, shortDisplayName(pending.teacher_name),
         formatDateTimeLabel(lessonStart, studentProfile.timezone), typeLabel, joinUrl,
+        Number(pending.price),
       ),
     );
   }

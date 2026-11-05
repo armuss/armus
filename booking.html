@@ -723,9 +723,12 @@
         <label class="consent-check">
           <input type="checkbox" id="withdrawalConsent">
           <span data-i18n="booking.withdrawalConsent">
-            Dersin, 14 günlük cayma süresi dolmadan benim onayımla başlayacağını
-            ve ders başladığında cayma hakkımın sona ereceğini kabul ediyorum.
-            İptal ve iade kuralları <a href="kullanim-sartlari#iptal" target="_blank" rel="noopener">Kullanım Şartları</a>'nda.
+            <a href="on-bilgilendirme-formu" target="_blank" rel="noopener">Ön Bilgilendirme Formu</a>'nu
+            ve <a href="mesafeli-satis-sozlesmesi" target="_blank" rel="noopener">Mesafeli Satış Sözleşmesi</a>'ni
+            okudum, kabul ediyorum. Dersin, 14 günlük cayma süresi dolmadan
+            benim onayımla başlayacağını ve ders başladığında cayma hakkımın
+            sona ereceğini kabul ediyorum. İptal ve iade kuralları
+            <a href="kullanim-sartlari#iptal" target="_blank" rel="noopener">Kullanım Şartları</a>'nda.
           </span>
         </label>
       </div>
@@ -767,7 +770,7 @@
     </div>
   </main>
 
-  <script src="i18n.js?v=18"></script>
+  <script src="i18n.js?v=19"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -1262,7 +1265,7 @@
           }
           // migration_112.sql: create-payment refuses a card payment without it
           if (!document.getElementById("withdrawalConsent").checked) {
-            confirmError.textContent = armusT("booking.withdrawalConsentRequired", "Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin.");
+            confirmError.textContent = armusT("booking.withdrawalConsentRequired", "Ödemeye geçmek için sözleşme ve cayma hakkıyla ilgili onay kutusunu işaretlemelisin.");
             confirmError.style.display = "block";
             return;
           }

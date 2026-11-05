@@ -1,9 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, radius } from '../lib/theme';
 
-// The right-of-withdrawal consent a card payment needs (migration_112.sql,
-// create-payment's withdrawalConsent) - same wording as booking.html.
+const SITE_URL = 'https://armus.com.tr';
+
+// The contract + right-of-withdrawal consent a card payment needs
+// (migration_112.sql, create-payment's withdrawalConsent) - same wording
+// as booking.html.
 export default function WithdrawalConsent({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
   return (
     <Pressable
@@ -14,8 +17,17 @@ export default function WithdrawalConsent({ checked, onChange }: { checked: bool
     >
       <View style={[styles.box, checked && styles.boxChecked]}>{checked && <Text style={styles.tick}>✓</Text>}</View>
       <Text style={styles.text}>
-        Dersin, 14 günlük cayma süresi dolmadan benim onayımla başlayacağını ve ders başladığında cayma hakkımın sona ereceğini
-        kabul ediyorum. Bir paketten hiç ders kullanmadıysam 14 gün içinde paketi iptal edip ücretin tamamını geri alabilirim.
+        <Text style={styles.link} onPress={() => Linking.openURL(`${SITE_URL}/on-bilgilendirme-formu`)}>
+          Ön Bilgilendirme Formu
+        </Text>
+        {"'nu ve "}
+        <Text style={styles.link} onPress={() => Linking.openURL(`${SITE_URL}/mesafeli-satis-sozlesmesi`)}>
+          Mesafeli Satış Sözleşmesi
+        </Text>
+        {"'ni okudum, kabul ediyorum. "}
+        Dersin, 14 günlük cayma süresi dolmadan benim onayımla başlayacağını ve ders başladığında
+        cayma hakkımın sona ereceğini kabul ediyorum. Bir paketten hiç ders kullanmadıysam 14 gün içinde paketi iptal edip
+        ücretin tamamını geri alabilirim.
       </Text>
     </Pressable>
   );
@@ -36,4 +48,5 @@ const styles = StyleSheet.create({
   boxChecked: { backgroundColor: colors.gold3, borderColor: colors.gold3 },
   tick: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.onGold },
   text: { flex: 1, fontFamily: fonts.body, fontSize: 12, lineHeight: 17, color: colors.muted },
+  link: { color: colors.gold3, textDecorationLine: 'underline' },
 });

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <script>if("scrollRestoration" in history){history.scrollRestoration="manual";}</script>
+  <script>(function(){try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Mesafeli Satış Sözleşmesi | ARMUS</title>
+  <meta name="description" content="ARMUS üzerinden satın alınan çevrim içi ders hizmetine ilişkin mesafeli satış sözleşmesi.">
+  <link rel="canonical" href="https://armus.com.tr/mesafeli-satis-sozlesmesi">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="theme.css?v=8">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: var(--armus-bg);
+      background-image: var(--armus-bg-glow);
+      color: var(--armus-ink);
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--armus-gold-text);
+      text-decoration: underline;
+    }
+
+    .container {
+      width: min(720px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    nav {
+      height: 76px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      width: min(720px, calc(100% - 40px));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .back {
+      color: var(--armus-muted);
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: var(--armus-ink);
+    }
+
+    main.container {
+      padding: 50px 0 100px;
+    }
+
+    .eyebrow {
+      color: var(--armus-muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 36px);
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .updated {
+      color: var(--armus-muted);
+      font-size: 12.5px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 36px 0 12px;
+      letter-spacing: -0.3px;
+    }
+
+    p, li {
+      color: var(--armus-ink);
+      font-size: 14.5px;
+      margin-bottom: 12px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13.5px;
+    }
+
+    .info-table th,
+    .info-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      color: var(--armus-ink);
+    }
+
+    .info-table th {
+      color: var(--armus-muted);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .note {
+      margin-top: 40px;
+      padding: 16px 18px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+      color: var(--armus-muted);
+      font-size: 13px;
+    }
+  
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-utility {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      background: transparent;
+      color: var(--armus-ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 700 12.5px Inter, sans-serif;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--armus-border);
+      color: var(--armus-muted);
+      flex-shrink: 0;
+    }
+
+    .help-btn:hover {
+      border-color: var(--armus-gold-2);
+      color: var(--armus-gold-text);
+    }
+
+    .help-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+    .info-table th {
+      width: 38%;
+    }
+
+    .form-box {
+      margin: 8px 0 12px;
+      padding: 16px 18px;
+      background: var(--armus-panel);
+      border: 1px solid var(--armus-border);
+      border-radius: 14px;
+    }
+
+    .form-box p {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .form-box p:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <div class="nav-right">
+        <div class="nav-utility">
+          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </a>
+        </div>
+        <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
+      </div>
+    </div>
+  </nav>
+
+
+  <main class="container">
+
+    <div class="eyebrow" data-i18n="contract.eyebrow">YASAL</div>
+    <h1 data-i18n="contract.title">Mesafeli Satış Sözleşmesi</h1>
+    <div class="updated" data-i18n="contract.updated">Son güncelleme: 05.11.2026</div>
+
+    <h2 data-i18n="contract.s1Title">Madde 1 - Taraflar</h2>
+    <p data-i18n="contract.s1Seller">1.1. Satıcı / hizmet sağlayıcı (bu sözleşmede "ARMUS"):</p>
+    <table class="info-table">
+      <tr><th data-i18n="legal.sellerTitle">Ünvan</th><td>[ŞİRKET ÜNVANI]</td></tr>
+      <tr><th data-i18n="legal.sellerAddress">Adres</th><td>[ADRES]</td></tr>
+      <tr><th data-i18n="legal.sellerPhone">Telefon</th><td>[TELEFON]</td></tr>
+      <tr><th data-i18n="legal.sellerEmail">E-posta</th><td><a href="mailto:armus.support@gmail.com">armus.support@gmail.com</a></td></tr>
+      <tr><th data-i18n="legal.sellerTax">Vergi dairesi ve numarası</th><td>[VERGİ DAİRESİ / VERGİ NO]</td></tr>
+      <tr><th data-i18n="legal.sellerMersis">MERSİS numarası</th><td>[MERSİS NO]</td></tr>
+      <tr><th data-i18n="legal.sellerWeb">İnternet sitesi</th><td><a href="/">armus.com.tr</a></td></tr>
+    </table>
+    <p data-i18n="contract.s1Buyer">
+      1.2. Alıcı (bu sözleşmede "Öğrenci"): ARMUS'taki hesabıyla ders ya da
+      ders paketi satın alan kişi. Öğrencinin adı ve e-posta adresi hesap
+      bilgilerinde, ödeme sırasında verdiği telefon numarası ödeme kaydında
+      yer alır.
+    </p>
+
+    <h2 data-i18n="contract.s2Title">Madde 2 - Konu</h2>
+    <p data-i18n="contract.s2Text">
+      Bu sözleşme, Öğrencinin ARMUS üzerinden elektronik ortamda satın aldığı
+      çevrim içi İngilizce ders hizmetinin satışı ve ifasıyla ilgili
+      tarafların hak ve yükümlülüklerini, 6502 sayılı Tüketicinin Korunması
+      Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği'ne uygun olarak
+      düzenler. <a href="on-bilgilendirme-formu">Ön Bilgilendirme Formu</a>
+      ve <a href="kullanim-sartlari">Kullanım Şartları</a> bu sözleşmenin
+      ayrılmaz parçasıdır.
+    </p>
+
+    <h2 data-i18n="contract.s3Title">Madde 3 - Hizmet, fiyat ve ödeme</h2>
+    <p data-i18n="contract.s3Text">
+      Satın alınan hizmetin türü (deneme dersi, tek ders ya da ders paketi),
+      öğretmeni, ders tarihi ve saati ya da paketteki ders sayısı ile tüm
+      vergiler dahil toplam fiyatı ödeme sayfasında gösterilir; ödenen tutar
+      satın alma sonrasında Öğrencinin e-posta adresine gönderilir ve ders
+      bilgileri "Derslerim" sayfasında yer alır. Bir ders 50 dakikadır ve
+      ARMUS ders odasında görüntülü olarak birebir yapılır. Ödeme, kredi veya
+      banka kartıyla, lisanslı ödeme kuruluşu iyzico üzerinden tek seferde
+      alınır. Bir ders, Öğrencinin daha önce edindiği bir ders hakkıyla da
+      rezerve edilebilir; ders hakkı dersi karşılamıyorsa aradaki fark kartla
+      ödenir.
+    </p>
+
+    <h2 data-i18n="contract.s4Title">Madde 4 - Hizmetin ifası ve ders hakları</h2>
+    <p data-i18n="contract.s4Text1">
+      4.1. Sözleşme, ödemenin onaylanmasıyla kurulur. Ders, rezerve edilen
+      tarih ve saatte ARMUS ders odasında yapılır.
+    </p>
+    <p data-i18n="contract.s4Text2">
+      4.2. Ders hakları, alındıkları tarihten itibaren 6 ay geçerlidir;
+      süresi dolmadan 2 hafta önce e-postayla hatırlatma yapılır. Süresi
+      içinde rezerve edilen bir ders, ders tarihi daha sonra olsa bile
+      geçerlidir. Öğretmeni artık ders veremeyen ders hakları için Kullanım
+      Şartları'nın 3.1. maddesi uygulanır.
+    </p>
+    <p data-i18n="contract.s4Text3">
+      4.3. Öğrenci, derse zamanında katılmaktan ve ders için gereken internet
+      bağlantısını ve cihazı sağlamaktan sorumludur.
+    </p>
+
+    <h2 data-i18n="contract.s5Title">Madde 5 - İptal, saat değişikliği ve derse katılmama</h2>
+    <p data-i18n="contract.s5Text1">
+      5.1. Öğrenci, dersten en az 12 saat önce dersi "Derslerim" sayfasından
+      iptal edebilir; ders ücreti ders hakkı olarak bakiyesine geri eklenir.
+      Dersten 12 saatten az kala yapılan iptallerde ve Öğrenci derse hiç
+      katılmadığında, öğretmenin zamanı ayrıldığı için ücret iade edilmez.
+    </p>
+    <p data-i18n="contract.s5Text2">
+      5.2. Öğretmenin ya da ARMUS'un iptal ettiği derslerde ve öğretmenin
+      derse gelmediği ARMUS tarafından doğrulanan derslerde ücretin tamamı
+      iade edilir.
+    </p>
+    <p data-i18n="contract.s5Text3">
+      5.3. Dersle ilgili sorunlar dersin bitişinden sonraki 24 saat içinde
+      bildirilir; bu süre içinde bildirim yapılmazsa ders yapılmış sayılır.
+      Ders saatinin değiştirilmesi, geç kalma, teknik sorunlar ve asılsız
+      bildirimlerle ilgili kurallar
+      <a href="kullanim-sartlari#iptal">Kullanım Şartları</a>'nın 3.
+      maddesinde yer alır.
+    </p>
+
+    <h2 id="cayma" data-i18n="contract.s6Title">Madde 6 - Cayma hakkı</h2>
+    <p data-i18n="contract.s6Text1">
+      6.1. Öğrenci, sözleşmenin kurulduğu günden itibaren 14 gün içinde,
+      hiçbir gerekçe göstermeden ve cezai şart ödemeden sözleşmeden cayabilir.
+    </p>
+    <p data-i18n="contract.s6Text2">
+      6.2. Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesinin birinci
+      fıkrasının (ğ) bendi uyarınca, cayma süresi dolmadan tüketicinin
+      onayıyla ifasına başlanan hizmetlerde cayma hakkı kullanılamaz. Öğrenci,
+      ödeme sırasında dersin 14 günlük cayma süresi dolmadan kendi onayıyla
+      başlayacağını ve ders başladığında cayma hakkının sona ereceğini kabul
+      eder. Tek ders ve deneme dersinde cayma hakkı ders başladığında sona
+      erer.
+    </p>
+    <p data-i18n="contract.s6Text3">
+      6.3. Ders paketinde, paketten hiç ders kullanılmamışsa Öğrenci 14 gün
+      içinde paketi "Derslerim" sayfasından iptal edip ödediği tutarın
+      tamamını geri alabilir. Paketten ilk ders yapıldıktan sonra cayma hakkı
+      kullanılamaz; kalan ders hakları Madde 4.2'deki süre içinde kullanılır.
+    </p>
+    <p data-i18n="contract.s6Text4">
+      6.4. Cayma bildirimi, <a href="on-bilgilendirme-formu#cayma">Ön
+      Bilgilendirme Formu</a>'ndaki örnek formla ya da açık bir bildirimle
+      <a href="mailto:armus.support@gmail.com">armus.support@gmail.com</a>
+      adresine yapılabilir. ARMUS, cayma bildiriminin kendisine ulaştığı
+      günden itibaren 14 gün içinde ödenen tutarı, ödemede kullanılan karta
+      tek seferde ve masrafsız olarak iade eder.
+    </p>
+
+    <h2 data-i18n="contract.s7Title">Madde 7 - Öğrencinin yükümlülükleri</h2>
+    <ul>
+      <li data-i18n="contract.s7Li1">Hesap ve ödeme bilgilerini doğru vermek.</li>
+      <li data-i18n="contract.s7Li2">Öğretmenle platform dışında ödeme ya da ders anlaşması yapmamak.</li>
+      <li data-i18n="contract.s7Li3">Yapılmış bir ders için bankadan haksız ödeme itirazı (chargeback) başlatmamak; bir ödemeye itiraz edildiğinde, itiraz sonuçlanana kadar hesap kilitlenebilir.</li>
+      <li data-i18n="contract.s7Li4">Kullanım Şartları'na uymak. Kurallara aykırılıkta hesap kapatılabilir; hesabı kapatılan Öğrencinin planlanmış dersleri iadesiz iptal edilir ve kalan ders hakları geçersiz olur.</li>
+    </ul>
+
+    <h2 data-i18n="contract.s8Title">Madde 8 - Kişisel veriler</h2>
+    <p data-i18n="contract.s8Text">
+      Öğrencinin kişisel verileri <a href="gizlilik-politikasi">Gizlilik
+      Politikası</a>'na ve 6698 sayılı Kişisel Verilerin Korunması Kanunu'na
+      uygun olarak işlenir.
+    </p>
+
+    <h2 data-i18n="contract.s9Title">Madde 9 - Uyuşmazlıkların çözümü</h2>
+    <p data-i18n="contract.s9Text">
+      Bu sözleşmeden doğan uyuşmazlıklarda, Ticaret Bakanlığı'nca her yıl
+      ilan edilen parasal sınırlar içinde Öğrencinin yerleşim yerindeki ya da
+      hizmeti satın aldığı yerdeki Tüketici Hakem Heyetleri, bu sınırların
+      üzerindeki uyuşmazlıklarda Tüketici Mahkemeleri yetkilidir.
+    </p>
+
+    <h2 data-i18n="contract.s10Title">Madde 10 - Yürürlük</h2>
+    <p data-i18n="contract.s10Text">
+      Öğrenci, ödeme sayfasında bu sözleşmeyi ve Ön Bilgilendirme Formu'nu
+      okuduğunu ve kabul ettiğini onaylayarak sözleşmeyi elektronik ortamda
+      kurar. ARMUS, onay zamanını ve satın alma kaydını saklar. Her satın alma
+      için, satın alma tarihinde yayımlanmış olan metin geçerlidir.
+    </p>
+
+    <div class="note" data-i18n="contract.note">
+      Bu sözleşmeyle ilgili sorularının olması hâlinde
+      <a href="iletisim">bize ulaşabilirsin</a>.
+    </div>
+
+  </main>
+
+  <script src="i18n.js?v=19"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="logo-panel-link.js?v=1"></script>
+</body>
+</html>
