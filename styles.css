@@ -63,6 +63,23 @@ body {
   text-decoration: none;
   font-size: 12px;
 }
+/* the free level test (seviye-testi.html), last in the menu */
+.nav nav a.nav-test {
+  color: var(--armus-ink);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-free {
+  font: 700 9.5px Inter, sans-serif;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  background: var(--armus-gold-gradient);
+  color: var(--armus-on-gold);
+  padding: 3px 7px;
+  border-radius: 999px;
+}
 .nav-actions {
   display: flex;
   gap: 8px;

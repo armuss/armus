@@ -24,6 +24,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap">
   <link rel="stylesheet" href="theme.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=22">
 
   <style>
     * {
@@ -62,54 +63,14 @@
       display: none !important;
     }
 
-    /* ---- nav ---- */
-
-    .lt-nav {
-      width: min(460px, calc(100% - 32px));
-      margin: 0 auto;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .lt-nav .logo {
-      font-size: 26px;
-      text-decoration: none;
-    }
-
-    .lt-nav-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13.5px;
-    }
-
-    .lt-nav-right a {
-      color: var(--armus-muted);
-      text-decoration: none;
-    }
-
-    .lt-nav-right a:hover {
-      color: var(--armus-ink);
-    }
-
-    .lang-toggle {
-      border: 1px solid var(--armus-border);
-      border-radius: 999px;
-      padding: 6px 12px;
-      font: 700 12px Inter, sans-serif;
-      letter-spacing: 0.3px;
-    }
-
     /* ---- screens ---- */
 
     .lt {
       width: min(460px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 4px 0 40px;
-      min-height: calc(100vh - 64px);
-      min-height: calc(100dvh - 64px);
+      padding: 26px 0 40px;
+      min-height: calc(100vh - 82px);
+      min-height: calc(100dvh - 82px);
       display: flex;
       flex-direction: column;
     }
@@ -169,103 +130,264 @@
       margin-top: 12px;
     }
 
-    /* start */
+    /* ---- landing (design A): the gold band with the site nav, the hero,
+       then what the levels mean. Starting the test hides all of it
+       (body.lt-testing) and shows the test column below. ---- */
 
-    .lt-hero {
-      position: relative;
-      overflow: hidden;
-      border-radius: 28px;
-      padding: 26px 22px 24px;
-      background: var(--armus-gold-gradient);
+    .lt-band {
+      background: linear-gradient(180deg, var(--armus-gold-2) 0%, #f8d468 55%, #fbe7a6 100%);
+      padding-bottom: 80px;
+    }
+
+    body.lt-testing .lt-band {
+      background: none;
+      padding-bottom: 0;
+    }
+
+    .nav nav a.nav-test[aria-current="page"] {
+      box-shadow: inset 0 -2px 0 var(--armus-ink);
+    }
+
+    .lt-landing {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 40px;
+      align-items: center;
+      padding-top: 70px;
+    }
+
+    .lt-kicker {
+      font: 700 12px Inter, sans-serif;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       color: var(--armus-on-gold);
     }
 
-    .lt-eyebrow {
-      font: 700 11px Inter, sans-serif;
-      letter-spacing: 1.6px;
-      text-transform: uppercase;
-      color: #5a4507;
-      position: relative;
+    .lt-kicker::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
     }
 
-    .lt-hero h1 {
-      font: 800 clamp(30px, 8.6vw, 36px)/1.08 "Unbounded", "Inter", sans-serif;
-      letter-spacing: -1.2px;
-      margin: 12px 0 10px;
+    .lt-landing h1 {
+      font: 800 clamp(36px, 5vw, 64px)/1.02 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -2.4px;
+      margin: 22px 0 20px;
       text-wrap: balance;
-      position: relative;
+      color: var(--armus-on-gold);
     }
 
-    .lt-hero p {
-      font-size: 14.5px;
+    .lt-lead {
+      font-size: 19px;
       line-height: 1.55;
+      max-width: 520px;
+      color: #2b2204;
+    }
+
+    .lt-landing .hero-cta {
+      margin-top: 34px;
+      cursor: pointer;
+    }
+
+    .lt-facts {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 22px;
+      margin-top: 22px;
+      font-size: 13.5px;
       color: #3d3005;
-      max-width: 300px;
+    }
+
+    .lt-facts li {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lt-facts li::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    /* the two decorative cards on the right: an example question and an
+       example result card, drawn in HTML so they stay sharp and translate */
+    .lt-stack {
       position: relative;
+      height: 560px;
     }
 
-    .lt-ghost {
+    .lt-stack-inner {
       position: absolute;
-      right: -8px;
-      top: -26px;
-      font: 800 104px "Unbounded", sans-serif;
-      letter-spacing: -6px;
-      color: rgba(10, 10, 10, 0.07);
-      pointer-events: none;
+      inset: 0;
+      transform-origin: top center;
     }
 
-    .lt-tiles {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+    /* .lt-stack in front: .lt-story (the real result card's class, reused
+       here) sets position: relative further down */
+    .lt-stack .lt-demo-q,
+    .lt-stack .lt-demo-card {
+      position: absolute;
+      border-radius: 26px;
+      box-shadow: 0 30px 70px rgba(60, 40, 0, 0.28);
+    }
+
+    .lt-demo-q {
+      width: 280px;
+      left: 10px;
+      top: 70px;
+      transform: rotate(-6deg);
+      background: #fff;
+      padding: 18px 16px 20px;
+    }
+
+    .lt-demo-q .lt-seg {
+      flex: none;
+    }
+
+    .lt-demo-q .lt-qhead {
       margin-top: 14px;
     }
 
-    .lt-tile {
+    .lt-demo-q .lt-qcard {
+      padding: 16px 14px;
+      margin-top: 12px;
+    }
+
+    .lt-demo-q .lt-prompt {
+      font-size: 15px;
+    }
+
+    .lt-demo-q .lt-options {
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .lt-demo-q .lt-opt {
+      padding: 13px 8px;
+      font-size: 14px;
+      border-radius: 14px;
+      cursor: default;
+    }
+
+    .lt-stack .lt-demo-card {
+      width: 300px;
+      right: 40px;
+      top: 0;
+      transform: rotate(4deg);
+    }
+
+    .lt-demo-card .lt-story-level {
+      font-size: 84px;
+    }
+
+    .lt-levels {
+      padding: 70px 0 90px;
+    }
+
+    .lt-levels h2 {
+      font: 800 30px "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1px;
+      text-wrap: balance;
+    }
+
+    .lt-levels > p {
+      color: var(--armus-muted);
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    .lt-level-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .lt-level {
+      border: 1px solid var(--armus-border-soft);
       border-radius: 18px;
-      background: #f5f5f3;
-      padding: 14px 12px;
+      padding: 18px 16px;
     }
 
-    .lt-tile b {
+    .lt-level b {
+      font: 800 22px "Unbounded", sans-serif;
       display: block;
-      font: 800 20px "Unbounded", sans-serif;
     }
 
-    .lt-tile span {
-      font-size: 12px;
+    .lt-level span {
+      display: block;
+      font: 700 12.5px Inter, sans-serif;
+      margin: 6px 0 8px;
+    }
+
+    .lt-level small {
+      display: block;
+      font-size: 12.5px;
+      line-height: 1.5;
       color: var(--armus-muted);
     }
 
-    .lt-learn {
-      list-style: none;
-      margin-top: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      counter-reset: lt;
+    @media (max-width: 1000px) {
+      .lt-level-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
-    .lt-learn li {
-      counter-increment: lt;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      font-size: 14px;
-      color: #333;
-    }
+    @media (max-width: 900px) {
+      .lt-band {
+        padding-bottom: 36px;
+      }
 
-    .lt-learn li::before {
-      content: counter(lt);
-      width: 30px;
-      height: 30px;
-      flex: none;
-      border-radius: 10px;
-      background: #f5f5f3;
-      display: grid;
-      place-items: center;
-      font: 800 12px "Unbounded", sans-serif;
-      color: var(--armus-ink);
+      .lt-landing {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding-top: 30px;
+      }
+
+      .lt-landing h1 {
+        letter-spacing: -1.4px;
+        margin: 14px 0 12px;
+      }
+
+      .lt-lead {
+        font-size: 15.5px;
+      }
+
+      .lt-landing .hero-cta {
+        margin-top: 22px;
+      }
+
+      .lt-stack {
+        height: 340px;
+      }
+
+      .lt-stack-inner {
+        left: 50%;
+        width: 600px;
+        margin-left: -300px;
+        transform: scale(0.6);
+      }
+
+      .lt-levels {
+        padding: 36px 0 50px;
+      }
+
+      .lt-levels h2 {
+        font-size: 22px;
+      }
+
+      .lt-level-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     /* goal */
@@ -676,38 +798,89 @@
 
 <body>
 
-  <header class="lt-nav">
-    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-    <div class="lt-nav-right">
-      <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-      <a href="login" id="ltAccountLink" data-i18n="levelTest.login">Giriş yap</a>
-    </div>
-  </header>
-
-  <main class="lt">
-
-    <!-- 1 · start -->
-    <section class="lt-screen" id="ltStart">
-      <div class="lt-hero">
-        <div class="lt-ghost" aria-hidden="true">C2</div>
-        <div class="lt-eyebrow" data-i18n="levelTest.eyebrow">Ücretsiz · 10 dakika</div>
-        <h1 data-i18n="levelTest.title">İngilizcen hangi seviyede?</h1>
-        <p data-i18n="levelTest.intro">20 hızlı soru. Sonunda seviyeni, güçlü yanlarını ve paylaşabileceğin seviye kartını al.</p>
+  <div class="lt-band">
+    <header class="nav shell">
+      <a class="brand" href="/"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <nav>
+        <a href="teachers" data-i18n="nav.teachers">Öğretmenler</a>
+        <a href="how-it-works" data-i18n="nav.how">Nasıl Çalışır?</a>
+        <a href="blog" data-i18n="nav.blog">Blog</a>
+        <a href="hakkimizda" data-i18n="nav.about">Hakkımızda</a>
+        <a href="seviye-testi" class="nav-test" aria-current="page" data-i18n="nav.levelTest">Seviye Testi <span class="nav-free">Ücretsiz</span></a>
+      </nav>
+      <div class="nav-utility">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+        <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </a>
       </div>
-      <div class="lt-tiles">
-        <div class="lt-tile"><b>20</b><span data-i18n="levelTest.tileQuestions">soru</span></div>
-        <div class="lt-tile"><b>~10</b><span data-i18n="levelTest.tileMinutes">dakika</span></div>
-        <div class="lt-tile"><b>A1–C2</b><span data-i18n="levelTest.tileResult">sonuç</span></div>
+      <div class="nav-actions" id="navAuthButtons"></div>
+    </header>
+
+    <!-- 1 · landing -->
+    <section class="lt-landing shell" id="ltStart">
+      <div>
+        <div class="lt-kicker" data-i18n="levelTest.heroEyebrow">ÜCRETSİZ SEVİYE TESTİ</div>
+        <h1 data-i18n="levelTest.heroTitle">İngilizce seviyeni 10 dakikada öğren.</h1>
+        <p class="lt-lead" data-i18n="levelTest.heroSub">20 kısa soru; dil bilgisi, kelime ve okuma. Sonunda seviyeni (A1–C2), güçlü yanlarını ve hedefine göre bir çalışma önerisi al.</p>
+        <button type="button" class="btn btn-light hero-cta" id="ltBegin"><span data-i18n="levelTest.start">Teste Başla</span> <span>→</span></button>
+        <ul class="lt-facts">
+          <li data-i18n="levelTest.fact1">Kayıt gerekmez</li>
+          <li data-i18n="levelTest.fact2">Sonuç anında</li>
+          <li data-i18n="levelTest.fact3">Paylaşılabilir seviye kartı</li>
+        </ul>
       </div>
-      <ol class="lt-learn">
-        <li data-i18n="levelTest.learn1">Seviyen (A1–C2) ve ne anlama geldiği</li>
-        <li data-i18n="levelTest.learn2">Dil bilgisi, kelime ve okumada puanın</li>
-        <li data-i18n="levelTest.learn3">Hedefine göre bir çalışma önerisi</li>
-      </ol>
-      <div class="lt-spacer"></div>
-      <button type="button" class="lt-btn-black" id="ltBegin" data-i18n="levelTest.begin">Başla →</button>
-      <p class="lt-fine" data-i18n="levelTest.noSignup">Kayıt gerekmez · Her soru için 60 saniye</p>
+      <div class="lt-stack" aria-hidden="true">
+        <div class="lt-stack-inner">
+          <div class="lt-demo-q">
+            <div class="lt-seg"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="cur"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="lt-qhead">
+              <span class="lt-chip" data-i18n="levelTest.skill.vocabulary">Kelime</span>
+              <div class="lt-ring">
+                <svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="23" fill="none" stroke="#eee" stroke-width="5"></circle><circle cx="27" cy="27" r="23" fill="none" stroke="#f6c649" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.51" stroke-dashoffset="43"></circle></svg>
+                <span>0:42</span>
+              </div>
+            </div>
+            <div class="lt-qcard">
+              <div class="lt-qn">11 / 20</div>
+              <div class="lt-prompt">Choose the word closest in meaning to <mark>reluctant</mark>.</div>
+            </div>
+            <div class="lt-options">
+              <span class="lt-opt">careful</span><span class="lt-opt">eager</span><span class="lt-opt picked">unwilling</span><span class="lt-opt">tired</span>
+            </div>
+          </div>
+          <div class="lt-story lt-demo-card">
+            <div class="lt-story-glow"></div>
+            <div class="lt-story-top"><img src="logo-cream.png" alt=""><span data-i18n="levelTest.storyTag">Seviye kartı</span></div>
+            <div class="lt-story-label" data-i18n="levelTest.storyLabel">İngilizce seviyem</div>
+            <div class="lt-story-level">B1</div>
+            <div class="lt-story-name" data-i18n="levelTest.demoLine">Orta seviye · bir sonraki hedef B2</div>
+            <div class="lt-story-skills">
+              <div><b>%70</b><span data-i18n="levelTest.skill.grammar">Dil bilgisi</span></div>
+              <div><b>%55</b><span data-i18n="levelTest.skill.vocabulary">Kelime</span></div>
+              <div><b>%65</b><span data-i18n="levelTest.skill.reading">Okuma</span></div>
+            </div>
+            <div class="lt-story-url" data-i18n="levelTest.storyUrl">Sen de dene → armus.com.tr/seviye-testi</div>
+          </div>
+        </div>
+      </div>
     </section>
+  </div>
+
+  <section class="lt-levels shell" id="ltLevels">
+    <h2 data-i18n="levelTest.levelsTitle">Seviyeler ne anlama geliyor?</h2>
+    <p data-i18n="levelTest.levelsLead">Avrupa Dilleri Ortak Çerçevesi (CEFR) ölçeği: A1'den C2'ye.</p>
+    <div class="lt-level-grid">
+      <div class="lt-level"><b>A1</b><span data-i18n="levelTest.lvlName.A1">Başlangıç</span><small data-i18n="levelTest.lvlCan.A1">Kendini tanıtır, basit sorular sorarsın.</small></div>
+      <div class="lt-level"><b>A2</b><span data-i18n="levelTest.lvlName.A2">Temel</span><small data-i18n="levelTest.lvlCan.A2">Günlük ihtiyaçlarını kısa cümlelerle anlatırsın.</small></div>
+      <div class="lt-level"><b>B1</b><span data-i18n="levelTest.lvlName.B1">Orta seviye</span><small data-i18n="levelTest.lvlCan.B1">Tanıdık konularda sohbet eder, seyahatte idare edersin.</small></div>
+      <div class="lt-level"><b>B2</b><span data-i18n="levelTest.lvlName.B2">Orta üstü</span><small data-i18n="levelTest.lvlCan.B2">Çoğu konuda akıcı konuşur, uzun metin okursun.</small></div>
+      <div class="lt-level"><b>C1</b><span data-i18n="levelTest.lvlName.C1">İleri</span><small data-i18n="levelTest.lvlCan.C1">İşte ve akademide rahatça kullanırsın.</small></div>
+      <div class="lt-level"><b>C2</b><span data-i18n="levelTest.lvlName.C2">Ustalık</span><small data-i18n="levelTest.lvlCan.C2">Anadile çok yakın, inceliklerle konuşursun.</small></div>
+    </div>
+  </section>
+
+  <main class="lt" id="ltApp" hidden>
 
     <!-- 2 · goal -->
     <section class="lt-screen" id="ltGoal" hidden>
@@ -784,7 +957,7 @@
 
   </main>
 
-  <script src="i18n.js?v=20"></script>
+  <script src="i18n.js?v=21"></script>
   <script src="level-test.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -798,10 +971,17 @@
     // (armusClaimPendingLevelTest, auth.js).
 
     const LT_RING = 144.51;
-    const screens = ["ltStart", "ltGoal", "ltQuestion", "ltResult"];
+    const screens = ["ltGoal", "ltQuestion", "ltResult"];
     const state = { goal: null, questions: [], answers: [], current: 0, startedAt: 0, deadline: 0, timer: null, locked: false, result: null, session: null };
 
+    // "landing" = the gold landing and the level cards; anything else is one
+    // of the test screens in the column below
     function show(id) {
+      const landing = id === "landing";
+      document.body.classList.toggle("lt-testing", !landing);
+      document.getElementById("ltStart").hidden = !landing;
+      document.getElementById("ltLevels").hidden = !landing;
+      document.getElementById("ltApp").hidden = landing;
       screens.forEach(s => { document.getElementById(s).hidden = s !== id; });
       document.body.classList.toggle("lt-in-test", id === "ltQuestion");
       window.scrollTo(0, 0);
@@ -941,7 +1121,7 @@
     document.getElementById("ltExit").addEventListener("click", () => {
       if (!window.confirm(armusT("levelTest.exitConfirm", "Testten çıkmak istiyor musun? Cevapların kaydedilmez."))) return;
       clearInterval(state.timer);
-      show("ltStart");
+      show("landing");
     });
 
     // ---- result ----
@@ -1021,7 +1201,7 @@
       }
     }
 
-    document.getElementById("ltRetake").addEventListener("click", () => show("ltStart"));
+    document.getElementById("ltRetake").addEventListener("click", () => show("landing"));
 
     // ---- the story card: a 1080x1920 PNG of the result for Instagram ----
 
@@ -1171,19 +1351,14 @@
       shareNote(armusT("levelTest.saved", "Kart indirildi."));
     });
 
-    // ---- session: nav link and the "saved to your account" line ----
+    // ---- session: the "saved to your account" line (the nav's own buttons
+    // are drawn by auth.js into #navAuthButtons) ----
 
     (async () => {
       try {
         state.session = await armusGetSession();
       } catch (err) {
         state.session = null;
-      }
-      const link = document.getElementById("ltAccountLink");
-      if (state.session) {
-        link.removeAttribute("data-i18n");
-        link.textContent = armusT("nav.myPanel", "Panelim");
-        link.href = state.session.role === "teacher" ? "dashboard" : "student-dashboard";
       }
       if (state.result) renderAccountLine();
     })();
