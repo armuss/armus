@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <script>(function(){try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Ücretsiz İngilizce Seviye Testi | ARMUS</title>
+  <meta name="description" content="20 soruluk ücretsiz İngilizce seviye testi: 10 dakikada A1–C2 seviyeni, güçlü yanlarını ve sana uygun çalışma planını öğren.">
+  <link rel="canonical" href="https://armus.com.tr/seviye-testi">
+  <meta property="og:title" content="İngilizcen hangi seviyede? · ARMUS">
+  <meta property="og:description" content="20 hızlı soru, 10 dakika, kayıt gerekmez. Seviyeni (A1–C2) ve sana uygun çalışma planını hemen gör.">
+  <meta property="og:url" content="https://armus.com.tr/seviye-testi">
+  <meta property="og:image" content="https://armus.com.tr/og-image.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap">
+  <link rel="stylesheet" href="theme.css?v=8">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--armus-bg);
+      color: var(--armus-ink);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--armus-gold-3);
+      outline-offset: 2px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    /* ---- nav ---- */
+
+    .lt-nav {
+      width: min(460px, calc(100% - 32px));
+      margin: 0 auto;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lt-nav .logo {
+      font-size: 26px;
+      text-decoration: none;
+    }
+
+    .lt-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+    }
+
+    .lt-nav-right a {
+      color: var(--armus-muted);
+      text-decoration: none;
+    }
+
+    .lt-nav-right a:hover {
+      color: var(--armus-ink);
+    }
+
+    .lang-toggle {
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font: 700 12px Inter, sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    /* ---- screens ---- */
+
+    .lt {
+      width: min(460px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 4px 0 40px;
+      min-height: calc(100vh - 64px);
+      min-height: calc(100dvh - 64px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lt-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lt-spacer {
+      flex: 1;
+      min-height: 24px;
+    }
+
+    .lt-btn-black,
+    .lt-btn-gold,
+    .lt-btn-soft {
+      display: block;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 18px;
+      font: 700 16px Inter, sans-serif;
+      padding: 18px;
+      transition: transform 0.15s;
+    }
+
+    .lt-btn-black {
+      background: var(--armus-ink);
+      color: #fff;
+    }
+
+    .lt-btn-gold {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .lt-btn-soft {
+      background: #f2f2f0;
+      color: var(--armus-ink);
+      font-weight: 600;
+      font-size: 15px;
+      padding: 15px;
+    }
+
+    .lt-btn-black:active,
+    .lt-btn-gold:active,
+    .lt-btn-soft:active {
+      transform: scale(0.99);
+    }
+
+    .lt-fine {
+      font-size: 12px;
+      color: var(--armus-faint);
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* start */
+
+    .lt-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      padding: 26px 22px 24px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .lt-eyebrow {
+      font: 700 11px Inter, sans-serif;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: #5a4507;
+      position: relative;
+    }
+
+    .lt-hero h1 {
+      font: 800 clamp(30px, 8.6vw, 36px)/1.08 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.2px;
+      margin: 12px 0 10px;
+      text-wrap: balance;
+      position: relative;
+    }
+
+    .lt-hero p {
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: #3d3005;
+      max-width: 300px;
+      position: relative;
+    }
+
+    .lt-ghost {
+      position: absolute;
+      right: -8px;
+      top: -26px;
+      font: 800 104px "Unbounded", sans-serif;
+      letter-spacing: -6px;
+      color: rgba(10, 10, 10, 0.07);
+      pointer-events: none;
+    }
+
+    .lt-tiles {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .lt-tile {
+      border-radius: 18px;
+      background: #f5f5f3;
+      padding: 14px 12px;
+    }
+
+    .lt-tile b {
+      display: block;
+      font: 800 20px "Unbounded", sans-serif;
+    }
+
+    .lt-tile span {
+      font-size: 12px;
+      color: var(--armus-muted);
+    }
+
+    .lt-learn {
+      list-style: none;
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      counter-reset: lt;
+    }
+
+    .lt-learn li {
+      counter-increment: lt;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .lt-learn li::before {
+      content: counter(lt);
+      width: 30px;
+      height: 30px;
+      flex: none;
+      border-radius: 10px;
+      background: #f5f5f3;
+      display: grid;
+      place-items: center;
+      font: 800 12px "Unbounded", sans-serif;
+      color: var(--armus-ink);
+    }
+
+    /* goal */
+
+    .lt-screen h2 {
+      font: 800 26px/1.15 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -0.8px;
+      margin-top: 16px;
+      text-wrap: balance;
+    }
+
+    .lt-sub {
+      color: var(--armus-muted);
+      font-size: 14.5px;
+      margin-top: 8px;
+    }
+
+    .lt-goals {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .lt-goal {
+      border: 2px solid #ececec;
+      border-radius: 20px;
+      padding: 20px 14px;
+      font: 700 15.5px Inter, sans-serif;
+      text-align: center;
+      background: #fff;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .lt-goal:hover {
+      border-color: var(--armus-ink);
+    }
+
+    .lt-goal.selected {
+      background: var(--armus-ink);
+      border-color: var(--armus-ink);
+      color: #fff;
+    }
+
+    .lt-skip-goal {
+      margin: 16px auto 0;
+      font-size: 14px;
+      color: var(--armus-muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* question */
+
+    .lt-qtop {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .lt-exit {
+      font-size: 15px;
+      color: var(--armus-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      flex: none;
+    }
+
+    .lt-seg {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 3px;
+    }
+
+    .lt-seg i {
+      height: 5px;
+      border-radius: 3px;
+      background: #ececec;
+    }
+
+    .lt-seg i.done {
+      background: var(--armus-ink);
+    }
+
+    .lt-seg i.cur {
+      background: var(--armus-gold-2);
+    }
+
+    .lt-qhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .lt-chip {
+      font: 700 12px Inter, sans-serif;
+      background: var(--armus-ink);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .lt-ring {
+      width: 54px;
+      height: 54px;
+      position: relative;
+    }
+
+    .lt-ring svg {
+      transform: rotate(-90deg);
+      display: block;
+    }
+
+    .lt-ring span {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font: 700 12px Inter, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lt-ring.low circle:last-child {
+      stroke: #d9534a;
+    }
+
+    .lt-qcard {
+      margin-top: 16px;
+      border-radius: 24px;
+      background: #f5f5f3;
+      padding: 22px 20px;
+    }
+
+    .lt-qn {
+      font: 800 13px "Unbounded", sans-serif;
+      color: var(--armus-faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lt-passage {
+      margin-top: 10px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #333;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e6e6e2;
+    }
+
+    .lt-prompt {
+      font: 700 20px/1.42 Inter, sans-serif;
+      letter-spacing: -0.3px;
+      margin-top: 8px;
+    }
+
+    .lt-passage + .lt-prompt {
+      font-size: 17px;
+      margin-top: 12px;
+    }
+
+    .lt-blank {
+      display: inline-block;
+      min-width: 58px;
+      border-bottom: 2px solid var(--armus-ink);
+      margin: 0 2px;
+      transform: translateY(-4px);
+    }
+
+    .lt-prompt mark {
+      background: #fbe9a8;
+      color: inherit;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    .lt-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .lt-options.long {
+      grid-template-columns: 1fr;
+    }
+
+    .lt-opt {
+      border-radius: 20px;
+      border: 2px solid #ececec;
+      background: #fff;
+      padding: 20px 14px;
+      font: 700 17px Inter, sans-serif;
+      text-align: center;
+      transition: border-color 0.12s, background 0.12s, color 0.12s;
+    }
+
+    .lt-options.long .lt-opt {
+      text-align: left;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 15px 16px;
+      border-radius: 16px;
+    }
+
+    .lt-opt:hover {
+      border-color: #bdbdbd;
+    }
+
+    .lt-opt.picked {
+      background: var(--armus-ink);
+      border-color: var(--armus-ink);
+      color: #fff;
+    }
+
+    /* result */
+
+    .lt-story {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      padding: 22px 20px 20px;
+      background: #0b0b0b;
+      color: #fff;
+      margin-top: 6px;
+    }
+
+    .lt-story-glow {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(246, 198, 73, 0.45), transparent 65%);
+      right: -80px;
+      top: -90px;
+      pointer-events: none;
+    }
+
+    .lt-story-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      font-size: 11px;
+      color: #8d8d8d;
+    }
+
+    .lt-story-top img {
+      height: 18px;
+      width: auto;
+      display: block;
+    }
+
+    .lt-story-label {
+      margin-top: 24px;
+      font: 700 11px Inter, sans-serif;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: #f6c649;
+      position: relative;
+    }
+
+    .lt-story-level {
+      font: 800 92px/1 "Unbounded", sans-serif;
+      letter-spacing: -4px;
+      background: var(--armus-gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      position: relative;
+      margin: 6px 0 4px;
+    }
+
+    .lt-story-name {
+      font: 600 16px Inter, sans-serif;
+      color: #e5e5e5;
+      position: relative;
+    }
+
+    .lt-story-skills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 18px;
+      position: relative;
+    }
+
+    .lt-story-skills div {
+      border-radius: 14px;
+      background: #171717;
+      border: 1px solid #262626;
+      padding: 10px;
+    }
+
+    .lt-story-skills b {
+      display: block;
+      font: 800 17px "Unbounded", sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lt-story-skills span {
+      font-size: 11px;
+      color: #9a9a9a;
+    }
+
+    .lt-story-url {
+      margin-top: 16px;
+      font-size: 11.5px;
+      color: #8d8d8d;
+      position: relative;
+    }
+
+    .lt-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .lt-actions .lt-btn-gold,
+    .lt-actions .lt-btn-soft {
+      padding: 15px;
+      font-size: 15px;
+    }
+
+    .lt-share-note {
+      font-size: 12.5px;
+      color: var(--armus-muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .lt-desc {
+      font-size: 14.5px;
+      line-height: 1.6;
+      color: #333;
+      margin-top: 18px;
+    }
+
+    .lt-plan {
+      margin-top: 14px;
+      border-radius: 20px;
+      background: #f5f5f3;
+      padding: 16px;
+    }
+
+    .lt-plan b {
+      font: 700 14px Inter, sans-serif;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .lt-plan p {
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #4b4b4b;
+    }
+
+    .lt-account {
+      font-size: 13.5px;
+      text-align: center;
+      margin-top: 14px;
+      color: var(--armus-muted);
+    }
+
+    .lt-account a {
+      color: var(--armus-ink);
+      font-weight: 600;
+    }
+
+    .lt-retake {
+      margin: 14px auto 0;
+      font-size: 13.5px;
+      color: var(--armus-muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* the site-wide chat bubble (i18n.js) would sit on the answer buttons */
+    body.lt-in-test #armusChatRoot {
+      display: none;
+    }
+
+    @media (min-width: 720px) {
+      .lt {
+        padding-top: 12px;
+        min-height: 0;
+      }
+
+      .lt-spacer {
+        flex: 0 0 28px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .lt-btn-black,
+      .lt-btn-gold,
+      .lt-btn-soft,
+      .lt-opt,
+      .lt-goal {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="lt-nav">
+    <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <div class="lt-nav-right">
+      <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+      <a href="login" id="ltAccountLink" data-i18n="levelTest.login">Giriş yap</a>
+    </div>
+  </header>
+
+  <main class="lt">
+
+    <!-- 1 · start -->
+    <section class="lt-screen" id="ltStart">
+      <div class="lt-hero">
+        <div class="lt-ghost" aria-hidden="true">C2</div>
+        <div class="lt-eyebrow" data-i18n="levelTest.eyebrow">Ücretsiz · 10 dakika</div>
+        <h1 data-i18n="levelTest.title">İngilizcen hangi seviyede?</h1>
+        <p data-i18n="levelTest.intro">20 hızlı soru. Sonunda seviyeni, güçlü yanlarını ve paylaşabileceğin seviye kartını al.</p>
+      </div>
+      <div class="lt-tiles">
+        <div class="lt-tile"><b>20</b><span data-i18n="levelTest.tileQuestions">soru</span></div>
+        <div class="lt-tile"><b>~10</b><span data-i18n="levelTest.tileMinutes">dakika</span></div>
+        <div class="lt-tile"><b>A1–C2</b><span data-i18n="levelTest.tileResult">sonuç</span></div>
+      </div>
+      <ol class="lt-learn">
+        <li data-i18n="levelTest.learn1">Seviyen (A1–C2) ve ne anlama geldiği</li>
+        <li data-i18n="levelTest.learn2">Dil bilgisi, kelime ve okumada puanın</li>
+        <li data-i18n="levelTest.learn3">Hedefine göre bir çalışma önerisi</li>
+      </ol>
+      <div class="lt-spacer"></div>
+      <button type="button" class="lt-btn-black" id="ltBegin" data-i18n="levelTest.begin">Başla →</button>
+      <p class="lt-fine" data-i18n="levelTest.noSignup">Kayıt gerekmez · Her soru için 60 saniye</p>
+    </section>
+
+    <!-- 2 · goal -->
+    <section class="lt-screen" id="ltGoal" hidden>
+      <h2 data-i18n="levelTest.goalTitle">İngilizceyi en çok ne için istiyorsun?</h2>
+      <p class="lt-sub" data-i18n="levelTest.goalSub">Sonuçtaki önerini buna göre hazırlayalım.</p>
+      <div class="lt-goals" id="ltGoals">
+        <button type="button" class="lt-goal" data-goal="yds" data-i18n="levelTest.goal.yds">YDS / YÖKDİL</button>
+        <button type="button" class="lt-goal" data-goal="ielts" data-i18n="levelTest.goal.ielts">IELTS / TOEFL</button>
+        <button type="button" class="lt-goal" data-goal="work" data-i18n="levelTest.goal.work">İş için</button>
+        <button type="button" class="lt-goal" data-goal="speaking" data-i18n="levelTest.goal.speaking">Konuşma pratiği</button>
+        <button type="button" class="lt-goal" data-goal="travel" data-i18n="levelTest.goal.travel">Seyahat</button>
+        <button type="button" class="lt-goal" data-goal="school" data-i18n="levelTest.goal.school">Okul / üniversite</button>
+      </div>
+      <button type="button" class="lt-skip-goal" id="ltSkipGoal" data-i18n="levelTest.goalSkip">Atla, teste geç</button>
+    </section>
+
+    <!-- 3 · question -->
+    <section class="lt-screen" id="ltQuestion" hidden>
+      <div class="lt-qtop">
+        <button type="button" class="lt-exit" id="ltExit" aria-label="Testten çık">✕</button>
+        <div class="lt-seg" id="ltSeg" aria-hidden="true"></div>
+      </div>
+      <div class="lt-qhead">
+        <span class="lt-chip" id="ltChip"></span>
+        <div class="lt-ring" id="ltRing" role="timer" aria-live="off">
+          <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
+            <circle cx="27" cy="27" r="23" fill="none" stroke="#eee" stroke-width="5"></circle>
+            <circle id="ltRingArc" cx="27" cy="27" r="23" fill="none" stroke="#f6c649" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.51" stroke-dashoffset="0"></circle>
+          </svg>
+          <span id="ltRingText">1:00</span>
+        </div>
+      </div>
+      <div class="lt-qcard">
+        <div class="lt-qn" id="ltQn"></div>
+        <div class="lt-passage" id="ltPassage" hidden></div>
+        <div class="lt-prompt" id="ltPrompt"></div>
+      </div>
+      <div class="lt-options" id="ltOptions"></div>
+      <div class="lt-spacer"></div>
+      <button type="button" class="lt-btn-soft" id="ltDontKnow" data-i18n="levelTest.dontKnow">Bilmiyorum, geç</button>
+    </section>
+
+    <!-- 4 · result -->
+    <section class="lt-screen" id="ltResult" hidden>
+      <div class="lt-story" id="ltStory">
+        <div class="lt-story-glow"></div>
+        <div class="lt-story-top"><img src="logo-cream.png" alt="ARMUS"><span data-i18n="levelTest.storyTag">Seviye kartı</span></div>
+        <div class="lt-story-label" data-i18n="levelTest.storyLabel">İngilizce seviyem</div>
+        <div class="lt-story-level" id="ltLevel"></div>
+        <div class="lt-story-name" id="ltLevelLine"></div>
+        <div class="lt-story-skills">
+          <div><b id="ltSkillGrammar"></b><span data-i18n="levelTest.skill.grammar">Dil bilgisi</span></div>
+          <div><b id="ltSkillVocabulary"></b><span data-i18n="levelTest.skill.vocabulary">Kelime</span></div>
+          <div><b id="ltSkillReading"></b><span data-i18n="levelTest.skill.reading">Okuma</span></div>
+        </div>
+        <div class="lt-story-url" data-i18n="levelTest.storyUrl">Sen de dene → armus.com.tr/seviye-testi</div>
+      </div>
+      <div class="lt-actions">
+        <button type="button" class="lt-btn-gold" id="ltShare" data-i18n="levelTest.share">Hikâyede paylaş</button>
+        <button type="button" class="lt-btn-soft" id="ltSave" data-i18n="levelTest.save">Kaydet</button>
+      </div>
+      <p class="lt-share-note" id="ltShareNote" hidden></p>
+      <p class="lt-desc" id="ltDesc"></p>
+      <div class="lt-plan">
+        <b id="ltPlanTitle"></b>
+        <p id="ltPlanText"></p>
+      </div>
+      <p class="lt-fine" style="text-align: left;" data-i18n="levelTest.disclaimer">Bu test hızlı bir ön değerlendirmedir; konuşma ve dinlemeyi ölçmez. İlk derste öğretmenin seviyeni birlikte netleştirir.</p>
+      <div class="lt-spacer"></div>
+      <a class="lt-btn-black" href="teachers" data-i18n="levelTest.findTeacher">Sana Uygun Öğretmeni Seç</a>
+      <p class="lt-account" id="ltAccount"></p>
+      <button type="button" class="lt-retake" id="ltRetake" data-i18n="levelTest.retake">Testi tekrar çöz</button>
+    </section>
+
+  </main>
+
+  <script src="i18n.js?v=20"></script>
+  <script src="level-test.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="auth.js?v=14"></script>
+  <script src="logo-panel-link.js?v=1"></script>
+  <script>
+    // ---- the free level test: start -> goal -> 20 questions -> result.
+    // Questions and scoring live in level-test.js; the result is saved
+    // with submit_level_test (migration_114.sql) and, when nobody is signed
+    // in, kept in this browser so the account made next can claim it
+    // (armusClaimPendingLevelTest, auth.js).
+
+    const LT_RING = 144.51;
+    const screens = ["ltStart", "ltGoal", "ltQuestion", "ltResult"];
+    const state = { goal: null, questions: [], answers: [], current: 0, startedAt: 0, deadline: 0, timer: null, locked: false, result: null, session: null };
+
+    function show(id) {
+      screens.forEach(s => { document.getElementById(s).hidden = s !== id; });
+      document.body.classList.toggle("lt-in-test", id === "ltQuestion");
+      window.scrollTo(0, 0);
+    }
+
+    function levelName(level) {
+      const tr = { A1: "Başlangıç", A2: "Temel", B1: "Orta seviye", B2: "Orta üstü", C1: "İleri", C2: "Ustalık" };
+      return armusT(`levelTest.lvlName.${level}`, tr[level]);
+    }
+
+    function levelDesc(level) {
+      const tr = {
+        A1: "Basit kelimeleri ve kalıpları tanıyorsun. Kendini tanıtmak ve günlük ihtiyaçlarını anlatmak ilk hedefin.",
+        A2: "Günlük basit konuşmaları ve kısa metinleri anlıyorsun. Geçmiş ve gelecek zamanları rahat kullanmak sıradaki adımın.",
+        B1: "Günlük konuları anlayıp kendini ifade edebiliyorsun. Karmaşık cümlelerde ve akıcı konuşmada zorlanıyorsun.",
+        B2: "Çoğu konuda akıcı konuşup uzun metinleri anlayabiliyorsun. İnce anlam farkları ve akademik dil sıradaki hedefin.",
+        C1: "İngilizceyi iş ve akademik ortamda etkili kullanıyorsun. Doğal ifadeler ve üslup inceliği seni C2'ye taşır.",
+        C2: "İngilizcen anadil seviyesine çok yakın. Pratiği sürdürmek ve uzmanlık alanında derinleşmek sana kalıyor.",
+      };
+      return armusT(`levelTest.lvlDesc.${level}`, tr[level]);
+    }
+
+    function skillName(skill) {
+      const tr = { grammar: "Dil bilgisi", vocabulary: "Kelime", reading: "Okuma" };
+      return armusT(`levelTest.skill.${skill}`, tr[skill]);
+    }
+
+    function pct(value) {
+      return armusGetLang() === "en" ? `${value}%` : `%${value}`;
+    }
+
+    // "___" -> a blank line, *word* -> highlighted; everything else escaped
+    function promptHtml(text) {
+      return armusEscapeHtml(text)
+        .replace(/___/g, '<span class="lt-blank"></span>')
+        .replace(/\*([^*]+)\*/g, "<mark>$1</mark>");
+    }
+
+    // ---- start / goal ----
+
+    document.getElementById("ltBegin").addEventListener("click", () => show("ltGoal"));
+
+    document.getElementById("ltGoals").addEventListener("click", e => {
+      const btn = e.target.closest("[data-goal]");
+      if (!btn) return;
+      document.querySelectorAll(".lt-goal").forEach(b => b.classList.toggle("selected", b === btn));
+      state.goal = btn.dataset.goal;
+      setTimeout(startTest, 180);
+    });
+
+    document.getElementById("ltSkipGoal").addEventListener("click", () => {
+      state.goal = null;
+      startTest();
+    });
+
+    // ---- questions ----
+
+    function startTest() {
+      state.questions = armusDrawLevelTest();
+      state.answers = new Array(state.questions.length).fill(null);
+      state.current = 0;
+      state.startedAt = Date.now();
+      state.result = null;
+      document.getElementById("ltSeg").innerHTML = state.questions.map(() => "<i></i>").join("");
+      show("ltQuestion");
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = state.questions[state.current];
+      const total = state.questions.length;
+      state.locked = false;
+
+      document.querySelectorAll("#ltSeg i").forEach((seg, i) => {
+        seg.className = i < state.current ? "done" : i === state.current ? "cur" : "";
+      });
+      document.getElementById("ltChip").textContent = skillName(q.skill);
+      document.getElementById("ltQn").textContent = `${String(state.current + 1).padStart(2, "0")} / ${total}`;
+      const passage = document.getElementById("ltPassage");
+      passage.hidden = !q.passage;
+      passage.textContent = q.passage || "";
+      document.getElementById("ltPrompt").innerHTML = promptHtml(q.prompt);
+
+      const options = document.getElementById("ltOptions");
+      options.classList.toggle("long", q.options.some(o => o.length > 16));
+      options.innerHTML = q.options.map((o, i) => `<button type="button" class="lt-opt" data-index="${i}">${armusEscapeHtml(o)}</button>`).join("");
+
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(state.timer);
+      state.deadline = Date.now() + ARMUS_LEVEL_TEST_SECONDS * 1000;
+      tick();
+      state.timer = setInterval(tick, 200);
+    }
+
+    function tick() {
+      const left = Math.max(0, state.deadline - Date.now());
+      const secs = Math.ceil(left / 1000);
+      document.getElementById("ltRingArc").setAttribute("stroke-dashoffset", String(LT_RING * (1 - left / (ARMUS_LEVEL_TEST_SECONDS * 1000))));
+      document.getElementById("ltRingText").textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+      document.getElementById("ltRing").classList.toggle("low", secs <= 10);
+      if (left <= 0) answer(null);
+    }
+
+    function answer(value, button) {
+      if (state.locked) return;
+      state.locked = true;
+      clearInterval(state.timer);
+      state.answers[state.current] = value;
+      if (button) button.classList.add("picked");
+      setTimeout(() => {
+        state.current++;
+        if (state.current >= state.questions.length) finish();
+        else renderQuestion();
+      }, button ? 260 : 0);
+    }
+
+    document.getElementById("ltOptions").addEventListener("click", e => {
+      const btn = e.target.closest(".lt-opt");
+      if (!btn) return;
+      answer(state.questions[state.current].options[Number(btn.dataset.index)], btn);
+    });
+
+    document.getElementById("ltDontKnow").addEventListener("click", () => answer(null));
+
+    document.addEventListener("keydown", e => {
+      if (document.getElementById("ltQuestion").hidden || state.locked) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= 4) {
+        const btn = document.querySelectorAll("#ltOptions .lt-opt")[n - 1];
+        if (btn) btn.click();
+      }
+    });
+
+    document.getElementById("ltExit").addEventListener("click", () => {
+      if (!window.confirm(armusT("levelTest.exitConfirm", "Testten çıkmak istiyor musun? Cevapların kaydedilmez."))) return;
+      clearInterval(state.timer);
+      show("ltStart");
+    });
+
+    // ---- result ----
+
+    function finish() {
+      state.result = armusScoreLevelTest(state.questions, state.answers);
+      renderResult();
+      show("ltResult");
+      saveResult();
+    }
+
+    function planText(result) {
+      if (!result.next) {
+        return armusT("levelTest.planKeep", "Haftada 1–2 ders ile pratiği sürdür ve kendi alanında derinleş. İlk derste öğretmenin konuşmanı da değerlendirir.");
+      }
+      const focusTr = { grammar: "dil bilgisi", vocabulary: "kelime dağarcığı", reading: "okuma ve anlama" };
+      const weakest = armusLevelTestWeakestSkill(result.skills);
+      const adviceTr = {
+        yds: "YDS'de kelime ve okuma ağırlıklı; sınav deneyimi olan bir öğretmen seç.",
+        ielts: "IELTS dört beceriyi ölçer; konuşma ve yazmayı da çalıştıran bir öğretmen seç.",
+        work: "Toplantı, sunum ve e-posta pratiği yaptıran bir öğretmen seç.",
+        speaking: "Derslerin çoğunu sohbetle geçirecek bir öğretmen seç.",
+        travel: "Günlük kalıplar ve dinleme pratiği öncelikli olsun.",
+        school: "Okuldaki konuları düzenli tekrar eden bir öğretmen seç.",
+      };
+      const advice = state.goal ? ` ${armusT(`levelTest.advice.${state.goal}`, adviceTr[state.goal])}` : "";
+      return armusT("levelTest.planText", "Haftada 2 ders · önce {focus}.{advice} İlk derste öğretmenin konuşmanı da değerlendirir.")
+        .replace("{focus}", armusT(`levelTest.focus.${weakest}`, focusTr[weakest]))
+        .replace("{advice}", advice);
+    }
+
+    function renderResult() {
+      const r = state.result;
+      if (!r) return;
+      document.getElementById("ltLevel").textContent = r.level;
+      document.getElementById("ltLevelLine").textContent = r.next
+        ? armusT("levelTest.levelLine", "{name} · bir sonraki hedef {next}").replace("{name}", levelName(r.level)).replace("{next}", r.next)
+        : armusT("levelTest.levelLineTop", "{name} · en üst seviye").replace("{name}", levelName(r.level));
+      document.getElementById("ltSkillGrammar").textContent = pct(r.skills.grammar);
+      document.getElementById("ltSkillVocabulary").textContent = pct(r.skills.vocabulary);
+      document.getElementById("ltSkillReading").textContent = pct(r.skills.reading);
+      document.getElementById("ltDesc").textContent = levelDesc(r.level);
+      document.getElementById("ltPlanTitle").textContent = r.next
+        ? armusT("levelTest.planTitle", "Sıradaki adım: {next}").replace("{next}", r.next)
+        : armusT("levelTest.planTitleTop", "Seviyeni koru");
+      document.getElementById("ltPlanText").textContent = planText(r);
+      renderAccountLine();
+    }
+
+    function renderAccountLine() {
+      const el = document.getElementById("ltAccount");
+      if (state.session) {
+        el.textContent = armusT("levelTest.savedToAccount", "Sonucun hesabına kaydedildi.");
+      } else {
+        el.innerHTML = `<a href="register">${armusEscapeHtml(armusT("levelTest.createAccount", "Ücretsiz hesap oluştur"))}</a> ${armusEscapeHtml(armusT("levelTest.createAccountTail", "· sonucun hesabında saklansın"))}`;
+      }
+    }
+
+    async function saveResult() {
+      const r = state.result;
+      try {
+        const { data, error } = await armusSupabase.rpc("submit_level_test", {
+          p_level: r.level,
+          p_goal: state.goal || "",
+          p_grammar: r.skills.grammar,
+          p_vocabulary: r.skills.vocabulary,
+          p_reading: r.skills.reading,
+          p_correct: r.correct,
+          p_skipped: r.skipped,
+          p_duration_seconds: Math.min(7200, Math.round((Date.now() - state.startedAt) / 1000)),
+        });
+        const row = Array.isArray(data) ? data[0] : data;
+        if (error || !row || state.session) return;
+        localStorage.setItem("armusPendingLevelTest", JSON.stringify({ id: row.id, token: row.claim_token, at: Date.now() }));
+      } catch (err) {
+        // the result is already on screen; saving is only for the numbers
+      }
+    }
+
+    document.getElementById("ltRetake").addEventListener("click", () => show("ltStart"));
+
+    // ---- the story card: a 1080x1920 PNG of the result for Instagram ----
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    async function storyBlob() {
+      const r = state.result;
+      await Promise.all([
+        document.fonts.load('800 400px "Unbounded"'),
+        document.fonts.load('800 60px "Unbounded"'),
+        document.fonts.load('600 48px "Inter"'),
+        document.fonts.load('700 34px "Inter"'),
+      ]).catch(() => {});
+      const W = 1080, H = 1920;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#0b0b0b";
+      ctx.fillRect(0, 0, W, H);
+      const glow = ctx.createRadialGradient(W - 120, 260, 0, W - 120, 260, 700);
+      glow.addColorStop(0, "rgba(246,198,73,0.42)");
+      glow.addColorStop(1, "rgba(246,198,73,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      try {
+        const logo = await loadImage("logo-cream.png");
+        const lh = 64;
+        ctx.drawImage(logo, 96, 150, (logo.width / logo.height) * lh, lh);
+      } catch (e) {}
+
+      const gold = ctx.createLinearGradient(96, 700, 900, 1100);
+      gold.addColorStop(0, "#fee06d");
+      gold.addColorStop(0.55, "#f6c649");
+      gold.addColorStop(1, "#dfac2e");
+
+      ctx.textBaseline = "alphabetic";
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "8px";
+      ctx.fillStyle = "#f6c649";
+      ctx.font = '700 34px "Inter", sans-serif';
+      ctx.fillText(armusT("levelTest.storyLabel", "İngilizce seviyem").toLocaleUpperCase(armusGetLang() === "en" ? "en-US" : "tr-TR"), 96, 560);
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "-12px";
+      ctx.fillStyle = gold;
+      ctx.font = '800 400px "Unbounded", sans-serif';
+      ctx.fillText(r.level, 80, 960);
+      if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+
+      ctx.fillStyle = "#e5e5e5";
+      ctx.font = '600 48px "Inter", sans-serif';
+      ctx.fillText(document.getElementById("ltLevelLine").textContent, 96, 1080);
+
+      const skills = [["grammar", r.skills.grammar], ["vocabulary", r.skills.vocabulary], ["reading", r.skills.reading]];
+      const tileW = 276, gap = 24, top = 1170;
+      skills.forEach(([skill, value], i) => {
+        const x = 96 + i * (tileW + gap);
+        roundRect(ctx, x, top, tileW, 200, 36);
+        ctx.fillStyle = "#171717";
+        ctx.fill();
+        ctx.strokeStyle = "#262626";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = '800 60px "Unbounded", sans-serif';
+        ctx.fillText(pct(value), x + 30, top + 96);
+        ctx.fillStyle = "#9a9a9a";
+        ctx.font = '500 32px "Inter", sans-serif';
+        ctx.fillText(skillName(skill), x + 30, top + 156);
+      });
+
+      ctx.fillStyle = "#8d8d8d";
+      ctx.font = '500 36px "Inter", sans-serif';
+      ctx.fillText(armusT("levelTest.storyUrl", "Sen de dene → armus.com.tr/seviye-testi"), 96, 1700);
+
+      return new Promise(resolve => {
+        try {
+          canvas.toBlob(resolve, "image/png");
+        } catch (err) {
+          resolve(null);
+        }
+      });
+    }
+
+    function downloadBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function shareNote(text) {
+      const note = document.getElementById("ltShareNote");
+      note.textContent = text;
+      note.hidden = !text;
+    }
+
+    async function storyBlobOrNote() {
+      const blob = await storyBlob().catch(() => null);
+      if (!blob) shareNote(armusT("levelTest.cardFailed", "Kart oluşturulamadı. Ekran görüntüsü alarak paylaşabilirsin."));
+      return blob;
+    }
+
+    document.getElementById("ltShare").addEventListener("click", async () => {
+      const blob = await storyBlobOrNote();
+      if (!blob) return;
+      const name = `armus-seviye-${state.result.level}.png`;
+      const file = new File([blob], name, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "ARMUS" });
+          shareNote("");
+          return;
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+        }
+      }
+      downloadBlob(blob, name);
+      shareNote(armusT("levelTest.sharedDownload", "Kart indirildi. Instagram'da hikâyene ekleyebilirsin."));
+    });
+
+    document.getElementById("ltSave").addEventListener("click", async () => {
+      const blob = await storyBlobOrNote();
+      if (!blob) return;
+      downloadBlob(blob, `armus-seviye-${state.result.level}.png`);
+      shareNote(armusT("levelTest.saved", "Kart indirildi."));
+    });
+
+    // ---- session: nav link and the "saved to your account" line ----
+
+    (async () => {
+      try {
+        state.session = await armusGetSession();
+      } catch (err) {
+        state.session = null;
+      }
+      const link = document.getElementById("ltAccountLink");
+      if (state.session) {
+        link.removeAttribute("data-i18n");
+        link.textContent = armusT("nav.myPanel", "Panelim");
+        link.href = state.session.role === "teacher" ? "dashboard" : "student-dashboard";
+      }
+      if (state.result) renderAccountLine();
+    })();
+
+    document.addEventListener("armus:langchange", () => {
+      if (!document.getElementById("ltQuestion").hidden) {
+        document.getElementById("ltChip").textContent = skillName(state.questions[state.current].skill);
+      }
+      if (state.result) renderResult();
+    });
+  </script>
+</body>
+</html>

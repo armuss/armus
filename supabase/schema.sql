@@ -4794,6 +4794,8 @@ grant execute on function public.admin_set_marketing_spend(date, numeric, text) 
 --   new_paying      students whose first card payment was that month
 --   cash_in         card payments that month, minus what was refunded
 --   spend           ad spend entered for that month (null = not entered)
+--   level_tests     finished level tests (migration_114.sql)
+--   level_test_accounts ... of them now on an account
 -- plus totals over the months shown, and all-time paying students with
 -- their average net card payment.
 
@@ -4904,7 +4906,9 @@ begin
       (select count(*) from first_paid fp where fp.first_at >= mo.m_start and fp.first_at < mo.m_end) as new_paying,
       (select coalesce(sum(pd.net), 0) from paid pd where pd.created_at >= mo.m_start and pd.created_at < mo.m_end) as cash_in,
       (select ms.amount from marketing_spend ms where ms.month = mo.month) as spend,
-      (select ms.note from marketing_spend ms where ms.month = mo.month) as spend_note
+      (select ms.note from marketing_spend ms where ms.month = mo.month) as spend_note,
+      (select count(*) from level_test_results lt where lt.created_at >= mo.m_start and lt.created_at < mo.m_end) as level_tests,
+      (select count(*) from level_test_results lt where lt.created_at >= mo.m_start and lt.created_at < mo.m_end and lt.user_id is not null) as level_test_accounts
     from months mo
   )
   select jsonb_build_object(
@@ -4923,7 +4927,9 @@ begin
         'cash_in', coalesce(sum(cash_in), 0),
         -- cost per paying student only over months with spend entered
         'spend', coalesce(sum(spend), 0),
-        'new_paying_with_spend', coalesce(sum(new_paying) filter (where spend is not null), 0)
+        'new_paying_with_spend', coalesce(sum(new_paying) filter (where spend is not null), 0),
+        'level_tests', coalesce(sum(level_tests), 0),
+        'level_test_accounts', coalesce(sum(level_test_accounts), 0)
       )
       from per_month
     ),
@@ -4942,3 +4948,90 @@ $$;
 
 revoke all on function public.admin_growth_metrics(integer) from public, anon;
 grant execute on function public.admin_growth_metrics(integer) to authenticated;
+
+-- === LEVEL TEST (migration_114.sql) ==================================
+-- The free level test (seviye-testi.html): finished tests, signed in or
+-- not; a signed-out test is attached to the account made right after
+-- (claim_level_test, from auth.js). Scored in the page.
+
+create table if not exists public.level_test_results (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_id uuid references public.profiles(id) on delete set null,
+  claim_token uuid not null default gen_random_uuid(),
+  claimed_at timestamptz,
+  level text not null check (level in ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
+  goal text check (goal in ('yds', 'ielts', 'work', 'speaking', 'travel', 'school')),
+  grammar smallint not null check (grammar between 0 and 100),
+  vocabulary smallint not null check (vocabulary between 0 and 100),
+  reading smallint not null check (reading between 0 and 100),
+  correct smallint not null check (correct between 0 and 40),
+  skipped smallint not null check (skipped between 0 and 40),
+  duration_seconds integer check (duration_seconds between 0 and 7200)
+);
+
+create index if not exists level_test_results_created_idx on public.level_test_results (created_at);
+create index if not exists level_test_results_user_idx on public.level_test_results (user_id);
+
+alter table public.level_test_results enable row level security;
+
+drop policy if exists level_test_results_select_own on public.level_test_results;
+create policy level_test_results_select_own on public.level_test_results
+  for select using (user_id = auth.uid() or public.is_admin());
+
+-- Written only through the two functions below.
+
+create or replace function public.submit_level_test(
+  p_level text, p_goal text, p_grammar integer, p_vocabulary integer, p_reading integer,
+  p_correct integer, p_skipped integer, p_duration_seconds integer
+)
+returns table (id uuid, claim_token uuid)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- the page is public, so keep a flood of fake results out of the numbers
+  if (select count(*) from level_test_results r where r.created_at > now() - interval '1 minute') >= 60 then
+    raise exception 'too many level tests, try again in a minute';
+  end if;
+
+  return query
+  insert into level_test_results (user_id, level, goal, grammar, vocabulary, reading, correct, skipped, duration_seconds, claimed_at)
+  values (auth.uid(), p_level, nullif(p_goal, ''), p_grammar, p_vocabulary, p_reading, p_correct, p_skipped, p_duration_seconds,
+          case when auth.uid() is not null then now() end)
+  returning level_test_results.id, level_test_results.claim_token;
+end;
+$$;
+
+revoke all on function public.submit_level_test(text, text, integer, integer, integer, integer, integer, integer) from public;
+grant execute on function public.submit_level_test(text, text, integer, integer, integer, integer, integer, integer) to anon, authenticated;
+
+-- A signed-out test, attached to the account that was just made (or
+-- signed into) on the same browser. Only within 7 days, only once.
+create or replace function public.claim_level_test(p_id uuid, p_token uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  n integer;
+begin
+  if auth.uid() is null then
+    return false;
+  end if;
+
+  update level_test_results
+  set user_id = auth.uid(), claimed_at = now()
+  where id = p_id
+    and claim_token = p_token
+    and user_id is null
+    and created_at > now() - interval '7 days';
+  get diagnostics n = row_count;
+  return n > 0;
+end;
+$$;
+
+revoke all on function public.claim_level_test(uuid, uuid) from public, anon;
+grant execute on function public.claim_level_test(uuid, uuid) to authenticated;
