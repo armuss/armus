@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fee06d"/>
+      <stop offset="55%" stop-color="#f6c649"/>
+      <stop offset="100%" stop-color="#dfac2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#g)"/>
+  <!-- an optical answer sheet: five-choice rows, a few marked -->
+  <g transform="translate(430 70) rotate(-4 170 180)">
+    <rect x="0" y="0" width="340" height="370" rx="18" fill="#fffdf4"/>
+    <rect x="28" y="26" width="120" height="14" rx="7" fill="#0a0a0a"/>
+    <rect x="236" y="26" width="76" height="14" rx="7" fill="#0a0a0a" opacity="0.25"/>
+    <g fill="none" stroke="#0a0a0a" stroke-opacity="0.35" stroke-width="3">
+      <circle cx="80" cy="84" r="13"/><circle cx="130" cy="84" r="13"/><circle cx="180" cy="84" r="13"/><circle cx="230" cy="84" r="13"/><circle cx="280" cy="84" r="13"/>
+      <circle cx="80" cy="134" r="13"/><circle cx="130" cy="134" r="13"/><circle cx="180" cy="134" r="13"/><circle cx="230" cy="134" r="13"/><circle cx="280" cy="134" r="13"/>
+      <circle cx="80" cy="184" r="13"/><circle cx="130" cy="184" r="13"/><circle cx="180" cy="184" r="13"/><circle cx="230" cy="184" r="13"/><circle cx="280" cy="184" r="13"/>
+      <circle cx="80" cy="234" r="13"/><circle cx="130" cy="234" r="13"/><circle cx="180" cy="234" r="13"/><circle cx="230" cy="234" r="13"/><circle cx="280" cy="234" r="13"/>
+      <circle cx="80" cy="284" r="13"/><circle cx="130" cy="284" r="13"/><circle cx="180" cy="284" r="13"/><circle cx="230" cy="284" r="13"/><circle cx="280" cy="284" r="13"/>
+      <circle cx="80" cy="334" r="13"/><circle cx="130" cy="334" r="13"/><circle cx="180" cy="334" r="13"/><circle cx="230" cy="334" r="13"/><circle cx="280" cy="334" r="13"/>
+    </g>
+    <g fill="#0a0a0a">
+      <circle cx="130" cy="84" r="13"/>
+      <circle cx="230" cy="134" r="13"/>
+      <circle cx="80" cy="184" r="13"/>
+      <circle cx="280" cy="234" r="13"/>
+      <circle cx="180" cy="284" r="13"/>
+    </g>
+    <circle cx="130" cy="334" r="13" fill="#dfac2e"/>
+    <g fill="#0a0a0a" opacity="0.55" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700">
+      <text x="34" y="89">1</text><text x="34" y="139">2</text><text x="34" y="189">3</text>
+      <text x="34" y="239">4</text><text x="34" y="289">5</text><text x="34" y="339">6</text>
+    </g>
+  </g>
+  <circle cx="140" cy="100" r="6" fill="#0a0a0a" opacity="0.14"/>
+  <circle cx="1060" cy="390" r="7" fill="#0a0a0a" opacity="0.12"/>
+  <circle cx="1010" cy="110" r="5" fill="#0a0a0a" opacity="0.14"/>
+</svg>
