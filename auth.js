@@ -518,7 +518,7 @@ async function armusRenderStudentNav(el, session, firstName) {
     const teacherList = armusEscapeHtml(credits.map((c) => armusShortDisplayName(c.teacher_name)).join(", "));
     const tooltip = armusT("nav.creditsTooltip", "Kullanılabilir ders hakkın: {teachers}").replace("{teachers}", teacherList);
     const badgeText = armusT("nav.creditsBadge", "{n} ders hakkın var").replace("{n}", credits.length);
-    creditBadge = `<span class="gnav-credit-badge" title="${tooltip}">
+    creditBadge = `<span class="gnav-credit-badge" title="${tooltip}" data-count="${credits.length}">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
           <path d="M20 12v9H4v-9"></path>
           <path d="M2 7h20v5H2z"></path>
