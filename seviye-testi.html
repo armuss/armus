@@ -701,6 +701,15 @@
       color: #4b4b4b;
     }
 
+    .lt-exam-link {
+      display: inline-block;
+      margin-top: 10px;
+      font: 700 13.5px Inter, sans-serif;
+      color: var(--armus-ink);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
     .lt-account {
       font-size: 13.5px;
       text-align: center;
@@ -867,6 +876,7 @@
       <div class="lt-plan">
         <b id="ltPlanTitle"></b>
         <p id="ltPlanText"></p>
+        <a class="lt-exam-link" id="ltExamLink" href="sinav-hazirlik" hidden></a>
       </div>
       <p class="lt-fine" style="text-align: left;" data-i18n="levelTest.disclaimer">Bu test hızlı bir ön değerlendirmedir; konuşma ve dinlemeyi ölçmez. İlk derste öğretmenin seviyeni birlikte netleştirir.</p>
       <div class="lt-spacer"></div>
@@ -877,7 +887,7 @@
 
   </main>
 
-  <script src="i18n.js?v=23"></script>
+  <script src="i18n.js?v=24"></script>
   <script src="level-test.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -1088,6 +1098,16 @@
         ? armusT("levelTest.planTitle", "Sıradaki adım: {next}").replace("{next}", r.next)
         : armusT("levelTest.planTitleTop", "Seviyeni koru");
       document.getElementById("ltPlanText").textContent = planText(r);
+      // YDS / IELTS goals: the exam prep page (sinav-hazirlik.html)
+      const examLink = document.getElementById("ltExamLink");
+      const exam = state.goal === "yds" || state.goal === "ielts" ? state.goal : null;
+      examLink.hidden = !exam;
+      if (exam) {
+        examLink.href = `sinav-hazirlik#${exam}`;
+        examLink.textContent = exam === "yds"
+          ? armusT("levelTest.examLinkYds", "YDS / YÖKDİL hazırlığına göz at →")
+          : armusT("levelTest.examLinkIelts", "IELTS hazırlığına göz at →");
+      }
       renderAccountLine();
     }
 
