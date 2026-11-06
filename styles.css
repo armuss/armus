@@ -63,10 +63,9 @@ body {
   text-decoration: none;
   font-size: 12px;
 }
-/* the exam prep page (sinav-hazirlik.html) and the free level test
-   (seviye-testi.html), last in the menu */
-.nav nav a.nav-exam,
-.nav nav a.nav-test {
+/* every menu link in dark bold, the same as YDS / IELTS and Seviye Testi
+   (the footer links above stay grey) */
+.nav nav a {
   color: var(--armus-ink);
   font-weight: 700;
   display: inline-flex;
@@ -91,6 +90,29 @@ body {
     gap: 16px;
   }
   .nav nav a.nav-optional {
+    display: none;
+  }
+}
+/* logged in, the header's right side (Arkadaşını Davet Et, the credits
+   badge, messages, favourites, bell, avatar - auth.js) is far wider than
+   Giriş Yap / Kayıt Ol, so make room: Blog and Hakkımızda leave the menu,
+   the credits badge keeps just the gift icon and the number (the sentence
+   stays in its title) and, below 1280px, Arkadaşını Davet Et is only in
+   the profile menu */
+.nav:has(.gnav-avatar-btn) nav a.nav-optional {
+  display: none;
+}
+.nav .gnav-credit-badge[data-count] {
+  font-size: 0;
+  gap: 5px;
+  padding: 8px 11px;
+}
+.nav .gnav-credit-badge[data-count]::after {
+  content: attr(data-count);
+  font-size: 12.5px;
+}
+@media (max-width: 1279px) {
+  .nav a.gnav-refer-btn {
     display: none;
   }
 }
