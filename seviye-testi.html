@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap">
   <link rel="stylesheet" href="theme.css?v=8">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=25">
 
   <style>
     * {
@@ -133,11 +133,6 @@
     /* ---- landing (design C, "Basamaklar"): the site nav, the headline
        with the six CEFR steps beside it, then a short FAQ. Starting the
        test hides it (show("ltGoal")) and shows the test column. ---- */
-
-    .nav nav a.nav-test[aria-current="page"] {
-      box-shadow: inset 0 -2px 0 var(--armus-gold-2);
-      padding-bottom: 3px;
-    }
 
     .lt-landing {
       display: grid;
@@ -766,8 +761,9 @@
       <nav>
         <a href="teachers" data-i18n="nav.teachers">Öğretmenler</a>
         <a href="how-it-works" data-i18n="nav.how">Nasıl Çalışır?</a>
-        <a href="blog" data-i18n="nav.blog">Blog</a>
-        <a href="hakkimizda" data-i18n="nav.about">Hakkımızda</a>
+        <a href="blog" class="nav-optional" data-i18n="nav.blog">Blog</a>
+        <a href="hakkimizda" class="nav-optional" data-i18n="nav.about">Hakkımızda</a>
+        <a href="sinav-hazirlik" class="nav-exam" data-i18n="nav.examPrep">YDS / IELTS</a>
         <a href="seviye-testi" class="nav-test" aria-current="page" data-i18n="nav.levelTest">Seviye Testi <span class="nav-free">Ücretsiz</span></a>
       </nav>
       <div class="nav-utility">
@@ -887,7 +883,7 @@
 
   </main>
 
-  <script src="i18n.js?v=24"></script>
+  <script src="i18n.js?v=25"></script>
   <script src="level-test.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
