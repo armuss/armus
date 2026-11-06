@@ -1964,7 +1964,6 @@ const ARMUS_I18N_EN = {
   "levelTest.lvlDesc.B2": "You speak fluently on most topics and understand long texts. Fine shades of meaning and academic language are your next goal.",
   "levelTest.lvlDesc.C1": "You use English effectively at work and in academic settings. Natural expressions and a feel for style will take you to C2.",
   "levelTest.lvlDesc.C2": "Your English is very close to native level. What's left is keeping it up and going deeper in your own field.",
-  "index.hero.testLink": "Not sure of your level? <b>Take the free level test →</b>",
   "index.footer.levelTest": "Level Test",
   "admin.colLevelTests": "Level tests",
   "admin.growthLevelTestAccounts": "{n} on an account",
