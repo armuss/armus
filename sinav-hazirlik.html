@@ -203,8 +203,78 @@
       width: 22%;
     }
 
-    .ex-strip {
+    /* guides: the blog's YDS / IELTS articles, one column per exam */
+    .ex-guides {
+      margin-top: 52px;
+    }
+
+    .ex-guides h2 {
+      font: 800 22px "Unbounded", "Inter", sans-serif;
+      letter-spacing: -0.6px;
+      margin: 0;
+    }
+
+    .ex-guides-lead {
+      color: var(--armus-muted);
+      font-size: 14.5px;
+      margin-top: 6px;
+    }
+
+    .ex-guides-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 40px;
       margin-top: 18px;
+    }
+
+    .ex-guides-col h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 700 12px Inter, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--armus-muted);
+      margin: 0 0 4px;
+    }
+
+    .ex-guides-col h3::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--armus-gold-gradient);
+    }
+
+    .ex-guides-col.ielts h3::before {
+      background: #0b0b0b;
+    }
+
+    .ex-guides-col a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 2px;
+      border-bottom: 1px solid var(--armus-border-soft);
+      color: var(--armus-ink);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .ex-guides-col a:hover span:first-child {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .ex-guides-col a span[aria-hidden] {
+      color: var(--armus-muted);
+      flex: none;
+    }
+
+    .ex-strip {
+      margin-top: 40px;
       border-radius: 22px;
       background: #f5f4f0;
       padding: 22px 26px;
@@ -273,6 +343,15 @@
 
       .ex-table {
         font-size: 13px;
+      }
+
+      .ex-guides {
+        margin-top: 40px;
+      }
+
+      .ex-guides-grid {
+        grid-template-columns: 1fr;
+        gap: 22px;
       }
 
       .ex-strip {
@@ -396,6 +475,29 @@
           </tbody>
         </table>
       </div>
+
+      <div class="ex-guides">
+        <h2 data-i18n="exam.guidesTitle">Rehberler</h2>
+        <p class="ex-guides-lead" data-i18n="exam.guidesLead">Hazırlığa başlamadan önce bilmen gerekenler: puanlar, soru tipleri, süre ve çalışma planı.</p>
+        <div class="ex-guides-grid">
+          <div class="ex-guides-col yds">
+            <h3>YDS / YÖKDİL</h3>
+            <a href="blog/yds-kac-puan-yeterli"><span data-i18n="exam.guideYds1">YDS kaç puan yeterli? Amaca göre gereken puanlar</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/yds-soru-tipleri-ve-cozum-teknikleri"><span data-i18n="exam.guideYds2">YDS soru tipleri ve çözüm teknikleri</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/yds-mi-yokdil-mi"><span data-i18n="exam.guideYds3">YDS mi, YÖKDİL mi, e-YDS mi?</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/yds-yokdil-hazirlik"><span data-i18n="exam.guideYds4">YDS/YÖKDİL hazırlığında özel ders</span> <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="ex-guides-col ielts">
+            <h3>IELTS</h3>
+            <a href="blog/ielts-kac-ayda-hazirlanilir"><span data-i18n="exam.guideIelts1">IELTS'e kaç ayda hazırlanılır?</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/ielts-band-skorlari"><span data-i18n="exam.guideIelts2">IELTS band skorları: 6.5 ne demek?</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/ielts-writing-task-2"><span data-i18n="exam.guideIelts3">IELTS Writing Task 2: yapı ve örnek</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/ielts-speaking-rehberi"><span data-i18n="exam.guideIelts4">IELTS Speaking: 3 bölüm, 4 kriter</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/ielts-academic-mi-general-training-mi"><span data-i18n="exam.guideIelts5">Academic mi, General Training mi?</span> <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </div>
+
       <div class="ex-strip">
         <div>
           <b data-i18n="exam.stripTitle">Nereden başlayacağını bilmiyor musun?</b>
@@ -408,7 +510,7 @@
 
   </main>
 
-  <script src="i18n.js?v=27"></script>
+  <script src="i18n.js?v=28"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
