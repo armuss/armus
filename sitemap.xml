@@ -116,6 +116,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://armus.com.tr/sinav-hazirlik</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://armus.com.tr/seviye-testi</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
