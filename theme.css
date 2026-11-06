@@ -378,4 +378,9 @@ html.armus-logo-static .logo-splash .logo-img {
   a.gnav-icon-btn { display: none; }
   a.gnav-refer-btn { display: none; }
   .gnav-dropdown { width: 240px; }
+  /* "2 ders hakkın var" doesn't fit next to the bell, the avatar and the
+     menu button on a phone: keep the gift icon and the number (the full
+     sentence stays in the title) */
+  .gnav-credit-badge[data-count] { font-size: 0; gap: 5px; padding: 8px 11px; }
+  .gnav-credit-badge[data-count]::after { content: attr(data-count); font-size: 12.5px; }
 }

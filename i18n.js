@@ -1897,6 +1897,13 @@ const ARMUS_I18N_EN = {
   "levelTest.faq4a": "You see your level, your skill scores and advice for your goal; if you like, you can save the result to your account.",
   "nav.levelTest": "Level Test <span class=\"nav-free\">Free</span>",
   "nav.examPrep": "YDS / IELTS",
+  // phone menu (nav-sheet.js)
+  "nav.menu": "Menu",
+  "nav.close": "Close",
+  "nav.sheetTest": "Level Test",
+  "nav.free": "Free",
+  "nav.sheetTestSub": "Find your level in 10 minutes",
+  "nav.sheetExamSub": "Prepare one-to-one for your exam",
   "levelTest.heroEyebrow": "FREE ENGLISH LEVEL TEST",
   "levelTest.heroTitle": "Which step are you on? Find out <em>in 10 minutes</em>.",
   "levelTest.heroSub": "Six steps from A1 to C2. 20 short questions put you on the right step and tell you what to work on to reach the next one.",
