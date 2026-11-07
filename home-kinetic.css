@@ -541,7 +541,8 @@ html[lang="en"] .hk-pc {
   content: attr(data-n);
   position: absolute;
   left: 0;
-  top: 0;
+  top: -.12em;
+  padding: .12em .2em .12em 0;
   color: var(--armus-gold-2);
   -webkit-text-stroke: 4px var(--armus-gold-3);
   paint-order: stroke fill;
@@ -1161,26 +1162,44 @@ html[lang="en"] .hk-pc {
   position: relative;
   transition: transform .5s var(--hk-spring);
 }
+/* --s is the size in px at full width; it shrinks with the viewport so the
+   row of five always fits. Letter-spacing stays light enough that digits
+   don't overlap (an overlap shows the next digit's outline across the fill). */
 .hk-rate-n {
   position: relative;
   display: inline-block;
-  font: 900 var(--fs, 72px) / .9 Unbounded, Inter, sans-serif;
-  letter-spacing: -.06em;
+  font: 900 min(calc(var(--s, 72) * 1px), calc(var(--s, 72) * .0806vw)) / .9 Unbounded, Inter, sans-serif;
+  letter-spacing: -.02em;
 }
+/* three stacked copies: a fat gold silhouette (every digit's stroke) at the
+   bottom, the empty white digits over it, the rising gold on top. Drawing all
+   strokes first means one digit's outline never cuts across its neighbour
+   where tight digits touch; the 3px rim left around the fill is the outline. */
+.hk-rate-s,
 .hk-rate-o,
 .hk-rate-f {
   display: inline-flex;
   align-items: baseline;
-  -webkit-text-stroke: 3px var(--armus-gold-3);
-  paint-order: stroke fill;
+}
+.hk-rate-s {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--armus-gold-3);
+  -webkit-text-stroke: 4.5px var(--armus-gold-3);
 }
 .hk-rate-o {
+  position: relative;
   color: var(--armus-bg);
 }
 .hk-rate-f {
   position: absolute;
   left: 0;
-  top: 0;
+  /* the mask clips to this box, and the tight letter-spacing pushes the last
+     digit's ink past its right edge: pad the box out (top via a matching
+     negative offset) so the glyphs stay put but the whole digit gets gold */
+  top: -.12em;
+  padding: .12em .2em .12em 0;
   color: var(--armus-gold-2);
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='10' viewBox='0 0 60 10'%3E%3Cpath d='M0 5Q15 0 30 5T60 5V10H0Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='10' viewBox='0 0 60 10'%3E%3Cpath d='M0 5Q15 0 30 5T60 5V10H0Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
@@ -1434,11 +1453,10 @@ html[lang="en"] .hk-rate-n i {
     border-bottom: 1.5px solid var(--armus-border-soft);
   }
   .hk-rate-n {
-    font-size: calc(var(--fs, 72px) * .72);
+    font-size: calc(var(--s, 72) * .72px);
   }
-  .hk-rate-o,
-  .hk-rate-f {
-    -webkit-text-stroke-width: 2px;
+  .hk-rate-s {
+    -webkit-text-stroke-width: 3.5px;
   }
   .hk-rate-h {
     margin: 0;
