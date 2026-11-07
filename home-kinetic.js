@@ -189,7 +189,7 @@
         restart(m, "is-run");
       }
       sync();
-    }, { threshold: 0.35 }).observe(m);
+    }, { threshold: 0.6 }).observe(m);
 
     // swipe between facts on touch screens
     let sx = null;
@@ -239,7 +239,7 @@
       if (motion) {
         new IntersectionObserver(([e], o) => {
           if (e.isIntersecting) { h2.classList.add("is-in"); o.disconnect(); }
-        }, { threshold: 0.6 }).observe(h2);
+        }, { threshold: 0.6, rootMargin: "0px 0px -20% 0px" }).observe(h2);
       }
     }
 
@@ -345,14 +345,16 @@
         reads.push([s, s.getBoundingClientRect(), num, num.offsetHeight, s.querySelector(".hk-par")]);
       });
       reads.forEach(([s, r, num, h, par]) => {
-        const p = clamp((vh * 0.95 - r.top) / (vh * 0.95 - (vh * 0.45 - r.height)), 0, 1);
-        const f = clamp((p - 0.06) / 0.6, 0, 1);
+        // the row's top travelling from 85% of the screen up to 25%:
+        // everything below plays out across that stretch of scrolling
+        const p = clamp((vh * 0.85 - r.top) / (vh * 0.6), 0, 1);
+        const f = clamp((p - 0.1) / 0.85, 0, 1);
         s.style.setProperty("--p", p.toFixed(3));
         num.style.setProperty("--fy", (-16 + (h + 32) * (1 - f)).toFixed(1) + "px");
         num.style.setProperty("--wx", wx.toFixed(1) + "px");
         num.style.setProperty("--rot", ((1 - f) * -7).toFixed(2) + "deg");
         if (par) par.style.setProperty("--py", ((r.top + r.height / 2 - vh / 2) * -0.07).toFixed(1) + "px");
-        if (p > 0.15 && !s.classList.contains("is-in")) {
+        if (p > 0.25 && !s.classList.contains("is-in")) {
           s.classList.add("is-in");
           const v = s.querySelector(".hk-pic");
           const key = v && ["v1", "v2", "v3"].find((c) => v.classList.contains("hk-" + c));
@@ -417,7 +419,7 @@
     nearLoop(box, () => {
       const vh = window.innerHeight, stacked = window.innerWidth <= 900;
       const r = box.getBoundingClientRect();
-      const p = clamp((vh * 0.9 - r.top) / (vh * (stacked ? 0.7 : 0.45)), 0, 1);
+      const p = clamp((vh * 0.85 - r.top) / (vh * (stacked ? 0.8 : 0.6)), 0, 1);
       const cut = Math.floor(p * (rates.length + 0.2));
       if (cut !== prev) { prev = cut; set(cut); }
     });
@@ -457,10 +459,17 @@
     }
     const wake = nearLoop(grid, () => {
       const vh = window.innerHeight;
+      const maxScroll = document.documentElement.scrollHeight - vh;
       const reads = rows.map((row) => [row, row.getBoundingClientRect()]);
       reads.forEach(([row, r]) => {
         if (r.bottom < -100 || r.top > vh + 100) return;
-        const q = clamp((vh * 0.8 - r.top) / (vh * 0.45), 0, 1);
+        // lights up while its top moves from 85% of the screen to 20% - or,
+        // for a quote near the page end that can't scroll that high, to the
+        // highest point it can reach, so the last one still finishes
+        const lowest = r.top + window.scrollY - maxScroll;
+        const end = Math.max(vh * 0.2, lowest + 4);
+        const start = Math.max(vh * 0.85, end + vh * 0.3);
+        const q = clamp((start - r.top) / (start - end), 0, 1);
         row.style.setProperty("--q", q.toFixed(3));
         if (q > 0.05) row.classList.add("is-lit");
         const ws = row.querySelectorAll(".hk-wd");
