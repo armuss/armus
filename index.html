@@ -43,7 +43,7 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
   <link rel="stylesheet" href="theme.css?v=9" />
   <link rel="stylesheet" href="styles.css?v=28" />
-  <link rel="stylesheet" href="home-kinetic.css?v=1" />
+  <link rel="stylesheet" href="home-kinetic.css?v=2" />
   <style>
     /* homepage-only intro: the mark writes itself big and centered,
        then flies/shrinks into its real spot in the header - see the
@@ -407,25 +407,54 @@
       </div>
     </section>
 
-    <section id="commission" class="commission-section shell reveal" data-flag-id="flagCommission">
+    <section id="commission" class="hk-comm shell" data-flag-id="flagCommission">
       <div class="section-label" data-i18n="index.commission.label">KOMİSYON ORANLARI</div>
-      <h2 data-i18n="index.commission.title">Daha çok ders ver,<br>daha az komisyon öde.</h2>
-      <div class="commission-row">
-        <div><b>%15</b><span data-i18n="index.commission.tier1">500+ saat</span></div>
-        <div><b>%20</b><span data-i18n="index.commission.tier2">300–500 saat</span></div>
-        <div><b>%25</b><span data-i18n="index.commission.tier3">200–300 saat</span></div>
-        <div><b>%28</b><span data-i18n="index.commission.tier4">100–200 saat</span></div>
-        <div><b>%30</b><span data-i18n="index.commission.tier5">0–100 saat</span></div>
+      <h2 class="hk-comm-h" data-i18n="index.commission.title">Daha çok ders ver,<br><em>daha az komisyon öde.</em></h2>
+      <div class="hk-rates">
+        <div class="hk-rate" style="--fs:88px">
+          <span class="hk-rate-n"><span class="hk-rate-o"><i>%</i>30</span><span class="hk-rate-f" aria-hidden="true"><i>%</i>30</span></span>
+          <span class="hk-rate-h" data-i18n="index.commission.tier5">0–100 saat</span>
+        </div>
+        <div class="hk-rate" style="--fs:80px">
+          <span class="hk-rate-n"><span class="hk-rate-o"><i>%</i>28</span><span class="hk-rate-f" aria-hidden="true"><i>%</i>28</span></span>
+          <span class="hk-rate-h" data-i18n="index.commission.tier4">100–200 saat</span>
+        </div>
+        <div class="hk-rate" style="--fs:72px">
+          <span class="hk-rate-n"><span class="hk-rate-o"><i>%</i>25</span><span class="hk-rate-f" aria-hidden="true"><i>%</i>25</span></span>
+          <span class="hk-rate-h" data-i18n="index.commission.tier3">200–300 saat</span>
+        </div>
+        <div class="hk-rate" style="--fs:64px">
+          <span class="hk-rate-n"><span class="hk-rate-o"><i>%</i>20</span><span class="hk-rate-f" aria-hidden="true"><i>%</i>20</span></span>
+          <span class="hk-rate-h" data-i18n="index.commission.tier2">300–500 saat</span>
+        </div>
+        <div class="hk-rate" style="--fs:56px">
+          <span class="hk-rate-n"><span class="hk-rate-o"><i>%</i>15</span><span class="hk-rate-f" aria-hidden="true"><i>%</i>15</span></span>
+          <span class="hk-rate-h" data-i18n="index.commission.tier1">500+ saat</span>
+        </div>
+        <div class="hk-spark" aria-hidden="true"></div>
       </div>
     </section>
 
-    <section class="testimonials shell" data-flag-id="flagTestimonials">
-      <div class="section-label reveal" data-i18n="index.testimonials.label">ÖĞRENCİLERİMİZ NE DİYOR?</div>
-      <div class="testimonial-grid" id="testimonialGrid">
-        <article class="reveal"><div class="stars">★★★★★</div><p>“ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.”</p><strong>Zeynep A.</strong><small>İstanbul</small></article>
-        <article class="reveal"><div class="stars">★★★★★</div><p>“Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.”</p><strong>Mehmet K.</strong><small>Ankara</small></article>
-        <article class="reveal"><div class="stars">★★★★★</div><p>“Esnek ders saatleri ve güvenli ödeme sistemi sayesinde içim çok rahat.”</p><strong>Elif T.</strong><small>İzmir</small></article>
-        <article class="reveal"><div class="stars">★★★★★</div><p>“ARMUS'ta kendi programımı oluşturup öğretmenimle kolayca buluşuyorum.”</p><strong>David K.</strong><small>Öğretmen</small></article>
+    <section class="hk-tst shell" data-flag-id="flagTestimonials">
+      <div class="section-label" data-i18n="index.testimonials.tag">YORUMLAR</div>
+      <h2 class="hk-tst-h" data-i18n="index.testimonials.title">Öğrencilerimiz <span class="hk-o">ne diyor?</span></h2>
+      <div class="hk-quotes" id="testimonialGrid">
+        <article class="hk-rv">
+          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">ZA</span><div><strong>Zeynep A.</strong><small>İstanbul</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
+          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.</p></blockquote>
+        </article>
+        <article class="hk-rv">
+          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">MK</span><div><strong>Mehmet K.</strong><small>Ankara</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
+          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.</p></blockquote>
+        </article>
+        <article class="hk-rv">
+          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">ET</span><div><strong>Elif T.</strong><small>İzmir</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
+          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>Esnek ders saatleri ve güvenli ödeme sistemi sayesinde içim çok rahat.</p></blockquote>
+        </article>
+        <article class="hk-rv">
+          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">DK</span><div><strong>David K.</strong><small>Öğretmen</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
+          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>ARMUS'ta kendi programımı oluşturup öğretmenimle kolayca buluşuyorum.</p></blockquote>
+        </article>
       </div>
     </section>
   </main>
@@ -454,7 +483,7 @@
   <script src="teachers-data.js?v=4"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="script.js?v=7"></script>
-  <script src="home-kinetic.js?v=1"></script>
+  <script src="home-kinetic.js?v=2"></script>
 
   <script>
     // Anyone already logged in shouldn't land on the marketing homepage -
@@ -480,15 +509,18 @@
       const testimonials = await armusGetPublishedTestimonials();
       if (!testimonials.length) return;
 
+      // same markup as the static rows; home-kinetic.js notices the swap
+      // and re-splits the quotes into words for the scroll light-up
       const grid = document.getElementById("testimonialGrid");
-      grid.innerHTML = testimonials.map(t => `
-        <article class="reveal in-view">
-          <div class="stars">${"★".repeat(t.rating)}${"☆".repeat(5 - t.rating)}</div>
-          <p>“${armusEscapeHtml(t.quote)}”</p>
-          <strong>${armusEscapeHtml(t.name)}</strong>
-          <small>${armusEscapeHtml(t.location) || ""}</small>
-        </article>
-      `).join("");
+      const initials = name => (name || "?").trim().split(/\s+/).map(w => w[0] || "").join("").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toLocaleUpperCase("tr");
+      grid.innerHTML = testimonials.map(t => {
+        const rating = Math.max(1, Math.min(5, t.rating || 5));
+        return `
+        <article class="hk-rv">
+          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">${armusEscapeHtml(initials(t.name))}</span><div><strong>${armusEscapeHtml(t.name)}</strong><small>${armusEscapeHtml(t.location) || ""}</small><span class="hk-stars" role="img" aria-label="${rating}/5">${"★".repeat(rating)}<span class="hk-stars-off">${"★".repeat(5 - rating)}</span></span></div></div>
+          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>${armusEscapeHtml(t.quote)}</p></blockquote>
+        </article>`;
+      }).join("");
     })();
   </script>
 

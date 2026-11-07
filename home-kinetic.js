@@ -1,6 +1,7 @@
 /*
  * Homepage kinetic sections: the proof band (moving headline + fact
- * machine) and the "3 steps" rows. Styles live in home-kinetic.css.
+ * machine), the "3 steps" rows, the commission rates and the testimonials.
+ * Styles live in home-kinetic.css.
  *
  * Adds html.hk-js, plus html.hk-motion unless the visitor prefers reduced
  * motion. Every hidden start state in the CSS is scoped to hk-motion, so
@@ -12,7 +13,9 @@
 
   const proof = document.querySelector(".hk-proof");
   const how = document.querySelector(".hk-how");
-  if (!proof && !how) return;
+  const comm = document.querySelector(".hk-comm");
+  const tst = document.querySelector(".hk-tst");
+  if (!proof && !how && !comm && !tst) return;
 
   const root = document.documentElement;
   root.classList.add("hk-js");
@@ -377,6 +380,111 @@
     }
   }
 
+
+  // runs `step(dt)` on every frame while `el` is within 200px of the
+  // viewport; woken by scroll/resize, stops itself when far away
+  function nearLoop(el, step) {
+    let raf = 0, last = 0;
+    const isNear = () => { const r = el.getBoundingClientRect(); return r.bottom > -200 && r.top < window.innerHeight + 200; };
+    function frame(t) {
+      raf = 0;
+      if (!isNear()) { last = 0; return; }
+      const dt = Math.min(64, t - (last || t));
+      last = t;
+      step(dt);
+      raf = requestAnimationFrame(frame);
+    }
+    const wake = () => { if (!raf && isNear()) raf = requestAnimationFrame(frame); };
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", wake);
+    wake();
+    return wake;
+  }
+
+  /* ---------------- commission: rates fill with gold ---------------- */
+  function initComm() {
+    const box = comm.querySelector(".hk-rates");
+    if (!box) return;
+    const rates = Array.from(box.querySelectorAll(".hk-rate"));
+    const spark = comm.querySelector(".hk-spark");
+    if (spark) spark.innerHTML = Array.from({ length: 10 }, (_, i) => '<i style="--a:' + i * 36 + 'deg"></i>').join("");
+    if (!motion) { rates.forEach((r) => r.classList.add("is-full")); return; }
+    box.style.setProperty("--p", 0);
+    let wx = 0, sparked = false;
+    nearLoop(box, (dt) => {
+      wx = (wx + dt * 0.03) % 60;
+      const vh = window.innerHeight, stacked = window.innerWidth <= 900;
+      const r = box.getBoundingClientRect();
+      const p = clamp((vh * 0.92 - r.top) / (vh * 0.5), 0, 1);
+      // reads first, then writes
+      const reads = rates.map((x) => [x, x.querySelector(".hk-rate-f"), x.getBoundingClientRect().top]);
+      const hs = reads.map(([, f]) => f.offsetHeight);
+      box.style.setProperty("--p", p.toFixed(3));
+      reads.forEach(([x, fe, top], i) => {
+        // side by side: one after another across the row; stacked: each as it scrolls up
+        const f = stacked ? clamp((vh * 0.88 - top) / (vh * 0.22), 0, 1) : clamp((p - i * 0.13) / 0.35, 0, 1);
+        fe.style.setProperty("--fy", (-12 + (hs[i] + 24) * (1 - f)).toFixed(1) + "px");
+        fe.style.setProperty("--wx", wx.toFixed(1) + "px");
+        x.classList.toggle("is-full", f >= 1);
+        if (i === rates.length - 1 && f >= 1 && !sparked && spark) { sparked = true; spark.classList.add("go"); }
+      });
+    });
+  }
+
+  /* ---------------- testimonials: words light up as you read ---------------- */
+  function initQuotes() {
+    const grid = tst.querySelector(".hk-quotes");
+    if (!grid) return;
+    // a few warm words per quote get a gold underline (quotes come from the
+    // admin panel, so they are picked by stem rather than by hand)
+    const KEY = /^(harika|verimli|rahat|kolay|güven|mükemmel|memnun|başar|akıcı|özgüven|sevd|sevi|tavsiye|süper|iyi|great|amazing|easy|easily|confiden|perfect|love|recommend|helpful|excellent)/;
+    let rows = [];
+    function prep() {
+      rows = Array.from(grid.querySelectorAll(".hk-rv"));
+      rows.forEach((row) => {
+        const p = row.querySelector(".hk-rv-text p");
+        if (!p || p.querySelector(".hk-wd")) return;
+        const text = p.textContent.trim().replace(/^[“"]+|[”"]+$/g, "");
+        row.classList.toggle("hk-long", text.length > 150);
+        let keys = 0;
+        p.innerHTML = text.split(/\s+/).map((w) => {
+          const bare = w.toLocaleLowerCase("tr").replace(/[^\p{L}]/gu, "");
+          const key = keys < 3 && KEY.test(bare);
+          if (key) keys++;
+          return '<span class="hk-wd' + (key ? " hk-key" : "") + '">' + esc(w) + "</span>";
+        }).join(" ");
+        row._lit = -1;
+        if (motion) row.style.setProperty("--q", 0);
+        else { row.classList.add("is-lit"); p.querySelectorAll(".hk-wd").forEach((x) => x.classList.add("is-on")); }
+      });
+    }
+    prep();
+    if (!motion) {
+      new MutationObserver(prep).observe(grid, { childList: true });
+      return;
+    }
+    const wake = nearLoop(grid, () => {
+      const vh = window.innerHeight;
+      const reads = rows.map((row) => [row, row.getBoundingClientRect()]);
+      reads.forEach(([row, r]) => {
+        if (r.bottom < -100 || r.top > vh + 100) return;
+        const q = clamp((vh * 0.8 - r.top) / (vh * 0.45), 0, 1);
+        row.style.setProperty("--q", q.toFixed(3));
+        if (q > 0.05) row.classList.add("is-lit");
+        const ws = row.querySelectorAll(".hk-wd");
+        const lit = Math.round(q * ws.length);
+        if (lit !== row._lit) {
+          row._lit = lit;
+          ws.forEach((w, i) => w.classList.toggle("is-on", i < lit));
+        }
+      });
+    });
+    // the admin-panel testimonials replace the static ones after load
+    new MutationObserver(() => { prep(); wake(); }).observe(grid, { childList: true });
+  }
+
   if (proof) { if (motion) initMarquee(); initMachine(); }
   if (how) initHow();
+  if (comm) initComm();
+  if (tst) initQuotes();
 })();
