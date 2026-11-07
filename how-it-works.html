@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <script>if("scrollRestoration" in history){history.scrollRestoration="manual";}</script>
   <script>(function(){try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
+  <script>(function(){var d=document.documentElement;try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}d.classList.add("hw-motion");setTimeout(function(){if(!window.__hwOK)d.classList.remove("hw-motion");},4000);})();</script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="alternate icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -23,583 +24,296 @@
   <meta property="og:image" content="https://armus.com.tr/og-image.png">
   <meta property="og:url" content="https://armus.com.tr/how-it-works">
 
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap">
   <link rel="stylesheet" href="theme.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=29">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    /* design A ("Yol"): a black path draws itself down the page as you
+       scroll, carrying a gold dot to each of the three steps; numbers count
+       up on a black band, benefit icons draw themselves, the quote darkens
+       word by word. Every hidden start state sits under html.hw-motion,
+       which the script adds only when motion is allowed. */
+    :root { --hw-ease: cubic-bezier(.2, .8, .2, 1); --hw-spring: cubic-bezier(.34, 1.56, .64, 1); --hw-paper: #f6f4ef; }
+    body { overflow-x: clip; }
+
+    /* hero */
+    .hw-hero { text-align: center; padding: 90px 10px 30px; }
+    .hw-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 1.6px; color: #b8862a; }
+    .hw-hero h1 { font: 800 76px/1.02 Unbounded, Inter, sans-serif; letter-spacing: -3px; margin: 16px auto 22px; text-wrap: balance; }
+    .hw-hero h1 em { font-style: normal; color: var(--armus-bg); -webkit-text-stroke: 2.5px var(--armus-ink); paint-order: stroke fill; }
+    .hw-l { display: block; overflow: hidden; padding-bottom: .06em; }
+    .hw-l > span { display: inline-block; }
+    .hw-motion .hw-l > span { transform: translateY(110%); transition: transform 1.1s var(--hw-ease); }
+    .hw-motion .hw-l:nth-child(2) > span { transition-delay: .15s; }
+    .hw-motion .hw-hero.in .hw-l > span { transform: none; }
+    .hw-hero p { max-width: 50ch; margin: 0 auto 30px; font-size: 18px; line-height: 1.6; color: var(--armus-muted); }
+    .hw-motion .hw-hero p, .hw-motion .hw-hero .hw-btn { opacity: 0; transform: translateY(14px); transition: opacity .9s .45s, transform .9s .45s var(--hw-ease); }
+    .hw-motion .hw-hero .hw-btn { transition-delay: .6s; }
+    .hw-motion .hw-hero.in p, .hw-motion .hw-hero.in .hw-btn { opacity: 1; transform: none; }
+    .hw-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--armus-ink); color: #fff; font: 700 16px Inter, sans-serif; padding: 16px 26px; border-radius: 14px; text-decoration: none; transition: transform .3s var(--hw-spring), box-shadow .3s; }
+    .hw-btn:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0, 0, 0, .2); }
+    .hw-btn:focus-visible { outline: 3px solid var(--armus-gold-2); outline-offset: 3px; }
+    .hw-btn.gold { background: var(--armus-gold-gradient); color: var(--armus-on-gold); }
+    .hw-cue { width: 2px; height: 70px; margin: 46px auto 0; background: linear-gradient(var(--armus-ink), transparent); position: relative; overflow: hidden; }
+    .hw-cue::after { content: ""; position: absolute; left: 0; width: 2px; height: 20px; background: var(--armus-gold-2); animation: hw-drop 1.6s ease-in-out infinite; }
+    @keyframes hw-drop { from { top: -20px; } to { top: 70px; } }
+
+    /* the path and the steps */
+    .hw-path { position: relative; padding: 40px 10px 60px; }
+    .hw-track { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+    .hw-track .bg { fill: none; stroke: var(--armus-border-soft); stroke-width: 3; }
+    .hw-track .fg { fill: none; stroke: var(--armus-ink); stroke-width: 3; stroke-dasharray: 1; stroke-dashoffset: var(--o, 0); }
+    .hw-track .dot { fill: var(--armus-gold-2); stroke: var(--armus-ink); stroke-width: 3; }
+    .hw-motion .hw-track .fg { --o: 1; }
+    .hw-step { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 120px; align-items: center; padding: 70px 0; }
+    .hw-step:nth-of-type(even) .hw-txt { order: 2; }
+    .hw-num { position: absolute; left: 50%; top: 50%; z-index: 2; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; display: grid; place-items: center; font: 900 17px Unbounded, Inter, sans-serif; background: var(--armus-ink); color: var(--armus-gold-1); border: 3px solid var(--armus-ink); transition: background .5s, color .5s, transform .5s var(--hw-spring); }
+    .hw-motion .hw-step:not(.on) .hw-num { background: #fff; color: var(--armus-ink); }
+    .hw-motion .hw-step.on .hw-num { transform: scale(1.15); }
+    .hw-pill { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .4px; background: var(--hw-paper); border-radius: 999px; padding: 6px 12px; }
+    .hw-txt h3 { font: 800 36px/1.08 Inter, sans-serif; letter-spacing: -1.2px; margin: 16px 0 12px; }
+    .hw-txt p { color: var(--armus-muted); font-size: 16.5px; line-height: 1.6; margin: 0; }
+    .hw-vis { height: 340px; position: relative; }
+    .hw-motion .hw-txt, .hw-motion .hw-vis { opacity: 0; transition: opacity 1s, transform 1.2s var(--hw-ease); }
+    .hw-motion .hw-txt { transform: translateX(-50px); }
+    .hw-motion .hw-step:nth-of-type(even) .hw-txt { transform: translateX(50px); }
+    .hw-motion .hw-vis { transform: translateX(50px) rotate(2deg); }
+    .hw-motion .hw-step:nth-of-type(even) .hw-vis { transform: translateX(-50px) rotate(-2deg); }
+    .hw-motion .hw-step.on .hw-txt, .hw-motion .hw-step.on .hw-vis { opacity: 1; transform: none; }
+
+    /* step visuals */
+    .hw-v1 { background: var(--hw-paper); border-radius: 22px; padding: 18px; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .hw-search { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--armus-border); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; font-weight: 600; min-height: 41px; }
+    .hw-tc { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--armus-border); border-radius: 15px; padding: 10px 12px; transition: transform .5s var(--hw-spring), border-color .4s, box-shadow .4s; }
+    .hw-tc img { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; }
+    .hw-tc strong { display: flex; gap: 8px; align-items: center; font-size: 14.5px; }
+    .hw-tc strong span { font-size: 11.5px; font-weight: 800; background: #fff6d6; border-radius: 999px; padding: 2px 7px; }
+    .hw-tc small { display: block; font-size: 12.5px; color: var(--armus-muted); }
+    .hw-tc.hl { border-color: var(--armus-ink); box-shadow: 0 0 0 3px rgba(10, 10, 10, .12), 0 14px 30px rgba(0, 0, 0, .12); transform: scale(1.03); }
+    .hw-trial { margin-top: auto; align-self: flex-start; font-size: 13px; font-weight: 800; background: var(--armus-ink); color: #fff; padding: 10px 14px; border-radius: 11px; }
+    .hw-motion .hw-trial { animation: hw-pulse 2s ease-in-out infinite; }
+    @keyframes hw-pulse { 50% { box-shadow: 0 0 0 8px rgba(246, 198, 73, .35); } }
+    .hw-v2 { position: relative; height: 100%; border-radius: 22px; overflow: hidden; background: #efe9df; }
+    .hw-v2 > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 78%; display: block; }
+    .hw-motion .hw-v2 > img { animation: hw-kb 14s ease-in-out infinite alternate; transform-origin: 60% 90%; }
+    @keyframes hw-kb { to { transform: scale(1.08); } }
+    .hw-live { position: absolute; top: 14px; left: 14px; display: flex; align-items: center; gap: 7px; background: rgba(10, 10, 10, .78); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: .6px; padding: 7px 11px; border-radius: 999px; }
+    .hw-live i { width: 8px; height: 8px; border-radius: 50%; background: #ff4d4d; }
+    .hw-motion .hw-live i { animation: hw-ping 1.6s infinite; }
+    @keyframes hw-ping { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, .6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(255, 77, 77, 0); } }
+    .hw-live b { font-weight: 700; opacity: .8; font-variant-numeric: tabular-nums; }
+    .hw-bubble { position: absolute; left: 14px; top: 44%; max-width: 230px; min-height: 56px; background: #fff; border-radius: 16px 16px 16px 4px; padding: 10px 13px; font-size: 13.5px; font-weight: 600; line-height: 1.4; box-shadow: 0 14px 30px rgba(0, 0, 0, .18); }
+    .hw-bubble small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .6px; color: #b8862a; margin-bottom: 2px; }
+    .hw-v3 { background: #fff; border: 1px solid var(--armus-border-soft); border-radius: 22px; padding: 20px; height: 100%; display: flex; flex-direction: column; gap: 14px; }
+    .hw-v3 .hd { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 800; }
+    .hw-v3 .hd b { font: 900 26px Unbounded, Inter, sans-serif; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    .hw-words { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; flex: 1; }
+    .hw-words span { position: relative; font-size: 14.5px; font-weight: 700; padding: 10px 15px; border-radius: 999px; background: var(--armus-panel-2); border: 1px solid var(--armus-border-soft); transition: transform .5s var(--hw-spring), background .3s, color .3s; }
+    .hw-motion .hw-words span { transform: scale(0); }
+    .hw-motion .hw-words span.in { transform: none; }
+    .hw-words span.new { background: var(--armus-ink); color: #fff; border-color: var(--armus-ink); }
+    .hw-words span.new::after { content: "+1"; position: absolute; right: -6px; top: -12px; font-size: 10px; font-weight: 800; color: var(--armus-ink); background: var(--armus-gold-2); border-radius: 99px; padding: 2px 5px; animation: hw-up 1.2s ease forwards; }
+    @keyframes hw-up { 0% { opacity: 0; transform: translateY(6px); } 20%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-8px); } }
+    .hw-meter small { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--armus-muted); margin-bottom: 6px; }
+    .hw-meter i { display: block; height: 10px; border-radius: 10px; background: var(--armus-panel-2); overflow: hidden; }
+    .hw-meter i b { display: block; height: 100%; width: 72%; background: var(--armus-ink); border-radius: 10px; transition: width 2.4s var(--hw-ease); }
+    .hw-motion .hw-meter i b { width: 0; }
+    .hw-motion .hw-step.on .hw-meter i b { width: 72%; }
+
+    /* numbers */
+    .hw-stats { background: #0b0b0b; color: #fff; padding: 80px 0; margin-top: 40px; }
+    .hw-stats .shell { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    .hw-stat { border-left: 2px solid rgba(255, 255, 255, .15); padding-left: 24px; }
+    .hw-stat strong { display: block; font: 900 64px/1 Unbounded, Inter, sans-serif; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+    .hw-stat span { display: block; margin-top: 12px; color: rgba(255, 255, 255, .65); font-size: 15px; font-weight: 600; max-width: 26ch; }
+
+    /* benefits */
+    .hw-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 100px 10px 40px; }
+    .hw-tile { border: 1.5px solid var(--armus-border-soft); border-radius: 26px; padding: 30px; transition: transform .4s var(--hw-spring), border-color .3s, box-shadow .3s; }
+    .hw-tile:hover { transform: translateY(-6px); border-color: var(--armus-ink); box-shadow: 0 20px 40px rgba(0, 0, 0, .08); }
+    .hw-tile svg { width: 52px; height: 52px; fill: none; stroke: var(--armus-ink); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .hw-tile h4 { font-size: 21px; font-weight: 800; margin: 18px 0 8px; }
+    .hw-tile p { color: var(--armus-muted); line-height: 1.6; margin: 0; font-size: 15px; }
+    .hw-motion .hw-tile { opacity: 0; transform: translateY(30px); }
+    .hw-motion .hw-tile.in { opacity: 1; transform: none; transition: opacity .8s, transform .9s var(--hw-ease), border-color .3s, box-shadow .3s; }
+    .hw-motion .hw-tile.in:hover { transform: translateY(-6px); }
+    .hw-motion .hw-tile svg * { stroke-dasharray: 200; stroke-dashoffset: 200; transition: stroke-dashoffset 1.6s var(--hw-ease) .3s; }
+    .hw-motion .hw-tile.in svg * { stroke-dashoffset: 0; }
+
+    /* quote */
+    .hw-quote { padding: 80px 10px; text-align: center; }
+    .hw-stars { color: var(--armus-gold-2); font-size: 26px; letter-spacing: 4px; }
+    .hw-quote p { font: 800 44px/1.2 Inter, sans-serif; letter-spacing: -1.4px; max-width: 26ch; margin: 18px auto; text-wrap: pretty; }
+    .hw-motion .hw-wd { color: #d8d4ca; transition: color .4s; }
+    .hw-motion .hw-wd.on { color: var(--armus-ink); }
+    .hw-quote small { font-size: 15px; font-weight: 700; color: var(--armus-muted); }
+
+    /* closing card */
+    .hw-cta { position: relative; overflow: hidden; background: #0b0b0b; color: #fff; border-radius: 40px; padding: 80px 40px; text-align: center; margin: 0 10px 80px; }
+    .hw-cta h2 { font: 800 54px/1.05 Unbounded, Inter, sans-serif; letter-spacing: -2px; margin: 0 0 30px; }
+    .hw-ring { position: absolute; width: 520px; height: 520px; border: 2px dashed rgba(246, 198, 73, .35); border-radius: 50%; right: -160px; top: -200px; pointer-events: none; }
+    .hw-motion .hw-ring { animation: hw-spin 40s linear infinite; }
+    @keyframes hw-spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 900px) {
+      .hw-hero { padding-top: 50px; }
+      .hw-hero h1 { font-size: 40px; letter-spacing: -1.5px; }
+      .hw-hero h1 em { -webkit-text-stroke-width: 1.8px; }
+      .hw-hero p { font-size: 16px; }
+      .hw-step { grid-template-columns: 1fr; gap: 24px; padding: 40px 0 40px 58px; }
+      .hw-step:nth-of-type(even) .hw-txt { order: 0; }
+      .hw-num { left: 0; top: 40px; margin: 0; width: 40px; height: 40px; font-size: 14px; }
+      .hw-motion .hw-txt, .hw-motion .hw-step:nth-of-type(even) .hw-txt, .hw-motion .hw-vis, .hw-motion .hw-step:nth-of-type(even) .hw-vis { transform: translateY(30px); }
+      .hw-txt h3 { font-size: 26px; }
+      .hw-vis { height: 310px; }
+      .hw-words span { font-size: 13px; padding: 8px 12px; }
+      .hw-stats .shell, .hw-tiles { grid-template-columns: 1fr; }
+      .hw-stat strong { font-size: 46px; }
+      .hw-quote p { font-size: 28px; letter-spacing: -.8px; }
+      .hw-cta { padding: 56px 24px; border-radius: 28px; }
+      .hw-cta h2 { font-size: 32px; letter-spacing: -1px; }
     }
-
-    body {
-      font-family: "Inter", sans-serif;
-      background-color: var(--armus-bg);
-      background-image: var(--armus-bg-glow);
-      color: var(--armus-ink);
-      line-height: 1.6;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    h1, h2, h3 {
-      font-family: "Unbounded", "Inter", sans-serif;
-    }
-
-    .container {
-      width: min(1000px, calc(100% - 40px));
-      margin: auto;
-    }
-
-    /* NAV - same pattern as hakkimizda / blog / sss */
-
-    nav {
-      height: 76px;
-      border-bottom: 1px solid var(--armus-border-soft);
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-inner {
-      width: min(1000px, calc(100% - 40px));
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo-img { height: 22px; }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .nav-utility {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lang-toggle {
-      border: 1px solid var(--armus-border);
-      background: transparent;
-      color: var(--armus-ink);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font: 700 12.5px Inter, sans-serif;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .lang-toggle:hover {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .help-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--armus-border);
-      color: var(--armus-muted);
-      flex-shrink: 0;
-    }
-
-    .help-btn:hover {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .help-btn svg {
-      width: 17px;
-      height: 17px;
-    }
-
-    .back {
-      color: var(--armus-muted);
-      font-size: 13px;
-    }
-
-    .back:hover {
-      color: var(--armus-ink);
-    }
-
-    main.container {
-      padding: 60px 0 0;
-    }
-
-    /* HERO */
-
-    .hiw-hero {
-      text-align: center;
-      padding: 20px 0 50px;
-    }
-
-    .eyebrow {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      color: var(--armus-gold-3);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .hiw-hero h1 {
-      font-size: clamp(30px, 5vw, 44px);
-      line-height: 1.12;
-      letter-spacing: -1.3px;
-      text-wrap: balance;
-      margin-bottom: 16px;
-    }
-
-    .hiw-hero p {
-      color: var(--armus-muted);
-      font-size: 15.5px;
-      max-width: 480px;
-      margin: 0 auto 26px;
-      line-height: 1.6;
-    }
-
-    .btn {
-      display: inline-block;
-      background: var(--armus-ink);
-      color: #eee;
-      font-weight: 700;
-      font-size: 14px;
-      padding: 14px 28px;
-      border-radius: 12px;
-    }
-
-    /* OVERLAPPING CARD STACK - tap to spread the three cards apart */
-
-    .stack-hint {
-      text-align: center;
-      font-size: 12.5px;
-      color: var(--armus-faint);
-      margin: 4px 0 18px;
-    }
-
-    .stack-wrap {
-      position: relative;
-      width: min(940px, 100%);
-      height: 460px;
-      margin: 0 auto 100px;
-      cursor: pointer;
-    }
-
-    .stack-wrap:focus-visible {
-      outline: 2px solid var(--armus-gold-2);
-      outline-offset: 6px;
-      border-radius: 24px;
-    }
-
-    .stack-card {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      width: 280px;
-      height: 440px;
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border-soft);
-      border-radius: 24px;
-      padding: 26px;
-      box-shadow: 0 26px 54px rgba(35, 26, 10, .14);
-      display: flex;
-      flex-direction: column;
-      transition: transform .5s cubic-bezier(.68, -0.55, .27, 1.4), opacity .3s ease, background-color .3s ease;
-    }
-
-    .stack-card.c1 {
-      transform: translateX(-50%) translate(0, 0) scale(1) rotate(0deg);
-      z-index: 3;
-      transition-delay: 0s;
-    }
-
-    .stack-card.c2 {
-      transform: translateX(-50%) translate(-26px, 16px) scale(.94) rotate(-6deg);
-      z-index: 2;
-      background: var(--armus-panel-2);
-      transition-delay: .12s;
-    }
-
-    .stack-card.c3 {
-      transform: translateX(-50%) translate(22px, 26px) scale(.94) rotate(6deg);
-      z-index: 1;
-      background: #fdf7e8;
-      transition-delay: .24s;
-    }
-
-    /* once spread apart there's no neighboring card left to contrast
-       against, so a plain white card (c1) all but disappears on the
-       white page background - give all three the same light panel
-       once unstacked instead of the stacked view's peek tints */
-    .stack-wrap.unstacked .c1,
-    .stack-wrap.unstacked .c2,
-    .stack-wrap.unstacked .c3 {
-      background: var(--armus-panel-2);
-    }
-
-    /* z-index deliberately stays at its stacked value (c1 on top, c2
-       behind it, c3 at the back) through the whole transition instead
-       of flipping to the spread-out order - z-index can't be animated,
-       so changing it here would make c2 instantly jump in front of c1
-       the moment you click, before either card has actually moved.
-       Keeping it constant makes c1 visibly peel off the top of the
-       stack first, exactly matching its 0-delay head start; the
-       spread-out end state has no overlap left for z-index to affect. */
-    .stack-wrap.unstacked .c1 {
-      transform: translateX(-50%) translate(-310px, 0) scale(1) rotate(0deg);
-    }
-
-    .stack-wrap.unstacked .c2 {
-      transform: translateX(-50%) translate(0, 0) scale(1) rotate(0deg);
-    }
-
-    .stack-wrap.unstacked .c3 {
-      transform: translateX(-50%) translate(310px, 0) scale(1) rotate(0deg);
-    }
-
-    .stack-card .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      font-size: 11px;
-      font-weight: 800;
-      padding: 6px 12px;
-      border-radius: 20px;
-      width: fit-content;
-      margin-bottom: 16px;
-    }
-
-    .stack-card h3 {
-      font-size: 21px;
-      margin-bottom: 10px;
-      letter-spacing: -0.4px;
-    }
-
-    .stack-card p {
-      color: var(--armus-muted);
-      font-size: 13.5px;
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-
-    .stack-card .visual-box {
-      margin-top: auto;
-      border-radius: 16px;
-      overflow: hidden;
-    }
-
-    .stack-card .visual-box img {
-      width: 100%;
-      height: 140px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .stack-card .mtc {
-      background: var(--armus-panel-2);
-      border-radius: 14px;
-      padding: 12px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-top: auto;
-    }
-
-    .stack-card .mtc img {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .stack-card .mtc strong {
-      display: block;
-      font-size: 12.5px;
-    }
-
-    .stack-card .mtc small {
-      color: var(--armus-muted);
-      font-size: 11px;
-    }
-
-    /* STATS STRIP */
-
-    .stats-strip {
-      display: flex;
-      justify-content: space-around;
-      background: var(--armus-panel-2);
-      border-radius: 22px;
-      padding: 38px 20px;
-      margin-bottom: 70px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stats-strip::after {
-      content: "";
-      position: absolute;
-      right: -34px;
-      top: -30px;
-      width: 160px;
-      height: 160px;
-      background: url('dolphin-mark-black.svg') no-repeat center / contain;
-      opacity: .05;
-      transform: rotate(12deg);
-    }
-
-    .stats-strip .stat {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-    }
-
-    .stats-strip .stat strong {
-      display: block;
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: 32px;
-      background: var(--armus-gold-gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .stats-strip .stat span {
-      font-size: 12px;
-      color: var(--armus-muted);
-    }
-
-    /* FEATURE TILE ROW */
-
-    .tile-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      margin-bottom: 80px;
-    }
-
-    .tile {
-      background: var(--armus-panel-2);
-      border-radius: 18px;
-      padding: 24px;
-    }
-
-    .tile .ic {
-      width: 46px;
-      height: 46px;
-      border-radius: 12px;
-      background: var(--armus-gold-gradient);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-
-    .tile .ic img {
-      width: 27px;
-      height: 27px;
-      display: block;
-    }
-
-    .tile h4 {
-      font-size: 15px;
-      margin-bottom: 7px;
-    }
-
-    .tile p {
-      font-size: 12.5px;
-      color: var(--armus-muted);
-      line-height: 1.6;
-    }
-
-    /* TESTIMONIAL */
-
-    .testimonial {
-      text-align: center;
-      max-width: 600px;
-      margin: 0 auto 80px;
-    }
-
-    .testimonial .stars {
-      color: var(--armus-gold-3);
-      font-size: 17px;
-      margin-bottom: 16px;
-    }
-
-    .testimonial p {
-      font-size: 19px;
-      font-family: "Unbounded", "Inter", sans-serif;
-      letter-spacing: -0.3px;
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
-    .testimonial .who {
-      font-size: 13px;
-      color: var(--armus-muted);
-    }
-
-    /* CTA */
-
-    .hiw-cta {
-      background: var(--armus-gold-gradient);
-      border-radius: 26px;
-      padding: 54px;
-      text-align: center;
-      margin-bottom: 80px;
-    }
-
-    .hiw-cta h2 {
-      font-size: 28px;
-      color: var(--armus-on-gold);
-      margin-bottom: 10px;
-    }
-
-    .hiw-cta .btn {
-      background: var(--armus-on-gold);
-      color: var(--armus-gold-2);
-    }
-
-    @media (max-width: 700px) {
-      /* the tap-to-spread interaction needs room the phone doesn't have -
-         show the three steps as a plain readable column instead */
-      .stack-hint { display: none; }
-      .stack-wrap { height: auto; cursor: default; display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
-      .stack-card { position: static; width: 100%; height: auto; transform: none !important; transition: none; }
-      .tile-row { grid-template-columns: 1fr; }
-      .stats-strip { flex-direction: column; gap: 22px; }
-      .hiw-cta { padding: 40px 26px; }
-    }
+    @media (max-width: 380px) { .hw-step { padding-left: 50px; } .hw-vis { height: 330px; } }
   </style>
 </head>
 
 <body>
 
-  <nav>
-    <div class="nav-inner">
-      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-      <div class="nav-right">
-        <div class="nav-utility">
-          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          </a>
-        </div>
-        <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
-      </div>
+  <header class="nav shell">
+    <a class="brand" href="/"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+    <nav>
+      <a href="teachers" data-i18n="nav.teachers">Öğretmenler</a>
+      <a href="how-it-works" aria-current="page" data-i18n="nav.how">Nasıl Çalışır?</a>
+      <a href="blog" class="nav-optional" data-i18n="nav.blog">Blog</a>
+      <a href="hakkimizda" class="nav-optional" data-i18n="nav.about">Hakkımızda</a>
+      <a href="sinav-hazirlik" class="nav-exam" data-i18n="nav.examPrep">YDS / IELTS</a>
+      <a href="seviye-testi" class="nav-test" data-i18n="nav.levelTest">Seviye Testi <span class="nav-free">Ücretsiz</span></a>
+    </nav>
+    <div class="nav-utility">
+      <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
+      <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </a>
     </div>
-  </nav>
+    <div class="nav-actions" id="navAuthButtons"></div>
+  </header>
 
-  <main class="container">
+  <main>
 
-    <div class="hiw-hero">
-      <div class="eyebrow" data-i18n="howItWorks.eyebrow">SÜRECİ KEŞFET</div>
-      <h1 data-i18n="howItWorks.heroTitle">Süreç basit, sonuç kalıcı.</h1>
+    <section class="hw-hero shell" id="hwHero">
+      <div class="hw-eyebrow" data-i18n="howItWorks.eyebrow">SÜRECİ KEŞFET</div>
+      <h1 id="hwTitle" data-i18n="howItWorks.heroTitle">Süreç basit,<br><em>sonuç kalıcı.</em></h1>
       <p data-i18n="howItWorks.heroSubtitle">Deneme dersiyle başla, sana özel bir planla ilerle, gelişimini kelime kasanda ve konuşma takibinde gör.</p>
-      <a class="btn" href="register" data-i18n="howItWorks.heroCta">Hemen Başla →</a>
-    </div>
+      <a class="hw-btn" href="register" data-i18n="howItWorks.heroCta">Hemen Başla →</a>
+      <div class="hw-cue" aria-hidden="true"></div>
+    </section>
 
-    <div class="stack-hint" data-i18n="howItWorks.stackHint">Kartlara dokun, üç adımı birden oku</div>
+    <section class="hw-path shell" id="hwPath">
+      <svg class="hw-track" aria-hidden="true"><path class="bg"/><path class="fg" pathLength="1"/><circle class="dot" r="9"/></svg>
 
-    <div class="stack-wrap" id="stackWrap" role="button" tabindex="0" aria-expanded="false" aria-label="Adımları genişlet">
-      <div class="stack-card c1">
-        <div class="pill" data-i18n="howItWorks.step1Badge">Adım 1</div>
-        <h3 data-i18n="howItWorks.step1Title">Profilleri incele, deneme dersiyle test et.</h3>
-        <p data-i18n="howItWorks.step1Text">Hedefine, seviyene ve bütçene göre filtrele; öğretmenin tanıtım videosunu izle. Karar vermeden önce düşük riskli bir deneme dersiyle uyumunuzu gör.</p>
-        <div class="mtc">
-          <img src="avatars/sarah.jpg" alt="">
-          <div><strong>Sarah M. ★4.9</strong><small data-i18n="howItWorks.sarahRole">IELTS Uzmanı</small></div>
+      <article class="hw-step">
+        <span class="hw-num" aria-hidden="true">01</span>
+        <div class="hw-txt">
+          <span class="hw-pill" data-i18n="howItWorks.step1Badge">Adım 1</span>
+          <h3 data-i18n="howItWorks.step1Title">Profilleri incele, deneme dersiyle test et.</h3>
+          <p data-i18n="howItWorks.step1Text">Hedefine, seviyene ve bütçene göre filtrele; öğretmenin tanıtım videosunu izle. Karar vermeden önce düşük riskli bir deneme dersiyle uyumunuzu gör.</p>
         </div>
-      </div>
-      <div class="stack-card c2">
-        <div class="pill" data-i18n="howItWorks.step2Badge">Adım 2</div>
-        <h3 data-i18n="howItWorks.step2Title">Sana özel bir planla derse gir.</h3>
-        <p data-i18n="howItWorks.step2Text">Öğretmenin, ders planını hedefine göre şekillendirir. Canlı görüntülü derste konuşma pratiği yapar, anında geri bildirim alırsın.</p>
-        <div class="visual-box"><img src="avatars/step2-video-call.jpg" alt=""></div>
-      </div>
-      <div class="stack-card c3">
-        <div class="pill" data-i18n="howItWorks.step3Badge">Adım 3</div>
-        <h3 data-i18n="howItWorks.step3Title">Kelime kasan ve konuşma takibinle ilerle.</h3>
-        <p data-i18n="howItWorks.step3Text">Her dersten sonra kelime kasana yeni kelimeler eklenir, konuşma özgüvenin takip edilir. Ders sıklığını istediğin an değiştirebilirsin.</p>
-        <div class="visual-box"><img src="avatars/step3-progress-chart.jpg" alt=""></div>
-      </div>
-    </div>
+        <div class="hw-vis" data-k="0">
+          <div class="hw-v1">
+            <div class="hw-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="hw-typed">IELTS · Konuşma · Akşam</span><span class="hw-typed-src" hidden data-i18n="index.how.v1.search">IELTS · Konuşma · Akşam</span></div>
+            <div class="hw-tc hl"><img src="avatars/sarah.jpg" alt="" loading="lazy" width="42" height="42"><div><strong>Sarah M. <span>★ 4.9</span></strong><small data-i18n="howItWorks.sarahRole">IELTS Uzmanı</small></div></div>
+            <div class="hw-tc"><img src="avatars/david.jpg" alt="" loading="lazy" width="42" height="42"><div><strong>David K.</strong><small data-i18n="index.how.v1.role2">IELTS &amp; YDS Uzmanı</small></div></div>
+            <div class="hw-tc"><img src="avatars/emily.jpg" alt="" loading="lazy" width="42" height="42"><div><strong>Emily L.</strong><small>English Speaking Teacher</small></div></div>
+            <span class="hw-trial" data-i18n="howItWorks.v1Trial">Deneme dersi al →</span>
+          </div>
+        </div>
+      </article>
 
-    <div class="stats-strip">
-      <div class="stat"><strong>10.000+</strong><span data-i18n="about.stat1">aktif öğrenci</span></div>
-      <div class="stat"><strong>500+</strong><span data-i18n="about.stat2">onaylı öğretmen</span></div>
-      <div class="stat"><strong>%96</strong><span data-i18n="about.stat3">öğretmenle pratiğin faydalı bulunma oranı</span></div>
-    </div>
+      <article class="hw-step">
+        <span class="hw-num" aria-hidden="true">02</span>
+        <div class="hw-txt">
+          <span class="hw-pill" data-i18n="howItWorks.step2Badge">Adım 2</span>
+          <h3 data-i18n="howItWorks.step2Title">Sana özel bir planla derse gir.</h3>
+          <p data-i18n="howItWorks.step2Text">Öğretmenin, ders planını hedefine göre şekillendirir. Canlı görüntülü derste konuşma pratiği yapar, anında geri bildirim alırsın.</p>
+        </div>
+        <div class="hw-vis" data-k="1">
+          <div class="hw-v2">
+            <img src="avatars/step2-video-call.jpg" alt="" loading="lazy">
+            <span class="hw-live"><i></i><span data-i18n="index.how.v2.live">CANLI DERS</span> <b class="hw-clock">00:00</b></span>
+            <div class="hw-bubble" data-lines="Great job! Now say it in the past tense.|How was your weekend? Tell me in English.|Your pronunciation is getting better every week!"><small data-i18n="index.how.v2.teacher">ÖĞRETMEN</small><span class="hw-cap">Great job! Now say it in the past tense.</span></div>
+          </div>
+        </div>
+      </article>
 
-    <div class="tile-row">
-      <div class="tile">
-        <div class="ic"><img src="dolphin-mark-black.svg" alt=""></div>
+      <article class="hw-step">
+        <span class="hw-num" aria-hidden="true">03</span>
+        <div class="hw-txt">
+          <span class="hw-pill" data-i18n="howItWorks.step3Badge">Adım 3</span>
+          <h3 data-i18n="howItWorks.step3Title">Kelime kasan ve konuşma takibinle ilerle.</h3>
+          <p data-i18n="howItWorks.step3Text">Her dersten sonra kelime kasana yeni kelimeler eklenir, konuşma özgüvenin takip edilir. Ders sıklığını istediğin an değiştirebilirsin.</p>
+        </div>
+        <div class="hw-vis" data-k="2">
+          <div class="hw-v3">
+            <div class="hd"><span data-i18n="howItWorks.v3Vault">Kelime kasan</span><b class="hw-cnt">130</b></div>
+            <div class="hw-words"><span>confident</span><span>improve</span><span>fluent</span><span>schedule</span><span>goal</span><span>meeting</span><span>achieve</span><span>practice</span><span>deadline</span><span>explain</span></div>
+            <div class="hw-meter"><small><span data-i18n="howItWorks.v3Speaking">Konuşma takibi</span><span data-i18n="howItWorks.v3Month">bu ay</span></small><i><b></b></i></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="hw-stats">
+      <div class="shell">
+        <div class="hw-stat"><strong data-to="10000" data-fmt="plus">10.000+</strong><span data-i18n="about.stat1">aktif öğrenci</span></div>
+        <div class="hw-stat"><strong data-to="500" data-fmt="plus">500+</strong><span data-i18n="about.stat2">onaylı öğretmen</span></div>
+        <div class="hw-stat"><strong data-to="96" data-fmt="pct">%96</strong><span data-i18n="about.stat3">öğretmenle pratiğin faydalı bulunma oranı</span></div>
+      </div>
+    </section>
+
+    <section class="hw-tiles shell">
+      <div class="hw-tile">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="18" r="10"/><circle cx="30" cy="30" r="10"/><path d="M24 22 l3 3 6-7"/></svg>
         <h4 data-i18n="howItWorks.tile1Title">Rastgele değil, doğru eşleşme</h4>
         <p data-i18n="howItWorks.tile1Text">Seviyene, hedefine ve bütçene uygun filtrelerle seni gerçekten anlayan bir öğretmen bulursun.</p>
       </div>
-      <div class="tile">
-        <div class="ic"><img src="dolphin-mark-black.svg" alt=""></div>
+      <div class="hw-tile">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="12" width="32" height="24" rx="5"/><path d="M8 20h32M16 29h8"/><path d="M34 6 L14 42"/></svg>
         <h4 data-i18n="howItWorks.tile2Title">Gizli ücret yok</h4>
         <p data-i18n="howItWorks.tile2Text">Öğretmen fiyatını kendi belirler, öğrenci tarafında sürpriz ek ücret olmaz.</p>
       </div>
-      <div class="tile">
-        <div class="ic"><img src="dolphin-mark-black.svg" alt=""></div>
+      <div class="hw-tile">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 38 L18 26 L26 31 L40 12"/><path d="M32 12h8v8"/><path d="M8 42h32"/></svg>
         <h4 data-i18n="howItWorks.tile3Title">Veriyle görünür ilerleme</h4>
         <p data-i18n="howItWorks.tile3Text">Kelime kasan ve konuşma takibinle ne kadar geliştiğini gerçek verilerle görürsün.</p>
       </div>
-    </div>
+    </section>
 
-    <div class="testimonial">
-      <div class="stars">★★★★★</div>
-      <p>"Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim."</p>
-      <div class="who">Mehmet K. — ARMUS öğrencisi</div>
-    </div>
+    <section class="hw-quote shell">
+      <div class="hw-stars" role="img" aria-label="5/5">★★★★★</div>
+      <p id="hwQuote" data-i18n="howItWorks.quote">“Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.”</p>
+      <small data-i18n="howItWorks.quoteWho">Mehmet K. — ARMUS öğrencisi</small>
+    </section>
 
-    <div class="hiw-cta">
-      <h2 data-i18n="howItWorks.ctaTitle">Senin sürecin şimdi başlıyor.</h2>
-      <a class="btn" href="teachers" data-i18n="howItWorks.ctaButton">Öğretmenini Bul →</a>
-    </div>
+    <section class="shell">
+      <div class="hw-cta">
+        <div class="hw-ring" aria-hidden="true"></div>
+        <h2 data-i18n="howItWorks.ctaTitle">Senin sürecin şimdi başlıyor.</h2>
+        <a class="hw-btn gold" href="teachers" data-i18n="howItWorks.ctaButton">Öğretmenini Bul →</a>
+      </div>
+    </section>
 
   </main>
 
-  <script src="i18n.js?v=30"></script>
-  <script>
-    (function () {
-      const stackWrap = document.getElementById("stackWrap");
-      if (!stackWrap) return;
-
-      function toggle() {
-        const open = stackWrap.classList.toggle("unstacked");
-        stackWrap.setAttribute("aria-expanded", open ? "true" : "false");
-      }
-
-      stackWrap.addEventListener("click", toggle);
-      stackWrap.addEventListener("keydown", event => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          toggle();
-        }
-      });
-    })();
-  </script>
+  <script src="i18n.js?v=31"></script>
+  <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
+  <script src="auth.js?v=15"></script>
   <script src="logo-panel-link.js?v=1"></script>
+  <script src="how-it-works.js?v=1"></script>
 </body>
 </html>
