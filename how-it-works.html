@@ -97,10 +97,10 @@
     .hw-trial { margin-top: auto; align-self: flex-start; font-size: 13px; font-weight: 800; background: var(--armus-ink); color: #fff; padding: 10px 14px; border-radius: 11px; }
     .hw-motion .hw-trial { animation: hw-pulse 2s ease-in-out infinite; }
     @keyframes hw-pulse { 50% { box-shadow: 0 0 0 8px rgba(246, 198, 73, .35); } }
-    .hw-v2 { position: relative; height: 100%; border-radius: 22px; overflow: hidden; background: #efe9df; }
-    .hw-v2 > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 78%; display: block; }
-    .hw-motion .hw-v2 > img { animation: hw-kb 14s ease-in-out infinite alternate; transform-origin: 60% 90%; }
-    @keyframes hw-kb { to { transform: scale(1.08); } }
+    /* the call photo is shown whole: the frame takes the photo's own shape */
+    .hw-vis.full { height: auto; }
+    .hw-v2 { position: relative; width: 100%; max-width: 500px; margin-left: auto; aspect-ratio: 1002 / 964; border-radius: 22px; overflow: hidden; background: #efe9df; }
+    .hw-v2 > img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .hw-live { position: absolute; top: 14px; left: 14px; display: flex; align-items: center; gap: 7px; background: rgba(10, 10, 10, .78); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: .6px; padding: 7px 11px; border-radius: 999px; }
     .hw-live i { width: 8px; height: 8px; border-radius: 50%; background: #ff4d4d; }
     .hw-motion .hw-live i { animation: hw-ping 1.6s infinite; }
@@ -170,6 +170,8 @@
       .hw-motion .hw-txt, .hw-motion .hw-step:nth-of-type(even) .hw-txt, .hw-motion .hw-vis, .hw-motion .hw-step:nth-of-type(even) .hw-vis { transform: translateY(30px); }
       .hw-txt h3 { font-size: 26px; }
       .hw-vis { height: 310px; }
+      .hw-v2 { max-width: none; }
+      .hw-bubble { top: 52%; max-width: 185px; min-height: 0; font-size: 12.5px; padding: 8px 11px; }
       .hw-words span { font-size: 13px; padding: 8px 12px; }
       .hw-stats .shell, .hw-tiles { grid-template-columns: 1fr; }
       .hw-stat strong { font-size: 46px; }
@@ -240,9 +242,9 @@
           <h3 data-i18n="howItWorks.step2Title">Sana özel bir planla derse gir.</h3>
           <p data-i18n="howItWorks.step2Text">Öğretmenin, ders planını hedefine göre şekillendirir. Canlı görüntülü derste konuşma pratiği yapar, anında geri bildirim alırsın.</p>
         </div>
-        <div class="hw-vis" data-k="1">
+        <div class="hw-vis full" data-k="1">
           <div class="hw-v2">
-            <img src="avatars/step2-video-call.jpg" alt="" loading="lazy">
+            <img src="avatars/hiw-call.jpg" alt="" loading="lazy" width="1002" height="964">
             <span class="hw-live"><i></i><span data-i18n="index.how.v2.live">CANLI DERS</span> <b class="hw-clock">00:00</b></span>
             <div class="hw-bubble" data-lines="Great job! Now say it in the past tense.|How was your weekend? Tell me in English.|Your pronunciation is getting better every week!"><small data-i18n="index.how.v2.teacher">ÖĞRETMEN</small><span class="hw-cap">Great job! Now say it in the past tense.</span></div>
           </div>
