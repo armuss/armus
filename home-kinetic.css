@@ -1,0 +1,1119 @@
+/*
+ * Homepage "proof" band and "3 steps" rows (kinetic design).
+ *
+ * Every hidden or moving start state below is scoped to html.hk-motion,
+ * which home-kinetic.js adds only when the visitor allows motion. Without
+ * it (no JS, or prefers-reduced-motion) both sections render complete and
+ * still: a plain headline, the first fact, filled numbers, open visuals.
+ */
+
+@property --hk-r {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+:root {
+  --hk-ease: cubic-bezier(.2, .8, .2, 1);
+  --hk-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --hk-dur: 6000ms;
+  --hk-paper: #f6f4ef;
+  --hk-night: #0b0b0b;
+  --hk-gold-deep: #b8862a;
+}
+
+/* ================= PROOF ================= */
+.hk-proof {
+  position: relative;
+  padding: 70px 0 30px;
+  overflow: clip;
+}
+.hk-src {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 34ch;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-wrap: balance;
+}
+.hk-src em {
+  font-style: normal;
+  background: var(--armus-gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hk-motion .hk-src {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+}
+
+/* kinetic headline: two rows drifting in opposite directions */
+.hk-marquee {
+  display: none;
+}
+.hk-motion .hk-marquee {
+  display: block;
+}
+.hk-row {
+  position: relative;
+  white-space: nowrap;
+  font: 800 88px/1.12 Unbounded, Inter, sans-serif;
+  letter-spacing: -3px;
+}
+.hk-track {
+  display: inline-flex;
+  will-change: transform;
+}
+.hk-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .32em;
+  padding-right: .32em;
+}
+/* stroke painted under a background-coloured fill: a clean outline that
+   hides the font's overlapping inner contours */
+.hk-row1 .hk-track {
+  color: var(--armus-bg);
+  -webkit-text-stroke: 3px var(--armus-ink);
+  paint-order: stroke fill;
+}
+/* a gold "flashlight" that fills the outlined letters under the cursor */
+.hk-row1 .hk-lit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  color: var(--armus-gold-2);
+  -webkit-mask-image: radial-gradient(circle var(--hk-r) at var(--mx, -999px) var(--my, -999px), #000 0 86%, transparent 100%);
+  mask-image: radial-gradient(circle var(--hk-r) at var(--mx, -999px) var(--my, -999px), #000 0 86%, transparent 100%);
+  transition: --hk-r .5s var(--hk-ease);
+}
+.hk-row1:hover {
+  --hk-r: 150px;
+}
+.hk-row2 .hk-track {
+  color: var(--armus-ink);
+}
+.hk-row2 em {
+  font-style: normal;
+  background: linear-gradient(100deg, var(--armus-gold-3) 0%, var(--armus-gold-2) 30%, #fde7a0 45%, var(--armus-gold-1) 55%, var(--armus-gold-3) 80%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hk-shine 3.6s linear infinite;
+}
+.hk-star {
+  width: .5em;
+  height: .5em;
+  flex-shrink: 0;
+  fill: var(--armus-gold-2);
+  stroke: none;
+  animation: hk-spin 7s linear infinite;
+}
+.hk-row2 .hk-star {
+  animation-direction: reverse;
+}
+@keyframes hk-shine {
+  from { background-position: 130% 0; }
+  to { background-position: -130% 0; }
+}
+@keyframes hk-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* fact machine: circle photo, rolling number, flipping sentence */
+.hk-machine {
+  display: grid;
+  grid-template-columns: 300px auto minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+  margin-top: 40px;
+}
+.hk-motion .hk-machine {
+  margin-top: 56px;
+}
+.hk-circ {
+  position: relative;
+  width: 300px;
+  aspect-ratio: 1;
+  touch-action: pan-y;
+}
+.hk-glow {
+  position: absolute;
+  inset: -28%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 198, 73, .34), rgba(246, 198, 73, 0) 62%);
+  z-index: 0;
+  pointer-events: none;
+}
+.hk-motion .hk-glow {
+  animation: hk-drift 7s ease-in-out infinite alternate;
+}
+@keyframes hk-drift {
+  from { transform: translate(-6%, 4%) scale(.95); }
+  to { transform: translate(8%, -6%) scale(1.08); }
+}
+.hk-dash {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1.5px dashed #d9cfb5;
+  pointer-events: none;
+}
+.hk-motion .hk-dash {
+  animation: hk-spin 40s linear infinite;
+}
+.hk-ring {
+  position: absolute;
+  inset: -14px;
+  width: calc(100% + 28px);
+  height: calc(100% + 28px);
+  transform: rotate(-90deg);
+  z-index: 3;
+  pointer-events: none;
+  overflow: visible;
+}
+.hk-ring circle {
+  fill: none;
+  stroke: var(--armus-gold-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.hk-orbit {
+  position: absolute;
+  inset: -14px;
+  z-index: 4;
+  pointer-events: none;
+  display: none;
+}
+.hk-orbit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--armus-gold-2);
+  box-shadow: 0 0 0 4px rgba(246, 198, 73, .25), 0 0 18px 4px rgba(246, 198, 73, .7);
+}
+.hk-motion .hk-orbit {
+  display: block;
+}
+.hk-motion .hk-ring circle {
+  stroke-dashoffset: 1;
+}
+.hk-motion .hk-machine.is-run .hk-ring circle {
+  animation: hk-ringfill var(--hk-dur) linear forwards;
+}
+.hk-motion .hk-machine.is-run .hk-orbit {
+  animation: hk-spin var(--hk-dur) linear forwards;
+}
+@keyframes hk-ringfill {
+  to { stroke-dashoffset: 0; }
+}
+.hk-phs {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  isolation: isolate;
+  border-radius: 50%;
+}
+.hk-ph {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  opacity: 0;
+  background: var(--hk-paper);
+}
+.hk-ph.is-on {
+  opacity: 1;
+}
+.hk-ph img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 22%;
+  display: block;
+}
+.hk-motion .hk-ph {
+  opacity: 1;
+  clip-path: circle(0% at var(--cx, 50%) var(--cy, 50%));
+  transition: clip-path 1.15s var(--hk-ease);
+}
+/* the circle opens from a point on the rim, so it needs the full diameter */
+.hk-motion .hk-ph.is-on {
+  clip-path: circle(105% at var(--cx, 50%) var(--cy, 50%));
+}
+.hk-motion .hk-ph img {
+  transform: scale(1.18);
+  translate: var(--tx, 0px) var(--ty, 0px);
+  transition: transform 5.5s cubic-bezier(.15, .6, .2, 1), translate .5s ease-out;
+}
+.hk-motion .hk-ph.is-on img {
+  transform: scale(1.06);
+}
+.hk-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  pointer-events: none;
+}
+.hk-burst i {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--armus-gold-gradient);
+  opacity: 0;
+}
+.hk-burst.go i {
+  animation: hk-pop 1s var(--hk-ease) forwards;
+  animation-delay: var(--d, 0s);
+}
+@keyframes hk-pop {
+  0% { opacity: 0; transform: rotate(var(--a)) translateY(-150px) rotate(45deg) scale(0); }
+  25% { opacity: 1; transform: rotate(var(--a)) translateY(-168px) rotate(45deg) scale(1.1); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(-215px) rotate(225deg) scale(0); }
+}
+
+.hk-odo {
+  display: none;
+  position: relative;
+  height: 1em;
+  font: 900 150px/1 Unbounded, Inter, sans-serif;
+  letter-spacing: -6px;
+  min-width: 2.25em;
+}
+.hk-js .hk-odo {
+  display: flex;
+  align-items: flex-start;
+}
+.hk-nums {
+  display: flex;
+  align-items: flex-start;
+  transition: opacity .5s, transform .8s var(--hk-ease);
+}
+.hk-pc {
+  font-size: .5em;
+  letter-spacing: 0;
+  margin: .1em .1em 0 0;
+  color: var(--armus-gold-3);
+}
+html[lang="en"] .hk-pc {
+  order: 3;
+  margin: .1em 0 0 .1em;
+}
+.hk-col {
+  display: block;
+  height: 1em;
+  overflow: hidden;
+}
+.hk-col > span {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--d, 0) * -1em));
+  transition: transform 1.25s var(--hk-ease), filter .5s;
+}
+.hk-col:nth-child(3) > span {
+  transition-delay: .08s, 0s;
+}
+.hk-col b {
+  display: block;
+  height: 1em;
+  font-weight: inherit;
+  text-align: center;
+}
+.hk-rolling .hk-col > span {
+  filter: blur(2.5px);
+}
+.hk-q {
+  position: absolute;
+  left: 0;
+  top: -.16em;
+  font-size: 1.7em;
+  line-height: 1;
+  color: var(--armus-gold-2);
+  opacity: 0;
+  transform: translateY(-.35em) rotate(-14deg) scale(.6);
+  transition: opacity .5s, transform .9s var(--hk-spring);
+}
+.hk-machine[data-k="2"] .hk-nums {
+  opacity: 0;
+  transform: translateY(.35em);
+}
+.hk-machine[data-k="2"] .hk-q {
+  opacity: 1;
+  transform: none;
+}
+
+.hk-flip {
+  display: grid;
+  perspective: 1100px;
+}
+.hk-fact {
+  grid-area: 1 / 1;
+}
+.hk-fact:not(.is-on) {
+  visibility: hidden;
+}
+.hk-fact p {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.38;
+  letter-spacing: -.4px;
+  margin: 0 0 12px;
+  max-width: 24ch;
+  text-wrap: pretty;
+}
+.hk-fact small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--armus-muted);
+}
+.hk-motion .hk-fact {
+  visibility: visible;
+  opacity: 0;
+  transform-origin: 50% 50% -50px;
+  transform: rotateX(80deg);
+  transition: transform .75s var(--hk-ease), opacity .45s;
+  pointer-events: none;
+}
+.hk-motion .hk-fact.is-on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: .12s;
+}
+.hk-motion .hk-fact.is-out {
+  transform: rotateX(-80deg);
+}
+.hk-tabs {
+  display: flex;
+  gap: 22px;
+  margin-top: 30px;
+}
+.hk-tab {
+  position: relative;
+  padding: 10px 2px 12px;
+  border: 0;
+  background: none;
+  font: 800 13px Unbounded, Inter, sans-serif;
+  color: var(--armus-faint);
+  cursor: pointer;
+  transition: color .3s;
+}
+.hk-tab i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--armus-border-soft);
+  overflow: hidden;
+}
+.hk-tab i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--armus-ink);
+  transform: scaleX(0);
+  transform-origin: 0 0;
+}
+.hk-tab.is-on {
+  color: var(--armus-ink);
+}
+.hk-tab.is-on i::after {
+  transform: none;
+}
+.hk-motion .hk-machine.is-run .hk-tab.is-on i::after {
+  transform: scaleX(0);
+  animation: hk-grow var(--hk-dur) linear forwards;
+}
+.hk-tab:focus-visible {
+  outline: 2px solid var(--armus-gold-2);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+@keyframes hk-grow {
+  to { transform: none; }
+}
+.hk-machine.is-paused .hk-ring circle,
+.hk-machine.is-paused .hk-orbit,
+.hk-machine.is-paused .hk-tab i::after {
+  animation-play-state: paused !important;
+}
+
+/* ================= HOW IT WORKS ================= */
+.hk-how {
+  padding: 110px 10px 40px;
+}
+.hk-h2 {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -2px;
+  margin: 12px 0 30px;
+}
+.hk-w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: .1em;
+  margin-bottom: -.1em;
+}
+.hk-w > span {
+  display: inline-block;
+}
+.hk-w.hk-gold > span {
+  background: var(--armus-gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-right: .03em;
+}
+.hk-motion .hk-w > span {
+  transform: translateY(110%) rotate(5deg);
+  transform-origin: 0 100%;
+  transition: transform .95s var(--hk-ease) calc(var(--i, 0) * 55ms);
+}
+.hk-motion .hk-h2.is-in .hk-w > span {
+  transform: none;
+}
+
+.hk-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 70px;
+  align-items: center;
+  padding: 56px 0;
+  border-top: 1.5px solid var(--armus-border-soft);
+}
+.hk-step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -1.5px;
+  width: 100%;
+  height: 1.5px;
+  background: var(--armus-ink);
+  transform-origin: 0 0;
+  transform: scaleX(var(--p, 1));
+}
+.hk-step:nth-child(even) .hk-txt {
+  order: 2;
+}
+.hk-num {
+  position: relative;
+  display: inline-block;
+  padding-right: 12px;
+  font: 900 200px/.86 Unbounded, Inter, sans-serif;
+  letter-spacing: -8px;
+  color: var(--armus-bg);
+  -webkit-text-stroke: 4px var(--armus-gold-3);
+  paint-order: stroke fill;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: 0 100%;
+}
+/* the gold that rises inside the outlined number, with a moving wave on top */
+.hk-num::after {
+  content: attr(data-n);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--armus-gold-2);
+  -webkit-text-stroke: 4px var(--armus-gold-3);
+  paint-order: stroke fill;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='14' viewBox='0 0 90 14'%3E%3Cpath d='M0 7Q22.5 0 45 7T90 7V14H0Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='14' viewBox='0 0 90 14'%3E%3Cpath d='M0 7Q22.5 0 45 7T90 7V14H0Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
+  -webkit-mask-repeat: repeat-x, no-repeat;
+  mask-repeat: repeat-x, no-repeat;
+  -webkit-mask-size: 90px 14px, 100% 300%;
+  mask-size: 90px 14px, 100% 300%;
+  -webkit-mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
+  mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
+}
+.hk-txt h3 {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1.4px;
+  margin: 22px 0 12px;
+}
+.hk-txt p {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--armus-muted);
+  margin: 0;
+  max-width: 36ch;
+}
+.hk-motion .hk-txt h3,
+.hk-motion .hk-txt p {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s, transform .9s var(--hk-ease);
+}
+.hk-motion .hk-txt p {
+  transition-delay: .12s;
+}
+.hk-motion .hk-step.is-in .hk-txt h3,
+.hk-motion .hk-step.is-in .hk-txt p {
+  opacity: 1;
+  transform: none;
+}
+
+.hk-pic {
+  position: relative;
+  height: 440px;
+  border-radius: 28px;
+  overflow: hidden;
+  transition: transform .5s var(--hk-ease);
+}
+.hk-motion .hk-pic {
+  clip-path: inset(0 100% 0 0 round 28px);
+  transition: clip-path 1.25s var(--hk-ease), transform .5s var(--hk-ease);
+}
+.hk-motion .hk-step:nth-child(even) .hk-pic {
+  clip-path: inset(0 0 0 100% round 28px);
+}
+.hk-motion .hk-step.is-in .hk-pic {
+  clip-path: inset(0 0 0 0 round 28px);
+}
+.hk-par {
+  position: absolute;
+  inset: -30px 0;
+  transform: translateY(var(--py, 0px));
+}
+
+/* step 1: search + matching teacher cards */
+.hk-v1 {
+  background: var(--hk-paper);
+}
+.hk-v1 .hk-par {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 54px 34px;
+}
+.hk-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  border: 1px solid var(--armus-border);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 6px 18px rgba(35, 26, 10, .05);
+  margin-bottom: 4px;
+}
+.hk-search svg {
+  flex-shrink: 0;
+}
+.hk-caret {
+  width: 2px;
+  height: 16px;
+  background: var(--armus-ink);
+  animation: hk-blink 1s steps(1) infinite;
+}
+@keyframes hk-blink {
+  50% { opacity: 0; }
+}
+.hk-tc {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--armus-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(35, 26, 10, .06);
+  transition: transform .6s var(--hk-spring), box-shadow .5s, border-color .5s;
+}
+.hk-tc img {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.hk-tc strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.hk-tc strong span {
+  font-size: 11.5px;
+  font-weight: 800;
+  background: #fff6d6;
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.hk-tc small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--armus-muted);
+}
+.hk-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.hk-tags span {
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--armus-border);
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: #333;
+}
+.hk-ok {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  margin-top: -12px;
+  font-size: 11px;
+  font-weight: 800;
+  font-style: normal;
+  line-height: 14px;
+  background: var(--armus-ink);
+  color: var(--armus-gold-1);
+  padding: 5px 10px;
+  border-radius: 999px;
+  transform: scale(0);
+  transition: transform .45s var(--hk-spring);
+}
+.hk-tc.is-hl {
+  z-index: 2;
+  border-color: var(--armus-gold-2);
+  box-shadow: 0 0 0 4px rgba(246, 198, 73, .4), 0 18px 40px rgba(35, 26, 10, .14);
+  transform: scale(1.035);
+}
+.hk-tc.is-hl .hk-ok {
+  transform: none;
+  transition-delay: .3s;
+}
+.hk-motion .hk-tc {
+  opacity: 0;
+  translate: 80px 0;
+  transition: transform .6s var(--hk-spring), box-shadow .5s, border-color .5s, opacity .7s, translate .9s var(--hk-ease);
+}
+.hk-motion .hk-step.is-in .hk-tc {
+  opacity: 1;
+  translate: 0 0;
+}
+.hk-motion .hk-step.is-in .hk-tc + .hk-tc { transition-delay: 0s, 0s, 0s, .15s, .15s; }
+.hk-motion .hk-step.is-in .hk-tc + .hk-tc + .hk-tc { transition-delay: 0s, 0s, 0s, .3s, .3s; }
+.hk-cursor {
+  position: absolute;
+  z-index: 6;
+  width: 26px;
+  height: 26px;
+  left: 0;
+  top: 0;
+  transform: translate(var(--cx, 300px), var(--cy, 400px));
+  transition: transform 1s var(--hk-ease);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .25));
+  pointer-events: none;
+  display: none;
+}
+.hk-motion .hk-cursor {
+  display: block;
+}
+.hk-cursor::after {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--armus-gold-2);
+  opacity: 0;
+}
+.hk-cursor.click::after {
+  animation: hk-ripple .6s ease-out;
+}
+@keyframes hk-ripple {
+  from { opacity: 1; transform: scale(.4); }
+  to { opacity: 0; transform: scale(2.4); }
+}
+
+/* step 2: live lesson */
+.hk-call {
+  position: absolute;
+  inset: 0;
+  background: #efe9df;
+}
+.hk-call > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 80%;
+  display: block;
+}
+.hk-motion .hk-call > img {
+  animation: hk-kb 14s ease-in-out infinite alternate;
+  transform-origin: 60% 92%;
+}
+/* the photo's own name card sits at its bottom edge: no parallax offset here */
+.hk-v2 .hk-par {
+  inset: 0;
+  transform: none;
+}
+@keyframes hk-kb {
+  to { transform: scale(1.08) translate(-1.5%, 1%); }
+}
+.hk-live {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, .78);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  backdrop-filter: blur(6px);
+}
+.hk-live i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  animation: hk-ping 1.6s infinite;
+}
+.hk-live b {
+  font-weight: 700;
+  opacity: .8;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes hk-ping {
+  0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, .6); }
+  70%, 100% { box-shadow: 0 0 0 9px rgba(255, 77, 77, 0); }
+}
+.hk-wave {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+}
+.hk-wave span {
+  width: 3px;
+  height: 30%;
+  border-radius: 2px;
+  background: var(--armus-ink);
+  animation: hk-eq 1s ease-in-out infinite;
+}
+.hk-wave span:nth-child(2) { animation-delay: -.2s; }
+.hk-wave span:nth-child(3) { animation-delay: -.5s; }
+.hk-wave span:nth-child(4) { animation-delay: -.35s; }
+.hk-wave span:nth-child(5) { animation-delay: -.7s; }
+@keyframes hk-eq {
+  0%, 100% { height: 25%; }
+  50% { height: 75%; }
+}
+.hk-cap {
+  position: absolute;
+  left: 20px;
+  top: 47%;
+  max-width: 250px;
+  min-height: 66px;
+  padding: 12px 15px;
+  border-radius: 18px 18px 18px 4px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .18);
+  transform-origin: 0 100%;
+}
+.hk-cap small {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  color: var(--hk-gold-deep);
+}
+.hk-motion .hk-cap {
+  opacity: 0;
+  transform: translateY(14px) scale(.94);
+  transition: opacity .5s, transform .7s var(--hk-spring);
+}
+.hk-motion .hk-cap.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+/* step 3: weekly plan + progress line */
+.hk-v3 {
+  background: var(--hk-night);
+  color: #fff;
+}
+.hk-v3 .hk-par {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 56px 30px 44px;
+}
+.hk-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hk-plan > b {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+}
+.hk-seg {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .08);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .6);
+}
+.hk-seg span {
+  position: relative;
+  z-index: 1;
+  width: 78px;
+  padding: 8px 0;
+  text-align: center;
+  transition: color .4s;
+}
+.hk-seg .hk-ind {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: 78px;
+  border-radius: 9px;
+  background: var(--armus-gold-gradient);
+  transform: translateX(calc(var(--s, 1) * 82px));
+  transition: transform .6s var(--hk-spring);
+}
+.hk-seg span.is-on {
+  color: #0a0a0a;
+}
+.hk-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.hk-days span {
+  padding: 9px 0 8px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .07);
+  color: rgba(255, 255, 255, .55);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  transition: background .4s, color .4s, transform .5s var(--hk-spring), box-shadow .4s;
+}
+.hk-days span.is-on {
+  background: var(--armus-gold-gradient);
+  color: #0a0a0a;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(246, 198, 73, .3);
+}
+.hk-chart {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
+}
+.hk-chart .hk-ln {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.hk-motion .hk-chart .hk-ln {
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 2.2s var(--hk-ease);
+}
+.hk-chart .hk-rider {
+  display: none;
+}
+.hk-motion .hk-chart .hk-rider {
+  display: inline;
+}
+.hk-motion .hk-chart .hk-ar,
+.hk-motion .hk-chart .hk-lbl,
+.hk-motion .hk-chart .hk-rider {
+  opacity: 0;
+  transition: opacity .5s;
+}
+.hk-motion .hk-step.is-drawn .hk-chart .hk-ln {
+  stroke-dashoffset: 0;
+}
+.hk-motion .hk-step.is-drawn .hk-chart .hk-ar,
+.hk-motion .hk-step.is-drawn .hk-chart .hk-lbl {
+  opacity: 1;
+  transition-delay: 2s;
+}
+.hk-motion .hk-step.is-drawn .hk-chart .hk-lbl.s {
+  transition-delay: .2s;
+}
+.hk-motion .hk-step.is-drawn .hk-chart .hk-rider {
+  opacity: 1;
+  transition-delay: 2.2s;
+}
+.hk-motion .hk-step.is-drawn .hk-chart .hk-ar {
+  animation: hk-nudge 1.6s 2.4s ease-in-out infinite;
+}
+@keyframes hk-nudge {
+  50% { transform: translate(3px, -4px); }
+}
+
+/* ================= SMALL SCREENS ================= */
+@media (max-width: 900px) {
+  .hk-row {
+    font-size: 50px;
+    letter-spacing: -1.6px;
+  }
+  .hk-row1 .hk-track {
+    -webkit-text-stroke-width: 2px;
+  }
+  .hk-machine {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    justify-items: start;
+  }
+  .hk-circ {
+    width: 200px;
+    margin: 16px 0 0 14px;
+  }
+  .hk-odo {
+    font-size: 96px;
+    letter-spacing: -4px;
+  }
+  .hk-burst.go i {
+    animation-name: hk-pop-s;
+  }
+  @keyframes hk-pop-s {
+    0% { opacity: 0; transform: rotate(var(--a)) translateY(-100px) rotate(45deg) scale(0); }
+    25% { opacity: 1; transform: rotate(var(--a)) translateY(-114px) rotate(45deg) scale(1); }
+    100% { opacity: 0; transform: rotate(var(--a)) translateY(-150px) rotate(225deg) scale(0); }
+  }
+  .hk-fact p {
+    font-size: 22px;
+  }
+  .hk-how {
+    padding-top: 80px;
+  }
+  .hk-h2 {
+    font-size: 38px;
+    letter-spacing: -1.3px;
+  }
+  .hk-step {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 40px 0;
+  }
+  .hk-step:nth-child(even) .hk-txt {
+    order: 0;
+  }
+  .hk-num {
+    font-size: 124px;
+    letter-spacing: -5px;
+    -webkit-text-stroke-width: 3px;
+  }
+  .hk-num::after {
+    -webkit-text-stroke-width: 3px;
+  }
+  .hk-txt h3 {
+    font-size: 30px;
+    margin-top: 16px;
+  }
+  .hk-txt p {
+    font-size: 15.5px;
+  }
+  .hk-pic {
+    height: 340px;
+  }
+  .hk-v1 .hk-par,
+  .hk-v3 .hk-par {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .hk-v1 .hk-par {
+    padding-top: 44px;
+    padding-bottom: 44px;
+    gap: 10px;
+  }
+  .hk-seg span,
+  .hk-seg .hk-ind {
+    width: 64px;
+  }
+  .hk-seg .hk-ind {
+    transform: translateX(calc(var(--s, 1) * 68px));
+  }
+  .hk-days {
+    gap: 4px;
+  }
+}
+@media (max-width: 560px) {
+  .hk-src {
+    font-size: 28px;
+  }
+  .hk-row {
+    font-size: 42px;
+  }
+  .hk-ok {
+    padding: 5px 7px;
+  }
+  .hk-ok b {
+    display: none;
+  }
+  .hk-tags {
+    display: none;
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .hk-row1 .hk-lit {
+    display: none;
+  }
+}

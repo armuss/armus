@@ -43,6 +43,7 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap"></noscript>
   <link rel="stylesheet" href="theme.css?v=9" />
   <link rel="stylesheet" href="styles.css?v=28" />
+  <link rel="stylesheet" href="home-kinetic.css?v=1" />
   <style>
     /* homepage-only intro: the mark writes itself big and centered,
        then flies/shrinks into its real spot in the header - see the
@@ -263,87 +264,119 @@
     </div>
     </section>
 
-    <section class="proof shell" data-flag-id="flagProof">
-      <h2 class="reveal" data-i18n="index.proof.title">Binlerce öğrenci, yüzlerce öğretmen.<br>Kişisel ve kanıtlanmış ilerleme.</h2>
-      <div class="proof-carousel reveal">
-        <div class="proof-stage">
-          <div class="proof-slide-photo active"><img src="avatars/sarah.jpg" alt=""></div>
-          <div class="proof-slide-photo"><img src="avatars/david.jpg" alt=""></div>
-          <div class="proof-slide-photo"><img src="avatars/emily.jpg" alt=""></div>
+    <section class="hk-proof" data-flag-id="flagProof">
+      <h2 class="hk-src" data-i18n="index.proof.title">Binlerce öğrenci, yüzlerce öğretmen.<br>Kişisel ve <em>kanıtlanmış</em> ilerleme.</h2>
+      <div class="hk-marquee" aria-hidden="true">
+        <div class="hk-row hk-row1"><div class="hk-track"></div><div class="hk-track hk-lit"></div></div>
+        <div class="hk-row hk-row2"><div class="hk-track"></div></div>
+      </div>
+      <div class="hk-machine shell" data-k="0">
+        <div class="hk-circ">
+          <div class="hk-glow"></div>
+          <div class="hk-dash"></div>
+          <div class="hk-phs">
+            <div class="hk-ph is-on"><img src="avatars/sarah.jpg" alt="" loading="lazy" width="300" height="300"></div>
+            <div class="hk-ph"><img src="avatars/david.jpg" alt="" loading="lazy" width="300" height="300"></div>
+            <div class="hk-ph"><img src="avatars/emily.jpg" alt="" loading="lazy" width="300" height="300"></div>
+          </div>
+          <svg class="hk-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="49" pathLength="1"/></svg>
+          <div class="hk-orbit"></div>
+          <div class="hk-burst"></div>
         </div>
-        <div class="proof-text-wrap">
-          <div class="proof-text-stack">
-            <div class="proof-fact active">
+        <div class="hk-odo" aria-hidden="true"><div class="hk-nums"><span class="hk-pc">%</span><span class="hk-col"></span><span class="hk-col"></span></div><span class="hk-q">“</span></div>
+        <div class="hk-facts">
+          <div class="hk-flip">
+            <div class="hk-fact is-on" data-n="96">
               <p data-i18n="index.proof.fact1">Öğrencilerin %96'sı gerçek bir öğretmenle pratik yapmanın ilerlemeleri için çok önemli olduğunu söylüyor.</p>
               <small data-i18n="index.proof.fact1.source">ARMUS öğrenci anketi</small>
             </div>
-            <div class="proof-fact">
+            <div class="hk-fact" data-n="94">
               <p data-i18n="index.proof.fact2">Öğrencilerin %94'ü haftada sadece iki ders ile akıcılığını geliştirdi.</p>
               <small data-i18n="index.proof.fact2.source">ARMUS öğrenci anketi</small>
             </div>
-            <div class="proof-fact">
+            <div class="hk-fact" data-n="0">
               <p data-i18n="index.proof.fact3">“ARMUS sayesinde kendime güvenim arttı, bunu gerçekten başarabileceğimi fark ettim.”</p>
               <small data-i18n="index.proof.fact3.source">— Bir ARMUS öğrencisi</small>
             </div>
           </div>
-          <div class="proof-dots">
-            <button type="button" class="proof-dot active" data-slide="0" aria-label="1. slayt"></button>
-            <button type="button" class="proof-dot" data-slide="1" aria-label="2. slayt"></button>
-            <button type="button" class="proof-dot" data-slide="2" aria-label="3. slayt"></button>
+          <div class="hk-tabs">
+            <button type="button" class="hk-tab is-on" aria-pressed="true">01<i></i></button>
+            <button type="button" class="hk-tab" aria-pressed="false">02<i></i></button>
+            <button type="button" class="hk-tab" aria-pressed="false">03<i></i></button>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="how" class="how shell">
-      <div class="section-label reveal" data-i18n="index.how.label">NASIL ÇALIŞIR?</div>
-      <h2 class="reveal" data-i18n="index.how.title">İngilizce öğrenmeye<br>3 adımda başla.</h2>
-      <div class="steps">
-        <article class="reveal step-card">
-          <span class="step-badge b1">1</span>
-          <h3 data-i18n="index.how.step1.title">Öğretmenini bul.</h3>
-          <p data-i18n="index.how.step1.text">Seni motive edecek, zorlayacak ve hedeflerine ulaştıracak bir öğretmenle eşleştiriyoruz — ilk dersten akıcılığa kadar.</p>
-          <div class="step-visual visual-1">
-            <div class="mini-teacher-card top">
-              <img src="avatars/sarah.jpg" alt="">
-              <div class="mtc-info">
-                <strong>Sarah M. <span class="mtc-rating">★ 4.9</span></strong>
-                <small>IELTS Uzmanı</small>
-                <div class="mtc-tags"><span>IELTS</span><span>Konuşma</span></div>
+    <section id="how" class="hk-how shell">
+      <div class="section-label" data-i18n="index.how.label">NASIL ÇALIŞIR?</div>
+      <h2 class="hk-h2" data-i18n="index.how.title">İngilizce öğrenmeye<br>3 adımda başla.</h2>
+      <div class="hk-steps">
+        <article class="hk-step">
+          <div class="hk-txt">
+            <span class="hk-num" data-n="1" aria-hidden="true">1</span>
+            <h3 data-i18n="index.how.step1.title">Öğretmenini bul.</h3>
+            <p data-i18n="index.how.step1.text">Seni motive edecek, zorlayacak ve hedeflerine ulaştıracak bir öğretmenle eşleştiriyoruz — ilk dersten akıcılığa kadar.</p>
+          </div>
+          <div class="hk-pic hk-v1">
+            <div class="hk-par">
+              <div class="hk-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="hk-typed">IELTS · Konuşma · Akşam</span><span class="hk-typed-src" hidden data-i18n="index.how.v1.search">IELTS · Konuşma · Akşam</span><i class="hk-caret"></i></div>
+              <div class="hk-tc is-hl">
+                <img src="avatars/sarah.jpg" alt="" loading="lazy" width="48" height="48">
+                <div><strong>Sarah M. <span>★ 4.9</span></strong><small data-i18n="index.how.v1.role1">IELTS Uzmanı</small><div class="hk-tags"><span>IELTS</span><span data-i18n="index.how.v1.tagSpeaking">Konuşma</span></div></div>
+                <em class="hk-ok">✓ <b data-i18n="index.how.v1.match">Sana uygun</b></em>
               </div>
-            </div>
-            <div class="mini-teacher-card peek">
-              <img src="avatars/david.jpg" alt="">
-              <div class="mtc-info">
-                <strong>David K.</strong>
-                <small>IELTS &amp; YDS Uzmanı</small>
+              <div class="hk-tc">
+                <img src="avatars/david.jpg" alt="" loading="lazy" width="48" height="48">
+                <div><strong>David K.</strong><small data-i18n="index.how.v1.role2">IELTS &amp; YDS Uzmanı</small><div class="hk-tags"><span>YDS</span><span>IELTS</span></div></div>
+                <em class="hk-ok">✓ <b data-i18n="index.how.v1.match">Sana uygun</b></em>
               </div>
-            </div>
-            <div class="mini-teacher-card peek peek-2">
-              <img src="avatars/emily.jpg" alt="">
-              <div class="mtc-info">
-                <strong>Emily L.</strong>
-                <small>English Speaking Teacher</small>
+              <div class="hk-tc">
+                <img src="avatars/emily.jpg" alt="" loading="lazy" width="48" height="48">
+                <div><strong>Emily L.</strong><small>English Speaking Teacher</small><div class="hk-tags"><span data-i18n="index.how.v1.tagSpeaking">Konuşma</span></div></div>
+                <em class="hk-ok">✓ <b data-i18n="index.how.v1.match">Sana uygun</b></em>
               </div>
+              <svg class="hk-cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2L20 12L12.5 13.5L9 21Z" fill="#0a0a0a" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
             </div>
           </div>
         </article>
 
-        <article class="reveal step-card">
-          <span class="step-badge b2">2</span>
-          <h3 data-i18n="index.how.step2.title">Derse başla.</h3>
-          <p data-i18n="index.how.step2.text">Öğretmenin her dersi senin hedeflerine göre kişiselleştirir, böylece ilerleme daha ilk dersten kişisel hissettirir.</p>
-          <div class="step-visual visual-2">
-            <img class="v2-photo" src="avatars/step2-video-call.jpg" alt="">
+        <article class="hk-step">
+          <div class="hk-txt">
+            <span class="hk-num" data-n="2" aria-hidden="true">2</span>
+            <h3 data-i18n="index.how.step2.title">Derse başla.</h3>
+            <p data-i18n="index.how.step2.text">Öğretmenin her dersi senin hedeflerine göre kişiselleştirir, böylece ilerleme daha ilk dersten kişisel hissettirir.</p>
+          </div>
+          <div class="hk-pic hk-v2">
+            <div class="hk-par">
+              <div class="hk-call"><img src="avatars/step2-video-call.jpg" alt="" loading="lazy"></div>
+              <span class="hk-live"><i></i><span data-i18n="index.how.v2.live">CANLI DERS</span> <b class="hk-clock">00:00</b></span>
+              <span class="hk-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+              <div class="hk-cap is-on" data-lines="Great job! Now say it in the past tense.|How was your weekend? Tell me in English.|Your pronunciation is getting better every week!"><small data-i18n="index.how.v2.teacher">ÖĞRETMEN</small><span class="hk-cap-text">Great job! Now say it in the past tense.</span></div>
+            </div>
           </div>
         </article>
 
-        <article class="reveal step-card">
-          <span class="step-badge b3">3</span>
-          <h3 data-i18n="index.how.step3.title">Her hafta ilerle.</h3>
-          <p data-i18n="index.how.step3.text">Kaç ders almak istediğini sen seç ve düzenli pratikle kalıcı özgüven kazan.</p>
-          <div class="step-visual visual-3">
-            <img class="v3-photo" src="avatars/step3-progress-chart.jpg" alt="">
+        <article class="hk-step">
+          <div class="hk-txt">
+            <span class="hk-num" data-n="3" aria-hidden="true">3</span>
+            <h3 data-i18n="index.how.step3.title">Her hafta ilerle.</h3>
+            <p data-i18n="index.how.step3.text">Kaç ders almak istediğini sen seç ve düzenli pratikle kalıcı özgüven kazan.</p>
+          </div>
+          <div class="hk-pic hk-v3">
+            <div class="hk-par">
+              <div class="hk-plan"><b data-i18n="index.how.v3.plan">Haftalık planın</b><div class="hk-seg"><i class="hk-ind"></i><span data-i18n="index.how.v3.l1">1 ders</span><span class="is-on" data-i18n="index.how.v3.l2">2 ders</span><span data-i18n="index.how.v3.l3">3 ders</span></div></div>
+              <div class="hk-days"><span data-i18n="index.how.v3.d1">Pzt</span><span class="is-on" data-i18n="index.how.v3.d2">Sal</span><span data-i18n="index.how.v3.d3">Çar</span><span class="is-on" data-i18n="index.how.v3.d4">Per</span><span data-i18n="index.how.v3.d5">Cum</span><span data-i18n="index.how.v3.d6">Cmt</span><span data-i18n="index.how.v3.d7">Paz</span></div>
+              <svg class="hk-chart" viewBox="0 0 400 262" aria-hidden="true">
+                <defs><linearGradient id="hkGold" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#f6d77a"/><stop offset=".55" stop-color="#e2ad3a"/><stop offset="1" stop-color="#c8962e"/></linearGradient></defs>
+                <path d="M14 18V240H392" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"/>
+                <path id="hkLine" class="hk-ln" d="M24 226C38 204 46 186 62 186S86 214 100 214S130 146 150 146S174 222 190 222S220 98 240 98S262 176 276 176S292 124 306 124S320 150 332 148S356 116 372 90" pathLength="1" fill="none" stroke="url(#hkGold)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path class="hk-ar" d="M362 78L388 66L380 94Z" fill="#e2ad3a"/>
+                <circle class="hk-rider" r="7" fill="#fff" stroke="#f6c649" stroke-width="3"><animateMotion dur="3.4s" repeatCount="indefinite" begin="indefinite"><mpath href="#hkLine"/></animateMotion></circle>
+                <text class="hk-lbl s" x="22" y="259" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="rgba(255,255,255,.6)" data-i18n="index.how.v3.start">Başlangıç</text>
+                <text class="hk-lbl" x="388" y="52" text-anchor="end" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#fff" data-i18n="index.how.v3.fluent">Akıcı</text>
+              </svg>
+            </div>
           </div>
         </article>
       </div>
@@ -410,7 +443,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
   </button>
 
-  <script src="i18n.js?v=29"></script>
+  <script src="i18n.js?v=30"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
@@ -420,7 +453,8 @@
   <script src="auth.js?v=15"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="testimonials.js?v=4"></script>
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=7"></script>
+  <script src="home-kinetic.js?v=1"></script>
 
   <script>
     // Anyone already logged in shouldn't land on the marketing homepage -
