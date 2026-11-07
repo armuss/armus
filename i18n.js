@@ -267,7 +267,7 @@ const ARMUS_I18N_EN = {
 
   // how-it-works
   "howItWorks.eyebrow": "DISCOVER THE PROCESS",
-  "howItWorks.heroTitle": "A simple process, a lasting result.",
+  "howItWorks.heroTitle": "A simple process,<br><em>a lasting result.</em>",
   "howItWorks.heroSubtitle": "Start with a trial lesson, move forward with a plan built for you, and watch your progress in your vocabulary vault and speaking tracker.",
   "howItWorks.heroCta": "Get Started →",
   "howItWorks.stackHint": "Tap the cards to read all three steps",
@@ -281,6 +281,12 @@ const ARMUS_I18N_EN = {
   "howItWorks.step3Title": "Track progress in your vault and speaking tracker.",
   "howItWorks.step3Text": "Every lesson adds new words to your vocabulary vault and updates your speaking-confidence tracker. Change how often you take lessons any time you want.",
   "howItWorks.sarahRole": "IELTS Specialist",
+  "howItWorks.v1Trial": "Book a trial lesson →",
+  "howItWorks.v3Vault": "Your vocabulary vault",
+  "howItWorks.v3Speaking": "Speaking tracker",
+  "howItWorks.v3Month": "this month",
+  "howItWorks.quote": "“The trial lesson system is great. I didn't decide until I'd seen whether the teacher was a good fit.”",
+  "howItWorks.quoteWho": "Mehmet K. — ARMUS student",
   "howItWorks.tile1Title": "A real match, not a random one",
   "howItWorks.tile1Text": "Filters for your level, goal and budget find you a teacher who actually understands what you need.",
   "howItWorks.tile2Title": "No hidden fees",
