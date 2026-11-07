@@ -495,7 +495,7 @@ html[lang="en"] .hk-pc {
 .hk-motion .hk-w > span {
   transform: translateY(110%) rotate(5deg);
   transform-origin: 0 100%;
-  transition: transform .95s var(--hk-ease) calc(var(--i, 0) * 55ms);
+  transition: transform 1.15s var(--hk-ease) calc(var(--i, 0) * 80ms);
 }
 .hk-motion .hk-h2.is-in .hk-w > span {
   transform: none;
@@ -572,11 +572,11 @@ html[lang="en"] .hk-pc {
 .hk-motion .hk-txt h3,
 .hk-motion .hk-txt p {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity .7s, transform .9s var(--hk-ease);
+  transform: translateY(28px);
+  transition: opacity .9s, transform 1.2s var(--hk-ease);
 }
 .hk-motion .hk-txt p {
-  transition-delay: .12s;
+  transition-delay: .2s;
 }
 .hk-motion .hk-step.is-in .hk-txt h3,
 .hk-motion .hk-step.is-in .hk-txt p {
@@ -593,7 +593,7 @@ html[lang="en"] .hk-pc {
 }
 .hk-motion .hk-pic {
   clip-path: inset(0 100% 0 0 round 28px);
-  transition: clip-path 1.25s var(--hk-ease), transform .5s var(--hk-ease);
+  transition: clip-path 1.6s var(--hk-ease), transform .5s var(--hk-ease);
 }
 .hk-motion .hk-step:nth-child(even) .hk-pic {
   clip-path: inset(0 0 0 100% round 28px);
@@ -1179,7 +1179,7 @@ html[lang="en"] .hk-rate-n i {
   background: var(--armus-ink);
   transform: rotate(-8deg) scaleX(0);
   transform-origin: 0 50%;
-  transition: transform .55s var(--hk-ease);
+  transition: transform .75s var(--hk-ease);
 }
 .hk-rate.is-cut .hk-rate-n {
   color: #c9c5bb;
@@ -1215,7 +1215,7 @@ html[lang="en"] .hk-rate-n i {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   vector-effect: non-scaling-stroke;
-  transition: stroke-dashoffset .9s var(--hk-ease);
+  transition: stroke-dashoffset 1.3s var(--hk-ease);
 }
 .hk-rate.is-win .hk-rate-ring path {
   stroke-dashoffset: 0;
@@ -1341,7 +1341,7 @@ html[lang="en"] .hk-rate-n i {
   pointer-events: none;
 }
 .hk-wd {
-  transition: color .25s, background-size .6s var(--hk-ease);
+  transition: color .4s, background-size .8s var(--hk-ease);
 }
 .hk-wd.hk-key {
   background: linear-gradient(rgba(246, 198, 73, .6), rgba(246, 198, 73, .6)) 0 88% / 100% 34% no-repeat;
@@ -1453,5 +1453,18 @@ html[lang="en"] .hk-rate-n i {
 @media (max-width: 560px) {
   .hk-tst-h {
     font-size: 30px;
+  }
+}
+
+/* the homepage's older fade-ins (styles.css .reveal) play a little slower
+   too, so nothing finishes before the reader gets there */
+.reveal {
+  transition:
+    opacity 1s ease,
+    transform 1.15s cubic-bezier(.2, .8, .2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
   }
 }

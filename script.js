@@ -30,7 +30,7 @@ function armusInitScrollReveal(){
         observer.unobserve(entry.target);
       }
     });
-  },{threshold:0.15,rootMargin:'0px 0px -60px 0px'});
+  },{threshold:0.25,rootMargin:'0px 0px -22% 0px'});
   targets.forEach(el=>observer.observe(el));
 }
 
@@ -44,8 +44,8 @@ function armusInitScrollReveal(){
 // Android browsers still in real use (notably older Samsung Internet).
 function armusInitScrollScrubReveal(targets){
   const list=Array.from(targets);
-  const START=0.92; // element's top at 92% down the viewport -> progress 0
-  const END=0.55;   // element's top at 55% down the viewport -> progress 1
+  const START=0.9;  // element's top at 90% down the viewport -> progress 0
+  const END=0.4;    // element's top at 40% down the viewport -> progress 1
   let ticking=false;
 
   function apply(el){
