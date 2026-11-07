@@ -401,33 +401,25 @@
     return wake;
   }
 
-  /* ---------------- commission: rates fill with gold ---------------- */
+  /* ---------------- commission: the higher rates get struck through ---------------- */
   function initComm() {
     const box = comm.querySelector(".hk-rates");
     if (!box) return;
     const rates = Array.from(box.querySelectorAll(".hk-rate"));
-    const spark = comm.querySelector(".hk-spark");
-    if (spark) spark.innerHTML = Array.from({ length: 10 }, (_, i) => '<i style="--a:' + i * 36 + 'deg"></i>').join("");
-    if (!motion) { rates.forEach((r) => r.classList.add("is-full")); return; }
-    box.style.setProperty("--p", 0);
-    let wx = 0, sparked = false;
-    nearLoop(box, (dt) => {
-      wx = (wx + dt * 0.03) % 60;
+    const last = rates.length - 1;
+    // `cut` rates are struck; once all the others are, the last one is circled
+    const set = (cut) => rates.forEach((r, i) => {
+      r.classList.toggle("is-cut", i < last && i < cut);
+      r.classList.toggle("is-win", i === last && cut > last);
+    });
+    if (!motion) { set(rates.length); return; }
+    let prev = -1;
+    nearLoop(box, () => {
       const vh = window.innerHeight, stacked = window.innerWidth <= 900;
       const r = box.getBoundingClientRect();
-      const p = clamp((vh * 0.92 - r.top) / (vh * 0.5), 0, 1);
-      // reads first, then writes
-      const reads = rates.map((x) => [x, x.querySelector(".hk-rate-f"), x.getBoundingClientRect().top]);
-      const hs = reads.map(([, f]) => f.offsetHeight);
-      box.style.setProperty("--p", p.toFixed(3));
-      reads.forEach(([x, fe, top], i) => {
-        // side by side: one after another across the row; stacked: each as it scrolls up
-        const f = stacked ? clamp((vh * 0.88 - top) / (vh * 0.22), 0, 1) : clamp((p - i * 0.13) / 0.35, 0, 1);
-        fe.style.setProperty("--fy", (-12 + (hs[i] + 24) * (1 - f)).toFixed(1) + "px");
-        fe.style.setProperty("--wx", wx.toFixed(1) + "px");
-        x.classList.toggle("is-full", f >= 1);
-        if (i === rates.length - 1 && f >= 1 && !sparked && spark) { sparked = true; spark.classList.add("go"); }
-      });
+      const p = clamp((vh * 0.9 - r.top) / (vh * (stacked ? 0.7 : 0.45)), 0, 1);
+      const cut = Math.floor(p * (rates.length + 0.2));
+      if (cut !== prev) { prev = cut; set(cut); }
     });
   }
 
