@@ -1448,6 +1448,7 @@ html[lang="en"] .hk-rate-n i {
   .hk-rv-mark {
     font-size: 120px;
     top: -52px;
+    left: 0;
   }
 }
 @media (max-width: 560px) {
