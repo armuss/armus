@@ -425,7 +425,7 @@ html.nav-sheet-open body {
 }
 .eyebrow,
 .section-label {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: var(--armus-muted);
   font-weight: 700;
@@ -986,17 +986,17 @@ html.nav-sheet-open body {
   position: relative;
 }
 .footer h4 {
-  font-size: 11px;
+  font-size: 12.5px;
   margin: 0 0 15px;
 }
 .footer a {
   display: block;
   margin: 9px 0;
-  font-size: 10px;
+  font-size: 13px;
 }
 .footer p {
   color: var(--armus-muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 .socials {
   color: var(--armus-muted);
@@ -1015,7 +1015,7 @@ html.nav-sheet-open body {
   outline: 0;
   padding: 10px;
   width: 100%;
-  font: 10px Inter;
+  font: 13px Inter;
 }
 .newsletter button {
   border: 0;
@@ -1026,7 +1026,7 @@ html.nav-sheet-open body {
 .copyright {
   grid-column: 1/-1;
   color: var(--armus-faint);
-  font-size: 9px;
+  font-size: 11.5px;
   padding-top: 20px;
   border-top: 1px solid var(--armus-border);
 }
