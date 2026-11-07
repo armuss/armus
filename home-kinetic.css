@@ -1137,84 +1137,55 @@ html[lang="en"] .hk-pc {
   background-clip: text;
   color: transparent;
 }
+/* "price tag": scrolling down strikes the higher rates through one by one
+   (they fade to grey) until only %15 is left, circled by hand. Plain black
+   on white - no gold on the numbers. */
 .hk-rates {
-  position: relative;
   display: grid;
   grid-template-columns: repeat(5, auto);
   justify-content: space-between;
   align-items: end;
-  gap: 12px;
-  padding-bottom: 22px;
-  border-bottom: 2px solid var(--armus-border-soft);
-}
-.hk-rates::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 2px;
-  background: var(--armus-ink);
-  transform-origin: 0 0;
-  transform: scaleX(var(--p, 1));
+  gap: 10px;
 }
 .hk-rate {
   position: relative;
-  transition: transform .5s var(--hk-spring);
 }
-/* --s is the size in px at full width; it shrinks with the viewport so the
-   row of five always fits. Letter-spacing stays light enough that digits
-   don't overlap (an overlap shows the next digit's outline across the fill). */
 .hk-rate-n {
   position: relative;
-  display: inline-block;
-  font: 900 min(calc(var(--s, 72) * 1px), calc(var(--s, 72) * .0806vw)) / .9 Unbounded, Inter, sans-serif;
-  letter-spacing: -.02em;
-}
-/* three stacked copies: a fat gold silhouette (every digit's stroke) at the
-   bottom, the empty white digits over it, the rising gold on top. Drawing all
-   strokes first means one digit's outline never cuts across its neighbour
-   where tight digits touch; the 3px rim left around the fill is the outline. */
-.hk-rate-s,
-.hk-rate-o,
-.hk-rate-f {
   display: inline-flex;
   align-items: baseline;
-}
-.hk-rate-s {
-  position: absolute;
-  left: 0;
-  top: 0;
-  color: var(--armus-gold-3);
-  -webkit-text-stroke: 4.5px var(--armus-gold-3);
-}
-.hk-rate-o {
-  position: relative;
-  color: var(--armus-bg);
-}
-.hk-rate-f {
-  position: absolute;
-  left: 0;
-  /* the mask clips to this box, and the tight letter-spacing pushes the last
-     digit's ink past its right edge: pad the box out (top via a matching
-     negative offset) so the glyphs stay put but the whole digit gets gold */
-  top: -.12em;
-  padding: .12em .2em .12em 0;
-  color: var(--armus-gold-2);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='10' viewBox='0 0 60 10'%3E%3Cpath d='M0 5Q15 0 30 5T60 5V10H0Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='10' viewBox='0 0 60 10'%3E%3Cpath d='M0 5Q15 0 30 5T60 5V10H0Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
-  -webkit-mask-repeat: repeat-x, no-repeat;
-  mask-repeat: repeat-x, no-repeat;
-  -webkit-mask-size: 60px 10px, 100% 300%;
-  mask-size: 60px 10px, 100% 300%;
-  -webkit-mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 9px), 0 var(--fy, -40px);
-  mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 9px), 0 var(--fy, -40px);
+  font: 900 min(76px, 6.1vw) / 1 Unbounded, Inter, sans-serif;
+  letter-spacing: -.03em;
+  color: var(--armus-ink);
+  transition: color .5s, transform .5s var(--hk-spring);
 }
 .hk-rate-n i {
   font-style: normal;
+  font-size: .5em;
+  margin-right: .04em;
 }
 html[lang="en"] .hk-rate-n i {
   order: 2;
+  margin: 0 0 0 .04em;
+}
+.hk-rate-n::after {
+  content: "";
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  top: 52%;
+  height: .1em;
+  border-radius: 99px;
+  background: var(--armus-ink);
+  transform: rotate(-8deg) scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform .55s var(--hk-ease);
+}
+.hk-rate.is-cut .hk-rate-n {
+  color: #c9c5bb;
+}
+.hk-rate.is-cut .hk-rate-n::after {
+  transform: rotate(-8deg) scaleX(1);
 }
 .hk-rate-h {
   display: block;
@@ -1222,58 +1193,35 @@ html[lang="en"] .hk-rate-n i {
   font-size: 14px;
   font-weight: 700;
   color: var(--armus-muted);
+  transition: color .5s;
 }
-/* the lowest rate glows once its gold is full */
-.hk-rate:nth-child(5) .hk-rate-n::before {
-  content: "";
+.hk-rate.is-cut .hk-rate-h {
+  color: #b9b5ab;
+}
+.hk-rate-ring {
   position: absolute;
-  inset: -30% -15%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(246, 198, 73, .5), rgba(246, 198, 73, 0) 65%);
-  opacity: 0;
-  transition: opacity .7s;
-}
-.hk-rate.is-full:nth-child(5) .hk-rate-n::before {
-  opacity: 1;
-}
-.hk-spark {
-  position: absolute;
-  right: 6%;
-  top: 30%;
+  left: -14%;
+  top: -40%;
+  width: 128%;
+  height: 152%;
+  overflow: visible;
   pointer-events: none;
 }
-.hk-spark i {
-  position: absolute;
-  left: -4px;
-  top: -4px;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--armus-gold-gradient);
-  opacity: 0;
+.hk-rate-ring path {
+  fill: none;
+  stroke: var(--armus-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  vector-effect: non-scaling-stroke;
+  transition: stroke-dashoffset .9s var(--hk-ease);
 }
-.hk-spark.go i {
-  animation: hk-spk .9s var(--hk-ease) forwards;
+.hk-rate.is-win .hk-rate-ring path {
+  stroke-dashoffset: 0;
 }
-@keyframes hk-spk {
-  0% { opacity: 1; transform: rotate(var(--a)) translateY(-10px) rotate(45deg) scale(.4); }
-  30% { opacity: 1; transform: rotate(var(--a)) translateY(-40px) rotate(45deg) scale(1.1); }
-  100% { opacity: 0; transform: rotate(var(--a)) translateY(-80px) rotate(200deg) scale(0); }
-}
-.hk-motion .hk-rate-h {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity .5s, transform .6s var(--hk-ease);
-}
-.hk-motion .hk-rate.is-full .hk-rate-h {
-  opacity: 1;
-  transform: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  .hk-rate:hover {
-    transform: translateY(-8px) rotate(-2deg);
-  }
+.hk-rate.is-win .hk-rate-n {
+  transform: scale(1.06);
 }
 
 /* ================= TESTIMONIALS ================= */
@@ -1439,32 +1387,19 @@ html[lang="en"] .hk-rate-n i {
   .hk-rates {
     grid-template-columns: 1fr;
     gap: 0;
-    padding: 0;
-    border-bottom: 0;
-  }
-  .hk-rates::after {
-    display: none;
   }
   .hk-rate {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 12px 0;
     border-bottom: 1.5px solid var(--armus-border-soft);
   }
   .hk-rate-n {
-    font-size: calc(var(--s, 72) * .72px);
-  }
-  .hk-rate-s {
-    -webkit-text-stroke-width: 3.5px;
+    font-size: 46px;
   }
   .hk-rate-h {
     margin: 0;
-  }
-  .hk-spark {
-    right: 30%;
-    top: auto;
-    bottom: 30px;
   }
   .hk-tst {
     padding-top: 80px;
