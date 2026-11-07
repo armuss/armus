@@ -173,29 +173,3 @@ function armusInitHeroRotator(){
   },10000);
 }
 armusInitHeroRotator();
-
-// Proof carousel: 3 stat/testimonial cards auto-cross-fade, with dots
-// showing progress and doubling as manual controls.
-function armusInitProofCarousel(){
-  const photos=document.querySelectorAll('.proof-slide-photo');
-  const facts=document.querySelectorAll('.proof-fact');
-  const dots=document.querySelectorAll('.proof-dot');
-  if(!photos.length)return;
-
-  let index=0;
-
-  function show(i){
-    photos.forEach((p,n)=>p.classList.toggle('active',n===i));
-    facts.forEach((f,n)=>f.classList.toggle('active',n===i));
-    dots.forEach((d,n)=>d.classList.toggle('active',n===i));
-    index=i;
-  }
-
-  dots.forEach((dot,n)=>dot.addEventListener('click',()=>show(n)));
-
-  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(!reduceMotion){
-    setInterval(()=>show((index+1)%photos.length),5000);
-  }
-}
-armusInitProofCarousel();
