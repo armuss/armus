@@ -86,17 +86,33 @@
     .hw-motion .hw-step.on .hw-txt, .hw-motion .hw-step.on .hw-vis { opacity: 1; transform: none; }
 
     /* step visuals */
-    .hw-v1 { background: var(--hw-paper); border-radius: 22px; padding: 18px; height: 100%; display: flex; flex-direction: column; gap: 10px; }
-    .hw-search { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--armus-border); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; font-weight: 600; min-height: 41px; }
-    .hw-tc { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--armus-border); border-radius: 15px; padding: 10px 12px; transition: transform .5s var(--hw-spring), border-color .4s, box-shadow .4s; }
-    .hw-tc img { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; }
-    .hw-tc strong { display: flex; gap: 8px; align-items: center; font-size: 14.5px; }
-    .hw-tc strong span { font-size: 11.5px; font-weight: 800; background: #fff6d6; border-radius: 999px; padding: 2px 7px; }
-    .hw-tc small { display: block; font-size: 12.5px; color: var(--armus-muted); }
-    .hw-tc.hl { border-color: var(--armus-ink); box-shadow: 0 0 0 3px rgba(10, 10, 10, .12), 0 14px 30px rgba(0, 0, 0, .12); transform: scale(1.03); }
-    .hw-trial { margin-top: auto; align-self: flex-start; font-size: 13px; font-weight: 800; background: var(--armus-ink); color: #fff; padding: 10px 14px; border-radius: 11px; }
-    .hw-motion .hw-trial { animation: hw-pulse 2s ease-in-out infinite; }
-    @keyframes hw-pulse { 50% { box-shadow: 0 0 0 8px rgba(246, 198, 73, .35); } }
+    /* step 1: a teacher's profile, led by her intro video */
+    .hw-v1 { height: 100%; background: #fff; border: 1px solid var(--armus-border-soft); border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 18px 40px rgba(35, 26, 10, .08); }
+    .hw-vid { position: relative; flex: 1; min-height: 0; border-radius: 14px; overflow: hidden; background: #111; }
+    .hw-vid picture { display: block; height: 100%; }
+    .hw-vid img { width: 100%; height: 100%; object-fit: cover; object-position: 45% 30%; display: block; transition: transform 6s ease; }
+    .hw-motion .hw-step.on .hw-vid img { transform: scale(1.06); }
+    .hw-vtag { position: absolute; left: 10px; top: 10px; font-size: 11px; font-weight: 800; letter-spacing: .5px; background: rgba(10, 10, 10, .75); color: #fff; padding: 6px 10px; border-radius: 999px; }
+    .hw-play { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px; border-radius: 50%; background: var(--armus-gold-2); display: grid; place-items: center; transition: opacity .4s, transform .4s; }
+    .hw-play::after { content: ""; border-left: 16px solid var(--armus-ink); border-top: 10px solid transparent; border-bottom: 10px solid transparent; margin-left: 4px; }
+    .hw-motion .hw-play { animation: hw-playping 1.8s infinite; }
+    @keyframes hw-playping { 0% { box-shadow: 0 0 0 0 rgba(246, 198, 73, .6); } 70%, 100% { box-shadow: 0 0 0 16px rgba(246, 198, 73, 0); } }
+    .hw-v1.playing .hw-play { opacity: 0; transform: scale(.6); }
+    .hw-sub { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 700; color: #fff; background: rgba(10, 10, 10, .72); padding: 6px 10px; border-radius: 8px; transition: opacity .4s, transform .4s; }
+    .hw-motion .hw-sub { opacity: 0; transform: translate(-50%, 8px); }
+    .hw-motion .hw-v1.subs .hw-sub { opacity: 1; transform: translateX(-50%); }
+    .hw-vbar { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .35); overflow: hidden; }
+    .hw-vbar i { display: block; height: 100%; width: 38%; background: var(--armus-gold-2); }
+    .hw-motion .hw-vbar i { width: 0; }
+    .hw-motion .hw-v1.playing .hw-vbar i { width: 100%; transition: width 9s linear; }
+    .hw-vinfo { display: flex; align-items: center; gap: 10px; }
+    .hw-vinfo img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; flex: none; }
+    .hw-vinfo strong { display: flex; gap: 6px; align-items: center; font-size: 14.5px; }
+    .hw-vinfo strong span { font-size: 11.5px; font-weight: 800; background: #fff6d6; border-radius: 999px; padding: 2px 7px; }
+    .hw-vinfo small { display: block; font-size: 12.5px; color: var(--armus-muted); }
+    .hw-price { margin-left: auto; text-align: right; font-size: 16px; font-weight: 800; white-space: nowrap; }
+    .hw-price small { display: block; font-size: 11px; font-weight: 500; color: #8a8a8a; }
+    .hw-trial { text-align: center; font-size: 13.5px; font-weight: 800; background: var(--armus-ink); color: #fff; border-radius: 11px; padding: 11px; }
     /* the call photo is shown whole: the frame takes the photo's own shape */
     .hw-vis.full { height: auto; }
     .hw-v2 { position: relative; width: 100%; max-width: 500px; margin-left: auto; aspect-ratio: 1002 / 964; border-radius: 22px; overflow: hidden; background: #efe9df; }
@@ -173,6 +189,8 @@
       .hw-v2 { max-width: none; }
       .hw-bubble { top: 52%; max-width: 185px; min-height: 0; font-size: 12.5px; padding: 8px 11px; }
       .hw-words span { font-size: 13px; padding: 8px 12px; }
+      .hw-sub { font-size: 12px; bottom: 24px; white-space: normal; width: calc(100% - 32px); text-align: center; }
+      .hw-trial { padding: 10px; }
       .hw-stats .shell, .hw-tiles { grid-template-columns: 1fr; }
       .hw-stat strong { font-size: 46px; }
       .hw-quote p { font-size: 28px; letter-spacing: -.8px; }
@@ -226,10 +244,14 @@
         </div>
         <div class="hw-vis" data-k="0">
           <div class="hw-v1">
-            <div class="hw-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="hw-typed">IELTS · Konuşma · Akşam</span><span class="hw-typed-src" hidden data-i18n="index.how.v1.search">IELTS · Konuşma · Akşam</span></div>
-            <div class="hw-tc hl"><img src="avatars/step-sarah-96.jpg" srcset="avatars/step-sarah-96.jpg 2x, avatars/step-sarah-144.jpg 3x" alt="" loading="lazy" width="42" height="42"><div><strong>Sarah M. <span>★ 4.9</span></strong><small data-i18n="howItWorks.sarahRole">IELTS Uzmanı</small></div></div>
-            <div class="hw-tc"><img src="avatars/step-david-96.jpg" srcset="avatars/step-david-96.jpg 2x, avatars/step-david-144.jpg 3x" alt="" loading="lazy" width="42" height="42"><div><strong>David K.</strong><small data-i18n="index.how.v1.role2">IELTS &amp; YDS Uzmanı</small></div></div>
-            <div class="hw-tc"><img src="avatars/step-emily-96.jpg" srcset="avatars/step-emily-96.jpg 2x, avatars/step-emily-144.jpg 3x" alt="" loading="lazy" width="42" height="42"><div><strong>Emily L.</strong><small>English Speaking Teacher</small></div></div>
+            <div class="hw-vid">
+              <picture><source type="image/webp" srcset="avatars/teacher-intro-800.webp 800w, avatars/teacher-intro-1400.webp 1400w" sizes="(max-width: 900px) 100vw, 520px"><img src="avatars/teacher-intro-800.jpg" srcset="avatars/teacher-intro-800.jpg 800w, avatars/teacher-intro-1400.jpg 1400w" sizes="(max-width: 900px) 100vw, 520px" alt="" width="1400" height="1050" loading="lazy" decoding="async"></picture>
+              <span class="hw-vtag">▶ <span data-i18n="howItWorks.v1Video">Tanıtım videosu</span></span>
+              <span class="hw-play" aria-hidden="true"></span>
+              <span class="hw-sub">“Hi! I'm Sarah, let's practise speaking.”</span>
+              <span class="hw-vbar" aria-hidden="true"><i></i></span>
+            </div>
+            <div class="hw-vinfo"><img src="avatars/teacher-intro-av-96.jpg" srcset="avatars/teacher-intro-av-96.jpg 2x, avatars/teacher-intro-av-144.jpg 3x" alt="" width="40" height="40" loading="lazy"><div><strong>Sarah M. <span>★ 4.9</span></strong><small><span data-i18n="howItWorks.sarahRole">IELTS Uzmanı</span> · <span data-i18n="index.how.v1.tagSpeaking">Konuşma</span></small></div><div class="hw-price">₺800<small data-i18n="howItWorks.v1PerLesson">/ ders</small></div></div>
             <span class="hw-trial" data-i18n="howItWorks.v1Trial">Deneme dersi al →</span>
           </div>
         </div>
@@ -310,12 +332,12 @@
 
   </main>
 
-  <script src="i18n.js?v=31"></script>
+  <script src="i18n.js?v=32"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=15"></script>
   <script src="logo-panel-link.js?v=1"></script>
-  <script src="how-it-works.js?v=1"></script>
+  <script src="how-it-works.js?v=2"></script>
 </body>
 </html>
