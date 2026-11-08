@@ -129,23 +129,10 @@
   }
 
   function v1(vis) {
-    const typed = vis.querySelector(".hw-typed"), src = vis.querySelector(".hw-typed-src");
-    const cards = [...vis.querySelectorAll(".hw-tc")];
-    let done = false;
-    cards[0].classList.remove("hl");
-    cards.forEach((c) => c.animate(
-      [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
-      { duration: 700, delay: 900 + cards.indexOf(c) * 160, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" }));
-    const text = src.textContent.trim();
-    typed.textContent = "";
-    let n = 0;
-    const t = setInterval(() => {
-      typed.textContent = text.slice(0, ++n);
-      if (n >= text.length) { clearInterval(t); done = true; }
-    }, 45);
-    setTimeout(() => cards[0].classList.add("hl"), 1900);
-    new MutationObserver(() => { if (done) typed.textContent = src.textContent.trim(); })
-      .observe(src, { childList: true, characterData: true, subtree: true });
+    // the intro video starts, then its caption appears
+    const box = vis.querySelector(".hw-v1");
+    setTimeout(() => box.classList.add("playing"), 1100);
+    setTimeout(() => box.classList.add("subs"), 1700);
   }
 
   function v2(vis) {

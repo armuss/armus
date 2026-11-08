@@ -282,6 +282,8 @@ const ARMUS_I18N_EN = {
   "howItWorks.step3Text": "Every lesson adds new words to your vocabulary vault and updates your speaking-confidence tracker. Change how often you take lessons any time you want.",
   "howItWorks.sarahRole": "IELTS Specialist",
   "howItWorks.v1Trial": "Book a trial lesson →",
+  "howItWorks.v1Video": "Intro video",
+  "howItWorks.v1PerLesson": "/ lesson",
   "howItWorks.v3Vault": "Your vocabulary vault",
   "howItWorks.v3Speaking": "Speaking tracker",
   "howItWorks.v3Month": "this month",
