@@ -1508,3 +1508,12 @@ html[lang="en"] .hk-rate-n i {
     transition: none;
   }
 }
+
+/* teacher section photo: a real photo, cropped to keep the teacher in frame */
+.tcta-visual picture {
+  display: block;
+  height: 100%;
+}
+.tcta-visual img {
+  object-position: 64% 38%;
+}
