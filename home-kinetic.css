@@ -269,6 +269,45 @@
 .hk-motion .hk-ph.is-on img {
   transform: scale(1.06);
 }
+/* drawn illustrations, one per fact. Their final state is the resting state;
+   motion replays the build-up each time a fact becomes the current one. */
+.hk-ph svg.il {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hk-motion .hk-ph svg.il {
+  transform: scale(1.12);
+  translate: var(--tx, 0px) var(--ty, 0px);
+  transition: transform 5.5s cubic-bezier(.15, .6, .2, 1), translate .5s ease-out;
+}
+.hk-motion .hk-ph.is-on svg.il {
+  transform: scale(1);
+}
+.il-bar, .il-wave { transform-box: fill-box; }
+.il-bar { transform-origin: left center; }
+.il-wave { transform-origin: center; }
+.il-draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.il-arc { stroke-dasharray: 1; stroke-dashoffset: .194; }
+.il-needle { transform-origin: 150px 200px; transform: rotate(55deg); }
+.hk-motion .hk-machine.is-run .hk-ph.is-cur .il-pop { animation: il-pop .6s var(--d, 0s) cubic-bezier(.34, 1.56, .64, 1) both; }
+.hk-motion .hk-machine.is-run .hk-ph.is-cur .il-bar { animation: il-grow .5s var(--d, 0s) var(--hk-ease) both; }
+.hk-motion .hk-machine.is-run .hk-ph.is-cur .il-draw { animation: il-draw 1.4s var(--d, 0s) var(--hk-ease) both; }
+.hk-motion .hk-machine.is-run .hk-ph.is-cur .il-fade { animation: il-fade .8s var(--d, 0s) ease both; }
+.hk-motion .hk-machine.is-run .hk-ph.is-cur .il-arc { animation: il-arc 1.6s .4s var(--hk-ease) both; }
+.hk-motion .hk-machine.is-run .hk-ph.is-cur .il-needle { animation: il-needle 1.6s .4s var(--hk-ease) both; }
+.hk-motion .hk-ph.is-cur .il-wave { animation: il-wave .9s var(--d, 0s) ease-in-out infinite alternate; }
+.hk-motion .hk-ph.is-cur .il-live { animation: il-blink 1.2s ease-in-out infinite; }
+.hk-machine.is-paused .il-wave,
+.hk-machine.is-paused .il-live { animation-play-state: paused; }
+@keyframes il-pop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+@keyframes il-grow { from { transform: scaleX(0); } }
+@keyframes il-draw { from { stroke-dashoffset: 1; } }
+@keyframes il-fade { from { opacity: 0; } }
+@keyframes il-arc { from { stroke-dashoffset: 1; } }
+@keyframes il-needle { from { transform: rotate(-88deg); } }
+@keyframes il-wave { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+@keyframes il-blink { 50% { opacity: .25; } }
 .hk-burst {
   position: absolute;
   left: 50%;

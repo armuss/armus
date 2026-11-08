@@ -142,6 +142,7 @@
         t.setAttribute("aria-pressed", i === k ? "true" : "false");
       });
       setNumber(+facts[k].dataset.n);
+      phs.forEach((p, i) => p.classList.toggle("is-cur", i === k));
       if (!motion) {
         phs.forEach((p, i) => p.classList.toggle("is-on", i === k));
         return;
