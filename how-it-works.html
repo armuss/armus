@@ -100,7 +100,8 @@
     /* the call photo is shown whole: the frame takes the photo's own shape */
     .hw-vis.full { height: auto; }
     .hw-v2 { position: relative; width: 100%; max-width: 500px; margin-left: auto; aspect-ratio: 1002 / 964; border-radius: 22px; overflow: hidden; background: #efe9df; }
-    .hw-v2 > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hw-v2 picture { display: block; height: 100%; }
+    .hw-v2 img { width: 100%; height: 100%; object-fit: cover; object-position: 64% 50%; display: block; }
     .hw-live { position: absolute; top: 14px; left: 14px; display: flex; align-items: center; gap: 7px; background: rgba(10, 10, 10, .78); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: .6px; padding: 7px 11px; border-radius: 999px; }
     .hw-live i { width: 8px; height: 8px; border-radius: 50%; background: #ff4d4d; }
     .hw-motion .hw-live i { animation: hw-ping 1.6s infinite; }
@@ -171,6 +172,7 @@
       .hw-txt h3 { font-size: 26px; }
       .hw-vis { height: 310px; }
       .hw-v2 { max-width: none; }
+      .hw-v2 img { object-position: 38% 50%; }
       .hw-bubble { top: 52%; max-width: 185px; min-height: 0; font-size: 12.5px; padding: 8px 11px; }
       .hw-words span { font-size: 13px; padding: 8px 12px; }
       .hw-stats .shell, .hw-tiles { grid-template-columns: 1fr; }
@@ -227,9 +229,9 @@
         <div class="hw-vis" data-k="0">
           <div class="hw-v1">
             <div class="hw-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="hw-typed">IELTS · Konuşma · Akşam</span><span class="hw-typed-src" hidden data-i18n="index.how.v1.search">IELTS · Konuşma · Akşam</span></div>
-            <div class="hw-tc hl"><img src="avatars/sarah.jpg" alt="" loading="lazy" width="42" height="42"><div><strong>Sarah M. <span>★ 4.9</span></strong><small data-i18n="howItWorks.sarahRole">IELTS Uzmanı</small></div></div>
-            <div class="hw-tc"><img src="avatars/david.jpg" alt="" loading="lazy" width="42" height="42"><div><strong>David K.</strong><small data-i18n="index.how.v1.role2">IELTS &amp; YDS Uzmanı</small></div></div>
-            <div class="hw-tc"><img src="avatars/emily.jpg" alt="" loading="lazy" width="42" height="42"><div><strong>Emily L.</strong><small>English Speaking Teacher</small></div></div>
+            <div class="hw-tc hl"><img src="avatars/step-sarah-96.jpg" srcset="avatars/step-sarah-96.jpg 2x, avatars/step-sarah-144.jpg 3x" alt="" loading="lazy" width="42" height="42"><div><strong>Sarah M. <span>★ 4.9</span></strong><small data-i18n="howItWorks.sarahRole">IELTS Uzmanı</small></div></div>
+            <div class="hw-tc"><img src="avatars/step-david-96.jpg" srcset="avatars/step-david-96.jpg 2x, avatars/step-david-144.jpg 3x" alt="" loading="lazy" width="42" height="42"><div><strong>David K.</strong><small data-i18n="index.how.v1.role2">IELTS &amp; YDS Uzmanı</small></div></div>
+            <div class="hw-tc"><img src="avatars/step-emily-96.jpg" srcset="avatars/step-emily-96.jpg 2x, avatars/step-emily-144.jpg 3x" alt="" loading="lazy" width="42" height="42"><div><strong>Emily L.</strong><small>English Speaking Teacher</small></div></div>
             <span class="hw-trial" data-i18n="howItWorks.v1Trial">Deneme dersi al →</span>
           </div>
         </div>
@@ -244,7 +246,7 @@
         </div>
         <div class="hw-vis full" data-k="1">
           <div class="hw-v2">
-            <img src="avatars/hiw-call.jpg" alt="" loading="lazy" width="1002" height="964">
+            <picture><source type="image/webp" srcset="avatars/step-lesson-900.webp 900w, avatars/step-lesson-1600.webp 1600w" sizes="(max-width: 900px) 100vw, 500px"><img src="avatars/step-lesson-900.jpg" srcset="avatars/step-lesson-900.jpg 900w, avatars/step-lesson-1600.jpg 1600w" sizes="(max-width: 900px) 100vw, 500px" alt="" loading="lazy" width="1600" height="1066"></picture>
             <span class="hw-live"><i></i><span data-i18n="index.how.v2.live">CANLI DERS</span> <b class="hw-clock">00:00</b></span>
             <div class="hw-bubble" data-lines="Great job! Now say it in the past tense.|How was your weekend? Tell me in English.|Your pronunciation is getting better every week!"><small data-i18n="index.how.v2.teacher">ÖĞRETMEN</small><span class="hw-cap">Great job! Now say it in the past tense.</span></div>
           </div>
