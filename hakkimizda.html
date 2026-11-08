@@ -275,6 +275,16 @@
       display: grid;
     }
 
+    .tab-panel picture,
+    .story-section picture {
+      display: block;
+    }
+
+    .tab-panel picture img,
+    .story-section picture img {
+      height: auto;
+    }
+
     .tab-panel img {
       width: 100%;
       aspect-ratio: 1;
@@ -535,7 +545,7 @@
         </div>
 
         <div class="tab-panel active" data-panel="teacher">
-          <img src="avatars/sarah.jpg" alt="">
+          <picture><source type="image/webp" srcset="avatars/about-teacher-500.webp 500w, avatars/about-teacher-750.webp 750w" sizes="220px"><img src="avatars/about-teacher-500.jpg" srcset="avatars/about-teacher-500.jpg 500w, avatars/about-teacher-750.jpg 750w" sizes="220px" alt="" width="750" height="750" loading="lazy" decoding="async"></picture>
           <div>
             <h3 data-i18n="about.tabTeacherTitle">ARMUS'u farklı kılan, ekranın diğer tarafındaki insan.</h3>
             <p data-i18n="about.tabTeacherText">Öğretmenlerimiz her derse gerçek deneyim ve uzmanlık katıyor; fiyatını kendisi belirliyor, programını kendisi kuruyor ve öğrencisini deneme dersiyle tanıyor.</p>
@@ -543,7 +553,7 @@
         </div>
 
         <div class="tab-panel" data-panel="student">
-          <img src="avatars/step2-video-call.jpg" alt="">
+          <picture><source type="image/webp" srcset="avatars/about-student-500.webp 500w, avatars/about-student-750.webp 750w" sizes="220px"><img src="avatars/about-student-500.jpg" srcset="avatars/about-student-500.jpg 500w, avatars/about-student-750.jpg 750w" sizes="220px" alt="" width="750" height="750" loading="lazy" decoding="async"></picture>
           <div>
             <h3 data-i18n="about.tabStudentTitle">Her öğrenci kendi hedefine göre ilerler.</h3>
             <p data-i18n="about.tabStudentText">Seviyene, bütçene ve hedefine uygun bir öğretmenle birebir çalışır; kelime kasan ve konuşma takibinle ilerlemeni gerçek verilerle görürsün.</p>
@@ -551,7 +561,7 @@
         </div>
 
         <div class="tab-panel" data-panel="staff">
-          <img src="avatars/classroom-photo.jpg" alt="">
+          <picture><source type="image/webp" srcset="avatars/about-team-500.webp 500w, avatars/about-team-750.webp 750w" sizes="220px"><img src="avatars/about-team-500.jpg" srcset="avatars/about-team-500.jpg 500w, avatars/about-team-750.jpg 750w" sizes="220px" alt="" width="750" height="750" loading="lazy" decoding="async"></picture>
           <div>
             <h3 data-i18n="about.tabStaffTitle">Perde arkasında, her gün bu deneyimi iyileştiren ekip.</h3>
             <p data-i18n="about.tabStaffText">Destek, kalite kontrol ve ürün ekibimiz; öğretmen başvurularını inceler, platformu geliştirir ve her iki taraf için sorunsuz bir deneyim kurar.</p>
@@ -579,7 +589,7 @@
           <p data-i18n="about.storyText1">Her şey tek bir soruyla başladı: Türkiye'de doğru İngilizce öğretmenini bulmak neden bu kadar zor? Kurucularımız Arman Chahargoli ve Mustafa Gören, kalabalık sınıflar yerine öğrencinin hedefine göre seçtiği bir öğretmenle birebir ilerleyebileceği bir platform hayal etti.</p>
           <p data-i18n="about.storyText2">Bugün ARMUS, binlerce öğrenciyi doğru öğretmenle buluşturan, Türkiye'nin İngilizce öğrenme platformu haline geldi.</p>
         </div>
-        <div class="photo"><img src="avatars/michael.jpg" alt=""></div>
+        <div class="photo"><picture><source type="image/webp" srcset="avatars/about-story-600.webp 600w, avatars/about-story-1000.webp 1000w" sizes="(max-width: 900px) 100vw, 440px"><img src="avatars/about-story-600.jpg" srcset="avatars/about-story-600.jpg 600w, avatars/about-story-1000.jpg 1000w" sizes="(max-width: 900px) 100vw, 440px" alt="" width="1000" height="1250" loading="lazy" decoding="async"></picture></div>
       </div>
 
       <div class="team-section">
