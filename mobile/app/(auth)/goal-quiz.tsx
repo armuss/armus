@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
@@ -6,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Button from '../../components/Button';
 import Logo from '../../components/Logo';
-import { colors, fonts, goldGradient, radius } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 
 type CountryOption = { value: string; label: string; flag: string };
 
@@ -444,7 +443,7 @@ export default function GoalQuiz() {
               <Switch
                 value={answers.nativeOnly}
                 onValueChange={(v) => setAnswers((prev) => ({ ...prev, nativeOnly: v }))}
-                trackColor={{ true: colors.gold3, false: colors.border }}
+                trackColor={{ true: colors.dark, false: colors.border }}
                 thumbColor="#fff"
               />
             </View>
@@ -585,7 +584,7 @@ export default function GoalQuiz() {
 
         {step === 'matching' && (
           <View style={styles.matchingWrap}>
-            <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.matchingCard}>
+            <View style={[styles.matchingCard, { backgroundColor: colors.dark }]}>
               <View style={styles.matchingDots}>
                 <View style={styles.matchingDot} />
                 <View style={[styles.matchingDot, { opacity: 0.6 }]} />
@@ -600,7 +599,7 @@ export default function GoalQuiz() {
                 için doğru öğretmeni buluyoruz.
               </Text>
               <Text style={styles.matchingSubtitle}>500'den fazla onaylı öğretmen arasından senin için en iyisini seçiyoruz.</Text>
-            </LinearGradient>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -644,7 +643,7 @@ const styles = StyleSheet.create({
   },
   illustration: {
     height: 190,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.panel2,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 28,
@@ -686,8 +685,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   radioRowActive: {
-    borderColor: colors.gold3,
-    backgroundColor: '#fff8e6',
+    borderColor: colors.ink,
+    backgroundColor: colors.goldPale,
   },
   radioLabel: {
     fontFamily: fonts.bodyMedium,
@@ -706,13 +705,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioCircleActive: {
-    borderColor: colors.gold3,
+    borderColor: colors.ink,
   },
   radioDot: {
     width: 11,
     height: 11,
     borderRadius: 6,
-    backgroundColor: colors.gold3,
+    backgroundColor: colors.ink,
   },
   toggleRow: {
     marginHorizontal: 26,
@@ -769,8 +768,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipActive: {
-    borderColor: colors.gold3,
-    backgroundColor: '#fff8e6',
+    borderColor: colors.ink,
+    backgroundColor: colors.goldPale,
   },
   chipIcon: {
     fontSize: 15,
@@ -822,7 +821,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   recapChipGold: {
-    backgroundColor: '#fff2cf',
+    backgroundColor: colors.goldSoft,
   },
   recapChipSilver: {
     backgroundColor: colors.silver1,
@@ -853,31 +852,31 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.onGold,
+    backgroundColor: colors.gold2,
   },
   matchingEyebrow: {
     fontFamily: fonts.bodyBold,
     fontSize: 11.5,
     letterSpacing: 1,
-    color: colors.onGold,
+    color: '#fff',
     opacity: 0.7,
     marginBottom: 16,
   },
   matchingTitle: {
     fontFamily: fonts.displayBlack,
-    fontSize: 30,
-    lineHeight: 36,
-    color: colors.onGold,
+    fontSize: 24,
+    lineHeight: 31,
+    color: '#fff',
     letterSpacing: -0.8,
     marginBottom: 16,
   },
   matchingAccent: {
-    color: '#fff',
+    color: colors.gold2,
   },
   matchingSubtitle: {
     fontFamily: fonts.body,
     fontSize: 14.5,
-    color: colors.onGold,
+    color: '#fff',
     opacity: 0.75,
     lineHeight: 21,
   },

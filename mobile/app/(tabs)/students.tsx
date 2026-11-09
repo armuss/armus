@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -89,7 +90,7 @@ export default function Students() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={students}
@@ -115,7 +116,13 @@ export default function Students() {
                   {item.lessonCount} ders · son {item.lastDateLabel}
                 </Text>
               </View>
-              <Text style={styles.msgLink}>{openingId === item.id ? '…' : '✉'}</Text>
+              <View style={styles.msgLink}>
+                {openingId === item.id ? (
+                  <ActivityIndicator size="small" color={colors.ink} />
+                ) : (
+                  <Ionicons name="chatbubble-outline" size={17} color={colors.ink} />
+                )}
+              </View>
             </Pressable>
           )}
           ListEmptyComponent={
@@ -182,8 +189,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   msgLink: {
-    fontSize: 18,
-    color: colors.goldText,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.panel2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   empty: {
     fontFamily: fonts.body,

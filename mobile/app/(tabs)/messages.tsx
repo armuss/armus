@@ -36,7 +36,7 @@ export default function Messages() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={conversations}

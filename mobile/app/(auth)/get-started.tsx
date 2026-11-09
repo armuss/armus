@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   superBadge: {
-    backgroundColor: '#fff2cf',
+    backgroundColor: colors.goldSoft,
     borderRadius: radius.pill,
     paddingHorizontal: 9,
     paddingVertical: 3,

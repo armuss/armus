@@ -1,27 +1,29 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import Button from '../../components/Button';
 import ReschedulePicker from '../../components/ReschedulePicker';
 import StrandedPackageCard from '../../components/StrandedPackageCard';
 import { useAuth } from '../../lib/auth';
 import {
+  DAY_NAMES,
   FREE_CANCEL_HOURS,
   bookingCancellable,
   cancelBooking,
   canJoinLessonNow,
   formatLessonWhenForViewer,
   formatRescheduleSlot,
+  formatTimeUntil,
   getBookingsForStudent,
   getPendingRescheduleRequests,
   getTeacherBusyTimes,
   hoursUntilLesson,
   isBookingPast,
-  isBookingToday,
   lessonTypeLabel,
   lessonWindow,
+  localDateKey,
   rescheduleBooking,
   respondReschedule,
   withdrawReschedule,
@@ -152,8 +154,6 @@ function cancelledLine(b: Booking) {
   return b.cancelledBy === 'student' ? 'İptal edildi · Ders hakkı eklenmedi' : 'İptal edildi';
 }
 
-type Row = { kind: 'heading'; key: string; title: string } | { kind: 'lesson'; key: string; booking: Booking };
-
 type PickerState = {
   booking: Booking;
   teacher: Teacher;
@@ -173,6 +173,11 @@ export default function Lessons() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [picker, setPicker] = useState<PickerState | null>(null);
   const [submittingMove, setSubmittingMove] = useState(false);
+  const [mode, setMode] = useState<'agenda' | 'history'>('agenda');
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<Booking | null>(null);
+  const [creditsOpen, setCreditsOpen] = useState(false);
+  const [photos, setPhotos] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -189,6 +194,12 @@ export default function Lessons() {
     setStranded(strandedData);
     setPending(pendingData);
     setLoading(false);
+    // photos for the next-lesson banner (one lookup per teacher)
+    Array.from(new Set(bookingsData.map((b) => b.teacherId))).forEach((tid) => {
+      findMarketplaceTeacher(tid).then((t) => {
+        if (t?.photo) setPhotos((prev) => (prev[tid] ? prev : { ...prev, [tid]: t.photo as string }));
+      });
+    });
     setRefreshing(false);
   }, [profile]);
 
@@ -207,12 +218,6 @@ export default function Lessons() {
   const startOf = (b: Booking) => lessonWindow(b).start.getTime();
   const upcoming = bookings.filter((b) => !inHistory(b)).sort((a, b) => startOf(a) - startOf(b));
   const history = bookings.filter(inHistory).sort((a, b) => startOf(b) - startOf(a));
-  const rows: Row[] = [
-    ...(upcoming.length ? [{ kind: 'heading' as const, key: 'h-up', title: 'Yaklaşan dersler' }] : []),
-    ...upcoming.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b })),
-    ...(history.length ? [{ kind: 'heading' as const, key: 'h-past', title: 'Geçmiş' }] : []),
-    ...history.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b })),
-  ];
 
   async function handleCancel(b: Booking) {
     const when = formatLessonWhenForViewer(b);
@@ -286,100 +291,151 @@ export default function Lessons() {
     load();
   }
 
-  function renderLesson(item: Booking) {
-    const isCancelled = item.status === 'cancelled';
-    const isPast = isBookingPast(item);
-    const joinable = !isCancelled && canJoinLessonNow(item);
-    const showHint = !isCancelled && !isPast && !joinable && isBookingToday(item);
-    const cancellable = bookingCancellable(item);
+  // ---- the agenda: week strip, next-lesson banner, the picked day ----
+  const todayKey = localDateKey(new Date());
+  const dayKeyOf = (b: Booking) => localDateKey(lessonWindow(b).start);
+  const lessonDays = new Set(upcoming.map(dayKeyOf));
+  // today through the last upcoming lesson (at least a week, at most two months)
+  const lastKey = upcoming.length ? dayKeyOf(upcoming[upcoming.length - 1]) : todayKey;
+  const strip: { key: string; date: Date }[] = [];
+  for (let i = 0; i < 60; i++) {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + i);
+    const key = localDateKey(date);
+    strip.push({ key, date });
+    if (i >= 6 && key >= lastKey) break;
+  }
+  const dayKey = selectedDay ?? todayKey;
+  const dayLessons = upcoming.filter((b) => dayKeyOf(b) === dayKey);
+  const next = upcoming.find((b) => b.status !== 'cancelled') ?? null;
+  // the rest of the week at a glance, below the picked day
+  const laterLessons = upcoming.filter((b) => dayKeyOf(b) !== dayKey && dayKeyOf(b) >= todayKey).slice(0, 6);
+
+  function renderBanner(b: Booking) {
+    const when = formatLessonWhenForViewer(b);
+    const joinable = canJoinLessonNow(b);
+    const started = when.start.getTime() <= Date.now();
+    const photo = photos[b.teacherId];
+    return (
+      <View style={styles.banner}>
+        {photo ? (
+          <Image source={{ uri: photo }} style={styles.bannerPhoto} />
+        ) : (
+          <View style={[styles.bannerPhoto, styles.bannerInitial]}>
+            <Text style={styles.bannerInitialText}>{shortDisplayName(b.teacherName).charAt(0)}</Text>
+          </View>
+        )}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.bannerName} numberOfLines={1}>
+            {shortDisplayName(b.teacherName)}
+          </Text>
+          <Text style={styles.bannerWhen} numberOfLines={1}>
+            {started ? 'Ders başladı' : `${formatTimeUntil(when.start)} sonra`} · {dayKeyOf(b) === todayKey ? when.time : `${when.dateLabel} ${when.time}`}
+          </Text>
+        </View>
+        {joinable ? (
+          <Pressable onPress={() => router.push(`/class/${b.id}`)} style={({ pressed }) => [styles.bannerGo, pressed && { opacity: 0.85 }]}>
+            <Text style={styles.bannerGoText}>Katıl</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.bannerSoon}>
+            <Ionicons name="time-outline" size={14} color="#aaa" />
+            <Text style={styles.bannerSoonText}>15 dk önce açılır</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  function renderAgendaItem(item: Booking) {
     const when = formatLessonWhenForViewer(item);
+    const joinable = canJoinLessonNow(item);
     const request = pending[item.id];
     const busy = actingId === item.id;
-    const late = hoursUntilLesson(item) < FREE_CANCEL_HOURS;
-
     return (
-      <View style={[styles.card, (isCancelled || (isPast && !joinable)) && styles.cardMuted]}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.teacherName}>{shortDisplayName(item.teacherName)}</Text>
-          <View style={[styles.statusPill, isCancelled ? styles.statusPillCancelled : isPast && !joinable && styles.statusPillDone]}>
-            <Text style={[styles.statusText, isCancelled ? styles.statusTextCancelled : isPast && !joinable && styles.statusTextDone]}>
-              {isCancelled ? 'İptal edildi' : isPast && !joinable ? 'Tamamlandı' : 'Onaylı'}
+      <View key={item.id} style={styles.ag}>
+        <Text style={styles.agHour}>{when.time}</Text>
+        <View style={[styles.agCard, item.type === 'trial' ? styles.agCardTrial : null]}>
+          <View style={styles.agTop}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.agTitle} numberOfLines={1}>
+                {shortDisplayName(item.teacherName)} · {lessonTypeLabel(item.type)}
+              </Text>
+              <Text style={styles.agSub}>
+                {when.timeRange} · ₺{item.price}
+              </Text>
+            </View>
+            <Pressable onPress={() => setSheet(item)} hitSlop={10} style={styles.dots} accessibilityLabel="Ders seçenekleri">
+              {busy ? <ActivityIndicator size="small" color={colors.ink} /> : <Ionicons name="ellipsis-horizontal" size={18} color={colors.ink} />}
+            </Pressable>
+          </View>
+          {joinable && (
+            <Pressable style={styles.agJoin} onPress={() => router.push(`/class/${item.id}`)}>
+              <Ionicons name="videocam" size={16} color={colors.ink} />
+              <Text style={styles.agJoinText}>Derse katıl</Text>
+            </Pressable>
+          )}
+          {bookingCancellable(item) && request && (
+            <View style={styles.requestBox}>
+              <Text style={styles.requestText}>
+                {request.requestedBy === 'teacher' ? 'Öğretmenin yeni bir saat önerdi: ' : 'Saat değişikliği isteğin onay bekliyor: '}
+                <Text style={styles.requestSlot}>{formatRescheduleSlot(request.newDate, request.newTime, item.teacherTimezone)}</Text>
+              </Text>
+              <View style={styles.actionRow}>
+                {request.requestedBy === 'teacher' ? (
+                  <>
+                    <Pressable disabled={busy} onPress={() => act(item.id, () => respondReschedule(request.id, true))} style={[styles.smallBtn, styles.smallBtnPrimary]}>
+                      <Text style={[styles.smallBtnText, styles.smallBtnTextPrimary]}>Kabul et</Text>
+                    </Pressable>
+                    <Pressable disabled={busy} onPress={() => act(item.id, () => respondReschedule(request.id, false))} style={styles.smallBtn}>
+                      <Text style={styles.smallBtnText}>Reddet</Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Pressable disabled={busy} onPress={() => act(item.id, () => withdrawReschedule(request.id))} style={styles.smallBtn}>
+                    <Text style={styles.smallBtnText}>İsteği geri çek</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  function renderHistoryItem(item: Booking) {
+    const isCancelled = item.status === 'cancelled';
+    const when = formatLessonWhenForViewer(item);
+    const dispute = disputeByBooking.get(item.id);
+    return (
+      <View key={item.id} style={styles.hist}>
+        <View style={styles.agTop}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.agTitle} numberOfLines={1}>
+              {shortDisplayName(item.teacherName)} · {lessonTypeLabel(item.type)}
             </Text>
+            <Text style={styles.agSub}>
+              {when.dateLabel} · {when.timeRange} · ₺{item.price}
+            </Text>
+          </View>
+          <View style={[styles.statusPill, isCancelled && styles.statusPillCancelled]}>
+            <Text style={[styles.statusText, isCancelled && styles.statusTextCancelled]}>{isCancelled ? 'İptal' : 'Tamamlandı'}</Text>
           </View>
         </View>
-        <Text style={styles.type}>{lessonTypeLabel(item.type)}</Text>
-        <View style={styles.metaRow}>
-          <Text style={styles.meta}>{when.dateLabel}</Text>
-          <Text style={styles.meta}>{when.timeRange}</Text>
-          <Text style={styles.meta}>₺{item.price}</Text>
-        </View>
-
-        {isCancelled && <Text style={styles.cancelLine}>⊘ {cancelledLine(item)}</Text>}
-
-        {joinable && (
-          <Pressable style={styles.joinBtn} onPress={() => router.push(`/class/${item.id}`)}>
-            <Text style={styles.joinBtnText}>🎥 Derse Katıl</Text>
-          </Pressable>
-        )}
-        {showHint && <Text style={styles.joinHint}>Ders saatinde bu kart üzerinden odaya katılabileceksin.</Text>}
-
-        {cancellable && request && (
-          <View style={styles.requestBox}>
-            <Text style={styles.requestText}>
-              {request.requestedBy === 'teacher'
-                ? 'Öğretmenin bu ders için yeni bir saat önerdi: '
-                : 'Saat değişikliği isteğin öğretmen onayı bekliyor: '}
-              <Text style={styles.requestSlot}>{formatRescheduleSlot(request.newDate, request.newTime, item.teacherTimezone)}</Text>
-            </Text>
-            <View style={styles.actionRow}>
-              {request.requestedBy === 'teacher' ? (
-                <>
-                  <Pressable disabled={busy} onPress={() => act(item.id, () => respondReschedule(request.id, true))} style={[styles.smallBtn, styles.smallBtnPrimary]}>
-                    <Text style={[styles.smallBtnText, styles.smallBtnTextPrimary]}>Kabul Et</Text>
-                  </Pressable>
-                  <Pressable disabled={busy} onPress={() => act(item.id, () => respondReschedule(request.id, false))} style={styles.smallBtn}>
-                    <Text style={styles.smallBtnText}>Reddet</Text>
-                  </Pressable>
-                </>
-              ) : (
-                <Pressable disabled={busy} onPress={() => act(item.id, () => withdrawReschedule(request.id))} style={styles.smallBtn}>
-                  <Text style={styles.smallBtnText}>İsteği Geri Çek</Text>
-                </Pressable>
-              )}
-            </View>
+        {isCancelled && <Text style={styles.cancelLine}>{cancelledLine(item)}</Text>}
+        {dispute ? (
+          <View style={styles.disputeSubmitted}>
+            <Text style={styles.disputeStatus}>⚑ {DISPUTE_STATUS_LABELS[dispute.status] || dispute.status}</Text>
+            <Text style={styles.disputeSubjectText}>{dispute.subject}</Text>
           </View>
-        )}
-
-        {cancellable && (
-          <View style={styles.manageBox}>
-            <View style={styles.actionRow}>
-              {!(request && request.requestedBy === 'teacher') && (
-                <Pressable disabled={busy} onPress={() => openReschedule(item)} style={styles.smallBtn}>
-                  <Text style={styles.smallBtnText}>{busy ? '…' : 'Saati Değiştir'}</Text>
-                </Pressable>
-              )}
-              <Pressable disabled={busy} onPress={() => handleCancel(item)} style={[styles.smallBtn, styles.smallBtnDanger]}>
-                <Text style={[styles.smallBtnText, styles.smallBtnTextDanger]}>Dersi İptal Et</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.manageHint}>
-              {!late
-                ? 'Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir. Saati değiştirirsen ders hemen yeni saate taşınır.'
-                : item.type === 'trial'
-                  ? 'Derse 12 saatten az kaldı: iptal edersen deneme dersi bakiyene geri eklenmez. Saat değişikliği öğretmen onayına gider.'
-                  : 'Derse 12 saatten az kaldı: iptal edersen ders hakkı iade edilmez ve ücret öğretmene ödenir. Saat değişikliği öğretmen onayına gider.'}
-            </Text>
-          </View>
-        )}
-
-        {!isCancelled && profile && (
-          <DisputeSection
-            booking={item}
-            reporterId={profile.id}
-            reporterName={profile.name}
-            existingDispute={disputeByBooking.get(item.id)}
-            onCreated={(d) => setDisputes((prev) => [d, ...prev])}
-          />
+        ) : (
+          !isCancelled && (
+            <Pressable onPress={() => setSheet(item)} style={styles.disputePromptBtn}>
+              <Text style={styles.disputePromptText}>⚑ Bir sorun bildir</Text>
+            </Pressable>
+          )
         )}
       </View>
     );
@@ -396,47 +452,37 @@ export default function Lessons() {
     }, new Map<string, { name: string; count: number; values: number[] }>())
   );
   const strandedIds = new Set(stranded.map((p) => p.teacherId));
+  const shownCredits = creditGroups.filter(([teacherId]) => !strandedIds.has(teacherId));
+  const creditTotal = shownCredits.reduce((n, [, g]) => n + g.count, 0);
 
-  const listHeader = (
-    <View>
-      {stranded.map((pkg) => (
-        <StrandedPackageCard key={pkg.teacherId} pkg={pkg} onDone={load} />
-      ))}
-      {creditGroups.filter(([teacherId]) => !strandedIds.has(teacherId)).length > 0 && (
-        <View style={styles.creditsCard}>
-          <Text style={styles.creditsTitle}>🎁 Ders hakların</Text>
-          {creditGroups
-            .filter(([teacherId]) => !strandedIds.has(teacherId))
-            .map(([teacherId, g]) => (
-              <Text key={teacherId} style={styles.creditsLine}>
-                {shortDisplayName(g.name)} · {g.count} ders hakkı
-                {g.values.length ? ` (her biri ${formatMoney(Math.min(...g.values))}${Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : ''})` : ''}
-              </Text>
-            ))}
-          <Text style={styles.creditsHint}>
-            Bir ders hakkı aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir. Rezervasyon
-            sırasında otomatik uygulanır.
-          </Text>
-        </View>
-      )}
-    </View>
-  );
+  const sheetBooking = sheet ? bookings.find((b) => b.id === sheet.id) ?? sheet : null;
+  const sheetRequest = sheetBooking ? pending[sheetBooking.id] : undefined;
+  const sheetLate = sheetBooking ? hoursUntilLesson(sheetBooking) < FREE_CANCEL_HOURS : false;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.headerBlock}>
+      <View style={styles.head}>
         <Text style={styles.title}>Derslerim</Text>
+        <View style={styles.seg}>
+          {(
+            [
+              ['agenda', 'Yaklaşan'],
+              ['history', 'Geçmiş'],
+            ] as const
+          ).map(([key, label]) => (
+            <Pressable key={key} onPress={() => setMode(key)} style={[styles.segItem, mode === key && styles.segItemOn]}>
+              <Text style={[styles.segText, mode === key && styles.segTextOn]}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
       ) : (
-        <FlatList
-          data={rows}
-          keyExtractor={(row) => row.key}
+        <ScrollView
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={listHeader}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -444,25 +490,167 @@ export default function Lessons() {
                 setRefreshing(true);
                 load();
               }}
-              tintColor={colors.gold3}
+              tintColor={colors.ink}
             />
           }
-          renderItem={({ item: row }) =>
-            row.kind === 'heading' ? <Text style={styles.sectionTitle}>{row.title}</Text> : renderLesson(row.booking)
-          }
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>Ders programın burada görünecek</Text>
-              <Text style={styles.emptyText}>
-                Ders programın başarıya giden yol - başlamak için bir deneme dersi ayarla.
-              </Text>
-              <View style={styles.emptyBtn}>
-                <Button label="Öğretmen bul" onPress={() => router.push('/(tabs)')} />
-              </View>
+        >
+          {mode === 'agenda' ? (
+            <>
+              {stranded.map((pkg) => (
+                <StrandedPackageCard key={pkg.teacherId} pkg={pkg} onDone={load} />
+              ))}
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.week} contentContainerStyle={styles.weekInner}>
+                {strip.map(({ key, date }) => {
+                  const on = key === dayKey;
+                  return (
+                    <Pressable key={key} onPress={() => setSelectedDay(key)} style={[styles.day, on && styles.dayOn]}>
+                      <Text style={[styles.dayName, on && styles.dayNameOn]}>{DAY_NAMES[date.getDay()]}</Text>
+                      <Text style={[styles.dayNum, on && styles.dayNumOn]}>{date.getDate()}</Text>
+                      {lessonDays.has(key) && <View style={styles.dayDot} />}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {next ? (
+                renderBanner(next)
+              ) : (
+                <View style={styles.emptyBanner}>
+                  <Text style={styles.emptyBannerTitle}>Planlanmış dersin yok</Text>
+                  <Text style={styles.emptyBannerText}>Bir öğretmen seç, deneme dersiyle başla.</Text>
+                  <Pressable onPress={() => router.push('/(tabs)')} style={styles.emptyBannerBtn}>
+                    <Text style={styles.emptyBannerBtnText}>Öğretmen bul</Text>
+                  </Pressable>
+                </View>
+              )}
+
+              {shownCredits.length > 0 && (
+                <Pressable onPress={() => setCreditsOpen((v) => !v)} style={styles.credits}>
+                  <View style={styles.creditsRow}>
+                    <Ionicons name="gift-outline" size={18} color={colors.ink} />
+                    <Text style={styles.creditsTitle}>{creditTotal} ders hakkın var</Text>
+                    <Ionicons name={creditsOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.muted} />
+                  </View>
+                  {creditsOpen && (
+                    <>
+                      {shownCredits.map(([teacherId, g]) => (
+                        <Text key={teacherId} style={styles.creditsLine}>
+                          {shortDisplayName(g.name)} · {g.count} ders hakkı
+                          {g.values.length ? ` (her biri ${formatMoney(Math.min(...g.values))}${Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : ''})` : ''}
+                        </Text>
+                      ))}
+                      <Text style={styles.creditsHint}>
+                        Bir ders hakkı aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir.
+                        Rezervasyon sırasında otomatik uygulanır.
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              )}
+
+              {dayLessons.length > 0 ? (
+                dayLessons.map(renderAgendaItem)
+              ) : (
+                <View style={styles.agEmpty}>
+                  <Text style={styles.agEmptyText}>{dayKey === todayKey ? 'Bugün dersin yok' : 'Bu gün dersin yok'}</Text>
+                </View>
+              )}
+
+              {laterLessons.length > 0 && (
+                <>
+                  <Text style={styles.laterTitle}>Sonraki dersler</Text>
+                  {laterLessons.map((b) => {
+                    const when = formatLessonWhenForViewer(b);
+                    return (
+                      <Pressable key={b.id} onPress={() => setSelectedDay(dayKeyOf(b))} style={styles.later}>
+                        <View style={styles.laterDate}>
+                          <Text style={styles.laterDay}>{DAY_NAMES[when.start.getDay()]}</Text>
+                          <Text style={styles.laterNum}>{when.start.getDate()}</Text>
+                        </View>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text style={styles.laterName} numberOfLines={1}>
+                            {shortDisplayName(b.teacherName)} · {lessonTypeLabel(b.type)}
+                          </Text>
+                          <Text style={styles.laterTime}>{when.timeRange}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={17} color={colors.faint} />
+                      </Pressable>
+                    );
+                  })}
+                </>
+              )}
+            </>
+          ) : history.length > 0 ? (
+            history.map(renderHistoryItem)
+          ) : (
+            <View style={styles.agEmpty}>
+              <Text style={styles.agEmptyText}>Geçmiş derslerin burada görünecek</Text>
             </View>
-          }
-        />
+          )}
+        </ScrollView>
       )}
+
+      <Modal visible={!!sheetBooking} transparent animationType="slide" onRequestClose={() => setSheet(null)}>
+        <Pressable style={styles.sheetShade} onPress={() => setSheet(null)} />
+        {sheetBooking && (
+          <View style={styles.sheet}>
+            <View style={styles.grab} />
+            <Text style={styles.sheetTitle}>
+              {shortDisplayName(sheetBooking.teacherName)} · {lessonTypeLabel(sheetBooking.type)}
+            </Text>
+            <Text style={styles.sheetSub}>
+              {formatLessonWhenForViewer(sheetBooking).dateLabel} · {formatLessonWhenForViewer(sheetBooking).timeRange}
+            </Text>
+
+            {bookingCancellable(sheetBooking) && (
+              <>
+                {!(sheetRequest && sheetRequest.requestedBy === 'teacher') && (
+                  <Pressable
+                    onPress={() => {
+                      const b = sheetBooking;
+                      setSheet(null);
+                      openReschedule(b);
+                    }}
+                    style={styles.sheetRow}
+                  >
+                    <Ionicons name="swap-horizontal" size={20} color={colors.ink} />
+                    <Text style={styles.sheetRowText}>Saati değiştir</Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  onPress={() => {
+                    const b = sheetBooking;
+                    setSheet(null);
+                    handleCancel(b);
+                  }}
+                  style={styles.sheetRow}
+                >
+                  <Ionicons name="close-circle-outline" size={20} color={colors.error} />
+                  <Text style={[styles.sheetRowText, { color: colors.error }]}>Dersi iptal et</Text>
+                </Pressable>
+                <Text style={styles.sheetHint}>
+                  {!sheetLate
+                    ? 'Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir. Saati değiştirirsen ders hemen yeni saate taşınır.'
+                    : sheetBooking.type === 'trial'
+                      ? 'Derse 12 saatten az kaldı: iptal edersen deneme dersi bakiyene geri eklenmez. Saat değişikliği öğretmen onayına gider.'
+                      : 'Derse 12 saatten az kaldı: iptal edersen ders hakkı iade edilmez ve ücret öğretmene ödenir. Saat değişikliği öğretmen onayına gider.'}
+                </Text>
+              </>
+            )}
+
+            {sheetBooking.status !== 'cancelled' && profile && (
+              <DisputeSection
+                booking={sheetBooking}
+                reporterId={profile.id}
+                reporterName={profile.name}
+                existingDispute={disputeByBooking.get(sheetBooking.id)}
+                onCreated={(d) => setDisputes((prev) => [d, ...prev])}
+              />
+            )}
+          </View>
+        )}
+      </Modal>
 
       {picker && (
         <ReschedulePicker
@@ -488,307 +676,128 @@ export default function Lessons() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  headerBlock: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 24,
-    color: colors.ink,
-    letterSpacing: -0.5,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-  },
-  card: {
-    backgroundColor: colors.panel,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHeader: {
+  screen: { flex: 1, backgroundColor: colors.bg },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 },
+  title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
+  seg: { flexDirection: 'row', backgroundColor: colors.panel2, borderRadius: 12, padding: 3 },
+  segItem: { paddingHorizontal: 11, paddingVertical: 7, borderRadius: 9 },
+  segItemOn: { backgroundColor: colors.dark },
+  segText: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.muted },
+  segTextOn: { color: '#fff' },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
+  week: { marginHorizontal: -16, marginBottom: 14 },
+  weekInner: { paddingHorizontal: 16, gap: 6 },
+  day: { width: 46, alignItems: 'center', paddingTop: 8, paddingBottom: 12, borderRadius: 16 },
+  dayOn: { backgroundColor: colors.dark },
+  dayName: { fontFamily: fonts.bodySemibold, fontSize: 11.5, color: colors.faint },
+  dayNameOn: { color: '#aaa' },
+  dayNum: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.ink, marginTop: 2 },
+  dayNumOn: { color: '#fff' },
+  dayDot: { position: 'absolute', bottom: 4, width: 5, height: 5, borderRadius: 3, backgroundColor: colors.goldDot },
+  banner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  teacherName: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 15.5,
-    color: colors.ink,
-  },
-  statusPill: {
-    backgroundColor: '#e9f7ef',
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  statusPillCancelled: {
-    backgroundColor: '#fbeceb',
-  },
-  statusText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: colors.success,
-  },
-  statusTextCancelled: {
-    color: colors.error,
-  },
-  statusPillDone: {
-    backgroundColor: colors.panel2,
-  },
-  statusTextDone: {
-    color: colors.muted,
-  },
-  cardMuted: {
-    backgroundColor: '#fcfcfc',
-  },
-  sectionTitle: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 13,
-    letterSpacing: 0.4,
-    color: colors.muted,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  cancelLine: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 12.5,
-    lineHeight: 18,
-    color: colors.error,
-    marginTop: 10,
-  },
-  requestBox: {
-    marginTop: 12,
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.md,
-    padding: 10,
-    gap: 8,
-  },
-  requestText: {
-    fontFamily: fonts.body,
-    fontSize: 12.5,
-    lineHeight: 18,
-    color: colors.ink,
-  },
-  requestSlot: {
-    fontFamily: fonts.bodyBold,
-  },
-  manageBox: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
-    gap: 8,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  smallBtn: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.bg,
-  },
-  smallBtnPrimary: {
-    borderColor: colors.gold3,
-    backgroundColor: colors.gold3,
-  },
-  smallBtnDanger: {
-    borderColor: '#f3c9c6',
-  },
-  smallBtnText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12.5,
-    color: colors.ink,
-  },
-  smallBtnTextPrimary: {
-    color: colors.onGold,
-  },
-  smallBtnTextDanger: {
-    color: colors.error,
-  },
-  manageHint: {
-    fontFamily: fonts.body,
-    fontSize: 11.5,
-    lineHeight: 16,
-    color: colors.faint,
-  },
-  creditsCard: {
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.lg,
-    padding: 14,
+    gap: 12,
+    backgroundColor: colors.dark,
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingLeft: 14,
+    paddingRight: 12,
     marginBottom: 14,
-    gap: 4,
   },
-  creditsTitle: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 14,
-    color: colors.ink,
-    marginBottom: 2,
-  },
-  creditsLine: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13,
-    color: colors.ink,
-  },
-  creditsHint: {
-    fontFamily: fonts.body,
-    fontSize: 11.5,
-    lineHeight: 16,
-    color: colors.muted,
-    marginTop: 4,
-  },
-  type: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.muted,
-    marginTop: 4,
-  },
-  metaRow: {
+  bannerPhoto: { width: 44, height: 44, borderRadius: 13, backgroundColor: colors.dark2 },
+  bannerInitial: { alignItems: 'center', justifyContent: 'center' },
+  bannerInitialText: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.gold2 },
+  bannerName: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
+  bannerWhen: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.gold2, marginTop: 1 },
+  bannerGo: { backgroundColor: colors.gold2, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11 },
+  bannerGoText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.ink },
+  bannerSoon: { flexDirection: 'row', alignItems: 'center', gap: 4, maxWidth: 92 },
+  bannerSoonText: { fontFamily: fonts.bodySemibold, fontSize: 11, color: '#aaa' },
+  emptyBanner: { backgroundColor: colors.dark, borderRadius: 20, padding: 16, marginBottom: 14 },
+  emptyBannerTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: '#fff' },
+  emptyBannerText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#aaa', marginTop: 3 },
+  emptyBannerBtn: { alignSelf: 'flex-start', backgroundColor: colors.gold2, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11, marginTop: 12 },
+  emptyBannerBtnText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.ink },
+  credits: { backgroundColor: colors.goldPale, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14, gap: 4 },
+  creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  creditsTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  creditsLine: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.ink, marginTop: 4 },
+  creditsHint: { fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16, color: colors.muted, marginTop: 4 },
+  ag: { flexDirection: 'row', gap: 12, marginBottom: 10 },
+  agHour: { width: 46, fontFamily: fonts.bodyBold, fontSize: 13, color: colors.faint, paddingTop: 13 },
+  agCard: { flex: 1, borderRadius: 18, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: '#f6f6f6', borderLeftWidth: 4, borderLeftColor: colors.dark },
+  agCardTrial: { backgroundColor: '#fff8de', borderLeftColor: colors.goldDot },
+  agTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  agTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: colors.ink },
+  agSub: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.muted, marginTop: 2 },
+  dots: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
+  agJoin: {
     flexDirection: 'row',
-    gap: 16,
-    marginTop: 12,
-  },
-  meta: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12.5,
-    color: colors.ink,
-  },
-  joinBtn: {
-    marginTop: 14,
-    backgroundColor: colors.gold3,
-    borderRadius: radius.md,
-    paddingVertical: 11,
     alignItems: 'center',
-  },
-  joinBtnText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13.5,
-    color: colors.onGold,
-  },
-  joinHint: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.faint,
-    marginTop: 12,
-  },
-  disputePromptBtn: {
-    marginTop: 12,
-    alignSelf: 'flex-start',
-  },
-  disputePromptText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 12.5,
-    color: colors.muted,
-  },
-  disputeSubmitted: {
-    marginTop: 12,
-    backgroundColor: colors.panel2,
-    borderRadius: radius.md,
-    padding: 10,
-  },
-  disputeStatus: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11.5,
-    color: colors.goldText,
-  },
-  disputeSubjectText: {
-    fontFamily: fonts.body,
-    fontSize: 12.5,
-    color: colors.muted,
-    marginTop: 3,
-  },
-  disputeForm: {
-    marginTop: 12,
-    gap: 8,
-  },
-  disputeSubjectRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 6,
+    backgroundColor: colors.gold2,
+    borderRadius: 12,
+    paddingVertical: 10,
+    marginTop: 10,
   },
-  disputeChip: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  disputeChipActive: {
-    borderColor: colors.gold3,
-    backgroundColor: '#fff8e6',
-  },
-  disputeChipText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11.5,
-    color: colors.muted,
-  },
-  disputeChipTextActive: {
-    color: colors.goldText,
-  },
+  agJoinText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.ink },
+  agEmpty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#e3e3e3', borderRadius: 18, padding: 16, alignItems: 'center' },
+  agEmptyText: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: '#9a9a9a' },
+  laterTitle: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.faint, letterSpacing: 0.5, textTransform: 'uppercase', marginTop: 22, marginBottom: 8 },
+  later: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 10, marginBottom: 8 },
+  laterDate: { width: 44, alignItems: 'center', backgroundColor: colors.panel2, borderRadius: 12, paddingVertical: 5 },
+  laterDay: { fontFamily: fonts.bodySemibold, fontSize: 11, color: colors.faint },
+  laterNum: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
+  laterName: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
+  laterTime: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.muted, marginTop: 1 },
+  hist: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, marginBottom: 10 },
+  statusPill: { backgroundColor: colors.panel2, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4 },
+  statusPillCancelled: { backgroundColor: '#fbeceb' },
+  statusText: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.muted },
+  statusTextCancelled: { color: colors.error },
+  cancelLine: { fontFamily: fonts.bodySemibold, fontSize: 12.5, lineHeight: 18, color: colors.error, marginTop: 8 },
+  requestBox: { marginTop: 10, backgroundColor: '#fff', borderRadius: 12, padding: 10, gap: 8 },
+  requestText: { fontFamily: fonts.body, fontSize: 12.5, lineHeight: 18, color: colors.ink },
+  requestSlot: { fontFamily: fonts.bodyBold },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  smallBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.bg },
+  smallBtnPrimary: { borderColor: colors.dark, backgroundColor: colors.dark },
+  smallBtnText: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.ink },
+  smallBtnTextPrimary: { color: '#fff' },
+  sheetShade: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 34 },
+  grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 14 },
+  sheetTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.ink },
+  sheetSub: { fontFamily: fonts.bodyMedium, fontSize: 13.5, color: colors.muted, marginTop: 2, marginBottom: 10 },
+  sheetRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  sheetRowText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  sheetHint: { fontFamily: fonts.body, fontSize: 12, lineHeight: 17, color: colors.faint, marginTop: 10 },
+  disputePromptBtn: { marginTop: 10, alignSelf: 'flex-start' },
+  disputePromptText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.muted },
+  disputeSubmitted: { marginTop: 10, backgroundColor: colors.panel2, borderRadius: 12, padding: 10 },
+  disputeStatus: { fontFamily: fonts.bodyBold, fontSize: 11.5, color: colors.goldText },
+  disputeSubjectText: { fontFamily: fonts.body, fontSize: 12.5, color: colors.muted, marginTop: 3 },
+  disputeForm: { marginTop: 12, gap: 8 },
+  disputeSubjectRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  disputeChip: { backgroundColor: colors.panel2, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
+  disputeChipActive: { backgroundColor: colors.dark },
+  disputeChipText: { fontFamily: fonts.bodySemibold, fontSize: 12, color: colors.ink },
+  disputeChipTextActive: { color: '#fff' },
   disputeInput: {
-    minHeight: 64,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    minHeight: 72,
+    borderRadius: 14,
+    backgroundColor: colors.panel2,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontFamily: fonts.body,
-    fontSize: 13.5,
+    fontSize: 14,
     color: colors.ink,
     textAlignVertical: 'top',
   },
-  disputeError: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.error,
-  },
-  disputeSubmitBtn: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-  },
-  disputeSubmitBtnDisabled: {
-    opacity: 0.6,
-  },
-  disputeSubmitText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12.5,
-    color: '#fff',
-  },
-  empty: {
-    alignItems: 'flex-start',
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontFamily: fonts.displayBlack,
-    fontSize: 22,
-    color: colors.ink,
-    marginBottom: 10,
-  },
-  emptyText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.muted,
-    lineHeight: 20,
-    marginBottom: 22,
-  },
-  emptyBtn: {
-    width: '100%',
-  },
+  disputeError: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.error },
+  disputeSubmitBtn: { alignSelf: 'flex-start', backgroundColor: colors.dark, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 11 },
+  disputeSubmitBtnDisabled: { opacity: 0.6 },
+  disputeSubmitText: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff' },
 });

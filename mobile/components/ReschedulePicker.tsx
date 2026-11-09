@@ -197,11 +197,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   selected: {
-    borderColor: colors.gold3,
-    backgroundColor: colors.gold3,
+    borderColor: colors.dark,
+    backgroundColor: colors.dark,
   },
   selectedText: {
-    color: colors.onGold,
+    color: colors.gold2,
   },
   slotScroll: {
     maxHeight: 280,

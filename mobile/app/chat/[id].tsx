@@ -145,7 +145,7 @@ export default function Chat() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {loading ? (
-          <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
         ) : (
           <FlatList
             ref={listRef}
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   bubbleMine: {
-    backgroundColor: colors.gold3,
+    backgroundColor: colors.dark,
     borderBottomRightRadius: 4,
   },
   bubbleText: {
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   bubbleTextMine: {
-    color: colors.onGold,
+    color: '#fff',
   },
   empty: {
     fontFamily: fonts.body,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 12.5,
     color: colors.goldText,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.goldPale,
     borderRadius: radius.md,
     padding: 12,
     marginHorizontal: 16,
@@ -302,22 +302,21 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 44,
     maxHeight: 120,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: 22,
+    backgroundColor: colors.panel2,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
     fontFamily: fonts.body,
     fontSize: 14.5,
     color: colors.ink,
   },
   sendBtn: {
     height: 44,
-    borderRadius: radius.lg,
+    borderRadius: 22,
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.gold3,
+    backgroundColor: colors.dark,
   },
   sendBtnDisabled: {
     opacity: 0.5,
@@ -325,6 +324,6 @@ const styles = StyleSheet.create({
   sendBtnText: {
     fontFamily: fonts.bodyBold,
     fontSize: 13.5,
-    color: colors.onGold,
+    color: '#fff',
   },
 });

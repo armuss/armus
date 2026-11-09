@@ -1,14 +1,68 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../lib/auth';
-import { colors, fonts } from '../../lib/theme';
+import { colors, floatShadow, fonts } from '../../lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
-  return <Ionicons name={name} size={23} color={focused ? colors.gold3 : colors.faint} />;
+const ICONS: Record<string, IconName> = {
+  index: 'search',
+  students: 'people-outline',
+  availability: 'calendar-outline',
+  messages: 'chatbubble-outline',
+  lessons: 'calendar-outline',
+  profile: 'person-outline',
+};
+
+/**
+ * The floating black dock: icons only, and the open tab grows into a gold
+ * pill with its name.
+ */
+function Dock({ state, descriptors, navigation, home }: BottomTabBarProps & { home: IconName }) {
+  const insets = useSafeAreaInsets();
+  const visible = state.routes.filter(
+    (r) => StyleSheet.flatten(descriptors[r.key].options.tabBarItemStyle)?.display !== 'none'
+  );
+  return (
+    <View style={[styles.dockWrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={styles.dock}>
+        {visible.map((route) => {
+          const focused = state.routes[state.index]?.key === route.key;
+          const { options } = descriptors[route.key];
+          const label = typeof options.title === 'string' ? options.title : route.name;
+          const icon = route.name === 'index' ? home : ICONS[route.name] ?? 'ellipse-outline';
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: focused }}
+              accessibilityLabel={label}
+              onPress={() => {
+                const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+                if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+              }}
+              style={[styles.item, focused && styles.itemOn]}
+            >
+              <Ionicons
+                name={focused ? (icon.replace('-outline', '') as IconName) : icon}
+                size={21}
+                color={focused ? colors.ink : '#8a8a8a'}
+              />
+              {focused && (
+                <Text style={styles.label} numberOfLines={1}>
+                  {label}
+                </Text>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 }
 
 export default function TabsLayout() {
@@ -17,7 +71,7 @@ export default function TabsLayout() {
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </View>
     );
   }
@@ -28,76 +82,41 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.gold3,
-        tabBarInactiveTintColor: colors.faint,
-        tabBarStyle: {
-          backgroundColor: colors.panel,
-          borderTopColor: colors.borderSoft,
-          height: 64,
-          paddingBottom: 10,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: { fontFamily: fonts.bodySemibold, fontSize: 11 },
-      }}
+      tabBar={(props) => <Dock {...props} home={isTeacher ? 'home-outline' : 'search'} />}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: isTeacher ? 'Bugün' : 'Öğretmenler',
-          tabBarIcon: ({ focused }) =>
-            isTeacher ? (
-              <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
-            ) : (
-              <TabIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="students"
-        options={{
-          title: 'Öğrencilerim',
-          href: isTeacher ? undefined : null,
-          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'people' : 'people-outline'} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="availability"
-        options={{
-          title: 'Programım',
-          href: isTeacher ? undefined : null,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Mesajlar',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'chatbubbles' : 'chatbubbles-outline'} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="lessons"
-        options={{
-          title: 'Derslerim',
-          href: isTeacher ? null : undefined,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} />,
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: isTeacher ? 'Bugün' : 'Keşfet' }} />
+      <Tabs.Screen name="students" options={{ title: 'Öğrenciler', href: isTeacher ? undefined : null }} />
+      <Tabs.Screen name="availability" options={{ title: 'Programım', href: isTeacher ? undefined : null }} />
+      <Tabs.Screen name="messages" options={{ title: 'Mesajlar' }} />
+      <Tabs.Screen name="lessons" options={{ title: 'Derslerim', href: isTeacher ? null : undefined }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  dockWrap: { backgroundColor: colors.bg, alignItems: 'center', paddingTop: 8 },
+  dock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    height: 62,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    backgroundColor: colors.dark,
+    ...floatShadow,
+  },
+  item: {
+    height: 46,
+    minWidth: 46,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingHorizontal: 12,
+  },
+  itemOn: { backgroundColor: colors.gold2 },
+  label: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
+});

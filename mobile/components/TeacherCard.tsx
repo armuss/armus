@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { shortDisplayName } from '../lib/displayName';
@@ -6,233 +8,91 @@ import type { Teacher } from '../lib/teachers-data';
 
 type Props = {
   teacher: Teacher;
+  width: number;
   onPress?: () => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
 };
 
-export default function TeacherCard({ teacher, onPress, isFavorite, onToggleFavorite }: Props) {
-  const isPopular = teacher.reviewCount > 100;
-
+/** Photo tile for the two-column Keşfet grid: rating, heart, name, main topic and price. */
+export default function TeacherCard({ teacher, width, onPress, isFavorite, onToggleFavorite }: Props) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, { opacity: pressed ? 0.9 : 1 }]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, { width, opacity: pressed ? 0.92 : 1 }]}>
+      <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={40} />
+      <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.72)']} style={styles.shade} />
+      <View style={styles.rating}>
+        <Text style={styles.ratingText}>{teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : 'Yeni'}</Text>
+      </View>
       {onToggleFavorite && (
-        <Pressable onPress={onToggleFavorite} hitSlop={10} style={styles.favBtn}>
-          <Text style={[styles.favIcon, isFavorite && styles.favIconActive]}>{isFavorite ? '♥' : '♡'}</Text>
+        <Pressable
+          onPress={onToggleFavorite}
+          hitSlop={10}
+          style={styles.heart}
+          accessibilityLabel={isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+        >
+          <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={17} color={isFavorite ? colors.gold2 : '#fff'} />
         </Pressable>
       )}
-
-      <View style={styles.topRow}>
-        {teacher.photo ? (
-          <Image source={{ uri: teacher.photo }} style={styles.photo} />
-        ) : (
-          <View style={[styles.photo, styles.photoFallback]}>
-            <Text style={styles.photoFallbackText}>{teacher.initials}</Text>
-          </View>
-        )}
-        <View style={styles.info}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name}>{shortDisplayName(teacher.name)}</Text>
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedCheck}>✓</Text>
-            </View>
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingText}>{teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : 'Yeni'}</Text>
-            {teacher.reviewCount > 0 && <Text style={styles.reviewCount}>({teacher.reviewCount} yorum)</Text>}
-          </View>
-          <View style={styles.priceRow}>
-            <Text style={styles.price}>₺{teacher.price}</Text>
-            <Text style={styles.priceUnit}> / 50 dk ders</Text>
-          </View>
+      <View style={styles.text}>
+        <Text style={styles.name} numberOfLines={1}>
+          {shortDisplayName(teacher.name)}
+        </Text>
+        <View style={styles.meta}>
+          <Text style={styles.topic} numberOfLines={1}>
+            {teacher.tags[0] ?? teacher.role}
+          </Text>
+          <Text style={styles.price}>₺{teacher.price}</Text>
         </View>
       </View>
-
-      {!!teacher.level && (
-        <View style={styles.levelBadge}>
-          <Text style={styles.levelBadgeText}>{teacher.level} Seviye</Text>
-        </View>
-      )}
-
-      <Text style={styles.bio} numberOfLines={2}>
-        {teacher.about[0]}
-      </Text>
-
-      <Text style={styles.stats}>
-        {teacher.students} öğrenci · {teacher.completedLessons} ders
-      </Text>
-
-      <View style={styles.tagRow}>
-        {teacher.tags.slice(0, 3).map((tag) => (
-          <View key={tag} style={styles.tag}>
-            <Text style={styles.tagText}>{tag}</Text>
-          </View>
-        ))}
-      </View>
-
-      {isPopular && (
-        <View style={styles.popularBanner}>
-          <Text style={styles.popularBannerText}>⚡ Süper popüler · sık tercih ediliyor</Text>
-        </View>
-      )}
     </Pressable>
   );
 }
 
+export function TeacherPhoto({ teacher, style, initialsSize = 18 }: { teacher: Teacher; style: any; initialsSize?: number }) {
+  if (teacher.photo) return <Image source={{ uri: teacher.photo }} style={[style, styles.photoBg]} resizeMode="cover" />;
+  return (
+    <View style={[style, styles.photoBg, styles.fallback]}>
+      <Text style={[styles.fallbackText, { fontSize: initialsSize }]}>{teacher.initials}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.panel,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+  tile: {
+    height: 232,
+    borderRadius: radius.xl,
     overflow: 'hidden',
-    marginBottom: 14,
-    padding: 14,
+    backgroundColor: colors.panel2,
+    marginBottom: 10,
   },
-  favBtn: {
+  shade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '52%' },
+  photoBg: { backgroundColor: colors.panel2 },
+  fallback: { alignItems: 'center', justifyContent: 'center' },
+  fallbackText: { fontFamily: fonts.display, color: colors.faint },
+  rating: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  favIcon: {
-    fontSize: 22,
-    color: colors.faint,
-  },
-  favIconActive: {
-    color: colors.error,
-  },
-  topRow: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingRight: 24,
-  },
-  photo: {
-    width: 74,
-    height: 74,
-    borderRadius: radius.md,
-    backgroundColor: colors.panel2,
-  },
-  photoFallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoFallbackText: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 20,
-    color: colors.muted,
-  },
-  info: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  name: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 16,
-    color: colors.ink,
-  },
-  verifiedBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  verifiedCheck: {
-    color: '#fff',
-    fontSize: 10,
-    fontFamily: fonts.bodyBold,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 4,
-  },
-  ratingText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: colors.goldText,
-  },
-  reviewCount: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.muted,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: 4,
-  },
-  price: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  priceUnit: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.muted,
-  },
-  levelBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.panel2,
+    left: 9,
+    top: 9,
+    backgroundColor: 'rgba(255,255,255,0.93)',
     borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginTop: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  levelBadgeText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: colors.muted,
+  ratingText: { fontFamily: fonts.bodyExtraBold, fontSize: 11.5, color: colors.ink },
+  heart: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  bio: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.muted,
-    lineHeight: 19,
-    marginTop: 10,
-  },
-  stats: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.faint,
-    marginTop: 8,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 10,
-  },
-  tag: {
-    backgroundColor: colors.panel2,
-    borderRadius: radius.pill,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-  },
-  tagText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11.5,
-    color: colors.muted,
-  },
-  popularBanner: {
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.md,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    marginTop: 12,
-  },
-  popularBannerText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 12,
-    color: colors.goldText,
-  },
+  text: { position: 'absolute', left: 11, right: 11, bottom: 10 },
+  name: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
+  meta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 1 },
+  topic: { fontFamily: fonts.bodySemibold, fontSize: 12, color: 'rgba(255,255,255,0.85)', flexShrink: 1 },
+  price: { fontFamily: fonts.bodyExtraBold, fontSize: 12.5, color: '#fff' },
 });

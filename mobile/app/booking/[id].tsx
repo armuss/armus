@@ -1,8 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
@@ -65,8 +65,10 @@ const DATE_OPTIONS = Array.from({ length: 10 }, (_, i) => {
 type Phase = 'picking' | 'checkout' | 'success' | 'error';
 
 export default function Booking() {
-  const { id, type: typeParam } = useLocalSearchParams<{ id: string; type?: string }>();
+  const { id, type: typeParam, date: dateParam } = useLocalSearchParams<{ id: string; type?: string; date?: string }>();
   const { profile } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   // one trial per teacher (migration_110.sql): a student who's had theirs
   // with this teacher is switched to a regular lesson, with a notice
   const [type, setType] = useState<'trial' | 'lesson'>(typeParam === 'lesson' ? 'lesson' : 'trial');
@@ -158,6 +160,27 @@ export default function Booking() {
     }));
   }, [teacher, selectedDateInfo, busyTimes]);
 
+  // which of the bookable days have at least one open time (calendar dots)
+  const openDays = useMemo(() => {
+    const out: Record<string, boolean> = {};
+    if (!teacher) return out;
+    const now = Date.now();
+    for (const d of DATE_OPTIONS) {
+      out[d.key] = slotsForDate(teacher, d.key, d.date.getDay(), busyTimes).some(
+        (slot) => slot.available && zonedTimeToUtc(d.key, slot.time, teacher.timezone).getTime() > now
+      );
+    }
+    return out;
+  }, [teacher, busyTimes]);
+
+  // open on the first day that has a free time, so times show right away
+  useEffect(() => {
+    if (selectedDate || !teacher) return;
+    // a day picked on the profile's "Saatler" tab comes along as ?date=
+    const first = DATE_OPTIONS.find((d) => d.key === dateParam && openDays[d.key]) ?? DATE_OPTIONS.find((d) => openDays[d.key]);
+    if (first) setSelectedDate(first.key);
+  }, [openDays, teacher, selectedDate]);
+
   // Every teacher-local time shown to the student (slot grid, summary,
   // success screen) converts through this - a slot picked in the
   // teacher's own calendar grid, not the viewer's. A slot near midnight
@@ -175,6 +198,7 @@ export default function Booking() {
   function pickDate(key: string) {
     setSelectedDate(key);
     setSelectedTime(null);
+    setExpandedGroups([]);
     setError('');
   }
 
@@ -260,7 +284,7 @@ export default function Booking() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </SafeAreaView>
     );
   }
@@ -285,7 +309,7 @@ export default function Booking() {
         <WebView
           source={{ uri: checkoutUrl }}
           startInLoadingState
-          renderLoading={() => <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />}
+          renderLoading={() => <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
             const status = parsePaymentRedirect(navState.url);
             if (status === 'success') {
@@ -349,31 +373,52 @@ export default function Booking() {
     );
   }
 
+  // open times of the chosen day, grouped by the viewer's own part of day
+  const groups = (() => {
+    if (!selectedDateInfo) return [];
+    const parts: { key: string; label: string; items: { time: string; start: string; end: string }[] }[] = [
+      { key: 'morning', label: 'Öğleden önce', items: [] },
+      { key: 'noon', label: 'Öğleden sonra', items: [] },
+      { key: 'evening', label: 'Akşam', items: [] },
+      { key: 'night', label: 'Gece', items: [] },
+    ];
+    for (const slot of slots) {
+      if (!slot.available) continue;
+      const range = whenForViewer(selectedDateInfo.key, slot.time)?.timeRange ?? slot.time;
+      const [start, end = ''] = range.split(/\s*[–-]\s*/);
+      const hour = Number(start.slice(0, 2));
+      const part = hour >= 6 && hour < 12 ? 0 : hour >= 12 && hour < 17 ? 1 : hour >= 17 ? 2 : 3;
+      parts[part].items.push({ time: slot.time, start, end });
+    }
+    return parts.filter((g) => g.items.length > 0);
+  })();
+  const openCount = groups.reduce((n, g) => n + g.items.length, 0);
+  const ctaLabel = coversAll
+    ? 'Rezervasyonu tamamla'
+    : submitting
+      ? 'Yönlendiriliyor…'
+      : coverage
+        ? `Farkı öde (${formatMoney(coverage.topUp)})`
+        : 'Ödemeye geç';
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Geri</Text>
-        </Pressable>
-
-        <View style={styles.teacherRow}>
-          {teacher.photo ? (
-            <Image source={{ uri: teacher.photo }} style={styles.teacherPhoto} />
-          ) : (
-            <View style={[styles.teacherPhoto, styles.teacherPhotoFallback]}>
-              <Text style={styles.teacherPhotoText}>{teacher.initials}</Text>
-            </View>
-          )}
-          <View style={{ flex: 1 }}>
-            <Text style={styles.teacherName}>{shortDisplayName(teacher.name)}</Text>
-            <Text style={styles.teacherRole}>{teacher.role}</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={styles.head}>
+          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+          </Pressable>
+          <View style={styles.headText}>
+            <Text style={styles.headTitle} numberOfLines={1}>
+              {shortDisplayName(teacher.name)} ile ders
+            </Text>
+            <Text style={styles.headSub}>
+              {lessonTypeLabel(type)} · 50 dk · ₺{teacher.price}
+            </Text>
           </View>
-          <Text style={styles.price}>₺{teacher.price}</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.typeChip}>
-          <Text style={styles.typeChipText}>{lessonTypeLabel(type)}</Text>
-        </View>
         {trialTakenNotice && (
           <Text style={styles.notice}>
             Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her
@@ -381,68 +426,84 @@ export default function Booking() {
           </Text>
         )}
 
-        <Text style={styles.sectionTitle}>Tarih seç</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateRow}>
-          {DATE_OPTIONS.map((d) => (
-            <Pressable
-              key={d.key}
-              onPress={() => pickDate(d.key)}
-              style={[styles.datePill, selectedDate === d.key && styles.datePillSelected]}
-            >
-              <Text style={[styles.dayName, selectedDate === d.key && styles.dateTextSelected]}>
-                {DAY_NAMES[d.date.getDay()]}
-              </Text>
-              <Text style={[styles.dayNum, selectedDate === d.key && styles.dateTextSelected]}>
-                {d.date.getDate()}
-              </Text>
-            </Pressable>
-          ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.week} contentContainerStyle={styles.weekInner}>
+          {DATE_OPTIONS.map(({ date, key }) => {
+            const on = selectedDate === key;
+            const open = openDays[key];
+            return (
+              <Pressable
+                key={key}
+                onPress={() => pickDate(key)}
+                style={[styles.day, on && styles.dayOn]}
+                accessibilityLabel={`${date.getDate()} ${MONTH_NAMES[date.getMonth()]}, ${DAY_NAMES[date.getDay()]}`}
+              >
+                <Text style={[styles.dayName, on && styles.dayNameOn]}>{DAY_NAMES[date.getDay()]}</Text>
+                <Text style={[styles.dayNum, !open && styles.dayNumClosed, on && styles.dayNumOn]}>{date.getDate()}</Text>
+                {open && <View style={styles.dayDot} />}
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
-        {selectedDate && (
+        {selectedDateInfo && (
           <>
-            <Text style={styles.sectionTitle}>Saat seç</Text>
-            {slots.some((s) => s.available) ? (
-              <View style={styles.slotGrid}>
-                {slots.map((slot) => (
-                  <Pressable
-                    key={slot.time}
-                    disabled={!slot.available}
-                    onPress={() => {
-                      setSelectedTime(slot.time);
-                      setError('');
-                    }}
-                    style={[
-                      styles.slot,
-                      !slot.available && styles.slotUnavailable,
-                      selectedTime === slot.time && styles.slotSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.slotText,
-                        !slot.available && styles.slotTextUnavailable,
-                        selectedTime === slot.time && styles.slotTextSelected,
-                      ]}
-                    >
-                      {selectedDateInfo ? whenForViewer(selectedDateInfo.key, slot.time)?.timeRange : ''}
-                    </Text>
-                  </Pressable>
-                ))}
+            {groups.length === 0 ? (
+              <View style={styles.emptyDay}>
+                <Text style={styles.emptyHint}>Bu gün boş saat yok. Altında nokta olan bir gün seç.</Text>
               </View>
             ) : (
-              <Text style={styles.emptyHint}>Bu tarihte boş saat yok, başka bir gün dene.</Text>
+              groups.map((g) => {
+                const expanded = expandedGroups.includes(g.key);
+                const shown = expanded ? g.items : g.items.slice(0, 4);
+                return (
+                  <View key={g.key}>
+                    <View style={styles.per}>
+                      <Text style={styles.perText}>{g.label}</Text>
+                      <Text style={styles.perText}>{g.items.length} boş saat</Text>
+                    </View>
+                    {shown.map((it) => {
+                      const on = selectedTime === it.time;
+                      return (
+                        <Pressable
+                          key={it.time}
+                          onPress={() => {
+                            setSelectedTime(it.time);
+                            setError('');
+                          }}
+                          style={[styles.opt, on && styles.optOn]}
+                        >
+                          {on && (
+                            <View style={styles.check}>
+                              <Ionicons name="checkmark" size={14} color={colors.gold2} />
+                            </View>
+                          )}
+                          <Text style={styles.optTime}>{it.start}</Text>
+                          {!!it.end && <Text style={styles.optEnd}>{it.end} bitiş</Text>}
+                        </Pressable>
+                      );
+                    })}
+                    {g.items.length > 4 && (
+                      <Pressable
+                        onPress={() =>
+                          setExpandedGroups((prev) => (expanded ? prev.filter((k) => k !== g.key) : [...prev, g.key]))
+                        }
+                        style={styles.moreBtn}
+                      >
+                        <Text style={styles.moreText}>{expanded ? 'Daha az göster' : `${g.items.length - 4} saat daha`}</Text>
+                        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={15} color={colors.muted} />
+                      </Pressable>
+                    )}
+                  </View>
+                );
+              })
             )}
+            {openCount > 0 && <Text style={styles.tzHint}>Saatler senin saat dilimine göre.</Text>}
           </>
         )}
 
         {selectedDate && selectedTime && (
           <View style={styles.confirmBox}>
-            <Text style={styles.sectionTitle}>Özet</Text>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Öğretmen</Text>
-              <Text style={styles.summaryValue}>{shortDisplayName(teacher.name)}</Text>
-            </View>
+            <Text style={styles.boxTitle}>Özet</Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tarih</Text>
               <Text style={styles.summaryValue}>{selectedWhen?.dateLabel}</Text>
@@ -516,295 +577,125 @@ export default function Booking() {
             )}
 
             {!!error && <Text style={styles.error}>{error}</Text>}
-
-            <Button
-              label={
-                coversAll
-                  ? 'Rezervasyonu Tamamla'
-                  : submitting
-                    ? 'Yönlendiriliyor…'
-                    : coverage
-                      ? `Farkı Öde (${formatMoney(coverage.topUp)})`
-                      : 'Ödemeye Geç'
-              }
-              onPress={handleConfirm}
-              loading={submitting}
-            />
           </View>
         )}
+        {!!error && !(selectedDate && selectedTime) && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
+
+      <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        {selectedDate && selectedTime ? (
+          <Pressable
+            onPress={handleConfirm}
+            disabled={submitting}
+            style={({ pressed }) => [styles.go, { opacity: submitting ? 0.7 : pressed ? 0.88 : 1 }]}
+          >
+            {submitting ? (
+              <ActivityIndicator color={colors.gold2} />
+            ) : (
+              <Text style={styles.goText} numberOfLines={1} adjustsFontSizeToFit>
+                {selectedWhen?.dateLabel} · {selectedWhen?.time} · <Text style={styles.goGold}>{ctaLabel}</Text>
+              </Text>
+            )}
+          </Pressable>
+        ) : (
+          <View style={[styles.go, styles.goIdle]}>
+            <Text style={styles.goIdleText}>{openCount > 0 ? 'Bir saat seç' : 'Bir gün seç'}</Text>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  centered: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  notFound: {
-    fontFamily: fonts.body,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 60,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 40,
-  },
-  backBtn: {
-    marginBottom: 12,
-  },
-  backText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13.5,
-    color: colors.muted,
-  },
-  teacherRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 26,
-  },
-  teacherPhoto: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.md,
-    backgroundColor: colors.panel2,
-  },
-  teacherPhotoFallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  teacherPhotoText: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 16,
-    color: colors.muted,
-  },
-  teacherName: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 16,
-    color: colors.ink,
-  },
-  teacherRole: {
-    fontFamily: fonts.body,
-    fontSize: 12.5,
-    color: colors.muted,
-    marginTop: 2,
-  },
-  price: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 17,
-    color: colors.ink,
-  },
-  sectionTitle: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 15,
-    color: colors.ink,
-    marginBottom: 12,
-  },
-  typeChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.panel2,
-    borderRadius: radius.pill,
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    marginTop: -12,
-    marginBottom: 18,
-  },
-  typeChipText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12,
-    color: colors.muted,
-  },
+  screen: { flex: 1, backgroundColor: colors.bg },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 60 },
+  content: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 24 },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
+  headText: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
+  headTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
+  headSub: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.faint, marginTop: 1 },
+  backBtn: { paddingVertical: 4 },
+  backText: { fontFamily: fonts.bodySemibold, fontSize: 14, color: colors.ink },
   notice: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    lineHeight: 19,
-    color: colors.ink,
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.gold2,
-    padding: 12,
-    marginTop: -6,
-    marginBottom: 20,
-  },
-  dateRow: {
-    gap: 10,
-    paddingBottom: 24,
-  },
-  datePill: {
-    width: 54,
-    height: 64,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  datePillSelected: {
-    borderColor: colors.gold3,
-    backgroundColor: colors.gold3,
-  },
-  dayName: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: colors.muted,
-  },
-  dayNum: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 16,
-    color: colors.ink,
-  },
-  dateTextSelected: {
-    color: colors.onGold,
-  },
-  slotGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  slot: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  slotUnavailable: {
-    borderColor: colors.borderSoft,
-    backgroundColor: colors.panel2,
-  },
-  slotSelected: {
-    borderColor: colors.gold3,
-    backgroundColor: colors.gold3,
-  },
-  slotText: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13,
-    color: colors.ink,
-  },
-  slotTextUnavailable: {
-    color: colors.faint,
-  },
-  slotTextSelected: {
-    color: colors.onGold,
-  },
-  emptyHint: {
-    fontFamily: fonts.body,
-    fontSize: 13.5,
-    color: colors.muted,
-    marginBottom: 24,
-  },
-  confirmBox: {
-    backgroundColor: colors.panel,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: 16,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 7,
-  },
-  summaryLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13.5,
-    color: colors.muted,
-  },
-  summaryValue: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13.5,
-    color: colors.ink,
-  },
-  creditNote: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12.5,
     color: colors.goldText,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.goldSoft,
     borderRadius: radius.md,
-    padding: 10,
-    marginTop: 10,
-    marginBottom: 14,
+    padding: 12,
+    marginBottom: 12,
+    lineHeight: 19,
   },
-  field: {
-    marginTop: 14,
-    marginBottom: 4,
-  },
-  label: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 12.5,
-    color: colors.ink,
+  week: { marginHorizontal: -16, marginBottom: 6 },
+  weekInner: { paddingHorizontal: 16, gap: 6 },
+  day: { width: 46, alignItems: 'center', paddingTop: 8, paddingBottom: 12, borderRadius: 16 },
+  dayOn: { backgroundColor: colors.dark },
+  dayName: { fontFamily: fonts.bodySemibold, fontSize: 11.5, color: colors.faint },
+  dayNameOn: { color: '#aaa' },
+  dayNum: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.ink, marginTop: 2 },
+  dayNumClosed: { color: '#c4c4c4' },
+  dayNumOn: { color: '#fff' },
+  dayDot: { position: 'absolute', bottom: 4, width: 5, height: 5, borderRadius: 3, backgroundColor: colors.goldDot },
+  per: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, marginBottom: 8 },
+  perText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.faint, letterSpacing: 0.5, textTransform: 'uppercase' },
+  opt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     marginBottom: 8,
   },
+  optOn: { borderColor: colors.ink, borderWidth: 2, padding: 13, backgroundColor: colors.goldPale },
+  check: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
+  optTime: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  optEnd: { marginLeft: 'auto', fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.faint },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8 },
+  moreText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.muted },
+  emptyDay: { borderWidth: 1.5, borderColor: '#e3e3e3', borderStyle: 'dashed', borderRadius: 16, padding: 16, marginTop: 14 },
+  emptyHint: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: colors.faint, textAlign: 'center' },
+  tzHint: { fontFamily: fonts.body, fontSize: 12, color: colors.faint, marginTop: 6 },
+  confirmBox: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 16, marginTop: 16 },
+  boxTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink, marginBottom: 6 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7 },
+  summaryLabel: { fontFamily: fonts.body, fontSize: 13.5, color: colors.muted },
+  summaryValue: { fontFamily: fonts.bodyBold, fontSize: 13.5, color: colors.ink },
+  creditNote: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.goldText, marginTop: 8, lineHeight: 18, textAlign: 'left' },
+  field: { marginTop: 14 },
+  label: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.ink, marginBottom: 6 },
   input: {
     height: 48,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.panel2,
     paddingHorizontal: 14,
     fontFamily: fonts.body,
     fontSize: 14.5,
     color: colors.ink,
-    backgroundColor: colors.bg,
   },
-  error: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12.5,
-    color: colors.error,
-    marginTop: 14,
-    marginBottom: 4,
-  },
-  checkoutHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
-  },
-  checkoutTitle: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 15,
-    color: colors.ink,
-  },
+  error: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.error, marginTop: 12, lineHeight: 18 },
+  bar: { paddingHorizontal: 16, paddingTop: 10, backgroundColor: colors.bg },
+  go: { height: 56, borderRadius: 18, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  goText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
+  goGold: { color: colors.gold2 },
+  goIdle: { backgroundColor: colors.panel2 },
+  goIdleText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.faint },
+  checkoutHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 10 },
+  checkoutTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
   successIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.gold3,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: colors.dark,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
-  successIconText: {
-    fontSize: 32,
-    color: colors.onGold,
-    fontFamily: fonts.bodyExtraBold,
-  },
-  successTitle: {
-    fontFamily: fonts.displayBlack,
-    fontSize: 22,
-    color: colors.ink,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  successSubtitle: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  successIconText: { fontFamily: fonts.bodyExtraBold, fontSize: 34, color: colors.gold2 },
+  successTitle: { fontFamily: fonts.display, fontSize: 21, color: colors.ink, textAlign: 'center' },
+  successSubtitle: { fontFamily: fonts.body, fontSize: 14.5, color: colors.muted, textAlign: 'center', marginTop: 8, lineHeight: 21 },
 });
