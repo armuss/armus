@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import Button from '../../components/Button';
@@ -17,6 +18,7 @@ import {
   type Booking,
 } from '../../lib/bookings';
 import { shortDisplayName } from '../../lib/displayName';
+import { getLessonNotes, saveLessonNotes } from '../../lib/lessonNotes';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -51,6 +53,31 @@ export default function Class() {
   const [progressLabel, setProgressLabel] = useState('');
   const [progressPct, setProgressPct] = useState(0);
   const [overtime, setOvertime] = useState(false);
+  const [timerShort, setTimerShort] = useState('');
+  const insets = useSafeAreaInsets();
+
+  // the bottom panel: words and a note for this lesson, kept on the device
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState<'words' | 'notes'>('words');
+  const [words, setWords] = useState<string[]>([]);
+  const [note, setNote] = useState('');
+  const [wordInput, setWordInput] = useState('');
+  const notesLoaded = useRef(false);
+
+  useEffect(() => {
+    notesLoaded.current = false;
+    getLessonNotes(id).then((n) => {
+      setWords(n.words);
+      setNote(n.note);
+      notesLoaded.current = true;
+    });
+  }, [id]);
+
+  useEffect(() => {
+    if (!notesLoaded.current) return;
+    const t = setTimeout(() => saveLessonNotes(id, { words, note }), 400);
+    return () => clearTimeout(t);
+  }, [id, words, note]);
 
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState('');
@@ -143,9 +170,11 @@ export default function Class() {
       if (now > end) {
         setOvertime(true);
         setProgressLabel(`Ders bitti · +${formatClock(now.getTime() - end.getTime())} ek süre`);
+        setTimerShort(`+${formatClock(now.getTime() - end.getTime())} ek süre`);
       } else {
         setOvertime(false);
         setProgressLabel(`${formatClock(now.getTime() - start.getTime())} geçti · ${formatClock(end.getTime() - now.getTime())} kaldı`);
+        setTimerShort(now < start ? `${formatClock(start.getTime() - now.getTime())} sonra başlıyor` : `${formatClock(end.getTime() - now.getTime())} kaldı`);
       }
     }
 
@@ -252,7 +281,7 @@ export default function Class() {
   if (phase === 'loading') {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </SafeAreaView>
     );
   }
@@ -271,6 +300,7 @@ export default function Class() {
   if (phase === 'cancelled') {
     return (
       <Gate
+        icon="close-circle-outline"
         title="Bu ders iptal edildi"
         subtitle="Bu ders artık gerçekleşmeyecek."
         buttonLabel="← Geri dön"
@@ -285,6 +315,7 @@ export default function Class() {
     const when = formatLessonWhenForViewer(booking);
     return (
       <Gate
+        icon="time-outline"
         title="Henüz erken"
         subtitle={`${otherName} ile ${when.dateLabel}, ${when.timeRange} — ${formatMinutes(minutesUntil)} sonra katılabileceksin.`}
         buttonLabel="Derslerime dön"
@@ -391,41 +422,130 @@ export default function Class() {
   const isStudent = profile?.id === booking.studentId;
   const otherName = isStudent ? shortDisplayName(booking.teacherName) : booking.studentName;
 
+  function addWord() {
+    const w = wordInput.trim();
+    if (!w || words.some((x) => x.toLowerCase() === w.toLowerCase())) {
+      setWordInput('');
+      return;
+    }
+    setWords((prev) => [...prev, w]);
+    setWordInput('');
+  }
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {otherName} ile ders · {formatLessonWhenForViewer(booking).timeRange}
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.room, { paddingTop: insets.top + 6 }]}>
+      <View style={styles.roomTop}>
+        <View style={[styles.timer, overtime && styles.timerOver]} accessibilityLabel={progressLabel}>
+          <View style={[styles.timerDot, overtime && { backgroundColor: '#fff' }]} />
+          <Text style={styles.timerText}>{timerShort}</Text>
+        </View>
+        <Text style={styles.roomWith} numberOfLines={1}>
+          {otherName} · {formatLessonWhenForViewer(booking).timeRange}
         </Text>
-        <Pressable onPress={handleLeave} style={styles.leaveBtn}>
-          <Text style={styles.leaveBtnText}>Ayrıl</Text>
+        <Pressable onPress={handleLeave} style={styles.leave} accessibilityLabel="Dersten ayrıl">
+          <Ionicons name="exit-outline" size={16} color="#fff" />
+          <Text style={styles.leaveText}>Ayrıl</Text>
         </Pressable>
       </View>
-
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, overtime && styles.progressFillOvertime, { width: `${progressPct}%` }]} />
       </View>
-      <Text style={styles.progressLabel}>{progressLabel}</Text>
 
-      <WebView
-        source={{ uri: roomUrl }}
-        style={{ flex: 1 }}
-        allowsInlineMediaPlayback
-        mediaPlaybackRequiresUserAction={false}
-        mediaCapturePermissionGrantType="grant"
-        startInLoadingState
-        renderLoading={() => <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />}
-      />
-    </SafeAreaView>
+      <View style={styles.videoFrame}>
+        <WebView
+          source={{ uri: roomUrl }}
+          style={{ flex: 1, backgroundColor: '#0b0b0b' }}
+          allowsInlineMediaPlayback
+          mediaPlaybackRequiresUserAction={false}
+          mediaCapturePermissionGrantType="grant"
+          startInLoadingState
+          renderLoading={() => (
+            <View style={styles.videoLoading}>
+              <ActivityIndicator color={colors.gold2} />
+              <Text style={styles.videoLoadingText}>Ders odası açılıyor…</Text>
+            </View>
+          )}
+        />
+      </View>
+
+      <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <Pressable onPress={() => setPanelOpen((v) => !v)} style={styles.grabArea} accessibilityLabel={panelOpen ? 'Paneli kapat' : 'Paneli aç'}>
+          <View style={styles.grab} />
+        </Pressable>
+        <View style={styles.panelTabs}>
+          {(
+            [
+              ['words', `Kelimeler${words.length ? ` · ${words.length}` : ''}`],
+              ['notes', 'Notlar'],
+            ] as const
+          ).map(([key, label]) => (
+            <Pressable
+              key={key}
+              onPress={() => {
+                setPanelTab(key);
+                setPanelOpen(true);
+              }}
+            >
+              <Text style={[styles.panelTab, panelOpen && panelTab === key && styles.panelTabOn]}>{label}</Text>
+            </Pressable>
+          ))}
+          <Pressable onPress={() => setPanelOpen((v) => !v)} style={{ marginLeft: 'auto' }} hitSlop={10}>
+            <Ionicons name={panelOpen ? 'chevron-down' : 'chevron-up'} size={18} color={colors.muted} />
+          </Pressable>
+        </View>
+
+        {panelOpen && panelTab === 'words' && (
+          <>
+            <View style={styles.words}>
+              {words.map((w) => (
+                <Pressable key={w} onPress={() => setWords((prev) => prev.filter((x) => x !== w))} style={styles.word} accessibilityLabel={`${w} kelimesini sil`}>
+                  <Text style={styles.wordText}>{w}</Text>
+                  <Ionicons name="close" size={12} color={colors.faint} />
+                </Pressable>
+              ))}
+              {words.length === 0 && <Text style={styles.panelHint}>Derste duyduğun yeni kelimeleri buraya yaz, ders bitince de burada kalır.</Text>}
+            </View>
+            <View style={styles.addRow}>
+              <TextInput
+                value={wordInput}
+                onChangeText={setWordInput}
+                onSubmitEditing={addWord}
+                placeholder="Yeni kelime"
+                placeholderTextColor={colors.faint}
+                autoCapitalize="none"
+                returnKeyType="done"
+                style={styles.addInput}
+              />
+              <Pressable onPress={addWord} style={styles.addBtn} accessibilityLabel="Kelime ekle">
+                <Ionicons name="add" size={20} color={colors.gold2} />
+              </Pressable>
+            </View>
+          </>
+        )}
+
+        {panelOpen && panelTab === 'notes' && (
+          <TextInput
+            value={note}
+            onChangeText={setNote}
+            placeholder="Bu dersten aklında kalmasını istediklerin…"
+            placeholderTextColor={colors.faint}
+            multiline
+            style={styles.noteInput}
+          />
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 function Gate({
+  icon = 'videocam-outline',
   title,
   subtitle,
   buttonLabel,
   onPress,
 }: {
+  icon?: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle: string;
   buttonLabel: string;
@@ -433,6 +553,9 @@ function Gate({
 }) {
   return (
     <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
+      <View style={styles.gateIcon}>
+        <Ionicons name={icon} size={28} color={colors.gold2} />
+      </View>
       <Text style={styles.gateTitle}>{title}</Text>
       <Text style={styles.gateSubtitle}>{subtitle}</Text>
       <View style={{ width: '100%', marginTop: 24 }}>
@@ -451,50 +574,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  header: {
+  room: { flex: 1, backgroundColor: '#0b0b0b' },
+  roomTop: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingBottom: 10 },
+  timer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
-  },
-  headerTitle: {
-    flex: 1,
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 14.5,
-    color: colors.ink,
-    marginRight: 12,
-  },
-  leaveBtn: {
-    backgroundColor: colors.panel2,
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  leaveBtnText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12.5,
-    color: colors.error,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: colors.panel2,
-  },
-  progressFill: {
-    height: 4,
-    backgroundColor: colors.gold3,
-  },
-  progressFillOvertime: {
-    backgroundColor: colors.error,
-  },
-  progressLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: colors.muted,
-    textAlign: 'center',
+    paddingHorizontal: 11,
     paddingVertical: 6,
+  },
+  timerOver: { backgroundColor: colors.error },
+  timerDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#e5484d' },
+  timerText: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff', fontVariant: ['tabular-nums'] },
+  roomWith: { flex: 1, fontFamily: fonts.bodySemibold, fontSize: 13, color: '#aaa' },
+  leave: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#e5484d', borderRadius: radius.pill, paddingHorizontal: 13, paddingVertical: 7 },
+  leaveText: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff' },
+  progressTrack: { height: 3, marginHorizontal: 14, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)', marginBottom: 10 },
+  progressFill: { height: 3, borderRadius: 2, backgroundColor: colors.gold2 },
+  progressFillOvertime: { backgroundColor: colors.error },
+  videoFrame: { flex: 1, marginHorizontal: 10, borderRadius: 24, overflow: 'hidden', backgroundColor: '#161616' },
+  videoLoading: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#161616' },
+  videoLoadingText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: '#aaa' },
+  panel: { backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: 10, paddingHorizontal: 16 },
+  grabArea: { alignItems: 'center', paddingTop: 10, paddingBottom: 10 },
+  grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#ddd' },
+  panelTabs: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingBottom: 4 },
+  panelTab: { fontFamily: fonts.bodyBold, fontSize: 14, color: '#9a9a9a' },
+  panelTabOn: { color: colors.ink },
+  words: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12, maxHeight: 110, overflow: 'hidden' },
+  word: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.panel2, borderRadius: 10, paddingHorizontal: 11, paddingVertical: 7 },
+  wordText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
+  panelHint: { fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 18, color: colors.faint },
+  addRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  addInput: { flex: 1, height: 46, borderRadius: 14, backgroundColor: colors.panel2, paddingHorizontal: 14, fontFamily: fonts.bodyMedium, fontSize: 14.5, color: colors.ink },
+  addBtn: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
+  noteInput: {
+    minHeight: 96,
+    maxHeight: 160,
+    marginTop: 12,
+    borderRadius: 14,
+    backgroundColor: colors.panel2,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.ink,
+    textAlignVertical: 'top',
+  },
+  gateIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: colors.dark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
   },
   gateTitle: {
     fontFamily: fonts.displayBlack,

@@ -143,7 +143,7 @@ export default function EditProfile() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </SafeAreaView>
     );
   }
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 12.5,
     color: colors.goldText,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.goldPale,
     borderRadius: radius.md,
     padding: 10,
     marginBottom: 14,

@@ -83,7 +83,7 @@ export default function Earnings() {
   if (loading || !summary) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </SafeAreaView>
     );
   }
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   statValue: { fontFamily: fonts.bodyExtraBold, fontSize: 18, color: colors.ink },
   statLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.muted, marginTop: 3, textAlign: 'center' },
-  balanceCard: { backgroundColor: '#fff8e6', borderRadius: radius.lg, borderWidth: 1, borderColor: colors.gold2, padding: 16, gap: 6 },
+  balanceCard: { backgroundColor: colors.goldPale, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.gold2, padding: 16, gap: 6 },
   balanceLabel: { fontFamily: fonts.bodySemibold, fontSize: 12.5, color: colors.muted },
   balanceValue: { fontFamily: fonts.display, fontSize: 28, color: colors.ink },
   held: { fontFamily: fonts.bodySemibold, fontSize: 12.5, lineHeight: 18, color: colors.goldText },
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyBold,
     fontSize: 11,
     color: colors.goldText,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.goldPale,
     borderRadius: radius.pill,
     paddingHorizontal: 9,
     paddingVertical: 3,

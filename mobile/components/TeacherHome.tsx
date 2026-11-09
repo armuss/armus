@@ -158,7 +158,7 @@ export default function TeacherHome() {
 
         {joinable && (
           <Pressable style={styles.joinBtn} onPress={() => router.push(`/class/${b.id}`)}>
-            <Text style={styles.joinBtnText}>🎥 Derse Katıl</Text>
+            <Text style={styles.joinBtnText}>Derse katıl</Text>
           </Pressable>
         )}
 
@@ -206,7 +206,7 @@ export default function TeacherHome() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]} edges={['top']}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </SafeAreaView>
     );
   }
@@ -225,13 +225,13 @@ export default function TeacherHome() {
               setRefreshing(true);
               load();
             }}
-            tintColor={colors.gold3}
+            tintColor={colors.ink}
           />
         }
         ListHeaderComponent={
           <View style={styles.headerBlock}>
             <Text style={styles.eyebrow}>BUGÜN</Text>
-            <Text style={styles.title}>Merhaba, {profile?.name?.split(' ')[0] || 'Öğretmen'} 👋</Text>
+            <Text style={styles.title}>Merhaba, {profile?.name?.split(' ')[0] || 'Öğretmen'}</Text>
 
             <View style={styles.statRow}>
               <View style={styles.statCard}>
@@ -255,7 +255,7 @@ export default function TeacherHome() {
                   <Text style={styles.earningsValue}>{formatMoney(earnings.netThisMonth)}</Text>
                   <Text style={styles.earningsSub}>Çekilebilir: {formatMoney(earnings.withdrawableBalance)}</Text>
                 </View>
-                <Text style={styles.earningsLink}>Kazançlarım →</Text>
+                <Text style={styles.earningsLink}>Kazançlarım</Text>
               </Pressable>
             )}
 
@@ -337,9 +337,9 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: colors.panel,
-    borderRadius: radius.md,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: colors.border,
     paddingVertical: 14,
     alignItems: 'center',
   },
@@ -358,33 +358,37 @@ const styles = StyleSheet.create({
   earningsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff8e6',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.gold2,
-    padding: 14,
+    backgroundColor: colors.dark,
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     marginBottom: 14,
   },
   earningsLabel: {
     fontFamily: fonts.bodySemibold,
     fontSize: 12,
-    color: colors.muted,
+    color: '#aaa',
   },
   earningsValue: {
     fontFamily: fonts.display,
     fontSize: 22,
-    color: colors.ink,
-    marginVertical: 2,
+    color: '#fff',
+    marginVertical: 3,
   },
   earningsSub: {
-    fontFamily: fonts.bodySemibold,
+    fontFamily: fonts.bodyBold,
     fontSize: 12,
-    color: colors.goldText,
+    color: colors.gold2,
   },
   earningsLink: {
-    fontFamily: fonts.bodyBold,
+    fontFamily: fonts.bodyExtraBold,
     fontSize: 13,
-    color: colors.goldText,
+    color: colors.ink,
+    backgroundColor: colors.gold2,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    overflow: 'hidden',
   },
   allowance: {
     fontFamily: fonts.body,
@@ -442,7 +446,7 @@ const styles = StyleSheet.create({
   },
   joinBtn: {
     marginTop: 12,
-    backgroundColor: colors.gold3,
+    backgroundColor: colors.gold2,
     borderRadius: radius.md,
     paddingVertical: 10,
     alignItems: 'center',
@@ -454,7 +458,7 @@ const styles = StyleSheet.create({
   },
   requestBox: {
     marginTop: 12,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.goldPale,
     borderRadius: radius.md,
     padding: 10,
     gap: 8,
@@ -482,8 +486,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   smallBtnPrimary: {
-    borderColor: colors.gold3,
-    backgroundColor: colors.gold3,
+    borderColor: colors.dark,
+    backgroundColor: colors.dark,
   },
   smallBtnDanger: {
     borderColor: '#f3c9c6',
@@ -494,7 +498,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   smallBtnTextPrimary: {
-    color: colors.onGold,
+    color: '#fff',
   },
   smallBtnTextDanger: {
     color: colors.error,

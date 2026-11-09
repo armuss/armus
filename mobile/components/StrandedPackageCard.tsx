@@ -187,8 +187,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   btnPrimary: {
-    borderColor: colors.gold3,
-    backgroundColor: colors.gold3,
+    borderColor: colors.dark,
+    backgroundColor: colors.dark,
   },
   btnText: {
     fontFamily: fonts.bodyBold,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   btnTextPrimary: {
-    color: colors.onGold,
+    color: '#fff',
   },
   disabled: {
     opacity: 0.5,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   teacherRowSelected: {
     borderColor: colors.gold3,
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.goldPale,
   },
   teacherName: {
     fontFamily: fonts.bodyBold,

@@ -1,17 +1,15 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, goldGradient, radius } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 
-function PrimaryOption({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function PrimaryOption({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-      <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.option}>
-        <Text style={[styles.optionIcon, { color: colors.onGold }]}>{icon}</Text>
-        <Text style={[styles.optionLabel, { color: colors.onGold }]}>{label}</Text>
-      </LinearGradient>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.option, { backgroundColor: colors.dark, opacity: pressed ? 0.86 : 1 }]}>
+      <Ionicons name={icon} size={19} color={colors.gold2} style={{ marginRight: 10 }} />
+      <Text style={[styles.optionLabel, { color: '#fff' }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -30,7 +28,7 @@ export default function SignupOptions() {
         </Text>
 
         <View style={styles.options}>
-          <PrimaryOption icon="✉" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
+          <PrimaryOption icon="mail-outline" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
         </View>
 
         <Text style={styles.legal}>
@@ -90,18 +88,10 @@ const styles = StyleSheet.create({
   },
   option: {
     height: 56,
-    borderRadius: radius.md,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  optionIcon: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: colors.ink,
-    marginRight: 10,
-    width: 22,
-    textAlign: 'center',
   },
   optionLabel: {
     fontFamily: fonts.bodyBold,

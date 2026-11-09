@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 20,
-    backgroundColor: colors.gold3,
+    backgroundColor: colors.ink,
   },
   footer: {
     paddingHorizontal: 28,

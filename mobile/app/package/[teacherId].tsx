@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -110,7 +111,7 @@ export default function PackageOffer() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.gold3} />
+        <ActivityIndicator color={colors.ink} />
       </SafeAreaView>
     );
   }
@@ -135,7 +136,7 @@ export default function PackageOffer() {
         <WebView
           source={{ uri: checkoutUrl }}
           startInLoadingState
-          renderLoading={() => <ActivityIndicator color={colors.gold3} style={{ marginTop: 40 }} />}
+          renderLoading={() => <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
             const status = parsePaymentRedirect(navState.url);
             if (status === 'success') {
@@ -251,7 +252,9 @@ export default function PackageOffer() {
             <Text style={styles.iconBtnTextLight}>✕</Text>
           </Pressable>
         </View>
-        <Text style={styles.heroIcon}>📘</Text>
+        <View style={styles.heroIcon}>
+          <Ionicons name="trending-up" size={22} color={colors.ink} />
+        </View>
         <Text style={styles.heroTitle}>Gelişimin burada başlıyor!</Text>
       </View>
 
@@ -298,10 +301,12 @@ const styles = StyleSheet.create({
     marginTop: 60,
   },
   hero: {
-    backgroundColor: '#fff8e6',
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    paddingBottom: 24,
+    backgroundColor: colors.dark,
+    marginHorizontal: 12,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingTop: 6,
+    paddingBottom: 22,
   },
   heroTopBar: {
     flexDirection: 'row',
@@ -319,17 +324,22 @@ const styles = StyleSheet.create({
   },
   iconBtnTextLight: {
     fontSize: 20,
-    color: colors.ink,
+    color: '#fff',
   },
   heroIcon: {
-    fontSize: 40,
-    marginBottom: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.gold2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   heroTitle: {
     fontFamily: fonts.displayBlack,
-    fontSize: 28,
-    lineHeight: 33,
-    color: colors.ink,
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#fff',
     letterSpacing: -0.5,
   },
   content: {
@@ -345,9 +355,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   optionCard: {
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: 18,
     padding: 18,
     marginBottom: 14,
   },
@@ -373,7 +383,7 @@ const styles = StyleSheet.create({
   },
   popularBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.gold3,
+    backgroundColor: colors.gold2,
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 5,

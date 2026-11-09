@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 1,
   },
-  boxChecked: { backgroundColor: colors.gold3, borderColor: colors.gold3 },
-  tick: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.onGold },
+  boxChecked: { backgroundColor: colors.dark, borderColor: colors.dark },
+  tick: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.gold2 },
   text: { flex: 1, fontFamily: fonts.body, fontSize: 12, lineHeight: 17, color: colors.muted },
 });
