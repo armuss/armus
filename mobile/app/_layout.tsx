@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import LaunchAnimation from '../components/LaunchAnimation';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { registerForPushNotifications } from '../lib/push';
 import { colors } from '../lib/theme';
@@ -41,28 +42,6 @@ function PushNotifications() {
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-/**
- * Keeps the launch screen up until the first real screen can be drawn:
- * fonts are in (this only mounts after they are) and the sign-in state is
- * known. Without it the launch screen gave way to a blank page with a
- * spinner first. A slow connection can't hold it for long - after a few
- * seconds it lets go anyway.
- */
-function SplashGate() {
-  const { loading } = useAuth();
-
-  useEffect(() => {
-    if (!loading) SplashScreen.hideAsync().catch(() => {});
-  }, [loading]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return null;
-}
-
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -79,9 +58,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <SplashGate />
         <PushNotifications />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+        {/* over everything until it has played; it also lets go of the native launch screen */}
+        <LaunchAnimation />
       </AuthProvider>
     </SafeAreaProvider>
   );
