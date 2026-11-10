@@ -34,7 +34,20 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": ["expo-router", ["expo-notifications", { "color": "#e0a916" }]],
+    "plugins": [
+      "expo-router",
+      ["expo-notifications", { "color": "#e0a916" }],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#ffffff",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "ios": { "imageWidth": 280 }
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "a98f1a60-a9cc-4a3f-bae2-dff55825d12c"
