@@ -953,6 +953,7 @@ const ARMUS_I18N_EN = {
   "teacherDash.pushDisabled": "Notifications turned off",
   "teacherDash.pushFailed": "That didn't work. Check your browser permissions.",
   "teacherDash.availabilityHint": "Click an empty area and drag down to add availability for that day. You can resize a block by dragging its top or bottom edge, move it by its body, or hover and delete it with ×. This schedule works by day of the week, not a specific date, and repeats every week. Changes apply instantly, no approval needed.",
+  "teacherDash.availabilityHintTouch": "Tap an empty spot to add one hour of availability there. Drag the line on a block's top or bottom edge to make it longer or shorter. To move a block, press and hold it, then drag. To delete one, tap it, then tap the × that appears. This schedule repeats every week; press Save when you're done.",
 
   // student-dashboard - sidebar/top-level labels only; the stats
   // row, confidence card, flashcards, lesson list, recommendations etc.

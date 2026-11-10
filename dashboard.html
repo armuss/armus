@@ -1245,7 +1245,9 @@
     .week-header-days {
       flex: 1;
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      /* minmax(0, ...) keeps the seven columns equal even when a label
+         is wider than its share, so they stay over the timeline's */
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       margin: 0 14px;
     }
 
@@ -1289,6 +1291,7 @@
       margin-right: 14px;
       -webkit-user-select: none;
       user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .tl-hour-line {
@@ -1334,12 +1337,120 @@
       white-space: nowrap;
     }
 
+    /* the availability editor's own labels: dark on the pale gold block,
+       so the hours stay readable at phone size */
+    #timelineWrap .tl-block-label {
+      color: var(--armus-ink);
+      overflow: hidden;
+    }
+
+    /* the block being resized or moved right now */
+    #timelineWrap .tl-block.tl-active {
+      background: rgba(246, 198, 73, .5);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+      z-index: 3;
+    }
+
     .tl-handle {
       position: absolute;
       left: 0;
       right: 0;
       height: 10px;
       cursor: ns-resize;
+      /* a finger on an edge resizes the block instead of scrolling */
+      touch-action: none;
+    }
+
+    /* how to edit by finger - shown instead of the mouse hint on
+       touch screens */
+    .availability-hint-touch {
+      display: none;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .availability-hint-mouse {
+        display: none;
+      }
+
+      .availability-hint-touch {
+        display: block;
+      }
+
+      /* finger-sized edges with a visible grip, reaching a little past
+         the block so a half-hour block can still be grabbed */
+      #timelineWrap .tl-block {
+        overflow: visible;
+      }
+
+      #timelineWrap .tl-handle {
+        height: 22px;
+      }
+
+      #timelineWrap .tl-handle-top {
+        top: -8px;
+      }
+
+      #timelineWrap .tl-handle-bottom {
+        bottom: -8px;
+      }
+
+      #timelineWrap .tl-handle::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        width: 18px;
+        height: 4px;
+        margin-left: -9px;
+        border-radius: 2px;
+        background: var(--armus-ink);
+      }
+
+      #timelineWrap .tl-handle-top::after {
+        top: 6px;
+      }
+
+      #timelineWrap .tl-handle-bottom::after {
+        bottom: 6px;
+      }
+
+      /* by finger, × only shows on the block that was tapped: the
+         edges stay free to grab, and a stray tap can't delete */
+      #timelineWrap .tl-delete {
+        display: none;
+      }
+
+      #timelineWrap .tl-block.tl-selected {
+        background: rgba(246, 198, 73, .5);
+        border-color: var(--armus-ink);
+        z-index: 2;
+      }
+
+      #timelineWrap .tl-block.tl-selected .tl-delete {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--armus-ink);
+        color: #fff;
+        font-size: 17px;
+        z-index: 2;
+      }
+
+      #timelineWrap .tl-block.tl-selected .tl-block-label {
+        opacity: .35;
+      }
+
+      .wk-clear {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
     }
 
     .tl-handle-top {
@@ -2052,6 +2163,51 @@
         grid-template-columns: 1fr 1fr;
       }
 
+      /* the week tables on a phone: a slimmer hour gutter so the seven
+         day columns get the width, day headers stacked over their clear
+         button, and block hours on two lines */
+      .week-header-gutter {
+        width: 42px;
+      }
+
+      .week-header-days {
+        margin: 0 6px 0 1px;
+      }
+
+      .timeline-wrap {
+        margin-left: 42px;
+        margin-right: 6px;
+      }
+
+      .tl-hour-label {
+        left: -40px;
+        width: 34px;
+      }
+
+      .week-header-day {
+        flex-direction: column;
+        gap: 0;
+        padding-bottom: 4px;
+      }
+
+      .bk-daynum {
+        margin-top: 0;
+      }
+
+      #timelineWrap .tl-block-label {
+        padding: 5px 2px 0 4px;
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      #timelineWrap .tl-block-label span {
+        display: block;
+      }
+
+      #timelineWrap .tl-block-label .tl-sep {
+        display: none;
+      }
+
       .ov-lower-grid {
         grid-template-columns: 1fr;
       }
@@ -2348,12 +2504,18 @@
 
       <div class="panel" id="panel-availability">
         <h2 data-i18n="teacherDash.navAvailability">Haftalık Uygunluk</h2>
-        <p class="section-hint" data-i18n="teacherDash.availabilityHint">
+        <p class="section-hint availability-hint-mouse" data-i18n="teacherDash.availabilityHint">
           Boş bir alana tıklayıp aşağı sürükleyerek o gün için uygunluk ekle. Bir
           bloğun üst veya alt kenarından tutup büyütüp küçültebilir, gövdesinden
           tutup taşıyabilir, üzerine gelip × ile silebilirsin. Bu düzen belirli bir
           tarihe değil, haftanın günlerine göre çalışır ve her hafta tekrarlanır.
           Değişiklikler anında geçerli olur, onay beklemene gerek yok.
+        </p>
+        <p class="section-hint availability-hint-touch" data-i18n="teacherDash.availabilityHintTouch">
+          Boş bir yere dokun: o saate 1 saatlik uygunluk eklenir. Bloğun üst ya da
+          alt kenarındaki çizgiyi parmağınla sürükleyerek uzat ya da kısalt. Taşımak
+          için bloğa basılı tut, sonra sürükle. Silmek için bloğa dokun, çıkan ×
+          işaretine bas. Bu düzen her hafta tekrarlanır; bitince Kaydet'e bas.
         </p>
 
         <div class="week-wrap">
@@ -2581,7 +2743,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=32"></script>
+  <script src="i18n.js?v=33"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=4"></script>
@@ -3244,7 +3406,19 @@
       });
 
       renderBookingsCalendar();
-      document.getElementById("bkTimelineScroll").scrollTop = 7 * BK_HOUR_PX;
+
+      // open on the morning rather than midnight - the panel is hidden
+      // while the page loads and a hidden box can't be scrolled, so this
+      // is done when the panel is first opened
+      let bkScrolledToMorning = false;
+      document.querySelector('.nav-btn[data-panel="bookings"]').addEventListener("click", () => {
+        requestAnimationFrame(() => {
+          const bkScroll = document.getElementById("bkTimelineScroll");
+          if (bkScrolledToMorning || !bkScroll.clientHeight) return;
+          bkScroll.scrollTop = 7 * BK_HOUR_PX;
+          bkScrolledToMorning = true;
+        });
+      });
       document.addEventListener("armus:langchange", renderBookingsCalendar);
 
       // ---- overview stats (real, computed from bookings/reviews) ----
@@ -4436,6 +4610,7 @@
         el.querySelectorAll(".wk-clear").forEach(btn => {
           btn.addEventListener("click", () => {
             weekBlocks[Number(btn.dataset.day)] = [];
+            selectedBlock = null;
             renderTimeline();
           });
         });
@@ -4472,7 +4647,9 @@
           (weekBlocks[dayIdx] || []).forEach((block, blockIndex) => {
 
             const el = document.createElement("div");
-            el.className = "tl-block";
+            el.className = "tl-block"
+              + (dragMode && dragDay === dayIdx && dragIndex === blockIndex ? " tl-active" : "")
+              + (selectedBlock && selectedBlock.day === dayIdx && selectedBlock.index === blockIndex ? " tl-selected" : "");
             el.dataset.day = String(dayIdx);
             el.dataset.index = String(blockIndex);
             el.style.top = (block.start * PX_PER_MIN) + "px";
@@ -4481,7 +4658,7 @@
             el.style.width = "calc((100% / 7) - 4px)";
             el.innerHTML = `
               <div class="tl-handle tl-handle-top"></div>
-              <div class="tl-block-label">${minutesToTimeLabel(block.start)}–${minutesToTimeLabel(block.end)}</div>
+              <div class="tl-block-label"><span>${minutesToTimeLabel(block.start)}</span><span class="tl-sep">–</span><span>${minutesToTimeLabel(block.end)}</span></div>
               <button type="button" class="tl-delete" data-day="${dayIdx}" data-index="${blockIndex}" title="${armusT("teacherDash.delete", "Sil")}">×</button>
               <div class="tl-handle tl-handle-bottom"></div>
             `;
@@ -4490,23 +4667,29 @@
         });
       }
 
-      // drag state for create/move/resize - kept outside the mousedown
-      // handler so mousemove/mouseup (attached once, on document) can
-      // see it across the whole gesture, even if the pointer leaves the
-      // timeline element mid-drag
+      // drag state for create/move/resize - kept outside the handlers so
+      // the whole gesture can see it, even when the pointer or finger
+      // leaves the timeline mid-drag. Mouse and touch share it.
       let dragMode = null; // "create" | "move" | "resize-top" | "resize-bottom"
       let dragDay = null;
       let dragIndex = null;
       let dragStartY = 0;
       let dragOriginal = null;
       let dragCreateAnchor = null;
+      let dragClientY = 0;
+      let autoScrollRaf = null;
+      // touch only: the block that was tapped, which shows its ×
+      let selectedBlock = null;
+
+      const tlWrap = document.getElementById("timelineWrap");
+      const tlScroll = document.getElementById("timelineScroll");
 
       function wrapRect() {
-        return document.getElementById("timelineWrap").getBoundingClientRect();
+        return tlWrap.getBoundingClientRect();
       }
 
-      function relY(e) {
-        return e.clientY - wrapRect().top;
+      function relY(clientY) {
+        return clientY - wrapRect().top;
       }
 
       function dayIndexFromX(clientX) {
@@ -4516,58 +4699,39 @@
         return DAY_COLUMNS[colIndex][1];
       }
 
-      document.getElementById("timelineWrap").addEventListener("mousedown", e => {
+      function beginBlockDrag(mode, day, index, clientY) {
+        if (!weekBlocks[day] || !weekBlocks[day][index]) return;
+        selectedBlock = null;
+        dragMode = mode;
+        dragDay = day;
+        dragIndex = index;
+        dragOriginal = { ...weekBlocks[day][index] };
+        dragStartY = relY(clientY);
+        dragClientY = clientY;
+        renderTimeline();
+      }
 
-        const deleteBtn = e.target.closest(".tl-delete");
-        if (deleteBtn) {
-          const day = Number(deleteBtn.dataset.day);
-          weekBlocks[day].splice(Number(deleteBtn.dataset.index), 1);
-          renderTimeline();
-          return;
-        }
-
-        const handle = e.target.closest(".tl-handle");
-        const blockEl = e.target.closest(".tl-block");
-
-        if (handle && blockEl) {
-          dragMode = handle.classList.contains("tl-handle-top") ? "resize-top" : "resize-bottom";
-          dragDay = Number(blockEl.dataset.day);
-          dragIndex = Number(blockEl.dataset.index);
-          dragOriginal = { ...weekBlocks[dragDay][dragIndex] };
-          dragStartY = relY(e);
-          e.preventDefault();
-          return;
-        }
-
-        if (blockEl) {
-          dragMode = "move";
-          dragDay = Number(blockEl.dataset.day);
-          dragIndex = Number(blockEl.dataset.index);
-          dragOriginal = { ...weekBlocks[dragDay][dragIndex] };
-          dragStartY = relY(e);
-          e.preventDefault();
-          return;
-        }
-
-        // empty area - start a brand new block in the clicked day's column
-        const day = dayIndexFromX(e.clientX);
-        const startMin = Math.max(0, Math.min(DAY_MINUTES - 30, snapTo30(pxToMin(relY(e)))));
+      // a brand new half-hour block in that day's column, stretched by
+      // the rest of the drag
+      function beginCreate(day, startMin, clientY) {
+        selectedBlock = null;
         dragCreateAnchor = startMin;
         weekBlocks[day].push({ start: startMin, end: startMin + 30 });
         dragMode = "create";
         dragDay = day;
         dragIndex = weekBlocks[day].length - 1;
+        dragClientY = clientY;
         renderTimeline();
-        e.preventDefault();
-      });
+      }
 
-      document.addEventListener("mousemove", e => {
+      function applyDrag(clientY) {
 
         if (!dragMode) return;
         const block = weekBlocks[dragDay] && weekBlocks[dragDay][dragIndex];
         if (!block) return;
 
-        const y = relY(e);
+        dragClientY = clientY;
+        const y = relY(clientY);
 
         if (dragMode === "create") {
           const currentMin = Math.max(0, Math.min(DAY_MINUTES, snapTo30(pxToMin(y))));
@@ -4589,16 +4753,279 @@
         }
 
         renderTimeline();
-      });
+      }
 
-      document.addEventListener("mouseup", () => {
+      // holding a drag near the top or bottom of the scroll area scrolls
+      // it, so a block can be stretched past what's on screen - a finger
+      // that's dragging can't scroll any other way
+      function autoScrollStep() {
+
+        autoScrollRaf = null;
         if (!dragMode) return;
+
+        const rect = tlScroll.getBoundingClientRect();
+        const top = Math.max(rect.top, 0);
+        const bottom = Math.min(rect.bottom, window.innerHeight);
+        const EDGE = 36;
+
+        let delta = 0;
+        if (dragClientY > bottom - EDGE) delta = Math.min(12, 2 + (dragClientY - (bottom - EDGE)) / 3);
+        else if (dragClientY < top + EDGE) delta = -Math.min(12, 2 + ((top + EDGE) - dragClientY) / 3);
+        if (!delta) return;
+
+        const before = tlScroll.scrollTop;
+        tlScroll.scrollTop = before + delta;
+        if (tlScroll.scrollTop === before) return;
+
+        applyDrag(dragClientY);
+        autoScrollRaf = requestAnimationFrame(autoScrollStep);
+      }
+
+      function dragTo(clientY) {
+        applyDrag(clientY);
+        if (dragMode && !autoScrollRaf) autoScrollRaf = requestAnimationFrame(autoScrollStep);
+      }
+
+      function endDrag() {
+        if (!dragMode) return;
+        if (autoScrollRaf) cancelAnimationFrame(autoScrollRaf);
+        autoScrollRaf = null;
         if (dragDay !== null) weekBlocks[dragDay] = mergeBlocks(weekBlocks[dragDay]);
         dragMode = null;
         dragDay = null;
         dragIndex = null;
         dragOriginal = null;
         renderTimeline();
+      }
+
+      function deleteBlock(day, index) {
+        if (!weekBlocks[day]) return;
+        selectedBlock = null;
+        weekBlocks[day].splice(index, 1);
+        renderTimeline();
+      }
+
+      // ---- mouse ----
+
+      // a tap on a touch screen is followed by made-up mouse events - the
+      // touch handlers below have already dealt with that tap
+      let lastTouchAt = 0;
+      let activeTouch = null;
+
+      tlWrap.addEventListener("mousedown", e => {
+
+        if (activeTouch || Date.now() - lastTouchAt < 800) return;
+
+        const deleteBtn = e.target.closest(".tl-delete");
+        if (deleteBtn) {
+          deleteBlock(Number(deleteBtn.dataset.day), Number(deleteBtn.dataset.index));
+          return;
+        }
+
+        const handle = e.target.closest(".tl-handle");
+        const blockEl = e.target.closest(".tl-block");
+
+        if (handle && blockEl) {
+          beginBlockDrag(
+            handle.classList.contains("tl-handle-top") ? "resize-top" : "resize-bottom",
+            Number(blockEl.dataset.day), Number(blockEl.dataset.index), e.clientY
+          );
+          e.preventDefault();
+          return;
+        }
+
+        if (blockEl) {
+          beginBlockDrag("move", Number(blockEl.dataset.day), Number(blockEl.dataset.index), e.clientY);
+          e.preventDefault();
+          return;
+        }
+
+        // empty area - start a brand new block in the clicked day's column
+        const startMin = Math.max(0, Math.min(DAY_MINUTES - 30, snapTo30(pxToMin(relY(e.clientY)))));
+        beginCreate(dayIndexFromX(e.clientX), startMin, e.clientY);
+        e.preventDefault();
+      });
+
+      document.addEventListener("mousemove", e => {
+        if (!dragMode || activeTouch) return;
+        dragTo(e.clientY);
+      });
+
+      document.addEventListener("mouseup", () => {
+        if (activeTouch) return;
+        endDrag();
+      });
+
+      // ---- touch (phones and tablets) ----
+      // The timeline scrolls under a finger, so a drag can't simply mean
+      // "edit" the way it does with a mouse:
+      //   - a block's top or bottom edge: drag it right away to resize
+      //   - a block's body: press and hold, then drag to move it; a tap
+      //     picks the block and shows its × (so × can't be hit by accident)
+      //   - empty space: a tap adds a one-hour block there; press and
+      //     hold, then drag, draws one as long as the drag
+      //   - a quick swipe anywhere but an edge scrolls, as usual
+      const HOLD_MS = 280;
+      const TAP_SLOP = 10;
+
+      function touchById(list, id) {
+        for (let i = 0; i < list.length; i++) if (list[i].identifier === id) return list[i];
+        return null;
+      }
+
+      function releaseTouch() {
+        if (!activeTouch) return;
+        clearTimeout(activeTouch.timer);
+        activeTouch.target.removeEventListener("touchmove", onTouchMove);
+        activeTouch.target.removeEventListener("touchend", onTouchEnd);
+        activeTouch.target.removeEventListener("touchcancel", onTouchCancel);
+        activeTouch = null;
+      }
+
+      function onTouchMove(e) {
+
+        if (!activeTouch) return;
+        const t = touchById(e.touches, activeTouch.id);
+        if (!t) return;
+
+        if (dragMode) {
+          if (e.cancelable) e.preventDefault();
+          dragTo(t.clientY);
+          return;
+        }
+
+        // the finger moved before the hold time was up: it's a scroll,
+        // which the browser does on its own
+        if (Math.abs(t.clientX - activeTouch.x) > TAP_SLOP || Math.abs(t.clientY - activeTouch.y) > TAP_SLOP) {
+          clearTimeout(activeTouch.timer);
+          activeTouch.kind = "scroll";
+        }
+      }
+
+      function onTouchEnd(e) {
+
+        if (!activeTouch || !touchById(e.changedTouches, activeTouch.id)) return;
+
+        const touch = activeTouch;
+        lastTouchAt = Date.now();
+        releaseTouch();
+
+        if (dragMode) {
+          if (e.cancelable) e.preventDefault();
+          endDrag();
+          return;
+        }
+
+        if (touch.kind === "scroll") return;
+
+        // a plain tap from here on - handled now, so the made-up mouse
+        // events that would follow it are not needed
+        if (e.cancelable) e.preventDefault();
+
+        if (touch.kind === "delete") {
+          deleteBlock(touch.day, touch.index);
+
+        } else if (touch.kind === "move") {
+          // a tap on a block shows its × (a second tap hides it again)
+          const same = selectedBlock && selectedBlock.day === touch.day && selectedBlock.index === touch.index;
+          selectedBlock = same ? null : { day: touch.day, index: touch.index };
+          renderTimeline();
+
+        } else if (touch.kind === "create" && selectedBlock) {
+          // tapping away from the picked block just lets go of it
+          selectedBlock = null;
+          renderTimeline();
+
+        } else if (touch.kind === "create") {
+          // one hour, starting at the half hour that was tapped
+          const day = dayIndexFromX(touch.x);
+          const tapped = Math.floor(pxToMin(relY(touch.y)) / 30) * 30;
+          const start = Math.max(0, Math.min(DAY_MINUTES - 60, tapped));
+          weekBlocks[day].push({ start, end: start + 60 });
+          weekBlocks[day] = mergeBlocks(weekBlocks[day]);
+          renderTimeline();
+        }
+      }
+
+      function onTouchCancel() {
+        lastTouchAt = Date.now();
+        releaseTouch();
+        endDrag();
+      }
+
+      tlWrap.addEventListener("touchstart", e => {
+
+        lastTouchAt = Date.now();
+
+        // a second finger (a pinch, say) ends whatever the first was doing
+        if (activeTouch || e.touches.length > 1) {
+          releaseTouch();
+          endDrag();
+          return;
+        }
+
+        const t = e.changedTouches[0];
+        const deleteBtn = e.target.closest(".tl-delete");
+        const handle = e.target.closest(".tl-handle");
+        const blockEl = e.target.closest(".tl-block");
+
+        activeTouch = {
+          id: t.identifier,
+          target: e.target,
+          x: t.clientX,
+          y: t.clientY,
+          kind: deleteBtn ? "delete" : handle ? "resize" : blockEl ? "move" : "create",
+          day: blockEl ? Number(blockEl.dataset.day) : null,
+          index: blockEl ? Number(blockEl.dataset.index) : null,
+          timer: null,
+        };
+
+        // the timeline is redrawn while a block is dragged, which takes
+        // the touched element out of the page - and a touch keeps
+        // reporting to the element it started on. Listening on that
+        // element itself keeps the rest of the gesture arriving.
+        e.target.addEventListener("touchmove", onTouchMove, { passive: false });
+        e.target.addEventListener("touchend", onTouchEnd);
+        e.target.addEventListener("touchcancel", onTouchCancel);
+
+        if (activeTouch.kind === "delete") return;
+
+        if (activeTouch.kind === "resize") {
+          e.preventDefault();
+          beginBlockDrag(
+            handle.classList.contains("tl-handle-top") ? "resize-top" : "resize-bottom",
+            activeTouch.day, activeTouch.index, t.clientY
+          );
+          return;
+        }
+
+        // a block's body or empty space: a quick swipe still scrolls;
+        // staying put for a moment turns the touch into a drag
+        activeTouch.timer = setTimeout(() => {
+          if (!activeTouch || dragMode) return;
+          if (activeTouch.kind === "move") {
+            beginBlockDrag("move", activeTouch.day, activeTouch.index, activeTouch.y);
+          } else if (activeTouch.kind === "create") {
+            const startMin = Math.max(0, Math.min(DAY_MINUTES - 30, Math.floor(pxToMin(relY(activeTouch.y)) / 30) * 30));
+            beginCreate(dayIndexFromX(activeTouch.x), startMin, activeTouch.y);
+          } else {
+            return;
+          }
+          if (navigator.vibrate) navigator.vibrate(12);
+        }, HOLD_MS);
+
+      }, { passive: false });
+
+      // while a block is being dragged the timeline must not scroll under
+      // the finger (this also covers a touched element that's still in
+      // the page, where the listeners above and this one both fire)
+      tlWrap.addEventListener("touchmove", e => {
+        if (dragMode && e.cancelable) e.preventDefault();
+      }, { passive: false });
+
+      // no long-press menu over the timeline on touch screens
+      tlWrap.addEventListener("contextmenu", e => {
+        if (activeTouch || Date.now() - lastTouchAt < 1500) e.preventDefault();
       });
 
       document.getElementById("saveAvailabilityBtn").addEventListener("click", async () => {
@@ -4625,7 +5052,20 @@
 
       renderWeekHeader();
       renderTimeline();
-      document.getElementById("timelineScroll").scrollTop = 7 * HOUR_PX;
+
+      // open on the morning rather than midnight. The panel is hidden
+      // while the page loads, and a hidden box can't be scrolled, so this
+      // only takes once the panel is on screen.
+      let scrolledToMorning = false;
+      function scrollToMorning() {
+        if (scrolledToMorning || !tlScroll.clientHeight) return;
+        tlScroll.scrollTop = 7 * HOUR_PX;
+        scrolledToMorning = true;
+      }
+      scrollToMorning();
+      document.querySelector('.nav-btn[data-panel="availability"]').addEventListener("click", () => {
+        requestAnimationFrame(scrollToMorning);
+      });
       document.addEventListener("armus:langchange", () => {
         renderWeekHeader();
         renderTimeline();
