@@ -216,7 +216,7 @@
   function initHow() {
     const h2 = how.querySelector(".hk-h2");
     if (h2) {
-      // every word rises out of its own mask; digits ("3") turn gold
+      // every word rises out of its own mask
       watch(h2, () => {
         if (h2.querySelector(".hk-w")) return;
         let i = 0;
@@ -226,7 +226,7 @@
             node.textContent.split(/(\s+)/).forEach((part) => {
               if (!part) return;
               if (/^\s+$/.test(part)) { out.push(" "); return; }
-              out.push('<span class="hk-w' + (/^\d+$/.test(part) ? " hk-gold" : "") + '"><span style="--i:' + i++ + '">' + esc(part) + "</span></span>");
+              out.push('<span class="hk-w"><span style="--i:' + i++ + '">' + esc(part) + "</span></span>");
             });
           } else if (node.nodeName === "BR") {
             out.push("<br>");
