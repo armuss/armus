@@ -1619,12 +1619,14 @@
 
       <div class="panel" id="panel-log">
         <h2 data-i18n="admin.navLog">Etkinlik Günlüğü</h2>
-        <p class="section-hint" data-i18n="admin.logHint2">
-          Yönetici paneline kim, ne zaman, hangi cihazdan girdi ve içeride ne
-          yaptı. Kayıtlar bu panelden değiştirilemez ve silinemez.
+        <p class="section-hint" data-i18n="admin.logHint3">
+          Yöneticiler panele ne zaman, hangi cihazdan girdi ve içeride ne
+          yaptı. Bu bölümü yalnızca şirket sahipleri görür; yöneticiler
+          göremez. Kayıtlar bu panelden değiştirilemez ve silinemez.
         </p>
 
         <div class="stat-grid log-admins" id="logAdmins"></div>
+        <div class="empty-note" id="logNoAdmins" style="display: none;" data-i18n="admin.logNoAdmins">Şu anda sahipler dışında yönetici yok.</div>
 
         <div class="log-filters">
           <select class="admin-search" id="logFilterAdmin" aria-label="Yönetici"></select>
@@ -2041,7 +2043,7 @@
 
   </div>
 
-  <script src="i18n.js?v=34"></script>
+  <script src="i18n.js?v=35"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=15"></script>
@@ -3026,6 +3028,11 @@
     // here. Best-effort: a failed write never breaks the action that
     // triggered it.
 
+    // Only the company's owners read the log (migration_116.sql); an
+    // admin writes to it without seeing it. Before that migration is run
+    // there is no is_owner at all, and every admin still sees the log.
+    let armusCanSeeAdminLog = true;
+
     async function armusLogAdminAction(action, targetType, targetId, targetLabel, details) {
       const session = await armusGetSession();
       if (!session) return;
@@ -3037,12 +3044,15 @@
         target_id: String(targetId),
         target_label: targetLabel,
       };
-      let res = await armusSupabase.from("admin_actions").insert(details ? { ...row, details } : row).select().single();
+      // a plain insert, never asking for the row back: an admin isn't
+      // allowed to read the log, so asking would make the write fail
+      let res = await armusSupabase.from("admin_actions").insert(details ? { ...row, details } : row);
       // before migration_115.sql is run there is no details column yet -
       // the action itself still gets logged
-      if (res.error && details) res = await armusSupabase.from("admin_actions").insert(row).select().single();
-      if (res.error || !res.data) return;
-      armusAdminLogs = [res.data, ...armusAdminLogs];
+      if (res.error && details) res = await armusSupabase.from("admin_actions").insert(row);
+      if (res.error || !armusCanSeeAdminLog) return;
+      // shown at once; the stored row (server time, IP) replaces it on the next load
+      armusAdminLogs = [{ ...row, details: details || null, id: "local-" + Date.now(), created_at: new Date().toISOString(), user_agent: navigator.userAgent, ip: null }, ...armusAdminLogs];
       renderLogPanel(armusAdminLogs);
     }
 
@@ -3051,6 +3061,8 @@
         panel_enter: armusT("admin.logPanelEnter", "Panele girdi"),
         admin_grant: armusT("admin.logAdminGrant", "Yönetici yetkisi verildi"),
         admin_revoke: armusT("admin.logAdminRevoke", "Yönetici yetkisi alındı"),
+        owner_grant: armusT("admin.logOwnerGrant", "Sahiplik yetkisi verildi"),
+        owner_revoke: armusT("admin.logOwnerRevoke", "Sahiplik yetkisi alındı"),
         profile_approve: armusT("admin.logApplicationApproved", "Başvuru onaylandı"),
         profile_reject: armusT("admin.logApplicationRejected", "Başvuru reddedildi"),
         change_approve: armusT("admin.logChangeApproved", "Profil değişikliği onaylandı"),
@@ -3110,6 +3122,8 @@
     }
 
     function renderLogPanel(logs) {
+      // not there at all for an admin who isn't an owner
+      if (!armusCanSeeAdminLog) return;
       const body = document.getElementById("logBody");
       const empty = document.getElementById("logEmpty");
       const more = document.getElementById("logMore");
@@ -3123,12 +3137,20 @@
         ? log.admin_name
         : armusT("admin.logViaSupabase", "Supabase (doğrudan)");
 
+      // The log is about the admins. The owners use the panel too, but
+      // they are the ones reading this, not the ones it is about: no
+      // card for them, and their own rows only on request (the filter).
+      const owners = new Map();
+      armusAdminProfiles.filter(p => p.is_owner).forEach(p => owners.set(p.id, p.name));
+      const byOwner = log => Boolean(log.admin_id && owners.has(log.admin_id));
+
       // ---- one card per admin: last entry, device, the week so far ----
       const admins = new Map();
-      armusAdminProfiles.filter(p => p.is_admin).forEach(p => admins.set(p.id, { name: p.name, current: true }));
+      armusAdminProfiles.filter(p => p.is_admin && !p.is_owner).forEach(p => admins.set(p.id, { name: p.name, current: true }));
       sorted.forEach(log => {
-        if (log.admin_id && !admins.has(log.admin_id)) admins.set(log.admin_id, { name: log.admin_name, current: false });
+        if (log.admin_id && !admins.has(log.admin_id) && !byOwner(log)) admins.set(log.admin_id, { name: log.admin_name, current: false });
       });
+      document.getElementById("logNoAdmins").style.display = admins.size ? "none" : "block";
       const weekAgo = Date.now() - 7 * 86400000;
       document.getElementById("logAdmins").innerHTML = Array.from(admins.entries()).map(([id, admin]) => {
         const mine = sorted.filter(log => log.admin_id === id);
@@ -3153,8 +3175,10 @@
       const adminSelect = document.getElementById("logFilterAdmin");
       const chosen = adminSelect.value || "all";
       const people = new Map();
-      sorted.forEach(log => { if (!people.has(whoKey(log))) people.set(whoKey(log), whoName(log)); });
-      admins.forEach((admin, id) => { if (!people.has(id)) people.set(id, admin.name); });
+      admins.forEach((admin, id) => people.set(id, admin.name));
+      sorted.forEach(log => { if (!byOwner(log) && !people.has(whoKey(log))) people.set(whoKey(log), whoName(log)); });
+      const ownerSuffix = armusT("admin.logOwnerSuffix", "(sahip)");
+      owners.forEach((name, id) => people.set(id, `${name} ${ownerSuffix}`));
       adminSelect.innerHTML = `<option value="all">${armusT("admin.logAllAdmins", "Tüm yöneticiler")}</option>`
         + Array.from(people.entries()).map(([key, name]) => `<option value="${armusEscapeHtml(key)}">${armusEscapeHtml(name)}</option>`).join("");
       adminSelect.value = people.has(chosen) ? chosen : "all";
@@ -3165,8 +3189,9 @@
       today.setHours(0, 0, 0, 0);
       const since = period === "today" ? today.getTime() : period === "all" ? 0 : Date.now() - Number(period) * 86400000;
 
+      // "all admins" leaves the owners' own rows out
       const rows = sorted.filter(log =>
-        (adminSelect.value === "all" || whoKey(log) === adminSelect.value)
+        (adminSelect.value === "all" ? !byOwner(log) : whoKey(log) === adminSelect.value)
         && (type === "all" || (type === "enter") === (log.action === "panel_enter"))
         && new Date(log.created_at).getTime() >= since
       );
@@ -3192,7 +3217,7 @@
 
         const label = labels[log.action] || armusEscapeHtml(log.action);
         const isEnter = log.action === "panel_enter";
-        const isRights = log.action === "admin_grant" || log.action === "admin_revoke";
+        const isRights = ["admin_grant", "admin_revoke", "owner_grant", "owner_revoke"].includes(log.action);
         const target = isEnter ? "—" : (armusEscapeHtml(log.target_label) || armusEscapeHtml(log.target_id) || "—");
         const device = armusDescribeDevice(log.user_agent);
 
@@ -5366,7 +5391,9 @@
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
-        armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).limit(3000),
+        armusCanSeeAdminLog
+          ? armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).limit(3000)
+          : Promise.resolve({ data: [] }),
         armusAdminGetAllTestimonials(),
         armusAdminGetAllDisputes(),
         armusAdminGetAllAttendanceReports(),
@@ -5426,6 +5453,14 @@
       if (!session.is_admin) {
         showGate(armusT("admin.gateNoPermTitle", "Yetkin yok"), armusT("admin.gateNoPermText", "Bu hesabın admin yetkisi yok."));
         return;
+      }
+
+      // is_owner is undefined until migration_116.sql is run - until
+      // then every admin sees the log, as before
+      armusCanSeeAdminLog = session.is_owner !== false;
+      if (!armusCanSeeAdminLog) {
+        document.querySelector('.nav-btn[data-panel="log"]').style.display = "none";
+        document.getElementById("panel-log").remove();
       }
 
       shell.style.display = "grid";
