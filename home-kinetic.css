@@ -570,8 +570,17 @@ html[lang="en"] .hk-pc {
   -webkit-mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
   mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
 }
-/* step 3 goes with its bordo weekly-plan card: the same outline and
-   rising fill, in bordo (outline a shade darker, as the gold one is) */
+/* steps 1 and 3 take the colour of their visual: night blue for the
+   teacher search, bordo for the weekly plan - the same outline and
+   rising fill as the gold "2", the outline a shade darker than the fill
+   as the gold one's is */
+.hk-num[data-n="1"],
+.hk-num[data-n="1"]::after {
+  -webkit-text-stroke-color: #1f2a5c;
+}
+.hk-num[data-n="1"]::after {
+  color: var(--armus-navy);
+}
 .hk-num[data-n="3"],
 .hk-num[data-n="3"]::after {
   -webkit-text-stroke-color: #62232e;
@@ -696,7 +705,8 @@ html[lang="en"] .hk-pc {
 .hk-tc strong span {
   font-size: 11.5px;
   font-weight: 800;
-  background: #fff6d6;
+  color: var(--armus-navy);
+  background: #e8ebf6;
   border-radius: 999px;
   padding: 2px 7px;
 }
@@ -728,8 +738,8 @@ html[lang="en"] .hk-pc {
   font-weight: 800;
   font-style: normal;
   line-height: 14px;
-  background: var(--armus-ink);
-  color: var(--armus-gold-1);
+  background: var(--armus-navy);
+  color: #fff;
   padding: 5px 10px;
   border-radius: 999px;
   transform: scale(0);
@@ -737,8 +747,8 @@ html[lang="en"] .hk-pc {
 }
 .hk-tc.is-hl {
   z-index: 2;
-  border-color: var(--armus-gold-2);
-  box-shadow: 0 0 0 4px rgba(246, 198, 73, .4), 0 18px 40px rgba(35, 26, 10, .14);
+  border-color: var(--armus-navy);
+  box-shadow: 0 0 0 4px rgba(43, 58, 124, .2), 0 18px 40px rgba(20, 26, 60, .14);
   transform: scale(1.035);
 }
 .hk-tc.is-hl .hk-ok {
@@ -780,7 +790,7 @@ html[lang="en"] .hk-pc {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--armus-gold-2);
+  border: 2px solid var(--armus-navy);
   opacity: 0;
 }
 .hk-cursor.click::after {
