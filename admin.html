@@ -354,6 +354,86 @@
       align-items: center;
     }
 
+    /* ---- admin log (migration_115.sql) ---- */
+
+    .log-admins {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      margin-bottom: 20px;
+    }
+
+    .log-admin-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--armus-ink);
+    }
+
+    .log-admin-last {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--armus-ink);
+    }
+
+    .log-admin-device,
+    .log-admin-week {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--armus-muted);
+    }
+
+    .log-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .log-filters .admin-search {
+      width: auto;
+      max-width: 240px;
+    }
+
+    .log-scroll {
+      overflow-x: auto;
+    }
+
+    .log-scroll table {
+      min-width: 720px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .log-scroll td:first-child {
+      white-space: nowrap;
+    }
+
+    tr.log-day td {
+      padding-top: 18px;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--armus-muted);
+      letter-spacing: .3px;
+    }
+
+    .log-chip {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      background: rgba(246, 198, 73, .3);
+      color: var(--armus-ink);
+    }
+
+    .log-chip.rights {
+      background: rgba(179, 38, 30, .14);
+      color: #d9534a;
+    }
+
+    .log-detail,
+    .log-device small {
+      display: block;
+      color: var(--armus-muted);
+      font-size: 11.5px;
+    }
+
     .spend-form .admin-search {
       margin-bottom: 0;
       width: auto;
@@ -1539,23 +1619,44 @@
 
       <div class="panel" id="panel-log">
         <h2 data-i18n="admin.navLog">Etkinlik Günlüğü</h2>
-        <p class="section-hint" data-i18n="admin.logHint">
-          Onay/red ve iptal gibi admin işlemlerinin geçmişi. (Bu panel
-          admin_actions tablosu Supabase'de oluşturulduktan sonra dolmaya
-          başlar - o ana kadar boş görünmesi normal.)
+        <p class="section-hint" data-i18n="admin.logHint2">
+          Yönetici paneline kim, ne zaman, hangi cihazdan girdi ve içeride ne
+          yaptı. Kayıtlar bu panelden değiştirilemez ve silinemez.
         </p>
-        <table id="logTable">
-          <thead>
-            <tr>
-              <th data-i18n="admin.colAdmin">Admin</th>
-              <th data-i18n="admin.colAction">İşlem</th>
-              <th data-i18n="admin.colTarget">Hedef</th>
-              <th data-i18n="admin.colTime2">Zaman</th>
-            </tr>
-          </thead>
-          <tbody id="logBody"></tbody>
-        </table>
-        <div class="empty-note" id="logEmpty" style="display: none;" data-i18n="admin.logEmpty">Henüz kayıtlı işlem yok.</div>
+
+        <div class="stat-grid log-admins" id="logAdmins"></div>
+
+        <div class="log-filters">
+          <select class="admin-search" id="logFilterAdmin" aria-label="Yönetici"></select>
+          <select class="admin-search" id="logFilterType" aria-label="Kayıt türü">
+            <option value="all" data-i18n="admin.logTypeAll">Girişler ve işlemler</option>
+            <option value="enter" data-i18n="admin.logTypeEnter">Sadece girişler</option>
+            <option value="action" data-i18n="admin.logTypeAction">Sadece işlemler</option>
+          </select>
+          <select class="admin-search" id="logFilterPeriod" aria-label="Dönem">
+            <option value="today" data-i18n="admin.logPeriodToday">Bugün</option>
+            <option value="7" selected data-i18n="admin.logPeriod7">Son 7 gün</option>
+            <option value="30" data-i18n="admin.logPeriod30">Son 30 gün</option>
+            <option value="all" data-i18n="admin.logPeriodAll">Tüm kayıtlar</option>
+          </select>
+        </div>
+
+        <div class="log-scroll">
+          <table id="logTable">
+            <thead>
+              <tr>
+                <th data-i18n="admin.colTime2">Zaman</th>
+                <th data-i18n="admin.colAdmin">Admin</th>
+                <th data-i18n="admin.colAction">İşlem</th>
+                <th data-i18n="admin.colTarget">Hedef</th>
+                <th data-i18n="admin.colDevice">Cihaz · IP</th>
+              </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-note" id="logEmpty" style="display: none;" data-i18n="admin.logEmptyFiltered">Bu seçimle eşleşen kayıt yok.</div>
+        <div class="empty-note" id="logMore" style="display: none;"></div>
       </div>
 
       <div class="panel" id="panel-errorlog">
@@ -1940,7 +2041,7 @@
 
   </div>
 
-  <script src="i18n.js?v=33"></script>
+  <script src="i18n.js?v=34"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=15"></script>
@@ -2918,60 +3019,198 @@
       URL.revokeObjectURL(url);
     }
 
-    // ---- admin activity log ----
-    // Best-effort: if the admin_actions table hasn't been created in
-    // Supabase yet, these calls just fail quietly (error is ignored)
-    // instead of breaking the action that triggered them.
+    // ---- admin activity log (migration_7.sql, migration_115.sql) ----
+    // One row per thing an admin does here, plus one each time an admin
+    // comes into the panel (admin_log_visit, called once at load). Who,
+    // when and from where are filled in by the database, not sent from
+    // here. Best-effort: a failed write never breaks the action that
+    // triggered it.
 
-    async function armusLogAdminAction(action, targetType, targetId, targetLabel) {
+    async function armusLogAdminAction(action, targetType, targetId, targetLabel, details) {
       const session = await armusGetSession();
       if (!session) return;
-      await armusSupabase.from("admin_actions").insert({
+      const row = {
         admin_id: session.id,
         admin_name: session.name,
         action,
         target_type: targetType,
-        target_id: targetId,
+        target_id: String(targetId),
         target_label: targetLabel,
-      });
+      };
+      let res = await armusSupabase.from("admin_actions").insert(details ? { ...row, details } : row).select().single();
+      // before migration_115.sql is run there is no details column yet -
+      // the action itself still gets logged
+      if (res.error && details) res = await armusSupabase.from("admin_actions").insert(row).select().single();
+      if (res.error || !res.data) return;
+      armusAdminLogs = [res.data, ...armusAdminLogs];
+      renderLogPanel(armusAdminLogs);
+    }
+
+    function armusLogActionLabels() {
+      return {
+        panel_enter: armusT("admin.logPanelEnter", "Panele girdi"),
+        admin_grant: armusT("admin.logAdminGrant", "Yönetici yetkisi verildi"),
+        admin_revoke: armusT("admin.logAdminRevoke", "Yönetici yetkisi alındı"),
+        profile_approve: armusT("admin.logApplicationApproved", "Başvuru onaylandı"),
+        profile_reject: armusT("admin.logApplicationRejected", "Başvuru reddedildi"),
+        change_approve: armusT("admin.logChangeApproved", "Profil değişikliği onaylandı"),
+        change_reject: armusT("admin.logChangeRejected", "Profil değişikliği reddedildi"),
+        profile_ban: armusT("admin.logProfileBan", "Öğretmen hesabı kapatıldı"),
+        profile_unban: armusT("admin.logProfileUnban", "Öğretmen hesabı yeniden açıldı"),
+        profile_unhide: armusT("admin.logProfileUnhide", "Öğretmen yeniden görünür yapıldı"),
+        profile_clear_ban_suggestion: armusT("admin.logProfileClearBan", "Hesap kapatma önerisi kaldırıldı"),
+        student_ban: armusT("admin.logStudentBan", "Öğrenci hesabı kapatıldı"),
+        student_unban: armusT("admin.logStudentUnban", "Öğrenci hesabı yeniden açıldı"),
+        student_unlock: armusT("admin.logStudentUnlock", "Öğrenci hesabının kilidi açıldı"),
+        booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
+        attendance_upheld: armusT("admin.logAttendanceUpheld", "Katılım bildirimi haklı bulundu"),
+        attendance_dismissed: armusT("admin.logAttendanceDismissed", "Katılım bildirimi reddedildi"),
+        withdrawal_paid: armusT("admin.logWithdrawalPaid", "Para çekme talebi ödendi"),
+        withdrawal_rejected: armusT("admin.logWithdrawalRejected", "Para çekme talebi reddedildi"),
+        teacher_report_resolved: armusT("admin.logTeacherReportResolved", "Öğretmen şikâyeti kapatıldı"),
+        message_report_resolved: armusT("admin.logMessageReportResolved", "Mesaj şikâyeti kapatıldı"),
+        payment_chargeback: armusT("admin.logPaymentChargeback", "Ödeme itirazı kaydedildi"),
+        payment_won: armusT("admin.logPaymentWon", "Ödeme itirazı kazanıldı olarak işaretlendi"),
+        payment_lost: armusT("admin.logPaymentLost", "Ödeme itirazı kaybedildi olarak işaretlendi"),
+        dispute_resolve: armusT("admin.logDisputeResolve", "Sorun bildirimi çözüldü"),
+        dispute_in_progress: armusT("admin.logDisputeInProgress", "Sorun bildirimi incelemeye alındı"),
+        dispute_note: armusT("admin.logDisputeNote", "Sorun bildirimine not yazıldı"),
+        support_ticket_reply: armusT("admin.logSupportTicketReply", "Destek talebine yanıt verildi"),
+        support_ticket_close: armusT("admin.logSupportTicketClosed", "Destek talebi kapatıldı"),
+        support_ticket_reopen: armusT("admin.logSupportTicketReopened", "Destek talebi yeniden açıldı"),
+        testimonial_create: armusT("admin.logTestimonialCreate", "Ana sayfa yorumu eklendi"),
+        testimonial_publish: armusT("admin.logTestimonialPublish", "Ana sayfa yorumu yayına alındı"),
+        testimonial_unpublish: armusT("admin.logTestimonialUnpublish", "Ana sayfa yorumu yayından kaldırıldı"),
+        testimonial_delete: armusT("admin.logTestimonialDelete", "Ana sayfa yorumu silindi"),
+        testimonial_reorder: armusT("admin.logTestimonialReorder", "Ana sayfa yorumlarının sırası değiştirildi"),
+        marketing_spend_set: armusT("admin.logSpendSet", "Reklam harcaması kaydedildi"),
+        marketing_spend_clear: armusT("admin.logSpendClear", "Reklam harcaması kaydı silindi"),
+        announcement_save: armusT("admin.logAnnouncementSave", "Site duyurusu güncellendi"),
+        feature_flag_on: armusT("admin.logFlagOn", "Ana sayfa bölümü açıldı"),
+        feature_flag_off: armusT("admin.logFlagOff", "Ana sayfa bölümü kapatıldı"),
+      };
+    }
+
+    // "iPhone · Safari" out of a browser's user-agent string
+    function armusDescribeDevice(userAgent) {
+      const ua = userAgent || "";
+      const device = /iPhone/.test(ua) ? "iPhone"
+        : /iPad/.test(ua) ? "iPad"
+        : /Android/.test(ua) ? "Android"
+        : /Windows/.test(ua) ? "Windows"
+        : /Macintosh|Mac OS X/.test(ua) ? "Mac"
+        : /Linux/.test(ua) ? "Linux" : "";
+      const browser = /Edg\w*\//.test(ua) ? "Edge"
+        : /OPR\/|Opera/.test(ua) ? "Opera"
+        : /SamsungBrowser/.test(ua) ? "Samsung Internet"
+        : /Firefox\/|FxiOS/.test(ua) ? "Firefox"
+        : /Chrome\/|CriOS/.test(ua) ? "Chrome"
+        : /Safari\//.test(ua) ? "Safari" : "";
+      return [device, browser].filter(Boolean).join(" · ");
     }
 
     function renderLogPanel(logs) {
       const body = document.getElementById("logBody");
       const empty = document.getElementById("logEmpty");
+      const more = document.getElementById("logMore");
+      const locale = armusGetLang() === "en" ? "en-US" : "tr-TR";
+      const labels = armusLogActionLabels();
+      const sorted = logs.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+
+      // a change made straight in Supabase has no admin behind it
+      const whoKey = log => log.admin_id || "name:" + (log.admin_name || "");
+      const whoName = log => log.admin_id || log.admin_name !== "Supabase"
+        ? log.admin_name
+        : armusT("admin.logViaSupabase", "Supabase (doğrudan)");
+
+      // ---- one card per admin: last entry, device, the week so far ----
+      const admins = new Map();
+      armusAdminProfiles.filter(p => p.is_admin).forEach(p => admins.set(p.id, { name: p.name, current: true }));
+      sorted.forEach(log => {
+        if (log.admin_id && !admins.has(log.admin_id)) admins.set(log.admin_id, { name: log.admin_name, current: false });
+      });
+      const weekAgo = Date.now() - 7 * 86400000;
+      document.getElementById("logAdmins").innerHTML = Array.from(admins.entries()).map(([id, admin]) => {
+        const mine = sorted.filter(log => log.admin_id === id);
+        const lastEnter = mine.find(log => log.action === "panel_enter");
+        const recent = mine.filter(log => new Date(log.created_at).getTime() >= weekAgo);
+        const enters = recent.filter(log => log.action === "panel_enter").length;
+        const lastLine = lastEnter
+          ? armusT("admin.logLastEnter", "Son giriş: {when}").replace("{when}", new Date(lastEnter.created_at).toLocaleString(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))
+          : armusT("admin.logNoEnterYet", "Henüz giriş kaydı yok");
+        const device = lastEnter ? [armusDescribeDevice(lastEnter.user_agent), lastEnter.ip].filter(Boolean).join(" · ") : "";
+        return `
+          <div class="stat-card">
+            <div class="log-admin-name">${armusEscapeHtml(admin.name)}${admin.current ? "" : ` <small>${armusT("admin.logFormerAdmin", "(artık yönetici değil)")}</small>`}</div>
+            <div class="log-admin-last">${lastLine}</div>
+            ${device ? `<div class="log-admin-device">${armusEscapeHtml(device)}</div>` : ""}
+            <div class="log-admin-week">${armusT("admin.logWeekSummary", "Son 7 gün: {enters} giriş · {actions} işlem").replace("{enters}", enters).replace("{actions}", recent.length - enters)}</div>
+          </div>
+        `;
+      }).join("");
+
+      // ---- filters ----
+      const adminSelect = document.getElementById("logFilterAdmin");
+      const chosen = adminSelect.value || "all";
+      const people = new Map();
+      sorted.forEach(log => { if (!people.has(whoKey(log))) people.set(whoKey(log), whoName(log)); });
+      admins.forEach((admin, id) => { if (!people.has(id)) people.set(id, admin.name); });
+      adminSelect.innerHTML = `<option value="all">${armusT("admin.logAllAdmins", "Tüm yöneticiler")}</option>`
+        + Array.from(people.entries()).map(([key, name]) => `<option value="${armusEscapeHtml(key)}">${armusEscapeHtml(name)}</option>`).join("");
+      adminSelect.value = people.has(chosen) ? chosen : "all";
+
+      const type = document.getElementById("logFilterType").value;
+      const period = document.getElementById("logFilterPeriod").value;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const since = period === "today" ? today.getTime() : period === "all" ? 0 : Date.now() - Number(period) * 86400000;
+
+      const rows = sorted.filter(log =>
+        (adminSelect.value === "all" || whoKey(log) === adminSelect.value)
+        && (type === "all" || (type === "enter") === (log.action === "panel_enter"))
+        && new Date(log.created_at).getTime() >= since
+      );
+
       body.innerHTML = "";
+      empty.style.display = rows.length ? "none" : "block";
 
-      if (!logs.length) {
-        empty.style.display = "block";
-        return;
-      }
-      empty.style.display = "none";
+      const LIMIT = 500;
+      more.style.display = rows.length > LIMIT ? "block" : "none";
+      more.textContent = armusT("admin.logShowingFirst", "En yeni {n} kayıt gösteriliyor. Daha eskileri için dönemi ya da yöneticiyi daralt.").replace("{n}", LIMIT);
 
-      const actionLabels = {
-        profile_approve: armusT("admin.logApplicationApproved", "Başvuru onaylandı"),
-        profile_reject: armusT("admin.logApplicationRejected", "Başvuru reddedildi"),
-        change_approve: armusT("admin.logChangeApproved", "Profil değişikliği onaylandı"),
-        change_reject: armusT("admin.logChangeRejected", "Profil değişikliği reddedildi"),
-        booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
-        support_ticket_reply: armusT("admin.logSupportTicketReply", "Destek talebine yanıt verildi"),
-        support_ticket_close: armusT("admin.logSupportTicketClosed", "Destek talebi kapatıldı"),
-        support_ticket_reopen: armusT("admin.logSupportTicketReopened", "Destek talebi yeniden açıldı"),
-      };
+      let lastDay = "";
+      rows.slice(0, LIMIT).forEach(log => {
+        const when = new Date(log.created_at);
+        const day = when.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric", weekday: "long" });
+        if (day !== lastDay) {
+          lastDay = day;
+          const head = document.createElement("tr");
+          head.className = "log-day";
+          head.innerHTML = `<td colspan="5">${armusEscapeHtml(day)}</td>`;
+          body.appendChild(head);
+        }
 
-      logs
-        .slice()
-        .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-        .forEach(log => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${armusEscapeHtml(log.admin_name)}</td>
-            <td>${actionLabels[log.action] || armusEscapeHtml(log.action)}</td>
-            <td>${armusEscapeHtml(log.target_label) || armusEscapeHtml(log.target_id) || "—"}</td>
-            <td>${new Date(log.created_at).toLocaleString(armusGetLang() === "en" ? "en-US" : "tr-TR")}</td>
-          `;
-          body.appendChild(tr);
-        });
+        const label = labels[log.action] || armusEscapeHtml(log.action);
+        const isEnter = log.action === "panel_enter";
+        const isRights = log.action === "admin_grant" || log.action === "admin_revoke";
+        const target = isEnter ? "—" : (armusEscapeHtml(log.target_label) || armusEscapeHtml(log.target_id) || "—");
+        const device = armusDescribeDevice(log.user_agent);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${when.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</td>
+          <td>${armusEscapeHtml(whoName(log))}</td>
+          <td>${isEnter || isRights ? `<span class="log-chip${isRights ? " rights" : ""}">${label}</span>` : label}</td>
+          <td>${target}${log.details ? `<span class="log-detail">${armusEscapeHtml(log.details)}</span>` : ""}</td>
+          <td class="log-device">${armusEscapeHtml(device) || "—"}${log.ip ? `<small>${armusEscapeHtml(log.ip)}</small>` : ""}</td>
+        `;
+        body.appendChild(tr);
+      });
     }
+
+    ["logFilterAdmin", "logFilterType", "logFilterPeriod"].forEach(id => {
+      document.getElementById(id).addEventListener("change", () => renderLogPanel(armusAdminLogs));
+    });
 
     // ---- client error log (migration_72.sql) ----
     // message/stack/page_url/user_agent are all attacker-controllable -
@@ -3049,6 +3288,7 @@
           armusAdminUpdateTestimonial(a.id, { display_order: b.display_order }),
           armusAdminUpdateTestimonial(b.id, { display_order: a.display_order }),
         ]);
+        if (ua && ub) armusLogAdminAction("testimonial_reorder", "testimonial", a.id, a.name);
         armusAdminTestimonials = armusAdminTestimonials.map(x => {
           if (ua && x.id === ua.id) return ua;
           if (ub && x.id === ub.id) return ub;
@@ -3086,6 +3326,7 @@
           button.disabled = true;
           const updated = await armusAdminUpdateTestimonial(id, { is_published: !t.is_published });
           if (updated) {
+            armusLogAdminAction(updated.is_published ? "testimonial_publish" : "testimonial_unpublish", "testimonial", id, t.name);
             armusAdminTestimonials = armusAdminTestimonials.map(x => x.id === id ? updated : x);
             renderAllFromState();
           } else {
@@ -3098,8 +3339,10 @@
           if (!confirm(armusT("admin.confirmDeleteTestimonial", "Bu yorumu silmek istediğine emin misin?"))) return;
           const id = button.dataset.deleteTestimonial;
           button.disabled = true;
+          const removed = armusAdminTestimonials.find(x => x.id === id);
           const ok = await armusAdminDeleteTestimonial(id);
           if (ok) {
+            armusLogAdminAction("testimonial_delete", "testimonial", id, removed ? removed.name : "");
             armusAdminTestimonials = armusAdminTestimonials.filter(x => x.id !== id);
             renderAllFromState();
           } else {
@@ -3134,6 +3377,7 @@
       button.disabled = false;
 
       if (created) {
+        armusLogAdminAction("testimonial_create", "testimonial", created.id, created.name);
         armusAdminTestimonials.push(created);
         document.getElementById("newTName").value = "";
         document.getElementById("newTLocation").value = "";
@@ -3974,16 +4218,23 @@
         return;
       }
       btn.disabled = true;
+      const spendMonth = document.getElementById("spendMonth").value;
+      const spendNote = document.getElementById("spendNote").value.trim() || null;
       const { error } = await armusSupabase.rpc("admin_set_marketing_spend", {
-        p_month: document.getElementById("spendMonth").value,
+        p_month: spendMonth,
         p_amount: amount,
-        p_note: document.getElementById("spendNote").value.trim() || null,
+        p_note: spendNote,
       });
       btn.disabled = false;
       if (error) {
         msg.textContent = armusT("admin.spendError", "Kaydedilemedi, tekrar dene.");
         return;
       }
+      armusLogAdminAction(
+        amount === null ? "marketing_spend_clear" : "marketing_spend_set",
+        "marketing_spend", spendMonth, spendMonth,
+        amount === null ? "" : `₺${amount.toLocaleString("tr-TR")}${spendNote ? " · " + spendNote : ""}`
+      );
       msg.textContent = amount === null
         ? armusT("admin.spendCleared", "Bu ayın reklam kaydı silindi.")
         : armusT("admin.spendSaved", "Kaydedildi.");
@@ -4055,6 +4306,9 @@
             alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             return;
           }
+          const resolvedReport = armusAdminMessageReports.find(r => r.id === button.dataset.resolveReport);
+          const reportedUser = resolvedReport && armusAdminProfiles.find(p => p.id === resolvedReport.reported_user_id);
+          armusLogAdminAction("message_report_resolved", "message_report", button.dataset.resolveReport, reportedUser ? reportedUser.name : "");
           armusAdminMessageReports = armusAdminMessageReports.map(r =>
             r.id === button.dataset.resolveReport ? { ...r, status: "resolved" } : r
           );
@@ -4248,6 +4502,7 @@
           const updated = await armusAdminUpdateDispute(id, { admin_notes: textarea.value.trim() });
           button.disabled = false;
           if (updated) {
+            armusLogAdminAction("dispute_note", "dispute", id, updated.subject);
             armusAdminDisputes = armusAdminDisputes.map(x => x.id === id ? updated : x);
             button.textContent = armusT("admin.savedNote", "Kaydedildi ✓");
             setTimeout(() => { button.textContent = armusT("admin.saveNote", "Notu Kaydet"); }, 1500);
@@ -4492,6 +4747,11 @@
       const saved = await armusSetSiteSetting("announcement", { message, active });
       button.disabled = false;
       if (saved) {
+        armusLogAdminAction(
+          "announcement_save", "site_setting", "announcement",
+          active ? armusT("admin.logAnnouncementOn", "Yayında") : armusT("admin.logAnnouncementOff", "Kapalı"),
+          message.slice(0, 200)
+        );
         const note = document.getElementById("announcementSavedNote");
         note.style.display = "inline";
         setTimeout(() => { note.style.display = "none"; }, 2000);
@@ -4713,6 +4973,8 @@
           const saved = await armusSetSiteSetting("feature_flags", armusFeatureFlags);
           button.disabled = false;
           if (saved) {
+            const flag = featureFlagsList().find(f => f.key === key);
+            armusLogAdminAction(newValue ? "feature_flag_on" : "feature_flag_off", "site_setting", key, flag ? flag.label : key);
             renderFlagsPanel();
           } else {
             armusFeatureFlags = previous;
@@ -5104,7 +5366,7 @@
         armusSupabase.from("profiles").select("*"),
         armusSupabase.from("bookings").select("*"),
         armusSupabase.from("reviews").select("*"),
-        armusSupabase.from("admin_actions").select("*"),
+        armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).limit(3000),
         armusAdminGetAllTestimonials(),
         armusAdminGetAllDisputes(),
         armusAdminGetAllAttendanceReports(),
@@ -5171,6 +5433,10 @@
       armusInitLivePulse();
       loadAnnouncementIntoForm();
       loadFlagsIntoPanel();
+      // this admin came into the panel (migration_115.sql) - awaited so
+      // the entry is already in the log that loadAll() reads; never
+      // allowed to stop the panel from loading
+      try { await armusSupabase.rpc("admin_log_visit"); } catch (err) {}
       await loadAll();
 
     })();
