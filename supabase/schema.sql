@@ -12,6 +12,10 @@ create table profiles (
   name text not null,
   role text not null check (role in ('student', 'teacher')),
   is_admin boolean not null default false,
+  -- migration_116.sql: the people who own the company. An owner is also
+  -- an admin; on top of that only an owner reads the admin log and
+  -- gives or removes admin rights (see enforce_owner_lock)
+  is_owner boolean not null default false,
   city text,
 
   -- teacher application fields
@@ -587,6 +591,19 @@ as $$
   select coalesce((select is_admin from profiles where id = auth.uid()), false);
 $$;
 
+-- migration_116.sql: owners, a level above admins
+-- same shape as public.is_admin(), for the same reason (a policy on
+-- profiles can't subquery profiles directly)
+create or replace function public.is_owner()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce((select is_owner from profiles where id = auth.uid()), false);
+$$;
+
 -- migration_30.sql: a teacher (and admins) also need to see lesson_credits
 -- tied to them, to detect when a trial converted into a real package
 -- purchase (armusTrialCountsAsEarned, bookings.js), so the trial's price
@@ -876,6 +893,51 @@ $$;
 create trigger profiles_lock_teacher_fields
   before update on profiles
   for each row execute procedure public.enforce_teacher_profile_lock();
+
+-- migration_116.sql: what only an owner may do. Only an owner gives or
+-- removes admin rights, an admin can't change an owner's account, and
+-- nobody makes an owner from the browser. A trigger of its own rather
+-- than more branches in
+-- enforce_teacher_profile_lock: that one lets every admin through at
+-- its first line, and these rules are exactly the ones an admin must
+-- not get past. auth.uid() is null in the SQL editor, where the people
+-- who own the database work - nothing here applies there.
+create or replace function public.enforce_owner_lock()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    return new;
+  end if;
+
+  if new.is_owner is distinct from old.is_owner then
+    raise exception 'owner_lock: an owner can only be set in the database';
+  end if;
+
+  if public.is_owner() then
+    return new;
+  end if;
+
+  if new.is_admin is distinct from old.is_admin then
+    raise exception 'admin_lock: only an owner can give or remove admin rights';
+  end if;
+
+  -- an owner's own edits to their own row are covered by the usual
+  -- profile rules; anyone else is an admin reaching into it
+  if old.is_owner and auth.uid() <> old.id then
+    raise exception 'owner_lock: an admin cannot change an owner''s account';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger profiles_enforce_owner_lock
+  before update on profiles
+  for each row execute procedure public.enforce_owner_lock();
 
 -- migration_63.sql: emails a teacher applicant when their status changes
 -- to approved or rejected - covers both admin.html's single approve/
@@ -1529,8 +1591,9 @@ create trigger messages_notify_new_message
 
 -- The admin log (migration_7.sql, extended by migration_115.sql): one
 -- row for each thing an admin does in the panel, and one ('panel_enter')
--- each time an admin comes into it. Rows can't be changed or deleted
--- from the browser - there is deliberately no update/delete policy.
+-- each time an admin comes into it. Only an owner can read it
+-- (migration_116.sql). Rows can't be changed or deleted from the
+-- browser - there is deliberately no update/delete policy.
 -- admin_id is SET NULL, not CASCADE: deleting an admin's account must
 -- not delete what they did; admin_name stays on the row.
 create table admin_actions (
@@ -1554,9 +1617,11 @@ create index admin_actions_created_at_idx on admin_actions (created_at desc);
 
 alter table admin_actions enable row level security;
 
-create policy "admin_actions_select_admin"
+-- migration_116.sql: the log is the owners' to read. Admins write their
+-- own rows to it (below) but can't see it.
+create policy "admin_actions_select_owner"
   on admin_actions for select
-  using (public.is_admin());
+  using (public.is_owner());
 
 create policy "admin_actions_insert_admin"
   on admin_actions for insert
@@ -1662,9 +1727,10 @@ $$;
 revoke all on function public.admin_log_visit() from public, anon;
 grant execute on function public.admin_log_visit() to authenticated;
 
--- Admin rights given or taken away, whoever does it and wherever
--- from. An AFTER trigger with its own error handling: the log can never
--- be the reason the change itself fails.
+-- Admin rights or owner status given or taken away, whoever does it
+-- and wherever from (migration_115.sql, migration_116.sql). An AFTER
+-- trigger with its own error handling: the log can never be the reason
+-- the change itself fails.
 create or replace function public.log_admin_rights_change()
 returns trigger
 language plpgsql
@@ -1673,12 +1739,22 @@ set search_path = public
 as $$
 begin
   begin
-    insert into admin_actions (admin_id, admin_name, action, target_type, target_id, target_label)
-    values (
-      auth.uid(), 'Supabase',
-      case when new.is_admin then 'admin_grant' else 'admin_revoke' end,
-      'profile', new.id::text, new.name
-    );
+    if new.is_admin is distinct from old.is_admin then
+      insert into admin_actions (admin_id, admin_name, action, target_type, target_id, target_label)
+      values (
+        auth.uid(), 'Supabase',
+        case when new.is_admin then 'admin_grant' else 'admin_revoke' end,
+        'profile', new.id::text, new.name
+      );
+    end if;
+    if new.is_owner is distinct from old.is_owner then
+      insert into admin_actions (admin_id, admin_name, action, target_type, target_id, target_label)
+      values (
+        auth.uid(), 'Supabase',
+        case when new.is_owner then 'owner_grant' else 'owner_revoke' end,
+        'profile', new.id::text, new.name
+      );
+    end if;
   exception when others then
     null;
   end;
@@ -1689,7 +1765,7 @@ $$;
 create trigger profiles_log_admin_rights
   after update on profiles
   for each row
-  when (old.is_admin is distinct from new.is_admin)
+  when (old.is_admin is distinct from new.is_admin or old.is_owner is distinct from new.is_owner)
   execute procedure public.log_admin_rights_change();
 
 -- === CLIENT ERROR LOG =================================================
