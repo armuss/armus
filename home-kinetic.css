@@ -80,8 +80,15 @@
   gap: .32em;
   padding-right: .32em;
 }
-/* stroke painted under a background-coloured fill: a clean outline that
-   hides the font's overlapping inner contours */
+/* outlined letters need air between them, or their outlines run into
+   each other: about twice the stroke, less what the font's own spacing
+   already leaves (measured on the tightest pairs, "st" and "re"). On the
+   row, so the gold "flashlight" copy keeps the same spacing */
+.hk-row1 {
+  letter-spacing: calc(6px - .04em);
+}
+/* the stroke is painted under a fill of the page colour, so only its
+   outer half shows */
 .hk-row1 .hk-track {
   color: var(--armus-bg);
   -webkit-text-stroke: 3px var(--armus-ink);
@@ -480,12 +487,15 @@ html[lang="en"] .hk-pc {
   letter-spacing: -2px;
   margin: 12px 0 30px;
 }
+/* each word rises out of its own mask. The mask reaches well past the
+   word - Turkish letters go far beyond the line (the dot of İ, the tail
+   of ş and ç) - and the negative margins cancel it out for the layout */
 .hk-w {
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  padding-bottom: .1em;
-  margin-bottom: -.1em;
+  padding: .2em .06em .3em;
+  margin: -.2em -.06em -.3em;
 }
 .hk-w > span {
   display: inline-block;
@@ -498,7 +508,7 @@ html[lang="en"] .hk-pc {
   padding-right: .03em;
 }
 .hk-motion .hk-w > span {
-  transform: translateY(110%) rotate(5deg);
+  transform: translateY(160%) rotate(5deg);
   transform-origin: 0 100%;
   transition: transform 1.15s var(--hk-ease) calc(var(--i, 0) * 80ms);
 }
@@ -1023,6 +1033,9 @@ html[lang="en"] .hk-pc {
   .hk-row {
     font-size: 50px;
     letter-spacing: -1.6px;
+  }
+  .hk-row1 {
+    letter-spacing: calc(4px - .04em);
   }
   .hk-row1 .hk-track {
     -webkit-text-stroke-width: 2px;

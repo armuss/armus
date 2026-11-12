@@ -43,11 +43,19 @@
     /* hero */
     .hw-hero { text-align: center; padding: 90px 10px 30px; }
     .hw-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 1.6px; color: #b8862a; }
-    .hw-hero h1 { font: 800 76px/1.02 Unbounded, Inter, sans-serif; letter-spacing: -3px; margin: 16px auto 22px; text-wrap: balance; }
-    .hw-hero h1 em { font-style: normal; color: var(--armus-bg); -webkit-text-stroke: 2.5px var(--armus-ink); paint-order: stroke fill; }
-    .hw-l { display: block; overflow: hidden; padding-bottom: .06em; }
+    /* a column, so the lines' negative margins below add up instead of
+       collapsing into each other */
+    .hw-hero h1 { display: flex; flex-direction: column; font: 800 76px/1.02 Unbounded, Inter, sans-serif; letter-spacing: -3px; margin: 16px auto 22px; text-wrap: balance; }
+    /* outlined letters need air between them, or their outlines run into
+       each other: about twice the stroke, less what the font's own spacing
+       already leaves (measured on the tightest pairs, "so" and "st") */
+    .hw-hero h1 em { font-style: normal; color: var(--armus-bg); -webkit-text-stroke: 2.5px var(--armus-ink); paint-order: stroke fill; letter-spacing: calc(5px - .04em); }
+    /* each line rises out of its own mask. The mask reaches well past the
+       line - Turkish letters go far beyond it (the tail of ç and ş, the dot
+       of İ) - and the negative margins keep the lines where they were */
+    .hw-l { display: block; overflow: hidden; padding: .2em .1em .32em; margin: -.2em -.1em -.26em; }
     .hw-l > span { display: inline-block; }
-    .hw-motion .hw-l > span { transform: translateY(110%); transition: transform 1.1s var(--hw-ease); }
+    .hw-motion .hw-l > span { transform: translateY(160%); transition: transform 1.1s var(--hw-ease); }
     .hw-motion .hw-l:nth-child(2) > span { transition-delay: .15s; }
     .hw-motion .hw-hero.in .hw-l > span { transform: none; }
     .hw-hero p { max-width: 50ch; margin: 0 auto 30px; font-size: 18px; line-height: 1.6; color: var(--armus-muted); }
@@ -178,7 +186,7 @@
     @media (max-width: 900px) {
       .hw-hero { padding-top: 50px; }
       .hw-hero h1 { font-size: 40px; letter-spacing: -1.5px; }
-      .hw-hero h1 em { -webkit-text-stroke-width: 1.8px; }
+      .hw-hero h1 em { -webkit-text-stroke-width: 1.8px; letter-spacing: calc(3.6px - .04em); }
       .hw-hero p { font-size: 16px; }
       .hw-step { grid-template-columns: 1fr; gap: 24px; padding: 40px 0 40px 58px; }
       .hw-step:nth-of-type(even) .hw-txt { order: 0; }
