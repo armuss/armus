@@ -122,10 +122,13 @@
      panels or sections. Readable on them: cream or white text on night
      blue (9.6 / 10.5) and on pine (5.9 / 6.4); night blue text on cream
      (9.6); gold on night blue (6.6). Gold on pine (4.0) is for large
-     text and small marks only. */
+     text and small marks only. Bordo is the extra accent, for parts that
+     should stand apart: white on it 9.2, cream 8.4, gold 5.7; bordo on
+     white 9.2. */
   --armus-cream: #faf5e2;
   --armus-navy: #2b3a7c;
   --armus-pine: #256b4c;
+  --armus-bordo: #7a2e3a;
 }
 
 /* big display headings use the same bold geometric display face as the
