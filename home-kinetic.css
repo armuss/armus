@@ -903,10 +903,12 @@ html[lang="en"] .hk-pc {
   transform: none;
 }
 
-/* step 3: weekly plan + progress line */
+/* step 3: weekly plan + progress line - white, with bordo where the
+   other steps use gold. The border marks the card's edge on the white page */
 .hk-v3 {
-  background: var(--hk-night);
-  color: #fff;
+  background: var(--armus-bg);
+  color: var(--armus-ink);
+  box-shadow: inset 0 0 0 1px var(--armus-border);
 }
 .hk-v3 .hk-par {
   display: flex;
@@ -932,10 +934,10 @@ html[lang="en"] .hk-pc {
   gap: 4px;
   padding: 4px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, .08);
+  background: var(--armus-panel-2);
   font-size: 12.5px;
   font-weight: 700;
-  color: rgba(255, 255, 255, .6);
+  color: var(--armus-muted);
 }
 .hk-seg span {
   position: relative;
@@ -952,12 +954,12 @@ html[lang="en"] .hk-pc {
   left: 4px;
   width: 78px;
   border-radius: 9px;
-  background: var(--armus-gold-gradient);
+  background: var(--armus-bordo);
   transform: translateX(calc(var(--s, 1) * 82px));
   transition: transform .6s var(--hk-spring);
 }
 .hk-seg span.is-on {
-  color: #0a0a0a;
+  color: #fff;
 }
 .hk-days {
   display: grid;
@@ -967,18 +969,18 @@ html[lang="en"] .hk-pc {
 .hk-days span {
   padding: 9px 0 8px;
   border-radius: 11px;
-  background: rgba(255, 255, 255, .07);
-  color: rgba(255, 255, 255, .55);
+  background: var(--armus-panel-2);
+  color: var(--armus-muted);
   font-size: 11.5px;
   font-weight: 700;
   text-align: center;
   transition: background .4s, color .4s, transform .5s var(--hk-spring), box-shadow .4s;
 }
 .hk-days span.is-on {
-  background: var(--armus-gold-gradient);
-  color: #0a0a0a;
+  background: var(--armus-bordo);
+  color: #fff;
   transform: translateY(-4px);
-  box-shadow: 0 10px 22px rgba(246, 198, 73, .3);
+  box-shadow: 0 10px 22px rgba(122, 46, 58, .28);
 }
 .hk-chart {
   flex: 1;
