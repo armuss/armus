@@ -876,7 +876,8 @@ html.nav-sheet-open body {
 }
 
 /* the text side on pine green: cream text, gold label and ticks, the
-   usual gold button */
+   three points in a darker inset, and a cream button with pine text
+   (pine on cream 5.9) */
 .teacher-cta {
   border-color: var(--armus-pine);
 }
@@ -893,6 +894,17 @@ html.nav-sheet-open body {
 .tcta-panel p,
 .tcta-link {
   color: rgba(250, 245, 226, 0.78);
+}
+.tcta-points {
+  max-width: 360px;
+  padding: 18px 20px;
+  gap: 14px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.16);
+}
+.tcta-panel .btn {
+  background: var(--armus-cream);
+  color: var(--armus-pine);
 }
 .tcta-panel .btn:focus-visible,
 .tcta-link:focus-visible {
