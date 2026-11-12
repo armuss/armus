@@ -28,6 +28,10 @@ main.container { padding: 44px 0 100px; }
 .crumbs a { color: var(--armus-muted); text-decoration: none; }
 .crumbs a:hover { color: var(--armus-ink); }
 .cat { display: inline-flex; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--armus-on-gold); background: var(--armus-gold-gradient); padding: 5px 11px; border-radius: 999px; margin-bottom: 16px; }
+/* these guides have always shown their headings in Inter - they never
+   loaded the display face. theme.css now makes that face available to
+   every page, so it is said here to keep them as they are */
+h1, h2 { font-family: "Inter", sans-serif; }
 h1 { font-size: clamp(28px, 4.5vw, 40px); letter-spacing: -0.5px; line-height: 1.15; max-width: 24ch; margin-bottom: 16px; text-wrap: balance; }
 
 .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
