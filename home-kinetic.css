@@ -500,13 +500,6 @@ html[lang="en"] .hk-pc {
 .hk-w > span {
   display: inline-block;
 }
-.hk-w.hk-gold > span {
-  background: var(--armus-gold-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  padding-right: .03em;
-}
 .hk-motion .hk-w > span {
   transform: translateY(160%) rotate(5deg);
   transform-origin: 0 100%;
