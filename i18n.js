@@ -153,7 +153,7 @@ const ARMUS_I18N_EN = {
   "index.commission.tier5": "0–100 hours",
   "index.testimonials.label": "WHAT OUR STUDENTS SAY",
   "index.testimonials.tag": "REVIEWS",
-  "index.testimonials.title": "What our students <span class=\"hk-o\">say.</span>",
+  "index.testimonials.title": "What our students say.",
   "index.footer.tagline": "A better way to learn English.",
   "index.footer.students": "Students",
   "index.footer.findTeachers": "Teachers",

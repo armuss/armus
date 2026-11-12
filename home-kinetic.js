@@ -425,63 +425,103 @@
     });
   }
 
-  /* ---------------- testimonials: words light up as you read ---------------- */
+  /* ---------------- testimonials: one at a time, with the names under it ---------------- */
   function initQuotes() {
     const grid = tst.querySelector(".hk-quotes");
     if (!grid) return;
-    // a few warm words per quote get a gold underline (quotes come from the
-    // admin panel, so they are picked by stem rather than by hand)
-    const KEY = /^(harika|verimli|rahat|kolay|güven|mükemmel|memnun|başar|akıcı|özgüven|sevd|sevi|tavsiye|süper|iyi|great|amazing|easy|easily|confiden|perfect|love|recommend|helpful|excellent)/;
-    let rows = [];
-    function prep() {
+    const title = tst.querySelector(".hk-tst-h");
+    const people = document.createElement("div");
+    people.className = "hk-people";
+    people.setAttribute("role", "tablist");
+    if (title && title.id) people.setAttribute("aria-labelledby", title.id);
+    let rows = [], tabs = [], current = 0;
+
+    function show(i, focus) {
+      current = (i + rows.length) % rows.length;
+      rows.forEach((row, n) => {
+        const on = n === current;
+        row.classList.toggle("is-on", on);
+        row.setAttribute("aria-hidden", on ? "false" : "true");
+        tabs[n].classList.toggle("is-on", on);
+        tabs[n].setAttribute("aria-selected", on ? "true" : "false");
+        tabs[n].tabIndex = on ? 0 : -1;
+      });
+      const tab = tabs[current];
+      if (focus) tab.focus({ preventScroll: true });
+      // on a phone the names are one sliding row: bring the current one to
+      // its middle (scrolling the row itself, never the page)
+      if (people.scrollWidth > people.clientWidth + 1) {
+        const left = tab.offsetLeft - (people.clientWidth - tab.offsetWidth) / 2;
+        people.scrollTo({ left, behavior: motion ? "smooth" : "auto" });
+      }
+    }
+    // once the visitor picks a name themselves, the turns stop
+    const take = () => people.classList.remove("is-auto");
+
+    function build() {
       rows = Array.from(grid.querySelectorAll(".hk-rv"));
-      rows.forEach((row) => {
+      people.textContent = "";
+      tabs = [];
+      rows.forEach((row, n) => {
         const p = row.querySelector(".hk-rv-text p");
-        if (!p || p.querySelector(".hk-wd")) return;
-        const text = p.textContent.trim().replace(/^[“"]+|[”"]+$/g, "");
+        // the quotation marks are the design's own; a review typed with
+        // its own doesn't get two pairs
+        const text = p ? p.textContent.trim().replace(/^[“"«]+|[”"»]+$/g, "").trim() : "";
+        if (p && p.textContent !== text) p.textContent = text;
         row.classList.toggle("hk-long", text.length > 150);
-        let keys = 0;
-        p.innerHTML = text.split(/\s+/).map((w) => {
-          const bare = w.toLocaleLowerCase("tr").replace(/[^\p{L}]/gu, "");
-          const key = keys < 3 && KEY.test(bare);
-          if (key) keys++;
-          return '<span class="hk-wd' + (key ? " hk-key" : "") + '">' + esc(w) + "</span>";
-        }).join(" ");
-        row._lit = -1;
-        if (motion) row.style.setProperty("--q", 0);
-        else { row.classList.add("is-lit"); p.querySelectorAll(".hk-wd").forEach((x) => x.classList.add("is-on")); }
+        row.id = "hkRv" + n;
+        row.setAttribute("role", "tabpanel");
+        row.setAttribute("aria-labelledby", "hkP" + n);
+
+        const av = row.querySelector(".hk-av"), name = row.querySelector(".hk-rv-who strong"), place = row.querySelector(".hk-rv-who small");
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = "hk-p";
+        tab.id = "hkP" + n;
+        tab.setAttribute("role", "tab");
+        tab.setAttribute("aria-controls", row.id);
+        // a longer review stays up longer: about reading speed, within 6-12 seconds
+        const words = text.split(/\s+/).length;
+        tab.style.setProperty("--hk-turn", clamp(3.2 + words * 0.32, 6, 12).toFixed(1) + "s");
+        tab.innerHTML = '<span class="hk-av" aria-hidden="true">' + esc(av ? av.textContent : "") + "</span>" +
+          "<span><strong>" + esc(name ? name.textContent : "") + "</strong><small>" + esc(place ? place.textContent : "") + "</small></span>" +
+          '<i class="hk-p-bar" aria-hidden="true"></i>';
+        tab.addEventListener("click", () => { take(); show(n); });
+        people.appendChild(tab);
+        tabs.push(tab);
       });
+      // one review needs no row of names, and has nothing to turn to
+      const many = rows.length > 1;
+      grid.classList.toggle("is-tabs", many);
+      people.hidden = !many;
+      people.classList.toggle("is-auto", many && motion);
+      if (many) show(0);
+      else rows.forEach((row) => { row.classList.remove("is-on"); row.removeAttribute("aria-hidden"); row.removeAttribute("role"); row.removeAttribute("aria-labelledby"); });
     }
-    prep();
-    if (!motion) {
-      new MutationObserver(prep).observe(grid, { childList: true });
-      return;
-    }
-    const wake = nearLoop(grid, () => {
-      const vh = window.innerHeight;
-      const maxScroll = document.documentElement.scrollHeight - vh;
-      const reads = rows.map((row) => [row, row.getBoundingClientRect()]);
-      reads.forEach(([row, r]) => {
-        if (r.bottom < -100 || r.top > vh + 100) return;
-        // lights up while its top moves from 85% of the screen to 20% - or,
-        // for a quote near the page end that can't scroll that high, to the
-        // highest point it can reach, so the last one still finishes
-        const lowest = r.top + window.scrollY - maxScroll;
-        const end = Math.max(vh * 0.2, lowest + 4);
-        const start = Math.max(vh * 0.85, end + vh * 0.3);
-        const q = clamp((start - r.top) / (start - end), 0, 1);
-        row.style.setProperty("--q", q.toFixed(3));
-        if (q > 0.05) row.classList.add("is-lit");
-        const ws = row.querySelectorAll(".hk-wd");
-        const lit = Math.round(q * ws.length);
-        if (lit !== row._lit) {
-          row._lit = lit;
-          ws.forEach((w, i) => w.classList.toggle("is-on", i < lit));
-        }
-      });
+
+    grid.after(people);
+    build();
+
+    people.addEventListener("keydown", (e) => {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!step && e.key !== "Home" && e.key !== "End") return;
+      e.preventDefault();
+      take();
+      show(e.key === "Home" ? 0 : e.key === "End" ? rows.length - 1 : current + step, true);
     });
+    // the line under the current name has filled: next review
+    people.addEventListener("animationend", (e) => {
+      if (e.animationName === "hk-tst-turn" && people.classList.contains("is-auto")) show(current + 1);
+    });
+    // no turns while the section is off screen
+    if ("IntersectionObserver" in window) {
+      people.classList.add("is-held");
+      new IntersectionObserver((entries) => {
+        people.classList.toggle("is-held", !entries[entries.length - 1].isIntersecting);
+      }, { threshold: 0.35 }).observe(tst);
+    }
     // the admin-panel testimonials replace the static ones after load
-    new MutationObserver(() => { prep(); wake(); }).observe(grid, { childList: true });
+    new MutationObserver(build).observe(grid, { childList: true });
   }
 
   if (proof) { if (motion) initMarquee(); initMachine(); }

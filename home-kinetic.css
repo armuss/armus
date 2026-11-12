@@ -1233,155 +1233,202 @@ html[lang="en"] .hk-rate-n i {
   transform: scale(1.06);
 }
 
-/* ================= TESTIMONIALS ================= */
+/* ================= TESTIMONIALS =================
+   One review on screen at a time, centred, with the row of names under
+   it. home-kinetic.js builds that row (.hk-people) and adds .is-tabs;
+   until it has - or without it - the reviews sit one under the other,
+   each with its own name. */
 .hk-tst {
-  padding: 110px 10px 60px;
+  padding: 110px 10px 96px;
+  text-align: center;
 }
 .hk-tst-h {
-  font: 800 72px/1 Unbounded, Inter, sans-serif;
-  letter-spacing: -3px;
-  margin: 10px 0 30px;
+  font: 800 22px/1.2 Unbounded, Inter, sans-serif;
+  letter-spacing: -.6px;
+  margin: 12px 0 0;
 }
-.hk-o {
-  color: var(--armus-bg);
-  -webkit-text-stroke: 2.5px var(--armus-ink);
-  paint-order: stroke fill;
+.hk-quotes {
+  display: grid;
+  gap: 56px;
+  max-width: 900px;
+  margin: 54px auto 0;
 }
 .hk-rv {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 50px;
-  padding: 60px 0;
-  border-top: 1.5px solid var(--armus-border-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  min-width: 0;
 }
-.hk-rv::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: -1.5px;
-  width: 100%;
-  height: 1.5px;
-  background: var(--armus-ink);
-  transform-origin: 0 0;
-  transform: scaleX(var(--q, 1));
+.hk-rv-text {
+  margin: 0;
 }
-.hk-rv-side {
-  position: sticky;
-  top: 110px;
-  align-self: start;
+.hk-rv-text p {
+  margin: 0;
+  font: 700 34px/1.32 Unbounded, Inter, sans-serif;
+  letter-spacing: -1.2px;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
-.hk-av {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: var(--armus-gold-gradient);
-  color: var(--armus-on-gold);
-  font: 900 24px Unbounded, Inter, sans-serif;
-  letter-spacing: -.5px;
+.hk-rv-text p::before {
+  content: "“";
 }
-.hk-av::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--armus-gold-3);
-  opacity: 0;
-  transition: opacity .5s;
+.hk-rv-text p::after {
+  content: "”";
 }
-.hk-rv.is-lit .hk-av::after {
-  opacity: 1;
-}
-.hk-motion .hk-rv.is-lit .hk-av::after {
-  animation: hk-spin 18s linear infinite;
-}
-.hk-rv-side strong {
-  display: block;
-  margin-top: 16px;
-  font-size: 20px;
-  font-weight: 800;
-}
-.hk-rv-side small {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--armus-muted);
+.hk-rv.hk-long .hk-rv-text p {
+  font-size: 25px;
+  line-height: 1.4;
+  letter-spacing: -.8px;
 }
 .hk-stars {
-  display: flex;
-  gap: 3px;
-  margin-top: 12px;
-  font-size: 22px;
+  font-size: 17px;
   line-height: 1;
+  letter-spacing: 2px;
   color: var(--armus-gold-2);
 }
 .hk-stars-off {
   color: var(--armus-border);
 }
-.hk-rv-text {
-  position: relative;
-  margin: 0;
+.hk-av {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--armus-gold-gradient);
+  color: var(--armus-on-gold);
+  font: 800 12px Inter, sans-serif;
+  letter-spacing: .2px;
 }
-.hk-rv-text p {
-  margin: 0;
-  font-size: 52px;
-  font-weight: 800;
-  line-height: 1.14;
-  letter-spacing: -1.8px;
-  text-wrap: pretty;
+.hk-rv-who,
+.hk-p {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
 }
-.hk-rv.hk-long .hk-rv-text p {
-  font-size: 40px;
-  letter-spacing: -1.2px;
+.hk-rv-who strong,
+.hk-p strong {
+  display: block;
+  font: 700 14px Inter, sans-serif;
+  white-space: nowrap;
 }
-.hk-rv-mark {
-  position: absolute;
-  left: -14px;
-  top: -74px;
-  z-index: -1;
-  font: 900 180px/1 Unbounded, Inter, sans-serif;
-  color: var(--armus-bg);
-  -webkit-text-stroke: 2px var(--armus-gold-3);
-  paint-order: stroke fill;
-  transform: rotate(calc(var(--q, 1) * -12deg)) scale(calc(.8 + var(--q, 1) * .2));
-  pointer-events: none;
+.hk-rv-who small,
+.hk-p small {
+  display: block;
+  margin-top: 1px;
+  font: 500 12px Inter, sans-serif;
+  color: var(--armus-muted);
+  white-space: nowrap;
 }
-.hk-wd {
-  transition: color .4s, background-size .8s var(--hk-ease);
+.hk-rv-who small:empty,
+.hk-p small:empty {
+  display: none;
 }
-.hk-wd.hk-key {
-  background: linear-gradient(rgba(246, 198, 73, .6), rgba(246, 198, 73, .6)) 0 88% / 100% 34% no-repeat;
+
+/* with the row of names: every review shares one cell, so the section
+   is as tall as the longest and nothing below it moves when they change */
+.hk-quotes.is-tabs {
+  gap: 0;
 }
-.hk-motion .hk-wd {
-  color: #dad6cc;
-}
-.hk-motion .hk-wd.is-on {
-  color: var(--armus-ink);
-}
-.hk-motion .hk-wd.hk-key {
-  background-size: 0 34%;
-}
-.hk-motion .hk-wd.hk-key.is-on {
-  background-size: 100% 34%;
-}
-.hk-motion .hk-av {
-  transform: scale(.6);
+.hk-quotes.is-tabs .hk-rv {
+  grid-area: 1 / 1;
+  visibility: hidden;
   opacity: 0;
-  transition: transform .6s var(--hk-spring), opacity .4s;
 }
-.hk-motion .hk-rv.is-lit .hk-av {
-  transform: none;
+.hk-quotes.is-tabs .hk-rv.is-on {
+  visibility: visible;
   opacity: 1;
 }
-.hk-motion .hk-stars {
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path .9s var(--hk-ease) .2s;
+.hk-quotes.is-tabs .hk-rv-who {
+  display: none;
 }
-.hk-motion .hk-rv.is-lit .hk-stars {
-  clip-path: inset(0 0 0 0);
+.hk-motion .hk-quotes.is-tabs .hk-rv {
+  transform: translateY(10px);
+  transition: opacity .3s, transform .3s, visibility 0s .3s;
+}
+.hk-motion .hk-quotes.is-tabs .hk-rv.is-on {
+  transform: none;
+  transition: opacity .55s .18s, transform .7s var(--hk-ease) .18s;
+}
+.hk-people {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 44px;
+}
+.hk-p {
+  position: relative;
+  overflow: hidden;
+  flex: none;
+  padding: 9px 18px 9px 9px;
+  border: 1px solid var(--armus-border);
+  border-radius: 999px;
+  background: var(--armus-bg);
+  color: var(--armus-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .3s, color .3s;
+}
+.hk-p .hk-av {
+  background: var(--armus-panel-2);
+  color: var(--armus-muted);
+}
+.hk-p.is-on {
+  border-color: var(--armus-ink);
+  color: var(--armus-ink);
+}
+.hk-p.is-on .hk-av {
+  background: var(--armus-gold-gradient);
+  color: var(--armus-on-gold);
+}
+.hk-p:focus-visible {
+  outline: 2px solid var(--armus-ink);
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .hk-p:not(.is-on):hover {
+    border-color: var(--armus-muted);
+    color: var(--armus-ink);
+  }
+}
+/* the line under the current name fills while its review is up; when it
+   is full, home-kinetic.js moves on. Pausing the line pauses the turn. */
+.hk-p-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--armus-gold-2);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+/* longhands on purpose: the shorthand would also set "running", and
+   being the more specific rule it would beat the pauses below */
+.hk-people.is-auto .hk-p.is-on .hk-p-bar {
+  animation-name: hk-tst-turn;
+  animation-duration: var(--hk-turn, 7s);
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.hk-people.is-held .hk-p-bar,
+.hk-tst:focus-within .hk-p-bar {
+  animation-play-state: paused;
+}
+@media (hover: hover) {
+  .hk-tst:hover .hk-p-bar {
+    animation-play-state: paused;
+  }
+}
+@keyframes hk-tst-turn {
+  to {
+    transform: none;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1411,58 +1458,67 @@ html[lang="en"] .hk-rate-n i {
     margin: 0;
   }
   .hk-tst {
-    padding-top: 80px;
+    padding: 80px 10px 76px;
   }
-  .hk-tst-h {
-    font-size: 34px;
-    letter-spacing: -1.3px;
+  .hk-quotes {
+    margin-top: 40px;
   }
-  .hk-o {
-    -webkit-text-stroke-width: 1.6px;
-  }
-  .hk-rv {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 44px 0;
-  }
-  .hk-rv-side {
-    position: static;
-    order: 2;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .hk-av {
-    width: 56px;
-    height: 56px;
-    font-size: 17px;
-    flex-shrink: 0;
-  }
-  .hk-rv-side strong {
-    margin: 0;
-    font-size: 17px;
-  }
-  .hk-stars {
-    margin-top: 5px;
-    font-size: 16px;
-  }
-  .hk-rv-text p,
-  .hk-rv.hk-long .hk-rv-text p {
-    font-size: 30px;
-    letter-spacing: -.8px;
+  .hk-rv-text p {
+    font-size: 27px;
+    letter-spacing: -.9px;
   }
   .hk-rv.hk-long .hk-rv-text p {
-    font-size: 25px;
-  }
-  .hk-rv-mark {
-    font-size: 120px;
-    top: -52px;
-    left: 0;
+    font-size: 21px;
+    letter-spacing: -.6px;
   }
 }
 @media (max-width: 560px) {
+  .hk-tst {
+    padding: 64px 10px 60px;
+  }
   .hk-tst-h {
-    font-size: 30px;
+    font-size: 17px;
+  }
+  .hk-quotes {
+    gap: 44px;
+    margin-top: 34px;
+  }
+  .hk-rv {
+    gap: 20px;
+  }
+  .hk-rv-text p {
+    font-size: 22px;
+    line-height: 1.36;
+    letter-spacing: -.7px;
+  }
+  .hk-rv.hk-long .hk-rv-text p {
+    font-size: 18px;
+    letter-spacing: -.4px;
+  }
+  .hk-stars {
+    font-size: 15px;
+  }
+  /* the names become one row that slides sideways, out to the screen's
+     edges (the section sits 30px in: .shell's 20 + its own 10). The auto
+     margins centre the row when it happens to fit. */
+  .hk-people {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 8px;
+    margin: 30px -30px 0;
+    padding: 0 30px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .hk-people::-webkit-scrollbar {
+    display: none;
+  }
+  .hk-p:first-child {
+    margin-left: auto;
+  }
+  .hk-p:last-child {
+    margin-right: auto;
   }
 }
 

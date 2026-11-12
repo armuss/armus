@@ -46,7 +46,7 @@
   <link rel="preload" href="fonts/unbounded-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="theme.css?v=10" />
   <link rel="stylesheet" href="styles.css?v=29" />
-  <link rel="stylesheet" href="home-kinetic.css?v=10" />
+  <link rel="stylesheet" href="home-kinetic.css?v=11" />
   <style>
     /* homepage-only intro: the mark writes itself big and centered,
        then flies/shrinks into its real spot in the header - see the
@@ -442,23 +442,30 @@
 
     <section class="hk-tst shell" data-flag-id="flagTestimonials">
       <div class="section-label" data-i18n="index.testimonials.tag">YORUMLAR</div>
-      <h2 class="hk-tst-h" data-i18n="index.testimonials.title">Öğrencilerimiz <span class="hk-o">ne diyor?</span></h2>
+      <h2 class="hk-tst-h" id="hkTstTitle" data-i18n="index.testimonials.title">Öğrencilerimiz ne diyor?</h2>
+      <!-- one review on screen at a time: home-kinetic.js builds the row of
+           names under it and moves on to the next every few seconds.
+           Without it, the reviews simply sit one under the other. -->
       <div class="hk-quotes" id="testimonialGrid">
         <article class="hk-rv">
-          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">ZA</span><div><strong>Zeynep A.</strong><small>İstanbul</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
-          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.</p></blockquote>
+          <blockquote class="hk-rv-text"><p>ARMUS sayesinde harika bir öğretmen buldum. Dersler çok verimli geçiyor.</p></blockquote>
+          <span class="hk-stars" role="img" aria-label="5/5">★★★★★</span>
+          <div class="hk-rv-who"><span class="hk-av" aria-hidden="true">ZA</span><span><strong>Zeynep A.</strong><small>İstanbul</small></span></div>
         </article>
         <article class="hk-rv">
-          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">MK</span><div><strong>Mehmet K.</strong><small>Ankara</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
-          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.</p></blockquote>
+          <blockquote class="hk-rv-text"><p>Deneme dersi sistemi çok iyi. Öğretmenle uyumlu olup olmadığımı görmeden karar vermedim.</p></blockquote>
+          <span class="hk-stars" role="img" aria-label="5/5">★★★★★</span>
+          <div class="hk-rv-who"><span class="hk-av" aria-hidden="true">MK</span><span><strong>Mehmet K.</strong><small>Ankara</small></span></div>
         </article>
         <article class="hk-rv">
-          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">ET</span><div><strong>Elif T.</strong><small>İzmir</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
-          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>Esnek ders saatleri ve güvenli ödeme sistemi sayesinde içim çok rahat.</p></blockquote>
+          <blockquote class="hk-rv-text"><p>Esnek ders saatleri ve güvenli ödeme sistemi sayesinde içim çok rahat.</p></blockquote>
+          <span class="hk-stars" role="img" aria-label="5/5">★★★★★</span>
+          <div class="hk-rv-who"><span class="hk-av" aria-hidden="true">ET</span><span><strong>Elif T.</strong><small>İzmir</small></span></div>
         </article>
         <article class="hk-rv">
-          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">DK</span><div><strong>David K.</strong><small>Öğretmen</small><span class="hk-stars" role="img" aria-label="5/5">★★★★★</span></div></div>
-          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>ARMUS'ta kendi programımı oluşturup öğretmenimle kolayca buluşuyorum.</p></blockquote>
+          <blockquote class="hk-rv-text"><p>ARMUS'ta kendi programımı oluşturup öğretmenimle kolayca buluşuyorum.</p></blockquote>
+          <span class="hk-stars" role="img" aria-label="5/5">★★★★★</span>
+          <div class="hk-rv-who"><span class="hk-av" aria-hidden="true">DK</span><span><strong>David K.</strong><small>Öğretmen</small></span></div>
         </article>
       </div>
     </section>
@@ -477,7 +484,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
   </button>
 
-  <script src="i18n.js?v=35"></script>
+  <script src="i18n.js?v=36"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
@@ -488,7 +495,7 @@
   <script src="teachers-data.js?v=4"></script>
   <script src="testimonials.js?v=4"></script>
   <script src="script.js?v=8"></script>
-  <script src="home-kinetic.js?v=6"></script>
+  <script src="home-kinetic.js?v=7"></script>
 
   <script>
     // Anyone already logged in shouldn't land on the marketing homepage -
@@ -515,15 +522,16 @@
       if (!testimonials.length) return;
 
       // same markup as the static rows; home-kinetic.js notices the swap
-      // and re-splits the quotes into words for the scroll light-up
+      // and rebuilds the row of names from it
       const grid = document.getElementById("testimonialGrid");
       const initials = name => (name || "?").trim().split(/\s+/).map(w => w[0] || "").join("").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toLocaleUpperCase("tr");
       grid.innerHTML = testimonials.map(t => {
         const rating = Math.max(1, Math.min(5, t.rating || 5));
         return `
         <article class="hk-rv">
-          <div class="hk-rv-side"><span class="hk-av" aria-hidden="true">${armusEscapeHtml(initials(t.name))}</span><div><strong>${armusEscapeHtml(t.name)}</strong><small>${armusEscapeHtml(t.location) || ""}</small><span class="hk-stars" role="img" aria-label="${rating}/5">${"★".repeat(rating)}<span class="hk-stars-off">${"★".repeat(5 - rating)}</span></span></div></div>
-          <blockquote class="hk-rv-text"><span class="hk-rv-mark" aria-hidden="true">“</span><p>${armusEscapeHtml(t.quote)}</p></blockquote>
+          <blockquote class="hk-rv-text"><p>${armusEscapeHtml(t.quote)}</p></blockquote>
+          <span class="hk-stars" role="img" aria-label="${rating}/5">${"★".repeat(rating)}<span class="hk-stars-off">${"★".repeat(5 - rating)}</span></span>
+          <div class="hk-rv-who"><span class="hk-av" aria-hidden="true">${armusEscapeHtml(initials(t.name))}</span><span><strong>${armusEscapeHtml(t.name)}</strong><small>${armusEscapeHtml(t.location) || ""}</small></span></div>
         </article>`;
       }).join("");
     })();
