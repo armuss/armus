@@ -570,6 +570,15 @@ html[lang="en"] .hk-pc {
   -webkit-mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
   mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
 }
+/* step 3 goes with its bordo weekly-plan card: the same outline and
+   rising fill, in bordo (outline a shade darker, as the gold one is) */
+.hk-num[data-n="3"],
+.hk-num[data-n="3"]::after {
+  -webkit-text-stroke-color: #62232e;
+}
+.hk-num[data-n="3"]::after {
+  color: var(--armus-bordo);
+}
 .hk-txt h3 {
   font-size: 40px;
   font-weight: 800;
