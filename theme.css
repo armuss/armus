@@ -116,6 +116,16 @@
 
   /* flat background on purpose - no visible gradient/glow */
   --armus-bg-glow: none;
+
+  /* the brand palette around the gold: cream, night blue and pine green.
+     Gold stays the main colour (buttons, highlights); these colour whole
+     panels or sections. Readable on them: cream or white text on night
+     blue (9.6 / 10.5) and on pine (5.9 / 6.4); night blue text on cream
+     (9.6); gold on night blue (6.6). Gold on pine (4.0) is for large
+     text and small marks only. */
+  --armus-cream: #faf5e2;
+  --armus-navy: #2b3a7c;
+  --armus-pine: #256b4c;
 }
 
 /* big display headings use the same bold geometric display face as the
