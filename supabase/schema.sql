@@ -1527,16 +1527,30 @@ create trigger messages_notify_new_message
 -- cancel-booking Edge Function (service role) instead, so that policy
 -- was dropped (see migration_24.sql).
 
+-- The admin log (migration_7.sql, extended by migration_115.sql): one
+-- row for each thing an admin does in the panel, and one ('panel_enter')
+-- each time an admin comes into it. Rows can't be changed or deleted
+-- from the browser - there is deliberately no update/delete policy.
+-- admin_id is SET NULL, not CASCADE: deleting an admin's account must
+-- not delete what they did; admin_name stays on the row.
 create table admin_actions (
   id uuid primary key default gen_random_uuid(),
-  admin_id uuid not null references profiles(id) on delete cascade,
+  admin_id uuid references profiles(id) on delete set null,
   admin_name text not null,
   action text not null,
   target_type text not null,
   target_id text not null,
   target_label text,
+  -- a short free-text detail for the action (e.g. the month and amount
+  -- of an ad spend entry)
+  details text,
+  -- where the request came from - set by admin_actions_stamp below
+  ip text,
+  user_agent text,
   created_at timestamptz not null default now()
 );
+
+create index admin_actions_created_at_idx on admin_actions (created_at desc);
 
 alter table admin_actions enable row level security;
 
@@ -1547,6 +1561,136 @@ create policy "admin_actions_select_admin"
 create policy "admin_actions_insert_admin"
   on admin_actions for insert
   with check (public.is_admin() and admin_id = auth.uid());
+
+-- One header of the API request this statement came in on (PostgREST
+-- puts them in request.headers). Null outside a request, e.g. in the SQL
+-- editor. Not callable from the browser - only the functions below use it.
+create or replace function public.armus_request_header(p_name text)
+returns text
+language plpgsql
+stable
+set search_path = public
+as $$
+declare
+  v_headers text := current_setting('request.headers', true);
+begin
+  if v_headers is null or v_headers = '' then
+    return null;
+  end if;
+  return nullif(left(trim(v_headers::json ->> p_name), 400), '');
+exception when others then
+  return null;
+end;
+$$;
+
+revoke all on function public.armus_request_header(text) from public, anon, authenticated;
+
+-- The caller's IP address. cf-connecting-ip and x-real-ip are set by the
+-- proxies in front of the API; x-forwarded-for is the fallback, and only
+-- its first entry is the client.
+create or replace function public.armus_request_ip()
+returns text
+language sql
+stable
+set search_path = public
+as $$
+  select nullif(trim(split_part(coalesce(
+    public.armus_request_header('cf-connecting-ip'),
+    public.armus_request_header('x-real-ip'),
+    public.armus_request_header('x-forwarded-for')
+  ), ',', 1)), '');
+$$;
+
+revoke all on function public.armus_request_ip() from public, anon, authenticated;
+
+-- Who, when and from where are the server's to say, not the browser's
+create or replace function public.admin_actions_stamp()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  new.admin_id := auth.uid();
+  -- outside a signed-in request (the SQL editor) the given name stands
+  new.admin_name := coalesce((select name from profiles where id = auth.uid()), nullif(new.admin_name, ''), 'Supabase');
+  new.created_at := now();
+  new.ip := public.armus_request_ip();
+  new.user_agent := public.armus_request_header('user-agent');
+  new.details := left(new.details, 500);
+  return new;
+end;
+$$;
+
+create trigger admin_actions_stamp
+  before insert on admin_actions
+  for each row execute procedure public.admin_actions_stamp();
+
+-- An admin came into the panel. Called by admin.html each time the
+-- panel is opened; coming back within 30 minutes from the same device is
+-- the same sitting, not a new entry. Does nothing for a non-admin.
+create or replace function public.admin_log_visit()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_ip text := public.armus_request_ip();
+  v_agent text := public.armus_request_header('user-agent');
+begin
+  if not public.is_admin() then
+    return;
+  end if;
+
+  if exists (
+    select 1 from admin_actions
+    where admin_id = auth.uid()
+      and action = 'panel_enter'
+      and created_at > now() - interval '30 minutes'
+      and ip is not distinct from v_ip
+      and user_agent is not distinct from v_agent
+  ) then
+    return;
+  end if;
+
+  insert into admin_actions (admin_id, admin_name, action, target_type, target_id)
+  values (auth.uid(), '', 'panel_enter', 'panel', 'admin');
+end;
+$$;
+
+revoke all on function public.admin_log_visit() from public, anon;
+grant execute on function public.admin_log_visit() to authenticated;
+
+-- Admin rights given or taken away, whoever does it and wherever
+-- from. An AFTER trigger with its own error handling: the log can never
+-- be the reason the change itself fails.
+create or replace function public.log_admin_rights_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  begin
+    insert into admin_actions (admin_id, admin_name, action, target_type, target_id, target_label)
+    values (
+      auth.uid(), 'Supabase',
+      case when new.is_admin then 'admin_grant' else 'admin_revoke' end,
+      'profile', new.id::text, new.name
+    );
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+create trigger profiles_log_admin_rights
+  after update on profiles
+  for each row
+  when (old.is_admin is distinct from new.is_admin)
+  execute procedure public.log_admin_rights_change();
 
 -- === CLIENT ERROR LOG =================================================
 -- migration_72.sql: a lightweight, self-hosted stand-in for real error
