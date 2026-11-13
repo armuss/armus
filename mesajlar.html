@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="stylesheet" href="theme.css?v=16">
+  <link rel="stylesheet" href="theme.css?v=17">
 
   <style>
     * {
@@ -114,7 +114,7 @@
       border: 1px solid var(--armus-border);
       background: transparent;
       color: var(--armus-ink);
-      border-radius: 999px;
+      border-radius: 0;
       padding: 8px 14px;
       font: 700 12.5px Inter, sans-serif;
       letter-spacing: 0.3px;
@@ -192,7 +192,7 @@
       display: grid;
       grid-template-columns: 300px 1fr 260px;
       border: 1px solid var(--armus-border);
-      border-radius: 20px;
+      border-radius: 0;
       background: var(--armus-panel);
       overflow: hidden;
       height: 65vh;
@@ -261,7 +261,7 @@
     .context-card {
       background: var(--armus-panel);
       border: 1px solid var(--armus-border-soft);
-      border-radius: 12px;
+      border-radius: 0;
       padding: 12px;
       text-align: left;
       margin-bottom: 10px;
@@ -284,7 +284,7 @@
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
       border: none;
-      border-radius: 10px;
+      border-radius: 0;
       padding: 10px;
       font-weight: 700;
       font-size: 12px;
@@ -318,7 +318,7 @@
     .convo-avatar {
       width: 42px;
       height: 42px;
-      border-radius: 10px;
+      border-radius: 0;
       background: var(--armus-silver-gradient);
       color: #1c1c1e;
       display: flex;
@@ -444,7 +444,7 @@
     .msg-bubble {
       max-width: 70%;
       padding: 10px 14px;
-      border-radius: 20px 20px 20px 4px;
+      border-radius: 0;
       font-size: 13.5px;
       line-height: 1.5;
       background: var(--armus-panel-2);
@@ -454,7 +454,7 @@
     .msg-attachment video {
       max-width: 220px;
       max-height: 220px;
-      border-radius: 10px;
+      border-radius: 0;
       display: block;
       margin-bottom: 6px;
     }
@@ -506,7 +506,7 @@
 
     .voice-wave span {
       width: 3px;
-      border-radius: 2px;
+      border-radius: 0;
       background: var(--armus-faint);
       flex-shrink: 0;
       transition: background-color .1s linear;
@@ -561,7 +561,7 @@
       min-height: 40px;
       background: var(--armus-panel-2);
       border: 1px solid var(--armus-gold-2);
-      border-radius: 10px;
+      border-radius: 0;
       padding: 8px 10px;
       color: var(--armus-ink);
       font-family: inherit;
@@ -571,7 +571,7 @@
 
     .edit-form-wrap button {
       border: none;
-      border-radius: 10px;
+      border-radius: 0;
       padding: 0 14px;
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
@@ -590,7 +590,7 @@
     .msg-row.mine .msg-bubble {
       background: var(--armus-ink);
       color: #fff;
-      border-radius: 20px 20px 4px 20px;
+      border-radius: 0;
     }
 
     .msg-time {
@@ -607,7 +607,7 @@
       border: 1px solid #c0392b;
       background: rgba(192, 57, 43, .12);
       color: #b3261e;
-      border-radius: 10px;
+      border-radius: 0;
       font-size: 12.5px;
       line-height: 1.6;
     }
@@ -626,7 +626,7 @@
       max-height: 100px;
       background: var(--armus-panel-2);
       border: 1px solid var(--armus-border);
-      border-radius: 12px;
+      border-radius: 0;
       padding: 11px 14px;
       color: var(--armus-ink);
       font-family: inherit;
@@ -636,7 +636,7 @@
 
     .thread-input button[type="submit"] {
       border: none;
-      border-radius: 12px;
+      border-radius: 0;
       padding: 0 22px;
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
@@ -650,7 +650,7 @@
       border: 1px solid var(--armus-border);
       background: var(--armus-panel-2);
       color: var(--armus-ink);
-      border-radius: 12px;
+      border-radius: 0;
       width: 44px;
       height: 44px;
       flex-shrink: 0;
@@ -708,7 +708,7 @@
       align-items: center;
       gap: 10px;
       background: var(--armus-panel-2);
-      border-radius: 999px;
+      border-radius: 0;
       padding: 8px 16px;
     }
 
@@ -737,7 +737,7 @@
 
     .recording-wave span {
       width: 2.5px;
-      border-radius: 2px;
+      border-radius: 0;
       background: #c23b2e;
       animation: armus-wave-bounce .8s ease-in-out infinite;
     }
@@ -855,7 +855,7 @@
     .report-modal {
       background: var(--armus-panel);
       border: 1px solid var(--armus-border);
-      border-radius: 18px;
+      border-radius: 0;
       padding: 28px;
       width: min(420px, 100%);
       max-height: 90vh;
@@ -880,7 +880,7 @@
       width: 100%;
       background: var(--armus-panel-2);
       border: 1px solid var(--armus-border-soft);
-      border-radius: 10px;
+      border-radius: 0;
       padding: 10px 12px;
       color: var(--armus-ink);
       font-family: inherit;
@@ -1020,7 +1020,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=37"></script>
+  <script src="i18n.js?v=38"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -1268,7 +1268,7 @@
 
       const header = document.getElementById("threadHeader");
       header.style.display = "flex";
-      const avatarInner = armusSafeUrl(otherPhoto) ? `<img src="${armusSafeUrl(otherPhoto)}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;">` : "";
+      const avatarInner = armusSafeUrl(otherPhoto) ? `<img src="${armusSafeUrl(otherPhoto)}" alt="" style="width:28px;height:28px;border-radius:0;object-fit:cover;">` : "";
       header.innerHTML = `${avatarInner}<span>${escapeHtml(otherPartyDisplayName(otherName))}</span>`;
 
       document.getElementById("threadForm").style.display = "flex";

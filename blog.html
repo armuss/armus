@@ -31,8 +31,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="theme.css?v=16">
-  <link rel="stylesheet" href="styles.css?v=35">
+  <link rel="stylesheet" href="theme.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=36">
 
   <style>
     /* ---- ARMUS blog, design A "Dergi": a magazine page with motion ---- */
@@ -48,7 +48,7 @@
     .blog-page a { color: inherit; text-decoration: none; }
     /* the header's Kayıt Ol keeps its own cream on red */
     .blog-page a.btn-light { color: var(--armus-on-gold); }
-    .blog-page :focus-visible { outline: 2px solid var(--armus-gold-2); outline-offset: 3px; border-radius: 6px; }
+    .blog-page :focus-visible { outline: 2px solid var(--armus-gold-2); outline-offset: 3px; border-radius: 0; }
 
     .bl-progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; background: var(--armus-gold-gradient); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
 
@@ -77,10 +77,10 @@
 
     /* featured post */
     .bl-feature { display: grid; grid-template-columns: 1.2fr 1fr; gap: 52px; align-items: center; margin: 34px 0 74px; }
-    .bl-feature .fig { position: relative; border-radius: 28px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--armus-gold-2); box-shadow: 0 34px 70px rgba(90, 15, 20, .2); transform-style: preserve-3d; transition: transform .5s var(--bl-ease); }
+    .bl-feature .fig { position: relative; border-radius: 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--armus-gold-2); box-shadow: 0 34px 70px rgba(90, 15, 20, .2); transform-style: preserve-3d; transition: transform .5s var(--bl-ease); }
     .bl-feature .kb { position: absolute; inset: -8% 0; animation: blKen 16s ease-in-out infinite alternate; }
     .bl-feature .kb img { width: 100%; height: 100%; object-fit: cover; display: block; transform: translate3d(0, var(--py, 0px), 0) scale(1.06); }
-    .bl-tag { display: inline-flex; gap: 6px; font: 700 11px Inter, sans-serif; letter-spacing: 1px; text-transform: uppercase; background: var(--armus-gold-gradient); color: var(--armus-on-gold); padding: 6px 12px; border-radius: 999px; }
+    .bl-tag { display: inline-flex; gap: 6px; font: 700 11px Inter, sans-serif; letter-spacing: 1px; text-transform: uppercase; background: var(--armus-gold-gradient); color: var(--armus-on-gold); padding: 6px 12px; border-radius: 0; }
     .bl-feature h2 { font: 800 clamp(26px, 3vw, 38px)/1.12 Unbounded, Inter, sans-serif; letter-spacing: -0.03em; margin: 18px 0 14px; text-wrap: balance; }
     .bl-feature p { color: var(--bl-muted); font-size: 16px; line-height: 1.65; max-width: 46ch; margin: 0; }
     .bl-feature .facts { display: flex; gap: 14px; margin-top: 14px; font-size: 13px; color: var(--bl-muted); }
@@ -93,7 +93,7 @@
     /* sticky filters */
     .bl-sentinel { height: 1px; }
     .bl-filters { position: sticky; top: 90px; z-index: 9; margin: 0 -20px 34px; padding: 0 20px; transition: background .3s, box-shadow .3s; }
-    .bl-filters.stuck { background: rgba(251, 248, 239, .9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(60, 45, 10, .08); border-radius: 0 0 18px 18px; }
+    .bl-filters.stuck { background: rgba(251, 248, 239, .9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(60, 45, 10, .08); border-radius: 0; }
     .bl-filter-inner { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--bl-line); }
     .bl-filter-row { position: relative; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; }
     .bl-filter-row::-webkit-scrollbar { display: none; }
@@ -103,7 +103,7 @@
     .bl-filter-row.more-l.more-r { -webkit-mask-image: linear-gradient(90deg, transparent, #000 44px, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, transparent, #000 44px, #000 calc(100% - 44px), transparent); }
     .bl-filter { background: none; border: 0; font: 700 14px Inter, sans-serif; color: var(--bl-muted); padding: 15px 12px 16px; cursor: pointer; white-space: nowrap; transition: color .25s; }
     .bl-filter:hover, .bl-filter.on { color: var(--armus-ink); }
-    .bl-ind { position: absolute; bottom: 0; left: 0; height: 3px; width: 0; background: var(--armus-ink); border-radius: 3px; transition: transform .5s var(--bl-ease-io), width .5s var(--bl-ease-io); }
+    .bl-ind { position: absolute; bottom: 0; left: 0; height: 3px; width: 0; background: var(--armus-ink); border-radius: 0; transition: transform .5s var(--bl-ease-io), width .5s var(--bl-ease-io); }
     .bl-count { flex: none; font-size: 13px; color: var(--bl-muted); white-space: nowrap; }
     .bl-count b { color: var(--armus-ink); font-variant-numeric: tabular-nums; }
 
@@ -111,7 +111,7 @@
     .bl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 46px 30px; padding-bottom: 96px; }
     .post-card { display: block; position: relative; transition: transform .25s var(--bl-ease); -webkit-tap-highlight-color: transparent; }
     .post-card[hidden] { display: none !important; }
-    .post-card .thumb { border-radius: 22px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--armus-gold-2); transform: translateZ(0); }
+    .post-card .thumb { border-radius: 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--armus-gold-2); transform: translateZ(0); }
     .post-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--bl-ease); }
     .post-card .meta { display: flex; justify-content: space-between; gap: 12px; margin: 17px 0 9px; font-size: 11.5px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: var(--bl-gold-ink); }
     .post-card .meta span + span { color: var(--bl-muted); letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 12.5px; white-space: nowrap; }
@@ -145,7 +145,7 @@
     .bl-cta h2 { font: 800 clamp(24px, 3vw, 34px)/1.15 Unbounded, Inter, sans-serif; letter-spacing: -0.03em; margin: 0 0 8px; }
     .bl-cta p { color: #b5b5b5; font-size: 15.5px; margin: 0; max-width: 52ch; }
     .bl-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-    .bl-btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 14px; padding: 17px 24px; font: 700 15px Inter, sans-serif; transition: transform .35s var(--bl-ease), background .2s; will-change: transform; }
+    .bl-btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 0; padding: 17px 24px; font: 700 15px Inter, sans-serif; transition: transform .35s var(--bl-ease), background .2s; will-change: transform; }
     .bl-btn.gold { background: var(--armus-gold-gradient); color: var(--armus-on-gold); }
     .bl-btn.line { box-shadow: inset 0 0 0 1.5px #3a3a3a; color: #f4f4f2; }
     .bl-btn.line:hover { box-shadow: inset 0 0 0 1.5px var(--armus-red-on-dark); }
@@ -157,10 +157,10 @@
     .bl-motion .bl-title.go .wi { animation: blRise 1s var(--bl-ease) forwards; }
     .bl-motion .bl-title .hl path { stroke-dashoffset: 560; }
     .bl-motion .bl-title.go .hl path { animation: blDraw 1.1s var(--bl-ease-io) forwards; animation-delay: var(--dd, .9s); }
-    .bl-motion .post-card .thumb { clip-path: inset(100% 0 0 0 round 22px); transition: clip-path 1.1s var(--bl-ease-io); transition-delay: var(--d, 0s); }
+    .bl-motion .post-card .thumb { clip-path: inset(100% 0 0 0); transition: clip-path 1.1s var(--bl-ease-io); transition-delay: var(--d, 0s); }
     .bl-motion .post-card .thumb img { transform: scale(1.22); }
     .bl-motion .post-card .meta, .bl-motion .post-card h2, .bl-motion .post-card p { opacity: 0; transform: translateY(16px); transition: opacity .8s var(--bl-ease), transform .8s var(--bl-ease); }
-    .bl-motion .post-card.in .thumb { clip-path: inset(0 0 0 0 round 22px); }
+    .bl-motion .post-card.in .thumb { clip-path: inset(0 0 0 0); }
     .bl-motion .post-card.in .thumb img { transform: scale(1); }
     .bl-motion .post-card.in .meta { opacity: 1; transform: none; transition-delay: calc(var(--d, 0s) + .25s); }
     .bl-motion .post-card.in h2 { opacity: 1; transform: none; transition-delay: calc(var(--d, 0s) + .33s); }
@@ -193,7 +193,7 @@
       .bl-side { text-align: left; display: flex; align-items: baseline; gap: 10px; }
       .bl-group span { font-size: 13px; margin: 0 16px; }
       .bl-feature { grid-template-columns: 1fr; gap: 22px; margin: 22px 0 50px; }
-      .bl-feature .fig { border-radius: 22px; }
+      .bl-feature .fig { border-radius: 0; }
       .bl-filters { top: 88px; }
       .bl-filter { padding: 14px 10px 15px; font-size: 13.5px; }
       .bl-count { display: none; }
@@ -575,7 +575,7 @@
 }
   </script>
 
-  <script src="i18n.js?v=37"></script>
+  <script src="i18n.js?v=38"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script>
   (function () {
