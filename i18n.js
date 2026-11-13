@@ -63,10 +63,8 @@ const ARMUS_I18N_EN = {
   "settings.errPasswordMismatch": "Passwords don't match.",
   "settings.passwordSaved": "Your password has been updated.",
   "settings.currentEmailLabel": "Current email",
-  "settings.newEmailLabel": "New email",
-  "settings.emailSaveNote": "We'll send a confirmation link to your new address before the change takes effect.",
-  "settings.errEmailInvalid": "Please enter a valid email address.",
-  "settings.emailSaved": "Confirmation email sent. Check your inbox to complete the change.",
+  "settings.emailLockedNote": "Your email address is tied to your account and can't be changed. If you signed up with the wrong address or can no longer reach it, contact us.",
+  "settings.contactUs": "Contact us",
   "settings.deleteWarningTitle": "Delete Your Account",
   "settings.deleteButton": "Delete My Account",
 
