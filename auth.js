@@ -628,9 +628,9 @@ async function armusRenderTeacherNav(el, session, firstName) {
           <div class="gnav-avatar">${avatarInner}</div>
           <div class="gnav-dropdown-greeting">${armusT("nav.greeting", "Merhaba, {name}").replace("{name}", firstName)} <small>(${armusT("nav.roleTeacher", "Öğretmen")})</small></div>
         </div>
-        <a href="dashboard">${armusT("nav.myPanel", "Panelim")}</a>
+        <a href="dashboard#overview">${armusT("nav.myPanel", "Panelim")}</a>
         <a href="mesajlar">${armusT("nav.messages", "Mesajlar")}</a>
-        <a href="settings">${armusT("nav.settings", "Ayarlar")}</a>
+        <a href="dashboard#profile">${armusT("nav.settings", "Ayarlar")}</a>
         <a href="sss">${armusT("nav.help", "Yardım")}</a>
         <hr>
         <button type="button" id="gnavLogoutBtn">${armusT("nav.logout", "Çıkış Yap")}</button>
