@@ -94,6 +94,17 @@ export default function Profile() {
     ]);
   }
 
+  function explainEmailLock() {
+    Alert.alert(
+      'E-posta adresi değiştirilemez',
+      'E-posta adresin hesabına bağlıdır. Yanlış bir adresle kaydolduysan ya da bu adrese artık erişemiyorsan bize ulaş.',
+      [
+        { text: 'Tamam', style: 'cancel' },
+        { text: 'Bize ulaş', onPress: () => open('/iletisim') },
+      ]
+    );
+  }
+
   async function togglePush(next: boolean) {
     setPushOn(next);
     await setPushEnabled(next);
@@ -250,7 +261,8 @@ export default function Profile() {
         <Text style={styles.groupLabel}>HESAP</Text>
         <View style={styles.group}>
           <Row icon="person-outline" label="Profili düzenle" onPress={() => router.push('/profile/edit')} />
-          <Row icon="mail-outline" label="E-posta" value={profile?.email} onPress={() => router.push('/settings/email')} />
+          {/* shown only: the sign-in email can't be changed (migration_117.sql) */}
+          <Row icon="mail-outline" label="E-posta" value={profile?.email} locked onPress={explainEmailLock} />
           <Row icon="lock-closed-outline" label="Şifre değiştir" onPress={() => router.push('/settings/password')} last />
         </View>
 
@@ -339,6 +351,7 @@ function Row({
   onPress,
   right,
   danger,
+  locked,
   last,
 }: {
   icon: IconName;
@@ -347,6 +360,8 @@ function Row({
   onPress?: () => void;
   right?: React.ReactNode;
   danger?: boolean;
+  /** a value that can't be changed: a small lock instead of the arrow */
+  locked?: boolean;
   last?: boolean;
 }) {
   return (
@@ -367,7 +382,14 @@ function Row({
               {value}
             </Text>
           )}
-          {!danger && <Ionicons name="chevron-forward" size={16} color={colors.faint} style={{ marginLeft: value ? 4 : 'auto' }} />}
+          {!danger && (
+            <Ionicons
+              name={locked ? 'lock-closed' : 'chevron-forward'}
+              size={locked ? 13 : 16}
+              color={colors.faint}
+              style={{ marginLeft: value ? 6 : 'auto' }}
+            />
+          )}
         </>
       )}
     </Pressable>

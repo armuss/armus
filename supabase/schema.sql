@@ -349,6 +349,44 @@ create trigger on_auth_user_email_updated
   after update of email on auth.users
   for each row execute procedure public.sync_profile_email();
 
+-- migration_117.sql: the sign-in email can't be changed. A teacher or
+-- student keeps the address they signed up with; Settings / Profil no
+-- longer offer it, and this refuses both Supabase Auth's updateUser({
+-- email }) request (auth.users.email_change) and any change to
+-- auth.users.email. An owner who must move an account to a new address
+-- does it in the SQL editor inside one transaction after
+-- select set_config('armus.allow_email_change', 'on', true);
+create or replace function public.block_email_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- the owner's own SQL-editor fix (see above) - never set by app code
+  if coalesce(current_setting('armus.allow_email_change', true), '') = 'on' then
+    return new;
+  end if;
+
+  -- updateUser({ email }) asking for a new address
+  if coalesce(new.email_change, '') <> '' and new.email_change is distinct from old.email_change then
+    raise exception 'email_change_locked: the sign-in email of an account cannot be changed';
+  end if;
+
+  -- the address itself (first-time set on a brand-new row is fine)
+  if old.email is not null and new.email is distinct from old.email then
+    raise exception 'email_change_locked: the sign-in email of an account cannot be changed';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists before_auth_user_email_change on auth.users;
+create trigger before_auth_user_email_change
+  before update on auth.users
+  for each row execute procedure public.block_email_change();
+
 -- === LESSON CREDITS =================================================
 -- Replaces "cancel = money back" with "cancel = a lesson owed back".
 -- cancel-booking grants one when a cancellation is refund-eligible (see
