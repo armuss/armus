@@ -205,6 +205,13 @@ export default function Words() {
               >
                 <View style={styles.cardBack} />
 
+                {/* both sides live in their own flat layer drawn above the
+                    tilted card behind: on iOS, views turning in 3D are
+                    depth-sorted against their siblings, so without this the
+                    card behind cut through the turning card mid-flip.
+                    collapsable={false} keeps this wrapper from being
+                    optimised away. */}
+                <View style={styles.flipLayer} collapsable={false} pointerEvents="box-none">
                 {/* the word side */}
                 <Animated.View style={[styles.card, styles.face, frontStyle]} pointerEvents={flipped ? 'none' : 'auto'}>
                   <View style={styles.cardTop}>
@@ -244,6 +251,7 @@ export default function Words() {
                     <Text style={[styles.hintText, { color: 'rgba(250,245,226,0.8)' }]}>Kelimeye dönmek için dokun</Text>
                   </View>
                 </Animated.View>
+                </View>
               </Pressable>
             ) : (
               <View style={[styles.cardWrap, styles.doneBox]}>
@@ -466,6 +474,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.champagneDeep,
     transform: [{ rotate: '-4deg' }, { translateX: -6 }, { translateY: 10 }],
+    zIndex: 0,
   },
   card: {
     flex: 1,
@@ -483,6 +492,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 14 },
     elevation: 8,
   },
+  flipLayer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 },
   // both sides sit on top of each other; only the one facing you shows
   face: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backfaceVisibility: 'hidden' },
   cardBackFace: {
