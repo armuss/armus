@@ -1,9 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -19,7 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Band from '../components/Band';
 import { useAuth } from '../lib/auth';
-import { colors, fonts, radius } from '../lib/theme';
+import { colors, fonts, radius, redGradient } from '../lib/theme';
 import { addVocabEntry, deleteVocabEntry, getVocabEntries, setVocabMastered, type VocabEntry } from '../lib/vocab';
 
 const ALL = 'Tümü';
@@ -38,6 +42,9 @@ export default function Words() {
   const [hideMastered, setHideMastered] = useState(false);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  // the card turns over like the website's (a 3D flip, 0.6s): 0 = word, 1 = meaning
+  const flip = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
   const [adding, setAdding] = useState(params.add === '1');
   const [busy, setBusy] = useState(false);
 
@@ -53,6 +60,35 @@ export default function Words() {
   );
   const current = deck.length ? deck[Math.min(index, deck.length - 1)] : null;
   const position = current ? deck.indexOf(current) : -1;
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion, () => {});
+  }, []);
+
+  // turning the card over animates; a new card always starts on its word
+  // side straight away (no glimpse of the next card's meaning)
+  useEffect(() => {
+    Animated.timing(flip, {
+      toValue: flipped ? 1 : 0,
+      duration: reduceMotion ? 0 : 600,
+      easing: Easing.bezier(0.4, 0.2, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+  }, [flipped]);
+
+  useEffect(() => {
+    flip.stopAnimation();
+    flip.setValue(0);
+  }, [current?.id]);
+
+  const frontStyle = {
+    opacity: flip.interpolate({ inputRange: [0, 0.5, 0.501, 1], outputRange: [1, 1, 0, 0] }),
+    transform: [{ perspective: 1400 }, { rotateY: flip.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }],
+  };
+  const backStyle = {
+    opacity: flip.interpolate({ inputRange: [0, 0.5, 0.501, 1], outputRange: [0, 0, 1, 1] }),
+    transform: [{ perspective: 1400 }, { rotateY: flip.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] }) }],
+  };
 
   function go(step: number) {
     if (!deck.length) return;
@@ -161,9 +197,16 @@ export default function Words() {
             </ScrollView>
 
             {current ? (
-              <Pressable onPress={() => setFlipped((f) => !f)} style={styles.cardWrap} accessibilityRole="button" accessibilityLabel="Kartı çevir">
+              <Pressable
+                onPress={() => setFlipped((f) => !f)}
+                style={styles.cardWrap}
+                accessibilityRole="button"
+                accessibilityLabel={flipped ? `${current.term}: ${current.meaning}. Kelimeye dönmek için dokun` : `${current.term}. Anlamını görmek için dokun`}
+              >
                 <View style={styles.cardBack} />
-                <View style={styles.card}>
+
+                {/* the word side */}
+                <Animated.View style={[styles.card, styles.face, frontStyle]} pointerEvents={flipped ? 'none' : 'auto'}>
                   <View style={styles.cardTop}>
                     <Text style={styles.cat}>{current.category}</Text>
                     {current.mastered && (
@@ -176,15 +219,31 @@ export default function Words() {
                   <Text style={styles.term} adjustsFontSizeToFit numberOfLines={2}>
                     {current.term}
                   </Text>
-                  {flipped && <Text style={styles.meaning}>{current.meaning}</Text>}
                   <View style={styles.hint}>
                     <Ionicons name="sync-outline" size={13} color={colors.muted} />
-                    <Text style={styles.hintText}>{flipped ? 'Kelimeye dönmek için dokun' : 'Anlamını görmek için dokun'}</Text>
+                    <Text style={styles.hintText}>Anlamını görmek için dokun</Text>
                   </View>
                   <Pressable onPress={confirmDelete} hitSlop={10} style={styles.trash} accessibilityLabel="Kartı sil">
                     <Ionicons name="trash-outline" size={17} color={colors.faint} />
                   </Pressable>
-                </View>
+                </Animated.View>
+
+                {/* the meaning side, on the back of the card */}
+                <Animated.View style={[styles.face, styles.cardBackFace, backStyle]} pointerEvents={flipped ? 'auto' : 'none'}>
+                  <LinearGradient colors={redGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.backFill} />
+                  <Text style={styles.backCat}>{current.category}</Text>
+                  <Text style={styles.backLabel}>ANLAMI</Text>
+                  <Text style={styles.backMeaning} adjustsFontSizeToFit numberOfLines={4}>
+                    {current.meaning}
+                  </Text>
+                  <Text style={styles.backTerm} numberOfLines={1}>
+                    {current.term}
+                  </Text>
+                  <View style={styles.hint}>
+                    <Ionicons name="sync-outline" size={13} color="rgba(250,245,226,0.8)" />
+                    <Text style={[styles.hintText, { color: 'rgba(250,245,226,0.8)' }]}>Kelimeye dönmek için dokun</Text>
+                  </View>
+                </Animated.View>
               </Pressable>
             ) : (
               <View style={[styles.cardWrap, styles.doneBox]}>
@@ -424,6 +483,34 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 14 },
     elevation: 8,
   },
+  // both sides sit on top of each other; only the one facing you shows
+  face: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backfaceVisibility: 'hidden' },
+  cardBackFace: {
+    borderRadius: 26,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 26,
+    gap: 10,
+    shadowColor: colors.redDeep,
+    shadowOpacity: 0.28,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 8,
+  },
+  backFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  backCat: {
+    position: 'absolute',
+    top: 18,
+    left: 20,
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    color: 'rgba(250,245,226,0.75)',
+  },
+  backLabel: { fontFamily: fonts.bodyExtraBold, fontSize: 11, letterSpacing: 1.4, color: 'rgba(250,245,226,0.72)' },
+  backMeaning: { fontFamily: fonts.display, fontSize: 28, lineHeight: 34, color: colors.onRed, textAlign: 'center', letterSpacing: -0.5 },
+  backTerm: { fontFamily: fonts.bodySemibold, fontSize: 14, color: 'rgba(250,245,226,0.7)', marginTop: 4 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cat: {
     fontFamily: fonts.bodyBold,
@@ -440,18 +527,6 @@ const styles = StyleSheet.create({
   knownTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.petrolSoft, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 3 },
   knownText: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.petrol },
   term: { fontFamily: fonts.display, fontSize: 32, color: colors.ink, letterSpacing: -1, textAlign: 'center' },
-  meaning: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 17,
-    lineHeight: 24,
-    color: '#3a3a3a',
-    textAlign: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.champagneDeep,
-    borderStyle: 'dashed',
-    paddingTop: 12,
-    alignSelf: 'stretch',
-  },
   hint: { position: 'absolute', bottom: 16, flexDirection: 'row', alignItems: 'center', gap: 6 },
   hintText: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
   trash: { position: 'absolute', top: 14, right: 14 },
