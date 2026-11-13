@@ -14,6 +14,8 @@ export type Profile = {
   photo_url: string | null;
   // IANA zone - a teacher's lesson times are wall-clock in it
   timezone?: string | null;
+  // the invite code behind armus.com.tr/register?ref=... (Arkadaşını davet et)
+  referral_code?: string | null;
 };
 
 type AuthState = {
