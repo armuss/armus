@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Band from '../../components/Band';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
+import { capitalizeName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
 
 const SITE_URL = 'https://armus.com.tr';
@@ -55,7 +56,7 @@ export default function Profile() {
             <Text style={styles.avatarInitial}>{(profile?.name?.[0] || '?').toUpperCase()}</Text>
           </View>
         )}
-        <Text style={styles.name}>{profile?.name}</Text>
+        <Text style={styles.name}>{capitalizeName(profile?.name)}</Text>
         <Text style={styles.email}>{profile?.email}</Text>
 
         <View style={styles.infoCard}>

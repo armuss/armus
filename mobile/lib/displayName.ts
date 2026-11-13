@@ -6,7 +6,18 @@
 // admin/support purposes; this only affects what gets rendered, and is
 // never applied to a student's name shown to their teacher.
 export function shortDisplayName(fullName: string | null | undefined): string {
-  const parts = String(fullName || '').trim().split(/\s+/);
+  const parts = capitalizeName(fullName).split(/\s+/).filter(Boolean);
   if (parts.length < 2) return parts[0] || 'Öğretmen';
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
+// "arman cAN" -> "Arman Can": every word starts with a capital, whatever
+// the person typed when signing up. Mirrors armusCapitalizeName on the web
+// (plain upper/lower case, not Turkish rules, so "Mike" stays "Mike").
+export function capitalizeName(fullName: string | null | undefined): string {
+  return String(fullName || '')
+    .trim()
+    .split(/\s+/)
+    .map((word) => (word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word))
+    .join(' ');
 }

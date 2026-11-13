@@ -26,6 +26,7 @@ import {
   type Message,
 } from '../../lib/messages';
 import { supabase } from '../../lib/supabase';
+import { capitalizeName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
 
 export default function Chat() {
@@ -137,7 +138,7 @@ export default function Chat() {
           </View>
         )}
         <Text style={styles.headerName} numberOfLines={1}>
-          {otherName || 'Kullanıcı'}
+          {capitalizeName(otherName) || 'Kullanıcı'}
         </Text>
       </View>
 

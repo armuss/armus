@@ -8,6 +8,8 @@ export type Teacher = {
   id: string;
   initials: string;
   photo: string | null;
+  /** The teacher's intro video (profiles.video_url) - shown on the profile instead of the big photo when there is one, like teacher.html. */
+  video?: string | null;
   name: string;
   role: string;
   price: number;

@@ -6,12 +6,13 @@
  * and "rejected" applicants stay hidden.
  */
 import { isBookingPast as isBookingTimingPast } from './bookings';
+import { capitalizeName } from './displayName';
 import { supabase } from './supabase';
 import { TEACHERS, type Teacher } from './teachers-data';
 
 // "Mehmet Kaya" -> "Mehmet K."
 function formatReviewerName(fullName: string) {
-  const parts = fullName.trim().split(/\s+/);
+  const parts = capitalizeName(fullName).split(/\s+/).filter(Boolean);
   if (parts.length < 2) return parts[0] || 'Öğrenci';
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
@@ -56,6 +57,7 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[])
     id: profile.id,
     initials: initials || '?',
     photo: profile.photo_url || null,
+    video: profile.video_url || null,
     name: profile.name,
     role: profile.title || 'İngilizce Öğretmeni',
     price: profile.price ?? 500,

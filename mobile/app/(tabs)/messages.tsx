@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
-import { shortDisplayName } from '../../lib/displayName';
+import { capitalizeName, shortDisplayName } from '../../lib/displayName';
 import { getConversations, type Conversation } from '../../lib/messages';
 import { colors, fonts, radius } from '../../lib/theme';
 
@@ -18,7 +18,7 @@ export default function Messages() {
   // The other participant in any conversation here is a teacher exactly
   // when the viewer is a student (conversations are always
   // student<->teacher) - so their full name never shows, only "Ahmet Y.".
-  const displayName = (name: string) => (profile?.role === 'student' ? shortDisplayName(name) : name);
+  const displayName = (name: string) => (profile?.role === 'student' ? shortDisplayName(name) : capitalizeName(name));
 
   useFocusEffect(
     useCallback(() => {

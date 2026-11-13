@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ScrollBand } from '../../components/Band';
 import { TeacherPhoto } from '../../components/TeacherCard';
+import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
 import { DAY_NAMES, getTeacherBusyTimes, slotsForDate, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
 import { hasTakenTrialWith } from '../../lib/credits';
@@ -192,15 +193,20 @@ export default function TeacherDetail() {
 
         {tab === 'about' && (
           <>
-            <View style={styles.media}>
-              <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={48} />
-              {!!teacher.availability && (
-                <View style={styles.mediaTag}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.mediaTagText}>{teacher.availability}</Text>
-                </View>
-              )}
-            </View>
+            {/* the intro video when the teacher has one (like the website), else the big photo */}
+            {teacher.video && /^https:\/\//i.test(teacher.video) ? (
+              <TeacherVideo uri={teacher.video} style={styles.mediaVideo} badge={teacher.availability || undefined} />
+            ) : (
+              <View style={styles.media}>
+                <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={48} />
+                {!!teacher.availability && (
+                  <View style={styles.mediaTag}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.mediaTagText}>{teacher.availability}</Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             <View style={styles.facts}>
               {facts.map((f) => (
@@ -346,6 +352,7 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.faint },
   tabTextOn: { color: colors.red },
   media: { height: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.panel2 },
+  mediaVideo: { width: '100%', aspectRatio: 16 / 9, borderRadius: 20 },
   mediaTag: {
     position: 'absolute',
     left: 10,
