@@ -27,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="stylesheet" href="theme.css?v=13">
+  <link rel="stylesheet" href="theme.css?v=14">
 
   <style>
     * {
@@ -148,7 +148,7 @@
       border-radius: 12px;
     }
 
-    /* HERO BAND - full-bleed gold, same emphasis block already used by
+    /* HERO BAND - full-bleed theme colour (cream text on it), same emphasis block already used by
        .teacher-banner / .hiw-cta across the site, just at hero size */
 
     .hero-band {
@@ -174,7 +174,7 @@
       font-size: 12px;
       font-weight: 800;
       letter-spacing: 3px;
-      color: rgba(10, 10, 10, .55);
+      color: rgba(250, 245, 226, .9);
       text-transform: uppercase;
       margin-bottom: 18px;
     }
@@ -185,13 +185,13 @@
       letter-spacing: -1.5px;
       max-width: 780px;
       margin: 0 auto 20px;
-      color: var(--armus-ink);
+      color: var(--armus-on-gold);
       text-wrap: balance;
     }
 
     .hero-band p {
       font-size: 16px;
-      color: rgba(10, 10, 10, .65);
+      color: rgba(250, 245, 226, .9);
       max-width: 520px;
       margin: 0 auto;
       line-height: 1.65;
@@ -257,7 +257,7 @@
 
     .tab-btn.active {
       background: var(--armus-ink);
-      color: var(--armus-gold-2);
+      color: var(--armus-red-on-dark);
     }
 
     .tab-panel {
@@ -324,7 +324,7 @@
       display: block;
       font-family: "Unbounded", "Inter", sans-serif;
       font-size: 38px;
-      background: var(--armus-gold-gradient);
+      background: var(--armus-red-on-dark-gradient);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -628,7 +628,7 @@
 
   </main>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script>
     document.querySelectorAll('.tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {

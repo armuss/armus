@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="stylesheet" href="theme.css?v=13">
+  <link rel="stylesheet" href="theme.css?v=14">
 
   <style>
     * {
@@ -384,7 +384,7 @@
       object-fit: cover;
     }
 
-    /* hero band: full-bleed gold gradient wrapping the greeting + stat
+    /* hero band: full-bleed theme-colour gradient wrapping the greeting + stat
        strip, breaking out of .container's max-width the same way
        index.html's own .hero-band does, so the dashboard opens with the
        same warm, designed moment the rest of the site has instead of
@@ -409,7 +409,7 @@
       content: "";
       position: absolute;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, .5), transparent 70%);
+      background: radial-gradient(circle, rgba(255, 255, 255, .14), transparent 70%);
       pointer-events: none;
     }
 
@@ -462,7 +462,7 @@
     }
 
     .greet-sub {
-      color: rgba(10, 10, 10, .62);
+      color: rgba(250, 245, 226, .9);
       font-size: 14px;
       margin-top: 6px;
     }
@@ -752,7 +752,7 @@
       align-items: center;
       gap: 8px;
       background: var(--armus-panel);
-      border: 1px solid rgba(223, 172, 46, .3);
+      border: 1px solid rgba(109, 22, 28, .3);
       border-radius: 999px;
       padding: 9px 18px 9px 11px;
       font-size: 12.5px;
@@ -866,7 +866,7 @@
       width: 260px;
       height: 260px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(246, 198, 73, .25), transparent 70%);
+      background: radial-gradient(circle, rgba(140, 28, 36, .18), transparent 70%);
       top: -90px;
       right: -50px;
       pointer-events: none;
@@ -883,7 +883,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 14px 30px rgba(223, 172, 46, .4);
+      box-shadow: 0 14px 30px rgba(109, 22, 28, .32);
     }
 
     .flashcard-toggle-icon svg {
@@ -904,7 +904,7 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1.2px;
-      color: var(--armus-gold-2);
+      color: var(--armus-red-on-dark);
       margin-bottom: 8px;
     }
 
@@ -939,7 +939,7 @@
       padding: 14px 22px;
       font-weight: 800;
       font-size: 14px;
-      box-shadow: 0 8px 20px rgba(223, 172, 46, .3);
+      box-shadow: 0 8px 20px rgba(109, 22, 28, .3);
     }
 
     .flashcard-toggle-cta svg {
@@ -1138,7 +1138,7 @@
       cursor: pointer;
       transform-style: preserve-3d;
       transition: transform .6s cubic-bezier(.4, .2, .2, 1);
-      box-shadow: 0 24px 55px rgba(223, 172, 46, .28);
+      box-shadow: 0 24px 55px rgba(109, 22, 28, .24);
     }
 
     .flashcard.flipped {
@@ -1520,7 +1520,7 @@
 
     .rec-cta {
       display: inline-block;
-      border: 1px solid rgba(223, 172, 46, .4);
+      border: 1px solid rgba(109, 22, 28, .32);
       color: var(--armus-gold-text);
       border-radius: 999px;
       padding: 7px 16px;
@@ -1702,11 +1702,11 @@
 
   </main>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
-  <script src="site-settings.js?v=4"></script>
+  <script src="site-settings.js?v=5"></script>
   <script src="auth.js?v=15"></script>
   <script src="bookings.js?v=12"></script>
   <script src="reviews.js?v=5"></script>
@@ -2102,7 +2102,7 @@
           const y = pad + (h - pad * 2) * (1 - (c.score - 1) / 4);
           return `${x.toFixed(1)},${y.toFixed(1)}`;
         }).join(" ");
-        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="#f6c649" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="#8c1c24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       }
 
       function renderConfidenceTrend() {

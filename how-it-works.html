@@ -28,8 +28,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="theme.css?v=13">
-  <link rel="stylesheet" href="styles.css?v=32">
+  <link rel="stylesheet" href="theme.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=33">
 
   <style>
     /* design A ("Yol"): a black path draws itself down the page as you
@@ -42,7 +42,7 @@
 
     /* hero */
     .hw-hero { text-align: center; padding: 90px 10px 30px; }
-    .hw-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 1.6px; color: #b8862a; }
+    .hw-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 1.6px; color: var(--armus-gold-text); }
     /* a column, so the lines' negative margins below add up instead of
        collapsing into each other */
     .hw-hero h1 { display: flex; flex-direction: column; font: 800 76px/1.02 Unbounded, Inter, sans-serif; letter-spacing: -3px; margin: 16px auto 22px; text-wrap: balance; }
@@ -79,7 +79,7 @@
     .hw-motion .hw-track .fg { --o: 1; }
     .hw-step { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 120px; align-items: center; padding: 70px 0; }
     .hw-step:nth-of-type(even) .hw-txt { order: 2; }
-    .hw-num { position: absolute; left: 50%; top: 50%; z-index: 2; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; display: grid; place-items: center; font: 900 17px Unbounded, Inter, sans-serif; background: var(--armus-ink); color: var(--armus-gold-1); border: 3px solid var(--armus-ink); transition: background .5s, color .5s, transform .5s var(--hw-spring); }
+    .hw-num { position: absolute; left: 50%; top: 50%; z-index: 2; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; display: grid; place-items: center; font: 900 17px Unbounded, Inter, sans-serif; background: var(--armus-ink); color: var(--armus-red-on-dark); border: 3px solid var(--armus-ink); transition: background .5s, color .5s, transform .5s var(--hw-spring); }
     .hw-motion .hw-step:not(.on) .hw-num { background: #fff; color: var(--armus-ink); }
     .hw-motion .hw-step.on .hw-num { transform: scale(1.15); }
     .hw-pill { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .4px; background: var(--hw-paper); border-radius: 999px; padding: 6px 12px; }
@@ -104,7 +104,7 @@
     .hw-play { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px; border-radius: 50%; background: var(--armus-gold-2); display: grid; place-items: center; transition: opacity .4s, transform .4s; }
     .hw-play::after { content: ""; border-left: 16px solid var(--armus-ink); border-top: 10px solid transparent; border-bottom: 10px solid transparent; margin-left: 4px; }
     .hw-motion .hw-play { animation: hw-playping 1.8s infinite; }
-    @keyframes hw-playping { 0% { box-shadow: 0 0 0 0 rgba(246, 198, 73, .6); } 70%, 100% { box-shadow: 0 0 0 16px rgba(246, 198, 73, 0); } }
+    @keyframes hw-playping { 0% { box-shadow: 0 0 0 0 rgba(140, 28, 36, .5); } 70%, 100% { box-shadow: 0 0 0 16px rgba(140, 28, 36, 0); } }
     .hw-v1.playing .hw-play { opacity: 0; transform: scale(.6); }
     .hw-sub { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 700; color: #fff; background: rgba(10, 10, 10, .72); padding: 6px 10px; border-radius: 8px; transition: opacity .4s, transform .4s; }
     .hw-motion .hw-sub { opacity: 0; transform: translate(-50%, 8px); }
@@ -116,7 +116,7 @@
     .hw-vinfo { display: flex; align-items: center; gap: 10px; }
     .hw-vinfo img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; flex: none; }
     .hw-vinfo strong { display: flex; gap: 6px; align-items: center; font-size: 14.5px; }
-    .hw-vinfo strong span { font-size: 11.5px; font-weight: 800; background: #fff6d6; border-radius: 999px; padding: 2px 7px; }
+    .hw-vinfo strong span { font-size: 11.5px; font-weight: 800; background: var(--armus-red-tint); border-radius: 999px; padding: 2px 7px; }
     .hw-vinfo small { display: block; font-size: 12.5px; color: var(--armus-muted); }
     .hw-price { margin-left: auto; text-align: right; font-size: 16px; font-weight: 800; white-space: nowrap; }
     .hw-price small { display: block; font-size: 11px; font-weight: 500; color: #8a8a8a; }
@@ -131,7 +131,7 @@
     @keyframes hw-ping { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, .6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(255, 77, 77, 0); } }
     .hw-live b { font-weight: 700; opacity: .8; font-variant-numeric: tabular-nums; }
     .hw-bubble { position: absolute; left: 14px; top: 44%; max-width: 230px; min-height: 56px; background: #fff; border-radius: 16px 16px 16px 4px; padding: 10px 13px; font-size: 13.5px; font-weight: 600; line-height: 1.4; box-shadow: 0 14px 30px rgba(0, 0, 0, .18); }
-    .hw-bubble small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .6px; color: #b8862a; margin-bottom: 2px; }
+    .hw-bubble small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .6px; color: var(--armus-gold-text); margin-bottom: 2px; }
     .hw-v3 { background: #fff; border: 1px solid var(--armus-border-soft); border-radius: 22px; padding: 20px; height: 100%; display: flex; flex-direction: column; gap: 14px; }
     .hw-v3 .hd { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 800; }
     .hw-v3 .hd b { font: 900 26px Unbounded, Inter, sans-serif; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
@@ -179,7 +179,7 @@
     /* closing card */
     .hw-cta { position: relative; overflow: hidden; background: #0b0b0b; color: #fff; border-radius: 40px; padding: 80px 40px; text-align: center; margin: 0 10px 80px; }
     .hw-cta h2 { font: 800 54px/1.05 Unbounded, Inter, sans-serif; letter-spacing: -2px; margin: 0 0 30px; }
-    .hw-ring { position: absolute; width: 520px; height: 520px; border: 2px dashed rgba(246, 198, 73, .35); border-radius: 50%; right: -160px; top: -200px; pointer-events: none; }
+    .hw-ring { position: absolute; width: 520px; height: 520px; border: 2px dashed rgba(239, 107, 115, .35); border-radius: 50%; right: -160px; top: -200px; pointer-events: none; }
     .hw-motion .hw-ring { animation: hw-spin 40s linear infinite; }
     @keyframes hw-spin { to { transform: rotate(360deg); } }
 
@@ -340,7 +340,7 @@
 
   </main>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
