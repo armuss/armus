@@ -1,8 +1,14 @@
-import MaskedView from '@react-native-masked-view/masked-view';
+import MaskedViewNative from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Text } from 'react-native';
+import type { ComponentType, ReactElement } from 'react';
+import { StyleSheet, Text, type ViewProps } from 'react-native';
 
 import { colors, fonts, redGradient } from '../lib/theme';
+
+// the package's own types still build on React Native's old NativeMethods
+// type, which RN 0.88 no longer exports, so TypeScript can't read it as a
+// component; the component itself is unchanged (SDK 58 ships 0.3.2)
+const MaskedView = MaskedViewNative as unknown as ComponentType<ViewProps & { maskElement: ReactElement }>;
 
 /** The ARMUS wordmark: red on the light ground, plain cream on the red band (`light`). */
 export default function Logo({ size = 28, light = false }: { size?: number; light?: boolean }) {

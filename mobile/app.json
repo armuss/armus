@@ -21,7 +21,10 @@
     "android": {
       "package": "com.armus.app",
       "versionCode": 1,
-      "permissions": ["CAMERA", "RECORD_AUDIO"],
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -36,7 +39,12 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-notifications", { "color": "#e0a916" }],
+      [
+        "expo-notifications",
+        {
+          "color": "#8c1c24"
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -44,9 +52,14 @@
           "backgroundColor": "#ffffff",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "ios": { "imageWidth": 280 }
+          "ios": {
+            "imageWidth": 280
+          }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {
