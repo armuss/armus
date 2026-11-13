@@ -29,8 +29,10 @@ import {
 import { supabase } from '../../lib/supabase';
 import { capitalizeName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 export default function Chat() {
+  const t = useT();
   const { id, otherName, otherPhoto } = useLocalSearchParams<{
     id: string;
     otherName?: string;
@@ -89,7 +91,7 @@ export default function Chat() {
         if (profile.role === 'student') {
           amIBlockedBy(otherId).then((isBlocked) => {
             setBlockedByTeacher(isBlocked);
-            if (isBlocked) setWarning('Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.');
+            if (isBlocked) setWarning(t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın."));
           });
         }
       });
@@ -109,7 +111,7 @@ export default function Chat() {
 
     if (!canShareContact && messageViolatesContactPolicy(body)) {
       setWarning(
-        'Bu mesaj gönderilemedi: telefon numarası, e-posta veya WhatsApp/Instagram gibi platform dışı iletişim bilgisi paylaşımı, resmi bir ders rezervasyonu olana kadar yasak. Lütfen yazışmaya ARMUS üzerinden devam et.'
+        t("Bu mesaj gönderilemedi: telefon numarası, e-posta veya WhatsApp/Instagram gibi platform dışı iletişim bilgisi paylaşımı, resmi bir ders rezervasyonu olana kadar yasak. Lütfen yazışmaya ARMUS üzerinden devam et.")
       );
       return;
     }
@@ -122,12 +124,12 @@ export default function Chat() {
 
     if (result === 'blocked') {
       setText(body);
-      setWarning('Bu mesaj gönderilemedi: platform dışı iletişim bilgisi paylaşımı henüz yasak.');
+      setWarning(t("Bu mesaj gönderilemedi: platform dışı iletişim bilgisi paylaşımı henüz yasak."));
       return;
     }
     if (!result) {
       setText(body);
-      setWarning('Mesaj gönderilemedi. Tekrar dene.');
+      setWarning(t("Mesaj gönderilemedi. Tekrar dene."));
       return;
     }
     setMessages((prev) => (prev.some((m) => m.id === result.id) ? prev : [...prev, result]));
@@ -147,7 +149,7 @@ export default function Chat() {
           </View>
         )}
         <Text style={styles.headerName} numberOfLines={1}>
-          {capitalizeName(otherName) || 'Kullanıcı'}
+          {capitalizeName(otherName) || t("Kullanıcı")}
         </Text>
       </View>
 
@@ -160,6 +162,7 @@ export default function Chat() {
           <ActivityIndicator color={colors.red} style={{ marginTop: 40 }} />
         ) : (
           <FlatList
+            extraData={t}
             ref={listRef}
             data={messages}
             keyExtractor={(item) => item.id}
@@ -176,7 +179,7 @@ export default function Chat() {
               );
             }}
             ListEmptyComponent={
-              <Text style={styles.empty}>Henüz mesaj yok, ilk mesajı sen gönder.</Text>
+              <Text style={styles.empty}>{t("Henüz mesaj yok, ilk mesajı sen gönder.")}</Text>
             }
           />
         )}
@@ -187,7 +190,7 @@ export default function Chat() {
           <TextInput
             value={text}
             onChangeText={setText}
-            placeholder="Mesaj yaz..."
+            placeholder={t("Mesaj yaz...")}
             placeholderTextColor={colors.faint}
             style={styles.input}
             multiline
@@ -198,7 +201,7 @@ export default function Chat() {
             disabled={!text.trim() || sending || blockedByTeacher}
             style={[styles.sendBtn, (!text.trim() || sending || blockedByTeacher) && styles.sendBtnDisabled]}
           >
-            <Text style={styles.sendBtnText}>Gönder</Text>
+            <Text style={styles.sendBtnText}>{t("Gönder")}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

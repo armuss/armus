@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors, fonts, radius } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 /**
  * The teacher's intro video on their profile, where the big photo used to
@@ -23,6 +24,7 @@ export default function TeacherVideo({
   /** a small caption over the corner until it starts, e.g. the teacher's availability */
   badge?: string;
 }) {
+  const t = useT();
   const [started, setStarted] = useState(false);
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
@@ -52,14 +54,14 @@ export default function TeacherVideo({
             player.play();
           }}
           accessibilityRole="button"
-          accessibilityLabel="Tanıtım videosunu oynat"
+          accessibilityLabel={t("Tanıtım videosunu oynat")}
         >
           <View style={styles.play}>
             <Ionicons name="play" size={26} color={colors.red} style={{ marginLeft: 3 }} />
           </View>
           <View style={[styles.pill, styles.topRight]}>
             <Ionicons name="videocam" size={13} color="#fff" />
-            <Text style={styles.tagText}>Tanıtım videosu</Text>
+            <Text style={styles.tagText}>{t("Tanıtım videosu")}</Text>
           </View>
           {!!badge && (
             <View style={[styles.pill, styles.bottomLeft]}>

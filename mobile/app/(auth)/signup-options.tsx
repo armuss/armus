@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Band from '../../components/Band';
 import { colors, fonts } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 function PrimaryOption({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
   return (
@@ -16,6 +17,7 @@ function PrimaryOption({ icon, label, onPress }: { icon: keyof typeof Ionicons.g
 }
 
 export default function SignupOptions() {
+  const t = useT();
   return (
     <View style={styles.screen}>
       <Band height={240} />
@@ -25,23 +27,20 @@ export default function SignupOptions() {
       </Pressable>
 
       <View style={styles.content}>
-        <Text style={styles.title}>Sana uygun{'\n'}öğretmeni bulmak{'\n'}için kaydol</Text>
+        <Text style={styles.title}>{t("Sana uygun")}{'\n'}{t("öğretmeni bulmak")}{'\n'}{t("için kaydol")}</Text>
         <Text style={styles.subtitle}>
-          <Text style={styles.subtitleAccent}>500'den fazla</Text> onaylı öğretmene anında eriş
-        </Text>
+          <Text style={styles.subtitleAccent}>{t("500'den fazla")}</Text> {t(" onaylı öğretmene anında eriş")}</Text>
 
         <View style={styles.options}>
-          <PrimaryOption icon="mail-outline" label="E-posta ile kaydol" onPress={() => router.push('/(auth)/register')} />
+          <PrimaryOption icon="mail-outline" label={t("E-posta ile kaydol")} onPress={() => router.push('/(auth)/register')} />
         </View>
 
         <Text style={styles.legal}>
-          Kaydol'a tıklayarak, ARMUS'un Hizmet Koşullarını ve Gizlilik Politikasını kabul etmiş sayılırsın.
-        </Text>
+          {t("Kaydol'a tıklayarak, ARMUS'un Hizmet Koşullarını ve Gizlilik Politikasını kabul etmiş sayılırsın.")}</Text>
       </View>
 
       <Link href="/(auth)/login" style={styles.loginLink}>
-        Hesabıma giriş yap
-      </Link>
+        {t("Hesabıma giriş yap")}</Link>
       </SafeAreaView>
     </View>
   );

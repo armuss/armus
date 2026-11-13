@@ -22,12 +22,14 @@ import { PHOTO_NEEDS_WHITE_BG, preparePhoto, STUDENT_PHOTO_MAX_BYTES } from '../
 import { updateOwnProfile, uploadProfilePhoto } from '../../lib/profile';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
 
 const NAME_PATTERN = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
 
 export default function EditProfile() {
+  const t = useT();
   const { profile, refreshProfile } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,12 @@ export default function EditProfile() {
   async function pickPhoto() {
     setStatus('');
     if (photoLocked) {
-      setStatus('Onaylı öğretmenler profil fotoğrafını buradan değiştiremez. Fotoğrafını güncellemek için bize ulaş.');
+      setStatus(t("Onaylı öğretmenler profil fotoğrafını buradan değiştiremez. Fotoğrafını güncellemek için bize ulaş."));
       return;
     }
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setStatus('Fotoğraf seçmek için galeri izni gerekiyor.');
+      setStatus(t("Fotoğraf seçmek için galeri izni gerekiyor."));
       return;
     }
 
@@ -110,7 +112,7 @@ export default function EditProfile() {
 
     if (!isTeacher) {
       if (asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
-        setStatus('Dosya çok büyük (maks 5MB).');
+        setStatus(t("Dosya çok büyük (maks 5MB)."));
         return;
       }
       setLocalPhotoUri(asset.uri);
@@ -121,12 +123,12 @@ export default function EditProfile() {
     try {
       const prepared = await preparePhoto(asset.uri, true);
       if (!prepared.isWhiteBackground) {
-        setStatus(PHOTO_NEEDS_WHITE_BG);
+        setStatus(t(PHOTO_NEEDS_WHITE_BG));
         return;
       }
       setLocalPhotoUri(prepared.uri);
     } catch {
-      setStatus('Fotoğraf okunamadı.');
+      setStatus(t("Fotoğraf okunamadı."));
     } finally {
       setCheckingPhoto(false);
     }
@@ -138,7 +140,7 @@ export default function EditProfile() {
     // the same rule as signup and the website's settings: a first and a
     // last name, not a single word or a nickname
     if (!NAME_PATTERN.test(name.trim())) {
-      setStatus('Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil).');
+      setStatus(t("Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil)."));
       return;
     }
     setSaving(true);
@@ -150,7 +152,7 @@ export default function EditProfile() {
       setUploadingPhoto(false);
       if (!uploaded) {
         setSaving(false);
-        setStatus('Fotoğraf yüklenemedi, tekrar dene.');
+        setStatus(t("Fotoğraf yüklenemedi, tekrar dene."));
         return;
       }
       nextPhotoUrl = uploaded;
@@ -160,7 +162,7 @@ export default function EditProfile() {
     setSaving(false);
 
     if (!ok) {
-      setStatus('Kaydedilemedi, tekrar dene.');
+      setStatus(t("Kaydedilemedi, tekrar dene."));
       return;
     }
 
@@ -183,7 +185,7 @@ export default function EditProfile() {
 
     const ok = await updateOwnProfile({ pending_changes: newPendingChanges });
     setSaving(false);
-    setTeacherStatus(ok ? 'Onay için gönderildi ✓' : 'Gönderilemedi ✕');
+    setTeacherStatus(ok ? t("Onay için gönderildi ✓") : t("Gönderilemedi ✕"));
     if (ok) setPendingChanges(newPendingChanges);
   }
 
@@ -203,10 +205,10 @@ export default function EditProfile() {
         <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <ScrollBand height={photoBottom - 10} inset={24} fade={70} />
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Geri</Text>
+            <Text style={styles.backText}>{t("← Geri")}</Text>
           </Pressable>
 
-          <Text style={styles.screenTitle}>Profili Düzenle</Text>
+          <Text style={styles.screenTitle}>{t("Profili Düzenle")}</Text>
 
           <Pressable
             onPress={pickPhoto}
@@ -222,25 +224,25 @@ export default function EditProfile() {
             )}
             <Text style={styles.photoEditText}>
               {checkingPhoto
-                ? 'Fotoğraf kontrol ediliyor…'
+                ? t("Fotoğraf kontrol ediliyor…")
                 : photoLocked
-                  ? 'Fotoğraf değişikliği için bize ulaş'
-                  : 'Fotoğrafı değiştir'}
+                  ? t("Fotoğraf değişikliği için bize ulaş")
+                  : t("Fotoğrafı değiştir")}
             </Text>
-            {isTeacher && !photoLocked && <Text style={styles.photoRule}>Arka plan düz beyaz olmalı</Text>}
+            {isTeacher && !photoLocked && <Text style={styles.photoRule}>{t("Arka plan düz beyaz olmalı")}</Text>}
           </Pressable>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Ad Soyad</Text>
+            <Text style={styles.label}>{t("Ad Soyad")}</Text>
             <TextInput value={name} onChangeText={setName} style={styles.input} placeholderTextColor={colors.faint} />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şehir</Text>
+            <Text style={styles.label}>{t("Şehir")}</Text>
             <TextInput
               value={city}
               onChangeText={setCity}
-              placeholder="İstanbul"
+              placeholder={t("İstanbul")}
               placeholderTextColor={colors.faint}
               style={styles.input}
             />
@@ -249,33 +251,32 @@ export default function EditProfile() {
           {!!status && <Text style={styles.error}>{status}</Text>}
 
           <Button
-            label={uploadingPhoto ? 'Fotoğraf yükleniyor…' : 'Kaydet'}
+            label={uploadingPhoto ? t("Fotoğraf yükleniyor…") : t("Kaydet")}
             onPress={handleSave}
             loading={saving}
           />
 
           {isTeacher && (
             <View style={styles.teacherSection}>
-              <Text style={styles.sectionTitle}>Öğretmen profili</Text>
+              <Text style={styles.sectionTitle}>{t("Öğretmen profili")}</Text>
               <Text style={styles.sectionNote}>
-                Bu alanlardaki değişiklikler ARMUS ekibinin onayından sonra yayına girer.
-              </Text>
+                {t("Bu alanlardaki değişiklikler ARMUS ekibinin onayından sonra yayına girer.")}</Text>
 
-              {hasPendingTeacherFields && <Text style={styles.pendingNote}>İncelemede bekleyen bir değişikliğin var.</Text>}
+              {hasPendingTeacherFields && <Text style={styles.pendingNote}>{t("İncelemede bekleyen bir değişikliğin var.")}</Text>}
 
               <View style={styles.field}>
-                <Text style={styles.label}>Ünvan</Text>
+                <Text style={styles.label}>{t("Ünvan")}</Text>
                 <TextInput
                   value={title}
                   onChangeText={setTitle}
-                  placeholder="IELTS & Speaking Uzmanı"
+                  placeholder={t("IELTS & Speaking Uzmanı")}
                   placeholderTextColor={colors.faint}
                   style={styles.input}
                 />
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Ders ücreti (₺)</Text>
+                <Text style={styles.label}>{t("Ders ücreti (₺)")}</Text>
                 <TextInput
                   value={price}
                   onChangeText={setPrice}
@@ -285,18 +286,18 @@ export default function EditProfile() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Müsaitlik notu</Text>
+                <Text style={styles.label}>{t("Müsaitlik notu")}</Text>
                 <TextInput
                   value={availability}
                   onChangeText={setAvailability}
-                  placeholder="Şu anda ders almaya uygun"
+                  placeholder={t("Şu anda ders almaya uygun")}
                   placeholderTextColor={colors.faint}
                   style={styles.input}
                 />
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Hakkında</Text>
+                <Text style={styles.label}>{t("Hakkında")}</Text>
                 <TextInput
                   value={bio}
                   onChangeText={setBio}
@@ -308,7 +309,7 @@ export default function EditProfile() {
 
               {!!teacherStatus && <Text style={styles.pendingNote}>{teacherStatus}</Text>}
 
-              <Button label="Onaya Gönder" variant="outline" onPress={handleSubmitTeacherFields} loading={saving} />
+              <Button label={t("Onaya Gönder")} variant="outline" onPress={handleSubmitTeacherFields} loading={saving} />
             </View>
           )}
         </ScrollView>

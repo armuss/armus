@@ -1,4 +1,5 @@
 import { invokeEdge } from './edge';
+import { tr } from './i18n';
 
 export type CreatePaymentParams =
   | {
@@ -39,13 +40,13 @@ export async function createPayment(params: CreatePaymentParams): Promise<Create
   if (!result.ok) {
     return {
       ok: false,
-      error: result.error || 'İşlem başlatılamadı. Lütfen tekrar dene.',
+      error: result.error || tr("İşlem başlatılamadı. Lütfen tekrar dene."),
       trialAlreadyTaken: !!result.body?.trialAlreadyTaken,
     };
   }
   const data = result.data;
   if (!data.paymentPageUrl && !data.bookedDirectly) {
-    return { ok: false, error: 'İşlem başlatılamadı. Lütfen tekrar dene.' };
+    return { ok: false, error: tr("İşlem başlatılamadı. Lütfen tekrar dene.") };
   }
 
   if (data.bookedDirectly) {

@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { supabase } from './supabase';
+import { tr } from './i18n';
 
 export type Message = {
   id: string;
@@ -67,7 +68,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
   return conversations
     .map((c: any) => {
       const otherId = c.student_id === userId ? c.teacher_id : c.student_id;
-      const otherProfile = profileById[otherId] || { name: 'Kullanıcı', photo_url: null };
+      const otherProfile = profileById[otherId] || { name: tr("Kullanıcı"), photo_url: null };
       const convoMessages = (allMessages || []).filter((m: any) => m.conversation_id === c.id);
       const lastMessage = convoMessages[convoMessages.length - 1] || null;
       const unreadCount = convoMessages.filter((m: any) => m.sender_id !== userId && !m.read_at).length;

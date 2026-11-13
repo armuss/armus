@@ -23,6 +23,7 @@ import { getLessonNotes, saveLessonNotes } from '../../lib/lessonNotes';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'checkin' | 'review';
 
@@ -34,6 +35,7 @@ function formatClock(ms: number) {
 }
 
 export default function Class() {
+  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
 
@@ -164,12 +166,12 @@ export default function Class() {
 
       if (now > end) {
         setOvertime(true);
-        setProgressLabel(`Ders bitti · +${formatClock(now.getTime() - end.getTime())} ek süre`);
-        setTimerShort(`+${formatClock(now.getTime() - end.getTime())} ek süre`);
+        setProgressLabel(t("Ders bitti · +{0} ek süre", formatClock(now.getTime() - end.getTime())));
+        setTimerShort(t("+{0} ek süre", formatClock(now.getTime() - end.getTime())));
       } else {
         setOvertime(false);
-        setProgressLabel(`${formatClock(now.getTime() - start.getTime())} geçti · ${formatClock(end.getTime() - now.getTime())} kaldı`);
-        setTimerShort(now < start ? `${formatClock(start.getTime() - now.getTime())} sonra başlıyor` : `${formatClock(end.getTime() - now.getTime())} kaldı`);
+        setProgressLabel(t("{0} geçti · {1} kaldı", formatClock(now.getTime() - start.getTime()), formatClock(end.getTime() - now.getTime())));
+        setTimerShort(now < start ? t("{0} sonra başlıyor", formatClock(start.getTime() - now.getTime())) : t("{0} kaldı", formatClock(end.getTime() - now.getTime())));
       }
     }
 
@@ -288,9 +290,9 @@ export default function Class() {
   if (phase === 'noAccess') {
     return (
       <Gate
-        title="Bu derse erişimin yok"
-        subtitle="Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin."
-        buttonLabel="Derslerime dön"
+        title={t("Bu derse erişimin yok")}
+        subtitle={t("Bu ders bağlantısı geçersiz ya da bu dersin katılımcılarından biri değilsin.")}
+        buttonLabel={t("Derslerime dön")}
         onPress={() => goBackToLessons()}
       />
     );
@@ -300,9 +302,9 @@ export default function Class() {
     return (
       <Gate
         icon="close-circle-outline"
-        title="Bu ders iptal edildi"
-        subtitle="Bu ders artık gerçekleşmeyecek."
-        buttonLabel="← Geri dön"
+        title={t("Bu ders iptal edildi")}
+        subtitle={t("Bu ders artık gerçekleşmeyecek.")}
+        buttonLabel={t("← Geri dön")}
         onPress={() => goBackToLessons()}
       />
     );
@@ -315,9 +317,9 @@ export default function Class() {
     return (
       <Gate
         icon="time-outline"
-        title="Henüz erken"
-        subtitle={`${otherName} ile ${when.dateLabel}, ${when.timeRange} — ${formatMinutes(minutesUntil)} sonra katılabileceksin.`}
-        buttonLabel="Derslerime dön"
+        title={t("Henüz erken")}
+        subtitle={t("{0} ile {1}, {2} — {3} sonra katılabileceksin.", otherName, when.dateLabel, when.timeRange, formatMinutes(minutesUntil))}
+        buttonLabel={t("Derslerime dön")}
         onPress={() => goBackToLessons()}
       />
     );
@@ -326,9 +328,9 @@ export default function Class() {
   if (phase === 'tooLate') {
     return (
       <Gate
-        title="Bu dersin katılım süresi doldu"
-        subtitle="Ders saati ve sonrasındaki katılım penceresi geçti."
-        buttonLabel="Derslerime dön"
+        title={t("Bu dersin katılım süresi doldu")}
+        subtitle={t("Ders saati ve sonrasındaki katılım penceresi geçti.")}
+        buttonLabel={t("Derslerime dön")}
         onPress={() => goBackToLessons()}
       />
     );
@@ -338,10 +340,10 @@ export default function Class() {
     if (checkinMessage) {
       return (
         <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
-          <Text style={styles.reviewTitle}>Bildirimin alındı</Text>
+          <Text style={styles.reviewTitle}>{t("Bildirimin alındı")}</Text>
           <Text style={styles.gateSubtitle}>{checkinMessage}</Text>
           <View style={{ width: '100%', marginTop: 22 }}>
-            <Button label="Çık" onPress={() => goBackToLessons()} />
+            <Button label={t("Çık")} onPress={() => goBackToLessons()} />
           </View>
         </SafeAreaView>
       );
@@ -350,10 +352,9 @@ export default function Class() {
     return (
       <SafeAreaView style={styles.screen}>
         <ScrollView contentContainerStyle={styles.checkinContent} keyboardShouldPersistTaps="handled">
-          <Text style={styles.reviewTitle}>Bu ders gerçekleşti mi?</Text>
+          <Text style={styles.reviewTitle}>{t("Bu ders gerçekleşti mi?")}</Text>
           <Text style={[styles.gateSubtitle, { marginBottom: 20 }]}>
-            {formatLessonWhenForViewer(booking).dateLabel}, {formatLessonWhenForViewer(booking).timeRange} için planlanan ders.
-          </Text>
+            {t("{0}, {1} için planlanan ders.", formatLessonWhenForViewer(booking).dateLabel, formatLessonWhenForViewer(booking).timeRange)}</Text>
           <AttendanceFlow
             booking={booking}
             studentId={profile.id}
@@ -370,7 +371,7 @@ export default function Class() {
   if (phase === 'review') {
     return (
       <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
-        <Text style={styles.reviewTitle}>Bu ders nasıldı?</Text>
+        <Text style={styles.reviewTitle}>{t("Bu ders nasıldı?")}</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((n) => (
             <Pressable key={n} onPress={() => setStars(n)}>
@@ -381,15 +382,15 @@ export default function Class() {
         <TextInput
           value={comment}
           onChangeText={setComment}
-          placeholder="İstersen kısa bir not bırak (opsiyonel)"
+          placeholder={t("İstersen kısa bir not bırak (opsiyonel)")}
           placeholderTextColor={colors.faint}
           style={styles.commentInput}
           multiline
         />
         <View style={{ width: '100%', marginTop: 20, gap: 10 }}>
-          <Button label="Gönder" onPress={submitReview} loading={savingReview} />
+          <Button label={t("Gönder")} onPress={submitReview} loading={savingReview} />
           <Pressable onPress={() => goBackToLessons()}>
-            <Text style={styles.skipText}>Atla</Text>
+            <Text style={styles.skipText}>{t("Atla")}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -426,13 +427,13 @@ export default function Class() {
           {otherName} · {formatLessonWhenForViewer(booking).timeRange}
         </Text>
         {isStudent && (
-          <Pressable onPress={openReport} style={styles.reportBtn} accessibilityLabel="Bir sorun bildir">
+          <Pressable onPress={openReport} style={styles.reportBtn} accessibilityLabel={t("Bir sorun bildir")}>
             <Ionicons name="flag-outline" size={15} color="#fff" />
           </Pressable>
         )}
-        <Pressable onPress={handleLeave} style={styles.leave} accessibilityLabel="Dersten ayrıl">
+        <Pressable onPress={handleLeave} style={styles.leave} accessibilityLabel={t("Dersten ayrıl")}>
           <Ionicons name="exit-outline" size={16} color="#fff" />
-          <Text style={styles.leaveText}>Ayrıl</Text>
+          <Text style={styles.leaveText}>{t("Ayrıl")}</Text>
         </Pressable>
       </View>
       <View style={styles.progressTrack}>
@@ -450,21 +451,21 @@ export default function Class() {
           renderLoading={() => (
             <View style={styles.videoLoading}>
               <ActivityIndicator color={colors.gold2} />
-              <Text style={styles.videoLoadingText}>Ders odası açılıyor…</Text>
+              <Text style={styles.videoLoadingText}>{t("Ders odası açılıyor…")}</Text>
             </View>
           )}
         />
       </View>
 
       <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <Pressable onPress={() => setPanelOpen((v) => !v)} style={styles.grabArea} accessibilityLabel={panelOpen ? 'Paneli kapat' : 'Paneli aç'}>
+        <Pressable onPress={() => setPanelOpen((v) => !v)} style={styles.grabArea} accessibilityLabel={panelOpen ? t("Paneli kapat") : t("Paneli aç")}>
           <View style={styles.grab} />
         </Pressable>
         <View style={styles.panelTabs}>
           {(
             [
-              ['words', `Kelimeler${words.length ? ` · ${words.length}` : ''}`],
-              ['notes', 'Notlar'],
+              ['words', t("Kelimeler{0}", words.length ? ` · ${words.length}` : '')],
+              ['notes', t("Notlar")],
             ] as const
           ).map(([key, label]) => (
             <Pressable
@@ -486,25 +487,25 @@ export default function Class() {
           <>
             <View style={styles.words}>
               {words.map((w) => (
-                <Pressable key={w} onPress={() => setWords((prev) => prev.filter((x) => x !== w))} style={styles.word} accessibilityLabel={`${w} kelimesini sil`}>
+                <Pressable key={w} onPress={() => setWords((prev) => prev.filter((x) => x !== w))} style={styles.word} accessibilityLabel={t("{0} kelimesini sil", w)}>
                   <Text style={styles.wordText}>{w}</Text>
                   <Ionicons name="close" size={12} color={colors.faint} />
                 </Pressable>
               ))}
-              {words.length === 0 && <Text style={styles.panelHint}>Derste duyduğun yeni kelimeleri buraya yaz, ders bitince de burada kalır.</Text>}
+              {words.length === 0 && <Text style={styles.panelHint}>{t("Derste duyduğun yeni kelimeleri buraya yaz, ders bitince de burada kalır.")}</Text>}
             </View>
             <View style={styles.addRow}>
               <TextInput
                 value={wordInput}
                 onChangeText={setWordInput}
                 onSubmitEditing={addWord}
-                placeholder="Yeni kelime"
+                placeholder={t("Yeni kelime")}
                 placeholderTextColor={colors.faint}
                 autoCapitalize="none"
                 returnKeyType="done"
                 style={styles.addInput}
               />
-              <Pressable onPress={addWord} style={styles.addBtn} accessibilityLabel="Kelime ekle">
+              <Pressable onPress={addWord} style={styles.addBtn} accessibilityLabel={t("Kelime ekle")}>
                 <Ionicons name="add" size={20} color={colors.gold2} />
               </Pressable>
             </View>
@@ -515,7 +516,7 @@ export default function Class() {
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder="Bu dersten aklında kalmasını istediklerin…"
+            placeholder={t("Bu dersten aklında kalmasını istediklerin…")}
             placeholderTextColor={colors.faint}
             multiline
             style={styles.noteInput}
@@ -527,25 +528,25 @@ export default function Class() {
         <Pressable style={styles.sheetShade} onPress={() => setReportOpen(false)} />
         <View style={[styles.reportSheet, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
           <View style={styles.sheetGrab} />
-          <Text style={styles.reportTitle}>Bir sorun bildir</Text>
+          <Text style={styles.reportTitle}>{t("Bir sorun bildir")}</Text>
           {reportExisting ? (
             <>
-              <Text style={styles.reportText}>Bu ders için zaten bir bildirim göndermiştin.</Text>
+              <Text style={styles.reportText}>{t("Bu ders için zaten bir bildirim göndermiştin.")}</Text>
               <View style={{ marginTop: 14 }}>
-                <Button label="Kapat" variant="outline" onPress={() => setReportOpen(false)} />
+                <Button label={t("Kapat")} variant="outline" onPress={() => setReportOpen(false)} />
               </View>
             </>
           ) : reportMessage ? (
             <>
               <Text style={styles.reportText}>{reportMessage}</Text>
               <View style={{ marginTop: 14 }}>
-                <Button label="Kapat" variant="outline" onPress={() => setReportOpen(false)} />
+                <Button label={t("Kapat")} variant="outline" onPress={() => setReportOpen(false)} />
               </View>
             </>
           ) : (
             profile && (
               <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                <Text style={[styles.reportText, { marginBottom: 14 }]}>Öğretmenle ilgili ne bildirmek istiyorsun?</Text>
+                <Text style={[styles.reportText, { marginBottom: 14 }]}>{t("Öğretmenle ilgili ne bildirmek istiyorsun?")}</Text>
                 <AttendanceFlow
                   booking={booking}
                   studentId={profile.id}

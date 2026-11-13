@@ -14,6 +14,7 @@ import { notify } from '../lib/dialogs';
 import { supabase } from '../lib/supabase';
 import { colors, fonts, radius } from '../lib/theme';
 import Button from './Button';
+import { getLocale, useT } from '../lib/i18n';
 
 /**
  * The teacher panel's attendance banner (dashboard.html
@@ -24,6 +25,7 @@ import Button from './Button';
  * no-show hide, or read why it's hidden.
  */
 export default function TeacherAttendanceBanner({ reloadKey }: { reloadKey?: number }) {
+  const t = useT();
   const { profile: signedIn, refreshProfile } = useAuth();
   // the hide / ban flags are re-read on every refresh (an admin may have
   // changed them since sign-in)
@@ -64,15 +66,15 @@ export default function TeacherAttendanceBanner({ reloadKey }: { reloadKey?: num
   if (!isHidden && !hasOpenReport) return null;
 
   const title = profile.is_banned
-    ? 'Hesabın kapatıldı'
+    ? t("Hesabın kapatıldı")
     : isHidden
-      ? 'Profilin yeni öğrencilerden gizli'
-      : 'Bir dersinle ilgili bildirim var';
+      ? t("Profilin yeni öğrencilerden gizli")
+      : t("Bir dersinle ilgili bildirim var");
   const sub = profile.is_banned
-    ? 'Detaylar için tıkla'
+    ? t("Detaylar için tıkla")
     : hasOpenReport
-      ? 'Bir öğrenci bir şey bildirdi - açıklamak için tıkla'
-      : 'Detaylar için tıkla';
+      ? t("Bir öğrenci bir şey bildirdi - açıklamak için tıkla")
+      : t("Detaylar için tıkla");
 
   async function sendExplanation() {
     const text = explanation.trim();
@@ -81,7 +83,7 @@ export default function TeacherAttendanceBanner({ reloadKey }: { reloadKey?: num
     const result = await submitAttendanceExplanation(report.id, text);
     setBusy(false);
     if (!result) {
-      notify('Gönderilemedi', 'Gönderilemedi. Lütfen tekrar dene.');
+      notify(t("Gönderilemedi"), t("Gönderilemedi. Lütfen tekrar dene."));
       return;
     }
     setOpen(false);
@@ -94,7 +96,7 @@ export default function TeacherAttendanceBanner({ reloadKey }: { reloadKey?: num
     const result = await selfUnhideFromNewStudents(requiresAck);
     setBusy(false);
     if (result !== 'ok') {
-      notify('İşlem başarısız', 'İşlem başarısız oldu. Lütfen tekrar dene.');
+      notify(t("İşlem başarısız"), t("İşlem başarısız oldu. Lütfen tekrar dene."));
       return;
     }
     setOpen(false);
@@ -162,23 +164,23 @@ function Details({
   onMakeVisible: (requiresAck: boolean) => void;
   onClose: () => void;
 }) {
-  const contact = <Button label="Bize Ulaş" variant="gold" onPress={() => Linking.openURL('https://armus.com.tr/iletisim')} />;
-  const close = <Button label="Kapat" variant="outline" onPress={onClose} />;
+  const t = useT();
+  const contact = <Button label={t("Bize Ulaş")} variant="gold" onPress={() => Linking.openURL('https://armus.com.tr/iletisim')} />;
+  const close = <Button label={t("Kapat")} variant="outline" onPress={onClose} />;
 
   const typeLabel =
     report?.type === 'no_show'
-      ? 'derse gelmedin'
+      ? t("derse gelmedin")
       : report?.type === 'technical'
-        ? 'senin tarafında teknik bir sorun yaşandığını'
-        : 'derse geç kaldın';
+        ? t("senin tarafında teknik bir sorun yaşandığını")
+        : t("derse geç kaldın");
 
   if (profile.is_banned) {
     return (
       <>
-        <Text style={styles.title}>Hesabın kapatıldı</Text>
+        <Text style={styles.title}>{t("Hesabın kapatıldı")}</Text>
         <Text style={styles.text}>
-          Tekrarlanan, doğrulanmış devamsızlık nedeniyle hesabın kalıcı olarak kapatıldı. İtiraz etmek istersen bizimle iletişime geç.
-        </Text>
+          {t("Tekrarlanan, doğrulanmış devamsızlık nedeniyle hesabın kalıcı olarak kapatıldı. İtiraz etmek istersen bizimle iletişime geç.")}</Text>
         <View style={styles.actions}>{contact}</View>
       </>
     );
@@ -187,17 +189,17 @@ function Details({
   if (report?.status === 'open') {
     return (
       <>
-        <Text style={styles.title}>Bir öğrenci bir şey bildirdi</Text>
+        <Text style={styles.title}>{t("Bir öğrenci bir şey bildirdi")}</Text>
         <Text style={styles.text}>
           {report.type === 'no_show'
-            ? `Bir öğrenci ${typeLabel} bildirdi. Bu yüzden profilin şu anda yeni öğrencilerin aramasından gizli.`
-            : `Bir öğrenci ${typeLabel} bildirdi. Profilin gizlenmedi; ekibimiz inceleyecek. İstersen açıklamanı yaz.`}
+            ? t("Bir öğrenci {0} bildirdi. Bu yüzden profilin şu anda yeni öğrencilerin aramasından gizli.", typeLabel)
+            : t("Bir öğrenci {0} bildirdi. Profilin gizlenmedi; ekibimiz inceleyecek. İstersen açıklamanı yaz.", typeLabel)}
         </Text>
-        <Text style={styles.rules}>{ATTENDANCE_RULES_TEXT}</Text>
+        <Text style={styles.rules}>{t(ATTENDANCE_RULES_TEXT)}</Text>
         <TextInput
           value={explanation}
           onChangeText={setExplanation}
-          placeholder="Ne oldu? Kısaca açıkla..."
+          placeholder={t("Ne oldu? Kısaca açıkla...")}
           placeholderTextColor={colors.faint}
           multiline
           style={styles.input}
@@ -205,7 +207,7 @@ function Details({
         <View style={styles.row}>
           <View style={{ flex: 1 }}>{close}</View>
           <View style={{ flex: 1 }}>
-            <Button label="Açıklamayı Gönder" onPress={onExplain} loading={busy} disabled={!explanation.trim()} />
+            <Button label={t("Açıklamayı Gönder")} onPress={onExplain} loading={busy} disabled={!explanation.trim()} />
           </View>
         </View>
       </>
@@ -215,10 +217,9 @@ function Details({
   if (report?.status === 'explained') {
     return (
       <>
-        <Text style={styles.title}>Açıklaman inceleniyor</Text>
+        <Text style={styles.title}>{t("Açıklaman inceleniyor")}</Text>
         <Text style={styles.text}>
-          Açıklamanı gönderdin, ekibimiz inceliyor. Profilin bu süreç tamamlanana kadar yeni öğrencilerin aramasından gizli kalır.
-        </Text>
+          {t("Açıklamanı gönderdin, ekibimiz inceliyor. Profilin bu süreç tamamlanana kadar yeni öğrencilerin aramasından gizli kalır.")}</Text>
         {!!report.teacherExplanation && <Text style={styles.rules}>{report.teacherExplanation}</Text>}
         <View style={styles.actions}>{close}</View>
       </>
@@ -232,25 +233,22 @@ function Details({
     const requiresAck = !!profile.trial_unhide_requires_ack;
     return (
       <>
-        <Text style={styles.title}>Profilin yeni öğrencilerden gizli (Deneme Dersi) — Seviye {tier}/5</Text>
+        <Text style={styles.title}>{t("Profilin yeni öğrencilerden gizli (Deneme Dersi) — Seviye {0}/5", tier)}</Text>
         <Text style={styles.text}>
-          Bu, doğrulanmış {profile.trial_noshow_count || tier}. deneme dersine gelmeme bildirimin. Her tekrar, profilinin yeni öğrencilerden daha uzun
-          süre gizlenmesine yol açar - mevcut öğrencilerin seni görmeye devam eder.
-        </Text>
+          {t("Bu, doğrulanmış {0}. deneme dersine gelmeme bildirimin. Her tekrar, profilinin yeni öğrencilerden daha uzun süre gizlenmesine yol açar - mevcut öğrencilerin seni görmeye devam eder.", profile.trial_noshow_count || tier)}</Text>
         {!eligible ? (
           <Text style={styles.rules}>
-            {eligibleAt ? eligibleAt.toLocaleDateString('tr-TR') : ''} tarihinden sonra profilini tekrar görünür yapabilirsin.
-          </Text>
+            {eligibleAt ? eligibleAt.toLocaleDateString(getLocale()) : ''} {t(" tarihinden sonra profilini tekrar görünür yapabilirsin.")}</Text>
         ) : (
           <>
             {requiresAck && (
               <Pressable onPress={() => setAck(!ack)} style={styles.ackRow}>
                 <View style={[styles.box, ack && styles.boxOn]}>{ack && <Ionicons name="checkmark" size={14} color={colors.onRed} />}</View>
-                <Text style={styles.ackText}>Kurallarımızı okudum ve bundan sonra derslerime zamanında katılacağıma söz veriyorum.</Text>
+                <Text style={styles.ackText}>{t("Kurallarımızı okudum ve bundan sonra derslerime zamanında katılacağıma söz veriyorum.")}</Text>
               </Pressable>
             )}
             <View style={styles.actions}>
-              <Button label="Profilimi Görünür Yap" onPress={() => onMakeVisible(requiresAck)} loading={busy} disabled={requiresAck && !ack} />
+              <Button label={t("Profilimi Görünür Yap")} onPress={() => onMakeVisible(requiresAck)} loading={busy} disabled={requiresAck && !ack} />
             </View>
           </>
         )}
@@ -261,16 +259,13 @@ function Details({
 
   const hiddenUntilActive = !!profile.hidden_until && new Date(profile.hidden_until) > new Date();
   if ((profile.penalty_hide_reason === 'no_show' || profile.penalty_hide_reason === 'late') && !hiddenUntilActive) {
-    const penaltyType = profile.penalty_hide_reason === 'no_show' ? 'derse gelmeme' : 'derse geç kalma';
+    const penaltyType = profile.penalty_hide_reason === 'no_show' ? t("derse gelmeme") : t("derse geç kalma");
     return (
       <>
-        <Text style={styles.title}>Profilin yeni öğrencilerden gizli</Text>
+        <Text style={styles.title}>{t("Profilin yeni öğrencilerden gizli")}</Text>
         <Text style={styles.text}>
-          Hakkındaki bir {penaltyType} bildirimi ekibimiz tarafından doğrulandı. Bu yüzden profilin yeni öğrencilerin aramasından gizli - mevcut
-          öğrencilerin seni görmeye ve ders almaya devam ediyor. Bu gizlilik ekibimiz kaldırana kadar sürer; itiraz etmek ya da durumu konuşmak
-          istersen bize ulaş.
-        </Text>
-        <Text style={styles.rules}>{ATTENDANCE_RULES_TEXT}</Text>
+          {t("Hakkındaki bir {0} bildirimi ekibimiz tarafından doğrulandı. Bu yüzden profilin yeni öğrencilerin aramasından gizli - mevcut öğrencilerin seni görmeye ve ders almaya devam ediyor. Bu gizlilik ekibimiz kaldırana kadar sürer; itiraz etmek ya da durumu konuşmak istersen bize ulaş.", penaltyType)}</Text>
+        <Text style={styles.rules}>{t(ATTENDANCE_RULES_TEXT)}</Text>
         <View style={styles.row}>
           <View style={{ flex: 1 }}>{contact}</View>
           <View style={{ flex: 1 }}>{close}</View>
@@ -281,12 +276,10 @@ function Details({
 
   return (
     <>
-      <Text style={styles.title}>Profilin geçici olarak gizli</Text>
+      <Text style={styles.title}>{t("Profilin geçici olarak gizli")}</Text>
       <Text style={styles.text}>
-        Tekrarlanan, doğrulanmış devamsızlık/geç kalma bildirimleri nedeniyle profilin bir süreliğine herkesten (yeni ve mevcut öğrencilerden)
-        gizlendi.
-      </Text>
-      <Text style={styles.rules}>{ATTENDANCE_RULES_TEXT}</Text>
+        {t("Tekrarlanan, doğrulanmış devamsızlık/geç kalma bildirimleri nedeniyle profilin bir süreliğine herkesten (yeni ve mevcut öğrencilerden) gizlendi.")}</Text>
+      <Text style={styles.rules}>{t(ATTENDANCE_RULES_TEXT)}</Text>
       <View style={styles.actions}>{close}</View>
     </>
   );

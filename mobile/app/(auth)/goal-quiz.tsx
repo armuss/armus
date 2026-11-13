@@ -7,6 +7,7 @@ import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import Logo from '../../components/Logo';
 import { colors, fonts, radius } from '../../lib/theme';
+import { tr, useLang, useT } from '../../lib/i18n';
 
 type CountryOption = { value: string; label: string; flag: string };
 
@@ -120,6 +121,13 @@ const GOAL_MATCH_PHRASES: Record<string, string> = {
   child: "çocuğunun İngilizce'yi keyifle öğrenmesi",
 };
 
+const GOAL_MATCH_PHRASES_EN: Record<string, string> = {
+  work: 'speaking confidently at work',
+  speaking: 'fluent everyday conversations',
+  exam: 'success in your target exam',
+  child: "your child's joy of learning English",
+};
+
 function recapEntries(a: Answers): string[] {
   const entries: string[] = [];
   const goalLabel = GOAL_OPTIONS.find((g) => g.value === a.goal)?.label;
@@ -129,7 +137,7 @@ function recapEntries(a: Answers): string[] {
   entries.push(...a.teachingStyle);
   if (a.tutorCountry) {
     const c = COUNTRY_OPTIONS_ALL.find((c) => c.value === a.tutorCountry);
-    if (c) entries.push(`${c.flag} ${c.label}`);
+    if (c) entries.push(`${c.flag} ${tr(c.label)}`);
   }
   if (a.budget) entries.push(a.budget);
   entries.push(...a.days);
@@ -147,7 +155,7 @@ function Illustration() {
 function RadioRow({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={[styles.radioRow, selected && styles.radioRowActive]}>
-      <Text style={styles.radioLabel}>{label}</Text>
+      <Text style={styles.radioLabel}>{tr(label)}</Text>
       <View style={[styles.radioCircle, selected && styles.radioCircleActive]}>
         {selected && <View style={styles.radioDot} />}
       </View>
@@ -169,7 +177,7 @@ function Chip({
   return (
     <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipActive]}>
       {!!icon && <Text style={styles.chipIcon}>{icon}</Text>}
-      <Text style={[styles.chipLabel, selected && styles.chipLabelActive]}>{label}</Text>
+      <Text style={[styles.chipLabel, selected && styles.chipLabelActive]}>{tr(label)}</Text>
     </Pressable>
   );
 }
@@ -177,12 +185,14 @@ function Chip({
 function RecapChip({ label, tone }: { label: string; tone: 'gold' | 'silver' }) {
   return (
     <View style={[styles.recapChip, tone === 'gold' ? styles.recapChipGold : styles.recapChipSilver]}>
-      <Text style={[styles.recapChipText, tone === 'gold' && { color: colors.goldText }]}>{label}</Text>
+      <Text style={[styles.recapChipText, tone === 'gold' && { color: colors.goldText }]}>{tr(label)}</Text>
     </View>
   );
 }
 
 export default function GoalQuiz() {
+  const t = useT();
+  const { lang } = useLang();
   const [stepIndex, setStepIndex] = useState(0);
   const [showAllIndustries, setShowAllIndustries] = useState(false);
   const [showAllTopics, setShowAllTopics] = useState(false);
@@ -300,7 +310,7 @@ export default function GoalQuiz() {
         {step === 'goal' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Hedefin ne?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Hedefin ne?")}</Text>
             <View style={styles.options}>
               {GOAL_OPTIONS.map((o) => (
                 <RadioRow
@@ -317,7 +327,7 @@ export default function GoalQuiz() {
         {step === 'timeline' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Bu hedefe ne zaman ulaşmak istersin?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Bu hedefe ne zaman ulaşmak istersin?")}</Text>
             <View style={styles.options}>
               {TIMELINE_OPTIONS.map((o) => (
                 <RadioRow
@@ -334,8 +344,8 @@ export default function GoalQuiz() {
         {step === 'industry' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Hangi sektörde çalışıyorsun?</Text>
-            <Text style={styles.subtitle} onLayout={growBand}>Bu, sana en uygun öğretmeni önermemize yardımcı olur.</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Hangi sektörde çalışıyorsun?")}</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>{t("Bu, sana en uygun öğretmeni önermemize yardımcı olur.")}</Text>
             <View style={styles.options}>
               {(showAllIndustries ? INDUSTRY_OPTIONS_ALL : INDUSTRY_OPTIONS_BASE).map((o) => (
                 <RadioRow
@@ -348,7 +358,7 @@ export default function GoalQuiz() {
             </View>
             {!showAllIndustries && (
               <Pressable onPress={() => setShowAllIndustries(true)} hitSlop={10}>
-                <Text style={styles.link}>Tüm sektörleri göster</Text>
+                <Text style={styles.link}>{t("Tüm sektörleri göster")}</Text>
               </Pressable>
             )}
           </>
@@ -357,12 +367,12 @@ export default function GoalQuiz() {
         {step === 'jobTitle' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Ünvanın veya pozisyonun ne?</Text>
-            <Text style={styles.subtitle} onLayout={growBand}>Birkaç kelimeyle anlat</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Ünvanın veya pozisyonun ne?")}</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>{t("Birkaç kelimeyle anlat")}</Text>
             <TextInput
               value={answers.jobTitle}
               onChangeText={(text) => setAnswers((prev) => ({ ...prev, jobTitle: text }))}
-              placeholder="Örn. Yazılım Geliştirici, Pazarlama Uzmanı..."
+              placeholder={t("Örn. Yazılım Geliştirici, Pazarlama Uzmanı...")}
               placeholderTextColor={colors.faint}
               style={styles.input}
               multiline
@@ -373,7 +383,7 @@ export default function GoalQuiz() {
         {step === 'skills' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Hangi kariyer becerilerini geliştirmek istersin?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Hangi kariyer becerilerini geliştirmek istersin?")}</Text>
             <View style={styles.chipRow}>
               {SKILL_OPTIONS.map((o) => (
                 <Chip
@@ -390,7 +400,7 @@ export default function GoalQuiz() {
         {step === 'topics' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Odaklanmak istediğin başka konular var mı?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Odaklanmak istediğin başka konular var mı?")}</Text>
             <View style={styles.chipRow}>
               {(showAllTopics ? TOPIC_OPTIONS_ALL : TOPIC_OPTIONS_BASE).map((o) => (
                 <Chip
@@ -403,7 +413,7 @@ export default function GoalQuiz() {
             </View>
             {!showAllTopics && (
               <Pressable onPress={() => setShowAllTopics(true)} hitSlop={10} style={{ marginTop: 4 }}>
-                <Text style={styles.link}>Tümünü göster</Text>
+                <Text style={styles.link}>{t("Tümünü göster")}</Text>
               </Pressable>
             )}
           </>
@@ -412,7 +422,7 @@ export default function GoalQuiz() {
         {step === 'level' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>İngilizce seviyen nedir?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("İngilizce seviyen nedir?")}</Text>
             <View style={styles.options}>
               {LEVEL_OPTIONS.map((o) => (
                 <RadioRow
@@ -429,10 +439,9 @@ export default function GoalQuiz() {
         {step === 'teachingStyle' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Senin için en iyi öğretim tarzı hangisi?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Senin için en iyi öğretim tarzı hangisi?")}</Text>
             <Text style={styles.subtitle} onLayout={growBand}>
-              En sevdiğin <Text style={styles.subtitleAccent}>{MAX_STYLES}</Text> özelliği seç.
-            </Text>
+              {t("En sevdiğin ")}<Text style={styles.subtitleAccent}>{MAX_STYLES}</Text> {t(" özelliği seç.")}</Text>
             <View style={styles.chipRow}>
               {STYLE_OPTIONS.map((o) => (
                 <Chip
@@ -449,9 +458,9 @@ export default function GoalQuiz() {
         {step === 'tutorCountry' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Öğretmenin hangi ülkeden olmasını istersin?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Öğretmenin hangi ülkeden olmasını istersin?")}</Text>
             <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>Sadece anadili İngilizce olanlar</Text>
+              <Text style={styles.toggleLabel}>{t("Sadece anadili İngilizce olanlar")}</Text>
               <Switch
                 value={answers.nativeOnly}
                 onValueChange={(v) => setAnswers((prev) => ({ ...prev, nativeOnly: v }))}
@@ -471,7 +480,7 @@ export default function GoalQuiz() {
             </View>
             {!showAllCountries && (
               <Pressable onPress={() => setShowAllCountries(true)} hitSlop={10} style={{ marginTop: 4 }}>
-                <Text style={styles.link}>Tümünü göster</Text>
+                <Text style={styles.link}>{t("Tümünü göster")}</Text>
               </Pressable>
             )}
           </>
@@ -480,7 +489,7 @@ export default function GoalQuiz() {
         {step === 'otherLanguages' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Öğretmeninin konuşmasını istediğin başka diller var mı?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Öğretmeninin konuşmasını istediğin başka diller var mı?")}</Text>
             <View style={styles.chipRow}>
               {(showAllLanguages ? LANGUAGE_OPTIONS_ALL : LANGUAGE_OPTIONS_BASE).map((o) => (
                 <Chip
@@ -493,7 +502,7 @@ export default function GoalQuiz() {
             </View>
             {!showAllLanguages && (
               <Pressable onPress={() => setShowAllLanguages(true)} hitSlop={10} style={{ marginTop: 4 }}>
-                <Text style={styles.link}>Tümünü göster</Text>
+                <Text style={styles.link}>{t("Tümünü göster")}</Text>
               </Pressable>
             )}
           </>
@@ -502,16 +511,16 @@ export default function GoalQuiz() {
         {step === 'schedule' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Ne zaman ders alabilirsin?</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Ne zaman ders alabilirsin?")}</Text>
 
-            <Text style={styles.sectionLabel}>Günler</Text>
+            <Text style={styles.sectionLabel}>{t("Günler")}</Text>
             <View style={styles.chipRow}>
               {DAY_OPTIONS.map((o) => (
                 <Chip key={o} label={o} selected={answers.days.includes(o)} onPress={() => toggleMulti('days', o)} />
               ))}
             </View>
 
-            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Saatler</Text>
+            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>{t("Saatler")}</Text>
             <View style={styles.chipRow}>
               {TIME_OPTIONS.map((o) => (
                 <Chip
@@ -528,8 +537,8 @@ export default function GoalQuiz() {
         {step === 'budget' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Ders başına bütçen ne kadar?</Text>
-            <Text style={styles.subtitle} onLayout={growBand}>50 dakikalık bir ders için</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Ders başına bütçen ne kadar?")}</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>{t("50 dakikalık bir ders için")}</Text>
             <View style={styles.options}>
               {BUDGET_OPTIONS.map((o) => (
                 <RadioRow
@@ -546,8 +555,8 @@ export default function GoalQuiz() {
         {step === 'futureSubjects' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>İleride başka bir dil öğrenmeyi düşünür müsün?</Text>
-            <Text style={styles.subtitle} onLayout={growBand}>Bu tamamen opsiyonel - şu an sadece ilgini not ediyoruz.</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("İleride başka bir dil öğrenmeyi düşünür müsün?")}</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>{t("Bu tamamen opsiyonel - şu an sadece ilgini not ediyoruz.")}</Text>
             <View style={styles.chipRow}>
               {(showAllFutureSubjects ? FUTURE_SUBJECT_OPTIONS_ALL : FUTURE_SUBJECT_OPTIONS_BASE).map((o) => (
                 <Chip
@@ -560,7 +569,7 @@ export default function GoalQuiz() {
             </View>
             {!showAllFutureSubjects && (
               <Pressable onPress={() => setShowAllFutureSubjects(true)} hitSlop={10} style={{ marginTop: 4 }}>
-                <Text style={styles.link}>Tümünü göster</Text>
+                <Text style={styles.link}>{t("Tümünü göster")}</Text>
               </Pressable>
             )}
           </>
@@ -569,12 +578,12 @@ export default function GoalQuiz() {
         {step === 'extraNotes' && (
           <>
             <Illustration />
-            <Text style={styles.title} onLayout={growBand}>Sana en uygun öğretmeni bulmamıza yardımcı olacak başka bir şey var mı?</Text>
-            <Text style={styles.subtitle} onLayout={growBand}>Eşleşmeni daha da iyileştirmek için bunu kullanacağız.</Text>
+            <Text style={styles.title} onLayout={growBand}>{t("Sana en uygun öğretmeni bulmamıza yardımcı olacak başka bir şey var mı?")}</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>{t("Eşleşmeni daha da iyileştirmek için bunu kullanacağız.")}</Text>
 
             {recapEntries(answers).length > 0 && (
               <View style={styles.recapCard}>
-                <Text style={styles.recapCardLabel}>Senden öğrendiklerimiz</Text>
+                <Text style={styles.recapCardLabel}>{t("Senden öğrendiklerimiz")}</Text>
                 <View style={styles.recapChipRow}>
                   {recapEntries(answers).map((entry, i) => (
                     <RecapChip key={`${entry}-${i}`} label={entry} tone={i % 2 === 0 ? 'gold' : 'silver'} />
@@ -586,7 +595,7 @@ export default function GoalQuiz() {
             <TextInput
               value={answers.extraNotes}
               onChangeText={(text) => setAnswers((prev) => ({ ...prev, extraNotes: text }))}
-              placeholder="Örn. Öğretmenimin iş görüşmelerinde daha doğal konuşmama yardımcı olmasını istiyorum..."
+              placeholder={t("Örn. Öğretmenimin iş görüşmelerinde daha doğal konuşmama yardımcı olmasını istiyorum...")}
               placeholderTextColor={colors.faint}
               style={styles.input}
               multiline
@@ -602,31 +611,39 @@ export default function GoalQuiz() {
                 <View style={[styles.matchingDot, { opacity: 0.6 }]} />
                 <View style={[styles.matchingDot, { opacity: 0.3 }]} />
               </View>
-              <Text style={styles.matchingEyebrow}>ARMUS SENİN İÇİN EŞLEŞTİRİYOR</Text>
-              <Text style={styles.matchingTitle}>
-                Sana,{' '}
-                <Text style={styles.matchingAccent}>
-                  {GOAL_MATCH_PHRASES[answers.goal ?? ''] ?? 'hedeflerine en uygun'}
-                </Text>{' '}
-                için doğru öğretmeni buluyoruz.
-              </Text>
-              <Text style={styles.matchingSubtitle}>500'den fazla onaylı öğretmen arasından senin için en iyisini seçiyoruz.</Text>
+              <Text style={styles.matchingEyebrow}>{t("ARMUS SENİN İÇİN EŞLEŞTİRİYOR")}</Text>
+              {/* the word order differs between the two languages */}
+              {lang === 'en' ? (
+                <Text style={styles.matchingTitle}>
+                  We're finding the right teacher for{' '}
+                  <Text style={styles.matchingAccent}>{GOAL_MATCH_PHRASES_EN[answers.goal ?? ''] ?? 'your goals'}</Text>.
+                </Text>
+              ) : (
+                <Text style={styles.matchingTitle}>
+                  Sana,{' '}
+                  <Text style={styles.matchingAccent}>
+                    {GOAL_MATCH_PHRASES[answers.goal ?? ''] ?? 'hedeflerine en uygun'}
+                  </Text>{' '}
+                  için doğru öğretmeni buluyoruz.
+                </Text>
+              )}
+              <Text style={styles.matchingSubtitle}>{t("500'den fazla onaylı öğretmen arasından senin için en iyisini seçiyoruz.")}</Text>
             </View>
           </View>
         )}
       </ScrollView>
 
       <SafeAreaView edges={['bottom']} style={styles.footer}>
-        {step === 'jobTitle' && <Button label={answers.jobTitle ? 'Devam et' : 'Atla'} onPress={next} />}
+        {step === 'jobTitle' && <Button label={answers.jobTitle ? t("Devam et") : t("Atla")} onPress={next} />}
         {step === 'futureSubjects' && (
-          <Button label={answers.futureSubjects.length > 0 ? 'Devam et' : 'Şimdilik geç'} onPress={next} />
+          <Button label={answers.futureSubjects.length > 0 ? t("Devam et") : t("Şimdilik geç")} onPress={next} />
         )}
-        {step === 'extraNotes' && <Button label="Bitir ve devam et" onPress={next} />}
-        {step === 'matching' && <Button label="Devam et →" onPress={next} />}
+        {step === 'extraNotes' && <Button label={t("Bitir ve devam et")} onPress={next} />}
+        {step === 'matching' && <Button label={t("Devam et →")} onPress={next} />}
         {step !== 'jobTitle' &&
           step !== 'futureSubjects' &&
           step !== 'extraNotes' &&
-          step !== 'matching' && <Button label="Devam et" onPress={next} disabled={!canContinue} />}
+          step !== 'matching' && <Button label={t("Devam et")} onPress={next} disabled={!canContinue} />}
       </SafeAreaView>
     </SafeAreaView>
   );

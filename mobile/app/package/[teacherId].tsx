@@ -15,6 +15,7 @@ import { createPayment, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 const WEEKS_PER_PACKAGE = 4;
 
@@ -34,6 +35,7 @@ function buildOptions(pricePerLesson: number): PackageOption[] {
 type Phase = 'options' | 'confirm' | 'checkout' | 'success';
 
 export default function PackageOffer() {
+  const t = useT();
   const { teacherId } = useLocalSearchParams<{ teacherId: string }>();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,19 +79,19 @@ export default function PackageOffer() {
 
     // the website checkout's own checks (lib/payer.ts)
     if (!normalizeTurkishPhone(phone)) {
-      setError('Lütfen geçerli bir cep telefonu numarası gir.');
+      setError(t("Lütfen geçerli bir cep telefonu numarası gir."));
       return;
     }
     if (!isValidTurkishIdentityNumber(identityNumber)) {
-      setError('Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).');
+      setError(t("Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli)."));
       return;
     }
     if (!payerConsent) {
-      setError('Devam etmek için kimlik ve ödeme bilgilerinin işlenmesini kabul etmelisin.');
+      setError(t("Devam etmek için kimlik ve ödeme bilgilerinin işlenmesini kabul etmelisin."));
       return;
     }
     if (!withdrawalConsent) {
-      setError('Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin.');
+      setError(t("Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin."));
       return;
     }
 
@@ -130,7 +132,7 @@ export default function PackageOffer() {
   if (!teacher) {
     return (
       <SafeAreaView style={styles.screen}>
-        <Text style={styles.notFound}>Öğretmen bulunamadı.</Text>
+        <Text style={styles.notFound}>{t("Öğretmen bulunamadı.")}</Text>
       </SafeAreaView>
     );
   }
@@ -140,9 +142,9 @@ export default function PackageOffer() {
       <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.checkoutHeader}>
           <Pressable onPress={() => setPhase('confirm')} style={styles.iconBtn}>
-            <Text style={styles.iconBtnText}>← Vazgeç</Text>
+            <Text style={styles.iconBtnText}>{t("← Vazgeç")}</Text>
           </Pressable>
-          <Text style={styles.checkoutTitle}>Güvenli ödeme</Text>
+          <Text style={styles.checkoutTitle}>{t("Güvenli ödeme")}</Text>
         </View>
         <WebView
           source={{ uri: checkoutUrl }}
@@ -154,9 +156,9 @@ export default function PackageOffer() {
               setPhase('success');
             } else if (status === 'failed') {
               setPhase('confirm');
-              setError('Ödeme tamamlanmadı ya da iptal edildi.');
+              setError(t("Ödeme tamamlanmadı ya da iptal edildi."));
             } else if (status === 'error') {
-              setError('Ödemen alındı ama paket tanımlanırken bir sorun çıktı. Lütfen bizimle iletişime geç.');
+              setError(t("Ödemen alındı ama paket tanımlanırken bir sorun çıktı. Lütfen bizimle iletişime geç."));
               setPhase('confirm');
             }
           }}
@@ -171,13 +173,11 @@ export default function PackageOffer() {
         <View style={styles.successIcon}>
           <Text style={styles.successIconText}>✓</Text>
         </View>
-        <Text style={styles.successTitle}>Paketin hazır!</Text>
+        <Text style={styles.successTitle}>{t("Paketin hazır!")}</Text>
         <Text style={styles.successSubtitle}>
-          {selected?.totalLessons} ders hakkın {shortDisplayName(teacher.name)} için tanımlandı — istediğin zaman
-          rezervasyon yapabilirsin.
-        </Text>
+          {t("{0} ders hakkın {1} için tanımlandı — istediğin zaman rezervasyon yapabilirsin.", selected?.totalLessons, shortDisplayName(teacher.name))}</Text>
         <View style={{ width: '100%', marginTop: 28 }}>
-          <Button label="Derslerime Git" onPress={close} />
+          <Button label={t("Derslerime Git")} onPress={close} />
         </View>
       </SafeAreaView>
     );
@@ -188,46 +188,46 @@ export default function PackageOffer() {
       <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.topBar}>
           <Pressable onPress={() => setPhase('options')} style={styles.iconBtn}>
-            <Text style={styles.iconBtnText}>← Geri</Text>
+            <Text style={styles.iconBtnText}>{t("← Geri")}</Text>
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.sectionTitle}>Özet</Text>
+          <Text style={styles.sectionTitle}>{t("Özet")}</Text>
           <View style={styles.confirmBox}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Öğretmen</Text>
+              <Text style={styles.summaryLabel}>{t("Öğretmen")}</Text>
               <Text style={styles.summaryValue}>{shortDisplayName(teacher.name)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Paket</Text>
-              <Text style={styles.summaryValue}>{selected.lessonsPerWeek} ders / hafta</Text>
+              <Text style={styles.summaryLabel}>{t("Paket")}</Text>
+              <Text style={styles.summaryValue}>{t("{0} ders / hafta", selected.lessonsPerWeek)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Toplam ders</Text>
+              <Text style={styles.summaryLabel}>{t("Toplam ders")}</Text>
               <Text style={styles.summaryValue}>{selected.totalLessons}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tutar</Text>
+              <Text style={styles.summaryLabel}>{t("Tutar")}</Text>
               <Text style={styles.summaryValue}>₺{selected.totalPrice.toFixed(2)}</Text>
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Telefon</Text>
+              <Text style={styles.label}>{t("Telefon")}</Text>
               <TextInput
                 value={phone}
                 onChangeText={setPhone}
-                placeholder="05XX XXX XX XX"
+                placeholder={t("05XX XXX XX XX")}
                 placeholderTextColor={colors.faint}
                 keyboardType="phone-pad"
                 style={styles.input}
               />
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>T.C. Kimlik No</Text>
+              <Text style={styles.label}>{t("T.C. Kimlik No")}</Text>
               <TextInput
                 value={identityNumber}
                 onChangeText={setIdentityNumber}
-                placeholder="11 haneli kimlik numaran"
+                placeholder={t("11 haneli kimlik numaran")}
                 placeholderTextColor={colors.faint}
                 keyboardType="number-pad"
                 maxLength={11}
@@ -241,7 +241,7 @@ export default function PackageOffer() {
             {!!error && <Text style={styles.error}>{error}</Text>}
 
             <Button
-              label={submitting ? 'Yönlendiriliyor…' : 'Ödemeye Geç'}
+              label={submitting ? t("Yönlendiriliyor…") : t("Ödemeye Geç")}
               onPress={handleConfirm}
               loading={submitting}
             />
@@ -269,25 +269,23 @@ export default function PackageOffer() {
         <View style={styles.heroIcon}>
           <Ionicons name="trending-up" size={22} color={colors.red} />
         </View>
-        <Text style={styles.heroTitle}>Gelişimin burada başlıyor!</Text>
+        <Text style={styles.heroTitle}>{t("Gelişimin burada başlıyor!")}</Text>
         <Text style={styles.subtitle}>
-          {shortDisplayName(teacher.name)} ile haftalık ders paketini seç. Fiyatlar 50 dakikalık standart dersi
-          kapsar — tüm ders hakların istediğin zaman kullanılabilir, otomatik yenilenmez.
-        </Text>
+          {t("{0} ile haftalık ders paketini seç. Fiyatlar 50 dakikalık standart dersi kapsar — tüm ders hakların istediğin zaman kullanılabilir, otomatik yenilenmez.", shortDisplayName(teacher.name))}</Text>
       </View>
 
         {options.map((option) => (
           <Pressable key={option.lessonsPerWeek} onPress={() => pickOption(option)} style={styles.optionCard}>
             <Text style={styles.optionTitle}>
-              {option.lessonsPerWeek} ders <Text style={styles.optionTitleUnit}>/ hafta</Text>
+              {t("{0} ders", option.lessonsPerWeek)} <Text style={styles.optionTitleUnit}>{t("/ hafta")}</Text>
             </Text>
             <Text style={styles.optionMeta}>
-              {option.totalLessons} ders x ₺{teacher.price} · {WEEKS_PER_PACKAGE} haftada bir{' '}
+              {option.totalLessons} {t(" ders x ₺")}{teacher.price} · {WEEKS_PER_PACKAGE} {t(" haftada bir")}{' '}
               <Text style={styles.optionMetaBold}>₺{option.totalPrice.toFixed(2)}</Text>
             </Text>
             {option.lessonsPerWeek === 3 && (
               <View style={styles.popularBadge}>
-                <Text style={styles.popularBadgeText}>Popüler</Text>
+                <Text style={styles.popularBadgeText}>{t("Popüler")}</Text>
               </View>
             )}
           </Pressable>

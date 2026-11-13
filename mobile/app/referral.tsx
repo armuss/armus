@@ -8,6 +8,7 @@ import SimpleHeader from '../components/SimpleHeader';
 import { useAuth } from '../lib/auth';
 import { getReferralRewardCount, referralLink } from '../lib/referrals';
 import { colors, fonts, radius } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 const STEPS: [string, string][] = [
   ['Linkini paylaş', 'Kendi davet linkini arkadaşınla paylaş'],
@@ -17,6 +18,7 @@ const STEPS: [string, string][] = [
 
 /** Arkadaşını davet et: the website's referral programme (referral.html) in the app. */
 export default function Referral() {
+  const t = useT();
   const { profile } = useAuth();
   const [rewards, setRewards] = useState<number | null>(null);
   const link = referralLink(profile?.referral_code);
@@ -28,7 +30,7 @@ export default function Referral() {
   async function share() {
     if (!link) return;
     try {
-      await Share.share({ message: `ARMUS'ta birebir İngilizce dersleri için benim davet linkimle kayıt ol: ${link}` });
+      await Share.share({ message: t("ARMUS'ta birebir İngilizce dersleri için benim davet linkimle kayıt ol: {0}", link) });
     } catch {
       // the share sheet was closed
     }
@@ -36,23 +38,23 @@ export default function Referral() {
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
-      <SimpleHeader title="Arkadaşını davet et" />
+      <SimpleHeader title={t("Arkadaşını davet et")} />
       <ScrollView style={styles.list} contentContainerStyle={styles.content}>
         <ScrollBand height={150} />
         <View style={styles.hero}>
           <View style={styles.giftIcon}>
             <Ionicons name="gift" size={30} color={colors.red} />
           </View>
-          <Text style={styles.title}>Bir arkadaş getir, bir ders kazan</Text>
-          <Text style={styles.text}>Arkadaşın ilk dersini alınca, sen de aynı öğretmenle ücretsiz bir ders kazanırsın.</Text>
+          <Text style={styles.title}>{t("Bir arkadaş getir, bir ders kazan")}</Text>
+          <Text style={styles.text}>{t("Arkadaşın ilk dersini alınca, sen de aynı öğretmenle ücretsiz bir ders kazanırsın.")}</Text>
         </View>
 
         <View style={styles.card}>
           <View style={styles.rewardRow}>
             <Text style={styles.rewardNum}>{rewards ?? '–'}</Text>
-            <Text style={styles.rewardLabel}>ücretsiz ders kazandın</Text>
+            <Text style={styles.rewardLabel}>{t("ücretsiz ders kazandın", rewards ?? 0)}</Text>
           </View>
-          <Text style={styles.linkLabel}>Davet linkin</Text>
+          <Text style={styles.linkLabel}>{t("Davet linkin")}</Text>
           {link ? (
             <>
               <View style={styles.linkBox}>
@@ -62,24 +64,24 @@ export default function Referral() {
               </View>
               <Pressable onPress={share} style={styles.shareBtn}>
                 <Ionicons name="share-outline" size={18} color={colors.onRed} />
-                <Text style={styles.shareText}>Linki paylaş</Text>
+                <Text style={styles.shareText}>{t("Linki paylaş")}</Text>
               </Pressable>
             </>
           ) : (
-            <Text style={styles.noLink}>Davet linkin henüz hazır değil. Biraz sonra tekrar dene.</Text>
+            <Text style={styles.noLink}>{t("Davet linkin henüz hazır değil. Biraz sonra tekrar dene.")}</Text>
           )}
         </View>
 
-        <Text style={styles.section}>Nasıl çalışır?</Text>
+        <Text style={styles.section}>{t("Nasıl çalışır?")}</Text>
         <View style={styles.card}>
-          {STEPS.map(([t, d], i) => (
-            <View key={t} style={[styles.step, i > 0 && styles.stepLine]}>
+          {STEPS.map(([title, d], i) => (
+            <View key={title} style={[styles.step, i > 0 && styles.stepLine]}>
               <View style={styles.stepNum}>
                 <Text style={styles.stepNumText}>{i + 1}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.stepTitle}>{t}</Text>
-                <Text style={styles.stepText}>{d}</Text>
+                <Text style={styles.stepTitle}>{t(title)}</Text>
+                <Text style={styles.stepText}>{t(d)}</Text>
               </View>
             </View>
           ))}

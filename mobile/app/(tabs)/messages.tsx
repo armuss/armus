@@ -9,8 +9,10 @@ import { useAuth } from '../../lib/auth';
 import { capitalizeName, shortDisplayName } from '../../lib/displayName';
 import { getConversations, type Conversation } from '../../lib/messages';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 export default function Messages() {
+  const t = useT();
   const { profile } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,8 +36,8 @@ export default function Messages() {
     // the title is fixed on plain red; the band's fade scrolls with the list
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <View style={styles.headerBlock}>
-        <Text style={styles.title}>Mesajlar</Text>
-        <Text style={styles.sub}>{profile?.role === 'teacher' ? 'Öğrencilerinle ve ARMUS destekle' : 'Öğretmenlerinle ve ARMUS destekle'}</Text>
+        <Text style={styles.title}>{t("Mesajlar")}</Text>
+        <Text style={styles.sub}>{profile?.role === 'teacher' ? t("Öğrencilerinle ve ARMUS destekle") : t("Öğretmenlerinle ve ARMUS destekle")}</Text>
       </View>
 
       {loading ? (
@@ -45,6 +47,7 @@ export default function Messages() {
         </View>
       ) : (
         <FlatList
+          extraData={t}
           style={styles.list}
           ListHeaderComponent={<ScrollBand height={conversations.length ? 40 : 0} />}
           data={conversations}
@@ -78,19 +81,18 @@ export default function Messages() {
                   )}
                 </View>
                 <Text style={styles.preview} numberOfLines={1}>
-                  {item.lastMessageText || 'Henüz mesaj yok'}
+                  {item.lastMessageText || t("Henüz mesaj yok")}
                 </Text>
               </View>
             </Pressable>
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>Hiç sorun yok mu?</Text>
+              <Text style={styles.emptyTitle}>{t("Hiç sorun yok mu?")}</Text>
               <Text style={styles.emptyText}>
-                Burada öğretmenlerine istediğini sorabilir, öğrenme hedeflerini konuşabilirsin.
-              </Text>
+                {t("Burada öğretmenlerine istediğini sorabilir, öğrenme hedeflerini konuşabilirsin.")}</Text>
               <View style={styles.emptyBtn}>
-                <Button label="Öğretmen bul" onPress={() => router.push('/(tabs)')} />
+                <Button label={t("Öğretmen bul")} onPress={() => router.push('/(tabs)')} />
               </View>
             </View>
           }

@@ -1,5 +1,6 @@
 import { invokeEdge } from './edge';
 import { supabase } from './supabase';
+import { getLocale, tr } from './i18n';
 
 export type LessonCredit = {
   id: string;
@@ -113,16 +114,16 @@ export async function getStrandedPackages(): Promise<StrandedPackage[]> {
 
 export async function refundStrandedPackage(teacherId: string) {
   const result = await invokeEdge('package-credits', { action: 'refund', teacher_id: teacherId });
-  if (!result.ok) return { ok: false as const, error: result.error || 'İşlem yapılamadı. Lütfen tekrar dene.' };
+  if (!result.ok) return { ok: false as const, error: result.error || tr("İşlem yapılamadı. Lütfen tekrar dene.") };
   return { ok: true as const, refundedLessons: Number(result.data.refundedLessons) || 0, refundedAmount: Number(result.data.refundedAmount) || 0 };
 }
 
 export async function transferStrandedPackage(teacherId: string, newTeacherId: string) {
   const result = await invokeEdge('package-credits', { action: 'transfer', teacher_id: teacherId, new_teacher_id: newTeacherId });
-  if (!result.ok) return { ok: false as const, error: result.error || 'İşlem yapılamadı. Lütfen tekrar dene.' };
+  if (!result.ok) return { ok: false as const, error: result.error || tr("İşlem yapılamadı. Lütfen tekrar dene.") };
   return { ok: true as const, transferred: Number(result.data.transferred) || 0, teacherName: String(result.data.teacherName || '') };
 }
 
 export function formatMoney(amount: number | string) {
-  return `₺${Number(amount).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`;
+  return `₺${Number(amount).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`;
 }

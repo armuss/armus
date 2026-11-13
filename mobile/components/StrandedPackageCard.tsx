@@ -8,12 +8,14 @@ import { getMarketplaceTeachers } from '../lib/teachers';
 import type { Teacher } from '../lib/teachers-data';
 import { colors, fonts, radius } from '../lib/theme';
 import Button from './Button';
+import { useT } from '../lib/i18n';
 
 // Package lessons whose teacher can't teach this student anymore (banned,
 // blocking them, account closed - migration_110.sql): get them refunded to
 // the card, or move them to another teacher (package-credits Edge
 // Function). Mirrors my-lessons.html's package notice.
 export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPackage; onDone: () => void }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState('');
@@ -25,9 +27,9 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
 
   async function refund() {
     const ok = await confirmAsync(
-      'Paramı iade et',
-      `${formatMoney(pkg.totalValue)} ödeme yaptığın karta iade edilecek ve bu ${pkg.lessons} ders bakiyenden silinecek. Onaylıyor musun?`,
-      'İade Et'
+      t("Paramı iade et"),
+      t("{0} ödeme yaptığın karta iade edilecek ve bu {1} ders bakiyenden silinecek. Onaylıyor musun?", formatMoney(pkg.totalValue), pkg.lessons),
+      t("İade Et")
     );
     if (!ok) return;
     setBusy(true);
@@ -39,7 +41,7 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
       return;
     }
     setResult(
-      `${r.refundedLessons} dersin ücreti (${formatMoney(r.refundedAmount)}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.`
+      t("{0} dersin ücreti ({1}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.", r.refundedLessons, formatMoney(r.refundedAmount))
     );
     onDone();
   }
@@ -65,19 +67,19 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
       return;
     }
     setPickerOpen(false);
-    setResult(`${r.transferred} dersin ${r.teacherName || shortDisplayName(chosen.name)} ile kullanılabilir. Rezervasyonu öğretmenin profilinden yapabilirsin.`);
+    setResult(t("{0} dersin {1} ile kullanılabilir. Rezervasyonu öğretmenin profilinden yapabilirsin.", r.transferred, r.teacherName || shortDisplayName(chosen.name)));
     onDone();
   }
 
-  function hintFor(t: Teacher) {
-    const diff = Math.round((Number(t.price) - perLesson) * 100) / 100;
+  function hintFor(tch: Teacher) {
+    const diff = Math.round((Number(tch.price) - perLesson) * 100) / 100;
     if (diff >= 1) {
-      return `Her dersin ${formatMoney(perLesson)} değerinde, bu öğretmenin ders ücreti ${formatMoney(t.price)}. Her derste aradaki ${formatMoney(diff)} farkı kartla ödersin.`;
+      return t("Her dersin {0} değerinde, bu öğretmenin ders ücreti {1}. Her derste aradaki {2} farkı kartla ödersin.", formatMoney(perLesson), formatMoney(tch.price), formatMoney(diff));
     }
     if (diff <= -1) {
-      return `Her dersin ${formatMoney(perLesson)} değerinde, bu öğretmenin ders ücreti ${formatMoney(t.price)}. Her ders tamamen karşılanır; aradaki ${formatMoney(-diff)} iade edilmez.`;
+      return t("Her dersin {0} değerinde, bu öğretmenin ders ücreti {1}. Her ders tamamen karşılanır; aradaki {2} iade edilmez.", formatMoney(perLesson), formatMoney(tch.price), formatMoney(-diff));
     }
-    return 'Her dersin bu öğretmenle tamamen karşılanır.';
+    return t("Her dersin bu öğretmenle tamamen karşılanır.");
   }
 
   if (result) {
@@ -90,35 +92,33 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{shortDisplayName(pkg.teacherName)} artık sana ders veremiyor</Text>
+      <Text style={styles.title}>{t("{0} artık sana ders veremiyor", shortDisplayName(pkg.teacherName))}</Text>
       <Text style={styles.text}>
-        Paketinden {pkg.lessons} ders kaldı ({formatMoney(pkg.totalValue)}). Bu dersleri kartına iade ettirebilir ya da başka bir
-        öğretmene aktarabilirsin.
-      </Text>
+        {t("Paketinden {0} ders kaldı ({1}). Bu dersleri kartına iade ettirebilir ya da başka bir öğretmene aktarabilirsin.", pkg.lessons, formatMoney(pkg.totalValue))}</Text>
       <View style={styles.actions}>
         {pkg.refundable && (
           <Pressable onPress={refund} disabled={busy} style={[styles.btn, styles.btnPrimary, busy && styles.disabled]}>
-            <Text style={[styles.btnText, styles.btnTextPrimary]}>Paramı İade Et ({formatMoney(pkg.totalValue)})</Text>
+            <Text style={[styles.btnText, styles.btnTextPrimary]}>{t("Paramı İade Et ({0})", formatMoney(pkg.totalValue))}</Text>
           </Pressable>
         )}
         <Pressable onPress={openPicker} disabled={busy} style={[styles.btn, busy && styles.disabled]}>
-          <Text style={styles.btnText}>Başka Öğretmene Aktar</Text>
+          <Text style={styles.btnText}>{t("Başka Öğretmene Aktar")}</Text>
         </Pressable>
       </View>
       {!pkg.refundable && (
-        <Text style={styles.text}>Bu paketin iadesi otomatik yapılamıyor - iade istersen destek ekibimize yaz.</Text>
+        <Text style={styles.text}>{t("Bu paketin iadesi otomatik yapılamıyor - iade istersen destek ekibimize yaz.")}</Text>
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}
 
       <Modal visible={pickerOpen} transparent animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <View style={styles.backdrop}>
           <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>Paketini hangi öğretmenle kullanmak istersin?</Text>
+            <Text style={styles.sheetTitle}>{t("Paketini hangi öğretmenle kullanmak istersin?")}</Text>
             <ScrollView style={{ maxHeight: 320 }} contentContainerStyle={{ gap: 8 }}>
               {teachers === null ? (
-                <Text style={styles.text}>Yükleniyor…</Text>
+                <Text style={styles.text}>{t("Yükleniyor…")}</Text>
               ) : teachers.length === 0 ? (
-                <Text style={styles.text}>Şu anda listelenecek öğretmen yok.</Text>
+                <Text style={styles.text}>{t("Şu anda listelenecek öğretmen yok.")}</Text>
               ) : (
                 teachers.map((t) => (
                   <Pressable key={t.id} onPress={() => setChosen(t)} style={[styles.teacherRow, chosen?.id === t.id && styles.teacherRowSelected]}>
@@ -132,10 +132,10 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
             {!!error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.sheetActions}>
               <View style={{ flex: 1 }}>
-                <Button label="Vazgeç" variant="outline" onPress={() => setPickerOpen(false)} />
+                <Button label={t("Vazgeç")} variant="outline" onPress={() => setPickerOpen(false)} />
               </View>
               <View style={{ flex: 1.3 }}>
-                <Button label="Paketi Aktar" disabled={!chosen} loading={busy} onPress={transfer} />
+                <Button label={t("Paketi Aktar")} disabled={!chosen} loading={busy} onPress={transfer} />
               </View>
             </View>
           </View>

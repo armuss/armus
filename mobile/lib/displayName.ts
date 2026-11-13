@@ -1,3 +1,4 @@
+import { tr } from './i18n';
 // A teacher's full real name is never shown to a student anywhere in the
 // UI - only "Ahmet Y." - so a student can't take that name off ARMUS and
 // look the teacher up (or contact them) elsewhere, bypassing the platform
@@ -7,7 +8,7 @@
 // never applied to a student's name shown to their teacher.
 export function shortDisplayName(fullName: string | null | undefined): string {
   const parts = capitalizeName(fullName).split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return parts[0] || 'Öğretmen';
+  if (parts.length < 2) return parts[0] || tr("Öğretmen");
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 

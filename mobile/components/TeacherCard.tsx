@@ -5,6 +5,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { shortDisplayName } from '../lib/displayName';
 import { colors, fonts, radius } from '../lib/theme';
 import type { Teacher } from '../lib/teachers-data';
+import { useT } from '../lib/i18n';
 
 type Props = {
   teacher: Teacher;
@@ -16,19 +17,20 @@ type Props = {
 
 /** Photo tile for the two-column Keşfet grid: rating, heart, name, main topic and price. */
 export default function TeacherCard({ teacher, width, onPress, isFavorite, onToggleFavorite }: Props) {
+  const t = useT();
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, { width, opacity: pressed ? 0.92 : 1 }]}>
       <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={40} />
       <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.72)']} style={styles.shade} />
       <View style={styles.rating}>
-        <Text style={styles.ratingText}>{teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : 'Yeni'}</Text>
+        <Text style={styles.ratingText}>{teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : t("Yeni")}</Text>
       </View>
       {onToggleFavorite && (
         <Pressable
           onPress={onToggleFavorite}
           hitSlop={10}
           style={styles.heart}
-          accessibilityLabel={isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+          accessibilityLabel={isFavorite ? t("Favorilerden çıkar") : t("Favorilere ekle")}
         >
           <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={17} color={isFavorite ? colors.red : colors.ink} />
         </Pressable>
@@ -39,7 +41,7 @@ export default function TeacherCard({ teacher, width, onPress, isFavorite, onTog
         </Text>
         <View style={styles.meta}>
           <Text style={styles.topic} numberOfLines={1}>
-            {teacher.tags[0] ?? teacher.role}
+            {t(teacher.tags[0] ?? teacher.role)}
           </Text>
           <Text style={styles.price}>₺{teacher.price}</Text>
         </View>

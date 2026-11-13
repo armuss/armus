@@ -1,14 +1,15 @@
 import { isBookingPast, isPaidLateCancel, lessonWindow, type Booking } from './bookings';
 import { supabase } from './supabase';
+import { tr } from './i18n';
 
 // The commission tier a teacher is paid at, by total completed hours.
 // Mirrors bookings.js's armusCommissionForHours exactly - keep in sync.
 export function commissionForHours(hours: number) {
-  if (hours < 100) return { rate: 30, range: '0–100 saat' };
-  if (hours < 200) return { rate: 28, range: '100–200 saat' };
-  if (hours < 300) return { rate: 25, range: '200–300 saat' };
-  if (hours < 500) return { rate: 20, range: '300–500 saat' };
-  return { rate: 15, range: '500+ saat' };
+  if (hours < 100) return { rate: 30, range: tr("0–100 saat") };
+  if (hours < 200) return { rate: 28, range: tr("100–200 saat") };
+  if (hours < 300) return { rate: 25, range: tr("200–300 saat") };
+  if (hours < 500) return { rate: 20, range: tr("300–500 saat") };
+  return { rate: 15, range: tr("500+ saat") };
 }
 
 type TeacherCredit = { student_id: string; teacher_id: string; source: string | null; source_booking_id: string | null; status: string };

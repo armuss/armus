@@ -3,12 +3,14 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 /** Back button and a centred title on the red band, for the small pages opened from Profil. */
 export default function SimpleHeader({ title, sub }: { title: string; sub?: string }) {
+  const t = useT();
   return (
     <View style={styles.head}>
-      <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
+      <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
         <Ionicons name="chevron-back" size={20} color={colors.onRed} />
       </Pressable>
       <View style={styles.text}>

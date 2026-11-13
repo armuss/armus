@@ -25,6 +25,7 @@ import Band from '../components/Band';
 import { useAuth } from '../lib/auth';
 import { colors, fonts, radius, redGradient } from '../lib/theme';
 import { addVocabEntry, deleteVocabEntry, getVocabEntries, setVocabMastered, type VocabEntry } from '../lib/vocab';
+import { useT } from '../lib/i18n';
 
 const ALL = 'Tümü';
 
@@ -35,6 +36,7 @@ const ALL = 'Tümü';
  * cards as the website's student panel.
  */
 export default function Words() {
+  const t = useT();
   const { profile } = useAuth();
   const params = useLocalSearchParams<{ add?: string }>();
   const [entries, setEntries] = useState<VocabEntry[] | null>(null);
@@ -136,7 +138,7 @@ export default function Words() {
     setOrder(ids);
     setIndex(0);
     setFlipped(false);
-    const text = `Karıştırıldı · ${deck.length} kart, baştan başlıyorsun`;
+    const text = t("Karıştırıldı · {0} kart, baştan başlıyorsun", deck.length);
     showToast(text);
     AccessibilityInfo.announceForAccessibility(text);
   }
@@ -159,7 +161,7 @@ export default function Words() {
     const updated = await setVocabMastered(current.id, !current.mastered);
     setBusy(false);
     if (!updated) {
-      Alert.alert('Kaydedilemedi', 'Lütfen tekrar dene.');
+      Alert.alert(t("Kaydedilemedi"), t("Lütfen tekrar dene."));
       return;
     }
     setEntries((prev) => (prev ?? []).map((e) => (e.id === updated.id ? updated : e)));
@@ -170,15 +172,15 @@ export default function Words() {
 
   function confirmDelete() {
     if (!current) return;
-    Alert.alert('Kartı sil', `"${current.term}" kartı silinsin mi?`, [
-      { text: 'Vazgeç', style: 'cancel' },
+    Alert.alert(t("Kartı sil"), t("\"{0}\" kartı silinsin mi?", current.term), [
+      { text: t("Vazgeç"), style: 'cancel' },
       {
-        text: 'Sil',
+        text: t("Sil"),
         style: 'destructive',
         onPress: async () => {
           const ok = await deleteVocabEntry(current.id);
           if (!ok) {
-            Alert.alert('Silinemedi', 'Lütfen tekrar dene.');
+            Alert.alert(t("Silinemedi"), t("Lütfen tekrar dene."));
             return;
           }
           setEntries((prev) => (prev ?? []).filter((e) => e.id !== current.id));
@@ -205,18 +207,17 @@ export default function Words() {
       <Band height={112} />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.head}>
-          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
+          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
             <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <View style={styles.headText}>
-            <Text style={styles.title}>Kelime kartlarım</Text>
+            <Text style={styles.title}>{t("Kelime kartlarım")}</Text>
             {!!entries?.length && (
               <Text style={styles.sub}>
-                {entries.length} kelime · {learned} öğrendin
-              </Text>
+                {t("{0} kelime · {1} öğrendin", entries.length, learned)}</Text>
             )}
           </View>
-          <Pressable onPress={() => setAdding(true)} style={styles.roundBtn} accessibilityLabel="Kelime ekle">
+          <Pressable onPress={() => setAdding(true)} style={styles.roundBtn} accessibilityLabel={t("Kelime ekle")}>
             <Ionicons name="add" size={22} color={colors.onRed} />
           </Pressable>
         </View>
@@ -228,11 +229,11 @@ export default function Words() {
             <View style={styles.emptyIcon}>
               <Ionicons name="albums-outline" size={30} color={colors.red} />
             </View>
-            <Text style={styles.emptyTitle}>Henüz kelimen yok</Text>
-            <Text style={styles.emptyText}>Derste öğrendiğin kelimeleri anlamlarıyla birlikte ekle, sonra kart kart çalış.</Text>
+            <Text style={styles.emptyTitle}>{t("Henüz kelimen yok")}</Text>
+            <Text style={styles.emptyText}>{t("Derste öğrendiğin kelimeleri anlamlarıyla birlikte ekle, sonra kart kart çalış.")}</Text>
             <Pressable onPress={() => setAdding(true)} style={styles.primary}>
               <Ionicons name="add" size={18} color={colors.onRed} />
-              <Text style={styles.primaryText}>İlk kelimeni ekle</Text>
+              <Text style={styles.primaryText}>{t("İlk kelimeni ekle")}</Text>
             </Pressable>
           </View>
         ) : (
@@ -241,7 +242,7 @@ export default function Words() {
               {[ALL, ...categories].map((c) => (
                 <Pressable key={c} onPress={() => pickCategory(c)} style={[styles.chip, category === c && styles.chipOn]}>
                   <Text style={[styles.chipText, category === c && styles.chipTextOn]}>
-                    {c === ALL ? `${ALL} · ${(entries ?? []).filter((e) => !hideMastered || !e.mastered).length}` : c}
+                    {c === ALL ? `${t(ALL)} · ${(entries ?? []).filter((e) => !hideMastered || !e.mastered).length}` : t(c)}
                   </Text>
                 </Pressable>
               ))}
@@ -252,7 +253,7 @@ export default function Words() {
                 onPress={() => setFlipped((f) => !f)}
                 style={styles.cardWrap}
                 accessibilityRole="button"
-                accessibilityLabel={flipped ? `${current.term}: ${current.meaning}. Kelimeye dönmek için dokun` : `${current.term}. Anlamını görmek için dokun`}
+                accessibilityLabel={flipped ? t("{0}: {1}. Kelimeye dönmek için dokun", current.term, current.meaning) : t("{0}. Anlamını görmek için dokun", current.term)}
               >
                 <View style={styles.cardBack} />
 
@@ -266,11 +267,11 @@ export default function Words() {
                 {/* the word side */}
                 <Animated.View style={[styles.card, styles.face, frontStyle]} pointerEvents={flipped ? 'none' : 'auto'}>
                   <View style={styles.cardTop}>
-                    <Text style={styles.cat}>{current.category}</Text>
+                    <Text style={styles.cat}>{t(current.category)}</Text>
                     {current.mastered && (
                       <View style={styles.knownTag}>
                         <Ionicons name="checkmark" size={12} color={colors.petrol} />
-                        <Text style={styles.knownText}>Öğrendin</Text>
+                        <Text style={styles.knownText}>{t("Öğrendin")}</Text>
                       </View>
                     )}
                   </View>
@@ -279,9 +280,9 @@ export default function Words() {
                   </Text>
                   <View style={styles.hint}>
                     <Ionicons name="sync-outline" size={13} color={colors.muted} />
-                    <Text style={styles.hintText}>Anlamını görmek için dokun</Text>
+                    <Text style={styles.hintText}>{t("Anlamını görmek için dokun")}</Text>
                   </View>
-                  <Pressable onPress={confirmDelete} hitSlop={10} style={styles.trash} accessibilityLabel="Kartı sil">
+                  <Pressable onPress={confirmDelete} hitSlop={10} style={styles.trash} accessibilityLabel={t("Kartı sil")}>
                     <Ionicons name="trash-outline" size={17} color={colors.faint} />
                   </Pressable>
                 </Animated.View>
@@ -289,8 +290,8 @@ export default function Words() {
                 {/* the meaning side, on the back of the card */}
                 <Animated.View style={[styles.face, styles.cardBackFace, backStyle]} pointerEvents={flipped ? 'auto' : 'none'}>
                   <LinearGradient colors={redGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.backFill} />
-                  <Text style={styles.backCat}>{current.category}</Text>
-                  <Text style={styles.backLabel}>ANLAMI</Text>
+                  <Text style={styles.backCat}>{t(current.category)}</Text>
+                  <Text style={styles.backLabel}>{t("ANLAMI")}</Text>
                   <Text style={styles.backMeaning} adjustsFontSizeToFit numberOfLines={4}>
                     {current.meaning}
                   </Text>
@@ -299,7 +300,7 @@ export default function Words() {
                   </Text>
                   <View style={styles.hint}>
                     <Ionicons name="sync-outline" size={13} color="rgba(250,245,226,0.8)" />
-                    <Text style={[styles.hintText, { color: 'rgba(250,245,226,0.8)' }]}>Kelimeye dönmek için dokun</Text>
+                    <Text style={[styles.hintText, { color: 'rgba(250,245,226,0.8)' }]}>{t("Kelimeye dönmek için dokun")}</Text>
                   </View>
                 </Animated.View>
                 </View>
@@ -307,8 +308,8 @@ export default function Words() {
             ) : (
               <View style={[styles.cardWrap, styles.doneBox]}>
                 <Ionicons name="checkmark-done" size={30} color={colors.petrol} />
-                <Text style={styles.doneTitle}>Burada çalışılacak kart kalmadı</Text>
-                <Text style={styles.doneText}>Öğrendiklerini gizlemeyi kapat ya da başka bir kategori seç.</Text>
+                <Text style={styles.doneTitle}>{t("Burada çalışılacak kart kalmadı")}</Text>
+                <Text style={styles.doneText}>{t("Öğrendiklerini gizlemeyi kapat ya da başka bir kategori seç.")}</Text>
               </View>
             )}
 
@@ -317,7 +318,7 @@ export default function Words() {
               <View style={styles.track}>
                 <View style={[styles.trackFill, { width: deck.length ? `${((position + 1) / deck.length) * 100}%` : '0%' }]} />
               </View>
-              <Text style={styles.progressText}>Öğrendiklerimi gizle</Text>
+              <Text style={styles.progressText}>{t("Öğrendiklerimi gizle")}</Text>
               <Switch
                 value={hideMastered}
                 onValueChange={(v) => {
@@ -333,7 +334,7 @@ export default function Words() {
             </View>
 
             <View style={styles.controls}>
-              <Pressable onPress={() => go(-1)} style={styles.navBtn} accessibilityLabel="Önceki kart" disabled={!current}>
+              <Pressable onPress={() => go(-1)} style={styles.navBtn} accessibilityLabel={t("Önceki kart")} disabled={!current}>
                 <Ionicons name="chevron-back" size={22} color={colors.ink} />
               </Pressable>
               <Pressable onPress={toggleMastered} disabled={!current || busy} style={[styles.knowBtn, current?.mastered && styles.knowBtnUndo]}>
@@ -343,12 +344,12 @@ export default function Words() {
                   <>
                     <Ionicons name={current?.mastered ? 'refresh' : 'checkmark'} size={18} color={current?.mastered ? colors.petrol : '#fff'} />
                     <Text style={[styles.knowText, current?.mastered && { color: colors.petrol }]}>
-                      {current?.mastered ? 'Tekrar çalış' : 'Öğrendim'}
+                      {current?.mastered ? t("Tekrar çalış") : t("Öğrendim")}
                     </Text>
                   </>
                 )}
               </Pressable>
-              <Pressable onPress={() => go(1)} style={styles.navBtn} accessibilityLabel="Sonraki kart" disabled={!current}>
+              <Pressable onPress={() => go(1)} style={styles.navBtn} accessibilityLabel={t("Sonraki kart")} disabled={!current}>
                 <Ionicons name="chevron-forward" size={22} color={colors.ink} />
               </Pressable>
             </View>
@@ -359,10 +360,10 @@ export default function Words() {
                 disabled={deck.length < 2}
                 style={({ pressed }) => [styles.shuffleBtn, deck.length < 2 && { opacity: 0.45 }, pressed && { opacity: 0.8 }]}
                 accessibilityRole="button"
-                accessibilityLabel="Kartları karıştır"
+                accessibilityLabel={t("Kartları karıştır")}
               >
                 <Ionicons name="shuffle" size={18} color={colors.red} />
-                <Text style={styles.shuffleText}>Kartları karıştır</Text>
+                <Text style={styles.shuffleText}>{t("Kartları karıştır")}</Text>
               </Pressable>
               {!!toast && (
                 <Animated.View style={[styles.toast, { opacity: toastOpacity }]} pointerEvents="none">
@@ -395,6 +396,7 @@ function AddWordSheet({
   onClose: () => void;
   onAdded: (entry: VocabEntry) => void;
 }) {
+  const t = useT();
   const [term, setTerm] = useState('');
   const [meaning, setMeaning] = useState('');
   const [category, setCategory] = useState('Genel');
@@ -414,18 +416,18 @@ function AddWordSheet({
   const options = [...new Set(['Genel', ...categories])];
 
   async function save() {
-    const t = term.trim();
+    const w = term.trim();
     const m = meaning.trim();
     const c = (newCategory ?? category).trim() || 'Genel';
-    if (!t || !m) {
-      setError('Kelimeyi ve anlamını yaz.');
+    if (!w || !m) {
+      setError(t("Kelimeyi ve anlamını yaz."));
       return;
     }
     setSaving(true);
-    const entry = await addVocabEntry(studentId, t, m, c);
+    const entry = await addVocabEntry(studentId, w, m, c);
     setSaving(false);
     if (!entry) {
-      setError('Kaydedilemedi. Lütfen tekrar dene.');
+      setError(t("Kaydedilemedi. Lütfen tekrar dene."));
       return;
     }
     setCategory(c);
@@ -438,23 +440,23 @@ function AddWordSheet({
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap} pointerEvents="box-none">
         <View style={styles.sheet}>
           <View style={styles.grab} />
-          <Text style={styles.sheetTitle}>Yeni kelime</Text>
+          <Text style={styles.sheetTitle}>{t("Yeni kelime")}</Text>
 
-          <Text style={styles.label}>Kelime</Text>
+          <Text style={styles.label}>{t("Kelime")}</Text>
           <TextInput
             value={term}
             onChangeText={setTerm}
-            placeholder="ör. deadline"
+            placeholder={t("ör. deadline")}
             placeholderTextColor={colors.faint}
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.input}
             autoFocus
           />
-          <Text style={styles.label}>Anlamı</Text>
-          <TextInput value={meaning} onChangeText={setMeaning} placeholder="ör. son teslim tarihi" placeholderTextColor={colors.faint} style={styles.input} />
+          <Text style={styles.label}>{t("Anlamı")}</Text>
+          <TextInput value={meaning} onChangeText={setMeaning} placeholder={t("ör. son teslim tarihi")} placeholderTextColor={colors.faint} style={styles.input} />
 
-          <Text style={styles.label}>Kategori</Text>
+          <Text style={styles.label}>{t("Kategori")}</Text>
           <View style={styles.catRow}>
             {options.map((c) => (
               <Pressable
@@ -465,18 +467,18 @@ function AddWordSheet({
                 }}
                 style={[styles.catChip, newCategory === null && category === c && styles.catChipOn]}
               >
-                <Text style={[styles.catChipText, newCategory === null && category === c && styles.catChipTextOn]}>{c}</Text>
+                <Text style={[styles.catChipText, newCategory === null && category === c && styles.catChipTextOn]}>{t(c)}</Text>
               </Pressable>
             ))}
             <Pressable onPress={() => setNewCategory('')} style={[styles.catChip, newCategory !== null && styles.catChipOn]}>
-              <Text style={[styles.catChipText, newCategory !== null && styles.catChipTextOn]}>+ Yeni kategori</Text>
+              <Text style={[styles.catChipText, newCategory !== null && styles.catChipTextOn]}>{t("+ Yeni kategori")}</Text>
             </Pressable>
           </View>
           {newCategory !== null && (
             <TextInput
               value={newCategory}
               onChangeText={setNewCategory}
-              placeholder="Kategori adı (ör. IELTS)"
+              placeholder={t("Kategori adı (ör. IELTS)")}
               placeholderTextColor={colors.faint}
               style={[styles.input, { marginTop: 10 }]}
             />
@@ -490,7 +492,7 @@ function AddWordSheet({
             ) : (
               <>
                 <Ionicons name="add" size={18} color={colors.onRed} />
-                <Text style={styles.primaryText}>Kartı ekle</Text>
+                <Text style={styles.primaryText}>{t("Kartı ekle")}</Text>
               </>
             )}
           </Pressable>

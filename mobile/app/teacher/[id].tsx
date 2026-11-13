@@ -17,6 +17,7 @@ import { getOrCreateConversation } from '../../lib/messages';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type Tab = 'about' | 'times' | 'reviews';
@@ -27,6 +28,7 @@ function toDateKey(date: Date) {
 }
 
 export default function TeacherDetail() {
+  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
@@ -133,18 +135,18 @@ export default function TeacherDetail() {
   if (!teacher) {
     return (
       <SafeAreaView style={styles.screen}>
-        <Text style={styles.notFound}>Öğretmen bulunamadı.</Text>
+        <Text style={styles.notFound}>{t("Öğretmen bulunamadı.")}</Text>
       </SafeAreaView>
     );
   }
 
-  const reviewsLabel = teacher.reviewCount > 0 ? `${teacher.reviewCount} yorum` : teacher.reviews.length > 0 ? `${teacher.reviews.length} yorum` : null;
+  const reviewsLabel = teacher.reviewCount > 0 ? t("{0} yorum", teacher.reviewCount) : teacher.reviews.length > 0 ? t("{0} yorum", teacher.reviews.length) : null;
   type Fact = { icon: IconName; value: string; label: string };
   const facts = ([
-    { icon: 'calendar-outline', value: teacher.completedLessons, label: 'tamamlanan ders' },
-    { icon: 'people-outline', value: String(teacher.students), label: 'öğrenci' },
-    { icon: 'chatbubble-outline', value: shortLanguages(teacher.languages), label: 'diller' },
-    { icon: 'star-outline', value: teacher.levelRange.replace(/\s*[–-]\s*/, '–'), label: 'seviye' },
+    { icon: 'calendar-outline', value: teacher.completedLessons, label: t("tamamlanan ders") },
+    { icon: 'people-outline', value: String(teacher.students), label: t("öğrenci") },
+    { icon: 'chatbubble-outline', value: shortLanguages(teacher.languages), label: t("diller") },
+    { icon: 'star-outline', value: teacher.levelRange.replace(/\s*[–-]\s*/, '–'), label: t("seviye") },
   ] as Fact[]).filter((f) => f.value && f.value !== '0');
   // teacher.html: messaging and the complaint button are for students (a
   // guest is sent to sign in first), never on a demo teacher
@@ -156,13 +158,13 @@ export default function TeacherDetail() {
       <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScrollBand height={headBottom - 4} fade={72} />
         <View style={styles.topBar}>
-          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
+          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
             <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <Pressable
             onPress={handleToggleFavorite}
             style={[styles.roundBtn, isFav && styles.roundBtnOn]}
-            accessibilityLabel={isFav ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+            accessibilityLabel={isFav ? t("Favorilerden çıkar") : t("Favorilere ekle")}
           >
             <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={19} color={isFav ? colors.red : colors.onRed} />
           </Pressable>
@@ -175,11 +177,11 @@ export default function TeacherDetail() {
               {shortDisplayName(teacher.name)}
             </Text>
             <Text style={styles.role} numberOfLines={2}>
-              {teacher.role}
+              {t(teacher.role)}
             </Text>
             <View style={styles.pill}>
               <Text style={styles.pillText}>
-                {teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : 'Yeni öğretmen'}
+                {teacher.rating ? `★ ${teacher.rating.toFixed(1)}` : t("Yeni öğretmen")}
                 {reviewsLabel ? ` · ${reviewsLabel}` : ''}
               </Text>
             </View>
@@ -189,9 +191,9 @@ export default function TeacherDetail() {
         <View style={styles.tabs}>
           {(
             [
-              ['about', 'Hakkında'],
-              ['times', 'Saatler'],
-              ['reviews', 'Yorumlar'],
+              ['about', t("Hakkında")],
+              ['times', t("Saatler")],
+              ['reviews', t("Yorumlar")],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <Pressable key={key} onPress={() => setTab(key)} style={[styles.tab, tab === key && styles.tabOn]}>
@@ -204,14 +206,14 @@ export default function TeacherDetail() {
           <>
             {/* the intro video when the teacher has one (like the website), else the big photo */}
             {teacher.video && /^https:\/\//i.test(teacher.video) ? (
-              <TeacherVideo uri={teacher.video} style={styles.mediaVideo} badge={teacher.availability || undefined} />
+              <TeacherVideo uri={teacher.video} style={styles.mediaVideo} badge={teacher.availability ? t(teacher.availability) : undefined} />
             ) : (
               <View style={styles.media}>
                 <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={48} />
                 {!!teacher.availability && (
                   <View style={styles.mediaTag}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.mediaTagText}>{teacher.availability}</Text>
+                    <Text style={styles.mediaTagText}>{t(teacher.availability)}</Text>
                   </View>
                 )}
               </View>
@@ -231,7 +233,7 @@ export default function TeacherDetail() {
               ))}
             </View>
 
-            <Text style={styles.sectionTitle}>Tanışalım</Text>
+            <Text style={styles.sectionTitle}>{t("Tanışalım")}</Text>
             {teacher.about.map((p, i) => (
               <Text key={i} style={styles.paragraph}>
                 {p}
@@ -240,11 +242,11 @@ export default function TeacherDetail() {
 
             {teacher.specialties.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Uzmanlık alanları</Text>
+                <Text style={styles.sectionTitle}>{t("Uzmanlık alanları")}</Text>
                 <View style={styles.tagRow}>
                   {teacher.specialties.map((sp) => (
                     <View key={sp} style={styles.tag}>
-                      <Text style={styles.tagText}>{sp}</Text>
+                      <Text style={styles.tagText}>{t(sp)}</Text>
                     </View>
                   ))}
                 </View>
@@ -255,7 +257,7 @@ export default function TeacherDetail() {
 
         {tab === 'times' && (
           <>
-            <Text style={styles.hint}>Önümüzdeki 7 gün. Bir güne dokun, o günün saatlerini seç.</Text>
+            <Text style={styles.hint}>{t("Önümüzdeki 7 gün. Bir güne dokun, o günün saatlerini seç.")}</Text>
             {week.map((d) => (
               <Pressable
                 key={d.key}
@@ -268,7 +270,7 @@ export default function TeacherDetail() {
                   <Text style={styles.dayBadgeNum}>{d.dayNum}</Text>
                 </View>
                 <Text style={[styles.dayText, d.open === 0 && styles.dayTextOff]}>
-                  {d.open === 0 ? 'Boş saat yok' : `${d.open} boş saat`}
+                  {d.open === 0 ? t("Boş saat yok") : t("{0} boş saat", d.open)}
                 </Text>
                 {d.open > 0 && <Ionicons name="chevron-forward" size={18} color={colors.faint} />}
               </Pressable>
@@ -278,7 +280,7 @@ export default function TeacherDetail() {
 
         {tab === 'reviews' &&
           (teacher.reviews.length === 0 ? (
-            <Text style={styles.hint}>Henüz yorum yok. İlk dersten sonra öğrencilerin yorumları burada görünür.</Text>
+            <Text style={styles.hint}>{t("Henüz yorum yok. İlk dersten sonra öğrencilerin yorumları burada görünür.")}</Text>
           ) : (
             teacher.reviews.map((r, i) => (
               <View key={i} style={styles.review}>
@@ -296,14 +298,14 @@ export default function TeacherDetail() {
 
         {!trialTaken && (
           <Pressable onPress={() => book('lesson')} hitSlop={8} style={styles.lessonLink}>
-            <Text style={styles.lessonLinkText}>Deneme dersi yerine normal ders rezerve et →</Text>
+            <Text style={styles.lessonLinkText}>{t("Deneme dersi yerine normal ders rezerve et →")}</Text>
           </Pressable>
         )}
 
         {showReport && (
           <Pressable onPress={() => setReportOpen(true)} hitSlop={8} style={styles.reportLink}>
             <Ionicons name="flag-outline" size={13} color={colors.muted} />
-            <Text style={styles.reportLinkText}>Öğretmeni şikayet et</Text>
+            <Text style={styles.reportLinkText}>{t("Öğretmeni şikayet et")}</Text>
           </Pressable>
         )}
       </ScrollView>
@@ -320,7 +322,7 @@ export default function TeacherDetail() {
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         {showMessage && (
-          <Pressable onPress={handleMessage} disabled={messaging} style={styles.msgBtn} accessibilityLabel="Mesaj gönder">
+          <Pressable onPress={handleMessage} disabled={messaging} style={styles.msgBtn} accessibilityLabel={t("Mesaj gönder")}>
             {messaging ? <ActivityIndicator color={colors.ink} /> : <Ionicons name="chatbubble-outline" size={22} color={colors.ink} />}
           </Pressable>
         )}
@@ -329,7 +331,7 @@ export default function TeacherDetail() {
           style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.88 : 1 }]}
         >
           <Text style={styles.ctaText}>
-            {trialTaken ? 'Ders rezerve et' : 'Deneme dersi al'} · <Text style={styles.ctaPrice}>₺{teacher.price}</Text>
+            {trialTaken ? t("Ders rezerve et") : t("Deneme dersi al")} · <Text style={styles.ctaPrice}>₺{teacher.price}</Text>
           </Text>
         </Pressable>
       </View>

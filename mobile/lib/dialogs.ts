@@ -1,4 +1,5 @@
 import { Alert, Platform } from 'react-native';
+import { tr } from './i18n';
 
 // Alert.alert does nothing on react-native-web - the web build (used for
 // previews) falls back to the browser's own dialogs.
@@ -8,7 +9,7 @@ export function confirmAsync(title: string, message: string, confirmLabel: strin
   }
   return new Promise((resolve) => {
     Alert.alert(title, message, [
-      { text: 'Vazgeç', style: 'cancel', onPress: () => resolve(false) },
+      { text: tr("Vazgeç"), style: 'cancel', onPress: () => resolve(false) },
       { text: confirmLabel, style: destructive ? 'destructive' : 'default', onPress: () => resolve(true) },
     ], { cancelable: true, onDismiss: () => resolve(false) });
   });

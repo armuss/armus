@@ -13,6 +13,7 @@ import {
 } from '../lib/bookings';
 import { colors, fonts, radius } from '../lib/theme';
 import Button from './Button';
+import { useT } from '../lib/i18n';
 
 const DAYS_SHOWN = 14;
 
@@ -55,6 +56,7 @@ export default function ReschedulePicker({
   onClose: () => void;
   onConfirm: (pick: { date: string; time: string }) => void;
 }) {
+  const t = useT();
   const dates = useMemo(() => {
     const today = todayIn(timeZone);
     return Array.from({ length: DAYS_SHOWN }, (_, i) => {
@@ -113,7 +115,7 @@ export default function ReschedulePicker({
 
           <ScrollView style={styles.slotScroll} contentContainerStyle={styles.slotGrid}>
             {open.length === 0 ? (
-              <Text style={styles.empty}>Bu tarihte boş saat yok, başka bir gün dene.</Text>
+              <Text style={styles.empty}>{t("Bu tarihte boş saat yok, başka bir gün dene.")}</Text>
             ) : (
               open.map((s) => (
                 <Pressable key={s.time} onPress={() => setTime(s.time)} style={[styles.slot, time === s.time && styles.selected]}>
@@ -127,7 +129,7 @@ export default function ReschedulePicker({
 
           <View style={styles.actions}>
             <View style={{ flex: 1 }}>
-              <Button label="Vazgeç" variant="outline" onPress={onClose} />
+              <Button label={t("Vazgeç")} variant="outline" onPress={onClose} />
             </View>
             <View style={{ flex: 1.4 }}>
               <Button

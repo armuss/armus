@@ -46,6 +46,7 @@ import { getReviewsForBookings, type Review } from '../../lib/reviews';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT, tr } from '../../lib/i18n';
 
 // a real (signed-up) teacher's id - the demo teachers can't be reported (my-lessons.html)
 const isRealTeacherId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ''));
@@ -77,6 +78,7 @@ function DisputeSection({
   existingDispute?: Dispute;
   onCreated: (d: Dispute) => void;
 }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [subject, setSubject] = useState(DISPUTE_SUBJECTS[0]);
   const [description, setDescription] = useState('');
@@ -86,8 +88,8 @@ function DisputeSection({
   if (existingDispute) {
     return (
       <View style={styles.disputeSubmitted}>
-        <Text style={styles.disputeStatus}>⚑ {DISPUTE_STATUS_LABELS[existingDispute.status] || existingDispute.status}</Text>
-        <Text style={styles.disputeSubjectText}>{existingDispute.subject}</Text>
+        <Text style={styles.disputeStatus}>⚑ {t(DISPUTE_STATUS_LABELS[existingDispute.status] || existingDispute.status)}</Text>
+        <Text style={styles.disputeSubjectText}>{t(existingDispute.subject)}</Text>
       </View>
     );
   }
@@ -95,14 +97,14 @@ function DisputeSection({
   if (!expanded) {
     return (
       <Pressable onPress={() => setExpanded(true)} style={styles.disputePromptBtn}>
-        <Text style={styles.disputePromptText}>⚑ Bir sorun bildir</Text>
+        <Text style={styles.disputePromptText}>{t("⚑ Bir sorun bildir")}</Text>
       </Pressable>
     );
   }
 
   async function handleSubmit() {
     if (!description.trim()) {
-      setError('Lütfen ne olduğunu kısaca yaz.');
+      setError(t("Lütfen ne olduğunu kısaca yaz."));
       return;
     }
     setError('');
@@ -118,7 +120,7 @@ function DisputeSection({
     });
     setSubmitting(false);
     if (!created) {
-      setError('Bildirilemedi. Lütfen tekrar dene.');
+      setError(t("Bildirilemedi. Lütfen tekrar dene."));
       return;
     }
     onCreated(created);
@@ -133,21 +135,21 @@ function DisputeSection({
             onPress={() => setSubject(s)}
             style={[styles.disputeChip, subject === s && styles.disputeChipActive]}
           >
-            <Text style={[styles.disputeChipText, subject === s && styles.disputeChipTextActive]}>{s}</Text>
+            <Text style={[styles.disputeChipText, subject === s && styles.disputeChipTextActive]}>{t(s)}</Text>
           </Pressable>
         ))}
       </View>
       <TextInput
         value={description}
         onChangeText={setDescription}
-        placeholder="Ne oldu, kısaca anlat..."
+        placeholder={t("Ne oldu, kısaca anlat...")}
         placeholderTextColor={colors.faint}
         style={styles.disputeInput}
         multiline
       />
       {!!error && <Text style={styles.disputeError}>{error}</Text>}
       <Pressable onPress={handleSubmit} disabled={submitting} style={[styles.disputeSubmitBtn, submitting && styles.disputeSubmitBtnDisabled]}>
-        <Text style={styles.disputeSubmitText}>{submitting ? 'Gönderiliyor…' : 'Gönder'}</Text>
+        <Text style={styles.disputeSubmitText}>{submitting ? t("Gönderiliyor…") : t("Gönder")}</Text>
       </Pressable>
     </View>
   );
@@ -155,14 +157,14 @@ function DisputeSection({
 
 // what a cancelled lesson's card says (mirrors my-lessons.html)
 function cancelledLine(b: Booking) {
-  if (b.teacherNoShow) return `Öğretmen derse gelmedi${b.refunded ? ' · Ders hakkın iade edildi' : ''}`;
+  if (b.teacherNoShow) return tr("Öğretmen derse gelmedi{0}", b.refunded ? tr(" · Ders hakkın iade edildi") : '');
   if (b.lateCancel) {
     return b.type === 'trial'
-      ? 'İptal edildi ve ücretlendirildi · derse 12 saatten az kala iptal edildi'
-      : 'İptal edildi ve ücretlendirildi · derse 12 saatten az kala iptal edildiği için ders hakkı iade edilmedi';
+      ? tr("İptal edildi ve ücretlendirildi · derse 12 saatten az kala iptal edildi")
+      : tr("İptal edildi ve ücretlendirildi · derse 12 saatten az kala iptal edildiği için ders hakkı iade edilmedi");
   }
-  if (b.refunded) return 'İptal edildi · Ders hakkın eklendi';
-  return b.cancelledBy === 'student' ? 'İptal edildi · Ders hakkı eklenmedi' : 'İptal edildi';
+  if (b.refunded) return tr("İptal edildi · Ders hakkın eklendi");
+  return b.cancelledBy === 'student' ? tr("İptal edildi · Ders hakkı eklenmedi") : tr("İptal edildi");
 }
 
 type PickerState = {
@@ -173,6 +175,7 @@ type PickerState = {
 };
 
 export default function Lessons() {
+  const t = useT();
   const { profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
@@ -255,27 +258,27 @@ export default function Lessons() {
     // re-checked at tap time - the screen may have stayed open across the
     // 12-hour line
     const late = hoursUntilLesson(b) < FREE_CANCEL_HOURS;
-    let message = `${shortDisplayName(b.teacherName)} ile ${when.dateLabel}, ${when.timeRange} dersini iptal etmek istediğine emin misin?`;
+    let message = t("{0} ile {1}, {2} dersini iptal etmek istediğine emin misin?", shortDisplayName(b.teacherName), when.dateLabel, when.timeRange);
     if (late) {
       message +=
         b.type === 'trial'
-          ? '\n\nDikkat: derse 12 saatten az kaldı, deneme dersi bakiyene geri eklenmez.'
-          : '\n\nDikkat: derse 12 saatten az kaldı, ders hakkı iade edilmez ve ücret öğretmene ödenir (saati senin için ayrılmıştı).';
+          ? t("\n\nDikkat: derse 12 saatten az kaldı, deneme dersi bakiyene geri eklenmez.")
+          : t("\n\nDikkat: derse 12 saatten az kaldı, ders hakkı iade edilmez ve ücret öğretmene ödenir (saati senin için ayrılmıştı).");
     }
-    if (!(await confirmAsync('Dersi iptal et', message, 'İptal Et', true))) return;
+    if (!(await confirmAsync(t("Dersi iptal et"), message, t("İptal Et"), true))) return;
     setActingId(b.id);
     const result = await cancelBooking(b.id);
     setActingId(null);
     if (!result.ok) {
-      notify('İptal edilemedi', result.error);
+      notify(t("İptal edilemedi"), result.error);
       return;
     }
     notify(
-      'Ders iptal edildi',
+      t("Ders iptal edildi"),
       result.lateCancel
-        ? 'Derse 12 saatten az kaldığı için ders hakkı iade edilmedi.'
+        ? t("Derse 12 saatten az kaldığı için ders hakkı iade edilmedi.")
         : result.refunded
-          ? 'Ders, ders hakkı olarak bakiyene geri eklendi.'
+          ? t("Ders, ders hakkı olarak bakiyene geri eklendi.")
           : ''
     );
     load();
@@ -286,7 +289,7 @@ export default function Lessons() {
     const [teacher, busy] = await Promise.all([findMarketplaceTeacher(b.teacherId), getTeacherBusyTimes(b.teacherId)]);
     setActingId(null);
     if (!teacher) {
-      notify('Saat değiştirilemiyor', 'Bu öğretmenin müsait saatleri şu anda görüntülenemiyor. Dersi iptal edebilir ya da öğretmenine mesaj atabilirsin.');
+      notify(t("Saat değiştirilemiyor"), t("Bu öğretmenin müsait saatleri şu anda görüntülenemiyor. Dersi iptal edebilir ya da öğretmenine mesaj atabilirsin."));
       return;
     }
     setPicker({ booking: b, teacher, busy, late: hoursUntilLesson(b) < FREE_CANCEL_HOURS });
@@ -298,15 +301,15 @@ export default function Lessons() {
     const result = await rescheduleBooking(picker.booking.id, pick.date, pick.time);
     setSubmittingMove(false);
     if (!result.ok) {
-      notify('Saat değiştirilemedi', result.error);
+      notify(t("Saat değiştirilemedi"), result.error);
       return;
     }
     setPicker(null);
     notify(
-      result.applied ? 'Dersin yeni saate taşındı' : 'İsteğin gönderildi',
+      result.applied ? t("Dersin yeni saate taşındı") : t("İsteğin gönderildi"),
       result.applied
-        ? 'Öğretmenine e-posta ile haber verildi. Ücret değişmedi.'
-        : 'Öğretmenin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır.'
+        ? t("Öğretmenine e-posta ile haber verildi. Ücret değişmedi.")
+        : t("Öğretmenin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır.")
     );
     load();
   }
@@ -316,7 +319,7 @@ export default function Lessons() {
     const result = await call();
     setActingId(null);
     if (!result.ok) {
-      notify('İşlem yapılamadı', result.error);
+      notify(t("İşlem yapılamadı"), result.error);
       return;
     }
     load();
@@ -362,17 +365,17 @@ export default function Lessons() {
             {shortDisplayName(b.teacherName)}
           </Text>
           <Text style={styles.bannerWhen} numberOfLines={1}>
-            {started ? 'Ders başladı' : `${formatTimeUntil(when.start)} sonra`} · {dayKeyOf(b) === todayKey ? when.time : `${when.dateLabel} ${when.time}`}
+            {started ? t("Ders başladı") : t("{0} sonra", formatTimeUntil(when.start))} · {dayKeyOf(b) === todayKey ? when.time : `${when.dateLabel} ${when.time}`}
           </Text>
         </View>
         {joinable ? (
           <Pressable onPress={() => router.push(`/class/${b.id}`)} style={({ pressed }) => [styles.bannerGo, pressed && { opacity: 0.85 }]}>
-            <Text style={styles.bannerGoText}>Katıl</Text>
+            <Text style={styles.bannerGoText}>{t("Katıl")}</Text>
           </Pressable>
         ) : (
           <View style={styles.bannerSoon}>
             <Ionicons name="time-outline" size={14} color="#aaa" />
-            <Text style={styles.bannerSoonText}>15 dk önce açılır</Text>
+            <Text style={styles.bannerSoonText}>{t("15 dk önce açılır")}</Text>
           </View>
         )}
       </View>
@@ -397,35 +400,35 @@ export default function Lessons() {
                 {when.timeRange} · ₺{item.price}
               </Text>
             </View>
-            <Pressable onPress={() => setSheet(item)} hitSlop={10} style={styles.dots} accessibilityLabel="Ders seçenekleri">
+            <Pressable onPress={() => setSheet(item)} hitSlop={10} style={styles.dots} accessibilityLabel={t("Ders seçenekleri")}>
               {busy ? <ActivityIndicator size="small" color={colors.ink} /> : <Ionicons name="ellipsis-horizontal" size={18} color={colors.ink} />}
             </Pressable>
           </View>
           {joinable && (
             <Pressable style={styles.agJoin} onPress={() => router.push(`/class/${item.id}`)}>
               <Ionicons name="videocam" size={16} color={colors.onRed} />
-              <Text style={styles.agJoinText}>Derse katıl</Text>
+              <Text style={styles.agJoinText}>{t("Derse katıl")}</Text>
             </Pressable>
           )}
           {bookingCancellable(item) && request && (
             <View style={styles.requestBox}>
               <Text style={styles.requestText}>
-                {request.requestedBy === 'teacher' ? 'Öğretmenin yeni bir saat önerdi: ' : 'Saat değişikliği isteğin onay bekliyor: '}
+                {request.requestedBy === 'teacher' ? t("Öğretmenin yeni bir saat önerdi: ") : t("Saat değişikliği isteğin onay bekliyor: ")}
                 <Text style={styles.requestSlot}>{formatRescheduleSlot(request.newDate, request.newTime, item.teacherTimezone)}</Text>
               </Text>
               <View style={styles.actionRow}>
                 {request.requestedBy === 'teacher' ? (
                   <>
                     <Pressable disabled={busy} onPress={() => act(item.id, () => respondReschedule(request.id, true))} style={[styles.smallBtn, styles.smallBtnPrimary]}>
-                      <Text style={[styles.smallBtnText, styles.smallBtnTextPrimary]}>Kabul et</Text>
+                      <Text style={[styles.smallBtnText, styles.smallBtnTextPrimary]}>{t("Kabul et")}</Text>
                     </Pressable>
                     <Pressable disabled={busy} onPress={() => act(item.id, () => respondReschedule(request.id, false))} style={styles.smallBtn}>
-                      <Text style={styles.smallBtnText}>Reddet</Text>
+                      <Text style={styles.smallBtnText}>{t("Reddet")}</Text>
                     </Pressable>
                   </>
                 ) : (
                   <Pressable disabled={busy} onPress={() => act(item.id, () => withdrawReschedule(request.id))} style={styles.smallBtn}>
-                    <Text style={styles.smallBtnText}>İsteği geri çek</Text>
+                    <Text style={styles.smallBtnText}>{t("İsteği geri çek")}</Text>
                   </Pressable>
                 )}
               </View>
@@ -452,7 +455,7 @@ export default function Lessons() {
             </Text>
           </View>
           <View style={[styles.statusPill, isCancelled && styles.statusPillCancelled]}>
-            <Text style={[styles.statusText, isCancelled && styles.statusTextCancelled]}>{isCancelled ? 'İptal' : 'Tamamlandı'}</Text>
+            <Text style={[styles.statusText, isCancelled && styles.statusTextCancelled]}>{isCancelled ? t("İptal") : t("Tamamlandı")}</Text>
           </View>
         </View>
         {isCancelled && <Text style={styles.cancelLine}>{cancelledLine(item)}</Text>}
@@ -483,19 +486,19 @@ export default function Lessons() {
         )}
         {dispute ? (
           <View style={styles.disputeSubmitted}>
-            <Text style={styles.disputeStatus}>⚑ {DISPUTE_STATUS_LABELS[dispute.status] || dispute.status}</Text>
-            <Text style={styles.disputeSubjectText}>{dispute.subject}</Text>
+            <Text style={styles.disputeStatus}>⚑ {t(DISPUTE_STATUS_LABELS[dispute.status] || dispute.status)}</Text>
+            <Text style={styles.disputeSubjectText}>{t(dispute.subject)}</Text>
           </View>
         ) : (
           !isCancelled && (
             <Pressable onPress={() => setSheet(item)} style={styles.disputePromptBtn}>
-              <Text style={styles.disputePromptText}>⚑ Bir sorun bildir</Text>
+              <Text style={styles.disputePromptText}>{t("⚑ Bir sorun bildir")}</Text>
             </Pressable>
           )
         )}
         {isRealTeacherId(item.teacherId) && (
           <Pressable onPress={() => setReportTeacherFor(item)} style={styles.complainLink} hitSlop={6}>
-            <Text style={styles.complainText}>Öğretmeni şikayet et</Text>
+            <Text style={styles.complainText}>{t("Öğretmeni şikayet et")}</Text>
           </Pressable>
         )}
       </View>
@@ -527,12 +530,12 @@ export default function Lessons() {
     // the content, reaching under the week (design A)
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <View style={styles.head}>
-        <Text style={styles.title}>Derslerim</Text>
+        <Text style={styles.title}>{t("Derslerim")}</Text>
         <View style={styles.seg}>
           {(
             [
-              ['agenda', 'Yaklaşan'],
-              ['history', 'Geçmiş'],
+              ['agenda', t("Yaklaşan")],
+              ['history', t("Geçmiş")],
             ] as const
           ).map(([key, label]) => (
             <Pressable key={key} onPress={() => setMode(key)} style={[styles.segItem, mode === key && styles.segItemOn]}>
@@ -583,10 +586,10 @@ export default function Lessons() {
                 renderBanner(next)
               ) : (
                 <View style={styles.emptyBanner}>
-                  <Text style={styles.emptyBannerTitle}>Planlanmış dersin yok</Text>
-                  <Text style={styles.emptyBannerText}>Bir öğretmen seç, deneme dersiyle başla.</Text>
+                  <Text style={styles.emptyBannerTitle}>{t("Planlanmış dersin yok")}</Text>
+                  <Text style={styles.emptyBannerText}>{t("Bir öğretmen seç, deneme dersiyle başla.")}</Text>
                   <Pressable onPress={() => router.push('/(tabs)')} style={styles.emptyBannerBtn}>
-                    <Text style={styles.emptyBannerBtnText}>Öğretmen bul</Text>
+                    <Text style={styles.emptyBannerBtnText}>{t("Öğretmen bul")}</Text>
                   </Pressable>
                 </View>
               )}
@@ -599,21 +602,18 @@ export default function Lessons() {
                 <Pressable onPress={() => setCreditsOpen((v) => !v)} style={styles.credits}>
                   <View style={styles.creditsRow}>
                     <Ionicons name="gift-outline" size={18} color={colors.ink} />
-                    <Text style={styles.creditsTitle}>{creditTotal} ders hakkın var</Text>
+                    <Text style={styles.creditsTitle}>{t("{0} ders hakkın var", creditTotal)}</Text>
                     <Ionicons name={creditsOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.muted} />
                   </View>
                   {creditsOpen && (
                     <>
                       {shownCredits.map(([teacherId, g]) => (
                         <Text key={teacherId} style={styles.creditsLine}>
-                          {shortDisplayName(g.name)} · {g.count} ders hakkı
-                          {g.values.length ? ` (her biri ${formatMoney(Math.min(...g.values))}${Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : ''})` : ''}
+                          {shortDisplayName(g.name)} · {g.count} {t(" ders hakkı")}{g.values.length ? t(" (her biri {0}{1})", formatMoney(Math.min(...g.values)), Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : '') : ''}
                         </Text>
                       ))}
                       <Text style={styles.creditsHint}>
-                        Bir ders hakkı aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir.
-                        Rezervasyon sırasında otomatik uygulanır.
-                      </Text>
+                        {t("Bir ders hakkı aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir. Rezervasyon sırasında otomatik uygulanır.")}</Text>
                     </>
                   )}
                 </Pressable>
@@ -623,13 +623,13 @@ export default function Lessons() {
                 dayLessons.map(renderAgendaItem)
               ) : (
                 <View style={styles.agEmpty}>
-                  <Text style={styles.agEmptyText}>{dayKey === todayKey ? 'Bugün dersin yok' : 'Bu gün dersin yok'}</Text>
+                  <Text style={styles.agEmptyText}>{dayKey === todayKey ? t("Bugün dersin yok") : t("Bu gün dersin yok")}</Text>
                 </View>
               )}
 
               {laterLessons.length > 0 && (
                 <>
-                  <Text style={styles.laterTitle}>Sonraki dersler</Text>
+                  <Text style={styles.laterTitle}>{t("Sonraki dersler")}</Text>
                   {laterLessons.map((b) => {
                     const when = formatLessonWhenForViewer(b);
                     return (
@@ -655,7 +655,7 @@ export default function Lessons() {
             history.map(renderHistoryItem)
           ) : (
             <View style={styles.agEmpty}>
-              <Text style={styles.agEmptyText}>Geçmiş derslerin burada görünecek</Text>
+              <Text style={styles.agEmptyText}>{t("Geçmiş derslerin burada görünecek")}</Text>
             </View>
           )}
         </ScrollView>
@@ -685,7 +685,7 @@ export default function Lessons() {
                     style={styles.sheetRow}
                   >
                     <Ionicons name="swap-horizontal" size={20} color={colors.ink} />
-                    <Text style={styles.sheetRowText}>Saati değiştir</Text>
+                    <Text style={styles.sheetRowText}>{t("Saati değiştir")}</Text>
                   </Pressable>
                 )}
                 <Pressable
@@ -697,15 +697,15 @@ export default function Lessons() {
                   style={styles.sheetRow}
                 >
                   <Ionicons name="close-circle-outline" size={20} color={colors.error} />
-                  <Text style={[styles.sheetRowText, { color: colors.error }]}>Dersi iptal et</Text>
+                  <Text style={[styles.sheetRowText, { color: colors.error }]}>{t("Dersi iptal et")}</Text>
                 </Pressable>
-                {sheetMoveLimit && <Text style={styles.sheetHint}>Bu ders 2 kez taşındı - bir ders en fazla 2 kez taşınabilir.</Text>}
+                {sheetMoveLimit && <Text style={styles.sheetHint}>{t("Bu ders 2 kez taşındı - bir ders en fazla 2 kez taşınabilir.")}</Text>}
                 <Text style={styles.sheetHint}>
                   {!sheetLate
-                    ? 'Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir. Saati değiştirirsen ders hemen yeni saate taşınır.'
+                    ? t("Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir. Saati değiştirirsen ders hemen yeni saate taşınır.")
                     : sheetBooking.type === 'trial'
-                      ? 'Derse 12 saatten az kaldı: iptal edersen deneme dersi bakiyene geri eklenmez. Saat değişikliği öğretmen onayına gider.'
-                      : 'Derse 12 saatten az kaldı: iptal edersen ders hakkı iade edilmez ve ücret öğretmene ödenir. Saat değişikliği öğretmen onayına gider.'}
+                      ? t("Derse 12 saatten az kaldı: iptal edersen deneme dersi bakiyene geri eklenmez. Saat değişikliği öğretmen onayına gider.")
+                      : t("Derse 12 saatten az kaldı: iptal edersen ders hakkı iade edilmez ve ücret öğretmene ödenir. Saat değişikliği öğretmen onayına gider.")}
                 </Text>
               </>
             )}
@@ -720,7 +720,7 @@ export default function Lessons() {
                 style={styles.sheetRow}
               >
                 <Ionicons name="flag-outline" size={20} color={colors.ink} />
-                <Text style={styles.sheetRowText}>Öğretmeni şikayet et</Text>
+                <Text style={styles.sheetRowText}>{t("Öğretmeni şikayet et")}</Text>
               </Pressable>
             )}
 
@@ -755,13 +755,13 @@ export default function Lessons() {
           timeZone={picker.booking.teacherTimezone || picker.teacher.timezone}
           busyTimes={picker.busy}
           current={{ date: picker.booking.date, time: picker.booking.time }}
-          title="Dersin için yeni bir saat seç"
+          title={t("Dersin için yeni bir saat seç")}
           note={
             picker.late
-              ? 'Derse 12 saatten az kaldı: seçtiğin saat öğretmenin onayına gönderilir. Ders başlayana kadar onaylamazsa ders eski saatinde kalır.'
-              : 'Dersin hemen yeni saate taşınır - ücret değişmez, öğretmenine e-posta ile haber verilir.'
+              ? t("Derse 12 saatten az kaldı: seçtiğin saat öğretmenin onayına gönderilir. Ders başlayana kadar onaylamazsa ders eski saatinde kalır.")
+              : t("Dersin hemen yeni saate taşınır - ücret değişmez, öğretmenine e-posta ile haber verilir.")
           }
-          confirmLabel={picker.late ? 'Öğretmene İstek Gönder' : 'Dersi Bu Saate Taşı'}
+          confirmLabel={picker.late ? t("Öğretmene İstek Gönder") : t("Dersi Bu Saate Taşı")}
           submitting={submittingMove}
           onClose={() => setPicker(null)}
           onConfirm={confirmReschedule}

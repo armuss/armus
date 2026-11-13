@@ -10,6 +10,7 @@ import { needsEmailVerification, useAuth } from '../lib/auth';
 import { invokeEdge } from '../lib/edge';
 import { supabase } from '../lib/supabase';
 import { colors, fonts, radius } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 const RESEND_COOLDOWN = 45;
 
@@ -20,6 +21,7 @@ const RESEND_COOLDOWN = 45;
  * the rest of the app until it's done; the tabs send it back here.
  */
 export default function VerifyEmail() {
+  const t = useT();
   const { profile, refreshProfile, signOut } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -32,7 +34,7 @@ export default function VerifyEmail() {
     const res = await invokeEdge('send-verification-email');
     if (!res.ok) {
       // no cooldown for a send that never went out
-      setError(res.error || 'Kod gönderilemedi. "Kodu tekrar gönder" ile tekrar dene.');
+      setError(res.error || t("Kod gönderilemedi. \"Kodu tekrar gönder\" ile tekrar dene."));
       return;
     }
     setCooldown(RESEND_COOLDOWN);
@@ -63,7 +65,7 @@ export default function VerifyEmail() {
     const res = await invokeEdge('verify-email-code', { code: value });
     if (!res.ok) {
       setVerifying(false);
-      setError(res.error || 'Kod doğrulanamadı. Tekrar dene.');
+      setError(res.error || t("Kod doğrulanamadı. Tekrar dene."));
       return;
     }
     // confirm the flag really flipped before moving on (the website does
@@ -71,7 +73,7 @@ export default function VerifyEmail() {
     const { data } = await supabase.from('profiles').select('email_verified').eq('id', profile!.id).maybeSingle();
     setVerifying(false);
     if (!data?.email_verified) {
-      setError('Kodun doğru görünüyor ama hesabın hâlâ doğrulanmamış görünüyor. Tekrar dene, sorun sürerse "Kodu tekrar gönder"i kullan.');
+      setError(t("Kodun doğru görünüyor ama hesabın hâlâ doğrulanmamış görünüyor. Tekrar dene, sorun sürerse \"Kodu tekrar gönder\"i kullan."));
       return;
     }
     await refreshProfile();
@@ -85,18 +87,18 @@ export default function VerifyEmail() {
           <ScrollBand height={170} inset={28} fade={80} />
           <View style={styles.brand}>
             <Logo size={28} light />
-            <Text style={styles.eyebrow}>SON ADIM</Text>
-            <Text style={styles.title}>E-postanı doğrula</Text>
+            <Text style={styles.eyebrow}>{t("SON ADIM")}</Text>
+            <Text style={styles.title}>{t("E-postanı doğrula")}</Text>
             <Text style={styles.note}>
-              {profile?.email ? `${profile.email} adresine 6 haneli bir kod gönderdik. Kodu aşağıya gir.` : '6 haneli kodu aşağıya gir.'}
+              {profile?.email ? t("{0} adresine 6 haneli bir kod gönderdik. Kodu aşağıya gir.", profile.email) : t("6 haneli kodu aşağıya gir.")}
             </Text>
           </View>
 
-          <Text style={styles.label}>Doğrulama kodu</Text>
+          <Text style={styles.label}>{t("Doğrulama kodu")}</Text>
           <TextInput
             value={code}
             onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 6))}
-            placeholder="6 haneli kod"
+            placeholder={t("6 haneli kod")}
             placeholderTextColor={colors.faint}
             keyboardType="number-pad"
             autoComplete="one-time-code"
@@ -106,14 +108,14 @@ export default function VerifyEmail() {
           />
           {!!error && <Text style={styles.error}>{error}</Text>}
           <View style={{ marginTop: 8 }}>
-            <Button label="Doğrula" onPress={verify} loading={verifying} disabled={code.length < 6} />
+            <Button label={t("Doğrula")} onPress={verify} loading={verifying} disabled={code.length < 6} />
           </View>
 
           <View style={styles.resendRow}>
-            <Text style={styles.resendText}>Kod gelmedi mi? </Text>
+            <Text style={styles.resendText}>{t("Kod gelmedi mi? ")}</Text>
             <Pressable onPress={cooldown > 0 ? undefined : sendCode} disabled={cooldown > 0} hitSlop={8}>
               <Text style={[styles.resendLink, cooldown > 0 && styles.resendOff]}>
-                {cooldown > 0 ? `Kodu tekrar gönder (${cooldown})` : 'Kodu tekrar gönder'}
+                {cooldown > 0 ? t("Kodu tekrar gönder ({0})", cooldown) : t("Kodu tekrar gönder")}
               </Text>
             </Pressable>
           </View>
@@ -126,7 +128,7 @@ export default function VerifyEmail() {
             style={styles.signOut}
             hitSlop={8}
           >
-            <Text style={styles.signOutText}>Farklı bir hesapla giriş yap</Text>
+            <Text style={styles.signOutText}>{t("Farklı bir hesapla giriş yap")}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

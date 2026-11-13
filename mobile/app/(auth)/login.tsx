@@ -18,8 +18,10 @@ import Logo from '../../components/Logo';
 import { signInThrottled } from '../../lib/signin';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 export default function Login() {
+  const t = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,7 +37,7 @@ export default function Login() {
     setResetMessage('');
     const trimmed = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setError('Şifreni sıfırlamak için önce e-posta adresini yaz.');
+      setError(t("Şifreni sıfırlamak için önce e-posta adresini yaz."));
       return;
     }
     setResetting(true);
@@ -44,16 +46,16 @@ export default function Login() {
     });
     setResetting(false);
     if (resetError) {
-      setError('Sıfırlama e-postası gönderilemedi. Lütfen biraz sonra tekrar dene.');
+      setError(t("Sıfırlama e-postası gönderilemedi. Lütfen biraz sonra tekrar dene."));
       return;
     }
-    setResetMessage('Şifre sıfırlama bağlantısını e-postana gönderdik. Bağlantıdan yeni şifreni belirleyip buradan giriş yapabilirsin.');
+    setResetMessage(t("Şifre sıfırlama bağlantısını e-postana gönderdik. Bağlantıdan yeni şifreni belirleyip buradan giriş yapabilirsin."));
   }
 
   async function handleLogin() {
     setError('');
     if (!email || !password) {
-      setError('E-posta ve şifreni gir.');
+      setError(t("E-posta ve şifreni gir."));
       return;
     }
     setLoading(true);
@@ -76,16 +78,16 @@ export default function Login() {
           <ScrollBand height={150} inset={28} fade={80} />
           <View style={styles.brandBlock}>
             <Logo size={32} light />
-            <Text style={styles.title}>Tekrar hoş geldin</Text>
-            <Text style={styles.subtitle}>Öğretmeninle devam etmek için giriş yap.</Text>
+            <Text style={styles.title}>{t("Tekrar hoş geldin")}</Text>
+            <Text style={styles.subtitle}>{t("Öğretmeninle devam etmek için giriş yap.")}</Text>
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>E-posta</Text>
+            <Text style={styles.label}>{t("E-posta")}</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="ornek@eposta.com"
+              placeholder={t("ornek@eposta.com")}
               placeholderTextColor={colors.faint}
               autoCapitalize="none"
               autoComplete="email"
@@ -95,11 +97,11 @@ export default function Login() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şifre</Text>
+            <Text style={styles.label}>{t("Şifre")}</Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
-              placeholder="Şifren"
+              placeholder={t("Şifren")}
               placeholderTextColor={colors.faint}
               secureTextEntry
               autoComplete="current-password"
@@ -108,21 +110,20 @@ export default function Login() {
           </View>
 
           <Pressable onPress={handleForgotPassword} disabled={resetting} hitSlop={8} style={styles.forgotRow}>
-            <Text style={styles.forgotText}>{resetting ? 'Gönderiliyor…' : 'Şifremi unuttum'}</Text>
+            <Text style={styles.forgotText}>{resetting ? t("Gönderiliyor…") : t("Şifremi unuttum")}</Text>
           </Pressable>
 
           {!!error && <Text style={styles.error}>{error}</Text>}
           {!!resetMessage && <Text style={styles.resetMessage}>{resetMessage}</Text>}
 
           <View style={{ marginTop: 8 }}>
-            <Button label="Giriş Yap" onPress={handleLogin} loading={loading} />
+            <Button label={t("Giriş Yap")} onPress={handleLogin} loading={loading} />
           </View>
 
           <Text style={styles.switchRow}>
-            Hesabın yok mu?{' '}
+            {t("Hesabın yok mu?")}{' '}
             <Link href="/(auth)/signup-options" style={styles.switchLink}>
-              Kayıt ol
-            </Link>
+              {t("Kayıt ol")}</Link>
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

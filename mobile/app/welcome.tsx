@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   Dimensions,
   Image,
+  Pressable,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
@@ -18,6 +20,7 @@ import Logo from '../components/Logo';
 import { markOnboardingSeen } from '../lib/onboarding';
 import { TEACHERS } from '../lib/teachers-data';
 import { colors, fonts, radius } from '../lib/theme';
+import { useLang, useT, type Lang } from '../lib/i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -64,6 +67,8 @@ function PhotoStack() {
 }
 
 export default function Welcome() {
+  const t = useT();
+  const { lang, setLang } = useLang();
   const [activeIndex, setActiveIndex] = useState(0);
 
   function handleScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -103,8 +108,8 @@ export default function Welcome() {
                 </View>
               )}
             </View>
-            <Text style={styles.title}>{slide.title}</Text>
-            <Text style={styles.subtitle}>{slide.subtitle}</Text>
+            <Text style={[styles.title, lang === 'en' && styles.titleEn]}>{t(slide.title)}</Text>
+            <Text style={styles.subtitle}>{t(slide.subtitle)}</Text>
           </View>
         ))}
       </ScrollView>
@@ -116,12 +121,37 @@ export default function Welcome() {
       </View>
 
       <View style={styles.footer}>
-        <Button label="Başla" onPress={() => goTo('/(auth)/get-started')} />
+        {/* the language, chosen before signing up or in (design 4) */}
+        <Text style={styles.langLabel}>DİL · LANGUAGE</Text>
+        <View style={styles.langRow} accessibilityRole="radiogroup">
+          {(
+            [
+              ['tr', 'TR', 'Türkçe'],
+              ['en', 'EN', 'English'],
+            ] as [Lang, string, string][]
+          ).map(([code, short, name]) => {
+            const on = lang === code;
+            return (
+              <Pressable
+                key={code}
+                onPress={() => setLang(code)}
+                style={({ pressed }) => [styles.langBtn, on && styles.langBtnOn, pressed && { opacity: 0.85 }]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: on }}
+                accessibilityLabel={name}
+              >
+                <Text style={[styles.langCode, on && { color: colors.red }]}>{short}</Text>
+                <Text style={[styles.langName, on && { color: colors.red }]}>{name}</Text>
+                {on && <Ionicons name="checkmark-circle" size={16} color={colors.red} />}
+              </Pressable>
+            );
+          })}
+        </View>
+        <Button label={t("Başla")} onPress={() => goTo('/(auth)/get-started')} />
         <Text style={styles.signInRow}>
-          Zaten hesabın var mı?{' '}
+          {t("Zaten hesabın var mı?")}{' '}
           <Text style={styles.signInLink} onPress={() => goTo('/(auth)/login')}>
-            Giriş yap
-          </Text>
+            {t("Giriş yap")}</Text>
         </Text>
       </View>
       </SafeAreaView>
@@ -212,6 +242,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingBottom: 20,
   },
+  // English runs longer: one step smaller, so the title keeps to three lines
+  titleEn: { fontSize: 36, lineHeight: 40 },
+  langLabel: {
+    fontFamily: fonts.bodyExtraBold,
+    fontSize: 11,
+    letterSpacing: 1,
+    color: colors.muted,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  langRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  langBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 46,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
+  },
+  langBtnOn: { borderColor: colors.red, backgroundColor: colors.redSoft },
+  langCode: { fontFamily: fonts.bodyExtraBold, fontSize: 11.5, color: colors.faint },
+  langName: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
   signInRow: {
     fontFamily: fonts.body,
     fontSize: 14,

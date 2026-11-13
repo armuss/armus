@@ -11,6 +11,7 @@ import SimpleHeader from '../../components/SimpleHeader';
 import { useAuth } from '../../lib/auth';
 import { SITE_URL } from '../../lib/referrals';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 // the word typed to unlock the final delete button ("sil", "SİL" and an
 // English-keyboard "SIL" all count)
@@ -25,6 +26,7 @@ const confirmed = (text: string) => ['SİL', 'SIL'].includes(text.trim().toLocal
  * the website's settings page, where these sit on their own tabs.
  */
 export default function AccountSecurity() {
+  const t = useT();
   const { profile, deleteAccount } = useAuth();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [typed, setTyped] = useState('');
@@ -35,11 +37,11 @@ export default function AccountSecurity() {
 
   function explainEmailLock() {
     Alert.alert(
-      'E-posta adresi değiştirilemez',
-      'E-posta adresin hesabına bağlıdır. Yanlış bir adresle kaydolduysan ya da bu adrese artık erişemiyorsan bize ulaş.',
+      t("E-posta adresi değiştirilemez"),
+      t("E-posta adresin hesabına bağlıdır. Yanlış bir adresle kaydolduysan ya da bu adrese artık erişemiyorsan bize ulaş."),
       [
-        { text: 'Tamam', style: 'cancel' },
-        { text: 'Bize ulaş', onPress: () => open('/iletisim') },
+        { text: t("Tamam"), style: 'cancel' },
+        { text: t("Bize ulaş"), onPress: () => open('/iletisim') },
       ]
     );
   }
@@ -57,7 +59,7 @@ export default function AccountSecurity() {
     const result = await deleteAccount();
     setDeleting(false);
     if (!result.ok) {
-      setError(result.error || 'Bir şeyler ters gitti. Lütfen tekrar dene.');
+      setError(result.error || t("Bir şeyler ters gitti. Lütfen tekrar dene."));
       return;
     }
     setDeleteOpen(false);
@@ -66,32 +68,31 @@ export default function AccountSecurity() {
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
-      <SimpleHeader title="Hesap ve güvenlik" />
+      <SimpleHeader title={t("Hesap ve güvenlik")} />
       <ScrollView style={styles.list} contentContainerStyle={styles.content}>
         <ScrollBand height={30} />
 
-        <Text style={styles.intro}>Giriş bilgilerin ve hesabınla ilgili geri alınamayan işlemler burada.</Text>
+        <Text style={styles.intro}>{t("Giriş bilgilerin ve hesabınla ilgili geri alınamayan işlemler burada.")}</Text>
         <SettingsGroup style={{ marginTop: 6 }}>
           {/* shown only: the sign-in email can't be changed (migration_117.sql) */}
-          <SettingsRow icon="mail-outline" label="E-posta" value={profile?.email} locked onPress={explainEmailLock} />
-          <SettingsRow icon="lock-closed-outline" label="Şifre değiştir" onPress={() => router.push('/settings/password')} last />
+          <SettingsRow icon="mail-outline" label={t("E-posta")} value={profile?.email} locked onPress={explainEmailLock} />
+          <SettingsRow icon="lock-closed-outline" label={t("Şifre değiştir")} onPress={() => router.push('/settings/password')} last />
         </SettingsGroup>
-        <Text style={styles.note}>E-posta adresin hesabına bağlıdır ve değiştirilemez.</Text>
+        <Text style={styles.note}>{t("E-posta adresin hesabına bağlıdır ve değiştirilemez.")}</Text>
 
-        <Text style={styles.dangerLabel}>HESABI SİL</Text>
+        <Text style={styles.dangerLabel}>{t("HESABI SİL")}</Text>
         <View style={styles.dangerBox}>
           <View style={styles.dangerHead}>
             <View style={styles.dangerIcon}>
               <Ionicons name="warning-outline" size={18} color={colors.error} />
             </View>
-            <Text style={styles.dangerTitle}>Hesabını kalıcı olarak sil</Text>
+            <Text style={styles.dangerTitle}>{t("Hesabını kalıcı olarak sil")}</Text>
           </View>
           <Text style={styles.dangerText}>
-            Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.
-          </Text>
+            {t("Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.")}</Text>
           <Pressable onPress={openDelete} style={({ pressed }) => [styles.dangerBtn, pressed && { opacity: 0.8 }]} accessibilityRole="button">
             <Ionicons name="trash-outline" size={16} color={colors.error} />
-            <Text style={styles.dangerBtnText}>Hesabımı sil</Text>
+            <Text style={styles.dangerBtnText}>{t("Hesabımı sil")}</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -108,13 +109,11 @@ export default function AccountSecurity() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.sheet}>
             <View style={styles.grab} />
-            <Text style={styles.sheetTitle}>Hesabını silmek istediğine emin misin?</Text>
+            <Text style={styles.sheetTitle}>{t("Hesabını silmek istediğine emin misin?")}</Text>
             <Text style={styles.sheetText}>
-              Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.
-            </Text>
+              {t("Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.")}</Text>
             <Text style={styles.sheetLabel}>
-              Onaylamak için <Text style={styles.word}>{CONFIRM_WORD}</Text> yaz
-            </Text>
+              {t("Onaylamak için ")}<Text style={styles.word}>{CONFIRM_WORD}</Text> {t(" yaz")}</Text>
             <TextInput
               value={typed}
               onChangeText={setTyped}
@@ -128,7 +127,7 @@ export default function AccountSecurity() {
             {!!error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.actions}>
               <View style={{ flex: 1 }}>
-                <Button label="Vazgeç" variant="outline" onPress={() => setDeleteOpen(false)} disabled={deleting} />
+                <Button label={t("Vazgeç")} variant="outline" onPress={() => setDeleteOpen(false)} disabled={deleting} />
               </View>
               <View style={{ flex: 1 }}>
                 <Pressable
@@ -138,7 +137,7 @@ export default function AccountSecurity() {
                   accessibilityRole="button"
                   accessibilityState={{ disabled: !confirmed(typed) || deleting }}
                 >
-                  <Text style={styles.finalBtnText}>{deleting ? 'Siliniyor…' : 'Hesabımı Sil'}</Text>
+                  <Text style={styles.finalBtnText}>{deleting ? t("Siliniyor…") : t("Hesabımı Sil")}</Text>
                 </Pressable>
               </View>
             </View>
