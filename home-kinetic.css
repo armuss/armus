@@ -25,8 +25,11 @@
 /* ================= PROOF ================= */
 .hk-proof {
   position: relative;
-  padding: 70px 0 30px;
+  padding: 70px 0 60px;
   overflow: clip;
+  /* champagne grounds (option A): this section, the step 1 panel and the
+     testimonials, between the white ones */
+  background: var(--armus-champagne-wash);
 }
 .hk-src {
   font-size: 38px;
@@ -294,7 +297,7 @@
   top: -5px;
   width: 10px;
   height: 10px;
-  border-radius: 0;
+  border-radius: 2px;
   background: var(--armus-gold-gradient);
   opacity: 0;
 }
@@ -440,7 +443,7 @@ html[lang="en"] .hk-pc {
   right: 0;
   bottom: 0;
   height: 2px;
-  border-radius: 0;
+  border-radius: 2px;
   background: var(--armus-border-soft);
   overflow: hidden;
 }
@@ -465,7 +468,7 @@ html[lang="en"] .hk-pc {
 .hk-tab:focus-visible {
   outline: 2px solid var(--armus-gold-2);
   outline-offset: 4px;
-  border-radius: 0;
+  border-radius: 4px;
 }
 @keyframes hk-grow {
   to { transform: none; }
@@ -517,6 +520,9 @@ html[lang="en"] .hk-pc {
   align-items: center;
   padding: 56px 0;
   border-top: 1.5px solid var(--armus-border-soft);
+}
+.hk-step + .hk-step {
+  border-color: var(--armus-champagne-deep);
 }
 .hk-step::before {
   content: "";
@@ -605,19 +611,19 @@ html[lang="en"] .hk-pc {
 .hk-pic {
   position: relative;
   height: 440px;
-  border-radius: 0;
+  border-radius: 28px;
   overflow: hidden;
   transition: transform .5s var(--hk-ease);
 }
 .hk-motion .hk-pic {
-  clip-path: inset(0 100% 0 0);
+  clip-path: inset(0 100% 0 0 round 28px);
   transition: clip-path 1.6s var(--hk-ease), transform .5s var(--hk-ease);
 }
 .hk-motion .hk-step:nth-child(even) .hk-pic {
-  clip-path: inset(0 0 0 100%);
+  clip-path: inset(0 0 0 100% round 28px);
 }
 .hk-motion .hk-step.is-in .hk-pic {
-  clip-path: inset(0 0 0 0);
+  clip-path: inset(0 0 0 0 round 28px);
 }
 .hk-par {
   position: absolute;
@@ -627,6 +633,7 @@ html[lang="en"] .hk-pc {
 
 /* step 1: search + matching teacher cards */
 .hk-v1 {
+  --hk-paper: var(--armus-champagne);
   background: var(--hk-paper);
 }
 .hk-v1 .hk-par {
@@ -642,7 +649,7 @@ html[lang="en"] .hk-pc {
   gap: 9px;
   padding: 11px 14px;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 14px;
   background: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -669,7 +676,7 @@ html[lang="en"] .hk-pc {
   gap: 12px;
   padding: 12px 14px;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 16px;
   background: #fff;
   box-shadow: 0 6px 18px rgba(35, 26, 10, .06);
   transition: transform .6s var(--hk-spring), box-shadow .5s, border-color .5s;
@@ -677,7 +684,7 @@ html[lang="en"] .hk-pc {
 .hk-tc img {
   width: 48px;
   height: 48px;
-  border-radius: 0;
+  border-radius: 13px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -692,7 +699,7 @@ html[lang="en"] .hk-pc {
   font-weight: 800;
   color: var(--armus-navy);
   background: #e8ebf6;
-  border-radius: 0;
+  border-radius: 999px;
   padding: 2px 7px;
 }
 .hk-tc small {
@@ -710,7 +717,7 @@ html[lang="en"] .hk-pc {
   font-size: 11px;
   font-weight: 700;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 999px;
   padding: 3px 8px;
   color: #333;
 }
@@ -726,7 +733,7 @@ html[lang="en"] .hk-pc {
   background: var(--armus-navy);
   color: #fff;
   padding: 5px 10px;
-  border-radius: 0;
+  border-radius: 999px;
   transform: scale(0);
   transition: transform .45s var(--hk-spring);
 }
@@ -823,7 +830,7 @@ html[lang="en"] .hk-pc {
   align-items: center;
   gap: 7px;
   padding: 7px 11px;
-  border-radius: 0;
+  border-radius: 999px;
   background: rgba(10, 10, 10, .78);
   color: #fff;
   font-size: 11.5px;
@@ -856,13 +863,13 @@ html[lang="en"] .hk-pc {
   gap: 3px;
   height: 32px;
   padding: 0 12px;
-  border-radius: 0;
+  border-radius: 999px;
   background: rgba(255, 255, 255, .94);
 }
 .hk-wave span {
   width: 3px;
   height: 30%;
-  border-radius: 0;
+  border-radius: 2px;
   background: var(--armus-ink);
   animation: hk-eq 1s ease-in-out infinite;
 }
@@ -881,7 +888,7 @@ html[lang="en"] .hk-pc {
   max-width: 250px;
   min-height: 66px;
   padding: 12px 15px;
-  border-radius: 0;
+  border-radius: 18px 18px 18px 4px;
   background: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -937,7 +944,7 @@ html[lang="en"] .hk-pc {
   display: flex;
   gap: 4px;
   padding: 4px;
-  border-radius: 0;
+  border-radius: 12px;
   background: var(--armus-panel-2);
   font-size: 12.5px;
   font-weight: 700;
@@ -957,7 +964,7 @@ html[lang="en"] .hk-pc {
   bottom: 4px;
   left: 4px;
   width: 78px;
-  border-radius: 0;
+  border-radius: 9px;
   background: var(--armus-navy);
   transform: translateX(calc(var(--s, 1) * 82px));
   transition: transform .6s var(--hk-spring);
@@ -972,7 +979,7 @@ html[lang="en"] .hk-pc {
 }
 .hk-days span {
   padding: 9px 0 8px;
-  border-radius: 0;
+  border-radius: 11px;
   background: var(--armus-panel-2);
   color: var(--armus-muted);
   font-size: 11.5px;
@@ -1203,7 +1210,7 @@ html[lang="en"] .hk-rate-n i {
   right: -6%;
   top: 52%;
   height: .1em;
-  border-radius: 0;
+  border-radius: 99px;
   background: var(--armus-ink);
   transform: rotate(-8deg) scaleX(0);
   transform-origin: 0 50%;
@@ -1258,8 +1265,13 @@ html[lang="en"] .hk-rate-n i {
    until it has - or without it - the reviews sit one under the other,
    each with its own name. */
 .hk-tst {
-  padding: 110px 10px 96px;
+  padding: 50px 10px;
   text-align: center;
+  /* the champagne wash runs edge to edge although the section sits in the
+     page column */
+  background: var(--armus-champagne-wash);
+  box-shadow: 0 0 0 100vmax var(--armus-champagne-wash);
+  clip-path: inset(0 -100vmax);
 }
 .hk-tst-h {
   font: 800 22px/1.2 Unbounded, Inter, sans-serif;
@@ -1386,7 +1398,7 @@ html[lang="en"] .hk-rate-n i {
   flex: none;
   padding: 9px 18px 9px 9px;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 999px;
   background: var(--armus-bg);
   color: var(--armus-muted);
   font: inherit;
