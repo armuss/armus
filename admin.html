@@ -87,40 +87,161 @@
       border-radius: 10px;
     }
 
-    /* ---- shell ---- */
+    /* ---- shell: design D - a red icon rail with the 8 groups, the open
+       group's pages in a white column next to it, then the panel. On a
+       phone the rail is a bar at the bottom and the pages open in a
+       sheet. ---- */
 
     .shell {
       display: none;
       min-height: 100vh;
-      grid-template-columns: 230px 1fr;
+      grid-template-columns: 84px 224px minmax(0, 1fr);
+      background: var(--armus-champagne-wash);
+    }
+
+    .rail {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 18px 0;
+      background: var(--armus-gold-gradient);
+      overflow-y: auto;
+      scrollbar-width: none;
+      z-index: 6;
+    }
+
+    .rail-mark {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 46px;
+      height: 46px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
+      font: 900 18px "Unbounded", "Inter", sans-serif;
+      text-decoration: none;
+    }
+
+    .rail-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      width: 62px;
+      padding: 9px 0 7px;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: rgba(250, 245, 226, .78);
+      font: 700 10px/1.2 Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .rail-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .rail-btn:hover {
+      background: rgba(255, 255, 255, .12);
+      color: #fff;
+    }
+
+    .rail-btn.active {
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
+    }
+
+    .rail-btn:focus-visible {
+      outline: 2px solid var(--armus-cream);
+      outline-offset: 2px;
+    }
+
+    .rail-btn[data-group="more"] {
+      display: none;
+    }
+
+    .rail-badge {
+      display: none;
+      position: absolute;
+      top: 4px;
+      right: 9px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 99px;
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
+      font: 800 9.5px/16px Inter, sans-serif;
+      box-shadow: 0 0 0 2px var(--armus-gold-2);
+    }
+
+    .rail-badge.visible {
+      display: block;
+    }
+
+    .rail-btn.active .rail-badge {
+      background: var(--armus-gold-2);
+      color: var(--armus-cream);
+      box-shadow: 0 0 0 2px var(--armus-cream);
     }
 
     .sidebar {
-      background: rgba(255, 255, 255, 0.02);
-      border-right: 1px solid var(--armus-border-soft);
-      padding: 22px 14px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      padding: 22px 14px 18px;
+      background: #fff;
+      border-right: 1px solid #ece4d6;
+      overflow-y: auto;
+      z-index: 5;
     }
 
     .sidebar .logo {
+      padding: 2px 10px 0;
       font-size: 26px;
-      font-weight: 900;
-      letter-spacing: -1px;
-      background: var(--armus-gold-gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      padding: 4px 10px 4px;
     }
 
     .sidebar .tag {
       display: block;
+      padding: 8px 10px 20px;
       font-size: 10.5px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: var(--armus-muted);
-      padding: 0 10px 20px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      color: var(--armus-gold-2);
+    }
+
+    .sheet-handle,
+    .sheet-backdrop {
+      display: none;
+    }
+
+    .fly-group {
+      display: none;
+    }
+
+    .fly-group.open {
+      display: block;
+    }
+
+    .fly-group small {
+      display: block;
+      padding: 0 10px 8px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #a8987c;
     }
 
     .nav-btn {
@@ -128,56 +249,92 @@
       align-items: center;
       gap: 10px;
       width: 100%;
-      text-align: left;
-      background: transparent;
-      border: none;
-      color: var(--armus-muted);
-      font-family: inherit;
-      font-size: 13.5px;
-      padding: 11px 12px;
-      border-radius: 10px;
-      cursor: pointer;
       margin-bottom: 2px;
+      padding: 10px;
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      color: #3a3a3a;
+      font: 600 13.5px/1.3 Inter, sans-serif;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-btn svg {
+      flex-shrink: 0;
+      width: 17px;
+      height: 17px;
+      color: #9a8b72;
     }
 
     .nav-btn:hover {
-      background: var(--armus-panel);
+      background: var(--armus-champagne-wash);
     }
 
     .nav-btn.active {
-      background: var(--armus-panel);
-      color: var(--armus-gold-text);
-      font-weight: 600;
+      background: var(--armus-red-tint);
+      color: var(--armus-gold-2);
+    }
+
+    .nav-btn.active svg {
+      color: var(--armus-gold-2);
+    }
+
+    .nav-btn:focus-visible {
+      outline: 2px solid var(--armus-gold-2);
+      outline-offset: 1px;
     }
 
     .nav-badge {
       display: none;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      font-size: 10px;
-      font-weight: 700;
-      border-radius: 999px;
-      padding: 1px 7px;
+      min-width: 20px;
+      height: 20px;
       margin-left: auto;
+      padding: 0 6px;
+      border-radius: 99px;
+      background: var(--armus-gold-2);
+      color: var(--armus-cream);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 20px;
+      text-align: center;
     }
 
     .nav-badge.visible {
       display: inline-block;
     }
 
+    .fly-hint {
+      margin: 18px 4px 0;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--armus-champagne-wash);
+      border: 1px solid #f0e6d6;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #7a6d58;
+    }
+
+    .fly-hint b {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 12.5px;
+      color: var(--armus-ink);
+    }
+
     .sidebar-bottom {
       margin-top: auto;
+      padding-top: 16px;
     }
 
     .logout-btn {
       width: 100%;
-      background: transparent;
-      border: 1px solid var(--armus-border);
-      color: var(--armus-muted);
-      font-family: inherit;
-      font-size: 12.5px;
+      background: #fff;
+      border: 1px solid #ece4d6;
+      color: var(--armus-gold-2);
+      font: 700 12.5px Inter, sans-serif;
       padding: 10px 12px;
-      border-radius: 10px;
+      border-radius: 11px;
       cursor: pointer;
     }
 
@@ -190,10 +347,10 @@
 
     .lang-toggle {
       flex: 1;
-      border: 1px solid var(--armus-border);
-      background: transparent;
+      border: 1px solid #ece4d6;
+      background: #fff;
       color: var(--armus-ink);
-      border-radius: 10px;
+      border-radius: 11px;
       padding: 10px 12px;
       font: 700 12.5px Inter, sans-serif;
       letter-spacing: 0.3px;
@@ -210,10 +367,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      border: 1px solid var(--armus-border);
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      border: 1px solid #ece4d6;
+      background: #fff;
       color: var(--armus-muted);
       flex-shrink: 0;
     }
@@ -228,10 +386,15 @@
       height: 17px;
     }
 
+    .m-top {
+      display: none;
+    }
+
     /* ---- main ---- */
 
     main {
-      padding: 30px 34px 60px;
+      min-width: 0;
+      padding: 26px 32px 60px;
       overflow-x: hidden;
     }
 
@@ -244,8 +407,8 @@
     }
 
     h2 {
-      font-size: 22px;
-      letter-spacing: -0.4px;
+      font: 800 26px/1.2 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -0.8px;
       margin-bottom: 22px;
     }
 
@@ -294,6 +457,619 @@
     .stat-card span {
       color: var(--armus-muted);
       font-size: 11.5px;
+    }
+
+    /* ---- overview (design D): coloured tiles, one meaning per colour -
+       navy money, red lessons, petrol teachers, champagne quality ---- */
+
+    .ov-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .ov-head h2 {
+      margin-bottom: 4px;
+    }
+
+    .ov-sub {
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #7a6d58;
+    }
+
+    .ov-sub strong {
+      color: var(--armus-ink);
+    }
+
+    .ov-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .seg {
+      display: flex;
+      padding: 4px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #ece4d6;
+    }
+
+    .seg button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: #7a6d58;
+      font: 700 12.5px Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .seg button.on {
+      background: var(--armus-ink);
+      color: #fff;
+    }
+
+    .ov-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 42px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid #ece4d6;
+      background: #fff;
+      color: #6b5f4b;
+      font: 600 13px Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .ov-search svg {
+      width: 17px;
+      height: 17px;
+      color: var(--armus-gold-2);
+    }
+
+    .ov-search kbd {
+      margin-left: 2px;
+    }
+
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-areas:
+        "mo mo le wa"
+        "mo mo te wa"
+        "st qu re fe"
+        "ch ch ch fe";
+      gap: 14px;
+    }
+
+    .tile {
+      position: relative;
+      min-width: 0;
+      padding: 20px;
+      border-radius: 24px;
+      background: #fff;
+      border: 1px solid #ece4d6;
+      overflow: hidden;
+    }
+
+    .tl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: #8a7c64;
+    }
+
+    .tl svg {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+    }
+
+    .tl-link {
+      margin-left: auto;
+      padding: 2px 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: 700 12px Inter, sans-serif;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tl-link:hover {
+      text-decoration: underline;
+    }
+
+    .tn {
+      margin: 12px 0 4px;
+      font: 800 40px/1.1 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ts {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #7a6d58;
+    }
+
+    .t-money {
+      grid-area: mo;
+      background: var(--armus-navy);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .t-money .tl {
+      color: #aab3dc;
+    }
+
+    .t-money .tl-link {
+      color: #fff;
+    }
+
+    .t-money .tn {
+      font-size: 56px;
+      letter-spacing: -2.5px;
+    }
+
+    .t-money .ts {
+      color: #c9cfe8;
+    }
+
+    .t-money .ts b {
+      color: #ffb3b8;
+    }
+
+    .t-money .ts b.up {
+      color: #9fe0d9;
+    }
+
+    .t-area {
+      position: relative;
+      height: 180px;
+      margin-top: 18px;
+    }
+
+    .t-area svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .t-area i {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffb3b8;
+      box-shadow: 0 0 0 4px rgba(255, 179, 184, .25);
+      transform: translate(-50%, -50%);
+    }
+
+    .t-ax {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #aab3dc;
+    }
+
+    .t-split {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .t-split div {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .08);
+      font-size: 11.5px;
+      color: #c9cfe8;
+    }
+
+    .t-split b {
+      display: block;
+      font: 800 18px/1.25 "Unbounded", "Inter", sans-serif;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .t-lessons {
+      grid-area: le;
+      background: var(--armus-gold-gradient);
+      border-color: transparent;
+      color: var(--armus-cream);
+    }
+
+    .t-lessons .tl,
+    .t-lessons .tl-link {
+      color: rgba(250, 245, 226, .78);
+    }
+
+    .t-lessons .ts {
+      color: rgba(250, 245, 226, .88);
+    }
+
+    .t-mb {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 52px;
+      margin-top: 14px;
+    }
+
+    .t-mb i {
+      position: relative;
+      flex: 1;
+      min-height: 3px;
+      border-radius: 4px;
+      background: var(--armus-cream);
+      overflow: hidden;
+    }
+
+    .t-mb i.z {
+      background: rgba(250, 245, 226, .22);
+    }
+
+    .t-mb i s {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      background: rgba(250, 245, 226, .38);
+    }
+
+    .t-teachers {
+      grid-area: te;
+      background: var(--armus-petrol);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .t-teachers .tl,
+    .t-teachers .tl-link {
+      color: #a9cfcb;
+    }
+
+    .fun {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .fun div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 112px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, .14);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .fun div b {
+      font: 800 14px "Unbounded", "Inter", sans-serif;
+    }
+
+    .fun div.f2 {
+      background: rgba(255, 255, 255, .24);
+    }
+
+    .fun div.f3 {
+      background: #fff;
+      color: var(--armus-petrol);
+    }
+
+    .t-wait {
+      grid-area: wa;
+    }
+
+    .t-wait .tl {
+      color: var(--armus-gold-2);
+    }
+
+    .w-item {
+      padding: 12px 0;
+      border-top: 1px solid #f0ebe2;
+    }
+
+    .w-item:first-of-type {
+      margin-top: 8px;
+      border-top: 0;
+    }
+
+    .w-item b {
+      display: block;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .w-item small {
+      font-size: 12px;
+      color: #7a6d58;
+    }
+
+    .w-acts {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .w-acts button {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #e2d6c3;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--armus-ink);
+      font: 700 12px Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .w-acts button.y {
+      border-color: transparent;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .w-acts button:disabled {
+      opacity: .55;
+      cursor: default;
+    }
+
+    .w-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 11px 0;
+      border: 0;
+      border-top: 1px solid #f0ebe2;
+      background: none;
+      color: var(--armus-ink);
+      font: 600 13px Inter, sans-serif;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .w-row b {
+      min-width: 24px;
+      height: 24px;
+      padding: 0 7px;
+      border-radius: 99px;
+      background: var(--armus-gold-2);
+      color: var(--armus-cream);
+      font-size: 12px;
+      line-height: 24px;
+      text-align: center;
+    }
+
+    .w-row span {
+      margin-left: auto;
+      color: var(--armus-gold-2);
+    }
+
+    .w-ok {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #eef5f4;
+      color: var(--armus-petrol);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .t-students {
+      grid-area: st;
+    }
+
+    .t-students .ts b {
+      color: var(--armus-petrol);
+    }
+
+    .dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .dots i {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #d3e6e3;
+    }
+
+    .dots i.n {
+      background: var(--armus-petrol);
+    }
+
+    .t-quality {
+      grid-area: qu;
+      background: var(--armus-champagne);
+      border-color: var(--armus-champagne-deep);
+    }
+
+    .t-quality .tl,
+    .t-quality .tn,
+    .t-quality .ts {
+      color: #6b5330;
+    }
+
+    .stars {
+      margin-top: 2px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      color: var(--armus-gold-2);
+    }
+
+    .stars span {
+      color: rgba(107, 83, 48, .3);
+    }
+
+    .t-repeat {
+      grid-area: re;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .t-repeat .tl {
+      grid-column: 1 / -1;
+    }
+
+    .ring {
+      display: grid;
+      place-items: center;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: conic-gradient(var(--armus-gold-2) 0 var(--p, 0%), #efe9df var(--p, 0%) 100%);
+    }
+
+    .ring span {
+      display: grid;
+      place-items: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #fff;
+      font: 800 14px "Unbounded", "Inter", sans-serif;
+    }
+
+    .t-feed {
+      grid-area: fe;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .live-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      color: var(--armus-petrol);
+      letter-spacing: 1px;
+    }
+
+    .live-tag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2e9a5f;
+      box-shadow: 0 0 0 4px rgba(46, 154, 95, .18);
+    }
+
+    .t-chart {
+      grid-area: ch;
+    }
+
+    .lg {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+      color: #6b5f4b;
+    }
+
+    .lg span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lg span::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: var(--c);
+    }
+
+    .gbars {
+      display: grid;
+      grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr));
+      align-items: end;
+      gap: 14px;
+      height: 130px;
+      margin-top: 18px;
+      padding: 0 4px;
+      border-bottom: 1px solid #f0ebe2;
+    }
+
+    .gbars > div {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      height: 100%;
+    }
+
+    .gbars i {
+      position: relative;
+      flex: 1;
+      max-width: 26px;
+      min-height: 3px;
+      border-radius: 6px 6px 2px 2px;
+      background: var(--c);
+    }
+
+    .gbars i.z {
+      background: #efe9df;
+    }
+
+    .gbars i em {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding-bottom: 3px;
+      font-size: 10.5px;
+      font-weight: 800;
+      font-style: normal;
+      color: #6b5f4b;
+    }
+
+    .gx {
+      display: grid;
+      grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr));
+      gap: 14px;
+      padding: 7px 4px 0;
+      font-size: 11px;
+      color: #8a8a8a;
+      text-align: center;
     }
 
     /* ---- growth (migration_113.sql) ---- */
@@ -821,16 +1597,6 @@
       gap: 6px;
     }
 
-    /* ---- trend chart ---- */
-
-    #trendChart, #revenueTrendChart, #cancellationTrendChart, #teacherGrowthChart {
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 14px;
-      padding: 20px;
-      margin-top: 8px;
-    }
-
     /* ---- student detail overlay ---- */
 
     .detail-overlay {
@@ -875,34 +1641,58 @@
     /* ---- live pulse feed ---- */
 
     .live-pulse {
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 14px;
-      padding: 6px 18px;
-      max-height: 280px;
-      overflow-y: auto;
+      flex: 1;
+      max-height: 420px;
       margin-top: 8px;
+      overflow-y: auto;
     }
 
     .pulse-item {
       display: flex;
-      gap: 12px;
-      align-items: baseline;
+      gap: 10px;
       padding: 10px 0;
-      border-bottom: 1px solid var(--armus-border-soft);
-      font-size: 13px;
+      border-top: 1px solid #f0ebe2;
+      font-size: 12.5px;
+      line-height: 1.4;
       color: var(--armus-ink);
     }
 
-    .pulse-item:last-child {
-      border-bottom: none;
+    .pulse-item:first-child {
+      border-top: 0;
+    }
+
+    .pulse-icon {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: var(--armus-red-tint);
+      color: var(--armus-gold-2);
+    }
+
+    .pulse-icon svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .pulse-icon.signup,
+    .pulse-icon.teacher {
+      background: #e3efee;
+      color: var(--armus-petrol);
+    }
+
+    .pulse-icon.review {
+      background: var(--armus-champagne);
+      color: #6b5330;
     }
 
     .pulse-time {
-      color: var(--armus-muted);
+      display: block;
+      margin-top: 2px;
       font-size: 11px;
-      flex-shrink: 0;
-      white-space: nowrap;
+      color: #9a9a9a;
     }
 
     .pulse-empty {
@@ -1040,16 +1830,7 @@
 
     /* ---- daily digest ---- */
 
-    .digest-card {
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-gold-2);
-      border-radius: 14px;
-      padding: 16px 20px;
-      margin-bottom: 20px;
-      font-size: 13.5px;
-      line-height: 1.7;
-      color: var(--armus-ink);
-    }
+
 
     /* ---- milestone confetti ---- */
 
@@ -1301,66 +2082,225 @@
       color: var(--armus-muted);
     }
 
+    @media (max-width: 1240px) {
+      .bento {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+          "mo mo"
+          "le te"
+          "wa st"
+          "wa qu"
+          "ch ch"
+          "re re"
+          "fe fe";
+      }
+    }
+
     @media (max-width: 860px) {
       .shell {
         grid-template-columns: 1fr;
       }
 
-      .sidebar {
-        position: sticky;
-        top: 0;
-        z-index: 5;
+      /* the rail becomes the red bar at the bottom: the first four groups
+         and "Diğer"; the pages open in a sheet over the panel */
+      .rail {
+        position: fixed;
+        top: auto;
+        left: 10px;
+        right: 10px;
+        bottom: 12px;
+        z-index: 40;
+        height: auto;
         flex-direction: row;
-        align-items: center;
-        overflow-x: auto;
-        padding: 12px;
-        gap: 6px;
-        background: var(--armus-bg);
+        justify-content: space-between;
+        gap: 2px;
+        padding: 6px;
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(109, 22, 28, .38);
+        overflow: visible;
       }
 
-      /* no scrollbar is visible on most phones, so without this the tab
-         strip just looks like it ends mid-word with no hint that there's
-         more to swipe to - a sticky faded edge stays pinned to the
-         scrollport's right side as a permanent "more tabs" cue */
-      .sidebar::after {
-        content: "";
-        position: sticky;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 28px;
-        margin-left: auto;
-        flex-shrink: 0;
-        background: linear-gradient(to right, transparent, var(--armus-bg));
-        pointer-events: none;
-      }
-
-      .sidebar .logo,
-      .sidebar .tag {
+      .rail-mark,
+      .rail-btn[data-group="trust"],
+      .rail-btn[data-group="contact"],
+      .rail-btn[data-group="site"],
+      .rail-btn[data-group="logs"] {
         display: none;
       }
 
-      .nav-btn {
-        white-space: nowrap;
-        width: auto;
+      .rail-btn[data-group="more"] {
+        display: flex;
       }
 
-      .sidebar-bottom {
-        margin-top: 0;
-        margin-left: 6px;
+      .rail-btn {
+        flex: 1;
+        width: auto;
+        padding: 8px 2px;
       }
 
-      .logout-btn {
-        width: auto;
-        white-space: nowrap;
+      .rail-badge {
+        right: calc(50% - 22px);
+      }
+
+      .sidebar {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        height: auto;
+        max-height: 78vh;
+        padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+        border-right: 0;
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -20px 50px rgba(20, 10, 10, .25);
+        transform: translateY(105%);
+        transition: transform .25s ease;
+        visibility: hidden;
+      }
+
+      .shell.sheet-open .sidebar {
+        transform: none;
+        visibility: visible;
+      }
+
+      .sheet-handle {
+        display: block;
+        width: 44px;
+        height: 5px;
+        margin: 0 auto 14px;
+        border-radius: 99px;
+        background: #e2d6c3;
+      }
+
+      .shell.sheet-open .sheet-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 45;
+        background: rgba(20, 10, 10, .4);
+      }
+
+      .sidebar .logo,
+      .sidebar .tag,
+      .fly-hint {
+        display: none;
+      }
+
+      .sidebar.more .fly-group[data-group="trust"],
+      .sidebar.more .fly-group[data-group="contact"],
+      .sidebar.more .fly-group[data-group="site"],
+      .sidebar.more .fly-group[data-group="logs"] {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .m-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .m-top .logo-img {
+        height: 24px;
+      }
+
+      .m-top span {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1.3px;
+        color: var(--armus-gold-2);
+        background: var(--armus-red-tint);
+        padding: 4px 8px;
+        border-radius: 7px;
+      }
+
+      #armusChatRoot {
+        bottom: 92px !important;
+      }
+
+      .ov-head {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .ov-tools {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .seg {
+        flex: 1;
+      }
+
+      .seg button {
+        flex: 1;
+      }
+
+      .ov-search span,
+      .ov-search kbd {
+        display: none;
+      }
+
+      .bento {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+          "mo mo"
+          "wa wa"
+          "le te"
+          "st qu"
+          "re re"
+          "ch ch"
+          "fe fe";
+        gap: 10px;
+      }
+
+      .tile {
+        padding: 16px;
+      }
+
+      .tn {
+        font-size: 30px;
+      }
+
+      .t-money .tn {
+        font-size: 40px;
+      }
+
+      .t-area {
+        height: 130px;
+      }
+
+      .t-split b {
+        font-size: 14px;
+      }
+
+      .gbars,
+      .gx {
+        gap: 6px;
+      }
+
+      .gbars i em {
+        display: none;
       }
 
       main {
-        padding: 20px 16px 50px;
+        padding: 16px 14px 110px;
       }
 
       .stat-grid {
         grid-template-columns: 1fr 1fr;
+      }
+
+      /* the half-width tiles have no room for their "go" link; the bar
+         at the bottom reaches every page */
+      .t-lessons .tl-link,
+      .t-teachers .tl-link,
+      .t-students .tl-link,
+      .t-quality .tl-link {
+        display: none;
       }
 
       .app-details {
@@ -1395,34 +2335,72 @@
 
   <div class="shell" id="shell">
 
-    <div class="sidebar">
+    <nav class="rail" id="adminRail" aria-label="Admin">
+      <a class="rail-mark" href="/" aria-label="ARMUS">A</a>
+      <button type="button" class="rail-btn active" data-group="general"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span data-i18n="admin.groupGeneral">Genel</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-i18n="admin.groupPeople">İnsanlar</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="lessons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span data-i18n="admin.groupLessons">Dersler</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="money"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg><span data-i18n="admin.groupMoney">Para</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span data-i18n="admin.groupTrust">Güven</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span data-i18n="admin.groupContact">İletişim</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="site"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg><span data-i18n="admin.groupSite">Site</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span data-i18n="admin.groupLogs">Kayıtlar</span><em class="rail-badge"></em></button>
+      <button type="button" class="rail-btn" data-group="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span data-i18n="admin.groupMore">Diğer</span><em class="rail-badge"></em></button>
+    </nav>
+
+    <div class="sidebar" id="adminFly">
+      <span class="sheet-handle" aria-hidden="true"></span>
       <div class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></div>
       <span class="tag" data-i18n="admin.tag">ADMIN PANELİ</span>
-
-      <button class="nav-btn active" data-panel="overview" data-i18n="admin.navOverview">Genel Bakış</button>
-      <button class="nav-btn" data-panel="growth" data-i18n="admin.navGrowth">Büyüme</button>
-      <button class="nav-btn" data-panel="teachers" data-i18n="admin.navTeachers">Öğretmenler</button>
-      <button class="nav-btn" data-panel="changes"><span data-i18n="admin.navChanges">Profil Değişiklikleri</span> <span class="nav-badge" id="changesBadge"></span></button>
-      <button class="nav-btn" data-panel="bookings" data-i18n="admin.navBookings">Rezervasyonlar</button>
-      <button class="nav-btn" data-panel="students" data-i18n="admin.navStudents">Öğrenciler</button>
-      <button class="nav-btn" data-panel="log" data-i18n="admin.navLog">Etkinlik Günlüğü</button>
-      <button class="nav-btn" data-panel="errorlog" data-i18n="admin.navErrorLog">Hata Günlüğü</button>
-      <button class="nav-btn" data-panel="testimonials" data-i18n="admin.navTestimonials">Anasayfa Yorumları</button>
-      <button class="nav-btn" data-panel="attendance"><span data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</span> <span class="nav-badge" id="attendanceBadge"></span></button>
-      <button class="nav-btn" data-panel="disputes"><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
-      <button class="nav-btn" data-panel="messages" data-i18n="admin.navMessages">Mesajlar</button>
-      <button class="nav-btn" data-panel="reviews"><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
-      <button class="nav-btn" data-panel="earnings" data-i18n="admin.navEarnings">Kazançlar</button>
-      <button class="nav-btn" data-panel="withdrawals"><span data-i18n="admin.navWithdrawals">Para Çekme Talepleri</span> <span class="nav-badge" id="withdrawalsBadge"></span></button>
-      <button class="nav-btn" data-panel="supporttickets"><span data-i18n="admin.navSupportTickets">Destek Talepleri</span> <span class="nav-badge" id="supportTicketsBadge"></span></button>
-      <button class="nav-btn" data-panel="messagereports"><span data-i18n="admin.navMessageReports">Mesaj Şikayetleri</span> <span class="nav-badge" id="messageReportsBadge"></span></button>
-      <button class="nav-btn" data-panel="teacherreports"><span data-i18n="admin.navTeacherReports">Öğretmen Şikayetleri</span> <span class="nav-badge" id="teacherReportsBadge"></span></button>
-      <button class="nav-btn" data-panel="payments" data-i18n="admin.navPayments">Ödemeler ve İtirazlar</button>
-      <button class="nav-btn" data-panel="fraud" data-i18n="admin.navFraud">Şüpheli Hesaplar</button>
-      <button class="nav-btn" data-panel="announcement" data-i18n="admin.navAnnouncement">Site Duyurusu</button>
-      <button class="nav-btn" data-panel="demand" data-i18n="admin.navDemand">Talep Haritası</button>
-      <button class="nav-btn" data-panel="cities" data-i18n="admin.navCities">Şehirler</button>
-      <button class="nav-btn" data-panel="flags" data-i18n="admin.navFlags">Görünüm Ayarları</button>
+      <div class="fly-group open" data-group="general">
+        <small data-i18n="admin.groupGeneral">Genel</small>
+        <button class="nav-btn active" data-panel="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span data-i18n="admin.navOverview">Genel Bakış</span></button>
+        <button class="nav-btn" data-panel="growth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span data-i18n="admin.navGrowth">Büyüme</span></button>
+        <button class="nav-btn" data-panel="demand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg><span data-i18n="admin.navDemand">Talep Haritası</span></button>
+      </div>
+      <div class="fly-group" data-group="people">
+        <small data-i18n="admin.groupPeople">İnsanlar</small>
+        <button class="nav-btn" data-panel="teachers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-i18n="admin.navTeachers">Öğretmenler</span> <span class="nav-badge" id="teachersBadge"></span></button>
+        <button class="nav-btn" data-panel="students"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg><span data-i18n="admin.navStudents">Öğrenciler</span></button>
+        <button class="nav-btn" data-panel="changes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span data-i18n="admin.navChanges">Profil Değişiklikleri</span> <span class="nav-badge" id="changesBadge"></span></button>
+      </div>
+      <div class="fly-group" data-group="lessons">
+        <small data-i18n="admin.groupLessons">Dersler</small>
+        <button class="nav-btn" data-panel="bookings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span data-i18n="admin.navBookings">Rezervasyonlar</span></button>
+        <button class="nav-btn" data-panel="attendance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span data-i18n="admin.navAttendance">Devamsızlık Bildirimleri</span> <span class="nav-badge" id="attendanceBadge"></span></button>
+        <button class="nav-btn" data-panel="disputes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><span data-i18n="admin.navDisputes">Anlaşmazlıklar</span> <span class="nav-badge" id="disputesBadge"></span></button>
+        <button class="nav-btn" data-panel="reviews"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span data-i18n="admin.navReviews">İncelemeler</span> <span class="nav-badge" id="reviewsBadge"></span></button>
+      </div>
+      <div class="fly-group" data-group="money">
+        <small data-i18n="admin.groupMoney">Para</small>
+        <button class="nav-btn" data-panel="earnings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg><span data-i18n="admin.navEarnings">Kazançlar</span></button>
+        <button class="nav-btn" data-panel="withdrawals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg><span data-i18n="admin.navWithdrawals">Para Çekme Talepleri</span> <span class="nav-badge" id="withdrawalsBadge"></span></button>
+        <button class="nav-btn" data-panel="payments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg><span data-i18n="admin.navPayments">Ödemeler ve İtirazlar</span></button>
+      </div>
+      <div class="fly-group" data-group="trust">
+        <small data-i18n="admin.groupTrust">Güven</small>
+        <button class="nav-btn" data-panel="messagereports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg><span data-i18n="admin.navMessageReports">Mesaj Şikayetleri</span> <span class="nav-badge" id="messageReportsBadge"></span></button>
+        <button class="nav-btn" data-panel="teacherreports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span data-i18n="admin.navTeacherReports">Öğretmen Şikayetleri</span> <span class="nav-badge" id="teacherReportsBadge"></span></button>
+        <button class="nav-btn" data-panel="fraud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="admin.navFraud">Şüpheli Hesaplar</span></button>
+      </div>
+      <div class="fly-group" data-group="contact">
+        <small data-i18n="admin.groupContact">İletişim</small>
+        <button class="nav-btn" data-panel="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span data-i18n="admin.navMessages">Mesajlar</span></button>
+        <button class="nav-btn" data-panel="supporttickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg><span data-i18n="admin.navSupportTickets">Destek Talepleri</span> <span class="nav-badge" id="supportTicketsBadge"></span></button>
+      </div>
+      <div class="fly-group" data-group="site">
+        <small data-i18n="admin.groupSite">Site</small>
+        <button class="nav-btn" data-panel="testimonials"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg><span data-i18n="admin.navTestimonials">Anasayfa Yorumları</span></button>
+        <button class="nav-btn" data-panel="announcement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg><span data-i18n="admin.navAnnouncement">Site Duyurusu</span></button>
+        <button class="nav-btn" data-panel="cities"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span data-i18n="admin.navCities">Şehirler</span></button>
+        <button class="nav-btn" data-panel="flags"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg><span data-i18n="admin.navFlags">Görünüm Ayarları</span></button>
+      </div>
+      <div class="fly-group" data-group="logs">
+        <small data-i18n="admin.groupLogs">Kayıtlar</small>
+        <button class="nav-btn" data-panel="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span data-i18n="admin.navLog">Etkinlik Günlüğü</span></button>
+        <button class="nav-btn" data-panel="errorlog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg><span data-i18n="admin.navErrorLog">Hata Günlüğü</span></button>
+      </div>
+      <div class="fly-hint"><b data-i18n="admin.flyHintTitle">8 grup, 24 sayfa</b><span data-i18n="admin.flyHintText">Soldaki kırmızı ray grupları gösterir; seçtiğin grubun sayfaları burada açılır.</span></div>
 
       <div class="sidebar-bottom">
         <div class="nav-utility">
@@ -1434,24 +2412,39 @@
         <button class="logout-btn" id="logoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
       </div>
     </div>
+    <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
     <main>
+      <div class="m-top"><img src="logo-black.png" alt="ARMUS" class="logo-img"><span data-i18n="admin.tag">ADMIN PANELİ</span></div>
 
       <div class="panel active" id="panel-overview">
-        <h2 data-i18n="admin.overviewHeading">Genel Bakış</h2>
-        <div class="digest-card" id="digestCard"></div>
-        <div class="stat-grid" id="overviewStats"></div>
-        <h3 data-i18n="admin.trendHeading">Son 6 ay - rezervasyon trendi</h3>
-        <div id="trendChart"></div>
-        <h3 data-i18n="admin.revenueTrendHeading">Son 6 ay - ciro trendi</h3>
-        <div id="revenueTrendChart"></div>
-        <h3 data-i18n="admin.cancellationTrendHeading">Son 6 ay - iptal oranı</h3>
-        <div id="cancellationTrendChart"></div>
-        <h3 data-i18n="admin.teacherGrowthHeading">Son 6 ay - yeni öğretmen başvurusu</h3>
-        <div id="teacherGrowthChart"></div>
-        <h3><span data-i18n="admin.pulseHeading">Canlı Akış</span> <span style="color:#1f7a4d;font-size:10px;vertical-align:middle;" data-i18n="admin.pulseLive">● CANLI</span></h3>
-        <p class="section-hint" data-i18n="admin.pulseHint">Yeni bir rezervasyon, kayıt ya da değerlendirme geldiği an burada görünür - sayfayı yenilemene gerek yok.</p>
-        <div id="livePulse" class="live-pulse"></div>
+        <div class="ov-head">
+          <div>
+            <h2 data-i18n="admin.overviewHeading">Genel Bakış</h2>
+            <p class="ov-sub" id="digestCard"></p>
+          </div>
+          <div class="ov-tools">
+            <div class="seg" id="ovMonths" role="group">
+              <button type="button" class="on" data-months="6" data-i18n="admin.months6">6 ay</button>
+              <button type="button" data-months="12" data-i18n="admin.months12">12 ay</button>
+            </div>
+            <button type="button" class="ov-search" id="ovSearchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span data-i18n="admin.searchShort">Ara</span><kbd>⌘K</kbd></button>
+          </div>
+        </div>
+        <div class="bento">
+          <section class="tile t-money" id="tileMoney"></section>
+          <section class="tile t-lessons" id="tileLessons"></section>
+          <section class="tile t-teachers" id="tileTeachers"></section>
+          <section class="tile t-wait" id="tileWaiting"></section>
+          <section class="tile t-students" id="tileStudents"></section>
+          <section class="tile t-quality" id="tileQuality"></section>
+          <section class="tile t-repeat" id="tileRepeat"></section>
+          <section class="tile t-feed">
+            <div class="tl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span data-i18n="admin.pulseHeading">Canlı Akış</span><span class="live-tag" data-i18n="admin.pulseLiveTag">CANLI</span></div>
+            <div id="livePulse" class="live-pulse"></div>
+          </section>
+          <section class="tile t-chart" id="tileChart"></section>
+        </div>
         <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
       </div>
 
@@ -2043,7 +3036,7 @@
 
   </div>
 
-  <script src="i18n.js?v=43"></script>
+  <script src="i18n.js?v=44"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=16"></script>
@@ -2071,14 +3064,86 @@
       window.location.href = "/";
     });
 
+    // ---- navigation (design D): the red rail holds the 8 groups, the
+    // white column next to it the open group's pages (the nav-btns). On
+    // a phone the rail is the bottom bar and the column a sheet. ----
+
+    const adminRail = document.getElementById("adminRail");
+    const adminFly = document.getElementById("adminFly");
+    const PHONE_QUERY = window.matchMedia("(max-width: 860px)");
+    // "Diğer" on the phone bar stands for the four groups it has no room for
+    const MORE_GROUPS = ["trust", "contact", "site", "logs"];
+
+    function groupOfPanel(panel) {
+      const btn = document.querySelector(`.nav-btn[data-panel="${panel}"]`);
+      const group = btn && btn.closest(".fly-group");
+      return group ? group.dataset.group : "general";
+    }
+
+    function showGroup(group) {
+      adminFly.classList.toggle("more", group === "more");
+      document.querySelectorAll(".fly-group").forEach(g => g.classList.toggle("open", g.dataset.group === group));
+      const railGroup = MORE_GROUPS.includes(group) && PHONE_QUERY.matches ? "more" : group;
+      adminRail.querySelectorAll(".rail-btn").forEach(b => b.classList.toggle("active", b.dataset.group === railGroup));
+    }
+
+    function openSheet(open) {
+      shell.classList.toggle("sheet-open", open);
+    }
+
     document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
         btn.classList.add("active");
         document.getElementById(`panel-${btn.dataset.panel}`).classList.add("active");
+        showGroup(groupOfPanel(btn.dataset.panel));
+        openSheet(false);
       });
     });
+
+    // desktop: a group opens its first page; phone: it opens the sheet
+    // with that group's pages (or all four "Diğer" groups)
+    adminRail.querySelectorAll(".rail-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const group = btn.dataset.group;
+        if (PHONE_QUERY.matches) {
+          showGroup(group);
+          adminRail.querySelectorAll(".rail-btn").forEach(b => b.classList.toggle("active", b === btn));
+          openSheet(true);
+          return;
+        }
+        showGroup(group);
+        const first = document.querySelector(`.fly-group[data-group="${group}"] .nav-btn:not([style*="display: none"])`);
+        if (first) first.click();
+      });
+    });
+
+    document.getElementById("sheetBackdrop").addEventListener("click", () => {
+      openSheet(false);
+      showGroup(groupOfPanel((document.querySelector(".nav-btn.active") || {}).dataset?.panel || "overview"));
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && shell.classList.contains("sheet-open")) openSheet(false);
+    });
+
+    // each rail group shows how many things wait in its pages - the sum
+    // of its pages' badges, kept in step whenever any badge changes
+    function syncRailBadges() {
+      const totals = {};
+      document.querySelectorAll(".fly-group").forEach(g => {
+        totals[g.dataset.group] = [...g.querySelectorAll(".nav-badge.visible")]
+          .reduce((sum, b) => sum + (parseInt(b.textContent, 10) || 0), 0);
+      });
+      totals.more = MORE_GROUPS.reduce((sum, g) => sum + (totals[g] || 0), 0);
+      adminRail.querySelectorAll(".rail-btn").forEach(btn => {
+        const n = totals[btn.dataset.group] || 0;
+        const badge = btn.querySelector(".rail-badge");
+        badge.textContent = n > 99 ? "99+" : String(n);
+        badge.classList.toggle("visible", n > 0);
+      });
+    }
+    new MutationObserver(syncRailBadges).observe(adminFly, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class"] });
 
     function dayColumns() {
       const labels = armusDayNames();
@@ -2427,6 +3492,13 @@
 
       const map = { pending: "pending", approved: "approved", rejected: "rejected", noApp: "noApp" };
 
+      // applications waiting for a decision show on the nav like every
+      // other queue (search-filtered lists aside: counted from all teachers)
+      const pendingAll = armusAdminProfiles.filter(p => p.role === "teacher" && p.status === "pending").length;
+      const teachersBadge = document.getElementById("teachersBadge");
+      teachersBadge.textContent = pendingAll;
+      teachersBadge.classList.toggle("visible", pendingAll > 0);
+
       Object.entries(map).forEach(([key]) => {
         const list = document.getElementById(`${key}List`);
         const empty = document.getElementById(`${key}Empty`);
@@ -2767,6 +3839,60 @@
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     }
 
+    // ---- overview tiles (design D): navy money, red lessons, petrol
+    // teachers, champagne quality, plus students, repeat rate, what waits
+    // and one chart of the last 6 or 12 months ----
+
+    let armusOverviewMonths = 6;
+
+    const OV_ICONS = {
+      coins: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+      cal: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+      users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+      grad: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+      star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+      rotate: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+      trend: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+      userplus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>',
+      alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    };
+
+    function ovIcon(name) {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${OV_ICONS[name] || ""}</svg>`;
+    }
+
+    function ovLocale() {
+      return armusGetLang() === "en" ? "en-GB" : "tr-TR";
+    }
+
+    function ovMoney(n) {
+      return "₺" + Math.round(n).toLocaleString(ovLocale());
+    }
+
+    function ovNum(n) {
+      return Number(n).toLocaleString(ovLocale(), { maximumFractionDigits: 1 });
+    }
+
+    // the last n calendar months, oldest first
+    function ovMonths(n) {
+      const now = new Date();
+      const months = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString(ovLocale(), { month: "short" }),
+        });
+      }
+      return months;
+    }
+
+    // a "go to that page" link inside a tile
+    function ovGo(panel, label) {
+      return `<button type="button" class="tl-link" data-go="${panel}">${label} →</button>`;
+    }
+
     function renderOverview(profiles, bookings, reviews) {
 
       const students = profiles.filter(p => p.role === "student");
@@ -2776,8 +3902,8 @@
       const completedBookings = bookings.filter(b => b.status !== "cancelled" && armusIsBookingPast(b));
       const grossRevenue = completedBookings.reduce((sum, b) => sum + (b.price || 0), 0);
       const avgRating = reviews.length
-        ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
-        : "—";
+        ? reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length
+        : null;
 
       const now = new Date();
       const thisMonthKey = armusMonthKey(now);
@@ -2791,11 +3917,9 @@
       const revenueDelta = lastMonthRevenue
         ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
         : null;
-      const revenueDeltaLabel = revenueDelta === null
-        ? ""
-        : ` (${revenueDelta >= 0 ? "+" : ""}${revenueDelta}%)`;
 
-      const newStudentsThisMonth = students.filter(s => s.created_at && armusMonthKey(s.created_at) === thisMonthKey).length;
+      const newStudentsThisMonth = students.filter(s => s.created_at && armusMonthKey(s.created_at) === thisMonthKey);
+      const newStudentIds = new Set(newStudentsThisMonth.map(s => s.id));
 
       // "repeat" = booked (any non-cancelled booking) with more than one
       // distinct teacher-agnostic booking - a simple loyalty/retention signal
@@ -2807,191 +3931,245 @@
       const repeatStudents = [...bookingCountByStudent.values()].filter(n => n > 1).length;
       const repeatRate = studentsWithBookings ? Math.round((repeatStudents / studentsWithBookings) * 100) : 0;
 
-      const stats = [
-        [students.length, armusT("admin.statTotalStudents", "Toplam öğrenci")],
-        [teachers.length, armusT("admin.statTotalTeacherAccounts", "Toplam öğretmen hesabı")],
-        [approvedTeachers.length, armusT("admin.statApprovedTeachers", "Onaylı öğretmen")],
-        [pendingTeachers.length, armusT("admin.statPendingApplications", "Bekleyen başvuru")],
-        [bookings.length, armusT("admin.statTotalBookings", "Toplam rezervasyon")],
-        [completedBookings.length, armusT("admin.statCompletedLessons", "Tamamlanan ders")],
-        [`₺${grossRevenue}`, armusT("admin.statGrossRevenue", "Toplam ciro (tamamlanan dersler)")],
-        [`${avgRating} (${reviews.length})`, armusT("admin.statAvgRating", "Ortalama puan / değerlendirme")],
-        [`₺${thisMonthRevenue}${revenueDeltaLabel}`, armusT("admin.statMonthRevenue", "Bu ayki ciro (geçen aya göre)")],
-        [newStudentsThisMonth, armusT("admin.statNewStudentsMonth", "Bu ay katılan yeni öğrenci")],
-        [`%${repeatRate}`, armusT("admin.statRepeatRate", "Birden fazla ders alan öğrenci oranı")],
-      ];
+      const cancelledCount = bookings.filter(b => b.status === "cancelled").length;
+      const cancelRate = bookings.length ? Math.round((cancelledCount / bookings.length) * 100) : 0;
 
-      document.getElementById("overviewStats").innerHTML = stats.map(([value, label]) => `
-        <div class="stat-card"><strong>${value}</strong><span>${label}</span></div>
-      `).join("");
-    }
+      const months = ovMonths(armusOverviewMonths);
 
-    // ---- trend chart: bookings per month, last 6 months, hand-rolled SVG
-    // bars so no charting library needs to be added to the project ----
-
-    function renderTrendChart(bookings) {
-
-      const container = document.getElementById("trendChart");
-      const now = new Date();
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({
-          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
-        });
-      }
-
-      const counts = months.map(m => bookings.filter(b => b.date.startsWith(m.key)).length);
-      const max = Math.max(1, ...counts);
-      const barWidth = 48, gap = 24, chartHeight = 130;
-      const width = months.length * (barWidth + gap);
-
-      const bars = counts.map((count, i) => {
-        const h = count ? Math.max(4, Math.round((count / max) * (chartHeight - 24))) : 0;
-        const x = i * (barWidth + gap);
-        const y = chartHeight - h;
-        return `
-          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
-          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">${count}</text>
-          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
-        `;
-      }).join("");
-
-      container.innerHTML = `
-        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
-          ${bars}
-        </svg>
-      `;
-    }
-
-    // same shape as renderTrendChart, but bars are completed-lesson revenue
-    // (₺) per month instead of a raw booking count - a full booking count
-    // can climb while revenue stays flat (more trial/low-price lessons), so
-    // the two charts answer different questions side by side.
-    function renderRevenueTrendChart(bookings) {
-
-      const container = document.getElementById("revenueTrendChart");
-      const completed = bookings.filter(b => b.status !== "cancelled" && armusIsBookingPast(b));
-      const now = new Date();
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({
-          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
-        });
-      }
-
-      const totals = months.map(m => completed
+      // ---- money (navy): revenue by month as a line ----
+      const revenue = months.map(m => completedBookings
         .filter(b => b.date.startsWith(m.key))
         .reduce((sum, b) => sum + (b.price || 0), 0));
-      const max = Math.max(1, ...totals);
-      const barWidth = 48, gap = 24, chartHeight = 130;
-      const width = months.length * (barWidth + gap);
+      const maxRevenue = Math.max(1, ...revenue);
+      const pts = revenue.map((v, i) => [
+        months.length > 1 ? 2 + (i / (months.length - 1)) * 96 : 50,
+        92 - (v / maxRevenue) * 80,
+      ]);
+      const line = pts.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+      const area = `${pts[0][0].toFixed(2)},96 ${line} ${pts[pts.length - 1][0].toFixed(2)},96`;
+      const [lx, ly] = pts[pts.length - 1];
+      const deltaLabel = revenueDelta === null ? "" : ` <b class="${revenueDelta >= 0 ? "up" : ""}">(${revenueDelta >= 0 ? "+" : "−"}%${Math.abs(revenueDelta)})</b>`;
+      const perLesson = completedBookings.length ? grossRevenue / completedBookings.length : 0;
 
-      const bars = totals.map((total, i) => {
-        const h = total ? Math.max(4, Math.round((total / max) * (chartHeight - 24))) : 0;
-        const x = i * (barWidth + gap);
-        const y = chartHeight - h;
-        return `
-          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
-          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="11" style="fill:var(--armus-ink)">₺${total}</text>
-          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
-        `;
-      }).join("");
-
-      container.innerHTML = `
-        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
-          ${bars}
-        </svg>
+      document.getElementById("tileMoney").innerHTML = `
+        <div class="tl">${ovIcon("coins")}${armusT("admin.tileRevenue", "Ciro")}${ovGo("earnings", armusT("admin.navEarnings", "Kazançlar"))}</div>
+        <div class="tn">${ovMoney(grossRevenue)}</div>
+        <p class="ts">${armusT("admin.tileRevenueSub", "tamamlanan derslerden")} · ${armusT("admin.tileThisMonth", "bu ay")} ${ovMoney(thisMonthRevenue)}${deltaLabel}</p>
+        <div class="t-area" role="img" aria-label="${armusEscapeHtml(months.map((m, i) => `${m.label} ${ovMoney(revenue[i])}`).join(", "))}">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <g stroke="rgba(255,255,255,.1)" stroke-width="1" vector-effect="non-scaling-stroke"><line x1="0" y1="12" x2="100" y2="12" vector-effect="non-scaling-stroke"/><line x1="0" y1="52" x2="100" y2="52" vector-effect="non-scaling-stroke"/><line x1="0" y1="92" x2="100" y2="92" vector-effect="non-scaling-stroke"/></g>
+            <polygon points="${area}" fill="rgba(255,179,184,.2)"/>
+            <polyline points="${line}" fill="none" stroke="#ffb3b8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <i style="left:${lx.toFixed(2)}%;top:${ly.toFixed(2)}%"></i>
+        </div>
+        <div class="t-ax">${months.map(m => `<span>${armusEscapeHtml(m.label)}</span>`).join("")}</div>
+        <div class="t-split">
+          <div><b>${ovMoney(thisMonthRevenue)}</b>${armusT("admin.tileThisMonth", "bu ay")}</div>
+          <div><b>${ovMoney(lastMonthRevenue)}</b>${armusT("admin.tileLastMonth", "geçen ay")}</div>
+          <div><b>${ovMoney(perLesson)}</b>${armusT("admin.tilePerLesson", "ders başı ortalama")}</div>
+        </div>
       `;
-    }
 
-    // cancellation rate per month, last 6 months - same bucketing as
-    // renderTrendChart (by lesson_date month, regardless of past/future),
-    // since "will this month's bookings hold up" is as useful to see as
-    // "did they hold up" once the month is still in progress
-    function renderCancellationRateChart(bookings) {
-
-      const container = document.getElementById("cancellationTrendChart");
-      const now = new Date();
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({
-          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
-        });
-      }
-
-      const rates = months.map(m => {
-        const monthBookings = bookings.filter(b => b.date.startsWith(m.key));
-        if (!monthBookings.length) return 0;
-        const cancelled = monthBookings.filter(b => b.status === "cancelled").length;
-        return Math.round((cancelled / monthBookings.length) * 100);
+      // ---- lessons (red): bookings by month, the cancelled part lighter ----
+      const perMonth = months.map(m => {
+        const list = bookings.filter(b => b.date.startsWith(m.key));
+        return { total: list.length, cancelled: list.filter(b => b.status === "cancelled").length };
       });
-      const max = Math.max(1, ...rates, 10);
-      const barWidth = 48, gap = 24, chartHeight = 130;
-      const width = months.length * (barWidth + gap);
+      const maxBookings = Math.max(1, ...perMonth.map(p => p.total));
+      document.getElementById("tileLessons").innerHTML = `
+        <div class="tl">${ovIcon("cal")}${armusT("admin.tileBookings", "Rezervasyon")}${ovGo("bookings", armusT("admin.tileAll", "Tümü"))}</div>
+        <div class="tn">${bookings.length}</div>
+        <p class="ts">${armusT("admin.tileCompleted", "{n} ders tamamlandı").replace("{n}", completedBookings.length)} · ${armusT("admin.tileCancelRate", "iptal %{n}").replace("{n}", cancelRate)}</p>
+        <div class="t-mb">${perMonth.map((p, i) => p.total
+          ? `<i style="height:${Math.max(8, Math.round((p.total / maxBookings) * 100))}%" title="${armusEscapeHtml(months[i].label)}: ${p.total} · ${armusEscapeHtml(armusT("admin.tileCancelled", "iptal"))} ${p.cancelled}"><s style="height:${Math.round((p.cancelled / p.total) * 100)}%"></s></i>`
+          : `<i class="z" title="${armusEscapeHtml(months[i].label)}: 0"></i>`).join("")}</div>
+      `;
 
-      const bars = rates.map((rate, i) => {
-        const h = rate ? Math.max(4, Math.round((rate / max) * (chartHeight - 24))) : 0;
-        const x = i * (barWidth + gap);
-        const y = chartHeight - h;
-        return `
-          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:#c0392b"></rect>
-          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">%${rate}</text>
-          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
-        `;
-      }).join("");
+      // ---- teachers (petrol): accounts -> waiting -> approved ----
+      const funnelWidth = n => teachers.length ? Math.max(40, Math.round((n / teachers.length) * 100)) : 40;
+      document.getElementById("tileTeachers").innerHTML = `
+        <div class="tl">${ovIcon("users")}${armusT("admin.tileFunnel", "Öğretmen hunisi")}${ovGo("teachers", armusT("admin.navTeachers", "Öğretmenler"))}</div>
+        <div class="fun">
+          <div style="width:100%">${armusT("admin.tileAccounts", "Hesap")}<b>${teachers.length}</b></div>
+          <div class="f2" style="width:${funnelWidth(pendingTeachers.length)}%">${armusT("admin.tileWaitingShort", "Bekliyor")}<b>${pendingTeachers.length}</b></div>
+          <div class="f3" style="width:${funnelWidth(approvedTeachers.length)}%">${armusT("admin.tileApproved", "Onaylı")}<b>${approvedTeachers.length}</b></div>
+        </div>
+      `;
 
-      container.innerHTML = `
-        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
-          ${bars}
-        </svg>
+      // ---- students: one dot each (new this month in petrol) ----
+      const dots = students.length <= 60
+        ? `<div class="dots" aria-hidden="true">${students
+            .slice()
+            .sort((a, b) => (newStudentIds.has(a.id) ? 1 : 0) - (newStudentIds.has(b.id) ? 1 : 0))
+            .map(s => `<i class="${newStudentIds.has(s.id) ? "n" : ""}"></i>`).join("")}</div>`
+        : "";
+      document.getElementById("tileStudents").innerHTML = `
+        <div class="tl">${ovIcon("grad")}${armusT("admin.tileStudents", "Öğrenciler")}${ovGo("students", armusT("admin.tileAll", "Tümü"))}</div>
+        <div class="tn">${students.length}</div>
+        <p class="ts">${armusT("admin.tileNewThisMonth", "bu ay <b>+{n} yeni</b>").replace("{n}", newStudentsThisMonth.length)}</p>
+        ${dots}
+      `;
+
+      // ---- quality (champagne): rating and cancellations ----
+      const fullStars = avgRating === null ? 0 : Math.round(avgRating);
+      document.getElementById("tileQuality").innerHTML = `
+        <div class="tl">${ovIcon("star")}${armusT("admin.tileQuality", "Kalite")}${ovGo("reviews", armusT("admin.navReviews", "İncelemeler"))}</div>
+        <div class="tn">${avgRating === null ? "—" : avgRating.toLocaleString(ovLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</div>
+        <div class="stars" aria-hidden="true">${"★".repeat(fullStars)}<span>${"★".repeat(5 - fullStars)}</span></div>
+        <p class="ts">${reviews.length
+          ? armusT("admin.tileReviews", "{n} değerlendirme").replace("{n}", reviews.length)
+          : armusT("admin.tileNoReviews", "henüz değerlendirme yok")} · ${armusT("admin.tileCancelRateLong", "iptal oranı %{n}").replace("{n}", cancelRate)}</p>
+      `;
+
+      // ---- repeat rate ----
+      document.getElementById("tileRepeat").innerHTML = `
+        <div class="tl">${ovIcon("rotate")}${armusT("admin.tileRepeat", "Tekrar")}</div>
+        <div>
+          <div class="tn">%${repeatRate}</div>
+          <p class="ts">${armusT("admin.statRepeatRate", "Birden fazla ders alan öğrenci oranı")}</p>
+        </div>
+        <div class="ring" style="--p:${repeatRate}%"><span>${repeatStudents}/${studentsWithBookings}</span></div>
+      `;
+
+      // ---- one chart: bookings, new students and teacher sign-ups ----
+      const series = [
+        { label: armusT("admin.tileBookings", "Rezervasyon"), color: "var(--armus-gold-2)", values: perMonth.map(p => p.total) },
+        { label: armusT("admin.tileNewStudents", "Yeni öğrenci"), color: "#b08d57", values: months.map(m => students.filter(s => s.created_at && armusMonthKey(s.created_at) === m.key).length) },
+        { label: armusT("admin.tileTeacherSignups", "Öğretmen başvurusu"), color: "var(--armus-petrol)", values: months.map(m => teachers.filter(t => t.created_at && armusMonthKey(t.created_at) === m.key).length) },
+      ];
+      const maxCount = Math.max(1, ...series.flatMap(s => s.values));
+      document.getElementById("tileChart").innerHTML = `
+        <div class="tl">${ovIcon("trend")}${armusT("admin.tileLastMonths", "Son {n} ay").replace("{n}", armusOverviewMonths)}
+          <span class="lg">${series.map(s => `<span style="--c:${s.color}">${s.label}</span>`).join("")}</span></div>
+        <div class="gbars" style="--n:${months.length}">${months.map((m, i) => `<div>${series.map(s => {
+          const v = s.values[i];
+          const tip = `${armusEscapeHtml(m.label)} · ${armusEscapeHtml(s.label)}: ${v}`;
+          return v
+            ? `<i style="--c:${s.color};height:${Math.max(4, Math.round((v / maxCount) * 100))}%" title="${tip}">${months.length <= 6 ? `<em>${v}</em>` : ""}</i>`
+            : `<i class="z" title="${tip}"></i>`;
+        }).join("")}</div>`).join("")}</div>
+        <div class="gx" style="--n:${months.length}">${months.map(m => `<span>${armusEscapeHtml(m.label)}</span>`).join("")}</div>
       `;
     }
 
-    // new teacher applications per month (role === "teacher", any status) -
-    // bucketed by created_at since profiles has no approved_at column, so
-    // this reads as "signups", not "approvals"
-    function renderTeacherGrowthChart(profiles) {
+    // what waits for a decision: teacher applications and profile changes
+    // by name (with İncele / Onayla), every other queue by its count.
+    // Read after the panels have rendered, so the counts are the nav
+    // badges' own.
+    const WAIT_QUEUES = [
+      ["withdrawalsBadge", "withdrawals", "admin.waitWithdrawals", "para çekme talebi"],
+      ["attendanceBadge", "attendance", "admin.waitAttendance", "devamsızlık bildirimi"],
+      ["disputesBadge", "disputes", "admin.waitDisputes", "anlaşmazlık"],
+      ["supportTicketsBadge", "supporttickets", "admin.waitSupport", "destek talebi"],
+      ["messageReportsBadge", "messagereports", "admin.waitMessageReports", "mesaj şikayeti"],
+      ["teacherReportsBadge", "teacherreports", "admin.waitTeacherReports", "öğretmen şikayeti"],
+      ["reviewsBadge", "reviews", "admin.waitReviews", "işaretli değerlendirme"],
+    ];
 
-      const container = document.getElementById("teacherGrowthChart");
-      const teacherSignups = profiles.filter(p => p.role === "teacher" && p.created_at);
-      const now = new Date();
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({
-          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-          label: d.toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR", { month: "short" }),
-        });
+    function ovDaysAgo(iso) {
+      if (!iso) return "";
+      const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+      if (days <= 0) return armusT("admin.agoToday", "bugün");
+      if (days === 1) return armusT("admin.agoYesterday", "dün");
+      return armusT("admin.agoDays", "{n} gün önce").replace("{n}", days);
+    }
+
+    function renderWaitingTile() {
+      const teachers = armusAdminProfiles.filter(p => p.role === "teacher");
+      const items = [
+        ...teachers.filter(t => t.status === "pending").map(t => ({ t, kind: "application" })),
+        ...teachers.filter(t => t.status === "approved" && t.pending_changes).map(t => ({ t, kind: "change" })),
+      ];
+      const queues = WAIT_QUEUES.map(([badgeId, panel, key, tr]) => {
+        const badge = document.getElementById(badgeId);
+        const n = badge && badge.classList.contains("visible") ? (parseInt(badge.textContent, 10) || 0) : 0;
+        return { panel, n, label: armusT(key, tr) };
+      }).filter(q => q.n > 0);
+      const total = items.length + queues.reduce((sum, q) => sum + q.n, 0);
+
+      const shown = items.slice(0, 4);
+      const tile = document.getElementById("tileWaiting");
+      tile.innerHTML = `
+        <div class="tl">${ovIcon("inbox")}${armusT("admin.tileWaiting", "Bekleyenler")} · ${total}</div>
+        ${shown.map(({ t, kind }) => `
+          <div class="w-item">
+            <b>${armusEscapeHtml(t.name || "—")}</b>
+            <small>${kind === "application"
+              ? armusT("admin.waitApplication", "Öğretmen başvurusu")
+              : armusT("admin.waitChange", "Profil değişikliği")} · ${ovDaysAgo(kind === "change" ? (t.pending_changes && t.pending_changes.submitted_at) : t.created_at)}</small>
+            <div class="w-acts">
+              <button type="button" data-review="${kind}" data-id="${armusEscapeHtml(t.id)}">${kind === "application" ? armusT("admin.waitReview", "İncele") : armusT("admin.waitCompare", "Karşılaştır")}</button>
+              <button type="button" class="y" data-approve="${kind}" data-id="${armusEscapeHtml(t.id)}">${armusT("admin.approve", "Onayla")}</button>
+            </div>
+          </div>`).join("")}
+        ${items.length > shown.length ? `<button type="button" class="w-row" data-go="teachers"><b>${items.length - shown.length}</b>${armusT("admin.waitMore", "başvuru / değişiklik daha")}<span>→</span></button>` : ""}
+        ${queues.map(q => `<button type="button" class="w-row" data-go="${q.panel}"><b>${q.n}</b>${q.label}<span>→</span></button>`).join("")}
+        ${queues.length === 0
+          ? `<div class="w-ok">${total === 0
+              ? armusT("admin.waitNone", "Bekleyen iş yok. Her şey yolunda.")
+              : armusT("admin.waitOthersClear", "Para çekme, devamsızlık, anlaşmazlık, destek ve şikayetlerde bekleyen yok.")}</div>`
+          : ""}
+      `;
+    }
+
+    // open a page from inside a tile, and show a teacher's card there
+    function ovOpenPanel(panel, cardId) {
+      const btn = document.querySelector(`.nav-btn[data-panel="${panel}"]`);
+      if (btn) btn.click();
+      window.scrollTo({ top: 0 });
+      if (!cardId) return;
+      setTimeout(() => {
+        const card = document.querySelector(`#panel-${panel} [data-id="${CSS.escape(cardId)}"]`);
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          card.classList.add("kbd-focus");
+          setTimeout(() => card.classList.remove("kbd-focus"), 2000);
+        }
+      }, 100);
+    }
+
+    document.getElementById("panel-overview").addEventListener("click", e => {
+      const go = e.target.closest("[data-go]");
+      if (go) { ovOpenPanel(go.dataset.go); return; }
+
+      const review = e.target.closest("[data-review]");
+      if (review) { ovOpenPanel(review.dataset.review === "application" ? "teachers" : "changes", review.dataset.id); return; }
+
+      // the same approve the teacher's own card does (status / pending
+      // changes, the admin log) - asked once first, since the details
+      // aren't on screen here
+      const approve = e.target.closest("[data-approve]");
+      if (approve) {
+        const kind = approve.dataset.approve;
+        const teacher = armusAdminProfiles.find(p => p.id === approve.dataset.id);
+        if (!teacher) return;
+        const question = kind === "application"
+          ? armusT("admin.waitApproveConfirm", "{name} öğretmen olarak onaylansın mı?")
+          : armusT("admin.waitApproveChangeConfirm", "{name} profil değişikliği onaylansın mı?");
+        if (!confirm(question.replace("{name}", teacher.name || ""))) return;
+        const list = kind === "application" ? "#pendingList" : "#changesList";
+        const selector = kind === "application" ? "[data-action='approve']" : "[data-change-action='approve']";
+        const card = document.querySelector(`${list} .app-card[data-id="${CSS.escape(teacher.id)}"]`);
+        const button = card && card.querySelector(selector);
+        if (button) {
+          approve.disabled = true;
+          button.click();
+        } else {
+          ovOpenPanel(kind === "application" ? "teachers" : "changes", teacher.id);
+        }
       }
+    });
 
-      const counts = months.map(m => teacherSignups.filter(p => armusMonthKey(p.created_at) === m.key).length);
-      const max = Math.max(1, ...counts);
-      const barWidth = 48, gap = 24, chartHeight = 130;
-      const width = months.length * (barWidth + gap);
+    document.querySelectorAll("#ovMonths button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        armusOverviewMonths = Number(btn.dataset.months);
+        document.querySelectorAll("#ovMonths button").forEach(b => b.classList.toggle("on", b === btn));
+        renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
+      });
+    });
 
-      const bars = counts.map((count, i) => {
-        const h = count ? Math.max(4, Math.round((count / max) * (chartHeight - 24))) : 0;
-        const x = i * (barWidth + gap);
-        const y = chartHeight - h;
-        return `
-          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" style="fill:var(--armus-gold-text)"></rect>
-          <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" style="fill:var(--armus-ink)">${count}</text>
-          <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" style="fill:var(--armus-muted)">${months[i].label}</text>
-        `;
-      }).join("");
-
-      container.innerHTML = `
-        <svg viewBox="0 0 ${width} ${chartHeight + 30}" style="width:100%;max-width:520px;height:auto;display:block;">
-          ${bars}
-        </svg>
-      `;
-    }
+    document.getElementById("ovSearchBtn").addEventListener("click", () => openPalette());
 
     // ---- CSV export (client-side, no server round trip) ----
 
@@ -4702,11 +5880,60 @@
     // supabase_realtime publication (migration_8.sql).
 
     let armusPulseEvents = [];
+    let armusPulseSeeded = false;
 
-    function pushPulseEvent(html) {
-      armusPulseEvents.unshift({ html, time: new Date() });
+    const PULSE_ICONS = { booking: "cal", signup: "userplus", teacher: "users", review: "star", alert: "alert" };
+
+    function pushPulseEvent(kind, html, time) {
+      armusPulseEvents.unshift({ kind, html, time: time || new Date() });
+      armusPulseEvents.sort((a, b) => b.time - a.time);
       armusPulseEvents = armusPulseEvents.slice(0, 25);
       renderPulse();
+    }
+
+    // the feed opens with the latest sign-ups, bookings and reviews
+    // instead of empty until something new happens with the page open
+    function seedPulseHistory() {
+      if (armusPulseSeeded) return;
+      armusPulseSeeded = true;
+      const history = [];
+      armusAdminProfiles.filter(p => p.created_at && (p.role === "student" || p.role === "teacher")).forEach(p => {
+        history.push({ kind: p.role === "teacher" ? "teacher" : "signup", time: new Date(p.created_at), html: pulseSignupHtml(p) });
+      });
+      armusAdminBookings.filter(b => b.createdAt).forEach(b => {
+        history.push({ kind: "booking", time: new Date(b.createdAt), html: pulseBookingHtml(b.studentName, b.teacherName) });
+      });
+      armusAdminReviews.filter(r => r.created_at).forEach(r => {
+        history.push({ kind: "review", time: new Date(r.created_at), html: pulseReviewHtml(r) });
+      });
+      history.sort((a, b) => b.time - a.time);
+      armusPulseEvents = armusPulseEvents.concat(history.slice(0, 8)).sort((a, b) => b.time - a.time).slice(0, 25);
+      renderPulse();
+    }
+
+    function pulseBookingHtml(student, teacher) {
+      return armusT("admin.pulseNewBooking", "Yeni rezervasyon: <strong>{student}</strong> → {teacher}")
+        .replace("{student}", armusEscapeHtml(student)).replace("{teacher}", armusEscapeHtml(teacher));
+    }
+
+    function pulseSignupHtml(p) {
+      const roleLabel = p.role === "teacher" ? armusT("admin.pulseTeacherApplicant", "öğretmen adayı") : armusT("admin.roleStudent", "öğrenci");
+      return armusT("admin.pulseNewSignup", "Yeni kayıt: <strong>{name}</strong> ({role})")
+        .replace("{name}", armusEscapeHtml(p.name)).replace("{role}", roleLabel);
+    }
+
+    function pulseReviewHtml(r) {
+      return armusT("admin.pulseNewReview", "Yeni değerlendirme: <strong>{student}</strong> {stars}")
+        .replace("{student}", armusEscapeHtml(r.student_name)).replace("{stars}", "★".repeat(r.stars));
+    }
+
+    // today: the clock time; before that: "dün", "3 gün önce", a date
+    function pulseWhen(time) {
+      const days = Math.round((new Date(localDateKey(new Date()) + "T00:00:00") - new Date(localDateKey(time) + "T00:00:00")) / 86400000);
+      if (days <= 0) return time.toLocaleTimeString(ovLocale(), { hour: "2-digit", minute: "2-digit" });
+      if (days === 1) return armusT("admin.agoYesterday", "dün");
+      if (days < 7) return armusT("admin.agoDays", "{n} gün önce").replace("{n}", days);
+      return time.toLocaleDateString(ovLocale(), { day: "numeric", month: "short" });
     }
 
     function renderPulse() {
@@ -4718,8 +5945,8 @@
       }
       el.innerHTML = armusPulseEvents.map(e => `
         <div class="pulse-item">
-          <span class="pulse-time">${e.time.toLocaleTimeString(armusGetLang() === "en" ? "en-US" : "tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
-          <span>${e.html}</span>
+          <span class="pulse-icon ${e.kind}">${ovIcon(PULSE_ICONS[e.kind] || "cal")}</span>
+          <div>${e.html}<span class="pulse-time">${pulseWhen(e.time)}</span></div>
         </div>
       `).join("");
     }
@@ -4728,19 +5955,15 @@
       armusSupabase.channel("admin-pulse")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bookings" }, payload => {
           const b = payload.new;
-          pushPulseEvent(armusT("admin.pulseNewBooking", "📅 Yeni rezervasyon: <strong>{student}</strong> → {teacher}")
-            .replace("{student}", armusEscapeHtml(b.student_name)).replace("{teacher}", armusEscapeHtml(b.teacher_name)));
+          pushPulseEvent("booking", pulseBookingHtml(b.student_name, b.teacher_name));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, payload => {
           const p = payload.new;
-          const roleLabel = p.role === "teacher" ? armusT("admin.pulseTeacherApplicant", "öğretmen adayı") : armusT("admin.roleStudent", "öğrenci");
-          pushPulseEvent(armusT("admin.pulseNewSignup", "👤 Yeni kayıt: <strong>{name}</strong> ({role})")
-            .replace("{name}", armusEscapeHtml(p.name)).replace("{role}", roleLabel));
+          pushPulseEvent(p.role === "teacher" ? "teacher" : "signup", pulseSignupHtml(p));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "reviews" }, payload => {
           const r = payload.new;
-          pushPulseEvent(armusT("admin.pulseNewReview", "⭐ Yeni değerlendirme: <strong>{student}</strong> {stars}")
-            .replace("{student}", armusEscapeHtml(r.student_name)).replace("{stars}", "★".repeat(r.stars)));
+          pushPulseEvent("review", pulseReviewHtml(r));
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "attendance_reports" }, payload => {
           const a = payload.new;
@@ -4748,7 +5971,7 @@
           const typeLabel = a.type === "no_show"
             ? armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
             : armusT("admin.attendanceTypeLate", "Derse geç kaldı");
-          pushPulseEvent(`${ATTENDANCE_WARNING_SVG} ` + armusT("admin.pulseAttendanceReport", "Devamsızlık bildirimi: <strong>{teacher}</strong> - {type}")
+          pushPulseEvent("alert", armusT("admin.pulseAttendanceReport", "Devamsızlık bildirimi: <strong>{teacher}</strong> - {type}")
             .replace("{teacher}", armusEscapeHtml(teacher ? teacher.name : a.teacher_id)).replace("{type}", typeLabel));
         })
         .subscribe();
@@ -4822,7 +6045,8 @@
           .replace("{name}", armusEscapeHtml(topTeacherEntry[0])).replace("{n}", topTeacherEntry[1]));
       }
 
-      let text = armusT("admin.digestGoodMorning", "👋 Günaydın! ") + parts.join(", ") + ".";
+      const dateLabel = new Date().toLocaleDateString(ovLocale(), { weekday: "long", day: "numeric", month: "long" });
+      let text = `${armusEscapeHtml(dateLabel)} · ${parts.join(", ")}.`;
       if (openDisputes > 0) {
         text += " " + armusT("admin.digestOpenDisputes", "⚑ <strong>{n}</strong> çözülmemiş anlaşmazlık var, göz atmalısın.").replace("{n}", openDisputes);
       }
@@ -5304,10 +6528,6 @@
 
       renderOverview(armusAdminProfiles, armusAdminBookings, armusAdminReviews);
       renderDigest(armusAdminProfiles, armusAdminBookings, armusAdminDisputes);
-      renderTrendChart(armusAdminBookings);
-      renderRevenueTrendChart(armusAdminBookings);
-      renderCancellationRateChart(armusAdminBookings);
-      renderTeacherGrowthChart(armusAdminProfiles);
       renderAtRiskPanel(computeAtRiskTeachers(teachers, armusAdminBookings, armusAdminReviews));
       renderBulkActionsBar();
       renderTeachersPanel(filteredTeachers);
@@ -5328,6 +6548,10 @@
       renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
       renderHeatmap(computeHeatmap(armusAdminBookings));
       renderCityBreakdown(computeCityBreakdown(armusAdminProfiles));
+      // after every panel, so it reads their badges' counts
+      renderWaitingTile();
+      seedPulseHistory();
+      syncRailBadges();
       checkMilestones(armusAdminProfiles);
     }
 
@@ -5478,6 +6702,7 @@
 
     document.addEventListener("armus:langchange", () => {
       renderAllFromState();
+      renderPulse();
       renderFlagsPanel();
       updateTestimonialPreview();
     });
