@@ -25,6 +25,8 @@ import { colors, fonts, radius } from '../../lib/theme';
 
 const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
 
+const NAME_PATTERN = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
+
 export default function EditProfile() {
   const { profile, refreshProfile } = useAuth();
 
@@ -132,8 +134,14 @@ export default function EditProfile() {
 
   async function handleSave() {
     if (!profile || saving) return;
-    setSaving(true);
     setStatus('');
+    // the same rule as signup and the website's settings: a first and a
+    // last name, not a single word or a nickname
+    if (!NAME_PATTERN.test(name.trim())) {
+      setStatus('Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil).');
+      return;
+    }
+    setSaving(true);
 
     let nextPhotoUrl = photoUrl;
     if (localPhotoUri) {

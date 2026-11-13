@@ -69,5 +69,5 @@ export async function unblockStudent(teacherId: string, studentId: string): Prom
 export async function amIBlockedBy(teacherId: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('am_i_blocked_by', { p_teacher_id: teacherId });
   if (error) return false;
-  return !!data;
+  return data === true;
 }

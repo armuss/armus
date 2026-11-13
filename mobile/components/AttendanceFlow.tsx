@@ -161,7 +161,9 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
             )
           }
         />
-        <View style={styles.actions}>{back}</View>
+        <View style={styles.actions}>
+          <View style={styles.flex}>{back}</View>
+        </View>
       </View>
     );
   }
@@ -197,7 +199,9 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
           onPress={() => go({ kind: 'techMinutes', side: 'teacher' })}
         />
         <Choice label="Benim tarafımda" onPress={() => go({ kind: 'techMinutes', side: 'student' })} />
-        <View style={styles.actions}>{back}</View>
+        <View style={styles.actions}>
+          <View style={styles.flex}>{back}</View>
+        </View>
       </View>
     );
   }
@@ -248,7 +252,9 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
       {!noShowReady && <Text style={styles.rule}>Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.</Text>}
       {onCancel && (
         <View style={styles.actions}>
-          <Button label="İptal" variant="outline" onPress={onCancel} />
+          <View style={styles.flex}>
+            <Button label="İptal" variant="outline" onPress={onCancel} />
+          </View>
         </View>
       )}
     </View>
@@ -331,6 +337,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panel,
     paddingHorizontal: 14,
   },
-  input: { flex: 1, fontFamily: fonts.displayBold, fontSize: 20, color: colors.ink },
+  input: { flex: 1, minWidth: 0, width: '100%', fontFamily: fonts.displayBold, fontSize: 20, color: colors.ink },
   unit: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.muted },
 });
