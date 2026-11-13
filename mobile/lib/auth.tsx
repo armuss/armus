@@ -21,6 +21,16 @@ export type Profile = {
   created_at?: string | null;
   // teachers: 'pending' | 'approved' | 'rejected'
   status?: string | null;
+  // teachers: attendance-report hide / ban state (migration_41, 100, 104)
+  is_banned?: boolean | null;
+  hidden_from_new_students?: boolean | null;
+  hidden_until?: string | null;
+  hidden_reason?: string | null;
+  penalty_hide_reason?: string | null;
+  trial_hidden_tier?: number | null;
+  trial_noshow_count?: number | null;
+  trial_unhide_eligible_at?: string | null;
+  trial_unhide_requires_ack?: boolean | null;
 };
 
 // Same rule as the website (auth.js): accounts created from this date on

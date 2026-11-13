@@ -34,6 +34,7 @@ import { capitalizeName } from '../lib/displayName';
 import { colors, fonts, radius } from '../lib/theme';
 import Band, { ScrollBand } from './Band';
 import ReschedulePicker from './ReschedulePicker';
+import TeacherAttendanceBanner from './TeacherAttendanceBanner';
 
 const LIMIT_MESSAGE =
   'Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine "Saat Öner" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.';
@@ -57,9 +58,12 @@ export default function TeacherHome() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [proposing, setProposing] = useState<Booking | null>(null);
   const [submittingMove, setSubmittingMove] = useState(false);
+  // bumps on every refresh so the attendance banner re-reads its report
+  const [reloadKey, setReloadKey] = useState(0);
 
   const load = useCallback(async () => {
     if (!profile) return;
+    setReloadKey((k) => k + 1);
     const [data, credits, withdrawals] = await Promise.all([
       getBookingsForTeacher(profile.id),
       getTeacherCredits(profile.id),
@@ -262,6 +266,9 @@ export default function TeacherHome() {
                 <Text style={styles.statLabel}>Toplam ders</Text>
               </View>
             </View>
+
+            {/* a student's report / the hide state - dashboard.html's attendance banner */}
+            <TeacherAttendanceBanner reloadKey={reloadKey} />
 
             {earnings && (
               <Pressable onPress={() => router.push('/earnings')} style={({ pressed }) => [styles.earningsCard, { opacity: pressed ? 0.9 : 1 }]}>
