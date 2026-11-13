@@ -5,6 +5,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Sty
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Band, { ScrollBand } from '../../components/Band';
+import { EMPTY_FILTERS, FilterBar, applyFilters, hasActiveFilters, type Filters } from '../../components/ExploreFilters';
 import TeacherCard from '../../components/TeacherCard';
 import TeacherHome from '../../components/TeacherHome';
 import { useAuth } from '../../lib/auth';
@@ -14,8 +15,6 @@ import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
-const SPECIALTY_OPTIONS = ['Tümü', 'IELTS', 'TOEFL', 'YDS', 'Konuşma', 'İş İngilizcesi'];
-type PriceSort = 'none' | 'asc' | 'desc';
 
 export default function Home() {
   const { profile } = useAuth();
@@ -27,12 +26,10 @@ function StudentBrowse() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [query, setQuery] = useState('');
-  const [specialty, setSpecialty] = useState('Tümü');
-  const [priceSort, setPriceSort] = useState<PriceSort>('none');
+  // search + filters (design A): the website's filters, one chip each
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+  const favoritesOnly = filters.favoritesOnly;
   const { width } = useWindowDimensions();
 
   const load = useCallback(async () => {
@@ -54,30 +51,16 @@ function StudentBrowse() {
     setFavoriteIds((prev) => (nowFavorited ? [...prev, teacherId] : prev.filter((id) => id !== teacherId)));
   }
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let list = teachers.filter((t) => {
-      const matchesQuery = !q || [t.name, t.role, ...t.tags].some((f) => f.toLowerCase().includes(q));
-      const matchesSpecialty = specialty === 'Tümü' || t.tags.includes(specialty);
-      const matchesFavorite = !favoritesOnly || favoriteIds.includes(t.id);
-      return matchesQuery && matchesSpecialty && matchesFavorite;
-    });
-    if (priceSort !== 'none') {
-      list = [...list].sort((a, b) => (priceSort === 'asc' ? a.price - b.price : b.price - a.price));
-    }
-    return list;
-  }, [teachers, query, specialty, priceSort, favoritesOnly, favoriteIds]);
+  const filtered = useMemo(() => applyFilters(teachers, filters, favoriteIds), [teachers, filters, favoriteIds]);
 
-  const activeFilters = specialty !== 'Tümü' || favoritesOnly || !!query.trim();
+  const activeFilters = hasActiveFilters(filters);
   const tileW = Math.floor((width - 32 - 10) / 2);
   // an odd result count under a filter ends on a tile that offers to widen it,
   // so the last photo doesn't sit alone
   const gridData: (Teacher | 'more')[] = filtered.length % 2 === 1 && activeFilters ? [...filtered, 'more'] : filtered;
 
   function clearFilters() {
-    setSpecialty('Tümü');
-    setFavoritesOnly(false);
-    setQuery('');
+    setFilters((f) => ({ ...EMPTY_FILTERS, sort: f.sort }));
   }
 
   if (loading) {
@@ -115,58 +98,31 @@ function StudentBrowse() {
         }
         ListHeaderComponent={
           <View>
-            {/* the red band reaches under the title and the filters; with the
-                search open it reaches the sort row too */}
-            <ScrollBand height={showSearch ? 262 : 150} />
+            {/* the red band reaches under the title, the search and the filter chips */}
+            <ScrollBand height={196} />
             <View style={styles.head}>
               <Text style={styles.title}>{t("Keşfet")}</Text>
               <Pressable
-                onPress={() => setShowSearch((v) => !v)}
-                style={[styles.roundBtn, showSearch && styles.roundBtnOn]}
-                accessibilityLabel={t("Ara ve sırala")}
+                onPress={() => setFilters((f) => ({ ...f, favoritesOnly: !f.favoritesOnly }))}
+                style={[styles.roundBtn, favoritesOnly && styles.roundBtnOn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: favoritesOnly }}
+                accessibilityLabel={t("Favorilerim")}
               >
-                <Ionicons name={showSearch ? 'close' : 'search'} size={19} color={showSearch ? colors.red : colors.onRed} />
+                <Ionicons name={favoritesOnly ? 'heart' : 'heart-outline'} size={19} color={favoritesOnly ? colors.red : colors.onRed} />
               </Pressable>
             </View>
 
-            {showSearch && (
-              <View style={styles.searchBlock}>
-                <View style={styles.searchRow}>
-                  <Ionicons name="search" size={17} color={colors.faint} />
-                  <TextInput
-                    value={query}
-                    onChangeText={setQuery}
-                    placeholder={t("İsim, IELTS, konuşma...")}
-                    placeholderTextColor={colors.faint}
-                    style={styles.search}
-                    autoFocus
-                  />
-                </View>
-                <View style={styles.sortRow}>
-                  <Text style={styles.sortLabel}>{t("Sırala")}</Text>
-                  {(
-                    [
-                      ['none', t("Önerilen")],
-                      ['asc', t("Fiyat ↑")],
-                      ['desc', t("Fiyat ↓")],
-                    ] as [PriceSort, string][]
-                  ).map(([key, label]) => (
-                    <Chip key={key} label={label} active={priceSort === key} onPress={() => setPriceSort(key)} />
-                  ))}
-                </View>
-              </View>
-            )}
+            <FilterBar filters={filters} onChange={setFilters} teachers={teachers} favoriteIds={favoriteIds} />
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips} contentContainerStyle={styles.chipsInner}>
-              {SPECIALTY_OPTIONS.map((opt) => (
-                <Chip key={opt} label={t(opt)} active={specialty === opt} onPress={() => setSpecialty(opt)} />
-              ))}
-              <Chip
-                label={favoritesOnly ? t("♥ Favorilerim") : t("♡ Favorilerim")}
-                active={favoritesOnly}
-                onPress={() => setFavoritesOnly((v) => !v)}
-              />
-            </ScrollView>
+            <View style={styles.countRow}>
+              <Text style={styles.countText}>{t("{0} öğretmen", filtered.length)}</Text>
+              {activeFilters && (
+                <Pressable onPress={clearFilters} hitSlop={8}>
+                  <Text style={styles.countClear}>{t("Filtreleri temizle")}</Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         }
         renderItem={({ item }) =>
@@ -211,6 +167,9 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 }
 
 const styles = StyleSheet.create({
+  countRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, marginLeft: 2 },
+  countText: { fontFamily: fonts.bodyExtraBold, fontSize: 12.5, color: colors.ink },
+  countClear: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.red, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1, backgroundColor: 'transparent' },
   // the status bar area is plain red; the list paints the ground and carries the band
