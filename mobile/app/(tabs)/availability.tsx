@@ -9,6 +9,7 @@ import { useAuth } from '../../lib/auth';
 import { confirmAsync } from '../../lib/dialogs';
 import { updateOwnProfile } from '../../lib/profile';
 import { supabase } from '../../lib/supabase';
+import Band, { ScrollBand } from '../../components/Band';
 import { colors, fonts } from '../../lib/theme';
 
 // [label, JS getDay() index] - Monday-first for display, but keyed by the
@@ -118,15 +119,20 @@ export default function Availability() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.ink} />
-      </SafeAreaView>
+      <View style={styles.screen}>
+        <Band height={150} />
+        <SafeAreaView style={[styles.safe, styles.centered]}>
+          <ActivityIndicator color={colors.onRed} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* the red band under the title and the quick-fill chips (design A) */}
+        <ScrollBand height={150} />
         <Text style={styles.title}>Programım</Text>
         <Text style={styles.subtitle}>Öğrenciler sadece buradaki saatlerde ders alabilir. Program her hafta tekrarlanır.</Text>
 
@@ -141,7 +147,7 @@ export default function Availability() {
             <Text style={styles.presetText}>+ Hafta sonu 10–18</Text>
           </Pressable>
           <Pressable onPress={clearAll} style={[styles.preset, styles.presetClear]}>
-            <Text style={[styles.presetText, { color: colors.error }]}>Temizle</Text>
+            <Text style={[styles.presetText, { color: colors.red }]}>Temizle</Text>
           </Pressable>
         </ScrollView>
 
@@ -195,7 +201,7 @@ export default function Availability() {
         <View style={styles.bar}>
           {!!status && <Text style={[styles.status, { color: colors.error, marginBottom: 6 }]}>{status}</Text>}
           <Pressable onPress={handleSave} disabled={saving} style={({ pressed }) => [styles.save, { opacity: saving ? 0.7 : pressed ? 0.88 : 1 }]}>
-            {saving ? <ActivityIndicator color={colors.gold2} /> : <Text style={styles.saveText}>Değişiklikleri kaydet</Text>}
+            {saving ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.saveText}>Değişiklikleri kaydet</Text>}
           </Pressable>
         </View>
       )}
@@ -219,16 +225,28 @@ function summarize(slots: string[]) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: 'transparent' },
+  // the status bar area is plain red; the list paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 24 },
-  title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  subtitle: { fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 19, color: colors.faint, marginTop: 4 },
+  title: { fontFamily: fonts.display, fontSize: 26, color: colors.onRed, letterSpacing: -0.8 },
+  subtitle: { fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 19, color: 'rgba(250,245,226,0.85)', marginTop: 4 },
   presets: { marginHorizontal: -16, marginTop: 14, marginBottom: 12 },
   presetsInner: { paddingHorizontal: 16, gap: 8 },
-  preset: { borderWidth: 1, borderColor: '#e3e3e3', borderRadius: 12, paddingHorizontal: 13, paddingVertical: 9 },
-  presetClear: { borderColor: '#f3c9c6' },
-  presetText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
-  table: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, overflow: 'hidden' },
+  // quick-fill chips on the red band
+  preset: {
+    backgroundColor: 'rgba(250,245,226,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.3)',
+    borderRadius: 99,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+  },
+  presetClear: { backgroundColor: colors.cream, borderColor: colors.cream },
+  presetText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.onRed },
+  table: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 18, overflow: 'hidden' },
   row: { borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   rowHead: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 13 },
   dayName: { width: 40, fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
@@ -240,12 +258,12 @@ const styles = StyleSheet.create({
   cell: { width: '23.5%', alignItems: 'center', paddingVertical: 9, borderRadius: 10, backgroundColor: colors.panel2 },
   cellOn: { backgroundColor: colors.dark },
   cellText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.muted, fontVariant: ['tabular-nums'] },
-  cellTextOn: { color: colors.gold2 },
+  cellTextOn: { color: colors.onRed },
   dayClear: { alignSelf: 'flex-start', marginTop: 12 },
   dayClearText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.error },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
   status: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.muted },
   bar: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6, backgroundColor: colors.bg },
   save: { height: 54, borderRadius: 18, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
-  saveText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
+  saveText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: colors.onRed },
 });

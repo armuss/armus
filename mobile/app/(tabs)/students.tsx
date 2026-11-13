@@ -4,6 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../../components/Band';
 import { useAuth } from '../../lib/auth';
 import { getBookingsForTeacher } from '../../lib/bookings';
 import { getOrCreateConversation } from '../../lib/messages';
@@ -84,15 +85,24 @@ export default function Students() {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    // the title is fixed on plain red; the band's fade scrolls with the list
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
       <View style={styles.headerBlock}>
         <Text style={styles.title}>Öğrencilerim</Text>
+        {!loading && (
+          <Text style={styles.sub}>{students.length ? `${students.length} öğrenci` : 'Henüz öğrencin yok'}</Text>
+        )}
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
+        <View style={styles.list}>
+          <ScrollBand height={0} />
+          <ActivityIndicator color={colors.red} style={{ marginTop: 60 }} />
+        </View>
       ) : (
         <FlatList
+          style={styles.list}
+          ListHeaderComponent={<ScrollBand height={students.length ? 40 : 0} />}
           data={students}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -120,7 +130,7 @@ export default function Students() {
                 {openingId === item.id ? (
                   <ActivityIndicator size="small" color={colors.ink} />
                 ) : (
-                  <Ionicons name="chatbubble-outline" size={17} color={colors.ink} />
+                  <Ionicons name="chatbubble-outline" size={17} color={colors.red} />
                 )}
               </View>
             </Pressable>
@@ -139,6 +149,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  // the status bar and title are plain red; the list paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   headerBlock: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -146,21 +159,31 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: 24,
-    color: colors.ink,
-    letterSpacing: -0.5,
+    fontSize: 26,
+    color: colors.onRed,
+    letterSpacing: -0.8,
+  },
+  sub: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13.5,
+    color: 'rgba(250,245,226,0.85)',
+    marginTop: 4,
   },
   listContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 32,
   },
+  // every student is a white card on the band / the champagne ground
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 18,
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   avatar: {
     width: 48,
@@ -191,8 +214,8 @@ const styles = StyleSheet.create({
   msgLink: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.panel2,
+    borderRadius: 12,
+    backgroundColor: colors.redSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -201,7 +224,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 100,
     paddingHorizontal: 20,
   },
 });

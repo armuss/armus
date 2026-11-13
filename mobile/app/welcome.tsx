@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Band from '../components/Band';
 import Button from '../components/Button';
 import Logo from '../components/Logo';
 import { markOnboardingSeen } from '../lib/onboarding';
@@ -77,9 +78,12 @@ export default function Welcome() {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
+      {/* the red band holds the logo and the pictures; the words sit below it */}
+      <Band height={175} />
+      <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Logo size={22} />
+        <Logo size={22} light />
       </View>
 
       <ScrollView
@@ -97,7 +101,7 @@ export default function Welcome() {
                 <PhotoStack />
               ) : (
                 <View style={styles.iconCircle}>
-                  <Logo size={30} />
+                  <Logo size={30} light />
                 </View>
               )}
             </View>
@@ -122,7 +126,8 @@ export default function Welcome() {
           </Text>
         </Text>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -131,6 +136,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  safe: { flex: 1, backgroundColor: 'transparent' },
   header: {
     alignItems: 'center',
     paddingTop: 8,
@@ -157,14 +163,16 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: radius.lg,
     borderWidth: 3,
-    borderColor: colors.bg,
+    borderColor: colors.cream,
     backgroundColor: colors.panel2,
   },
   iconCircle: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: colors.panel2,
+    backgroundColor: 'rgba(250,245,226,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -200,7 +208,7 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 20,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.red,
   },
   footer: {
     paddingHorizontal: 28,

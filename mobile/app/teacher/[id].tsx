@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../../components/Band';
 import { TeacherPhoto } from '../../components/TeacherCard';
 import { useAuth } from '../../lib/auth';
 import { DAY_NAMES, getTeacherBusyTimes, slotsForDate, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
@@ -31,6 +32,8 @@ export default function TeacherDetail() {
   const [loading, setLoading] = useState(true);
   const [messaging, setMessaging] = useState(false);
   const [isFav, setIsFav] = useState(false);
+  // the red band reaches just past the photo and the name
+  const [headBottom, setHeadBottom] = useState(140);
   // one trial per teacher (migration_110.sql) - after it, regular lessons
   const [trialTaken, setTrialTaken] = useState(false);
   const [tab, setTab] = useState<Tab>('about');
@@ -139,18 +142,23 @@ export default function TeacherDetail() {
   const showMessage = !!teacher.isRegistered && !!profile;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollBand height={headBottom - 4} fade={72} />
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
-            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+            <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
-          <Pressable onPress={handleToggleFavorite} style={styles.roundBtn} accessibilityLabel={isFav ? 'Favorilerden çıkar' : 'Favorilere ekle'}>
-            <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={19} color={isFav ? colors.goldDot : colors.ink} />
+          <Pressable
+            onPress={handleToggleFavorite}
+            style={[styles.roundBtn, isFav && styles.roundBtnOn]}
+            accessibilityLabel={isFav ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+          >
+            <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={19} color={isFav ? colors.red : colors.onRed} />
           </Pressable>
         </View>
 
-        <View style={styles.head}>
+        <View style={styles.head} onLayout={(e) => setHeadBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
           <TeacherPhoto teacher={teacher} style={styles.avatar} initialsSize={24} />
           <View style={styles.headText}>
             <Text style={styles.name} numberOfLines={1}>
@@ -306,23 +314,37 @@ function shortLanguages(languages: string) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  // the status bar area is plain red; the scroll view paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 16, paddingBottom: 30 },
   notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 60 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, marginBottom: 12 },
-  roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
+  // on the red band: see-through cream buttons, the name in cream
+  roundBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(250,245,226,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roundBtnOn: { backgroundColor: colors.cream, borderColor: colors.cream },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: { width: 72, height: 72, borderRadius: 22 },
+  avatar: { width: 72, height: 72, borderRadius: 22, borderWidth: 2, borderColor: colors.cream },
   headText: { flex: 1, minWidth: 0 },
-  name: { fontFamily: fonts.bodyExtraBold, fontSize: 20, color: colors.ink },
-  role: { fontFamily: fonts.body, fontSize: 13.5, color: colors.muted, marginTop: 1 },
-  pill: { alignSelf: 'flex-start', backgroundColor: colors.goldSoft, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 3, marginTop: 5 },
-  pillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.ink },
-  tabs: { flexDirection: 'row', gap: 18, borderBottomWidth: 1, borderBottomColor: '#eee', marginTop: 16, marginBottom: 14 },
+  name: { fontFamily: fonts.displayBold, fontSize: 19, color: colors.onRed },
+  role: { fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(250,245,226,0.85)', marginTop: 2 },
+  pill: { alignSelf: 'flex-start', backgroundColor: colors.cream, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 3, marginTop: 6 },
+  pillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.red },
+  tabs: { flexDirection: 'row', gap: 18, borderBottomWidth: 1, borderBottomColor: colors.border, marginTop: 26, marginBottom: 14 },
   tab: { paddingBottom: 10, borderBottomWidth: 3, borderBottomColor: 'transparent', marginBottom: -1 },
-  tabOn: { borderBottomColor: colors.ink },
-  tabText: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: '#9a9a9a' },
-  tabTextOn: { color: colors.ink },
+  tabOn: { borderBottomColor: colors.red },
+  tabText: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.faint },
+  tabTextOn: { color: colors.red },
   media: { height: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.panel2 },
   mediaTag: {
     position: 'absolute',
@@ -345,7 +367,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 9,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
     borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -364,17 +387,18 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.panel,
     borderRadius: 16,
     padding: 10,
     marginBottom: 8,
   },
-  dayRowOff: { borderStyle: 'dashed', borderColor: '#e3e3e3' },
+  dayRowOff: { borderStyle: 'dashed', borderColor: colors.champagneDeep, backgroundColor: 'transparent' },
   dayBadge: { width: 44, alignItems: 'center', backgroundColor: colors.panel2, borderRadius: 12, paddingVertical: 5 },
   dayBadgeName: { fontFamily: fonts.bodySemibold, fontSize: 11, color: colors.faint },
   dayBadgeNum: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
   dayText: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
   dayTextOff: { color: '#b5b5b5', fontFamily: fonts.bodySemibold },
-  review: { borderWidth: 1, borderColor: '#eee', borderRadius: 16, padding: 14, marginBottom: 8 },
+  review: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, borderRadius: 16, padding: 14, marginBottom: 8 },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 6 },
   reviewAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   reviewAvatarText: { fontFamily: fonts.bodyExtraBold, fontSize: 13, color: colors.muted },
@@ -386,6 +410,6 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 10, backgroundColor: colors.bg },
   msgBtn: { width: 56, height: 56, borderRadius: 18, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   cta: { flex: 1, height: 56, borderRadius: 18, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
-  ctaText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
+  ctaText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: colors.onRed },
   ctaPrice: { color: colors.gold2 },
 });

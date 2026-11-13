@@ -4,6 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { ActivityIndicator, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../../components/Band';
 import ReschedulePicker from '../../components/ReschedulePicker';
 import StrandedPackageCard from '../../components/StrandedPackageCard';
 import { useAuth } from '../../lib/auth';
@@ -372,7 +373,7 @@ export default function Lessons() {
           </View>
           {joinable && (
             <Pressable style={styles.agJoin} onPress={() => router.push(`/class/${item.id}`)}>
-              <Ionicons name="videocam" size={16} color={colors.ink} />
+              <Ionicons name="videocam" size={16} color={colors.onRed} />
               <Text style={styles.agJoinText}>Derse katıl</Text>
             </Pressable>
           )}
@@ -460,7 +461,9 @@ export default function Lessons() {
   const sheetLate = sheetBooking ? hoursUntilLesson(sheetBooking) < FREE_CANCEL_HOURS : false;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    // the title row is fixed on plain red; the band under it scrolls with
+    // the content, reaching under the week (design A)
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
       <View style={styles.head}>
         <Text style={styles.title}>Derslerim</Text>
         <View style={styles.seg}>
@@ -478,9 +481,13 @@ export default function Lessons() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
+        <View style={styles.list}>
+          <ScrollBand height={0} />
+          <ActivityIndicator color={colors.red} style={{ marginTop: 60 }} />
+        </View>
       ) : (
         <ScrollView
+          style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -490,16 +497,13 @@ export default function Lessons() {
                 setRefreshing(true);
                 load();
               }}
-              tintColor={colors.ink}
+              tintColor={colors.onRed}
             />
           }
         >
+          <ScrollBand height={mode === 'agenda' ? 80 : 0} />
           {mode === 'agenda' ? (
             <>
-              {stranded.map((pkg) => (
-                <StrandedPackageCard key={pkg.teacherId} pkg={pkg} onDone={load} />
-              ))}
-
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.week} contentContainerStyle={styles.weekInner}>
                 {strip.map(({ key, date }) => {
                   const on = key === dayKey;
@@ -524,6 +528,10 @@ export default function Lessons() {
                   </Pressable>
                 </View>
               )}
+
+              {stranded.map((pkg) => (
+                <StrandedPackageCard key={pkg.teacherId} pkg={pkg} onDone={load} />
+              ))}
 
               {shownCredits.length > 0 && (
                 <Pressable onPress={() => setCreditsOpen((v) => !v)} style={styles.credits}>
@@ -677,22 +685,35 @@ export default function Lessons() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: 'transparent' },
+  // the status bar and title row are plain red; the list paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 },
-  title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  seg: { flexDirection: 'row', backgroundColor: colors.panel2, borderRadius: 12, padding: 3 },
-  segItem: { paddingHorizontal: 11, paddingVertical: 7, borderRadius: 9 },
-  segItemOn: { backgroundColor: colors.dark },
-  segText: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.muted },
-  segTextOn: { color: '#fff' },
+  title: { fontFamily: fonts.display, fontSize: 26, color: colors.onRed, letterSpacing: -0.8 },
+  // on the red band: a see-through cream switch, the open side in cream
+  seg: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(250,245,226,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.28)',
+    borderRadius: 13,
+    padding: 3,
+  },
+  segItem: { paddingHorizontal: 11, paddingVertical: 7, borderRadius: 10 },
+  segItemOn: { backgroundColor: colors.cream },
+  segText: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.onRed },
+  segTextOn: { color: colors.red },
   listContent: { paddingHorizontal: 16, paddingBottom: 24 },
   week: { marginHorizontal: -16, marginBottom: 14 },
   weekInner: { paddingHorizontal: 16, gap: 6 },
-  day: { width: 46, alignItems: 'center', paddingTop: 8, paddingBottom: 12, borderRadius: 16 },
-  dayOn: { backgroundColor: colors.dark },
+  // white day tiles on the band, today / the picked day in cream
+  day: { width: 46, alignItems: 'center', paddingTop: 8, paddingBottom: 12, borderRadius: 16, backgroundColor: colors.panel },
+  dayOn: { backgroundColor: colors.cream },
   dayName: { fontFamily: fonts.bodySemibold, fontSize: 11.5, color: colors.faint },
-  dayNameOn: { color: '#aaa' },
-  dayNum: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.ink, marginTop: 2 },
-  dayNumOn: { color: '#fff' },
+  dayNameOn: { color: colors.red },
+  dayNum: { fontFamily: fonts.display, fontSize: 16, color: colors.ink, marginTop: 2 },
+  dayNumOn: { color: colors.red },
   dayDot: { position: 'absolute', bottom: 4, width: 5, height: 5, borderRadius: 3, backgroundColor: colors.goldDot },
   banner: {
     flexDirection: 'row',
@@ -710,24 +731,25 @@ const styles = StyleSheet.create({
   bannerInitialText: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.gold2 },
   bannerName: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
   bannerWhen: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.gold2, marginTop: 1 },
-  bannerGo: { backgroundColor: colors.gold2, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11 },
-  bannerGoText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.ink },
+  bannerGo: { backgroundColor: colors.cream, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11 },
+  bannerGoText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.red },
   bannerSoon: { flexDirection: 'row', alignItems: 'center', gap: 4, maxWidth: 92 },
-  bannerSoonText: { fontFamily: fonts.bodySemibold, fontSize: 11, color: '#aaa' },
-  emptyBanner: { backgroundColor: colors.dark, borderRadius: 20, padding: 16, marginBottom: 14 },
-  emptyBannerTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: '#fff' },
-  emptyBannerText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#aaa', marginTop: 3 },
-  emptyBannerBtn: { alignSelf: 'flex-start', backgroundColor: colors.gold2, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11, marginTop: 12 },
-  emptyBannerBtnText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.ink },
-  credits: { backgroundColor: colors.goldPale, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14, gap: 4 },
+  bannerSoonText: { fontFamily: fonts.bodySemibold, fontSize: 11, color: 'rgba(250,245,226,0.78)' },
+  emptyBanner: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 16, marginBottom: 14 },
+  emptyBannerTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
+  emptyBannerText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.muted, marginTop: 3 },
+  emptyBannerBtn: { alignSelf: 'flex-start', backgroundColor: colors.red, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11, marginTop: 12 },
+  emptyBannerBtnText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.onRed },
+  credits: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14, gap: 4 },
   creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   creditsTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   creditsLine: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.ink, marginTop: 4 },
   creditsHint: { fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16, color: colors.muted, marginTop: 4 },
   ag: { flexDirection: 'row', gap: 12, marginBottom: 10 },
   agHour: { width: 46, fontFamily: fonts.bodyBold, fontSize: 13, color: colors.faint, paddingTop: 13 },
-  agCard: { flex: 1, borderRadius: 18, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: '#f6f6f6', borderLeftWidth: 4, borderLeftColor: colors.dark },
-  agCardTrial: { backgroundColor: '#fff8de', borderLeftColor: colors.goldDot },
+  // a regular lesson is champagne, a trial petrol - the website's colours
+  agCard: { flex: 1, borderRadius: 18, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.champagneDeep },
+  agCardTrial: { backgroundColor: '#eef5f4', borderColor: '#cfe3e0', borderLeftColor: colors.petrol },
   agTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   agTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: colors.ink },
   agSub: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.muted, marginTop: 2 },
@@ -737,22 +759,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: colors.gold2,
+    backgroundColor: colors.red,
     borderRadius: 12,
     paddingVertical: 10,
     marginTop: 10,
   },
-  agJoinText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.ink },
-  agEmpty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#e3e3e3', borderRadius: 18, padding: 16, alignItems: 'center' },
+  agJoinText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.onRed },
+  agEmpty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.champagneDeep, borderRadius: 18, padding: 16, alignItems: 'center' },
   agEmptyText: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: '#9a9a9a' },
   laterTitle: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.faint, letterSpacing: 0.5, textTransform: 'uppercase', marginTop: 22, marginBottom: 8 },
-  later: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 10, marginBottom: 8 },
+  later: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 10, marginBottom: 8 },
   laterDate: { width: 44, alignItems: 'center', backgroundColor: colors.panel2, borderRadius: 12, paddingVertical: 5 },
   laterDay: { fontFamily: fonts.bodySemibold, fontSize: 11, color: colors.faint },
   laterNum: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
   laterName: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
   laterTime: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.muted, marginTop: 1 },
-  hist: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, marginBottom: 10 },
+  hist: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, marginBottom: 10 },
   statusPill: { backgroundColor: colors.panel2, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4 },
   statusPillCancelled: { backgroundColor: '#fbeceb' },
   statusText: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.muted },
@@ -762,10 +784,10 @@ const styles = StyleSheet.create({
   requestText: { fontFamily: fonts.body, fontSize: 12.5, lineHeight: 18, color: colors.ink },
   requestSlot: { fontFamily: fonts.bodyBold },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  smallBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.bg },
+  smallBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.panel },
   smallBtnPrimary: { borderColor: colors.dark, backgroundColor: colors.dark },
   smallBtnText: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.ink },
-  smallBtnTextPrimary: { color: '#fff' },
+  smallBtnTextPrimary: { color: colors.onRed },
   sheetShade: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 34 },
   grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 14 },

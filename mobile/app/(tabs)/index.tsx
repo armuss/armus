@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Band, { ScrollBand } from '../../components/Band';
 import TeacherCard from '../../components/TeacherCard';
 import TeacherHome from '../../components/TeacherHome';
 import { useAuth } from '../../lib/auth';
@@ -79,15 +80,19 @@ function StudentBrowse() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.screen, styles.centered]} edges={['top']}>
-        <ActivityIndicator color={colors.ink} />
-      </SafeAreaView>
+      <View style={styles.screen}>
+        <Band height={150} />
+        <SafeAreaView style={[styles.safe, styles.centered]} edges={['top']}>
+          <ActivityIndicator color={colors.onRed} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
       <FlatList
+        style={styles.list}
         data={gridData}
         numColumns={2}
         keyExtractor={(item) => (item === 'more' ? 'more' : item.id)}
@@ -102,11 +107,14 @@ function StudentBrowse() {
               setRefreshing(true);
               load();
             }}
-            tintColor={colors.ink}
+            tintColor={colors.onRed}
           />
         }
         ListHeaderComponent={
           <View>
+            {/* the red band reaches under the title and the filters; with the
+                search open it reaches the sort row too */}
+            <ScrollBand height={showSearch ? 262 : 150} />
             <View style={styles.head}>
               <Text style={styles.title}>Keşfet</Text>
               <Pressable
@@ -114,7 +122,7 @@ function StudentBrowse() {
                 style={[styles.roundBtn, showSearch && styles.roundBtnOn]}
                 accessibilityLabel="Ara ve sırala"
               >
-                <Ionicons name={showSearch ? 'close' : 'search'} size={19} color={showSearch ? '#fff' : colors.ink} />
+                <Ionicons name={showSearch ? 'close' : 'search'} size={19} color={showSearch ? colors.red : colors.onRed} />
               </Pressable>
             </View>
 
@@ -201,43 +209,59 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: 'transparent' },
+  // the status bar area is plain red; the list paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingHorizontal: 16, paddingBottom: 20 },
   row: { gap: 10 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, marginBottom: 12 },
-  title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
+  title: { fontFamily: fonts.display, fontSize: 26, color: colors.onRed, letterSpacing: -0.8 },
   roundBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.panel2,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: 'rgba(250,245,226,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  roundBtnOn: { backgroundColor: colors.dark },
+  roundBtnOn: { backgroundColor: colors.cream, borderColor: colors.cream },
   searchBlock: { marginBottom: 12, gap: 10 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.panel2,
-    borderRadius: 14,
+    backgroundColor: colors.panel,
+    borderRadius: 15,
     paddingHorizontal: 14,
     height: 48,
   },
   search: { flex: 1, height: '100%', fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.ink },
   sortRow: { flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
-  sortLabel: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.faint, letterSpacing: 0.5, textTransform: 'uppercase', marginRight: 2 },
+  sortLabel: { fontFamily: fonts.bodyBold, fontSize: 12, color: 'rgba(250,245,226,0.8)', letterSpacing: 0.5, textTransform: 'uppercase', marginRight: 2 },
   chips: { marginHorizontal: -16, marginBottom: 12 },
   chipsInner: { paddingHorizontal: 16, gap: 7 },
-  chip: { backgroundColor: colors.panel2, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  chipActive: { backgroundColor: colors.dark },
-  chipText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
-  chipTextActive: { color: '#fff' },
+  // the chips sit on the red band: see-through cream, the picked one solid cream
+  chip: {
+    backgroundColor: 'rgba(250,245,226,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.3)',
+    borderRadius: 99,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+  },
+  chipActive: { backgroundColor: colors.cream, borderColor: colors.cream },
+  chipText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.onRed },
+  chipTextActive: { color: colors.red },
   more: {
     height: 232,
     borderRadius: radius.xl,
-    backgroundColor: '#f6f6f6',
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -248,5 +272,5 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', marginTop: 40, gap: 14, paddingHorizontal: 20 },
   empty: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 20, color: colors.muted, textAlign: 'center' },
   emptyBtn: { backgroundColor: colors.dark, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12 },
-  emptyBtnText: { fontFamily: fonts.bodyBold, fontSize: 14, color: '#fff' },
+  emptyBtnText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.onRed },
 });

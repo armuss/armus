@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { updateOwnProfile, uploadProfilePhoto } from '../../lib/profile';
@@ -27,6 +28,8 @@ export default function EditProfile() {
   const { profile, refreshProfile } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  // the red band reaches just past the photo
+  const [photoBottom, setPhotoBottom] = useState(220);
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -143,22 +146,27 @@ export default function EditProfile() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.ink} />
+        <ActivityIndicator color={colors.red} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollBand height={photoBottom - 10} inset={24} fade={70} />
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backText}>← Geri</Text>
           </Pressable>
 
           <Text style={styles.screenTitle}>Profili Düzenle</Text>
 
-          <Pressable onPress={pickPhoto} style={styles.photoWrap}>
+          <Pressable
+            onPress={pickPhoto}
+            style={styles.photoWrap}
+            onLayout={(e) => setPhotoBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+          >
             {localPhotoUri || photoUrl ? (
               <Image source={{ uri: localPhotoUri || photoUrl! }} style={styles.photo} />
             ) : (
@@ -261,6 +269,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  // the status bar area is plain red; the scroll view paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -276,12 +287,12 @@ const styles = StyleSheet.create({
   backText: {
     fontFamily: fonts.bodySemibold,
     fontSize: 13.5,
-    color: colors.muted,
+    color: 'rgba(250,245,226,0.85)',
   },
   screenTitle: {
     fontFamily: fonts.display,
     fontSize: 24,
-    color: colors.ink,
+    color: colors.onRed,
     letterSpacing: -0.5,
     marginBottom: 20,
   },
@@ -293,7 +304,9 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: colors.panel2,
+    borderWidth: 3,
+    borderColor: colors.cream,
+    backgroundColor: colors.champagne,
   },
   photoFallback: {
     alignItems: 'center',
@@ -302,12 +315,12 @@ const styles = StyleSheet.create({
   photoFallbackText: {
     fontFamily: fonts.display,
     fontSize: 32,
-    color: colors.ink,
+    color: colors.red,
   },
   photoEditText: {
     fontFamily: fonts.bodyBold,
     fontSize: 12.5,
-    color: colors.goldText,
+    color: colors.onRed,
     marginTop: 10,
   },
   field: {
