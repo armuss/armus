@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../components/Band';
 import Button from '../components/Button';
 import { useAuth } from '../lib/auth';
 import { MONTH_NAMES, getBookingsForTeacher } from '../lib/bookings';
@@ -44,6 +45,8 @@ export default function Earnings() {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState<{ text: string; error: boolean } | null>(null);
   const [sending, setSending] = useState(false);
+  // the red band reaches just past the two figures at the top
+  const [statsBottom, setStatsBottom] = useState(150);
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -83,20 +86,21 @@ export default function Earnings() {
   if (loading || !summary) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.ink} />
+        <ActivityIndicator color={colors.red} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollBand height={statsBottom + 10} inset={20} />
         <Pressable onPress={() => router.back()} style={{ marginBottom: 12 }}>
           <Text style={styles.back}>← Geri</Text>
         </Pressable>
         <Text style={styles.title}>Kazançlarım</Text>
 
-        <View style={styles.statRow}>
+        <View style={styles.statRow} onLayout={(e) => setStatsBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{formatMoney(summary.netThisMonth)}</Text>
             <Text style={styles.statLabel}>Bu ay (tahmini)</Text>
@@ -178,26 +182,30 @@ export default function Earnings() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  // the status bar area is plain red; the scroll view paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40 },
-  back: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: colors.muted },
-  title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, letterSpacing: -0.5, marginBottom: 16 },
-  statRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  back: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: 'rgba(250,245,226,0.85)' },
+  title: { fontFamily: fonts.display, fontSize: 24, color: colors.onRed, letterSpacing: -0.5, marginBottom: 16 },
+  statRow: { flexDirection: 'row', gap: 10, marginBottom: 22 },
+  // the two figures sit on the band: see-through cream tiles
   statCard: {
     flex: 1,
-    backgroundColor: colors.panel,
+    backgroundColor: 'rgba(250,245,226,0.12)',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: 'rgba(250,245,226,0.28)',
     paddingVertical: 14,
     paddingHorizontal: 8,
     alignItems: 'center',
   },
-  statValue: { fontFamily: fonts.bodyExtraBold, fontSize: 18, color: colors.ink },
-  statLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.muted, marginTop: 3, textAlign: 'center' },
-  balanceCard: { backgroundColor: colors.goldPale, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.gold2, padding: 16, gap: 6 },
+  statValue: { fontFamily: fonts.displayBold, fontSize: 18, color: colors.onRed },
+  statLabel: { fontFamily: fonts.body, fontSize: 11, color: 'rgba(250,245,226,0.8)', marginTop: 3, textAlign: 'center' },
+  balanceCard: { backgroundColor: colors.panel, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.champagneDeep, padding: 16, gap: 6 },
   balanceLabel: { fontFamily: fonts.bodySemibold, fontSize: 12.5, color: colors.muted },
-  balanceValue: { fontFamily: fonts.display, fontSize: 28, color: colors.ink },
+  balanceValue: { fontFamily: fonts.display, fontSize: 28, color: colors.navy },
   held: { fontFamily: fonts.bodySemibold, fontSize: 12.5, lineHeight: 18, color: colors.goldText },
   hint: { fontFamily: fonts.body, fontSize: 12, lineHeight: 17, color: colors.muted },
   sectionTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink, marginTop: 26, marginBottom: 8 },
@@ -208,6 +216,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
     paddingHorizontal: 14,
+    backgroundColor: colors.panel,
     fontFamily: fonts.body,
     fontSize: 14.5,
     color: colors.ink,
@@ -234,6 +243,6 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     overflow: 'hidden',
   },
-  badgePaid: { color: colors.success, backgroundColor: '#e9f7ef' },
+  badgePaid: { color: colors.petrol, backgroundColor: colors.petrolSoft },
   badgeRejected: { color: colors.error, backgroundColor: '#fbeceb' },
 });

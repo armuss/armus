@@ -1,11 +1,12 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, fonts } from '../lib/theme';
+import { colors, fonts, redGradient } from '../lib/theme';
 
 type Props = {
   label: string;
   onPress?: () => void;
-  /** primary: the black main action · gold: a highlighted one · outline: a secondary one */
+  /** primary: the red main action · gold: a highlighted one (cream) · outline: a secondary one */
   variant?: 'primary' | 'gold' | 'outline';
   loading?: boolean;
   disabled?: boolean;
@@ -13,7 +14,7 @@ type Props = {
 
 export default function Button({ label, onPress, variant = 'primary', loading, disabled }: Props) {
   const isDisabled = disabled || loading;
-  const textColor = variant === 'primary' ? '#fff' : colors.ink;
+  const textColor = variant === 'primary' ? colors.onRed : variant === 'gold' ? colors.red : colors.ink;
 
   return (
     <Pressable
@@ -21,14 +22,16 @@ export default function Button({ label, onPress, variant = 'primary', loading, d
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        variant === 'primary' && { backgroundColor: colors.dark },
-        variant === 'gold' && { backgroundColor: colors.gold2 },
+        variant === 'gold' && { backgroundColor: colors.cream, borderWidth: 1, borderColor: colors.champagneDeep },
         variant === 'outline' && styles.outline,
         { opacity: isDisabled ? 0.55 : pressed ? 0.86 : 1 },
       ]}
     >
+      {variant === 'primary' && (
+        <LinearGradient colors={redGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fill} />
+      )}
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? colors.gold2 : colors.ink} />
+        <ActivityIndicator color={variant === 'primary' ? colors.onRed : colors.red} />
       ) : (
         <Text style={[styles.label, { color: textColor }]}>{label}</Text>
       )}
@@ -43,8 +46,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+    overflow: 'hidden',
   },
-  outline: { backgroundColor: colors.bg, borderWidth: 1, borderColor: '#e3e3e3' },
+  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  outline: { backgroundColor: colors.panel, borderWidth: 1, borderColor: '#e2d6c3' },
   label: {
     fontFamily: fonts.bodyExtraBold,
     fontSize: 15,

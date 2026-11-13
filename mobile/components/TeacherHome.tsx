@@ -29,6 +29,7 @@ import { formatMoney } from '../lib/credits';
 import { confirmAsync, notify } from '../lib/dialogs';
 import { getTeacherCredits, getWithdrawalRequests, summarizeEarnings, type EarningsSummary } from '../lib/earnings';
 import { colors, fonts, radius } from '../lib/theme';
+import Band, { ScrollBand } from './Band';
 import ReschedulePicker from './ReschedulePicker';
 
 const LIMIT_MESSAGE =
@@ -205,15 +206,19 @@ export default function TeacherHome() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.screen, styles.centered]} edges={['top']}>
-        <ActivityIndicator color={colors.ink} />
-      </SafeAreaView>
+      <View style={styles.screen}>
+        <Band height={175} />
+        <SafeAreaView style={[styles.safe, styles.centered]} edges={['top']}>
+          <ActivityIndicator color={colors.onRed} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
       <FlatList
+        style={styles.list}
         data={rows}
         keyExtractor={(row) => row.key}
         contentContainerStyle={styles.listContent}
@@ -225,12 +230,14 @@ export default function TeacherHome() {
               setRefreshing(true);
               load();
             }}
-            tintColor={colors.ink}
+            tintColor={colors.onRed}
           />
         }
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            <Text style={styles.eyebrow}>BUGÜN</Text>
+            {/* the red band under the greeting and the three numbers (design A) */}
+            <ScrollBand height={175} inset={20} />
+            <Text style={styles.eyebrow}>ÖĞRETMEN PANELİ · BUGÜN</Text>
             <Text style={styles.title}>Merhaba, {profile?.name?.split(' ')[0] || 'Öğretmen'}</Text>
 
             <View style={styles.statRow}>
@@ -302,6 +309,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  safe: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  // the status bar area is plain red; the list paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -318,14 +332,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyBold,
     fontSize: 11.5,
     letterSpacing: 1,
-    color: colors.goldText,
+    color: 'rgba(250,245,226,0.8)',
     marginBottom: 8,
   },
   title: {
     fontFamily: fonts.displayBlack,
     fontSize: 25,
     lineHeight: 31,
-    color: colors.ink,
+    color: colors.onRed,
     letterSpacing: -0.5,
     marginBottom: 18,
   },
@@ -334,24 +348,25 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 14,
   },
+  // the three numbers sit on the red band: see-through cream tiles
   statCard: {
     flex: 1,
-    backgroundColor: colors.panel,
+    backgroundColor: 'rgba(250,245,226,0.14)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(250,245,226,0.24)',
     paddingVertical: 14,
     alignItems: 'center',
   },
   statValue: {
-    fontFamily: fonts.bodyExtraBold,
+    fontFamily: fonts.display,
     fontSize: 20,
-    color: colors.ink,
+    color: colors.onRed,
   },
   statLabel: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.muted,
+    color: 'rgba(250,245,226,0.82)',
     marginTop: 3,
     textAlign: 'center',
   },
@@ -367,12 +382,12 @@ const styles = StyleSheet.create({
   earningsLabel: {
     fontFamily: fonts.bodySemibold,
     fontSize: 12,
-    color: '#aaa',
+    color: 'rgba(250,245,226,0.8)',
   },
   earningsValue: {
     fontFamily: fonts.display,
     fontSize: 22,
-    color: '#fff',
+    color: colors.onRed,
     marginVertical: 3,
   },
   earningsSub: {
@@ -383,8 +398,8 @@ const styles = StyleSheet.create({
   earningsLink: {
     fontFamily: fonts.bodyExtraBold,
     fontSize: 13,
-    color: colors.ink,
-    backgroundColor: colors.gold2,
+    color: colors.red,
+    backgroundColor: colors.cream,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -446,7 +461,7 @@ const styles = StyleSheet.create({
   },
   joinBtn: {
     marginTop: 12,
-    backgroundColor: colors.gold2,
+    backgroundColor: colors.red,
     borderRadius: radius.md,
     paddingVertical: 10,
     alignItems: 'center',
@@ -454,7 +469,7 @@ const styles = StyleSheet.create({
   joinBtnText: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: colors.onGold,
+    color: colors.onRed,
   },
   requestBox: {
     marginTop: 12,
@@ -483,7 +498,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.panel,
   },
   smallBtnPrimary: {
     borderColor: colors.dark,
@@ -498,7 +513,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   smallBtnTextPrimary: {
-    color: '#fff',
+    color: colors.onRed,
   },
   smallBtnTextDanger: {
     color: colors.error,

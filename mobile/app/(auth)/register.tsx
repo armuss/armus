@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import Logo from '../../components/Logo';
 import { supabase } from '../../lib/supabase';
@@ -61,11 +62,13 @@ export default function Register() {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {/* the logo and the greeting on the red band; the form below it */}
+          <ScrollBand height={150} inset={28} fade={80} />
           <View style={styles.brandBlock}>
-            <Logo size={32} />
+            <Logo size={32} light />
             <Text style={styles.title}>Hesap oluştur</Text>
             <Text style={styles.subtitle}>Hedefine uygun öğretmeni bulmaya başla.</Text>
           </View>
@@ -161,13 +164,15 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
+  // the status bar area is plain red; the scroll view paints the ground and carries the band
   screen: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.red,
   },
+  list: { flex: 1, backgroundColor: colors.bg },
   content: {
     paddingHorizontal: 28,
-    paddingTop: 40,
+    paddingTop: 24,
     paddingBottom: 40,
   },
   brandBlock: {
@@ -177,17 +182,17 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.display,
     fontSize: 28,
-    color: colors.ink,
-    marginTop: 28,
+    color: colors.onRed,
+    marginTop: 24,
     letterSpacing: -0.5,
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 14.5,
-    color: colors.muted,
+    color: 'rgba(250,245,226,0.85)',
     marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 64,
     textAlign: 'center',
   },
   field: {

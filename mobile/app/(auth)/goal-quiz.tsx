@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import Logo from '../../components/Logo';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -138,7 +139,7 @@ function recapEntries(a: Answers): string[] {
 function Illustration() {
   return (
     <View style={styles.illustration}>
-      <Logo size={34} />
+      <Logo size={30} light />
     </View>
   );
 }
@@ -227,6 +228,15 @@ export default function GoalQuiz() {
 
   const step = steps[stepIndex];
 
+  // how far down the question (title and subtitle) reaches on this step: the
+  // red band ends just below it, so the question always sits on red
+  const [band, setBand] = useState({ step: '', h: 0 });
+  const bandH = band.step === step ? band.h : 0;
+  function growBand(e: LayoutChangeEvent) {
+    const { y, height } = e.nativeEvent.layout;
+    setBand((prev) => ({ step, h: prev.step === step ? Math.max(prev.h, y + height) : y + height }));
+  }
+
   function finish() {
     router.replace('/(auth)/signup-options');
   }
@@ -279,16 +289,18 @@ export default function GoalQuiz() {
     (step === 'matching' && true);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <Pressable onPress={back} style={styles.backBtn} hitSlop={12}>
         <Text style={styles.backArrow}>←</Text>
       </Pressable>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView key={step} style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* the question sits on the red band; the band ends just below it */}
+        <ScrollBand height={bandH ? bandH + 26 : 0} inset={0} />
         {step === 'goal' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Hedefin ne?</Text>
+            <Text style={styles.title} onLayout={growBand}>Hedefin ne?</Text>
             <View style={styles.options}>
               {GOAL_OPTIONS.map((o) => (
                 <RadioRow
@@ -305,7 +317,7 @@ export default function GoalQuiz() {
         {step === 'timeline' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Bu hedefe ne zaman ulaşmak istersin?</Text>
+            <Text style={styles.title} onLayout={growBand}>Bu hedefe ne zaman ulaşmak istersin?</Text>
             <View style={styles.options}>
               {TIMELINE_OPTIONS.map((o) => (
                 <RadioRow
@@ -322,8 +334,8 @@ export default function GoalQuiz() {
         {step === 'industry' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Hangi sektörde çalışıyorsun?</Text>
-            <Text style={styles.subtitle}>Bu, sana en uygun öğretmeni önermemize yardımcı olur.</Text>
+            <Text style={styles.title} onLayout={growBand}>Hangi sektörde çalışıyorsun?</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>Bu, sana en uygun öğretmeni önermemize yardımcı olur.</Text>
             <View style={styles.options}>
               {(showAllIndustries ? INDUSTRY_OPTIONS_ALL : INDUSTRY_OPTIONS_BASE).map((o) => (
                 <RadioRow
@@ -345,8 +357,8 @@ export default function GoalQuiz() {
         {step === 'jobTitle' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Ünvanın veya pozisyonun ne?</Text>
-            <Text style={styles.subtitle}>Birkaç kelimeyle anlat</Text>
+            <Text style={styles.title} onLayout={growBand}>Ünvanın veya pozisyonun ne?</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>Birkaç kelimeyle anlat</Text>
             <TextInput
               value={answers.jobTitle}
               onChangeText={(text) => setAnswers((prev) => ({ ...prev, jobTitle: text }))}
@@ -361,7 +373,7 @@ export default function GoalQuiz() {
         {step === 'skills' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Hangi kariyer becerilerini geliştirmek istersin?</Text>
+            <Text style={styles.title} onLayout={growBand}>Hangi kariyer becerilerini geliştirmek istersin?</Text>
             <View style={styles.chipRow}>
               {SKILL_OPTIONS.map((o) => (
                 <Chip
@@ -378,7 +390,7 @@ export default function GoalQuiz() {
         {step === 'topics' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Odaklanmak istediğin başka konular var mı?</Text>
+            <Text style={styles.title} onLayout={growBand}>Odaklanmak istediğin başka konular var mı?</Text>
             <View style={styles.chipRow}>
               {(showAllTopics ? TOPIC_OPTIONS_ALL : TOPIC_OPTIONS_BASE).map((o) => (
                 <Chip
@@ -400,7 +412,7 @@ export default function GoalQuiz() {
         {step === 'level' && (
           <>
             <Illustration />
-            <Text style={styles.title}>İngilizce seviyen nedir?</Text>
+            <Text style={styles.title} onLayout={growBand}>İngilizce seviyen nedir?</Text>
             <View style={styles.options}>
               {LEVEL_OPTIONS.map((o) => (
                 <RadioRow
@@ -417,8 +429,8 @@ export default function GoalQuiz() {
         {step === 'teachingStyle' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Senin için en iyi öğretim tarzı hangisi?</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.title} onLayout={growBand}>Senin için en iyi öğretim tarzı hangisi?</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>
               En sevdiğin <Text style={styles.subtitleAccent}>{MAX_STYLES}</Text> özelliği seç.
             </Text>
             <View style={styles.chipRow}>
@@ -437,7 +449,7 @@ export default function GoalQuiz() {
         {step === 'tutorCountry' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Öğretmenin hangi ülkeden olmasını istersin?</Text>
+            <Text style={styles.title} onLayout={growBand}>Öğretmenin hangi ülkeden olmasını istersin?</Text>
             <View style={styles.toggleRow}>
               <Text style={styles.toggleLabel}>Sadece anadili İngilizce olanlar</Text>
               <Switch
@@ -468,7 +480,7 @@ export default function GoalQuiz() {
         {step === 'otherLanguages' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Öğretmeninin konuşmasını istediğin başka diller var mı?</Text>
+            <Text style={styles.title} onLayout={growBand}>Öğretmeninin konuşmasını istediğin başka diller var mı?</Text>
             <View style={styles.chipRow}>
               {(showAllLanguages ? LANGUAGE_OPTIONS_ALL : LANGUAGE_OPTIONS_BASE).map((o) => (
                 <Chip
@@ -490,7 +502,7 @@ export default function GoalQuiz() {
         {step === 'schedule' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Ne zaman ders alabilirsin?</Text>
+            <Text style={styles.title} onLayout={growBand}>Ne zaman ders alabilirsin?</Text>
 
             <Text style={styles.sectionLabel}>Günler</Text>
             <View style={styles.chipRow}>
@@ -516,8 +528,8 @@ export default function GoalQuiz() {
         {step === 'budget' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Ders başına bütçen ne kadar?</Text>
-            <Text style={styles.subtitle}>50 dakikalık bir ders için</Text>
+            <Text style={styles.title} onLayout={growBand}>Ders başına bütçen ne kadar?</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>50 dakikalık bir ders için</Text>
             <View style={styles.options}>
               {BUDGET_OPTIONS.map((o) => (
                 <RadioRow
@@ -534,8 +546,8 @@ export default function GoalQuiz() {
         {step === 'futureSubjects' && (
           <>
             <Illustration />
-            <Text style={styles.title}>İleride başka bir dil öğrenmeyi düşünür müsün?</Text>
-            <Text style={styles.subtitle}>Bu tamamen opsiyonel - şu an sadece ilgini not ediyoruz.</Text>
+            <Text style={styles.title} onLayout={growBand}>İleride başka bir dil öğrenmeyi düşünür müsün?</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>Bu tamamen opsiyonel - şu an sadece ilgini not ediyoruz.</Text>
             <View style={styles.chipRow}>
               {(showAllFutureSubjects ? FUTURE_SUBJECT_OPTIONS_ALL : FUTURE_SUBJECT_OPTIONS_BASE).map((o) => (
                 <Chip
@@ -557,8 +569,8 @@ export default function GoalQuiz() {
         {step === 'extraNotes' && (
           <>
             <Illustration />
-            <Text style={styles.title}>Sana en uygun öğretmeni bulmamıza yardımcı olacak başka bir şey var mı?</Text>
-            <Text style={styles.subtitle}>Eşleşmeni daha da iyileştirmek için bunu kullanacağız.</Text>
+            <Text style={styles.title} onLayout={growBand}>Sana en uygun öğretmeni bulmamıza yardımcı olacak başka bir şey var mı?</Text>
+            <Text style={styles.subtitle} onLayout={growBand}>Eşleşmeni daha da iyileştirmek için bunu kullanacağız.</Text>
 
             {recapEntries(answers).length > 0 && (
               <View style={styles.recapCard}>
@@ -604,7 +616,7 @@ export default function GoalQuiz() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <SafeAreaView edges={['bottom']} style={styles.footer}>
         {step === 'jobTitle' && <Button label={answers.jobTitle ? 'Devam et' : 'Atla'} onPress={next} />}
         {step === 'futureSubjects' && (
           <Button label={answers.futureSubjects.length > 0 ? 'Devam et' : 'Şimdilik geç'} onPress={next} />
@@ -615,16 +627,18 @@ export default function GoalQuiz() {
           step !== 'futureSubjects' &&
           step !== 'extraNotes' &&
           step !== 'matching' && <Button label="Devam et" onPress={next} disabled={!canContinue} />}
-      </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // the status bar and back row are plain red; the scroll view paints the ground and carries the band
   screen: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.red,
   },
+  list: { flex: 1, backgroundColor: colors.bg },
   backBtn: {
     marginLeft: 24,
     marginTop: 8,
@@ -636,23 +650,21 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 22,
-    color: colors.ink,
+    color: colors.onRed,
   },
   content: {
     paddingBottom: 20,
   },
   illustration: {
-    height: 190,
-    backgroundColor: colors.panel2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 28,
+    paddingHorizontal: 26,
+    paddingTop: 4,
+    marginBottom: 14,
   },
   title: {
     fontFamily: fonts.displayBlack,
     fontSize: 26,
     lineHeight: 31,
-    color: colors.ink,
+    color: colors.onRed,
     letterSpacing: -0.5,
     paddingHorizontal: 26,
     marginBottom: 10,
@@ -660,33 +672,35 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.muted,
+    color: 'rgba(250,245,226,0.88)',
     paddingHorizontal: 26,
     marginBottom: 18,
     lineHeight: 20,
   },
   subtitleAccent: {
     fontFamily: fonts.bodyBold,
-    color: colors.goldText,
+    color: colors.onRed,
   },
   options: {
     paddingHorizontal: 26,
     gap: 12,
-    marginTop: 10,
+    marginTop: 18,
   },
   radioRow: {
     height: 58,
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.border,
+    backgroundColor: colors.panel,
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  // the picked answer: red edge and a red dot, like the website's quiz
   radioRowActive: {
-    borderColor: colors.ink,
-    backgroundColor: colors.goldPale,
+    borderColor: colors.red,
+    backgroundColor: colors.panel,
   },
   radioLabel: {
     fontFamily: fonts.bodyMedium,
@@ -705,13 +719,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioCircleActive: {
-    borderColor: colors.ink,
+    borderColor: colors.red,
   },
   radioDot: {
     width: 11,
     height: 11,
     borderRadius: 6,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.red,
   },
   toggleRow: {
     marginHorizontal: 26,
@@ -720,6 +734,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.border,
+    backgroundColor: colors.panel,
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
@@ -747,6 +762,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
     padding: 16,
+    backgroundColor: colors.panel,
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.ink,
@@ -761,6 +777,7 @@ const styles = StyleSheet.create({
   chip: {
     borderWidth: 1.5,
     borderColor: colors.border,
+    backgroundColor: colors.panel,
     borderRadius: radius.pill,
     paddingHorizontal: 16,
     paddingVertical: 11,
@@ -768,8 +785,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipActive: {
-    borderColor: colors.ink,
-    backgroundColor: colors.goldPale,
+    borderColor: colors.red,
+    backgroundColor: colors.redSoft,
   },
   chipIcon: {
     fontSize: 15,
@@ -798,9 +815,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 16,
     borderRadius: radius.lg,
-    backgroundColor: colors.panel2,
+    backgroundColor: colors.panel,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: colors.border,
   },
   recapCardLabel: {
     fontFamily: fonts.bodyBold,
@@ -835,7 +852,7 @@ const styles = StyleSheet.create({
   },
   matchingWrap: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 56,
   },
   matchingCard: {
     borderRadius: radius.xl,
@@ -852,13 +869,13 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.gold2,
+    backgroundColor: colors.cream,
   },
   matchingEyebrow: {
     fontFamily: fonts.bodyBold,
     fontSize: 11.5,
     letterSpacing: 1,
-    color: '#fff',
+    color: colors.onRed,
     opacity: 0.7,
     marginBottom: 16,
   },
@@ -866,17 +883,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBlack,
     fontSize: 24,
     lineHeight: 31,
-    color: '#fff',
+    color: colors.onRed,
     letterSpacing: -0.8,
     marginBottom: 16,
   },
   matchingAccent: {
-    color: colors.gold2,
+    color: colors.champagneDeep,
   },
   matchingSubtitle: {
     fontFamily: fonts.body,
     fontSize: 14.5,
-    color: '#fff',
+    color: colors.onRed,
     opacity: 0.75,
     lineHeight: 21,
   },
@@ -886,5 +903,6 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
+    backgroundColor: colors.bg,
   },
 });

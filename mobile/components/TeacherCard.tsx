@@ -30,7 +30,7 @@ export default function TeacherCard({ teacher, width, onPress, isFavorite, onTog
           style={styles.heart}
           accessibilityLabel={isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
         >
-          <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={17} color={isFavorite ? colors.gold2 : '#fff'} />
+          <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={17} color={isFavorite ? colors.red : colors.ink} />
         </Pressable>
       )}
       <View style={styles.text}>
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.22)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center',
     justifyContent: 'center',
   },

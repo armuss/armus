@@ -13,6 +13,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
+import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import WithdrawalConsent from '../../components/WithdrawalConsent';
 import { useAuth } from '../../lib/auth';
@@ -90,6 +91,8 @@ export default function Booking() {
   const [phase, setPhase] = useState<Phase>('picking');
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [creditApplied, setCreditApplied] = useState(false);
+  // the red band reaches just past the week strip, wherever a notice puts it
+  const [weekBottom, setWeekBottom] = useState(130);
 
   useEffect(() => {
     let active = true;
@@ -284,7 +287,7 @@ export default function Booking() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.ink} />
+        <ActivityIndicator color={colors.red} />
       </SafeAreaView>
     );
   }
@@ -402,11 +405,12 @@ export default function Booking() {
         : 'Ödemeye geç';
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollBand height={weekBottom - 24} fade={64} />
         <View style={styles.head}>
           <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
-            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+            <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <View style={styles.headText}>
             <Text style={styles.headTitle} numberOfLines={1}>
@@ -426,7 +430,13 @@ export default function Booking() {
           </Text>
         )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.week} contentContainerStyle={styles.weekInner}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.week}
+          contentContainerStyle={styles.weekInner}
+          onLayout={(e) => setWeekBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+        >
           {DATE_OPTIONS.map(({ date, key }) => {
             const on = selectedDate === key;
             const open = openDays[key];
@@ -609,14 +619,26 @@ export default function Booking() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  // the picker: the status bar area is plain red, the scroll view paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 60 },
   content: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 24 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
+  roundBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(250,245,226,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(250,245,226,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headText: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
-  headTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
-  headSub: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.faint, marginTop: 1 },
+  headTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.onRed },
+  headSub: { fontFamily: fonts.bodyMedium, fontSize: 12, color: 'rgba(250,245,226,0.8)', marginTop: 1 },
   backBtn: { paddingVertical: 4 },
   backText: { fontFamily: fonts.bodySemibold, fontSize: 14, color: colors.ink },
   notice: {
@@ -631,13 +653,14 @@ const styles = StyleSheet.create({
   },
   week: { marginHorizontal: -16, marginBottom: 6 },
   weekInner: { paddingHorizontal: 16, gap: 6 },
-  day: { width: 46, alignItems: 'center', paddingTop: 8, paddingBottom: 12, borderRadius: 16 },
-  dayOn: { backgroundColor: colors.dark },
+  // white day tiles on the band, the picked day in cream with red figures
+  day: { width: 46, alignItems: 'center', paddingTop: 8, paddingBottom: 12, borderRadius: 16, backgroundColor: colors.panel },
+  dayOn: { backgroundColor: colors.cream },
   dayName: { fontFamily: fonts.bodySemibold, fontSize: 11.5, color: colors.faint },
-  dayNameOn: { color: '#aaa' },
-  dayNum: { fontFamily: fonts.bodyExtraBold, fontSize: 17, color: colors.ink, marginTop: 2 },
-  dayNumClosed: { color: '#c4c4c4' },
-  dayNumOn: { color: '#fff' },
+  dayNameOn: { color: colors.red },
+  dayNum: { fontFamily: fonts.displayBold, fontSize: 16, color: colors.ink, marginTop: 2 },
+  dayNumClosed: { color: '#cdbfae' },
+  dayNumOn: { color: colors.red },
   dayDot: { position: 'absolute', bottom: 4, width: 5, height: 5, borderRadius: 3, backgroundColor: colors.goldDot },
   per: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, marginBottom: 8 },
   perText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.faint, letterSpacing: 0.5, textTransform: 'uppercase' },
@@ -649,18 +672,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.panel,
     marginBottom: 8,
   },
-  optOn: { borderColor: colors.ink, borderWidth: 2, padding: 13, backgroundColor: colors.goldPale },
+  optOn: { borderColor: colors.red, borderWidth: 2, padding: 13, backgroundColor: colors.panel },
   check: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
   optTime: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   optEnd: { marginLeft: 'auto', fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.faint },
   moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8 },
   moreText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.muted },
-  emptyDay: { borderWidth: 1.5, borderColor: '#e3e3e3', borderStyle: 'dashed', borderRadius: 16, padding: 16, marginTop: 14 },
+  emptyDay: { borderWidth: 1.5, borderColor: colors.champagneDeep, borderStyle: 'dashed', borderRadius: 16, padding: 16, marginTop: 14 },
   emptyHint: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: colors.faint, textAlign: 'center' },
   tzHint: { fontFamily: fonts.body, fontSize: 12, color: colors.faint, marginTop: 6 },
-  confirmBox: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 16, marginTop: 16 },
+  confirmBox: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, borderRadius: 20, padding: 16, marginTop: 16 },
   boxTitle: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink, marginBottom: 6 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7 },
   summaryLabel: { fontFamily: fonts.body, fontSize: 13.5, color: colors.muted },
@@ -680,8 +704,8 @@ const styles = StyleSheet.create({
   error: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.error, marginTop: 12, lineHeight: 18 },
   bar: { paddingHorizontal: 16, paddingTop: 10, backgroundColor: colors.bg },
   go: { height: 56, borderRadius: 18, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  goText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
-  goGold: { color: colors.gold2 },
+  goText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: 'rgba(250,245,226,0.8)' },
+  goGold: { color: colors.onRed },
   goIdle: { backgroundColor: colors.panel2 },
   goIdleText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.faint },
   checkoutHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 10 },

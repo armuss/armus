@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Band from '../../components/Band';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -38,7 +39,10 @@ export default function Profile() {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <View style={styles.screen}>
+      {/* the red band under the title, the photo and the name (design A) */}
+      <Band height={232} />
+      <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.headerBlock}>
         <Text style={styles.title}>Profil</Text>
       </View>
@@ -95,7 +99,8 @@ export default function Profile() {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -104,6 +109,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  safe: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   headerBlock: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -111,9 +120,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: 24,
-    color: colors.ink,
-    letterSpacing: -0.5,
+    fontSize: 26,
+    color: colors.onRed,
+    letterSpacing: -0.8,
   },
   content: {
     alignItems: 'center',
@@ -124,27 +133,28 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: colors.panel2,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.champagne,
+    borderWidth: 3,
+    borderColor: 'rgba(250,245,226,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   avatarInitial: {
     fontFamily: fonts.display,
     fontSize: 30,
-    color: colors.ink,
+    color: colors.champagneText,
   },
   name: {
-    fontFamily: fonts.bodyExtraBold,
-    fontSize: 19,
-    color: colors.ink,
+    fontFamily: fonts.display,
+    fontSize: 20,
+    color: colors.onRed,
+    letterSpacing: -0.4,
   },
   email: {
     fontFamily: fonts.body,
     fontSize: 13.5,
-    color: colors.muted,
+    color: 'rgba(250,245,226,0.85)',
     marginTop: 4,
     marginBottom: 24,
   },
@@ -153,7 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panel,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: colors.border,
     padding: 16,
   },
   infoRow: {

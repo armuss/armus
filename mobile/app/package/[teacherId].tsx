@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
+import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import WithdrawalConsent from '../../components/WithdrawalConsent';
 import { shortDisplayName } from '../../lib/displayName';
@@ -41,6 +42,8 @@ export default function PackageOffer() {
   const [withdrawalConsent, setWithdrawalConsent] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // the red band reaches just past the heading block
+  const [heroH, setHeroH] = useState(200);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -242,8 +245,10 @@ export default function PackageOffer() {
   const options = buildOptions(teacher.price);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.hero}>
+    <SafeAreaView style={styles.safeRed} edges={['top']}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollBand height={heroH + 6} inset={20} />
+      <View style={styles.hero} onLayout={(e) => setHeroH(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
         <View style={styles.heroTopBar}>
           <Pressable onPress={() => router.back()} style={styles.iconBtn}>
             <Text style={styles.iconBtnTextLight}>←</Text>
@@ -253,16 +258,14 @@ export default function PackageOffer() {
           </Pressable>
         </View>
         <View style={styles.heroIcon}>
-          <Ionicons name="trending-up" size={22} color={colors.ink} />
+          <Ionicons name="trending-up" size={22} color={colors.red} />
         </View>
         <Text style={styles.heroTitle}>Gelişimin burada başlıyor!</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.subtitle}>
           {shortDisplayName(teacher.name)} ile haftalık ders paketini seç. Fiyatlar 50 dakikalık standart dersi
           kapsar — tüm ders hakların istediğin zaman kullanılabilir, otomatik yenilenmez.
         </Text>
+      </View>
 
         {options.map((option) => (
           <Pressable key={option.lessonsPerWeek} onPress={() => pickOption(option)} style={styles.optionCard}>
@@ -290,6 +293,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  // the package list: the status bar area is plain red, the scroll view paints the ground and carries the band
+  safeRed: { flex: 1, backgroundColor: colors.red },
+  list: { flex: 1, backgroundColor: colors.bg },
   centered: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -300,13 +306,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 60,
   },
+  // the heading sits straight on the red band
   hero: {
-    backgroundColor: colors.dark,
-    marginHorizontal: 12,
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingTop: 6,
-    paddingBottom: 22,
+    paddingBottom: 18,
   },
   heroTopBar: {
     flexDirection: 'row',
@@ -324,13 +326,13 @@ const styles = StyleSheet.create({
   },
   iconBtnTextLight: {
     fontSize: 20,
-    color: '#fff',
+    color: colors.onRed,
   },
   heroIcon: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: colors.gold2,
+    backgroundColor: colors.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -339,22 +341,23 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBlack,
     fontSize: 24,
     lineHeight: 30,
-    color: '#fff',
+    color: colors.onRed,
     letterSpacing: -0.5,
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 6,
     paddingBottom: 40,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.muted,
+    color: 'rgba(250,245,226,0.85)',
     lineHeight: 20,
-    marginBottom: 20,
+    marginTop: 10,
   },
   optionCard: {
+    backgroundColor: colors.panel,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 18,
@@ -383,7 +386,7 @@ const styles = StyleSheet.create({
   },
   popularBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.gold2,
+    backgroundColor: colors.red,
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -392,7 +395,7 @@ const styles = StyleSheet.create({
   popularBadgeText: {
     fontFamily: fonts.bodyBold,
     fontSize: 12,
-    color: colors.onGold,
+    color: colors.onRed,
   },
   topBar: {
     paddingHorizontal: 20,

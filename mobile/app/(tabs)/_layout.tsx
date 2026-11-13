@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, Tabs } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../lib/auth';
-import { colors, floatShadow, fonts } from '../../lib/theme';
+import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -19,8 +20,8 @@ const ICONS: Record<string, IconName> = {
 };
 
 /**
- * The floating black dock: icons only, and the open tab grows into a gold
- * pill with its name.
+ * The floating red dock (design A, like the website panels): every tab
+ * with its icon and name, the open one on a cream tile.
  */
 function Dock({ state, descriptors, navigation, home }: BottomTabBarProps & { home: IconName }) {
   const insets = useSafeAreaInsets();
@@ -29,7 +30,7 @@ function Dock({ state, descriptors, navigation, home }: BottomTabBarProps & { ho
   );
   return (
     <View style={[styles.dockWrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.dock}>
+      <LinearGradient colors={redGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dock}>
         {visible.map((route) => {
           const focused = state.routes[state.index]?.key === route.key;
           const { options } = descriptors[route.key];
@@ -50,17 +51,15 @@ function Dock({ state, descriptors, navigation, home }: BottomTabBarProps & { ho
               <Ionicons
                 name={focused ? (icon.replace('-outline', '') as IconName) : icon}
                 size={21}
-                color={focused ? colors.ink : '#8a8a8a'}
+                color={focused ? colors.red : 'rgba(250,245,226,0.8)'}
               />
-              {focused && (
-                <Text style={styles.label} numberOfLines={1}>
-                  {label}
-                </Text>
-              )}
+              <Text style={[styles.label, focused && styles.labelOn]} numberOfLines={1}>
+                {label}
+              </Text>
             </Pressable>
           );
         })}
-      </View>
+      </LinearGradient>
     </View>
   );
 }
@@ -96,27 +95,26 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  dockWrap: { backgroundColor: colors.bg, alignItems: 'center', paddingTop: 8 },
+  dockWrap: { backgroundColor: colors.bg, paddingTop: 8, paddingHorizontal: 14 },
   dock: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    height: 62,
-    paddingHorizontal: 8,
-    borderRadius: 999,
-    backgroundColor: colors.dark,
+    gap: 2,
+    padding: 6,
+    borderRadius: 24,
     ...floatShadow,
   },
   item: {
-    height: 46,
-    minWidth: 46,
-    borderRadius: 999,
-    flexDirection: 'row',
+    flex: 1,
+    minWidth: 0,
+    height: 54,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
-    paddingHorizontal: 12,
+    gap: 3,
+    paddingHorizontal: 2,
   },
-  itemOn: { backgroundColor: colors.gold2 },
-  label: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
+  itemOn: { backgroundColor: colors.cream },
+  label: { fontFamily: fonts.bodyBold, fontSize: 10.5, color: 'rgba(250,245,226,0.8)' },
+  labelOn: { color: colors.red },
 });

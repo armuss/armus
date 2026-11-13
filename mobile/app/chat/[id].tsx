@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLightStatusBar } from '../../components/Band';
 import { useAuth } from '../../lib/auth';
 import {
   getMessages,
@@ -42,6 +43,7 @@ export default function Chat() {
   const [warning, setWarning] = useState<string | null>(null);
   const [canShareContact, setCanShareContact] = useState(false);
   const listRef = useRef<FlatList<Message>>(null);
+  useLightStatusBar();
 
   useEffect(() => {
     if (!profile) return;
@@ -140,12 +142,12 @@ export default function Chat() {
       </View>
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.body}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {loading ? (
-          <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={colors.red} style={{ marginTop: 40 }} />
         ) : (
           <FlatList
             ref={listRef}
@@ -194,31 +196,33 @@ export default function Chat() {
 }
 
 const styles = StyleSheet.create({
+  // the status bar and the header are red (design A); the conversation sits on the ground
   screen: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.red,
   },
+  body: { flex: 1, backgroundColor: colors.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
   },
   backBtn: {
     paddingRight: 4,
   },
   backText: {
     fontSize: 20,
-    color: colors.ink,
+    color: colors.onRed,
   },
   headerAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.panel2,
+    borderWidth: 2,
+    borderColor: colors.cream,
+    backgroundColor: colors.champagne,
   },
   headerAvatarFallback: {
     alignItems: 'center',
@@ -227,13 +231,13 @@ const styles = StyleSheet.create({
   headerAvatarInitial: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.red,
   },
   headerName: {
     flex: 1,
     fontFamily: fonts.bodyExtraBold,
     fontSize: 16,
-    color: colors.ink,
+    color: colors.onRed,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -253,8 +257,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
+  // their messages white, mine red with cream text
   bubbleTheirs: {
-    backgroundColor: colors.panel2,
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderBottomLeftRadius: 4,
   },
   bubbleMine: {
@@ -268,7 +275,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   bubbleTextMine: {
-    color: '#fff',
+    color: colors.onRed,
   },
   empty: {
     fontFamily: fonts.body,
@@ -324,6 +331,6 @@ const styles = StyleSheet.create({
   sendBtnText: {
     fontFamily: fonts.bodyBold,
     fontSize: 13.5,
-    color: '#fff',
+    color: colors.onRed,
   },
 });

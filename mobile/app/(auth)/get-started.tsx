@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Band from '../../components/Band';
 import Button from '../../components/Button';
 import { TEACHERS } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -11,7 +12,10 @@ const learner = TEACHERS[2];
 
 export default function GetStarted() {
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
+      {/* the photo stands on the red band */}
+      <Band height={210} />
+      <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <Image source={{ uri: featured.photo! }} style={styles.heroPhoto} />
@@ -53,7 +57,8 @@ export default function GetStarted() {
           <Text style={styles.link}>500+ öğretmeni incele</Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -62,6 +67,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  safe: { flex: 1, backgroundColor: 'transparent' },
   content: {
     paddingHorizontal: 24,
     paddingTop: 12,
@@ -89,7 +95,7 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: radius.lg,
     borderWidth: 3,
-    borderColor: colors.bg,
+    borderColor: colors.cream,
     backgroundColor: colors.panel2,
   },
   onlineDot: {
@@ -190,7 +196,7 @@ const styles = StyleSheet.create({
   link: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.red,
     textDecorationLine: 'underline',
     marginTop: 18,
   },

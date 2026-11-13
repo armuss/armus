@@ -147,10 +147,10 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.panel2,
+    backgroundColor: colors.panel,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.gold2,
+    borderColor: colors.champagneDeep,
     padding: 16,
     marginBottom: 12,
   },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.panel,
   },
   btnPrimary: {
     borderColor: colors.dark,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   btnTextPrimary: {
-    color: '#fff',
+    color: colors.onRed,
   },
   disabled: {
     opacity: 0.5,
