@@ -21,3 +21,19 @@ export function capitalizeName(fullName: string | null | undefined): string {
     .map((word) => (word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word))
     .join(' ');
 }
+
+// For Turkish words such as a city: "istanbul" -> "İstanbul", "IĞDIR" ->
+// "Iğdır" - Turkish dotted/dotless i rules, which capitalizeName can't use
+// because people's names here are often not Turkish ("isabel" stays Isabel).
+export function capitalizeTurkish(text: string | null | undefined): string {
+  const lower = (w: string) => w.replace(/I/g, 'ı').replace(/İ/g, 'i').toLowerCase();
+  const upper = (c: string) => (c === 'i' ? 'İ' : c === 'ı' ? 'I' : c.toUpperCase());
+  return String(text || '')
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
+      const w = lower(word);
+      return w ? upper(w[0]) + w.slice(1) : w;
+    })
+    .join(' ');
+}

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -37,6 +38,8 @@ function easProjectId(): string | undefined {
 export async function registerForPushNotifications() {
   try {
     if (Platform.OS === 'web' || !Device.isDevice) return;
+    // switched off in Profil > Bildirimler: this phone stays unregistered
+    if (!(await getPushEnabled())) return;
 
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
@@ -76,4 +79,27 @@ export async function unregisterPushNotifications() {
     // the row is cleaned up anyway the first time Expo reports the token gone
   }
   registeredToken = null;
+}
+
+// Profil > Bildirimler: a per-phone switch. Off removes this phone's token
+// (no more lesson / message notifications here); on registers it again.
+const PUSH_OFF_KEY = 'armus_push_off';
+
+export async function getPushEnabled(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(PUSH_OFF_KEY)) !== 'true';
+  } catch {
+    return true;
+  }
+}
+
+export async function setPushEnabled(enabled: boolean) {
+  try {
+    if (enabled) await AsyncStorage.removeItem(PUSH_OFF_KEY);
+    else await AsyncStorage.setItem(PUSH_OFF_KEY, 'true');
+  } catch {
+    // the switch just won't survive a restart
+  }
+  if (enabled) await registerForPushNotifications();
+  else await unregisterPushNotifications();
 }
