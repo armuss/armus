@@ -43,6 +43,7 @@ import { createPayment, parsePaymentRedirect } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 // getDate()/getMonth()/getFullYear() read the device's own local
 // calendar day - date.toISOString() reads the UTC date instead, which
@@ -68,6 +69,7 @@ const DATE_OPTIONS = Array.from({ length: 10 }, (_, i) => {
 type Phase = 'picking' | 'checkout' | 'success' | 'error';
 
 export default function Booking() {
+  const t = useT();
   const { id, type: typeParam, date: dateParam } = useLocalSearchParams<{ id: string; type?: string; date?: string }>();
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
@@ -232,7 +234,7 @@ export default function Booking() {
       const mode = (c: CreditCoverage | null) => (!c ? 'none' : c.topUp > 0 ? `topup-${c.topUp}` : 'full');
       if (mode(freshCoverage) !== mode(coverage)) {
         setCredits(fresh);
-        setError('Ders hakkın bu arada kullanıldı. Devam etmek için aşağıdaki bilgileri kontrol et.');
+        setError(t("Ders hakkın bu arada kullanıldı. Devam etmek için aşağıdaki bilgileri kontrol et."));
         return;
       }
     }
@@ -240,19 +242,19 @@ export default function Booking() {
     if (needsCard) {
       // the website checkout's own checks (lib/payer.ts)
       if (!normalizeTurkishPhone(phone)) {
-        setError('Lütfen geçerli bir cep telefonu numarası gir.');
+        setError(t("Lütfen geçerli bir cep telefonu numarası gir."));
         return;
       }
       if (!isValidTurkishIdentityNumber(identityNumber)) {
-        setError('Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).');
+        setError(t("Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli)."));
         return;
       }
       if (!payerConsent) {
-        setError('Devam etmek için kimlik ve ödeme bilgilerinin işlenmesini kabul etmelisin.');
+        setError(t("Devam etmek için kimlik ve ödeme bilgilerinin işlenmesini kabul etmelisin."));
         return;
       }
       if (!withdrawalConsent) {
-        setError('Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin.');
+        setError(t("Ödemeye geçmek için cayma hakkıyla ilgili onay kutusunu işaretlemelisin."));
         return;
       }
     }
@@ -303,7 +305,7 @@ export default function Booking() {
   if (!teacher) {
     return (
       <SafeAreaView style={styles.screen}>
-        <Text style={styles.notFound}>Öğretmen bulunamadı.</Text>
+        <Text style={styles.notFound}>{t("Öğretmen bulunamadı.")}</Text>
       </SafeAreaView>
     );
   }
@@ -313,9 +315,9 @@ export default function Booking() {
       <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.checkoutHeader}>
           <Pressable onPress={() => setPhase('picking')} style={styles.backBtn}>
-            <Text style={styles.backText}>← Vazgeç</Text>
+            <Text style={styles.backText}>{t("← Vazgeç")}</Text>
           </Pressable>
-          <Text style={styles.checkoutTitle}>Güvenli ödeme</Text>
+          <Text style={styles.checkoutTitle}>{t("Güvenli ödeme")}</Text>
         </View>
         <WebView
           source={{ uri: checkoutUrl }}
@@ -327,20 +329,20 @@ export default function Booking() {
               finishBooking(false);
             } else if (status === 'failed') {
               setPhase('picking');
-              setError('Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı — istersen tekrar deneyebilirsin.');
+              setError(t("Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı — istersen tekrar deneyebilirsin."));
             } else if (status === 'slot_taken') {
               setPhase('picking');
               setSelectedTime(null);
               refreshBusyTimes();
               setError(
-                'Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.'
+                t("Bu saati sen ödemeni tamamlarken başka bir öğrenci aldı. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.")
               );
             } else if (status === 'time_passed') {
               setPhase('picking');
               setSelectedTime(null);
               refreshBusyTimes();
               setError(
-                'Ödemen tamamlanana kadar seçtiğin ders saati geçti. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.'
+                t("Ödemen tamamlanana kadar seçtiğin ders saati geçti. Ödemen bir ders hakkına çevrildi — aşağıdan başka bir saat seçebilirsin.")
               );
             } else if (status === 'error') {
               setPhase('error');
@@ -357,13 +359,13 @@ export default function Booking() {
         <View style={styles.successIcon}>
           <Text style={styles.successIconText}>✓</Text>
         </View>
-        <Text style={styles.successTitle}>Rezervasyon tamamlandı!</Text>
+        <Text style={styles.successTitle}>{t("Rezervasyon tamamlandı!")}</Text>
         <Text style={styles.successSubtitle}>
           {shortDisplayName(teacher.name)} ile {selectedWhen?.dateLabel} · {selectedWhen?.timeRange ?? ''}
         </Text>
-        {creditApplied && <Text style={styles.creditNote}>Ders hakkınla ödeme yapılmadan tamamlandı.</Text>}
+        {creditApplied && <Text style={styles.creditNote}>{t("Ders hakkınla ödeme yapılmadan tamamlandı.")}</Text>}
         <View style={{ width: '100%', marginTop: 28 }}>
-          <Button label="Derslerime Git" onPress={() => router.replace('/(tabs)/lessons')} />
+          <Button label={t("Derslerime Git")} onPress={() => router.replace('/(tabs)/lessons')} />
         </View>
       </SafeAreaView>
     );
@@ -372,13 +374,11 @@ export default function Booking() {
   if (phase === 'error') {
     return (
       <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 32 }]}>
-        <Text style={styles.successTitle}>Bir sorun çıktı</Text>
+        <Text style={styles.successTitle}>{t("Bir sorun çıktı")}</Text>
         <Text style={styles.successSubtitle}>
-          Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle
-          ilgileneceğiz.
-        </Text>
+          {t("Ödemen alındı ama rezervasyon oluşturulurken bir sorun çıktı. Lütfen bizimle iletişime geç, ödemenle ilgileneceğiz.")}</Text>
         <View style={{ width: '100%', marginTop: 28 }}>
-          <Button label="Geri Dön" variant="outline" onPress={() => router.back()} />
+          <Button label={t("Geri Dön")} variant="outline" onPress={() => router.back()} />
         </View>
       </SafeAreaView>
     );
@@ -388,10 +388,10 @@ export default function Booking() {
   const groups = (() => {
     if (!selectedDateInfo) return [];
     const parts: { key: string; label: string; items: { time: string; start: string; end: string }[] }[] = [
-      { key: 'morning', label: 'Öğleden önce', items: [] },
-      { key: 'noon', label: 'Öğleden sonra', items: [] },
-      { key: 'evening', label: 'Akşam', items: [] },
-      { key: 'night', label: 'Gece', items: [] },
+      { key: 'morning', label: t("Öğleden önce"), items: [] },
+      { key: 'noon', label: t("Öğleden sonra"), items: [] },
+      { key: 'evening', label: t("Akşam"), items: [] },
+      { key: 'night', label: t("Gece"), items: [] },
     ];
     for (const slot of slots) {
       if (!slot.available) continue;
@@ -405,37 +405,33 @@ export default function Booking() {
   })();
   const openCount = groups.reduce((n, g) => n + g.items.length, 0);
   const ctaLabel = coversAll
-    ? 'Rezervasyonu tamamla'
+    ? t("Rezervasyonu tamamla")
     : submitting
-      ? 'Yönlendiriliyor…'
+      ? t("Yönlendiriliyor…")
       : coverage
-        ? `Farkı öde (${formatMoney(coverage.topUp)})`
-        : 'Ödemeye geç';
+        ? t("Farkı öde ({0})", formatMoney(coverage.topUp))
+        : t("Ödemeye geç");
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <ScrollBand height={weekBottom - 24} fade={64} />
         <View style={styles.head}>
-          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel="Geri">
+          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
             <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <View style={styles.headText}>
             <Text style={styles.headTitle} numberOfLines={1}>
-              {shortDisplayName(teacher.name)} ile ders
-            </Text>
+              {t("{0} ile ders", shortDisplayName(teacher.name))}</Text>
             <Text style={styles.headSub}>
-              {lessonTypeLabel(type)} · 50 dk · ₺{teacher.price}
-            </Text>
+              {t("{0} · 50 dk · ₺{1}", lessonTypeLabel(type), teacher.price)}</Text>
           </View>
           <View style={{ width: 40 }} />
         </View>
 
         {trialTakenNotice && (
           <Text style={styles.notice}>
-            Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her
-            öğretmenle bir kez alınabilir.
-          </Text>
+            {t("Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her öğretmenle bir kez alınabilir.")}</Text>
         )}
 
         <ScrollView
@@ -467,7 +463,7 @@ export default function Booking() {
           <>
             {groups.length === 0 ? (
               <View style={styles.emptyDay}>
-                <Text style={styles.emptyHint}>Bu gün boş saat yok. Altında nokta olan bir gün seç.</Text>
+                <Text style={styles.emptyHint}>{t("Bu gün boş saat yok. Altında nokta olan bir gün seç.")}</Text>
               </View>
             ) : (
               groups.map((g) => {
@@ -477,7 +473,7 @@ export default function Booking() {
                   <View key={g.key}>
                     <View style={styles.per}>
                       <Text style={styles.perText}>{g.label}</Text>
-                      <Text style={styles.perText}>{g.items.length} boş saat</Text>
+                      <Text style={styles.perText}>{t("{0} boş saat", g.items.length)}</Text>
                     </View>
                     {shown.map((it) => {
                       const on = selectedTime === it.time;
@@ -496,7 +492,7 @@ export default function Booking() {
                             </View>
                           )}
                           <Text style={styles.optTime}>{it.start}</Text>
-                          {!!it.end && <Text style={styles.optEnd}>{it.end} bitiş</Text>}
+                          {!!it.end && <Text style={styles.optEnd}>{t("{0} bitiş", it.end)}</Text>}
                         </Pressable>
                       );
                     })}
@@ -507,7 +503,7 @@ export default function Booking() {
                         }
                         style={styles.moreBtn}
                       >
-                        <Text style={styles.moreText}>{expanded ? 'Daha az göster' : `${g.items.length - 4} saat daha`}</Text>
+                        <Text style={styles.moreText}>{expanded ? t("Daha az göster") : t("{0} saat daha", g.items.length - 4)}</Text>
                         <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={15} color={colors.muted} />
                       </Pressable>
                     )}
@@ -515,75 +511,71 @@ export default function Booking() {
                 );
               })
             )}
-            {openCount > 0 && <Text style={styles.tzHint}>Saatler senin saat dilimine göre.</Text>}
+            {openCount > 0 && <Text style={styles.tzHint}>{t("Saatler senin saat dilimine göre.")}</Text>}
           </>
         )}
 
         {selectedDate && selectedTime && (
           <View style={styles.confirmBox}>
-            <Text style={styles.boxTitle}>Özet</Text>
+            <Text style={styles.boxTitle}>{t("Özet")}</Text>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tarih</Text>
+              <Text style={styles.summaryLabel}>{t("Tarih")}</Text>
               <Text style={styles.summaryValue}>{selectedWhen?.dateLabel}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Saat</Text>
+              <Text style={styles.summaryLabel}>{t("Saat")}</Text>
               <Text style={styles.summaryValue}>{selectedWhen?.timeRange}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Ücret</Text>
+              <Text style={styles.summaryLabel}>{t("Ücret")}</Text>
               <Text style={styles.summaryValue}>₺{teacher.price}</Text>
             </View>
             {coverage && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Ders hakkınla</Text>
+                <Text style={styles.summaryLabel}>{t("Ders hakkınla")}</Text>
                 <Text style={[styles.summaryValue, { color: colors.goldText }]}>
-                  {coversAll ? 'Ücretsiz' : `−${formatMoney(coverage.credit.value ?? 0)}`}
+                  {coversAll ? t("Ücretsiz") : `−${formatMoney(coverage.credit.value ?? 0)}`}
                 </Text>
               </View>
             )}
             {coverage && !coversAll && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Kartla ödenecek fark</Text>
+                <Text style={styles.summaryLabel}>{t("Kartla ödenecek fark")}</Text>
                 <Text style={styles.summaryValue}>{formatMoney(coverage.topUp)}</Text>
               </View>
             )}
 
             {coverage && !coversAll && (
               <Text style={styles.creditNote}>
-                Ders hakkın {formatMoney(coverage.credit.value ?? 0)} değerinde, bu ders {formatMoney(teacher.price)}. Ders hakkın{' '}
-                {formatMoney(coverage.credit.value ?? 0)} kısmını karşılıyor, kalan {formatMoney(coverage.topUp)} kartla ödenir.
-              </Text>
+                {t("Ders hakkın {0} değerinde, bu ders {1}. Ders hakkın {2} kısmını karşılıyor, kalan {3} kartla ödenir.", formatMoney(coverage.credit.value ?? 0), formatMoney(teacher.price), formatMoney(coverage.credit.value ?? 0), formatMoney(coverage.topUp))}</Text>
             )}
             {coversAll ? (
               <>
-                <Text style={styles.creditNote}>Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak.</Text>
+                <Text style={styles.creditNote}>{t("Kart bilgisi gerekmiyor, ders hakkınla rezervasyon tamamlanacak.")}</Text>
                 {!!coverage && coverage.leftover > 0 && (
                   <Text style={styles.creditNote}>
-                    Bu ders hakkı {formatMoney(coverage.credit.value ?? 0)} değerinde, bu ders {formatMoney(teacher.price)}. Ders hakkın
-                    dersi tamamen karşılıyor; aradaki {formatMoney(coverage.leftover)} iade edilmez.
-                  </Text>
+                    {t("Bu ders hakkı {0} değerinde, bu ders {1}. Ders hakkın dersi tamamen karşılıyor; aradaki {2} iade edilmez.", formatMoney(coverage.credit.value ?? 0), formatMoney(teacher.price), formatMoney(coverage.leftover))}</Text>
                 )}
               </>
             ) : (
               <>
                 <View style={styles.field}>
-                  <Text style={styles.label}>Telefon</Text>
+                  <Text style={styles.label}>{t("Telefon")}</Text>
                   <TextInput
                     value={phone}
                     onChangeText={setPhone}
-                    placeholder="05XX XXX XX XX"
+                    placeholder={t("05XX XXX XX XX")}
                     placeholderTextColor={colors.faint}
                     keyboardType="phone-pad"
                     style={styles.input}
                   />
                 </View>
                 <View style={styles.field}>
-                  <Text style={styles.label}>T.C. Kimlik No</Text>
+                  <Text style={styles.label}>{t("T.C. Kimlik No")}</Text>
                   <TextInput
                     value={identityNumber}
                     onChangeText={setIdentityNumber}
-                    placeholder="11 haneli kimlik numaran"
+                    placeholder={t("11 haneli kimlik numaran")}
                     placeholderTextColor={colors.faint}
                     keyboardType="number-pad"
                     maxLength={11}
@@ -618,7 +610,7 @@ export default function Booking() {
           </Pressable>
         ) : (
           <View style={[styles.go, styles.goIdle]}>
-            <Text style={styles.goIdleText}>{openCount > 0 ? 'Bir saat seç' : 'Bir gün seç'}</Text>
+            <Text style={styles.goIdleText}>{openCount > 0 ? t("Bir saat seç") : t("Bir gün seç")}</Text>
           </View>
         )}
       </View>

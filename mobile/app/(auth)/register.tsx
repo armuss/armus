@@ -17,6 +17,7 @@ import Button from '../../components/Button';
 import Logo from '../../components/Logo';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 // Teacher applications only go through the website's full form (photo,
 // certificate, video, availability...) - the app only ever creates
@@ -25,6 +26,7 @@ import { colors, fonts, radius } from '../../lib/theme';
 const TEACHER_APPLY_URL = 'https://armus.com.tr/apply-teacher.html';
 
 export default function Register() {
+  const t = useT();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [city, setCity] = useState('');
@@ -42,19 +44,19 @@ export default function Register() {
     const cleanEmail = email.trim();
     // at least two letter-only words: first name and last name
     if (!/^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u.test(cleanName)) {
-      setError('Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil).');
+      setError(t("Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil)."));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setError('Geçerli bir e-posta adresi gir.');
+      setError(t("Geçerli bir e-posta adresi gir."));
       return;
     }
     if (password.length < 6) {
-      setError('Şifre en az 6 karakter olmalı.');
+      setError(t("Şifre en az 6 karakter olmalı."));
       return;
     }
     if (password !== password2) {
-      setError('Şifreler birbiriyle eşleşmiyor.');
+      setError(t("Şifreler birbiriyle eşleşmiyor."));
       return;
     }
     setLoading(true);
@@ -67,11 +69,11 @@ export default function Register() {
     if (signUpError) {
       // the same message whether or not the email already has an account,
       // like the website - no "this email is registered" oracle
-      setError('Hesap oluşturulamadı. Bilgilerini kontrol et, ya da zaten bir hesabın varsa giriş yapmayı dene.');
+      setError(t("Hesap oluşturulamadı. Bilgilerini kontrol et, ya da zaten bir hesabın varsa giriş yapmayı dene."));
       return;
     }
     if (!data.session) {
-      setNotice(`Hesabın oluşturuldu! ${cleanEmail} adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.`);
+      setNotice(t("Hesabın oluşturuldu! {0} adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.", cleanEmail));
       return;
     }
     // the last step, like the website: the 6-digit email code
@@ -86,16 +88,16 @@ export default function Register() {
           <ScrollBand height={150} inset={28} fade={80} />
           <View style={styles.brandBlock}>
             <Logo size={32} light />
-            <Text style={styles.title}>Hesap oluştur</Text>
-            <Text style={styles.subtitle}>Hedefine uygun öğretmeni bulmaya başla.</Text>
+            <Text style={styles.title}>{t("Hesap oluştur")}</Text>
+            <Text style={styles.subtitle}>{t("Hedefine uygun öğretmeni bulmaya başla.")}</Text>
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Ad Soyad</Text>
+            <Text style={styles.label}>{t("Ad Soyad")}</Text>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Adın Soyadın"
+              placeholder={t("Adın Soyadın")}
               placeholderTextColor={colors.faint}
               autoComplete="name"
               style={styles.input}
@@ -103,11 +105,11 @@ export default function Register() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>E-posta</Text>
+            <Text style={styles.label}>{t("E-posta")}</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="ornek@eposta.com"
+              placeholder={t("ornek@eposta.com")}
               placeholderTextColor={colors.faint}
               autoCapitalize="none"
               autoComplete="email"
@@ -118,23 +120,23 @@ export default function Register() {
 
           <View style={styles.field}>
             <Text style={styles.label}>
-              Şehir <Text style={styles.optional}>(opsiyonel)</Text>
+              {t("Şehir ")}<Text style={styles.optional}>{t("(opsiyonel)")}</Text>
             </Text>
             <TextInput
               value={city}
               onChangeText={setCity}
-              placeholder="İstanbul"
+              placeholder={t("İstanbul")}
               placeholderTextColor={colors.faint}
               style={styles.input}
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şifre</Text>
+            <Text style={styles.label}>{t("Şifre")}</Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
-              placeholder="En az 6 karakter"
+              placeholder={t("En az 6 karakter")}
               placeholderTextColor={colors.faint}
               secureTextEntry
               autoComplete="new-password"
@@ -143,11 +145,11 @@ export default function Register() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şifre (tekrar)</Text>
+            <Text style={styles.label}>{t("Şifre (tekrar)")}</Text>
             <TextInput
               value={password2}
               onChangeText={setPassword2}
-              placeholder="Şifreni tekrar yaz"
+              placeholder={t("Şifreni tekrar yaz")}
               placeholderTextColor={colors.faint}
               secureTextEntry
               autoComplete="new-password"
@@ -159,21 +161,19 @@ export default function Register() {
           {!!notice && <Text style={styles.notice}>{notice}</Text>}
 
           <View style={{ marginTop: 8 }}>
-            <Button label="Kayıt Ol" onPress={handleRegister} loading={loading} />
+            <Button label={t("Kayıt Ol")} onPress={handleRegister} loading={loading} />
           </View>
 
           <Text style={styles.switchRow}>
-            Zaten hesabın var mı?{' '}
+            {t("Zaten hesabın var mı?")}{' '}
             <Link href="/(auth)/login" style={styles.switchLink}>
-              Giriş yap
-            </Link>
+              {t("Giriş yap")}</Link>
           </Text>
 
           <Text style={styles.teacherNote}>
-            Öğretmen olarak katılmak mı istiyorsun?{' '}
+            {t("Öğretmen olarak katılmak mı istiyorsun?")}{' '}
             <Text style={styles.switchLink} onPress={() => Linking.openURL(TEACHER_APPLY_URL)}>
-              Web sitemizden başvur
-            </Text>
+              {t("Web sitemizden başvur")}</Text>
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

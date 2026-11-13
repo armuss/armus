@@ -60,7 +60,8 @@
       "expo-font",
       "expo-secure-store",
       "expo-status-bar",
-      "expo-video"
+      "expo-video",
+      "expo-localization"
     ],
     "extra": {
       "eas": {

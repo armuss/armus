@@ -1,5 +1,6 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { decode } from 'jpeg-js';
+import { tr } from './i18n';
 
 // The website's photo rules (apply-teacher.html / settings.html), the same
 // numbers here so the app accepts and rejects exactly what the site does:
@@ -87,7 +88,7 @@ export async function preparePhoto(uri: string, checkWhiteBackground: boolean): 
     .resize({ width: Math.max(1, Math.round(full.width * small)), height: Math.max(1, Math.round(full.height * small)) })
     .renderAsync();
   const probeSaved = await probe.saveAsync({ format: SaveFormat.JPEG, compress: 0.9, base64: true });
-  if (!probeSaved.base64) throw new Error('Fotoğraf okunamadı.');
+  if (!probeSaved.base64) throw new Error(tr("Fotoğraf okunamadı."));
   const pixels = decode(base64ToBytes(probeSaved.base64), { useTArray: true, formatAsRGBA: true });
   return { uri: saved.uri, isWhiteBackground: whiteEdgeRatio(pixels.data, pixels.width, pixels.height) >= PHOTO_WHITE_BG_MIN_RATIO };
 }

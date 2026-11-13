@@ -6,6 +6,7 @@ import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Switch, Text,
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
+import LanguageSheet from '../../components/LanguageSheet';
 import { SettingsGroup, SettingsRow as Row } from '../../components/SettingsRow';
 import { useAuth } from '../../lib/auth';
 import { getAvailableCredits } from '../../lib/credits';
@@ -16,6 +17,7 @@ import { SITE_URL } from '../../lib/referrals';
 import { getMarketplaceTeachers } from '../../lib/teachers';
 import { colors, fonts, radius } from '../../lib/theme';
 import { getVocabEntries, type VocabEntry } from '../../lib/vocab';
+import { useLang, useT } from '../../lib/i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -25,6 +27,9 @@ type IconName = keyof typeof Ionicons.glyphMap;
  * same page with their own two shortcuts instead of the student tools.
  */
 export default function Profile() {
+  const t = useT();
+  const { lang } = useLang();
+  const [langOpen, setLangOpen] = useState(false);
   const { profile, signOut } = useAuth();
   const isStudent = profile?.role !== 'teacher';
   const [headBottom, setHeadBottom] = useState(230);
@@ -64,9 +69,9 @@ export default function Profile() {
   );
 
   function confirmSignOut() {
-    Alert.alert('Çıkış yapmak istiyor musun?', undefined, [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Çıkış Yap', style: 'destructive', onPress: () => signOut() },
+    Alert.alert(t("Çıkış yapmak istiyor musun?"), undefined, [
+      { text: t("Vazgeç"), style: 'cancel' },
+      { text: t("Çıkış Yap"), style: 'destructive', onPress: () => signOut() },
     ]);
   }
 
@@ -77,7 +82,7 @@ export default function Profile() {
 
   const open = (path: string) => Linking.openURL(`${SITE_URL}${path}`);
   const city = capitalizeTurkish(profile?.city);
-  const roleLine = [isStudent ? 'Öğrenci' : 'Öğretmen', city].filter(Boolean).join(' · ');
+  const roleLine = [isStudent ? t("Öğrenci", 1) : t("Öğretmen"), city].filter(Boolean).join(' · ');
 
   const words = vocab ?? [];
   const learned = words.filter((w) => w.mastered).length;
@@ -101,7 +106,7 @@ export default function Profile() {
           <Text style={styles.roleLine}>{roleLine}</Text>
           <Pressable onPress={() => router.push('/profile/edit')} style={styles.editPill} accessibilityRole="button">
             <Ionicons name="create-outline" size={14} color={colors.onRed} />
-            <Text style={styles.editPillText}>Profili düzenle</Text>
+            <Text style={styles.editPillText}>{t("Profili düzenle")}</Text>
           </Pressable>
         </View>
 
@@ -111,17 +116,17 @@ export default function Profile() {
             <View style={styles.wordsCard}>
               <View style={styles.wordsTop}>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.eyebrow}>KELİME KARTLARIM</Text>
+                  <Text style={styles.eyebrow}>{t("KELİME KARTLARIM")}</Text>
                   <Text style={styles.wordsCount}>
                     {words.length}
-                    <Text style={styles.wordsUnit}> kelime</Text>
+                    <Text style={styles.wordsUnit}> {t(" kelime")}</Text>
                   </Text>
                   <Text style={styles.wordsMeta}>
                     {words.length === 0 ? (
-                      'Derste öğrendiğin kelimeleri kartlara ekle, istediğin zaman çalış.'
+                      t("Derste öğrendiğin kelimeleri kartlara ekle, istediğin zaman çalış.")
                     ) : (
                       <>
-                        <Text style={styles.wordsLearned}>{learned} öğrendin</Text> · {studying} çalışılıyor
+                        <Text style={styles.wordsLearned}>{t("{0} öğrendin", learned)}</Text> · {t("{0} çalışılıyor", studying)}
                       </>
                     )}
                   </Text>
@@ -140,7 +145,7 @@ export default function Profile() {
                         {sample.term}
                       </Text>
                       <Text style={styles.miniCat} numberOfLines={1}>
-                        {sample.category}
+                        {t(sample.category)}
                       </Text>
                     </View>
                   </View>
@@ -151,28 +156,28 @@ export default function Profile() {
                   <>
                     <Pressable onPress={() => router.push('/words')} style={[styles.btn, styles.btnRed, { flex: 1 }]}>
                       <Ionicons name="albums-outline" size={17} color={colors.onRed} />
-                      <Text style={styles.btnRedText}>Kartları çalış</Text>
+                      <Text style={styles.btnRedText}>{t("Kartları çalış")}</Text>
                     </Pressable>
                     <Pressable onPress={() => router.push({ pathname: '/words', params: { add: '1' } })} style={[styles.btn, styles.btnLight]}>
                       <Ionicons name="add" size={18} color={colors.ink} />
-                      <Text style={styles.btnLightText}>Ekle</Text>
+                      <Text style={styles.btnLightText}>{t("Ekle")}</Text>
                     </Pressable>
                   </>
                 ) : (
                   <Pressable onPress={() => router.push({ pathname: '/words', params: { add: '1' } })} style={[styles.btn, styles.btnRed, { flex: 1 }]}>
                     <Ionicons name="add" size={18} color={colors.onRed} />
-                    <Text style={styles.btnRedText}>İlk kelimeni ekle</Text>
+                    <Text style={styles.btnRedText}>{t("İlk kelimeni ekle")}</Text>
                   </Pressable>
                 )}
               </View>
             </View>
 
-            <Text style={styles.sectionTitle}>Kısayollar</Text>
+            <Text style={styles.sectionTitle}>{t("Kısayollar")}</Text>
             <View style={styles.tiles}>
               <Tile
                 icon="heart-outline"
-                title="Favori öğretmenlerim"
-                sub={favorites.count ? `${favorites.count} öğretmen` : 'Henüz favorin yok'}
+                title={t("Favori öğretmenlerim")}
+                sub={favorites.count ? t("{0} öğretmen", favorites.count) : t("Henüz favorin yok")}
                 onPress={() => router.push('/favorites')}
                 corner={
                   favorites.photos.length ? (
@@ -187,53 +192,57 @@ export default function Profile() {
               <Tile
                 icon="albums-outline"
                 tone="champagne"
-                title="Ders haklarım"
+                title={t("Ders haklarım")}
                 sub={
                   !credits || credits.count === 0
-                    ? 'Kullanılabilir ders hakkın yok'
+                    ? t("Kullanılabilir ders hakkın yok")
                     : credits.teachers.length === 1
-                      ? `${credits.teachers[0]} ile kullanılabilir`
-                      : `${credits.teachers.length} öğretmenle kullanılabilir`
+                      ? t("{0} ile kullanılabilir", credits.teachers[0])
+                      : t("{0} öğretmenle kullanılabilir", credits.teachers.length)
                 }
                 onPress={() => router.navigate('/(tabs)/lessons')}
                 corner={credits && credits.count > 0 ? <Text style={styles.tileBig}>{credits.count}</Text> : null}
               />
               <Tile
                 icon="gift-outline"
-                title="Arkadaşını davet et"
-                sub="Arkadaşın ilk dersini alınca sana 1 ücretsiz ders"
+                title={t("Arkadaşını davet et")}
+                sub={t("Arkadaşın ilk dersini alınca sana 1 ücretsiz ders")}
                 onPress={() => router.push('/referral')}
               />
               <Tile
                 icon="locate-outline"
                 tone="petrol"
-                title="Ücretsiz seviye testi"
-                sub="20 soru · yaklaşık 10 dk"
+                title={t("Ücretsiz seviye testi")}
+                sub={t("20 soru · yaklaşık 10 dk")}
                 onPress={() => open('/seviye-testi')}
               />
             </View>
           </>
         ) : (
           <>
-            <Text style={styles.sectionTitle}>Kısayollar</Text>
+            <Text style={styles.sectionTitle}>{t("Kısayollar")}</Text>
             <View style={styles.tiles}>
-              <Tile icon="wallet-outline" tone="champagne" title="Kazançlarım" sub="Bakiye ve para çekme" onPress={() => router.push('/earnings')} />
-              <Tile icon="shield-checkmark-outline" tone="petrol" title="Öğretmen etik kuralları" sub="ARMUS'ta ders verirken" onPress={() => open('/ogretmen-etik-kurallari')} />
+              <Tile icon="wallet-outline" tone="champagne" title={t("Kazançlarım")} sub={t("Bakiye ve para çekme")} onPress={() => router.push('/earnings')} />
+              <Tile icon="shield-checkmark-outline" tone="petrol" title={t("Öğretmen etik kuralları")} sub={t("ARMUS'ta ders verirken")} onPress={() => open('/ogretmen-etik-kurallari')} />
             </View>
           </>
         )}
 
-        <SettingsGroup label="HESAP">
-          <Row icon="person-outline" label="Profili düzenle" onPress={() => router.push('/profile/edit')} />
+        <SettingsGroup label={t("HESAP")}>
+          <Row icon="person-outline" label={t("Profili düzenle")} onPress={() => router.push('/profile/edit')} />
           {/* the sensitive settings (email, password, deleting the account)
               sit one step further in, so nothing there is a single stray tap away */}
-          <Row icon="shield-checkmark-outline" label="Hesap ve güvenlik" value="Şifre, hesabı sil" onPress={() => router.push('/settings/account')} last />
+          <Row icon="shield-checkmark-outline" label={t("Hesap ve güvenlik")} value={t("Şifre, hesabı sil")} onPress={() => router.push('/settings/account')} last />
         </SettingsGroup>
 
-        <SettingsGroup label="BİLDİRİMLER">
+        <SettingsGroup label={t("UYGULAMA")}>
+          <Row icon="language-outline" label="Dil · Language" value={lang === 'en' ? 'English' : 'Türkçe'} onPress={() => setLangOpen(true)} last />
+        </SettingsGroup>
+
+        <SettingsGroup label={t("BİLDİRİMLER")}>
           <Row
             icon="notifications-outline"
-            label="Ders ve mesaj bildirimleri"
+            label={t("Ders ve mesaj bildirimleri")}
             last
             right={
               <Switch
@@ -247,22 +256,23 @@ export default function Profile() {
           />
         </SettingsGroup>
 
-        <SettingsGroup label="DESTEK">
-          <Row icon="help-circle-outline" label="Sık sorulan sorular" onPress={() => open('/sss')} />
-          <Row icon="chatbubble-ellipses-outline" label="Bize ulaş" onPress={() => open('/iletisim')} last />
+        <SettingsGroup label={t("DESTEK")}>
+          <Row icon="help-circle-outline" label={t("Sık sorulan sorular")} onPress={() => open('/sss')} />
+          <Row icon="chatbubble-ellipses-outline" label={t("Bize ulaş")} onPress={() => open('/iletisim')} last />
         </SettingsGroup>
 
-        <SettingsGroup label="YASAL">
-          <Row icon="shield-outline" label="Gizlilik Politikası" onPress={() => open('/gizlilik-politikasi')} />
-          <Row icon="document-text-outline" label="Kullanım Şartları" onPress={() => open('/kullanim-sartlari')} last />
+        <SettingsGroup label={t("YASAL")}>
+          <Row icon="shield-outline" label={t("Gizlilik Politikası")} onPress={() => open('/gizlilik-politikasi')} />
+          <Row icon="document-text-outline" label={t("Kullanım Şartları")} onPress={() => open('/kullanim-sartlari')} last />
         </SettingsGroup>
 
         <SettingsGroup style={{ marginTop: 16 }}>
-          <Row icon="log-out-outline" label="Çıkış yap" onPress={confirmSignOut} last />
+          <Row icon="log-out-outline" label={t("Çıkış yap")} onPress={confirmSignOut} last />
         </SettingsGroup>
 
         <Text style={styles.version}>ARMUS {Constants.expoConfig?.version ?? ''}</Text>
       </ScrollView>
+      <LanguageSheet visible={langOpen} onClose={() => setLangOpen(false)} />
     </SafeAreaView>
   );
 }

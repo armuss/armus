@@ -6,11 +6,13 @@ import Band from '../../components/Band';
 import Button from '../../components/Button';
 import { TEACHERS } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 const featured = TEACHERS[0];
 const learner = TEACHERS[2];
 
 export default function GetStarted() {
+  const t = useT();
   return (
     <View style={styles.screen}>
       {/* the photo stands on the red band */}
@@ -24,7 +26,7 @@ export default function GetStarted() {
             <Image source={{ uri: learner.photo! }} style={styles.learnerPhoto} />
             <View style={styles.onlineDot} />
             <View style={styles.learnerTag}>
-              <Text style={styles.learnerTagText}>Öğrenci</Text>
+              <Text style={styles.learnerTagText}>{t("Öğrenci", 1)}</Text>
             </View>
           </View>
 
@@ -34,27 +36,24 @@ export default function GetStarted() {
               <View style={styles.teacherCardTop}>
                 <Text style={styles.teacherName}>{featured.name}</Text>
                 <View style={styles.superBadge}>
-                  <Text style={styles.superBadgeText}>Süper Öğretmen</Text>
+                  <Text style={styles.superBadgeText}>{t("Süper Öğretmen")}</Text>
                 </View>
               </View>
               <Text style={styles.teacherMeta}>
-                {featured.completedLessons} ders · ★ {featured.rating!.toFixed(1)} · {featured.reviewCount} yorum
-              </Text>
+                {t("{0} ders · ★ {1} · {2} yorum", featured.completedLessons, featured.rating!.toFixed(1), featured.reviewCount)}</Text>
             </View>
           </View>
         </View>
 
         <Text style={styles.title}>
-          <Text style={styles.titleAccent}>İngilizce'yi</Text> kendi öğretmeninle çok daha hızlı öğren.
-        </Text>
+          <Text style={styles.titleAccent}>{t("İngilizce'yi")}</Text> {t(" kendi öğretmeninle çok daha hızlı öğren.")}</Text>
         <Text style={styles.subtitle}>
-          Hedefine, seviyene ve öğrenme tarzına uygun bir öğretmenle, sana özel bir ders programıyla ilerle.
-        </Text>
+          {t("Hedefine, seviyene ve öğrenme tarzına uygun bir öğretmenle, sana özel bir ders programıyla ilerle.")}</Text>
 
-        <Button label="Öğretmenini bul →" onPress={() => router.push('/(auth)/goal-quiz')} />
+        <Button label={t("Öğretmenini bul →")} onPress={() => router.push('/(auth)/goal-quiz')} />
 
         <Pressable onPress={() => router.push('/(auth)/signup-options')} hitSlop={10}>
-          <Text style={styles.link}>500+ öğretmeni incele</Text>
+          <Text style={styles.link}>{t("500+ öğretmeni incele")}</Text>
         </Pressable>
       </ScrollView>
       </SafeAreaView>

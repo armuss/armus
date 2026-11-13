@@ -12,6 +12,7 @@ import { getOrCreateConversation } from '../../lib/messages';
 import { supabase } from '../../lib/supabase';
 import { capitalizeName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 type StudentSummary = {
   id: string;
@@ -22,6 +23,7 @@ type StudentSummary = {
 };
 
 export default function Students() {
+  const t = useT();
   const { profile } = useAuth();
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,21 +92,21 @@ export default function Students() {
     const student = students.find((s) => s.id === studentId);
     router.push({
       pathname: '/chat/[id]',
-      params: { id: conversation.id, otherName: student?.name || 'Öğrenci', otherPhoto: student?.photo ?? '' },
+      params: { id: conversation.id, otherName: student?.name || t("Öğrenci", 1), otherPhoto: student?.photo ?? '' },
     });
   }
 
   function openStudentMenu(student: StudentSummary) {
     if (!profile) return;
     if (blocked.has(student.id)) {
-      Alert.alert('Engeli kaldır', 'Bu öğrencinin engelini kaldırmak istediğine emin misin?', [
-        { text: 'Vazgeç', style: 'cancel' },
+      Alert.alert(t("Engeli kaldır"), t("Bu öğrencinin engelini kaldırmak istediğine emin misin?"), [
+        { text: t("Vazgeç"), style: 'cancel' },
         {
-          text: 'Engeli Kaldır',
+          text: t("Engeli Kaldır"),
           onPress: async () => {
             const ok = await unblockStudent(profile.id, student.id);
             if (!ok) {
-              Alert.alert('İşlem başarısız oldu, tekrar dene.');
+              Alert.alert(t("İşlem başarısız oldu, tekrar dene."));
               return;
             }
             setBlocked((prev) => {
@@ -128,7 +130,7 @@ export default function Students() {
     const result = await blockStudent(profile.id, blockTarget.id, blockReason, blockNote.trim() || undefined);
     setBlocking(false);
     if (!result.ok) {
-      Alert.alert('İşlem başarısız oldu, tekrar dene.');
+      Alert.alert(t("İşlem başarısız oldu, tekrar dene."));
       return;
     }
     const id = blockTarget.id;
@@ -136,8 +138,8 @@ export default function Students() {
     setBlockTarget(null);
     if (result.cancelledCount > 0) {
       Alert.alert(
-        'Öğrenci engellendi',
-        `Bu öğrenciyle aranızdaki ${result.cancelledCount} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.`
+        t("Öğrenci engellendi"),
+        t("Bu öğrenciyle aranızdaki {0} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.", result.cancelledCount)
       );
     }
   }
@@ -146,9 +148,9 @@ export default function Students() {
     // the title is fixed on plain red; the band's fade scrolls with the list
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <View style={styles.headerBlock}>
-        <Text style={styles.title}>Öğrencilerim</Text>
+        <Text style={styles.title}>{t("Öğrencilerim")}</Text>
         {!loading && (
-          <Text style={styles.sub}>{students.length ? `${students.length} öğrenci` : 'Henüz öğrencin yok'}</Text>
+          <Text style={styles.sub}>{students.length ? t("{0} öğrenci", students.length) : t("Henüz öğrencin yok")}</Text>
         )}
       </View>
 
@@ -159,6 +161,7 @@ export default function Students() {
         </View>
       ) : (
         <FlatList
+          extraData={t}
           style={styles.list}
           ListHeaderComponent={<ScrollBand height={students.length ? 40 : 0} />}
           data={students}
@@ -181,17 +184,16 @@ export default function Students() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>
                   {item.name}
-                  {blocked.has(item.id) && <Text style={styles.blockedTag}>  · Engellendi</Text>}
+                  {blocked.has(item.id) && <Text style={styles.blockedTag}>  {t("  · Engellendi")}</Text>}
                 </Text>
                 <Text style={styles.meta}>
-                  {item.lessonCount} ders · son {item.lastDateLabel}
-                </Text>
+                  {t("{0} ders · son {1}", item.lessonCount, item.lastDateLabel)}</Text>
               </View>
               <Pressable
                 onPress={() => openStudentMenu(item)}
                 hitSlop={8}
                 style={styles.moreBtn}
-                accessibilityLabel={blocked.has(item.id) ? 'Engeli kaldır' : 'Öğrenciyi engelle'}
+                accessibilityLabel={blocked.has(item.id) ? t("Engeli kaldır") : t("Öğrenciyi engelle")}
               >
                 <Ionicons name={blocked.has(item.id) ? 'lock-open-outline' : 'ban-outline'} size={17} color={colors.muted} />
               </Pressable>
@@ -205,7 +207,7 @@ export default function Students() {
             </Pressable>
           )}
           ListEmptyComponent={
-            <Text style={styles.empty}>Henüz bir rezervasyonun yok — öğrencilerin burada listelenecek.</Text>
+            <Text style={styles.empty}>{t("Henüz bir rezervasyonun yok — öğrencilerin burada listelenecek.")}</Text>
           }
         />
       )}
@@ -214,22 +216,20 @@ export default function Students() {
         <Pressable style={styles.shade} onPress={() => setBlockTarget(null)} />
         <View style={styles.sheet}>
           <View style={styles.grab} />
-          <Text style={styles.sheetTitle}>Öğrenciyi Engelle</Text>
+          <Text style={styles.sheetTitle}>{t("Öğrenciyi Engelle")}</Text>
           <Text style={styles.sheetIntro}>
-            Engellersen bu öğrenci seninle yeni bir ders rezervasyonu yapamaz, sana mesaj gönderemez ve aranızdaki henüz başlamamış dersler
-            otomatik iptal edilip kendisine ders hakkı olarak geri verilir.
-          </Text>
+            {t("Engellersen bu öğrenci seninle yeni bir ders rezervasyonu yapamaz, sana mesaj gönderemez ve aranızdaki henüz başlamamış dersler otomatik iptal edilip kendisine ders hakkı olarak geri verilir.")}</Text>
           {BLOCK_REASONS.map((r) => (
             <Pressable key={r.value} onPress={() => setBlockReason(r.value)} style={[styles.reason, blockReason === r.value && styles.reasonOn]}>
               <View style={[styles.radio, blockReason === r.value && styles.radioOn]}>{blockReason === r.value && <View style={styles.radioDot} />}</View>
-              <Text style={styles.reasonText}>{r.label}</Text>
+              <Text style={styles.reasonText}>{t(r.label)}</Text>
             </Pressable>
           ))}
           {blockReason === 'other' && (
             <TextInput
               value={blockNote}
               onChangeText={setBlockNote}
-              placeholder="Kısaca açıklar mısın? (isteğe bağlı)"
+              placeholder={t("Kısaca açıklar mısın? (isteğe bağlı)")}
               placeholderTextColor={colors.faint}
               style={styles.noteInput}
               multiline
@@ -237,10 +237,10 @@ export default function Students() {
           )}
           <View style={styles.sheetBtns}>
             <Pressable onPress={() => setBlockTarget(null)} style={[styles.sheetBtn, styles.sheetBtnLight]}>
-              <Text style={styles.sheetBtnLightText}>Vazgeç</Text>
+              <Text style={styles.sheetBtnLightText}>{t("Vazgeç")}</Text>
             </Pressable>
             <Pressable onPress={confirmBlock} disabled={blocking} style={[styles.sheetBtn, styles.sheetBtnRed]}>
-              {blocking ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.sheetBtnRedText}>Engelle</Text>}
+              {blocking ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.sheetBtnRedText}>{t("Engelle")}</Text>}
             </Pressable>
           </View>
         </View>

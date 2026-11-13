@@ -35,6 +35,7 @@ import { colors, fonts, radius } from '../lib/theme';
 import Band, { ScrollBand } from './Band';
 import ReschedulePicker from './ReschedulePicker';
 import TeacherAttendanceBanner from './TeacherAttendanceBanner';
+import { useT } from '../lib/i18n';
 
 const LIMIT_MESSAGE =
   'Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine "Saat Öner" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.';
@@ -46,6 +47,7 @@ type Row = { kind: 'heading'; key: string; title: string } | { kind: 'lesson'; k
 // toward the monthly cap), answer a student's request, cancel (3 a month,
 // migration_107.sql).
 export default function TeacherHome() {
+  const t = useT();
   const { profile } = useAuth();
   const timeZone = profile?.timezone || 'Europe/Istanbul';
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -96,23 +98,23 @@ export default function TeacherHome() {
   const cancelsLeft = Math.max(0, TEACHER_MONTHLY_CANCEL_LIMIT - teacherCancelsThisMonth(bookings, timeZone));
 
   const rows: Row[] = [
-    { kind: 'heading', key: 'h-today', title: 'Bugünkü derslerin' },
+    { kind: 'heading', key: 'h-today', title: t("Bugünkü derslerin") },
     ...(today.length
       ? today.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b, compact: false }))
-      : [{ kind: 'empty' as const, key: 'e-today', text: 'Bugün planlanmış bir dersin yok.' }]),
-    ...(upcoming.length ? [{ kind: 'heading' as const, key: 'h-up', title: 'Yaklaşan dersler' }] : []),
+      : [{ kind: 'empty' as const, key: 'e-today', text: t("Bugün planlanmış bir dersin yok.") }]),
+    ...(upcoming.length ? [{ kind: 'heading' as const, key: 'h-up', title: t("Yaklaşan dersler") }] : []),
     ...upcoming.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b, compact: true })),
   ];
 
   async function handleCancel(b: Booking) {
     if (cancelsLeft <= 0) {
-      notify('İptal hakkın kalmadı', LIMIT_MESSAGE);
+      notify(t("İptal hakkın kalmadı"), t(LIMIT_MESSAGE));
       return;
     }
     const ok = await confirmAsync(
-      'Dersi iptal et',
-      `Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.\n\nBu iptal, bu ayki iptal hakkından düşer (kalan: ${cancelsLeft}). Öğrencine yeni bir saat önermek istersen "Saat Öner"i kullan.`,
-      'İptal Et',
+      t("Dersi iptal et"),
+      t("Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.\n\nBu iptal, bu ayki iptal hakkından düşer (kalan: {0}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.", cancelsLeft),
+      t("İptal Et"),
       true
     );
     if (!ok) return;
@@ -120,7 +122,7 @@ export default function TeacherHome() {
     const result = await cancelBooking(b.id);
     setActingId(null);
     if (!result.ok) {
-      notify('İptal edilemedi', result.limitReached ? LIMIT_MESSAGE : result.error);
+      notify(t("İptal edilemedi"), result.limitReached ? t(LIMIT_MESSAGE) : result.error);
       return;
     }
     load();
@@ -131,7 +133,7 @@ export default function TeacherHome() {
     const result = await call();
     setActingId(null);
     if (!result.ok) {
-      notify('İşlem yapılamadı', result.error);
+      notify(t("İşlem yapılamadı"), result.error);
       return;
     }
     load();
@@ -143,11 +145,11 @@ export default function TeacherHome() {
     const result = await rescheduleBooking(proposing.id, pick.date, pick.time);
     setSubmittingMove(false);
     if (!result.ok) {
-      notify('Saat önerilemedi', result.error);
+      notify(t("Saat önerilemedi"), result.error);
       return;
     }
     setProposing(null);
-    notify('Önerin gönderildi', 'Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır.');
+    notify(t("Önerin gönderildi"), t("Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır."));
     load();
   }
 
@@ -166,34 +168,34 @@ export default function TeacherHome() {
         </View>
         <Text style={styles.bookingType}>
           {lessonTypeLabel(b.type)}
-          {done ? ' · tamamlandı' : ''}
+          {done ? t(" · tamamlandı") : ''}
         </Text>
 
         {joinable && (
           <Pressable style={styles.joinBtn} onPress={() => router.push(`/class/${b.id}`)}>
-            <Text style={styles.joinBtnText}>Derse katıl</Text>
+            <Text style={styles.joinBtnText}>{t("Derse katıl")}</Text>
           </Pressable>
         )}
 
         {cancellable && request && (
           <View style={styles.requestBox}>
             <Text style={styles.requestText}>
-              {request.requestedBy === 'student' ? 'Öğrenci yeni bir saat istedi: ' : 'Önerin öğrenci onayı bekliyor: '}
+              {request.requestedBy === 'student' ? t("Öğrenci yeni bir saat istedi: ") : t("Önerin öğrenci onayı bekliyor: ")}
               <Text style={styles.requestSlot}>{formatRescheduleSlot(request.newDate, request.newTime, b.teacherTimezone)}</Text>
             </Text>
             <View style={styles.actionRow}>
               {request.requestedBy === 'student' ? (
                 <>
                   <Pressable disabled={busy} onPress={() => act(b.id, () => respondReschedule(request.id, true))} style={[styles.smallBtn, styles.smallBtnPrimary]}>
-                    <Text style={[styles.smallBtnText, styles.smallBtnTextPrimary]}>Kabul Et</Text>
+                    <Text style={[styles.smallBtnText, styles.smallBtnTextPrimary]}>{t("Kabul Et")}</Text>
                   </Pressable>
                   <Pressable disabled={busy} onPress={() => act(b.id, () => respondReschedule(request.id, false))} style={styles.smallBtn}>
-                    <Text style={styles.smallBtnText}>Reddet</Text>
+                    <Text style={styles.smallBtnText}>{t("Reddet")}</Text>
                   </Pressable>
                 </>
               ) : (
                 <Pressable disabled={busy} onPress={() => act(b.id, () => withdrawReschedule(request.id))} style={styles.smallBtn}>
-                  <Text style={styles.smallBtnText}>Geri Çek</Text>
+                  <Text style={styles.smallBtnText}>{t("Geri Çek")}</Text>
                 </Pressable>
               )}
             </View>
@@ -204,11 +206,11 @@ export default function TeacherHome() {
           <View style={[styles.actionRow, { marginTop: 12 }]}>
             {!request && MAX_TEACHER_PROPOSALS - (proposalCounts[b.id]?.teacherProposals || 0) > 0 && (
               <Pressable disabled={busy} onPress={() => setProposing(b)} style={styles.smallBtn}>
-                <Text style={styles.smallBtnText}>Saat Öner</Text>
+                <Text style={styles.smallBtnText}>{t("Saat Öner")}</Text>
               </Pressable>
             )}
             <Pressable disabled={busy} onPress={() => handleCancel(b)} style={[styles.smallBtn, styles.smallBtnDanger]}>
-              <Text style={[styles.smallBtnText, styles.smallBtnTextDanger]}>{busy ? '…' : 'Dersi İptal Et'}</Text>
+              <Text style={[styles.smallBtnText, styles.smallBtnTextDanger]}>{busy ? '…' : t("Dersi İptal Et")}</Text>
             </Pressable>
           </View>
         )}
@@ -230,6 +232,7 @@ export default function TeacherHome() {
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <FlatList
+          extraData={t}
         style={styles.list}
         data={rows}
         keyExtractor={(row) => row.key}
@@ -249,21 +252,21 @@ export default function TeacherHome() {
           <View style={styles.headerBlock}>
             {/* the red band under the greeting and the three numbers (design A) */}
             <ScrollBand height={175} inset={20} />
-            <Text style={styles.eyebrow}>ÖĞRETMEN PANELİ · BUGÜN</Text>
-            <Text style={styles.title}>Merhaba, {capitalizeName(profile?.name).split(' ')[0] || 'Öğretmen'}</Text>
+            <Text style={styles.eyebrow}>{t("ÖĞRETMEN PANELİ · BUGÜN")}</Text>
+            <Text style={styles.title}>{t("Merhaba, ")}{capitalizeName(profile?.name).split(' ')[0] || t("Öğretmen")}</Text>
 
             <View style={styles.statRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>{today.length}</Text>
-                <Text style={styles.statLabel}>Bugünkü ders</Text>
+                <Text style={styles.statLabel}>{t("Bugünkü ders")}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>{studentCount}</Text>
-                <Text style={styles.statLabel}>Öğrenci</Text>
+                <Text style={styles.statLabel}>{t("Öğrenci", studentCount)}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>{active.length}</Text>
-                <Text style={styles.statLabel}>Toplam ders</Text>
+                <Text style={styles.statLabel}>{t("Toplam ders")}</Text>
               </View>
             </View>
 
@@ -273,19 +276,17 @@ export default function TeacherHome() {
             {earnings && (
               <Pressable onPress={() => router.push('/earnings')} style={({ pressed }) => [styles.earningsCard, { opacity: pressed ? 0.9 : 1 }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.earningsLabel}>Bu ayki kazancın (tahmini)</Text>
+                  <Text style={styles.earningsLabel}>{t("Bu ayki kazancın (tahmini)")}</Text>
                   <Text style={styles.earningsValue}>{formatMoney(earnings.netThisMonth)}</Text>
-                  <Text style={styles.earningsSub}>Çekilebilir: {formatMoney(earnings.withdrawableBalance)}</Text>
+                  <Text style={styles.earningsSub}>{t("Çekilebilir: {0}", formatMoney(earnings.withdrawableBalance))}</Text>
                 </View>
-                <Text style={styles.earningsLink}>Kazançlarım</Text>
+                <Text style={styles.earningsLink}>{t("Kazançlarım")}</Text>
               </Pressable>
             )}
 
             {bookings.length > 0 && (
               <Text style={styles.allowance}>
-                Bu ay kalan iptal hakkın: <Text style={{ fontFamily: fonts.bodyExtraBold }}>{cancelsLeft} / {TEACHER_MONTHLY_CANCEL_LIMIT}</Text> · Bir
-                dersin saatini değiştirmek için iptal yerine "Saat Öner"i kullan, iptal hakkından düşmez.
-              </Text>
+                {t("Bu ay kalan iptal hakkın: ")}<Text style={{ fontFamily: fonts.bodyExtraBold }}>{cancelsLeft} / {TEACHER_MONTHLY_CANCEL_LIMIT}</Text> {t(" · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan, iptal hakkından düşmez.")}</Text>
             )}
           </View>
         }
@@ -307,9 +308,9 @@ export default function TeacherHome() {
           timeZone={proposing.teacherTimezone || timeZone}
           busyTimes={active.map((b) => ({ date: b.date, time: b.time }))}
           current={{ date: proposing.date, time: proposing.time }}
-          title="Öğrencine yeni bir saat öner"
-          note={`Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez. Bir ders için en fazla 2 kez saat önerebilirsin (kalan: ${MAX_TEACHER_PROPOSALS - (proposalCounts[proposing.id]?.teacherProposals || 0)}).`}
-          confirmLabel="Bu Saati Öner"
+          title={t("Öğrencine yeni bir saat öner")}
+          note={t("Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez. Bir ders için en fazla 2 kez saat önerebilirsin (kalan: {0}).", MAX_TEACHER_PROPOSALS - (proposalCounts[proposing.id]?.teacherProposals || 0))}
+          confirmLabel={t("Bu Saati Öner")}
           submitting={submittingMove}
           onClose={() => setProposing(null)}
           onConfirm={confirmProposal}

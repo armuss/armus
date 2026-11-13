@@ -1,10 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, radius } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 // The right-of-withdrawal consent a card payment needs (migration_112.sql,
 // create-payment's withdrawalConsent) - same wording as booking.html.
 export default function WithdrawalConsent({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
+  const t = useT();
   return (
     <Pressable
       onPress={() => onChange(!checked)}
@@ -14,9 +16,7 @@ export default function WithdrawalConsent({ checked, onChange }: { checked: bool
     >
       <View style={[styles.box, checked && styles.boxChecked]}>{checked && <Text style={styles.tick}>✓</Text>}</View>
       <Text style={styles.text}>
-        Dersin, 14 günlük cayma süresi dolmadan benim onayımla başlayacağını ve ders başladığında cayma hakkımın sona ereceğini
-        kabul ediyorum. Bir paketten hiç ders kullanmadıysam 14 gün içinde paketi iptal edip ücretin tamamını geri alabilirim.
-      </Text>
+        {t("Dersin, 14 günlük cayma süresi dolmadan benim onayımla başlayacağını ve ders başladığında cayma hakkımın sona ereceğini kabul ediyorum. Bir paketten hiç ders kullanmadıysam 14 gün içinde paketi iptal edip ücretin tamamını geri alabilirim.")}</Text>
     </Pressable>
   );
 }

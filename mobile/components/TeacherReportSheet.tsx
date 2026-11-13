@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import { TEACHER_REPORT_REASONS, reportTeacher } from '../lib/attendance';
 import { colors, fonts, radius } from '../lib/theme';
 import Button from './Button';
+import { useT } from '../lib/i18n';
 
 type Props = {
   visible: boolean;
@@ -23,6 +24,7 @@ type Props = {
  * per teacher).
  */
 export default function TeacherReportSheet({ visible, teacherId, teacherName, reporterId, bookingId, onClose }: Props) {
+  const t = useT();
   const [reason, setReason] = useState(TEACHER_REPORT_REASONS[0].value);
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
@@ -48,8 +50,8 @@ export default function TeacherReportSheet({ visible, teacherId, teacherName, re
     }
     setError(
       result === 'duplicate'
-        ? 'Bu öğretmen hakkında incelenmeyi bekleyen bir şikayetin zaten var.'
-        : 'Şikayet gönderilemedi. Bu öğretmenle bir dersin ya da yazışman olmalı.'
+        ? t("Bu öğretmen hakkında incelenmeyi bekleyen bir şikayetin zaten var.")
+        : t("Şikayet gönderilemedi. Bu öğretmenle bir dersin ya da yazışman olmalı.")
     );
   }
 
@@ -64,33 +66,32 @@ export default function TeacherReportSheet({ visible, teacherId, teacherName, re
               <View style={styles.sentIcon}>
                 <Ionicons name="checkmark" size={26} color={colors.onRed} />
               </View>
-              <Text style={styles.title}>Şikayetin alındı</Text>
+              <Text style={styles.title}>{t("Şikayetin alındı")}</Text>
               <Text style={styles.text}>
-                Ekibimiz inceleyecek ve gerekirse seninle iletişime geçecek. Acil bir durum varsa destek ekibimize de yazabilirsin.
-              </Text>
+                {t("Ekibimiz inceleyecek ve gerekirse seninle iletişime geçecek. Acil bir durum varsa destek ekibimize de yazabilirsin.")}</Text>
               <View style={{ marginTop: 16 }}>
-                <Button label="Kapat" onPress={onClose} />
+                <Button label={t("Kapat")} onPress={onClose} />
               </View>
             </>
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={styles.title}>{teacherName} hakkında şikayet</Text>
-              <Text style={styles.text}>Şikayetin sadece ARMUS ekibine gider, öğretmen kimin bildirdiğini görmez.</Text>
+              <Text style={styles.title}>{t("{0} hakkında şikayet", teacherName)}</Text>
+              <Text style={styles.text}>{t("Şikayetin sadece ARMUS ekibine gider, öğretmen kimin bildirdiğini görmez.")}</Text>
 
-              <Text style={styles.label}>Sebep</Text>
+              <Text style={styles.label}>{t("Sebep")}</Text>
               <View style={{ gap: 8 }}>
                 {TEACHER_REPORT_REASONS.map((r) => {
                   const on = r.value === reason;
                   return (
                     <Pressable key={r.value} onPress={() => setReason(r.value)} style={[styles.reason, on && styles.reasonOn]}>
                       <View style={[styles.radio, on && styles.radioOn]}>{on && <View style={styles.radioDot} />}</View>
-                      <Text style={[styles.reasonText, on && { color: colors.red }]}>{r.label}</Text>
+                      <Text style={[styles.reasonText, on && { color: colors.red }]}>{t(r.label)}</Text>
                     </Pressable>
                   );
                 })}
               </View>
 
-              <Text style={styles.label}>Ne oldu? (isteğe bağlı)</Text>
+              <Text style={styles.label}>{t("Ne oldu? (isteğe bağlı)")}</Text>
               <TextInput
                 value={note}
                 onChangeText={(t) => setNote(t.slice(0, 2000))}
@@ -103,10 +104,10 @@ export default function TeacherReportSheet({ visible, teacherId, teacherName, re
 
               <View style={styles.actions}>
                 <View style={{ flex: 1 }}>
-                  <Button label="İptal" variant="outline" onPress={onClose} />
+                  <Button label={t("İptal")} variant="outline" onPress={onClose} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Button label="Şikayeti Gönder" onPress={send} loading={sending} />
+                  <Button label={t("Şikayeti Gönder")} onPress={send} loading={sending} />
                 </View>
               </View>
             </ScrollView>

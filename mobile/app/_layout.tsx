@@ -16,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import LaunchAnimation from '../components/LaunchAnimation';
 import { AuthProvider, useAuth } from '../lib/auth';
+import { LanguageProvider } from '../lib/i18n';
 import { registerForPushNotifications } from '../lib/push';
 import { colors } from '../lib/theme';
 
@@ -57,12 +58,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <LanguageProvider>
       <AuthProvider>
         <PushNotifications />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
         {/* over everything until it has played; it also lets go of the native launch screen */}
         <LaunchAnimation />
       </AuthProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

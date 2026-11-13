@@ -8,11 +8,12 @@
 import { capitalizeName } from './displayName';
 import { supabase } from './supabase';
 import { TEACHERS, type Teacher } from './teachers-data';
+import { tr } from './i18n';
 
 // "Mehmet Kaya" -> "Mehmet K."
 function formatReviewerName(fullName: string) {
   const parts = capitalizeName(fullName).split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return parts[0] || 'Öğrenci';
+  if (parts.length < 2) return parts[0] || tr("Öğrenci", 1);
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
@@ -48,16 +49,16 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], stats: { complet
     photo: profile.photo_url || null,
     video: profile.video_url || null,
     name: profile.name,
-    role: profile.title || 'İngilizce Öğretmeni',
+    role: profile.title || tr("İngilizce Öğretmeni"),
     price: profile.price ?? 500,
     timezone: profile.timezone || 'Europe/Istanbul',
     rating,
     reviewCount: reviews.length,
-    tags: [profile.subject_taught || 'Genel İngilizce', 'Yeni Öğretmen'],
+    tags: [profile.subject_taught || tr("Genel İngilizce"), tr("Yeni Öğretmen")],
     level: '',
-    availability: profile.availability || 'Şu anda ders almaya uygun',
-    about: profile.bio ? [profile.bio] : ['Bu öğretmen henüz bir tanıtım yazısı eklemedi.'],
-    experience: 'Yeni',
+    availability: profile.availability || tr("Şu anda ders almaya uygun"),
+    about: profile.bio ? [profile.bio] : [tr("Bu öğretmen henüz bir tanıtım yazısı eklemedi.")],
+    experience: tr("Yeni"),
     completedLessons: String(completedCount),
     students: studentCount,
     languages:
@@ -65,7 +66,7 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], stats: { complet
         ? profile.languages.map((l: any) => `${l.language} (${l.level})`).join(', ')
         : 'English / Türkçe',
     levelRange: 'A1 – C2',
-    specialties: [profile.subject_taught || 'Genel İngilizce'],
+    specialties: [profile.subject_taught || tr("Genel İngilizce")],
     reviews,
     isRegistered: true,
     weeklyAvailability: Array.isArray(profile.weekly_availability) ? profile.weekly_availability : null,

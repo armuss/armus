@@ -11,9 +11,11 @@ import { getFavorites, toggleFavorite } from '../lib/favorites';
 import { getMarketplaceTeachers } from '../lib/teachers';
 import type { Teacher } from '../lib/teachers-data';
 import { colors, fonts, radius } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 /** Favori öğretmenlerim: the teachers the student hearted, as the Keşfet photo grid. */
 export default function Favorites() {
+  const t = useT();
   const [teachers, setTeachers] = useState<Teacher[] | null>(null);
   const { width } = useWindowDimensions();
   const tileW = Math.floor((width - 32 - 10) / 2);
@@ -39,11 +41,12 @@ export default function Favorites() {
     <View style={styles.screen}>
       <Band height={70} />
       <SafeAreaView style={styles.safe} edges={['top']}>
-        <SimpleHeader title="Favori öğretmenlerim" sub={teachers?.length ? `${teachers.length} öğretmen` : undefined} />
+        <SimpleHeader title={t("Favori öğretmenlerim")} sub={teachers?.length ? t("{0} öğretmen", teachers.length) : undefined} />
         {teachers === null ? (
           <ActivityIndicator color={colors.onRed} style={{ marginTop: 40 }} />
         ) : (
           <FlatList
+          extraData={t}
             data={teachers}
             numColumns={2}
             keyExtractor={(t) => t.id}
@@ -57,10 +60,10 @@ export default function Favorites() {
                 <View style={styles.emptyIcon}>
                   <Ionicons name="heart-outline" size={28} color={colors.red} />
                 </View>
-                <Text style={styles.emptyTitle}>Henüz favorin yok</Text>
-                <Text style={styles.emptyText}>Keşfet'te bir öğretmenin fotoğrafındaki kalbe dokunarak buraya ekleyebilirsin.</Text>
+                <Text style={styles.emptyTitle}>{t("Henüz favorin yok")}</Text>
+                <Text style={styles.emptyText}>{t("Keşfet'te bir öğretmenin fotoğrafındaki kalbe dokunarak buraya ekleyebilirsin.")}</Text>
                 <Pressable onPress={() => router.navigate('/(tabs)')} style={styles.btn}>
-                  <Text style={styles.btnText}>Öğretmenlere göz at</Text>
+                  <Text style={styles.btnText}>{t("Öğretmenlere göz at")}</Text>
                 </Pressable>
               </View>
             }

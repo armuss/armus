@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnnouncementFrame from '../../components/AnnouncementBanner';
 import { needsEmailVerification, useAuth } from '../../lib/auth';
 import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -66,6 +67,7 @@ function Dock({ state, descriptors, emitter, navigateToTab, home }: BottomTabBar
 }
 
 export default function TabsLayout() {
+  const t = useT();
   const { session, profile, loading } = useAuth();
 
   if (loading) {
@@ -89,12 +91,12 @@ export default function TabsLayout() {
       tabBar={(props) => <Dock {...props} home={isTeacher ? 'home-outline' : 'search'} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}
     >
-      <Tabs.Screen name="index" options={{ title: isTeacher ? 'Bugün' : 'Keşfet' }} />
-      <Tabs.Screen name="students" options={{ title: 'Öğrenciler', href: isTeacher ? undefined : null }} />
-      <Tabs.Screen name="availability" options={{ title: 'Programım', href: isTeacher ? undefined : null }} />
-      <Tabs.Screen name="messages" options={{ title: 'Mesajlar' }} />
-      <Tabs.Screen name="lessons" options={{ title: 'Derslerim', href: isTeacher ? null : undefined }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
+      <Tabs.Screen name="index" options={{ title: isTeacher ? t("Bugün") : t("Keşfet") }} />
+      <Tabs.Screen name="students" options={{ title: t("Öğrenciler"), href: isTeacher ? undefined : null }} />
+      <Tabs.Screen name="availability" options={{ title: t("Programım"), href: isTeacher ? undefined : null }} />
+      <Tabs.Screen name="messages" options={{ title: t("Mesajlar") }} />
+      <Tabs.Screen name="lessons" options={{ title: t("Derslerim"), href: isTeacher ? null : undefined }} />
+      <Tabs.Screen name="profile" options={{ title: t("Profil") }} />
     </Tabs>
     </AnnouncementFrame>
   );

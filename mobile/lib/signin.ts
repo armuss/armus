@@ -1,5 +1,6 @@
 import { invokeEdge } from './edge';
 import { ARMUS_SUPABASE_ANON_KEY, supabase } from './supabase';
+import { tr } from './i18n';
 
 // Signs in through the login-with-throttle Edge Function, exactly like the
 // website (auth.js armusSignIn) - never with signInWithPassword directly,
@@ -13,8 +14,8 @@ export async function signInThrottled(email: string, password: string): Promise<
     anon_key: ARMUS_SUPABASE_ANON_KEY,
   });
   if (!res.ok || !res.data?.access_token || !res.data?.refresh_token) {
-    return { error: (!res.ok && res.error) || 'E-posta veya şifre hatalı.' };
+    return { error: (!res.ok && res.error) || tr("E-posta veya şifre hatalı.") };
   }
   const { error } = await supabase.auth.setSession({ access_token: res.data.access_token, refresh_token: res.data.refresh_token });
-  return { error: error ? 'Giriş yapılamadı. Lütfen tekrar dene.' : null };
+  return { error: error ? tr("Giriş yapılamadı. Lütfen tekrar dene.") : null };
 }

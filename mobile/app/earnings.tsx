@@ -20,6 +20,7 @@ import {
   type WithdrawalRequest,
 } from '../lib/earnings';
 import { colors, fonts, radius } from '../lib/theme';
+import { getLocale, useT } from '../lib/i18n';
 
 const STATUS_LABELS: Record<string, string> = { pending: 'Beklemede', paid: 'Ödendi', rejected: 'Reddedildi' };
 
@@ -33,6 +34,7 @@ function monthLabel(key: string) {
 // commission tier; a lesson's share becomes withdrawable 7 days after it
 // ends; a request is checked and paid by hand by the ARMUS team.
 export default function Earnings() {
+  const t = useT();
   const { profile } = useAuth();
   const timeZone = profile?.timezone || 'Europe/Istanbul';
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
@@ -68,16 +70,16 @@ export default function Earnings() {
     if (!profile || !summary) return;
     const value = Number(amount.replace(',', '.'));
     const cleanIban = normalizeIban(iban);
-    if (!value || value <= 0) return setStatus({ text: 'Geçerli bir tutar gir.', error: true });
-    if (value > summary.withdrawableBalance) return setStatus({ text: 'Bu tutar çekilebilir bakiyenden fazla.', error: true });
-    if (!isValidTurkishIban(cleanIban)) return setStatus({ text: 'Geçerli bir IBAN gir (TR ile başlayan 26 karakter).', error: true });
-    if (!ibanName.trim()) return setStatus({ text: 'Hesap sahibinin adını gir.', error: true });
+    if (!value || value <= 0) return setStatus({ text: t("Geçerli bir tutar gir."), error: true });
+    if (value > summary.withdrawableBalance) return setStatus({ text: t("Bu tutar çekilebilir bakiyenden fazla."), error: true });
+    if (!isValidTurkishIban(cleanIban)) return setStatus({ text: t("Geçerli bir IBAN gir (TR ile başlayan 26 karakter)."), error: true });
+    if (!ibanName.trim()) return setStatus({ text: t("Hesap sahibinin adını gir."), error: true });
 
     setSending(true);
     const created = await createWithdrawalRequest({ teacherId: profile.id, amount: value, iban: cleanIban, ibanName: ibanName.trim(), note: note.trim() });
     setSending(false);
-    if (!created) return setStatus({ text: 'Talep gönderilemedi. Lütfen tekrar dene.', error: true });
-    setStatus({ text: 'Talebin gönderildi ✓', error: false });
+    if (!created) return setStatus({ text: t("Talep gönderilemedi. Lütfen tekrar dene."), error: true });
+    setStatus({ text: t("Talebin gönderildi ✓"), error: false });
     setAmount('');
     setNote('');
     load();
@@ -96,81 +98,76 @@ export default function Earnings() {
       <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ScrollBand height={statsBottom + 10} inset={20} />
         <Pressable onPress={() => router.back()} style={{ marginBottom: 12 }}>
-          <Text style={styles.back}>← Geri</Text>
+          <Text style={styles.back}>{t("← Geri")}</Text>
         </Pressable>
-        <Text style={styles.title}>Kazançlarım</Text>
+        <Text style={styles.title}>{t("Kazançlarım")}</Text>
 
         <View style={styles.statRow} onLayout={(e) => setStatsBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{formatMoney(summary.netThisMonth)}</Text>
-            <Text style={styles.statLabel}>Bu ay (tahmini)</Text>
+            <Text style={styles.statLabel}>{t("Bu ay (tahmini)")}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>%{summary.rate}</Text>
-            <Text style={styles.statLabel}>Komisyon · {summary.range}</Text>
+            <Text style={styles.statLabel}>{t("Komisyon · {0}", summary.range)}</Text>
           </View>
         </View>
 
         <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Çekilebilir bakiye (tahmini)</Text>
+          <Text style={styles.balanceLabel}>{t("Çekilebilir bakiye (tahmini)")}</Text>
           <Text style={styles.balanceValue}>{formatMoney(summary.withdrawableBalance)}</Text>
           {summary.heldNet > 0 && (
             <Text style={styles.held}>
-              Bekleyen: {formatMoney(summary.heldNet)}. Son {PAYOUT_HOLD_DAYS} günün derslerinden gelir, her dersin ücreti dersten{' '}
-              {PAYOUT_HOLD_DAYS} gün sonra çekilebilir olur
-              {summary.nextReleaseAt
-                ? ` (sıradaki: ${summary.nextReleaseAt.getDate()} ${MONTH_NAMES[summary.nextReleaseAt.getMonth()]})`
+              {t("Bekleyen: ")}{formatMoney(summary.heldNet)}{t(". Son ")}{PAYOUT_HOLD_DAYS} {t(" günün derslerinden gelir, her dersin ücreti dersten")}{' '}
+              {PAYOUT_HOLD_DAYS} {t(" gün sonra çekilebilir olur")}{summary.nextReleaseAt
+                ? t(" (sıradaki: {0} {1})", summary.nextReleaseAt.getDate(), MONTH_NAMES[summary.nextReleaseAt.getMonth()])
                 : ''}
               .
             </Text>
           )}
           <Text style={styles.hint}>
-            Bu rakam, tamamlanan derslerinden şu anki komisyon oranınla hesaplanan bir tahmindir; kesin tutarı ARMUS ekibi talebini
-            incelerken doğrular.
-          </Text>
+            {t("Bu rakam, tamamlanan derslerinden şu anki komisyon oranınla hesaplanan bir tahmindir; kesin tutarı ARMUS ekibi talebini incelerken doğrular.")}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Para çekme talebi</Text>
+        <Text style={styles.sectionTitle}>{t("Para çekme talebi")}</Text>
         <Text style={styles.hint}>
-          Kazandığın parayı IBAN'ına çekmek için bir talep gönder. ARMUS ekibi talebini inceleyip ödemeyi elden gönderir, bu yüzden
-          işlem birkaç gün sürebilir.
-        </Text>
-        <Text style={styles.label}>Çekmek istediğin tutar (₺)</Text>
+          {t("Kazandığın parayı IBAN'ına çekmek için bir talep gönder. ARMUS ekibi talebini inceleyip ödemeyi elden gönderir, bu yüzden işlem birkaç gün sürebilir.")}</Text>
+        <Text style={styles.label}>{t("Çekmek istediğin tutar (₺)")}</Text>
         <TextInput value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.faint} style={styles.input} />
-        <Text style={styles.label}>IBAN</Text>
-        <TextInput value={iban} onChangeText={setIban} autoCapitalize="characters" placeholder="TR.." placeholderTextColor={colors.faint} style={styles.input} />
-        <Text style={styles.label}>Hesap sahibinin adı soyadı</Text>
-        <TextInput value={ibanName} onChangeText={setIbanName} placeholder="Ad Soyad" placeholderTextColor={colors.faint} style={styles.input} />
-        <Text style={styles.label}>Not (isteğe bağlı)</Text>
+        <Text style={styles.label}>{t("IBAN")}</Text>
+        <TextInput value={iban} onChangeText={setIban} autoCapitalize="characters" placeholder={t("TR..")} placeholderTextColor={colors.faint} style={styles.input} />
+        <Text style={styles.label}>{t("Hesap sahibinin adı soyadı")}</Text>
+        <TextInput value={ibanName} onChangeText={setIbanName} placeholder={t("Ad Soyad")} placeholderTextColor={colors.faint} style={styles.input} />
+        <Text style={styles.label}>{t("Not (isteğe bağlı)")}</Text>
         <TextInput value={note} onChangeText={setNote} placeholder="" placeholderTextColor={colors.faint} style={styles.input} />
         {status && <Text style={[styles.status, status.error && { color: colors.error }]}>{status.text}</Text>}
         <View style={{ marginTop: 14 }}>
-          <Button label="Talep Gönder" onPress={submit} loading={sending} disabled={summary.withdrawableBalance <= 0} />
+          <Button label={t("Talep Gönder")} onPress={submit} loading={sending} disabled={summary.withdrawableBalance <= 0} />
         </View>
 
-        <Text style={styles.sectionTitle}>Geçmiş talepler</Text>
+        <Text style={styles.sectionTitle}>{t("Geçmiş talepler")}</Text>
         {requests.length === 0 ? (
-          <Text style={styles.hint}>Henüz bir para çekme talebin yok.</Text>
+          <Text style={styles.hint}>{t("Henüz bir para çekme talebin yok.")}</Text>
         ) : (
           requests.map((r) => (
             <View key={r.id} style={styles.row}>
-              <Text style={styles.rowText}>{new Date(r.requested_at).toLocaleDateString('tr-TR')}</Text>
+              <Text style={styles.rowText}>{new Date(r.requested_at).toLocaleDateString(getLocale())}</Text>
               <Text style={styles.rowStrong}>{formatMoney(r.amount)}</Text>
               <Text style={[styles.badge, r.status === 'paid' && styles.badgePaid, r.status === 'rejected' && styles.badgeRejected]}>
-                {STATUS_LABELS[r.status] || r.status}
+                {t(STATUS_LABELS[r.status] || r.status)}
               </Text>
             </View>
           ))
         )}
 
-        <Text style={styles.sectionTitle}>Aylık kazanç</Text>
+        <Text style={styles.sectionTitle}>{t("Aylık kazanç")}</Text>
         {summary.months.length === 0 ? (
-          <Text style={styles.hint}>Tamamlanan dersin olduğunda burada aylara göre görünecek.</Text>
+          <Text style={styles.hint}>{t("Tamamlanan dersin olduğunda burada aylara göre görünecek.")}</Text>
         ) : (
           summary.months.map((m) => (
             <View key={m.key} style={styles.row}>
               <Text style={styles.rowText}>{monthLabel(m.key)}</Text>
-              <Text style={styles.rowText}>{m.count} ders</Text>
+              <Text style={styles.rowText}>{t("{0} ders", m.count)}</Text>
               <Text style={styles.rowStrong}>{formatMoney(m.net)}</Text>
             </View>
           ))

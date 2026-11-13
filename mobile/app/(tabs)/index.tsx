@@ -12,6 +12,7 @@ import { getFavorites, toggleFavorite } from '../../lib/favorites';
 import { getMarketplaceTeachers } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 const SPECIALTY_OPTIONS = ['Tümü', 'IELTS', 'TOEFL', 'YDS', 'Konuşma', 'İş İngilizcesi'];
 type PriceSort = 'none' | 'asc' | 'desc';
@@ -22,6 +23,7 @@ export default function Home() {
 }
 
 function StudentBrowse() {
+  const t = useT();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,6 +94,7 @@ function StudentBrowse() {
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <FlatList
+          extraData={t}
         style={styles.list}
         data={gridData}
         numColumns={2}
@@ -116,11 +119,11 @@ function StudentBrowse() {
                 search open it reaches the sort row too */}
             <ScrollBand height={showSearch ? 262 : 150} />
             <View style={styles.head}>
-              <Text style={styles.title}>Keşfet</Text>
+              <Text style={styles.title}>{t("Keşfet")}</Text>
               <Pressable
                 onPress={() => setShowSearch((v) => !v)}
                 style={[styles.roundBtn, showSearch && styles.roundBtnOn]}
-                accessibilityLabel="Ara ve sırala"
+                accessibilityLabel={t("Ara ve sırala")}
               >
                 <Ionicons name={showSearch ? 'close' : 'search'} size={19} color={showSearch ? colors.red : colors.onRed} />
               </Pressable>
@@ -133,19 +136,19 @@ function StudentBrowse() {
                   <TextInput
                     value={query}
                     onChangeText={setQuery}
-                    placeholder="İsim, IELTS, konuşma..."
+                    placeholder={t("İsim, IELTS, konuşma...")}
                     placeholderTextColor={colors.faint}
                     style={styles.search}
                     autoFocus
                   />
                 </View>
                 <View style={styles.sortRow}>
-                  <Text style={styles.sortLabel}>Sırala</Text>
+                  <Text style={styles.sortLabel}>{t("Sırala")}</Text>
                   {(
                     [
-                      ['none', 'Önerilen'],
-                      ['asc', 'Fiyat ↑'],
-                      ['desc', 'Fiyat ↓'],
+                      ['none', t("Önerilen")],
+                      ['asc', t("Fiyat ↑")],
+                      ['desc', t("Fiyat ↓")],
                     ] as [PriceSort, string][]
                   ).map(([key, label]) => (
                     <Chip key={key} label={label} active={priceSort === key} onPress={() => setPriceSort(key)} />
@@ -156,10 +159,10 @@ function StudentBrowse() {
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips} contentContainerStyle={styles.chipsInner}>
               {SPECIALTY_OPTIONS.map((opt) => (
-                <Chip key={opt} label={opt} active={specialty === opt} onPress={() => setSpecialty(opt)} />
+                <Chip key={opt} label={t(opt)} active={specialty === opt} onPress={() => setSpecialty(opt)} />
               ))}
               <Chip
-                label={favoritesOnly ? '♥ Favorilerim' : '♡ Favorilerim'}
+                label={favoritesOnly ? t("♥ Favorilerim") : t("♡ Favorilerim")}
                 active={favoritesOnly}
                 onPress={() => setFavoritesOnly((v) => !v)}
               />
@@ -170,7 +173,7 @@ function StudentBrowse() {
           item === 'more' ? (
             <Pressable onPress={clearFilters} style={[styles.more, { width: tileW }]}>
               <Ionicons name="options-outline" size={20} color={colors.muted} />
-              <Text style={styles.moreText}>Daha fazla öğretmen için filtreyi temizle</Text>
+              <Text style={styles.moreText}>{t("Daha fazla öğretmen için filtreyi temizle")}</Text>
             </Pressable>
           ) : (
             <TeacherCard
@@ -185,11 +188,11 @@ function StudentBrowse() {
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Text style={styles.empty}>
-              {favoritesOnly ? 'Henüz favori öğretmenin yok. Bir fotoğraftaki kalbe dokunarak ekleyebilirsin.' : 'Aramanla eşleşen öğretmen bulunamadı.'}
+              {favoritesOnly ? t("Henüz favori öğretmenin yok. Bir fotoğraftaki kalbe dokunarak ekleyebilirsin.") : t("Aramanla eşleşen öğretmen bulunamadı.")}
             </Text>
             {activeFilters && (
               <Pressable onPress={clearFilters} style={styles.emptyBtn}>
-                <Text style={styles.emptyBtnText}>Filtreyi temizle</Text>
+                <Text style={styles.emptyBtnText}>{t("Filtreyi temizle")}</Text>
               </Pressable>
             )}
           </View>

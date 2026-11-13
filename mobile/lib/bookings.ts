@@ -1,5 +1,6 @@
 import { invokeEdge } from './edge';
 import { supabase } from './supabase';
+import { getLang, tr } from './i18n';
 
 export type Booking = {
   id: string;
@@ -29,11 +30,22 @@ export type Booking = {
 };
 
 export function lessonTypeLabel(type: string) {
-  return type === 'trial' ? 'Deneme Dersi' : 'Ders';
+  return type === 'trial' ? tr("Deneme Dersi") : tr("Ders");
 }
 
-export const DAY_NAMES = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
-export const MONTH_NAMES = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+// short day / month names in the app's language (read at the moment they're used)
+const DAYS = {
+  tr: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+};
+const MONTHS = {
+  tr: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+const inLang = (names: Record<'tr' | 'en', string[]>) =>
+  new Proxy([] as string[], { get: (_target, prop) => (names[getLang()] as any)[prop as any] });
+export const DAY_NAMES: string[] = inLang(DAYS);
+export const MONTH_NAMES: string[] = inLang(MONTHS);
 
 export function formatDateLabel(dateKey: string) {
   const date = new Date(dateKey + 'T00:00:00');
@@ -377,7 +389,7 @@ export async function cancelBooking(
 ): Promise<{ ok: true; refunded: boolean; lateCancel: boolean } | { ok: false; error: string; limitReached?: boolean }> {
   const result = await invokeEdge('cancel-booking', { booking_id: bookingId });
   if (!result.ok) {
-    return { ok: false, error: result.error || 'Ders iptal edilemedi. Lütfen tekrar dene.', limitReached: !!result.body?.limitReached };
+    return { ok: false, error: result.error || tr("Ders iptal edilemedi. Lütfen tekrar dene."), limitReached: !!result.body?.limitReached };
   }
   return { ok: true, refunded: !!result.data.refunded, lateCancel: !!result.data.lateCancel };
 }
@@ -441,16 +453,16 @@ async function invokeReschedule(body: Record<string, unknown>, fallback: string)
 export function rescheduleBooking(bookingId: string, newDate: string, newTime: string) {
   return invokeReschedule(
     { action: 'request', booking_id: bookingId, new_date: newDate, new_time: newTime },
-    'Dersin saati değiştirilemedi.'
+    tr("Dersin saati değiştirilemedi.")
   );
 }
 
 export function respondReschedule(requestId: string, accept: boolean) {
-  return invokeReschedule({ action: 'respond', request_id: requestId, accept }, 'İsteğe yanıt verilemedi.');
+  return invokeReschedule({ action: 'respond', request_id: requestId, accept }, tr("İsteğe yanıt verilemedi."));
 }
 
 export function withdrawReschedule(requestId: string) {
-  return invokeReschedule({ action: 'withdraw', request_id: requestId }, 'İstek geri çekilemedi.');
+  return invokeReschedule({ action: 'withdraw', request_id: requestId }, tr("İstek geri çekilemedi."));
 }
 
 // "14 Eki, Çar · 15:00 – 15:50" in the viewer's own time
@@ -469,7 +481,7 @@ export function formatMinutes(minutesFromNow: number) {
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
-  if (days > 0) return hours > 0 ? `${days} gün ${hours} saat` : `${days} gün`;
-  if (hours > 0) return minutes > 0 ? `${hours} saat ${minutes} dakika` : `${hours} saat`;
-  return `${minutes} dakika`;
+  if (days > 0) return hours > 0 ? tr("{0} gün {1} saat", days, hours) : tr("{0} gün", days);
+  if (hours > 0) return minutes > 0 ? tr("{0} saat {1} dakika", hours, minutes) : tr("{0} saat", hours);
+  return tr("{0} dakika", minutes);
 }

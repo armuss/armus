@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 import { unregisterPushNotifications } from './push';
 import { supabase } from './supabase';
+import { useT, tr } from './i18n';
 
 export type Profile = {
   id: string;
@@ -57,10 +58,11 @@ const AuthContext = createContext<AuthState>({
   loading: true,
   signOut: async () => {},
   refreshProfile: async () => {},
-  deleteAccount: async () => ({ ok: false, error: 'Giriş yapmalısın.' }),
+  deleteAccount: async () => ({ ok: false, error: tr("Giriş yapmalısın.") }),
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deleteAccount: async () => {
           const { data, error } = await supabase.functions.invoke('delete-account');
           if (error || !data?.ok) {
-            return { ok: false, error: (data && data.error) || 'Hesap silinemedi. Lütfen tekrar dene.' };
+            return { ok: false, error: (data && data.error) || t("Hesap silinemedi. Lütfen tekrar dene.") };
           }
           await supabase.auth.signOut();
           return { ok: true };

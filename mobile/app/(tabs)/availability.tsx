@@ -11,6 +11,7 @@ import { updateOwnProfile } from '../../lib/profile';
 import { supabase } from '../../lib/supabase';
 import Band, { ScrollBand } from '../../components/Band';
 import { colors, fonts } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 
 // [label, JS getDay() index] - Monday-first for display, but keyed by the
 // real day-of-week index everywhere else (booking.html, marketplace.js).
@@ -28,6 +29,7 @@ const ALL_SLOTS = allTimeSlots();
 const WEEKDAYS = [1, 2, 3, 4, 5];
 
 export default function Availability() {
+  const t = useT();
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [openDay, setOpenDay] = useState<number | null>(null);
@@ -90,7 +92,7 @@ export default function Availability() {
   }
 
   async function clearAll() {
-    if (!(await confirmAsync('Programı temizle', 'Bütün günlerdeki saatler kaldırılsın mı? Kaydetmeden önce geri alabilirsin.', 'Temizle', true))) return;
+    if (!(await confirmAsync(t("Programı temizle"), t("Bütün günlerdeki saatler kaldırılsın mı? Kaydetmeden önce geri alabilirsin."), t("Temizle"), true))) return;
     edit(() => Object.fromEntries(DAY_COLUMNS.map(([, d]) => [d, []])));
   }
 
@@ -114,7 +116,7 @@ export default function Availability() {
     const ok = await updateOwnProfile({ availability_dates: cleaned });
     setSaving(false);
     if (ok) setDirty(false);
-    setStatus(ok ? 'Kaydedildi' : 'Kaydedilemedi, tekrar dene');
+    setStatus(ok ? t("Kaydedildi") : t("Kaydedilemedi, tekrar dene"));
   }
 
   if (loading) {
@@ -133,21 +135,21 @@ export default function Availability() {
       <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* the red band under the title and the quick-fill chips (design A) */}
         <ScrollBand height={150} />
-        <Text style={styles.title}>Programım</Text>
-        <Text style={styles.subtitle}>Öğrenciler sadece buradaki saatlerde ders alabilir. Program her hafta tekrarlanır.</Text>
+        <Text style={styles.title}>{t("Programım")}</Text>
+        <Text style={styles.subtitle}>{t("Öğrenciler sadece buradaki saatlerde ders alabilir. Program her hafta tekrarlanır.")}</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presets} contentContainerStyle={styles.presetsInner}>
           <Pressable onPress={() => applyPreset(WEEKDAYS, '19:00', '21:00')} style={styles.preset}>
-            <Text style={styles.presetText}>+ Akşamlar 19–22</Text>
+            <Text style={styles.presetText}>{t("+ Akşamlar 19–22")}</Text>
           </Pressable>
           <Pressable onPress={() => applyPreset(WEEKDAYS, '09:00', '11:00')} style={styles.preset}>
-            <Text style={styles.presetText}>+ Hafta içi 9–12</Text>
+            <Text style={styles.presetText}>{t("+ Hafta içi 9–12")}</Text>
           </Pressable>
           <Pressable onPress={() => applyPreset([6, 0], '10:00', '17:00')} style={styles.preset}>
-            <Text style={styles.presetText}>+ Hafta sonu 10–18</Text>
+            <Text style={styles.presetText}>{t("+ Hafta sonu 10–18")}</Text>
           </Pressable>
           <Pressable onPress={clearAll} style={[styles.preset, styles.presetClear]}>
-            <Text style={[styles.presetText, { color: colors.red }]}>Temizle</Text>
+            <Text style={[styles.presetText, { color: colors.red }]}>{t("Temizle")}</Text>
           </Pressable>
         </ScrollView>
 
@@ -158,15 +160,15 @@ export default function Availability() {
             return (
               <View key={dayIdx} style={[styles.row, i === DAY_COLUMNS.length - 1 && !open && { borderBottomWidth: 0 }]}>
                 <Pressable onPress={() => setOpenDay(open ? null : dayIdx)} style={styles.rowHead}>
-                  <Text style={styles.dayName}>{label}</Text>
+                  <Text style={styles.dayName}>{t(label)}</Text>
                   <Text style={[styles.dayValue, slots.length === 0 && styles.dayValueOff]} numberOfLines={2}>
-                    {slots.length === 0 ? 'Kapalı' : summarize(slots)}
+                    {slots.length === 0 ? t("Kapalı") : summarize(slots)}
                   </Text>
                   <Ionicons name={open ? 'chevron-up' : 'chevron-forward'} size={18} color={colors.faint} />
                 </Pressable>
                 {open && (
                   <View style={styles.editor}>
-                    <Text style={styles.editorHint}>Ders başlangıç saatlerine dokun. Her ders 50 dakika sürer.</Text>
+                    <Text style={styles.editorHint}>{t("Ders başlangıç saatlerine dokun. Her ders 50 dakika sürer.")}</Text>
                     <View style={styles.grid}>
                       {ALL_SLOTS.map((time) => {
                         const on = slots.includes(time);
@@ -179,7 +181,7 @@ export default function Availability() {
                     </View>
                     {slots.length > 0 && (
                       <Pressable onPress={() => edit((prev) => ({ ...prev, [dayIdx]: [] }))} style={styles.dayClear}>
-                        <Text style={styles.dayClearText}>{label} gününü kapat</Text>
+                        <Text style={styles.dayClearText}>{t("{0} gününü kapat", t(label))}</Text>
                       </Pressable>
                     )}
                   </View>
@@ -201,7 +203,7 @@ export default function Availability() {
         <View style={styles.bar}>
           {!!status && <Text style={[styles.status, { color: colors.error, marginBottom: 6 }]}>{status}</Text>}
           <Pressable onPress={handleSave} disabled={saving} style={({ pressed }) => [styles.save, { opacity: saving ? 0.7 : pressed ? 0.88 : 1 }]}>
-            {saving ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.saveText}>Değişiklikleri kaydet</Text>}
+            {saving ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.saveText}>{t("Değişiklikleri kaydet")}</Text>}
           </Pressable>
         </View>
       )}

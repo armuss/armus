@@ -6,6 +6,7 @@ import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area
 
 import { supabase } from '../lib/supabase';
 import { colors, fonts } from '../lib/theme';
+import { useT } from '../lib/i18n';
 
 const DISMISSED_KEY = 'armusDismissedAnnouncement';
 
@@ -18,6 +19,7 @@ const DISMISSED_KEY = 'armusDismissedAnnouncement';
  * status bar), so nothing on the screen is covered.
  */
 export default function AnnouncementFrame({ children }: { children: ReactNode }) {
+  const t = useT();
   const insets = useSafeAreaInsets();
   const [message, setMessage] = useState<string | null>(null);
 
@@ -53,7 +55,7 @@ export default function AnnouncementFrame({ children }: { children: ReactNode })
             setMessage(null);
           }}
           hitSlop={10}
-          accessibilityLabel="Duyuruyu kapat"
+          accessibilityLabel={t("Duyuruyu kapat")}
         >
           <Ionicons name="close" size={18} color={colors.onRed} />
         </Pressable>

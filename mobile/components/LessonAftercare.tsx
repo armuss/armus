@@ -9,6 +9,7 @@ import { shortDisplayName } from '../lib/displayName';
 import { addReview, type Review } from '../lib/reviews';
 import { colors, fonts, radius } from '../lib/theme';
 import AttendanceFlow from './AttendanceFlow';
+import { tr, useT } from '../lib/i18n';
 
 // What a finished lesson's card carries on the website (my-lessons.html):
 // the "did this lesson happen?" check-in for 24 hours after it ends, the
@@ -26,20 +27,21 @@ export function checkinOpen(booking: Booking, saidYes: boolean) {
 
 const TYPE_LABEL = (r: AttendanceReport) =>
   r.type === 'no_show'
-    ? 'Öğretmen gelmedi'
+    ? tr("Öğretmen gelmedi")
     : r.type === 'late'
-      ? `Öğretmen geç geldi${r.lateMinutes ? ` (${r.lateMinutes} dk)` : ''}`
+      ? tr("Öğretmen geç geldi{0}", r.lateMinutes ? tr(" ({0} dk)", r.lateMinutes) : '')
       : r.type === 'technical'
-        ? 'Teknik sorun'
+        ? tr("Teknik sorun")
         : r.type;
 
-const STATUS_LABEL = (r: AttendanceReport) => (r.status === 'upheld' ? 'Doğrulandı' : r.status === 'dismissed' ? 'Reddedildi' : 'İnceleniyor');
+const STATUS_LABEL = (r: AttendanceReport) => (r.status === 'upheld' ? tr("Doğrulandı") : r.status === 'dismissed' ? tr("Reddedildi") : tr("İnceleniyor"));
 
 export function ReportStatus({ report, message }: { report: AttendanceReport; message?: string }) {
+  const t = useT();
   return (
     <View style={styles.statusBox}>
       <Text style={styles.statusText}>
-        Bildirimin: <Text style={styles.strong}>{TYPE_LABEL(report)}</Text> · {STATUS_LABEL(report)}
+        {t("Bildirimin: ")}<Text style={styles.strong}>{TYPE_LABEL(report)}</Text> · {STATUS_LABEL(report)}
       </Text>
       {!!message && <Text style={styles.statusNote}>{message}</Text>}
     </View>
@@ -57,12 +59,12 @@ export function CheckinBox({
   onSaidYes: () => void;
   onFiled: (report: AttendanceReport, message: string) => void;
 }) {
+  const t = useT();
   return (
     <View style={styles.checkin}>
-      <Text style={styles.checkinTitle}>Bu ders gerçekleşti mi?</Text>
+      <Text style={styles.checkinTitle}>{t("Bu ders gerçekleşti mi?")}</Text>
       <Text style={styles.checkinText}>
-        Bir sorun olduysa dersten sonraki 24 saat içinde bildirebilirsin. Bildirim gelmezse ders yapılmış sayılır ve ücreti öğretmene ödenir.
-      </Text>
+        {t("Bir sorun olduysa dersten sonraki 24 saat içinde bildirebilirsin. Bildirim gelmezse ders yapılmış sayılır ve ücreti öğretmene ödenir.")}</Text>
       <AttendanceFlow
         booking={booking}
         studentId={studentId}
@@ -88,6 +90,7 @@ export function ReviewBlock({
   review?: Review;
   onSaved: (r: Review) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [stars, setStars] = useState(0);
   const [text, setText] = useState('');
@@ -99,7 +102,7 @@ export function ReviewBlock({
         <Text style={styles.reviewStars}>
           {'★'.repeat(review.stars)}
           <Text style={{ color: colors.border }}>{'★'.repeat(5 - review.stars)}</Text>
-          <Text style={styles.reviewDoneLabel}> Değerlendirdin</Text>
+          <Text style={styles.reviewDoneLabel}> {t(" Değerlendirdin")}</Text>
         </Text>
         {!!review.text && <Text style={styles.reviewText}>{review.text}</Text>}
       </View>
@@ -109,7 +112,7 @@ export function ReviewBlock({
   if (!open) {
     return (
       <Pressable onPress={() => setOpen(true)} style={styles.reviewPrompt}>
-        <Text style={styles.reviewPromptText}>★ Bu dersi değerlendir</Text>
+        <Text style={styles.reviewPromptText}>{t("★ Bu dersi değerlendir")}</Text>
       </Pressable>
     );
   }
@@ -117,7 +120,7 @@ export function ReviewBlock({
   async function submit() {
     if (saving) return;
     if (stars === 0) {
-      notify('Puan seç', 'Lütfen bir puan seç.');
+      notify(t("Puan seç"), t("Lütfen bir puan seç."));
       return;
     }
     setSaving(true);
@@ -131,7 +134,7 @@ export function ReviewBlock({
     });
     setSaving(false);
     if (!saved) {
-      notify('Kaydedilemedi', 'Değerlendirme kaydedilemedi.');
+      notify(t("Kaydedilemedi"), t("Değerlendirme kaydedilemedi."));
       return;
     }
     onSaved(saved);
@@ -139,9 +142,9 @@ export function ReviewBlock({
 
   return (
     <View style={styles.reviewForm}>
-      <View style={styles.starRow} accessibilityRole="radiogroup" accessibilityLabel="Puan ver">
+      <View style={styles.starRow} accessibilityRole="radiogroup" accessibilityLabel={t("Puan ver")}>
         {[1, 2, 3, 4, 5].map((n) => (
-          <Pressable key={n} onPress={() => setStars(n)} hitSlop={4} accessibilityRole="radio" accessibilityLabel={`${n} yıldız`} accessibilityState={{ checked: stars === n }}>
+          <Pressable key={n} onPress={() => setStars(n)} hitSlop={4} accessibilityRole="radio" accessibilityLabel={t("{0} yıldız", n)} accessibilityState={{ checked: stars === n }}>
             <Text style={[styles.star, n <= stars && styles.starOn]}>★</Text>
           </Pressable>
         ))}
@@ -149,13 +152,13 @@ export function ReviewBlock({
       <TextInput
         value={text}
         onChangeText={setText}
-        placeholder={`${shortDisplayName(booking.teacherName)} ile dersin nasıldı?`}
+        placeholder={t("{0} ile dersin nasıldı?", shortDisplayName(booking.teacherName))}
         placeholderTextColor={colors.faint}
         multiline
         style={styles.reviewInput}
       />
       <Pressable onPress={submit} disabled={saving} style={[styles.reviewSend, saving && { opacity: 0.6 }]}>
-        <Text style={styles.reviewSendText}>{saving ? 'Gönderiliyor…' : 'Gönder'}</Text>
+        <Text style={styles.reviewSendText}>{saving ? t("Gönderiliyor…") : t("Gönder")}</Text>
       </Pressable>
     </View>
   );

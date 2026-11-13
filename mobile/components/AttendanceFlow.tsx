@@ -11,6 +11,7 @@ import {
 } from '../lib/attendance';
 import { colors, fonts, radius } from '../lib/theme';
 import Button from './Button';
+import { useT } from '../lib/i18n';
 
 type Step =
   | { kind: 'main' }
@@ -51,6 +52,7 @@ type Props = {
  * side gives the lesson back).
  */
 export default function AttendanceFlow({ booking, studentId, noShowReady = true, askHappened, onHappened, onFiled, onCancel }: Props) {
+  const t = useT();
   const [step, setStep] = useState<Step>({ kind: 'main' });
   const [minutesText, setMinutesText] = useState('');
   const [inputError, setInputError] = useState(false);
@@ -78,13 +80,13 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
     onFiled(report, message);
   }
 
-  const back = <Button label="← Geri" variant="outline" onPress={() => go({ kind: 'main' })} />;
+  const back = <Button label={t("← Geri")} variant="outline" onPress={() => go({ kind: 'main' })} />;
 
   if (step.kind === 'sending') {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={colors.red} />
-        <Text style={styles.text}>Gönderiliyor...</Text>
+        <Text style={styles.text}>{t("Gönderiliyor...")}</Text>
       </View>
     );
   }
@@ -93,12 +95,11 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
     return (
       <View style={styles.wrap}>
         <Text style={styles.text}>
-          Bildirim gönderilemedi. Ders bitiminden sonraki 24 saat içinde ve sadece bir kez bildirim yapılabilir - lütfen tekrar dene.
-        </Text>
+          {t("Bildirim gönderilemedi. Ders bitiminden sonraki 24 saat içinde ve sadece bir kez bildirim yapılabilir - lütfen tekrar dene.")}</Text>
         <View style={styles.actions}>
           <View style={styles.flex}>{back}</View>
           <View style={styles.flex}>
-            <Button label="Tekrar dene" onPress={step.retry} />
+            <Button label={t("Tekrar dene")} onPress={step.retry} />
           </View>
         </View>
       </View>
@@ -108,13 +109,13 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
   if (step.kind === 'late') {
     return (
       <View style={styles.wrap}>
-        <Text style={styles.text}>Öğretmen kaç dakika geç geldi?</Text>
-        <MinutesInput value={minutesText} onChange={setMinutesText} placeholder="Örn. 10" error={inputError} />
+        <Text style={styles.text}>{t("Öğretmen kaç dakika geç geldi?")}</Text>
+        <MinutesInput value={minutesText} onChange={setMinutesText} placeholder={t("Örn. 10")} error={inputError} />
         <View style={styles.actions}>
           <View style={styles.flex}>{back}</View>
           <View style={styles.flex}>
             <Button
-              label="Devam Et"
+              label={t("Devam Et")}
               onPress={() => {
                 const minutes = readMinutes(1, 50);
                 if (!minutes) {
@@ -124,7 +125,7 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
                 if (minutes <= LATE_WARNING_MINUTES) {
                   submit(
                     { type: 'late', lateMinutes: minutes },
-                    'Bildirimin alındı. 15 dakikaya kadar gecikmeler öğretmene uyarı olarak iletilir.'
+                    t("Bildirimin alındı. 15 dakikaya kadar gecikmeler öğretmene uyarı olarak iletilir.")
                   );
                 } else {
                   go({ kind: 'lateChoice', minutes });
@@ -142,14 +143,13 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
     return (
       <View style={styles.wrap}>
         <Text style={styles.text}>
-          Öğretmen {minutes} dakika geç geldi. 15 dakikadan uzun gecikmelerde ne olacağına sen karar verirsin:
-        </Text>
+          {t("Öğretmen {0} dakika geç geldi. 15 dakikadan uzun gecikmelerde ne olacağına sen karar verirsin:", minutes)}</Text>
         <Choice
-          label="Ders kalan sürede yapıldı"
-          onPress={() => submit({ type: 'late', lateMinutes: minutes }, 'Bildirimin alındı ve öğretmene uyarı olarak iletildi.')}
+          label={t("Ders kalan sürede yapıldı")}
+          onPress={() => submit({ type: 'late', lateMinutes: minutes }, t("Bildirimin alındı ve öğretmene uyarı olarak iletildi."))}
         />
         <Choice
-          label="Ders yapılmamış sayılsın (ders hakkım iade edilsin)"
+          label={t("Ders yapılmamış sayılsın (ders hakkım iade edilsin)")}
           onPress={() =>
             submit(
               {
@@ -157,7 +157,7 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
                 lateMinutes: minutes,
                 note: `Öğretmen ${minutes} dakika geç geldi; öğrenci dersin yapılmamış sayılmasını seçti.`,
               },
-              'Bildirimin alındı. Ekibimiz ders kayıtlarını inceleyecek; doğrulanırsa ders hakkın iade edilir.'
+              t("Bildirimin alındı. Ekibimiz ders kayıtlarını inceleyecek; doğrulanırsa ders hakkın iade edilir.")
             )
           }
         />
@@ -172,16 +172,14 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
     return (
       <View style={styles.wrap}>
         <Text style={styles.text}>
-          Öğretmen derse hiç girmedi mi? Ekibimiz ders kayıtlarına (kimin derse ne zaman girdiğine) bakarak inceleyecek; doğrulanırsa
-          ders hakkın iade edilir. Asılsız bildirimler uyarı alır, 3 asılsız bildirimde hesap kapatılır.
-        </Text>
+          {t("Öğretmen derse hiç girmedi mi? Ekibimiz ders kayıtlarına (kimin derse ne zaman girdiğine) bakarak inceleyecek; doğrulanırsa ders hakkın iade edilir. Asılsız bildirimler uyarı alır, 3 asılsız bildirimde hesap kapatılır.")}</Text>
         <View style={styles.actions}>
           <View style={styles.flex}>{back}</View>
           <View style={styles.flex}>
             <Button
-              label="Öğretmen Gelmedi"
+              label={t("Öğretmen Gelmedi")}
               onPress={() =>
-                submit({ type: 'no_show' }, 'Bildirimin alındı. Ekibimiz ders kayıtlarını inceleyecek; doğrulanırsa ders hakkın iade edilir.')
+                submit({ type: 'no_show' }, t("Bildirimin alındı. Ekibimiz ders kayıtlarını inceleyecek; doğrulanırsa ders hakkın iade edilir."))
               }
             />
           </View>
@@ -193,12 +191,12 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
   if (step.kind === 'technical') {
     return (
       <View style={styles.wrap}>
-        <Text style={styles.text}>Sorun kimin tarafındaydı?</Text>
+        <Text style={styles.text}>{t("Sorun kimin tarafındaydı?")}</Text>
         <Choice
-          label="Öğretmenin tarafında (bağlantısı koptu, sesi ya da görüntüsü gelmedi)"
+          label={t("Öğretmenin tarafında (bağlantısı koptu, sesi ya da görüntüsü gelmedi)")}
           onPress={() => go({ kind: 'techMinutes', side: 'teacher' })}
         />
-        <Choice label="Benim tarafımda" onPress={() => go({ kind: 'techMinutes', side: 'student' })} />
+        <Choice label={t("Benim tarafımda")} onPress={() => go({ kind: 'techMinutes', side: 'student' })} />
         <View style={styles.actions}>
           <View style={styles.flex}>{back}</View>
         </View>
@@ -210,18 +208,18 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
     const side = step.side;
     return (
       <View style={styles.wrap}>
-        <Text style={styles.text}>Ders kaç dakika yapılabildi?</Text>
-        <MinutesInput value={minutesText} onChange={setMinutesText} placeholder="Örn. 20" error={inputError} />
+        <Text style={styles.text}>{t("Ders kaç dakika yapılabildi?")}</Text>
+        <MinutesInput value={minutesText} onChange={setMinutesText} placeholder={t("Örn. 20")} error={inputError} />
         <Text style={styles.rule}>
           {side === 'teacher'
-            ? 'Öğretmen tarafındaki bir sorun yüzünden ders 25 dakikadan az yapılabildiyse, inceleme sonunda ders hakkın iade edilir.'
-            : 'Senin tarafındaki teknik sorunlarda ders iadesi yapılmaz, ama bildirimin kayda geçer.'}
+            ? t("Öğretmen tarafındaki bir sorun yüzünden ders 25 dakikadan az yapılabildiyse, inceleme sonunda ders hakkın iade edilir.")
+            : t("Senin tarafındaki teknik sorunlarda ders iadesi yapılmaz, ama bildirimin kayda geçer.")}
         </Text>
         <View style={styles.actions}>
           <View style={styles.flex}>{back}</View>
           <View style={styles.flex}>
             <Button
-              label="Gönder"
+              label={t("Gönder")}
               onPress={() => {
                 const minutes = readMinutes(0, 50);
                 if (minutes === null) {
@@ -230,10 +228,10 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
                 }
                 const message =
                   side === 'student'
-                    ? 'Bildirimin kayda geçti. Senin tarafındaki teknik sorunlarda ders iadesi yapılmaz.'
+                    ? t("Bildirimin kayda geçti. Senin tarafındaki teknik sorunlarda ders iadesi yapılmaz.")
                     : minutes < TECH_REFUND_MINUTES
-                      ? 'Bildirimin alındı. İnceleme sonunda doğrulanırsa ders hakkın iade edilir.'
-                      : 'Bildirimin alındı. Ders 25 dakika ya da daha uzun yapılabildiği için iade yapılmaz.';
+                      ? t("Bildirimin alındı. İnceleme sonunda doğrulanırsa ders hakkın iade edilir.")
+                      : t("Bildirimin alındı. Ders 25 dakika ya da daha uzun yapılabildiği için iade yapılmaz.");
                 submit({ type: 'technical', techSide: side, minutesHeld: minutes }, message);
               }}
             />
@@ -245,15 +243,15 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
 
   return (
     <View style={styles.wrap}>
-      {askHappened && <Choice icon="checkmark-circle-outline" label="Evet, ders yapıldı" onPress={() => onHappened?.()} strong />}
-      <Choice icon="time-outline" label="Öğretmen geç geldi" onPress={() => go({ kind: 'late' })} />
-      <Choice icon="warning-outline" label="Öğretmen derse gelmedi" onPress={() => go({ kind: 'noShow' })} disabled={!noShowReady} />
-      <Choice icon="wifi-outline" label="Teknik bir sorun yaşandı" onPress={() => go({ kind: 'technical' })} />
-      {!noShowReady && <Text style={styles.rule}>Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.</Text>}
+      {askHappened && <Choice icon="checkmark-circle-outline" label={t("Evet, ders yapıldı")} onPress={() => onHappened?.()} strong />}
+      <Choice icon="time-outline" label={t("Öğretmen geç geldi")} onPress={() => go({ kind: 'late' })} />
+      <Choice icon="warning-outline" label={t("Öğretmen derse gelmedi")} onPress={() => go({ kind: 'noShow' })} disabled={!noShowReady} />
+      <Choice icon="wifi-outline" label={t("Teknik bir sorun yaşandı")} onPress={() => go({ kind: 'technical' })} />
+      {!noShowReady && <Text style={styles.rule}>{t("Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.")}</Text>}
       {onCancel && (
         <View style={styles.actions}>
           <View style={styles.flex}>
-            <Button label="İptal" variant="outline" onPress={onCancel} />
+            <Button label={t("İptal")} variant="outline" onPress={onCancel} />
           </View>
         </View>
       )}
@@ -288,6 +286,7 @@ function Choice({
 }
 
 function MinutesInput({ value, onChange, placeholder, error }: { value: string; onChange: (t: string) => void; placeholder: string; error: boolean }) {
+  const t = useT();
   return (
     <View style={[styles.inputRow, error && { borderColor: colors.error }]}>
       <TextInput
@@ -300,7 +299,7 @@ function MinutesInput({ value, onChange, placeholder, error }: { value: string; 
         maxLength={2}
         autoFocus
       />
-      <Text style={styles.unit}>dakika</Text>
+      <Text style={styles.unit}>{t("dakika")}</Text>
     </View>
   );
 }
