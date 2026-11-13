@@ -1557,9 +1557,16 @@
       border: 1px solid var(--armus-navy);
     }
 
+    /* a regular lesson in champagne: the champagne as the fill, with a
+       dark champagne text (5.9 on it) and a deeper champagne edge */
     .booking-tag.tag-lesson {
-      color: #9c3fb5;
-      border: 1px solid #9c3fb5;
+      color: #6b5330;
+      background: var(--armus-champagne);
+      border: 1px solid var(--armus-champagne-deep);
+    }
+
+    .booking-tag.tag-lesson::before {
+      background: #b08d57;
     }
 
     .booking-tag.tag-first::before,
@@ -1955,9 +1962,9 @@
     }
 
     .bk-block.tag-lesson-block {
-      background: rgba(211, 143, 224, .22);
-      border: 1px solid #9c3fb5;
-      color: #9c3fb5;
+      background: var(--armus-champagne);
+      border: 1px solid #c9a96f;
+      color: #6b5330;
     }
 
     .bk-block.bk-past {
