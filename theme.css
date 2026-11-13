@@ -87,12 +87,24 @@
 }
 
 :root {
-  --armus-gold-1: #fee06d;
-  --armus-gold-2: #f6c649;
-  --armus-gold-3: #dfac2e;
-  --armus-gold-text: #f6c649;
+  /* The theme colour. It was gold until the "kalibro" checkpoint (commit
+     a95abf3); it is now Kan kırmızısı. The --armus-gold-* names stay so
+     every page and script that uses them follows without a rename:
+     gold-1 is the light shade, gold-2 the colour itself, gold-3 the dark
+     shade, gold-text the colour for text on white (9.1), on-gold the
+     text colour on it (cream, 8.3). On dark backgrounds the theme colour
+     doesn't read (2.2 on black): use --armus-red-on-dark there (6.6). */
+  --armus-gold-1: #a54e54;
+  --armus-gold-2: #8c1c24;
+  --armus-gold-3: #6d161c;
+  --armus-gold-text: #8c1c24;
   --armus-gold-gradient: linear-gradient(135deg, var(--armus-gold-1) 0%, var(--armus-gold-2) 55%, var(--armus-gold-3) 100%);
-  --armus-on-gold: #0a0a0a;
+  --armus-on-gold: #faf5e2;
+  --armus-red-on-dark: #ef6b73;
+  /* gradient text on black: the darkest stop is still 4.5 on #0a0a0a */
+  --armus-red-on-dark-gradient: linear-gradient(135deg, #f4a3a8 0%, #ef6b73 55%, #e0505a 100%);
+  /* a pale wash of the theme colour, for highlighted rows and tags */
+  --armus-red-tint: #f4e8e9;
 
   --armus-silver-1: #f7f7f5;
   --armus-silver-2: #c9c8c2;

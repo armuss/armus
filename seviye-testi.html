@@ -23,8 +23,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="theme.css?v=13">
-  <link rel="stylesheet" href="styles.css?v=32">
+  <link rel="stylesheet" href="theme.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=33">
 
   <style>
     * {
@@ -146,7 +146,7 @@
     .lt-kicker {
       font: 700 12px Inter, sans-serif;
       letter-spacing: 2px;
-      color: #9a7a1c;
+      color: var(--armus-gold-text);
     }
 
     .lt-landing h1 {
@@ -243,7 +243,7 @@
       padding: 9px 13px;
       border-radius: 12px;
       white-space: nowrap;
-      box-shadow: 0 10px 24px rgba(160, 120, 10, 0.25);
+      box-shadow: 0 10px 24px rgba(90, 15, 20, 0.25);
     }
 
     .lt-bubble::after {
@@ -508,7 +508,7 @@
     }
 
     .lt-prompt mark {
-      background: #fbe9a8;
+      background: var(--armus-red-tint);
       color: inherit;
       padding: 0 4px;
       border-radius: 4px;
@@ -570,7 +570,7 @@
       width: 260px;
       height: 260px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(246, 198, 73, 0.45), transparent 65%);
+      background: radial-gradient(circle, rgba(239, 107, 115, 0.4), transparent 65%);
       right: -80px;
       top: -90px;
       pointer-events: none;
@@ -596,14 +596,14 @@
       font: 700 11px Inter, sans-serif;
       letter-spacing: 1.6px;
       text-transform: uppercase;
-      color: #f6c649;
+      color: var(--armus-red-on-dark);
       position: relative;
     }
 
     .lt-story-level {
       font: 800 92px/1 "Unbounded", sans-serif;
       letter-spacing: -4px;
-      background: var(--armus-gold-gradient);
+      background: var(--armus-red-on-dark-gradient);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -833,7 +833,7 @@
         <div class="lt-ring" id="ltRing" role="timer" aria-live="off">
           <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
             <circle cx="27" cy="27" r="23" fill="none" stroke="#eee" stroke-width="5"></circle>
-            <circle id="ltRingArc" cx="27" cy="27" r="23" fill="none" stroke="#f6c649" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.51" stroke-dashoffset="0"></circle>
+            <circle id="ltRingArc" cx="27" cy="27" r="23" fill="none" stroke="#ef6b73" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.51" stroke-dashoffset="0"></circle>
           </svg>
           <span id="ltRingText">1:00</span>
         </div>
@@ -883,7 +883,7 @@
 
   </main>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="level-test.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
@@ -1178,8 +1178,8 @@
       ctx.fillStyle = "#0b0b0b";
       ctx.fillRect(0, 0, W, H);
       const glow = ctx.createRadialGradient(W - 120, 260, 0, W - 120, 260, 700);
-      glow.addColorStop(0, "rgba(246,198,73,0.42)");
-      glow.addColorStop(1, "rgba(246,198,73,0)");
+      glow.addColorStop(0, "rgba(239,107,115,0.38)");
+      glow.addColorStop(1, "rgba(239,107,115,0)");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, W, H);
 
@@ -1190,13 +1190,13 @@
       } catch (e) {}
 
       const gold = ctx.createLinearGradient(96, 700, 900, 1100);
-      gold.addColorStop(0, "#fee06d");
-      gold.addColorStop(0.55, "#f6c649");
-      gold.addColorStop(1, "#dfac2e");
+      gold.addColorStop(0, "#f2a0a5");
+      gold.addColorStop(0.55, "#ef6b73");
+      gold.addColorStop(1, "#d9525b");
 
       ctx.textBaseline = "alphabetic";
       if ("letterSpacing" in ctx) ctx.letterSpacing = "8px";
-      ctx.fillStyle = "#f6c649";
+      ctx.fillStyle = "#ef6b73";
       ctx.font = '700 34px "Inter", sans-serif';
       ctx.fillText(armusT("levelTest.storyLabel", "İngilizce seviyem").toLocaleUpperCase(armusGetLang() === "en" ? "en-US" : "tr-TR"), 96, 560);
       if ("letterSpacing" in ctx) ctx.letterSpacing = "-12px";

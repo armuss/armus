@@ -24,16 +24,16 @@ function armusInjectRescheduleStyles() {
     .rs-date { flex: 0 0 auto; min-width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border-radius: 12px; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; cursor: pointer; }
     .rs-date span:first-child { font-size: 11px; color: var(--armus-muted, #a3a3a6); }
     .rs-date span:last-child { font-size: 15px; font-weight: 700; }
-    .rs-date[aria-pressed="true"] { border-color: var(--armus-gold-text, #b8860b); box-shadow: inset 0 0 0 1px var(--armus-gold-text, #b8860b); }
+    .rs-date[aria-pressed="true"] { border-color: var(--armus-gold-text, #8c1c24); box-shadow: inset 0 0 0 1px var(--armus-gold-text, #8c1c24); }
     .rs-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; overflow-y: auto; min-height: 60px; }
     .rs-slot { padding: 9px 6px; border-radius: 10px; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; font-size: 12.5px; cursor: pointer; }
-    .rs-slot[aria-pressed="true"] { border-color: var(--armus-gold-text, #b8860b); box-shadow: inset 0 0 0 1px var(--armus-gold-text, #b8860b); font-weight: 700; }
+    .rs-slot[aria-pressed="true"] { border-color: var(--armus-gold-text, #8c1c24); box-shadow: inset 0 0 0 1px var(--armus-gold-text, #8c1c24); font-weight: 700; }
     .rs-empty { grid-column: 1 / -1; font-size: 12.5px; color: var(--armus-muted, #a3a3a6); }
     .rs-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
     .rs-btn { padding: 10px 16px; border-radius: 10px; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .rs-btn-primary { border: none; background: var(--armus-gold-gradient, linear-gradient(90deg, #e8c777, #b8860b)); color: var(--armus-on-gold, #1c1c1e); }
+    .rs-btn-primary { border: none; background: var(--armus-gold-gradient, linear-gradient(90deg, #a54e54, #8c1c24)); color: var(--armus-on-gold, #faf5e2); }
     .rs-btn:disabled { opacity: .45; cursor: not-allowed; }
-    .rs-date:focus-visible, .rs-slot:focus-visible, .rs-btn:focus-visible { outline: 2px solid var(--armus-gold-text, #b8860b); outline-offset: 2px; }
+    .rs-date:focus-visible, .rs-slot:focus-visible, .rs-btn:focus-visible { outline: 2px solid var(--armus-gold-text, #8c1c24); outline-offset: 2px; }
   `;
   document.head.appendChild(style);
 }

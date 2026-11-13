@@ -31,8 +31,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="theme.css?v=13">
-  <link rel="stylesheet" href="styles.css?v=32">
+  <link rel="stylesheet" href="theme.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=33">
 
   <style>
     /* ---- ARMUS blog, design A "Dergi": a magazine page with motion ---- */
@@ -40,7 +40,7 @@
       --bl-paper: #fbf8ef;
       --bl-line: #e7dfc9;
       --bl-muted: #6b6558;
-      --bl-gold-ink: #a17a12;
+      --bl-gold-ink: var(--armus-gold-text);
       --bl-ease: cubic-bezier(.2, .8, .2, 1);
       --bl-ease-io: cubic-bezier(.65, 0, .25, 1);
     }
@@ -48,7 +48,7 @@
     .blog-page a { color: inherit; text-decoration: none; }
     .blog-page :focus-visible { outline: 2px solid var(--armus-gold-2); outline-offset: 3px; border-radius: 6px; }
 
-    .bl-progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; background: linear-gradient(90deg, #fee06d, #f6c649 55%, #dfac2e); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
+    .bl-progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; background: var(--armus-gold-gradient); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
 
     /* masthead */
     .bl-mast { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 30px; padding: 56px 0 30px; }
@@ -59,7 +59,7 @@
     .bl-title .mask { display: block; overflow: hidden; padding: .16em .05em .18em; margin: -.16em -.05em -.18em; }
     .bl-title .wi { display: inline-block; }
     .bl-title .hl svg { position: absolute; left: -2%; bottom: -.16em; width: 104%; height: .28em; overflow: visible; pointer-events: none; }
-    .bl-title .hl path { fill: none; stroke: #f6c649; stroke-width: 10; stroke-linecap: round; stroke-dasharray: 560; stroke-dashoffset: 0; }
+    .bl-title .hl path { fill: none; stroke: var(--armus-gold-2); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 560; stroke-dashoffset: 0; }
     .bl-intro { color: var(--bl-muted); font-size: 16.5px; line-height: 1.6; max-width: 56ch; margin: 24px 0 0; }
     .bl-side { text-align: right; padding-bottom: 6px; }
     .bl-side b { display: block; font: 800 clamp(48px, 6vw, 76px)/1 Unbounded, Inter, sans-serif; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
@@ -67,7 +67,7 @@
 
     /* the black ticker band */
     .bl-ticker-wrap { overflow: hidden; padding: 18px 0; margin: 6px 0 20px; }
-    .bl-ticker { background: #0a0a0a; color: #f6c649; transform: rotate(-1.4deg); margin: 0 -40px; padding: 15px 0; overflow: hidden; white-space: nowrap; }
+    .bl-ticker { background: #0a0a0a; color: var(--armus-red-on-dark); transform: rotate(-1.4deg); margin: 0 -40px; padding: 15px 0; overflow: hidden; white-space: nowrap; }
     .bl-track { display: inline-flex; will-change: transform; }
     .bl-group { display: inline-flex; align-items: center; flex: none; }
     .bl-group span { font: 800 15px Unbounded, Inter, sans-serif; letter-spacing: 1px; text-transform: uppercase; margin: 0 22px; }
@@ -75,7 +75,7 @@
 
     /* featured post */
     .bl-feature { display: grid; grid-template-columns: 1.2fr 1fr; gap: 52px; align-items: center; margin: 34px 0 74px; }
-    .bl-feature .fig { position: relative; border-radius: 28px; overflow: hidden; aspect-ratio: 16 / 10; background: #f6c649; box-shadow: 0 34px 70px rgba(120, 90, 10, .2); transform-style: preserve-3d; transition: transform .5s var(--bl-ease); }
+    .bl-feature .fig { position: relative; border-radius: 28px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--armus-gold-2); box-shadow: 0 34px 70px rgba(90, 15, 20, .2); transform-style: preserve-3d; transition: transform .5s var(--bl-ease); }
     .bl-feature .kb { position: absolute; inset: -8% 0; animation: blKen 16s ease-in-out infinite alternate; }
     .bl-feature .kb img { width: 100%; height: 100%; object-fit: cover; display: block; transform: translate3d(0, var(--py, 0px), 0) scale(1.06); }
     .bl-tag { display: inline-flex; gap: 6px; font: 700 11px Inter, sans-serif; letter-spacing: 1px; text-transform: uppercase; background: var(--armus-gold-gradient); color: var(--armus-on-gold); padding: 6px 12px; border-radius: 999px; }
@@ -109,12 +109,12 @@
     .bl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 46px 30px; padding-bottom: 96px; }
     .post-card { display: block; position: relative; transition: transform .25s var(--bl-ease); -webkit-tap-highlight-color: transparent; }
     .post-card[hidden] { display: none !important; }
-    .post-card .thumb { border-radius: 22px; overflow: hidden; aspect-ratio: 16 / 10; background: #f6c649; transform: translateZ(0); }
+    .post-card .thumb { border-radius: 22px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--armus-gold-2); transform: translateZ(0); }
     .post-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--bl-ease); }
     .post-card .meta { display: flex; justify-content: space-between; gap: 12px; margin: 17px 0 9px; font-size: 11.5px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: var(--bl-gold-ink); }
     .post-card .meta span + span { color: var(--bl-muted); letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 12.5px; white-space: nowrap; }
     .post-card h2 { font: 700 19.5px/1.32 Inter, sans-serif; letter-spacing: -.3px; margin: 0; }
-    .post-card h2 span { background: linear-gradient(#f6c649, #f6c649) 0 92% / 0 .32em no-repeat; transition: background-size .6s var(--bl-ease-io); }
+    .post-card h2 span { background: linear-gradient(#e9c4c7, #e9c4c7) 0 92% / 0 .32em no-repeat; transition: background-size .6s var(--bl-ease-io); }
     .post-card p { color: var(--bl-muted); font-size: 14.5px; line-height: 1.55; margin: 10px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .post-card:active { transform: scale(.98); }
     @media (hover: hover) and (pointer: fine) {
@@ -128,25 +128,25 @@
     .post-card.focus h2 span { background-size: 100% .32em; }
 
     /* cursor bubble (mouse only) */
-    .bl-cursor { position: fixed; left: 0; top: 0; width: 86px; height: 86px; margin: -43px 0 0 -43px; border-radius: 50%; background: #0a0a0a; color: #f6c649; display: grid; place-items: center; font: 800 13px Unbounded, Inter, sans-serif; letter-spacing: .5px; pointer-events: none; z-index: 70; transform: scale(0); transition: transform .4s var(--bl-ease); }
+    .bl-cursor { position: fixed; left: 0; top: 0; width: 86px; height: 86px; margin: -43px 0 0 -43px; border-radius: 50%; background: #0a0a0a; color: var(--armus-red-on-dark); display: grid; place-items: center; font: 800 13px Unbounded, Inter, sans-serif; letter-spacing: .5px; pointer-events: none; z-index: 70; transform: scale(0); transition: transform .4s var(--bl-ease); }
     .bl-cursor.on { transform: scale(1); }
 
     /* CTA band */
     .bl-cta { background: #0a0a0a; color: #f4f4f2; padding: 0 0 70px; overflow: hidden; }
     .bl-marquee { white-space: nowrap; overflow: hidden; padding: 46px 0 34px; }
     .bl-marquee .bl-track span { font: 900 clamp(46px, 8vw, 110px)/1 Unbounded, Inter, sans-serif; letter-spacing: -0.04em; margin-right: .4em; }
-    .bl-marquee .bl-group:nth-child(odd) span { color: #f6c649; }
+    .bl-marquee .bl-group:nth-child(odd) span { color: var(--armus-red-on-dark); }
     /* outlined letters need air between them, or their outlines cross:
        twice the stroke, plus a little for "KA", which the font pulls together */
-    .bl-marquee .bl-group:nth-child(even) span { color: transparent; -webkit-text-stroke: 1.5px #f6c649; letter-spacing: calc(3px + .015em); }
+    .bl-marquee .bl-group:nth-child(even) span { color: transparent; -webkit-text-stroke: 1.5px var(--armus-red-on-dark); letter-spacing: calc(3px + .015em); }
     .bl-cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
     .bl-cta h2 { font: 800 clamp(24px, 3vw, 34px)/1.15 Unbounded, Inter, sans-serif; letter-spacing: -0.03em; margin: 0 0 8px; }
     .bl-cta p { color: #b5b5b5; font-size: 15.5px; margin: 0; max-width: 52ch; }
     .bl-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
     .bl-btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 14px; padding: 17px 24px; font: 700 15px Inter, sans-serif; transition: transform .35s var(--bl-ease), background .2s; will-change: transform; }
-    .bl-btn.gold { background: var(--armus-gold-gradient); color: #0a0a0a; }
+    .bl-btn.gold { background: var(--armus-gold-gradient); color: var(--armus-on-gold); }
     .bl-btn.line { box-shadow: inset 0 0 0 1.5px #3a3a3a; color: #f4f4f2; }
-    .bl-btn.line:hover { box-shadow: inset 0 0 0 1.5px #f6c649; }
+    .bl-btn.line:hover { box-shadow: inset 0 0 0 1.5px var(--armus-red-on-dark); }
 
     /* ---- motion: "before" states, only with .bl-motion and until ready ---- */
     .bl-motion .bl-anim { opacity: 0; transform: translateY(26px); transition: opacity .9s var(--bl-ease), transform .9s var(--bl-ease); transition-delay: var(--d, 0s); }
@@ -573,7 +573,7 @@
 }
   </script>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script>
   (function () {

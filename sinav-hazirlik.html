@@ -23,8 +23,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="theme.css?v=13">
-  <link rel="stylesheet" href="styles.css?v=32">
+  <link rel="stylesheet" href="theme.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=33">
 
   <style>
     /* design D ("İki Yol"): which exam, two cards side by side, a YDS vs
@@ -38,7 +38,7 @@
     .ex-kicker {
       font: 700 12px Inter, sans-serif;
       letter-spacing: 2px;
-      color: #9a7a1c;
+      color: var(--armus-gold-text);
     }
 
     .ex-intro h1 {
@@ -56,6 +56,13 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+    }
+
+    /* on the black card the lighter red, so the word stays readable */
+    .ex-card.ielts h2 {
+      background: var(--armus-red-on-dark-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
     }
 
     .ex-intro p {
@@ -109,7 +116,11 @@
     }
 
     .ex-card.yds p {
-      color: #3d3005;
+      color: rgba(250, 245, 226, .92);
+    }
+
+    .ex-card.yds .ex-tag {
+      opacity: .92;
     }
 
     .ex-card.ielts p {
@@ -394,7 +405,7 @@
       .ex-table td[data-label]::before {
         content: attr(data-label) " · ";
         font-weight: 700;
-        color: #9a7a1c;
+        color: var(--armus-gold-text);
       }
     }
 
@@ -510,7 +521,7 @@
 
   </main>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script src="nav-sheet.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>

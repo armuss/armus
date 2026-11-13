@@ -386,8 +386,25 @@ html.nav-sheet-open body {
   /* fades out into the page background instead of cutting straight to
      white at the section edge, and the extra padding-bottom gives that
      fade room to play out below the hero content instead of overlapping it */
-  background: linear-gradient(180deg, var(--armus-gold-3) 0%, var(--armus-gold-2) 35%, var(--armus-gold-1) 60%, var(--armus-bg) 100%);
-  padding-bottom: 110px;
+  /* Kan kirmizisi: darkest at the very top, opening up to gold-1 just
+     under the content, then an eased fade (smoothstep stops) over the
+     last 220px into the page white - no visible edge where the band ends.
+     The fade only starts below the hero content so the cream text always
+     sits on red (cream on gold-1 is 5.0). */
+  background: linear-gradient(180deg,
+    var(--armus-gold-3) 0%,
+    var(--armus-gold-2) 38%,
+    var(--armus-gold-1) calc(100% - 220px),
+    #ac5b61 calc(100% - 183px),
+    #bc7c80 calc(100% - 147px),
+    #d2a6aa calc(100% - 110px),
+    #e8d1d3 calc(100% - 73px),
+    #f8f2f2 calc(100% - 37px),
+    var(--armus-bg) 100%);
+  padding-bottom: 170px;
+}
+.hero-band .hero h1 {
+  color: var(--armus-on-gold);
 }
 .hero {
   min-height: 500px;
@@ -875,7 +892,7 @@ html.nav-sheet-open body {
   color: var(--armus-gold-text);
 }
 
-/* the text side on pine green: cream text, gold label and ticks, the
+/* the text side on pine green: cream text, cream label and ticks, the
    three points in a darker inset, and a cream button with pine text
    (pine on cream 5.9) */
 .teacher-cta {
@@ -884,8 +901,12 @@ html.nav-sheet-open body {
 .tcta-panel {
   background: var(--armus-pine);
 }
-.tcta-panel .section-label {
-  color: var(--armus-gold-text);
+.tcta-panel .section-label,
+.tcta-panel .tcta-points li::before {
+  color: var(--armus-cream);
+}
+.tcta-panel .dot {
+  background: var(--armus-cream);
 }
 .tcta-panel h2,
 .tcta-points li {
@@ -893,7 +914,7 @@ html.nav-sheet-open body {
 }
 .tcta-panel p,
 .tcta-link {
-  color: rgba(250, 245, 226, 0.78);
+  color: rgba(250, 245, 226, 0.88);
 }
 .tcta-points {
   max-width: 360px;
@@ -1096,12 +1117,12 @@ html.nav-sheet-open body {
     border: 1px solid rgba(255, 255, 255, 0.35);
   }
   .hero-mobile-photo::after {
-    /* a soft gold veil ties the photo into the band's own gradient
+    /* a soft red veil ties the photo into the band's own gradient
        instead of it sitting on top like a pasted-in sticker */
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(212, 165, 63, 0) 55%, rgba(151, 105, 26, 0.35) 100%);
+    background: linear-gradient(180deg, rgba(109, 22, 28, 0) 55%, rgba(109, 22, 28, 0.35) 100%);
     pointer-events: none;
   }
   .hero-mobile-photo img {

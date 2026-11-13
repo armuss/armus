@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="stylesheet" href="theme.css?v=13">
+  <link rel="stylesheet" href="theme.css?v=14">
 
   <style>
     * {
@@ -95,9 +95,10 @@
       grid-template-columns: 230px 1fr;
     }
 
-    /* solid gold sidebar, white main content - the one gold "zone" on
-       this page instead of scattered small accents (matches the teacher
-       panel mockup the user picked: option G) */
+    /* solid theme-colour sidebar, white main content - the one coloured
+       "zone" on this page instead of scattered small accents (matches the
+       teacher panel mockup the user picked: option G). On the red the
+       text is cream and the active item is a black pill with light red. */
     .sidebar {
       background: linear-gradient(170deg, var(--armus-gold-1) 0%, var(--armus-gold-2) 55%, var(--armus-gold-3) 100%);
       padding: 24px 14px;
@@ -119,7 +120,7 @@
       font-size: 9.5px;
       font-weight: 700;
       letter-spacing: 0.4px;
-      color: var(--armus-gold-text);
+      color: var(--armus-red-on-dark);
       background: var(--armus-ink);
       border: none;
       border-radius: 999px;
@@ -131,7 +132,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(255, 255, 255, .6);
+      background: rgba(255, 255, 255, .9);
       border: 1px solid rgba(255, 255, 255, .5);
       border-radius: 16px;
       padding: 12px;
@@ -199,7 +200,7 @@
 
     .nav-btn.active {
       background: var(--armus-ink);
-      color: var(--armus-gold-text);
+      color: var(--armus-red-on-dark);
       font-weight: 700;
       box-shadow: 0 6px 16px -10px rgba(10, 10, 10, .5);
     }
@@ -254,6 +255,28 @@
     .help-btn svg {
       width: 17px;
       height: 17px;
+    }
+
+    .sidebar .nav-btn:not(.active),
+    .sidebar .back-link,
+    .sidebar .lang-toggle,
+    .sidebar .help-btn {
+      color: var(--armus-on-gold);
+    }
+
+    .sidebar .nav-btn:not(.active):hover {
+      background: rgba(255, 255, 255, .14);
+    }
+
+    .sidebar .lang-toggle,
+    .sidebar .help-btn {
+      border-color: rgba(250, 245, 226, .35);
+    }
+
+    .sidebar .lang-toggle:hover,
+    .sidebar .help-btn:hover {
+      border-color: var(--armus-on-gold);
+      color: var(--armus-on-gold);
     }
 
     /* ---- main ---- */
@@ -522,13 +545,13 @@
     }
 
     .ov-hero-digest .icon {
-      color: var(--armus-gold-text);
+      color: var(--armus-red-on-dark);
       flex-shrink: 0;
       margin-top: 3px;
     }
 
     .ov-hero-digest strong {
-      color: var(--armus-gold-text);
+      color: var(--armus-red-on-dark);
     }
 
     .ov-hero .badge-row {
@@ -546,7 +569,7 @@
     .ov-hero .badge-icon svg {
       width: 14px;
       height: 14px;
-      color: var(--armus-gold-text);
+      color: var(--armus-red-on-dark);
       display: block;
     }
 
@@ -904,7 +927,7 @@
     }
 
     .withdraw-status.pending {
-      background: rgba(223, 172, 46, .14);
+      background: rgba(109, 22, 28, .1);
       color: var(--armus-gold-3);
     }
 
@@ -1173,11 +1196,11 @@
 
     .tag-upcoming {
       color: var(--armus-gold-text);
-      background: rgba(246, 198, 73, .14);
+      background: rgba(140, 28, 36, .1);
     }
 
     .tag-review {
-      color: #1c1408;
+      color: var(--armus-on-gold);
       background: var(--armus-gold-gradient);
       font-weight: 800;
     }
@@ -1210,7 +1233,7 @@
 
     .availability-note {
       display: none;
-      background: rgba(246, 198, 73, .08);
+      background: rgba(140, 28, 36, .06);
       border: 1px solid var(--armus-gold-2);
       border-radius: 12px;
       padding: 12px 14px;
@@ -1320,7 +1343,7 @@
 
     .tl-block {
       position: absolute;
-      background: rgba(246, 198, 73, .24);
+      background: rgba(140, 28, 36, .16);
       border: 1px solid var(--armus-gold-2);
       border-radius: 8px;
       box-sizing: border-box;
@@ -1346,7 +1369,7 @@
 
     /* the block being resized or moved right now */
     #timelineWrap .tl-block.tl-active {
-      background: rgba(246, 198, 73, .5);
+      background: rgba(140, 28, 36, .3);
       box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
       z-index: 3;
     }
@@ -1420,7 +1443,7 @@
       }
 
       #timelineWrap .tl-block.tl-selected {
-        background: rgba(246, 198, 73, .5);
+        background: rgba(140, 28, 36, .3);
         border-color: var(--armus-ink);
         z-index: 2;
       }
@@ -2043,7 +2066,7 @@
     .ticket-message.own {
       align-self: flex-end;
       background: var(--armus-gold-text);
-      color: #1a1712;
+      color: var(--armus-on-gold);
     }
 
     .ticket-message.other {
@@ -2110,6 +2133,15 @@
         padding: 12px;
         gap: 6px;
         background: var(--armus-bg);
+      }
+
+      /* on a phone the strip is white again, so the tabs go back to ink */
+      .sidebar .nav-btn:not(.active) {
+        color: var(--armus-ink);
+      }
+
+      .sidebar .nav-btn:not(.active):hover {
+        background: rgba(10, 10, 10, .05);
       }
 
       /* no scrollbar is visible on most phones, so without this the tab
@@ -2254,7 +2286,7 @@
   <div class="shell" id="shell">
 
     <div class="sidebar">
-      <div class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></div>
+      <div class="logo"><img src="logo-cream.png" alt="ARMUS" class="logo-img"></div>
       <span class="tag" data-i18n="teacherDash.tag">ÖĞRETMEN PANELİ</span>
 
       <div class="sb-profile">
@@ -2338,8 +2370,8 @@
             <div class="ov-spark-label"><span data-i18n="teacherDash.spark7Days">Son 7 gün</span></div>
             <div class="ov-spark-value" id="sparkValue">₺0</div>
             <svg class="ov-spark-svg" width="248" height="40" viewBox="0 0 248 40">
-              <polyline id="sparkPolyline" points="0,37 248,37" fill="none" stroke="#f6c649" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle id="sparkDot" cx="248" cy="37" r="4" fill="#f6c649"/>
+              <polyline id="sparkPolyline" points="0,37 248,37" fill="none" stroke="#ef6b73" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle id="sparkDot" cx="248" cy="37" r="4" fill="#ef6b73"/>
             </svg>
           </div>
         </div>
@@ -2743,21 +2775,21 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=36"></script>
+  <script src="i18n.js?v=37"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
-  <script src="site-settings.js?v=4"></script>
+  <script src="site-settings.js?v=5"></script>
   <script src="auth.js?v=15"></script>
   <script src="bookings.js?v=12"></script>
-  <script src="reschedule.js?v=1"></script>
+  <script src="reschedule.js?v=2"></script>
   <script src="reviews.js?v=5"></script>
   <script src="messages.js?v=4"></script>
   <script src="teacher-notes.js?v=4"></script>
   <script src="teacher-blocks.js?v=2"></script>
   <script src="support-tickets.js?v=1"></script>
   <script src="push-notifications.js?v=1"></script>
-  <script src="withdrawal-receipt.js?v=1"></script>
-  <script src="attendance.js?v=6"></script>
+  <script src="withdrawal-receipt.js?v=2"></script>
+  <script src="attendance.js?v=7"></script>
   <script>
 
     // yyyy-mm-dd from a Date's own local year/month/day - never goes
