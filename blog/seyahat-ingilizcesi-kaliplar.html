@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
-  <link rel="stylesheet" href="../theme.css?v=17">
+  <link rel="stylesheet" href="../theme.css?v=16">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,7 +38,7 @@
     .logo-img { height: 22px; }
     .nav-right { display: flex; align-items: center; gap: 14px; }
     .nav-utility { display: flex; align-items: center; gap: 8px; }
-    .lang-toggle { border: 1px solid var(--armus-border); background: transparent; color: var(--armus-ink); border-radius: 0; padding: 8px 14px; font: 700 12.5px Inter, sans-serif; letter-spacing: 0.3px; cursor: pointer; }
+    .lang-toggle { border: 1px solid var(--armus-border); background: transparent; color: var(--armus-ink); border-radius: 999px; padding: 8px 14px; font: 700 12.5px Inter, sans-serif; letter-spacing: 0.3px; cursor: pointer; }
     .lang-toggle:hover { border-color: var(--armus-gold-2); color: var(--armus-gold-text); }
     .help-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--armus-border); color: var(--armus-muted); flex-shrink: 0; }
     .help-btn:hover { border-color: var(--armus-gold-2); color: var(--armus-gold-text); }
@@ -46,7 +46,7 @@
     .back { color: var(--armus-muted); font-size: 13px; text-decoration: none; }
     .back:hover { color: var(--armus-ink); }
     main.container { padding: 50px 0 100px; }
-    .cat { display: inline-flex; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--armus-on-gold); background: var(--armus-gold-gradient); padding: 5px 11px; border-radius: 0; margin-bottom: 16px; }
+    .cat { display: inline-flex; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--armus-on-gold); background: var(--armus-gold-gradient); padding: 5px 11px; border-radius: 999px; margin-bottom: 16px; }
     h1 { font-size: clamp(28px, 4.5vw, 38px); letter-spacing: -0.3px; line-height: 1.15; max-width: 22ch; margin-bottom: 14px; }
     .article-meta { color: var(--armus-muted); font-size: 13px; margin-bottom: 40px; }
     article h2 { font-size: 20px; letter-spacing: -0.4px; margin: 34px 0 12px; }
@@ -60,12 +60,12 @@
     }
     .phrase-list li span:first-child { color: var(--armus-ink); font-weight: 600; }
     .phrase-list li span:last-child { color: var(--armus-muted); text-align: right; }
-    .tip-box { background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 0; padding: 20px 22px; margin: 24px 0; font-size: 14.5px; color: var(--armus-muted); }
+    .tip-box { background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; padding: 20px 22px; margin: 24px 0; font-size: 14.5px; color: var(--armus-muted); }
     .tip-box strong { color: var(--armus-ink); }
-    .cta-banner { background: var(--armus-gold-gradient); border-radius: 0; padding: 32px; margin-top: 48px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .cta-banner { background: var(--armus-gold-gradient); border-radius: 22px; padding: 32px; margin-top: 48px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
     .cta-banner h2 { color: var(--armus-on-gold); font-size: 20px; margin: 0 0 6px; }
     .cta-banner p { color: var(--armus-on-gold); opacity: 0.92; font-size: 13.5px; margin: 0; }
-    .cta-banner .btn { flex-shrink: 0; display: inline-block; background: var(--armus-ink); color: #fff; text-decoration: none; font-weight: 700; font-size: 13.5px; padding: 13px 22px; border-radius: 0; white-space: nowrap; }
+    .cta-banner .btn { flex-shrink: 0; display: inline-block; background: var(--armus-ink); color: #fff; text-decoration: none; font-weight: 700; font-size: 13.5px; padding: 13px 22px; border-radius: 12px; white-space: nowrap; }
     .back-to-blog { display: inline-block; margin-top: 40px; font-size: 13.5px; color: var(--armus-muted); text-decoration: none; }
     .back-to-blog:hover { color: var(--armus-ink); }
     @media (max-width: 700px) {
@@ -86,7 +86,7 @@
     .byline .byline-text strong { color: var(--armus-ink); font-weight: 700; }
 
     .cover-image {
-      border-radius: 0;
+      border-radius: 22px;
       overflow: hidden;
       margin-bottom: 40px;
       box-shadow: 0 24px 54px rgba(35, 26, 10, 0.16);
@@ -104,7 +104,7 @@
 
     @media (max-width: 900px) {
       .article-layout { grid-template-columns: 1fr; }
-      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 0; }
+      .toc { position: static; order: -1; margin-bottom: 32px; padding: 18px 20px; background: var(--armus-panel); border: 1px solid var(--armus-border-soft); border-radius: 16px; }
       .toc nav { border-left: none; }
       .toc nav a { border-left: none; padding-left: 0; }
       .cover-image img { height: 200px; }
@@ -239,6 +239,6 @@
   }
   </script>
 
-  <script src="../i18n.js?v=38"></script>
+  <script src="../i18n.js?v=37"></script>
 </body>
 </html>

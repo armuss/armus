@@ -42,7 +42,7 @@ function armusOpenWithdrawalReceipt(withdrawal, teacher) {
 <title>${armusT("teacherDash.receiptTitle", "ARMUS Ödeme Makbuzu")} - ${receiptNo}</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f4f4f2; margin: 0; padding: 32px; color: #1c1c1e; }
-  .receipt { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #ddd; border-radius: 0; padding: 32px; }
+  .receipt { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 32px; }
   .brand { font-size: 22px; font-weight: 800; letter-spacing: -1px; color: #8c1c24; margin-bottom: 4px; }
   .title { font-size: 15px; color: #555; margin-bottom: 24px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
@@ -50,7 +50,7 @@ function armusOpenWithdrawalReceipt(withdrawal, teacher) {
   td:first-child { color: #777; width: 42%; }
   td:last-child { font-weight: 600; }
   .note { font-size: 11.5px; color: #999; line-height: 1.6; margin-bottom: 24px; }
-  .print-btn { background: linear-gradient(90deg,#a54e54,#8c1c24); color: #faf5e2; border: none; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 0; cursor: pointer; }
+  .print-btn { background: linear-gradient(90deg,#a54e54,#8c1c24); color: #faf5e2; border: none; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
   @media print { .print-btn { display: none; } body { background: #fff; padding: 0; } .receipt { border: none; } }
 </style>
 </head>

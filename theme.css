@@ -255,7 +255,7 @@ html.armus-logo-static .logo-splash .logo-img {
   background: transparent;
   border: 1px solid var(--armus-border);
   color: var(--armus-ink);
-  border-radius: 0;
+  border-radius: 13px;
   padding: 12px 18px;
   font: 600 13px Inter;
   cursor: pointer;
@@ -335,7 +335,7 @@ html.armus-logo-static .logo-splash .logo-img {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 0;
+  border-radius: 999px;
   background: #e5484d;
   color: #fff;
   font-size: 10px;
@@ -389,7 +389,7 @@ html.armus-logo-static .logo-splash .logo-img {
   width: 270px;
   background: var(--armus-panel);
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 16px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, .14);
   padding: 8px;
   z-index: 60;
@@ -402,7 +402,7 @@ html.armus-logo-static .logo-splash .logo-img {
   width: 100%;
   text-align: left;
   padding: 10px 12px;
-  border-radius: 0;
+  border-radius: 10px;
   font-size: 13.5px;
   font-weight: 500;
   color: var(--armus-ink);
@@ -452,7 +452,7 @@ html.armus-logo-static .logo-splash .logo-img {
 .gnav-bell-item {
   display: block;
   padding: 10px 12px;
-  border-radius: 0;
+  border-radius: 10px;
 }
 
 .gnav-bell-item:hover {
@@ -475,7 +475,7 @@ html.armus-logo-static .logo-splash .logo-img {
   align-items: center;
   gap: 6px;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 999px;
   padding: 8px 14px;
   font-size: 12.5px;
   font-weight: 700;

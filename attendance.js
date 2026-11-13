@@ -255,15 +255,15 @@ function armusEnsureReportModalStyles() {
   style.id = "armusReportModalStyles";
   style.textContent = `
     .armus-report-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .armus-report-modal { background: var(--armus-panel, #fff); color: var(--armus-ink, #1c1c1e); border-radius: 0; padding: 22px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.25); display: flex; flex-direction: column; gap: 10px; }
+    .armus-report-modal { background: var(--armus-panel, #fff); color: var(--armus-ink, #1c1c1e); border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.25); display: flex; flex-direction: column; gap: 10px; }
     .armus-report-modal h3 { margin: 0; font-size: 17px; }
     .armus-report-modal p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--armus-muted, #666); }
     .armus-report-modal label { font-size: 12.5px; font-weight: 600; }
-    .armus-report-modal select, .armus-report-modal textarea { width: 100%; box-sizing: border-box; border: 1.5px solid var(--armus-border, #ddd); border-radius: 0; padding: 9px 11px; font: inherit; font-size: 13.5px; background: var(--armus-panel, #fff); color: inherit; }
+    .armus-report-modal select, .armus-report-modal textarea { width: 100%; box-sizing: border-box; border: 1.5px solid var(--armus-border, #ddd); border-radius: 10px; padding: 9px 11px; font: inherit; font-size: 13.5px; background: var(--armus-panel, #fff); color: inherit; }
     .armus-report-modal textarea { min-height: 90px; resize: vertical; }
     .armus-report-status { color: #c0392b !important; }
     .armus-report-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
-    .armus-report-actions button { border: 1.5px solid var(--armus-border, #ddd); background: transparent; color: inherit; border-radius: 0; padding: 9px 16px; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+    .armus-report-actions button { border: 1.5px solid var(--armus-border, #ddd); background: transparent; color: inherit; border-radius: 10px; padding: 9px 16px; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .armus-report-actions button.primary { background: var(--armus-gold-3, #8c1c24); border-color: var(--armus-gold-3, #8c1c24); color: var(--armus-on-gold, #faf5e2); }
     .armus-report-actions button:disabled { opacity: .5; cursor: default; }
     .armus-report-actions button:focus-visible, .armus-report-modal select:focus-visible, .armus-report-modal textarea:focus-visible { outline: 2px solid var(--armus-gold-3, #8c1c24); outline-offset: 2px; }

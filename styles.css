@@ -23,7 +23,7 @@ body {
   height: 68px;
   margin-top: 14px;
   border: 1px solid var(--armus-border-soft);
-  border-radius: 0;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.86);
   box-shadow: 0 8px 30px rgba(35, 26, 10, 0.06);
   display: flex;
@@ -143,7 +143,7 @@ body {
     height: 36px;
     margin-left: 6px;
     border: 1px solid var(--armus-border);
-    border-radius: 0;
+    border-radius: 12px;
     background: transparent;
     color: var(--armus-ink);
     cursor: pointer;
@@ -190,7 +190,7 @@ html.nav-sheet-open body {
   width: 36px;
   height: 36px;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 12px;
   background: transparent;
   color: var(--armus-ink);
   cursor: pointer;
@@ -200,7 +200,7 @@ html.nav-sheet-open body {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  border-radius: 0;
+  border-radius: 20px;
   padding: 18px;
   text-decoration: none;
 }
@@ -239,7 +239,7 @@ html.nav-sheet-open body {
   text-transform: uppercase;
   background: #0a0a0a;
   color: #fff;
-  border-radius: 0;
+  border-radius: 999px;
   padding: 3px 7px;
 }
 .nav-sheet-links {
@@ -275,7 +275,7 @@ html.nav-sheet-open body {
   background: var(--armus-gold-gradient);
   color: var(--armus-on-gold);
   padding: 3px 7px;
-  border-radius: 0;
+  border-radius: 999px;
 }
 .nav-actions {
   display: flex;
@@ -295,7 +295,7 @@ html.nav-sheet-open body {
   border: 1px solid var(--armus-border);
   background: transparent;
   color: var(--armus-ink);
-  border-radius: 0;
+  border-radius: 999px;
   padding: 7px 12px;
   font: 700 11.5px Inter;
   letter-spacing: 0.3px;
@@ -331,7 +331,7 @@ html.nav-sheet-open body {
   background: transparent;
   border: 1px solid var(--armus-border);
   color: var(--armus-ink);
-  border-radius: 0;
+  border-radius: 13px;
   padding: 12px 18px;
   font: 600 13px Inter;
   cursor: pointer;
@@ -529,7 +529,7 @@ html.nav-sheet-open body {
   position: absolute;
   width: 190px;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 20px;
   background: var(--armus-panel);
   overflow: hidden;
   box-shadow: 0 25px 70px rgba(35, 26, 10, 0.14);
@@ -571,7 +571,7 @@ html.nav-sheet-open body {
   top: 12px;
   background: var(--armus-panel-2);
   border: 1px solid var(--armus-silver-border-strong);
-  border-radius: 0;
+  border-radius: 9px;
   padding: 5px 8px;
   font-size: 10px;
   color: var(--armus-gold-text);
@@ -603,7 +603,7 @@ html.nav-sheet-open body {
   border: 1px solid #444;
   background: #0a0a0a;
   color: #fff;
-  border-radius: 0;
+  border-radius: 10px;
   padding: 8px;
   font-weight: 600;
 }
@@ -621,7 +621,7 @@ html.nav-sheet-open body {
 .filter {
   font-size: 9px;
   border: 1px solid var(--armus-border-soft);
-  border-radius: 0;
+  border-radius: 99px;
   background: var(--armus-panel-2);
   color: var(--armus-muted);
   padding: 5px 8px;
@@ -629,7 +629,7 @@ html.nav-sheet-open body {
 .search-box {
   border: 1px solid var(--armus-border);
   background: var(--armus-panel);
-  border-radius: 0;
+  border-radius: 22px;
   padding: 23px;
   margin-bottom: 18px;
 }
@@ -648,7 +648,7 @@ html.nav-sheet-open body {
   min-width: 220px;
   border: 1px solid var(--armus-border);
   background: var(--armus-panel-2);
-  border-radius: 0;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -690,7 +690,7 @@ html.nav-sheet-open body {
 .testimonial-grid article {
   background: var(--armus-panel);
   border: 1px solid var(--armus-border-soft);
-  border-radius: 0;
+  border-radius: 20px;
   padding: 24px;
 }
 .icon,
@@ -752,12 +752,12 @@ html.nav-sheet-open body {
   gap: 30px;
   background: var(--armus-panel);
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 24px;
   padding: 26px;
 }
 .trial-visual {
   height: 260px;
-  border-radius: 0;
+  border-radius: 18px;
   background: linear-gradient(135deg, #292929, #777);
   display: grid;
   place-items: center;
@@ -767,7 +767,7 @@ html.nav-sheet-open body {
   width: 76%;
   height: 72%;
   border: 7px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 15px;
   background: var(--armus-panel-2);
   box-shadow: 0 20px 40px #000;
 }
@@ -796,7 +796,7 @@ html.nav-sheet-open body {
 }
 .trial-note {
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 16px;
   padding: 22px;
   display: flex;
   gap: 13px;
@@ -813,7 +813,7 @@ html.nav-sheet-open body {
   margin-top: 18px;
   padding: 0;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 28px;
   overflow: hidden;
   background: var(--armus-panel-2);
   display: grid;
@@ -920,7 +920,7 @@ html.nav-sheet-open body {
   max-width: 360px;
   padding: 18px 20px;
   gap: 14px;
-  border-radius: 0;
+  border-radius: 18px;
   background: rgba(0, 0, 0, 0.16);
 }
 .tcta-panel .btn {
@@ -953,7 +953,7 @@ html.nav-sheet-open body {
 .commission-row > div {
   background: var(--armus-panel);
   border: 1px solid var(--armus-border-soft);
-  border-radius: 0;
+  border-radius: 20px;
   padding: 34px 16px;
   display: flex;
   flex-direction: column;
@@ -971,7 +971,7 @@ html.nav-sheet-open body {
 }
 .commission {
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 18px;
   padding: 18px;
 }
 .commission div {
@@ -996,7 +996,7 @@ html.nav-sheet-open body {
 }
 .teacher-avatar {
   height: 220px;
-  border-radius: 0;
+  border-radius: 18px;
   background: var(--armus-silver-gradient);
   color: #1c1c1e;
   display: grid;
@@ -1035,7 +1035,7 @@ html.nav-sheet-open body {
 }
 .footer {
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 24px 24px 0 0;
   background: var(--armus-panel-2);
   padding: 40px 30px 20px;
   display: grid;
@@ -1063,7 +1063,7 @@ html.nav-sheet-open body {
 .newsletter {
   display: flex;
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 10px;
   overflow: hidden;
 }
 .newsletter input {
@@ -1111,7 +1111,7 @@ html.nav-sheet-open body {
     display: block;
     position: relative;
     margin: 26px 0 6px;
-    border-radius: 0;
+    border-radius: 26px;
     overflow: hidden;
     box-shadow: 0 24px 54px rgba(35, 26, 10, 0.28);
     border: 1px solid rgba(255, 255, 255, 0.35);
@@ -1370,7 +1370,7 @@ html.nav-sheet-open body {
   padding: 36px;
   background: var(--armus-panel);
   border: 2px solid var(--armus-silver-border-strong);
-  border-radius: 0;
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1378,7 +1378,7 @@ html.nav-sheet-open body {
 .step-badge {
   width: 44px;
   height: 44px;
-  border-radius: 0;
+  border-radius: 13px;
   display: grid;
   place-items: center;
   font-weight: 800;
@@ -1410,7 +1410,7 @@ html.nav-sheet-open body {
 .mini-teacher-card {
   background: var(--armus-panel-2);
   border: 1px solid var(--armus-border);
-  border-radius: 0;
+  border-radius: 16px;
   padding: 18px;
   display: flex;
   gap: 14px;
@@ -1421,7 +1421,7 @@ html.nav-sheet-open body {
 .mini-teacher-card img {
   width: 60px;
   height: 60px;
-  border-radius: 0;
+  border-radius: 14px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -1452,7 +1452,7 @@ html.nav-sheet-open body {
 .mtc-tags span {
   font-size: 12px;
   border: 1px solid var(--armus-border-soft);
-  border-radius: 0;
+  border-radius: 99px;
   padding: 5px 11px;
   color: var(--armus-muted);
 }
@@ -1461,7 +1461,7 @@ html.nav-sheet-open body {
   margin: -20px 12px 0;
   align-items: flex-start;
   opacity: 0.85;
-  border-radius: 0;
+  border-radius: 0 0 16px 16px;
   z-index: 1;
   overflow: hidden;
 }
@@ -1485,7 +1485,7 @@ html.nav-sheet-open body {
   inset: 10px 0 0 0;
   width: 100%;
   height: calc(100% - 10px);
-  border-radius: 0;
+  border-radius: 18px;
   object-fit: cover;
   box-shadow: 0 20px 40px rgba(35, 26, 10, 0.16);
 }
@@ -1497,7 +1497,7 @@ html.nav-sheet-open body {
   inset: 22px 0 0 0;
   width: 100%;
   height: calc(100% - 22px);
-  border-radius: 0;
+  border-radius: 18px;
   object-fit: cover;
   box-shadow: 0 20px 40px rgba(35, 26, 10, 0.16);
 }
@@ -1567,7 +1567,7 @@ html.nav-sheet-open body {
   width: 380px;
   height: 400px;
   flex-shrink: 0;
-  border-radius: 0;
+  border-radius: 22px;
   overflow: hidden;
   box-shadow: 0 25px 60px rgba(35, 26, 10, 0.16);
 }
@@ -1632,7 +1632,7 @@ html.nav-sheet-open body {
 .proof-dot.active {
   background: var(--armus-gold-text);
   width: 22px;
-  border-radius: 0;
+  border-radius: 5px;
   transition:
     width 0.3s ease,
     background 0.3s ease;
@@ -1674,7 +1674,7 @@ html.nav-sheet-open body {
   max-width: 480px;
   padding: 22px 48px;
   font-size: 16px;
-  border-radius: 0;
+  border-radius: 10px;
 }
 @media (max-width: 560px) {
   .hero-cta {
