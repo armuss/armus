@@ -5,6 +5,7 @@ import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import AnnouncementBanner from '../../components/AnnouncementBanner';
 import { needsEmailVerification, useAuth } from '../../lib/auth';
 import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
 
@@ -83,6 +84,7 @@ export default function TabsLayout() {
   const isTeacher = profile?.role === 'teacher';
 
   return (
+    <View style={{ flex: 1 }}>
     <Tabs
       tabBar={(props) => <Dock {...props} home={isTeacher ? 'home-outline' : 'search'} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}
@@ -94,6 +96,9 @@ export default function TabsLayout() {
       <Tabs.Screen name="lessons" options={{ title: 'Derslerim', href: isTeacher ? null : undefined }} />
       <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
     </Tabs>
+    {/* the admin's announcement, like the website's top banner */}
+    <AnnouncementBanner />
+    </View>
   );
 }
 
