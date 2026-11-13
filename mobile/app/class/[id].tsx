@@ -17,7 +17,7 @@ import {
   roomNameForBooking,
   type Booking,
 } from '../../lib/bookings';
-import { shortDisplayName } from '../../lib/displayName';
+import { capitalizeName, shortDisplayName } from '../../lib/displayName';
 import { getLessonNotes, saveLessonNotes } from '../../lib/lessonNotes';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { supabase } from '../../lib/supabase';
@@ -311,7 +311,7 @@ export default function Class() {
 
   if (phase === 'tooEarly' && booking) {
     const isStudent = profile?.id === booking.studentId;
-    const otherName = isStudent ? shortDisplayName(booking.teacherName) : booking.studentName;
+    const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
     const when = formatLessonWhenForViewer(booking);
     return (
       <Gate
@@ -420,7 +420,7 @@ export default function Class() {
   )}%22`;
 
   const isStudent = profile?.id === booking.studentId;
-  const otherName = isStudent ? shortDisplayName(booking.teacherName) : booking.studentName;
+  const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
 
   function addWord() {
     const w = wordInput.trim();

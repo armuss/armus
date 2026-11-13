@@ -28,6 +28,7 @@ import {
 import { formatMoney } from '../lib/credits';
 import { confirmAsync, notify } from '../lib/dialogs';
 import { getTeacherCredits, getWithdrawalRequests, summarizeEarnings, type EarningsSummary } from '../lib/earnings';
+import { capitalizeName } from '../lib/displayName';
 import { colors, fonts, radius } from '../lib/theme';
 import Band, { ScrollBand } from './Band';
 import ReschedulePicker from './ReschedulePicker';
@@ -149,7 +150,7 @@ export default function TeacherHome() {
     return (
       <View style={[styles.bookingCard, done && styles.bookingCardDone]}>
         <View style={styles.bookingRow}>
-          <Text style={styles.bookingName}>{b.studentName}</Text>
+          <Text style={styles.bookingName}>{capitalizeName(b.studentName)}</Text>
           <Text style={styles.bookingMeta}>{compact ? `${when.dateLabel} · ${when.time}` : when.timeRange}</Text>
         </View>
         <Text style={styles.bookingType}>
@@ -238,7 +239,7 @@ export default function TeacherHome() {
             {/* the red band under the greeting and the three numbers (design A) */}
             <ScrollBand height={175} inset={20} />
             <Text style={styles.eyebrow}>ÖĞRETMEN PANELİ · BUGÜN</Text>
-            <Text style={styles.title}>Merhaba, {profile?.name?.split(' ')[0] || 'Öğretmen'}</Text>
+            <Text style={styles.title}>Merhaba, {capitalizeName(profile?.name).split(' ')[0] || 'Öğretmen'}</Text>
 
             <View style={styles.statRow}>
               <View style={styles.statCard}>

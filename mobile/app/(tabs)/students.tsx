@@ -9,6 +9,7 @@ import { useAuth } from '../../lib/auth';
 import { getBookingsForTeacher } from '../../lib/bookings';
 import { getOrCreateConversation } from '../../lib/messages';
 import { supabase } from '../../lib/supabase';
+import { capitalizeName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
 
 type StudentSummary = {
@@ -41,7 +42,7 @@ export default function Students() {
             existing.count += 1;
             existing.lastDateLabel = b.dateLabel;
           } else {
-            byStudent.set(b.studentId, { name: b.studentName, count: 1, lastDateLabel: b.dateLabel });
+            byStudent.set(b.studentId, { name: capitalizeName(b.studentName), count: 1, lastDateLabel: b.dateLabel });
           }
         });
 
