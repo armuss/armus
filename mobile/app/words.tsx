@@ -54,10 +54,20 @@ export default function Words() {
   }, [profile?.id]);
 
   const categories = useMemo(() => [...new Set((entries ?? []).map((e) => e.category))].sort((a, b) => a.localeCompare(b, 'tr')), [entries]);
-  const deck = useMemo(
-    () => (entries ?? []).filter((e) => (category === ALL || e.category === category) && (!hideMastered || !e.mastered)),
-    [entries, category, hideMastered]
-  );
+  // "Kartları karıştır": the shuffled order of the card ids (null = the
+  // normal order). It stays while the category or the hide switch changes;
+  // a card added afterwards goes to the front, where the new card is shown.
+  const [order, setOrder] = useState<string[] | null>(null);
+  const [toast, setToast] = useState('');
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const deck = useMemo(() => {
+    const list = (entries ?? []).filter((e) => (category === ALL || e.category === category) && (!hideMastered || !e.mastered));
+    if (!order) return list;
+    const rank = new Map(order.map((id, i) => [id, i]));
+    return [...list].sort((a, b) => (rank.get(a.id) ?? -1) - (rank.get(b.id) ?? -1));
+  }, [entries, category, hideMastered, order]);
   const current = deck.length ? deck[Math.min(index, deck.length - 1)] : null;
   const position = current ? deck.indexOf(current) : -1;
 
@@ -89,6 +99,47 @@ export default function Words() {
     opacity: flip.interpolate({ inputRange: [0, 0.5, 0.501, 1], outputRange: [0, 0, 1, 1] }),
     transform: [{ perspective: 1400 }, { rotateY: flip.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] }) }],
   };
+
+  function showToast(text: string) {
+    setToast(text);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastOpacity.stopAnimation();
+    Animated.timing(toastOpacity, { toValue: 1, duration: reduceMotion ? 0 : 180, useNativeDriver: true }).start();
+    toastTimer.current = setTimeout(() => {
+      Animated.timing(toastOpacity, { toValue: 0, duration: reduceMotion ? 0 : 300, useNativeDriver: true }).start(() => setToast(''));
+    }, 2200);
+  }
+
+  useEffect(
+    () => () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    []
+  );
+
+  // a real shuffle of the whole deck (every card once, in a new order),
+  // starting again from the first card on its word side
+  function shuffle() {
+    if (deck.length < 2) return;
+    const ids = (entries ?? []).map((e) => e.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    // make the change visible: the card on screen doesn't stay first
+    const visible = new Set(deck.map((e) => e.id));
+    const firstVisible = ids.findIndex((id) => visible.has(id));
+    if (current && ids[firstVisible] === current.id) {
+      const other = ids.findIndex((id, k) => k !== firstVisible && visible.has(id));
+      if (other >= 0) [ids[firstVisible], ids[other]] = [ids[other], ids[firstVisible]];
+    }
+    setOrder(ids);
+    setIndex(0);
+    setFlipped(false);
+    const text = `Karıştırıldı · ${deck.length} kart, baştan başlıyorsun`;
+    showToast(text);
+    AccessibilityInfo.announceForAccessibility(text);
+  }
 
   function go(step: number) {
     if (!deck.length) return;
@@ -300,6 +351,25 @@ export default function Words() {
               <Pressable onPress={() => go(1)} style={styles.navBtn} accessibilityLabel="Sonraki kart" disabled={!current}>
                 <Ionicons name="chevron-forward" size={22} color={colors.ink} />
               </Pressable>
+            </View>
+
+            <View style={styles.shuffleArea}>
+              <Pressable
+                onPress={shuffle}
+                disabled={deck.length < 2}
+                style={({ pressed }) => [styles.shuffleBtn, deck.length < 2 && { opacity: 0.45 }, pressed && { opacity: 0.8 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Kartları karıştır"
+              >
+                <Ionicons name="shuffle" size={18} color={colors.red} />
+                <Text style={styles.shuffleText}>Kartları karıştır</Text>
+              </Pressable>
+              {!!toast && (
+                <Animated.View style={[styles.toast, { opacity: toastOpacity }]} pointerEvents="none">
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                  <Text style={styles.toastText}>{toast}</Text>
+                </Animated.View>
+              )}
             </View>
           </>
         )}
@@ -559,6 +629,21 @@ const styles = StyleSheet.create({
   track: { flex: 1, height: 6, borderRadius: 3, backgroundColor: '#f0e7d8', overflow: 'hidden' },
   trackFill: { height: '100%', borderRadius: 3, backgroundColor: colors.petrol },
 
+  shuffleArea: { alignItems: 'center', marginTop: 18, gap: 10 },
+  shuffleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: colors.champagneDeep,
+    backgroundColor: colors.panel,
+    borderRadius: radius.pill,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  shuffleText: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
+  toast: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.ink, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
+  toastText: { fontFamily: fonts.bodySemibold, fontSize: 12.5, color: '#fff' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 22 },
   navBtn: { width: 54, height: 54, borderRadius: 27, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   knowBtn: { minWidth: 150, height: 54, borderRadius: 27, backgroundColor: colors.petrol, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 20 },
