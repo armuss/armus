@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLightStatusBar } from '../../components/Band';
+import { amIBlockedBy } from '../../lib/blocks';
 import { useAuth } from '../../lib/auth';
 import {
   getMessages,
@@ -43,6 +44,8 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [canShareContact, setCanShareContact] = useState(false);
+  // a teacher who blocked this student (teacher-blocks.js): no new messages
+  const [blockedByTeacher, setBlockedByTeacher] = useState(false);
   const listRef = useRef<FlatList<Message>>(null);
   useLightStatusBar();
 
@@ -83,6 +86,12 @@ export default function Chat() {
         if (!data) return;
         const otherId = data.student_id === profile.id ? data.teacher_id : data.student_id;
         hasBookingWithOtherParty(profile.id, profile.role, otherId).then(setCanShareContact);
+        if (profile.role === 'student') {
+          amIBlockedBy(otherId).then((isBlocked) => {
+            setBlockedByTeacher(isBlocked);
+            if (isBlocked) setWarning('Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.');
+          });
+        }
       });
   }, [id, profile]);
 
@@ -96,7 +105,7 @@ export default function Chat() {
 
   async function handleSend() {
     const body = text.trim();
-    if (!body || !profile || sending) return;
+    if (!body || !profile || sending || blockedByTeacher) return;
 
     if (!canShareContact && messageViolatesContactPolicy(body)) {
       setWarning(
@@ -182,11 +191,12 @@ export default function Chat() {
             placeholderTextColor={colors.faint}
             style={styles.input}
             multiline
+            editable={!blockedByTeacher}
           />
           <Pressable
             onPress={handleSend}
-            disabled={!text.trim() || sending}
-            style={[styles.sendBtn, (!text.trim() || sending) && styles.sendBtnDisabled]}
+            disabled={!text.trim() || sending || blockedByTeacher}
+            style={[styles.sendBtn, (!text.trim() || sending || blockedByTeacher) && styles.sendBtnDisabled]}
           >
             <Text style={styles.sendBtnText}>Gönder</Text>
           </Pressable>

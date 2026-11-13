@@ -55,3 +55,16 @@ export async function addReview(review: {
   if (error) return null;
   return mapReviewRow(data);
 }
+
+// The student's own reviews for many lessons at once (Derslerim), keyed by booking.
+export async function getReviewsForBookings(bookingIds: string[]): Promise<Record<string, Review>> {
+  const ids = bookingIds.filter(Boolean);
+  if (!ids.length) return {};
+  const { data, error } = await supabase.from('reviews').select('*').in('booking_id', ids);
+  if (error || !data) return {};
+  const out: Record<string, Review> = {};
+  data.forEach((row) => {
+    out[row.booking_id] = mapReviewRow(row);
+  });
+  return out;
+}

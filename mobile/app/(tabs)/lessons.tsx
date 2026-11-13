@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
@@ -5,6 +6,9 @@ import { ActivityIndicator, Image, Modal, Pressable, RefreshControl, ScrollView,
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
+import { CHECKIN_OK_KEY, CheckinBox, ReportStatus, ReviewBlock, checkinOpen } from '../../components/LessonAftercare';
+import TeacherReportSheet from '../../components/TeacherReportSheet';
+import { getAttendanceReportsForBookings, type AttendanceReport } from '../../lib/attendance';
 import ReschedulePicker from '../../components/ReschedulePicker';
 import StrandedPackageCard from '../../components/StrandedPackageCard';
 import { useAuth } from '../../lib/auth';
@@ -19,6 +23,8 @@ import {
   formatTimeUntil,
   getBookingsForStudent,
   getPendingRescheduleRequests,
+  getRescheduleCounts,
+  MAX_STUDENT_MOVES,
   getTeacherBusyTimes,
   hoursUntilLesson,
   isBookingPast,
@@ -36,9 +42,13 @@ import { formatMoney, getAvailableCredits, getStrandedPackages, type LessonCredi
 import { confirmAsync, notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
 import { createDispute, getOwnDisputes, type Dispute } from '../../lib/disputes';
+import { getReviewsForBookings, type Review } from '../../lib/reviews';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
+
+// a real (signed-up) teacher's id - the demo teachers can't be reported (my-lessons.html)
+const isRealTeacherId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ''));
 
 const DISPUTE_SUBJECTS = [
   'Öğretmen derse gelmedi',
@@ -167,6 +177,8 @@ export default function Lessons() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [pending, setPending] = useState<Record<string, RescheduleRequest>>({});
+  // how many times each lesson has been moved (a lesson moves at most 2 times)
+  const [moveCounts, setMoveCounts] = useState<Record<string, { studentMoves: number; teacherProposals: number }>>({});
   const [credits, setCredits] = useState<LessonCredit[]>([]);
   const [stranded, setStranded] = useState<StrandedPackage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -179,6 +191,12 @@ export default function Lessons() {
   const [sheet, setSheet] = useState<Booking | null>(null);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [photos, setPhotos] = useState<Record<string, string>>({});
+  // a finished lesson's check-in, report and rating (my-lessons.html)
+  const [reports, setReports] = useState<Record<string, AttendanceReport>>({});
+  const [reportNotes, setReportNotes] = useState<Record<string, string>>({});
+  const [reviews, setReviews] = useState<Record<string, Review>>({});
+  const [saidYes, setSaidYes] = useState<Record<string, boolean>>({});
+  const [reportTeacherFor, setReportTeacherFor] = useState<Booking | null>(null);
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -188,12 +206,24 @@ export default function Lessons() {
       getAvailableCredits(profile.id),
       getStrandedPackages(),
     ]);
-    const pendingData = await getPendingRescheduleRequests(bookingsData.filter(bookingCancellable).map((b) => b.id));
+    const openIds = bookingsData.filter(bookingCancellable).map((b) => b.id);
+    const doneIds = bookingsData.filter((b) => b.status !== 'cancelled' && isBookingPast(b)).map((b) => b.id);
+    const [pendingData, countsData, reportsData, reviewsData, yesPairs] = await Promise.all([
+      getPendingRescheduleRequests(openIds),
+      getRescheduleCounts(openIds),
+      getAttendanceReportsForBookings(doneIds),
+      getReviewsForBookings(doneIds),
+      AsyncStorage.multiGet(doneIds.map(CHECKIN_OK_KEY)).catch(() => [] as readonly [string, string | null][]),
+    ]);
+    setReports(reportsData);
+    setReviews(reviewsData);
+    setSaidYes(Object.fromEntries(yesPairs.filter(([, v]) => v === '1').map(([k]) => [k.replace('armus_checkin_ok_', ''), true])));
     setBookings(bookingsData);
     setDisputes(disputesData);
     setCredits(creditData || []);
     setStranded(strandedData);
     setPending(pendingData);
+    setMoveCounts(countsData);
     setLoading(false);
     // photos for the next-lesson banner (one lookup per teacher)
     Array.from(new Set(bookingsData.map((b) => b.teacherId))).forEach((tid) => {
@@ -426,6 +456,31 @@ export default function Lessons() {
           </View>
         </View>
         {isCancelled && <Text style={styles.cancelLine}>{cancelledLine(item)}</Text>}
+        {!isCancelled && profile && (
+          <>
+            {reports[item.id] ? (
+              <ReportStatus report={reports[item.id]} message={reportNotes[item.id]} />
+            ) : (
+              checkinOpen(item, !!saidYes[item.id]) && (
+                <CheckinBox
+                  booking={item}
+                  studentId={profile.id}
+                  onSaidYes={() => setSaidYes((prev) => ({ ...prev, [item.id]: true }))}
+                  onFiled={(report, message) => {
+                    setReports((prev) => ({ ...prev, [item.id]: report }));
+                    setReportNotes((prev) => ({ ...prev, [item.id]: message }));
+                  }}
+                />
+              )
+            )}
+            <ReviewBlock
+              booking={item}
+              student={{ id: profile.id, name: profile.name }}
+              review={reviews[item.id]}
+              onSaved={(r) => setReviews((prev) => ({ ...prev, [item.id]: r }))}
+            />
+          </>
+        )}
         {dispute ? (
           <View style={styles.disputeSubmitted}>
             <Text style={styles.disputeStatus}>⚑ {DISPUTE_STATUS_LABELS[dispute.status] || dispute.status}</Text>
@@ -437,6 +492,11 @@ export default function Lessons() {
               <Text style={styles.disputePromptText}>⚑ Bir sorun bildir</Text>
             </Pressable>
           )
+        )}
+        {isRealTeacherId(item.teacherId) && (
+          <Pressable onPress={() => setReportTeacherFor(item)} style={styles.complainLink} hitSlop={6}>
+            <Text style={styles.complainText}>Öğretmeni şikayet et</Text>
+          </Pressable>
         )}
       </View>
     );
@@ -459,6 +519,8 @@ export default function Lessons() {
   const sheetBooking = sheet ? bookings.find((b) => b.id === sheet.id) ?? sheet : null;
   const sheetRequest = sheetBooking ? pending[sheetBooking.id] : undefined;
   const sheetLate = sheetBooking ? hoursUntilLesson(sheetBooking) < FREE_CANCEL_HOURS : false;
+  // migration_112.sql: a lesson can be moved at most 2 times (like my-lessons)
+  const sheetMoveLimit = sheetBooking ? (moveCounts[sheetBooking.id]?.studentMoves || 0) >= MAX_STUDENT_MOVES : false;
 
   return (
     // the title row is fixed on plain red; the band under it scrolls with
@@ -613,7 +675,7 @@ export default function Lessons() {
 
             {bookingCancellable(sheetBooking) && (
               <>
-                {!(sheetRequest && sheetRequest.requestedBy === 'teacher') && (
+                {!(sheetRequest && sheetRequest.requestedBy === 'teacher') && !sheetMoveLimit && (
                   <Pressable
                     onPress={() => {
                       const b = sheetBooking;
@@ -637,6 +699,7 @@ export default function Lessons() {
                   <Ionicons name="close-circle-outline" size={20} color={colors.error} />
                   <Text style={[styles.sheetRowText, { color: colors.error }]}>Dersi iptal et</Text>
                 </Pressable>
+                {sheetMoveLimit && <Text style={styles.sheetHint}>Bu ders 2 kez taşındı - bir ders en fazla 2 kez taşınabilir.</Text>}
                 <Text style={styles.sheetHint}>
                   {!sheetLate
                     ? 'Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir. Saati değiştirirsen ders hemen yeni saate taşınır.'
@@ -645,6 +708,20 @@ export default function Lessons() {
                       : 'Derse 12 saatten az kaldı: iptal edersen ders hakkı iade edilmez ve ücret öğretmene ödenir. Saat değişikliği öğretmen onayına gider.'}
                 </Text>
               </>
+            )}
+
+            {isRealTeacherId(sheetBooking.teacherId) && (
+              <Pressable
+                onPress={() => {
+                  const b = sheetBooking;
+                  setSheet(null);
+                  setReportTeacherFor(b);
+                }}
+                style={styles.sheetRow}
+              >
+                <Ionicons name="flag-outline" size={20} color={colors.ink} />
+                <Text style={styles.sheetRowText}>Öğretmeni şikayet et</Text>
+              </Pressable>
             )}
 
             {sheetBooking.status !== 'cancelled' && profile && (
@@ -659,6 +736,17 @@ export default function Lessons() {
           </View>
         )}
       </Modal>
+
+      {profile && (
+        <TeacherReportSheet
+          visible={!!reportTeacherFor}
+          teacherId={reportTeacherFor?.teacherId || ''}
+          teacherName={shortDisplayName(reportTeacherFor?.teacherName || '')}
+          reporterId={profile.id}
+          bookingId={reportTeacherFor?.id}
+          onClose={() => setReportTeacherFor(null)}
+        />
+      )}
 
       {picker && (
         <ReschedulePicker
@@ -684,6 +772,8 @@ export default function Lessons() {
 }
 
 const styles = StyleSheet.create({
+  complainLink: { alignSelf: 'flex-start', marginTop: 10 },
+  complainText: { fontFamily: fonts.bodySemibold, fontSize: 12.5, color: colors.muted, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1, backgroundColor: 'transparent' },
   // the status bar and title row are plain red; the list paints the ground and carries the band

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import Logo from '../../components/Logo';
+import { signInThrottled } from '../../lib/signin';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 
@@ -56,10 +57,12 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    // through login-with-throttle like the website - a few wrong
+    // passwords, then a 15-minute wait
+    const { error: signInError } = await signInThrottled(email, password);
     setLoading(false);
     if (signInError) {
-      setError('E-posta veya şifre hatalı.');
+      setError(signInError);
       return;
     }
     router.replace('/(tabs)');

@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
 import { useAuth } from '../../lib/auth';
+import { BLOCK_REASONS, blockStudent, getBlockedStudents, unblockStudent, type BlockReason } from '../../lib/blocks';
 import { getBookingsForTeacher } from '../../lib/bookings';
 import { getOrCreateConversation } from '../../lib/messages';
 import { supabase } from '../../lib/supabase';
@@ -25,6 +26,13 @@ export default function Students() {
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  // the website's "Engelle" (teacher-blocks.js): blocked students can't
+  // book or message this teacher; their upcoming lessons are cancelled
+  const [blocked, setBlocked] = useState<Set<string>>(new Set());
+  const [blockTarget, setBlockTarget] = useState<StudentSummary | null>(null);
+  const [blockReason, setBlockReason] = useState<BlockReason>('harassment');
+  const [blockNote, setBlockNote] = useState('');
+  const [blocking, setBlocking] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -32,6 +40,7 @@ export default function Students() {
       let active = true;
       setLoading(true);
 
+      getBlockedStudents(profile.id).then((set) => active && setBlocked(set));
       getBookingsForTeacher(profile.id).then(async (bookings) => {
         if (!active) return;
 
@@ -85,6 +94,54 @@ export default function Students() {
     });
   }
 
+  function openStudentMenu(student: StudentSummary) {
+    if (!profile) return;
+    if (blocked.has(student.id)) {
+      Alert.alert('Engeli kaldır', 'Bu öğrencinin engelini kaldırmak istediğine emin misin?', [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Engeli Kaldır',
+          onPress: async () => {
+            const ok = await unblockStudent(profile.id, student.id);
+            if (!ok) {
+              Alert.alert('İşlem başarısız oldu, tekrar dene.');
+              return;
+            }
+            setBlocked((prev) => {
+              const next = new Set(prev);
+              next.delete(student.id);
+              return next;
+            });
+          },
+        },
+      ]);
+      return;
+    }
+    setBlockReason('harassment');
+    setBlockNote('');
+    setBlockTarget(student);
+  }
+
+  async function confirmBlock() {
+    if (!profile || !blockTarget || blocking) return;
+    setBlocking(true);
+    const result = await blockStudent(profile.id, blockTarget.id, blockReason, blockNote.trim() || undefined);
+    setBlocking(false);
+    if (!result.ok) {
+      Alert.alert('İşlem başarısız oldu, tekrar dene.');
+      return;
+    }
+    const id = blockTarget.id;
+    setBlocked((prev) => new Set(prev).add(id));
+    setBlockTarget(null);
+    if (result.cancelledCount > 0) {
+      Alert.alert(
+        'Öğrenci engellendi',
+        `Bu öğrenciyle aranızdaki ${result.cancelledCount} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.`
+      );
+    }
+  }
+
   return (
     // the title is fixed on plain red; the band's fade scrolls with the list
     <SafeAreaView style={styles.safeRed} edges={['top']}>
@@ -122,11 +179,22 @@ export default function Students() {
                 </View>
               )}
               <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.name}>
+                  {item.name}
+                  {blocked.has(item.id) && <Text style={styles.blockedTag}>  · Engellendi</Text>}
+                </Text>
                 <Text style={styles.meta}>
                   {item.lessonCount} ders · son {item.lastDateLabel}
                 </Text>
               </View>
+              <Pressable
+                onPress={() => openStudentMenu(item)}
+                hitSlop={8}
+                style={styles.moreBtn}
+                accessibilityLabel={blocked.has(item.id) ? 'Engeli kaldır' : 'Öğrenciyi engelle'}
+              >
+                <Ionicons name={blocked.has(item.id) ? 'lock-open-outline' : 'ban-outline'} size={17} color={colors.muted} />
+              </Pressable>
               <View style={styles.msgLink}>
                 {openingId === item.id ? (
                   <ActivityIndicator size="small" color={colors.ink} />
@@ -141,11 +209,67 @@ export default function Students() {
           }
         />
       )}
+
+      <Modal visible={!!blockTarget} transparent animationType="slide" onRequestClose={() => setBlockTarget(null)}>
+        <Pressable style={styles.shade} onPress={() => setBlockTarget(null)} />
+        <View style={styles.sheet}>
+          <View style={styles.grab} />
+          <Text style={styles.sheetTitle}>Öğrenciyi Engelle</Text>
+          <Text style={styles.sheetIntro}>
+            Engellersen bu öğrenci seninle yeni bir ders rezervasyonu yapamaz, sana mesaj gönderemez ve aranızdaki henüz başlamamış dersler
+            otomatik iptal edilip kendisine ders hakkı olarak geri verilir.
+          </Text>
+          {BLOCK_REASONS.map((r) => (
+            <Pressable key={r.value} onPress={() => setBlockReason(r.value)} style={[styles.reason, blockReason === r.value && styles.reasonOn]}>
+              <View style={[styles.radio, blockReason === r.value && styles.radioOn]}>{blockReason === r.value && <View style={styles.radioDot} />}</View>
+              <Text style={styles.reasonText}>{r.label}</Text>
+            </Pressable>
+          ))}
+          {blockReason === 'other' && (
+            <TextInput
+              value={blockNote}
+              onChangeText={setBlockNote}
+              placeholder="Kısaca açıklar mısın? (isteğe bağlı)"
+              placeholderTextColor={colors.faint}
+              style={styles.noteInput}
+              multiline
+            />
+          )}
+          <View style={styles.sheetBtns}>
+            <Pressable onPress={() => setBlockTarget(null)} style={[styles.sheetBtn, styles.sheetBtnLight]}>
+              <Text style={styles.sheetBtnLightText}>Vazgeç</Text>
+            </Pressable>
+            <Pressable onPress={confirmBlock} disabled={blocking} style={[styles.sheetBtn, styles.sheetBtnRed]}>
+              {blocking ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.sheetBtnRedText}>Engelle</Text>}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  blockedTag: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.error },
+  moreBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginRight: 6 },
+  shade: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(20,6,8,0.45)' },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 34 },
+  grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: colors.silver2, alignSelf: 'center', marginBottom: 14 },
+  sheetTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.ink, letterSpacing: -0.5 },
+  sheetIntro: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 6, marginBottom: 12 },
+  reason: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, marginBottom: 8 },
+  reasonOn: { borderColor: colors.red },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  radioOn: { borderColor: colors.red },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.red },
+  reasonText: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.ink, flex: 1 },
+  noteInput: { minHeight: 70, borderRadius: 14, borderWidth: 1, borderColor: '#e8ddcc', backgroundColor: colors.panel, padding: 12, fontFamily: fonts.body, fontSize: 14, color: colors.ink, textAlignVertical: 'top' },
+  sheetBtns: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  sheetBtn: { flex: 1, height: 50, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  sheetBtnLight: { backgroundColor: colors.panel, borderWidth: 1, borderColor: '#e2d6c3' },
+  sheetBtnLightText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  sheetBtnRed: { backgroundColor: colors.red },
+  sheetBtnRedText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: colors.onRed },
   screen: {
     flex: 1,
     backgroundColor: colors.bg,

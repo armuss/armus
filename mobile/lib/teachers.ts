@@ -5,7 +5,6 @@
  * site exactly. Only status === "approved" teachers are shown — "pending"
  * and "rejected" applicants stay hidden.
  */
-import { isBookingPast as isBookingTimingPast } from './bookings';
 import { capitalizeName } from './displayName';
 import { supabase } from './supabase';
 import { TEACHERS, type Teacher } from './teachers-data';
@@ -17,22 +16,12 @@ function formatReviewerName(fullName: string) {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-// A booking counts once the lesson's real end instant has passed - not
-// when its raw lesson_date (a wall-clock date in the TEACHER's own
-// timezone) is less than a UTC-based "today" string, which used to
-// disagree by a day right around midnight for a viewer/teacher pair in
-// different zones. These are raw snake_case DB rows (not the mapped
-// Booking type), so this adapts the three fields isBookingPast actually
-// needs instead of mapping the whole row first.
-function isBookingPast(booking: any) {
-  return isBookingTimingPast({
-    date: booking.lesson_date,
-    time: booking.lesson_time,
-    teacherTimezone: booking.teacher_timezone || 'Europe/Istanbul',
-  });
-}
-
-function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[]): Teacher {
+// stats: a teacher_marketplace_stats row (migration_48.sql) - real counts
+// computed server-side. Counting a plain bookings query here was wrong for
+// almost every viewer: bookings_select_participant only returns the
+// viewer's OWN bookings, so a teacher's "tamamlanan ders" / "öğrenci"
+// showed just the viewer's share of them. Same source as marketplace.js.
+function buildTeacherFromParts(profile: any, rawReviews: any[], stats: { completed_count?: number; student_count?: number } | null): Teacher {
   const initials = String(profile.name || '')
     .split(' ')
     .map((part: string) => part[0])
@@ -50,8 +39,8 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[])
     ? Math.round((rawReviews.reduce((sum, r) => sum + r.stars, 0) / rawReviews.length) * 10) / 10
     : null;
 
-  const completedCount = bookings.filter(isBookingPast).length;
-  const studentCount = new Set(bookings.map((b) => b.student_id)).size;
+  const completedCount = stats?.completed_count ?? 0;
+  const studentCount = stats?.student_count ?? 0;
 
   return {
     id: profile.id,
@@ -82,7 +71,41 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], bookings: any[])
     weeklyAvailability: Array.isArray(profile.weekly_availability) ? profile.weekly_availability : null,
     availabilityDates:
       profile.availability_dates && typeof profile.availability_dates === 'object' ? profile.availability_dates : null,
+    // migration_41.sql - the attendance-report hide/ban state (filterVisibleTeachers)
+    isBanned: Boolean(profile.is_banned),
+    hiddenFromNewStudents: Boolean(profile.hidden_from_new_students),
+    hiddenUntil: profile.hidden_until || null,
   };
+}
+
+// Whether a teacher is hidden from EVERYONE right now: banned, or the
+// temporary hide of a repeated confirmed violation (migration_41.sql).
+function isHiddenFromEveryone(t: Teacher) {
+  if (t.isBanned) return true;
+  return !!(t.hiddenUntil && new Date(t.hiddenUntil).getTime() > Date.now());
+}
+
+// The website's armusFilterVisibleTeachers (marketplace.js), rule for rule:
+// a banned or temporarily hidden teacher is hidden from everyone; a teacher
+// hidden "from new students" (an open no-show / late report) stays visible
+// only to students who have booked them before. Demo teachers are never
+// hidden - they have no profile row for any of this to apply to.
+async function filterVisibleTeachers(teachers: Teacher[]): Promise<Teacher[]> {
+  const hiddenFromNewOnly = teachers.filter((t) => !isHiddenFromEveryone(t) && t.hiddenFromNewStudents);
+  let booked = new Set<string>();
+  if (hiddenFromNewOnly.length) {
+    const { data: auth } = await supabase.auth.getSession();
+    const viewerId = auth.session?.user.id;
+    if (viewerId) {
+      const { data } = await supabase.from('bookings').select('teacher_id').eq('student_id', viewerId);
+      booked = new Set((data || []).map((b: any) => b.teacher_id));
+    }
+  }
+  return teachers.filter((t) => {
+    if (isHiddenFromEveryone(t)) return false;
+    if (t.hiddenFromNewStudents) return booked.has(t.id);
+    return true;
+  });
 }
 
 // Demo teachers have a fixed, hand-written reviews list for marketing
@@ -106,36 +129,31 @@ async function enrichDemoTeacherReviews(teacher: Teacher): Promise<Teacher> {
   return { ...teacher, reviews: liveReviews.concat(teacher.reviews) };
 }
 
-// Only the real, self-registered teachers (a Supabase round trip).
+// Only the real, self-registered teachers (a Supabase round trip), the same
+// three sources as marketplace.js: masked_profiles (a teacher's name already
+// short-formed server-side), teacher_review_stats (rating and count without
+// downloading every review) and teacher_marketplace_stats (real lesson /
+// student counts) - then the same visibility filter.
 async function getRegisteredTeachers(): Promise<Teacher[]> {
-  const [profilesRes, reviewsRes, bookingsRes] = await Promise.all([
-    // masked_profiles/masked_reviews, not the raw tables - mirrors
-    // marketplace.js on the web exactly. A teacher's full real name
-    // (and a reviewing student's) must never ship over the wire to
-    // another viewer, only what this app already re-shortens client-side
-    // before rendering - querying the raw tables sent the real names in
-    // the JSON response regardless of how the UI displayed them.
-    // Also: migration_67.sql removed the raw profiles table's public
-    // SELECT policy, so this raw query returned zero rows for every
-    // teacher the viewer hadn't already messaged - masked_profiles is
-    // what actually still grants public marketplace read access.
+  const [profilesRes, reviewStatsRes, statsRes] = await Promise.all([
     supabase.from('masked_profiles').select('*').eq('role', 'teacher').eq('status', 'approved'),
-    supabase.from('masked_reviews').select('*'),
-    supabase.from('bookings').select('*'),
+    supabase.rpc('teacher_review_stats'),
+    supabase.rpc('teacher_marketplace_stats'),
   ]);
 
   if (profilesRes.error || !profilesRes.data) return [];
 
-  const allReviews = reviewsRes.data || [];
-  const allBookings = bookingsRes.data || [];
+  const reviewStats = new Map<string, any>((reviewStatsRes.data || []).map((r: any) => [r.teacher_id, r]));
+  const stats = new Map<string, any>((statsRes.data || []).map((r: any) => [r.teacher_id, r]));
 
-  return profilesRes.data.map((profile: any) =>
-    buildTeacherFromParts(
-      profile,
-      allReviews.filter((r: any) => r.teacher_id === profile.id),
-      allBookings.filter((b: any) => b.teacher_id === profile.id)
-    )
-  );
+  const teachers = profilesRes.data.map((profile: any) => {
+    const teacher = buildTeacherFromParts(profile, [], stats.get(profile.id) || null);
+    const rs = reviewStats.get(profile.id);
+    teacher.rating = rs ? Number(rs.avg_rating) : null;
+    teacher.reviewCount = rs ? Number(rs.review_count) : 0;
+    return teacher;
+  });
+  return filterVisibleTeachers(teachers);
 }
 
 export async function getMarketplaceTeachers(): Promise<Teacher[]> {
@@ -150,12 +168,17 @@ export async function findMarketplaceTeacher(id: string): Promise<Teacher | null
   const demoTeacher = TEACHERS.find((t) => t.id === id);
   if (demoTeacher) return enrichDemoTeacherReviews(demoTeacher);
 
-  const [profileRes, reviewsRes, bookingsRes] = await Promise.all([
+  const [profileRes, reviewsRes, statsRes] = await Promise.all([
     supabase.from('masked_profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
     supabase.from('masked_reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
-    supabase.from('bookings').select('*').eq('teacher_id', id),
+    supabase.rpc('teacher_marketplace_stats'),
   ]);
 
   if (profileRes.error || !profileRes.data) return null;
-  return buildTeacherFromParts(profileRes.data, reviewsRes.data || [], bookingsRes.data || []);
+  const stats = (statsRes.data || []).find((r: any) => r.teacher_id === id) || null;
+  const teacher = buildTeacherFromParts(profileRes.data, reviewsRes.data || [], stats);
+  // a hidden teacher's page is closed to anyone who couldn't find them in
+  // the list either (a stale link, a notification) - like the website
+  const [visible] = await filterVisibleTeachers([teacher]);
+  return visible || null;
 }

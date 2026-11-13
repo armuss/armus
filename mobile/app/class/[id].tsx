@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
+import AttendanceFlow from '../../components/AttendanceFlow';
 import Button from '../../components/Button';
-import { getAttendanceReportForBooking, reportAttendanceIssue } from '../../lib/attendance';
+import { NO_SHOW_GRACE_MINUTES, getAttendanceReportForBooking, type AttendanceReport } from '../../lib/attendance';
 import { useAuth } from '../../lib/auth';
 import {
   canJoinLessonNow,
@@ -24,12 +25,6 @@ import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 
 type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'checkin' | 'review';
-
-// how long after the lesson's real start a "the teacher never showed up"
-// report can be filed - mirrors ARMUS_NO_SHOW_GRACE_MINUTES (class.html):
-// short enough a student doesn't wait long to report, long enough that a
-// teacher joining a couple minutes late isn't instantly flagged.
-const NO_SHOW_GRACE_MINUTES = 10;
 
 function formatClock(ms: number) {
   const totalSeconds = Math.max(0, Math.round(ms / 1000));
@@ -196,8 +191,24 @@ export default function Class() {
     return () => clearInterval(interval);
   }, [phase, booking]);
 
-  const [checkinBusy, setCheckinBusy] = useState(false);
-  const [checkinError, setCheckinError] = useState(false);
+  // after the student leaves: the website's shared report flow, then
+  // the message it filed (or the star rating)
+  const [checkinMessage, setCheckinMessage] = useState('');
+  // the in-room "Bildir" sheet (class.html's report button)
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportExisting, setReportExisting] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
+
+  function noShowReady() {
+    return windowRef.current ? new Date() >= new Date(windowRef.current.start.getTime() + NO_SHOW_GRACE_MINUTES * 60000) : false;
+  }
+
+  async function openReport() {
+    if (!booking) return;
+    setReportMessage('');
+    setReportExisting(!!(await getAttendanceReportForBooking(booking.id)));
+    setReportOpen(true);
+  }
 
   // Only the student rates a lesson or reports the teacher's attendance -
   // mirrors class.html's `if (isStudent)` gate around its whole
@@ -228,36 +239,24 @@ export default function Class() {
     setPhase('checkin');
   }
 
-  async function submitCheckin(type: 'yes' | 'late' | 'no_show') {
-    if (!booking || !profile) return;
-
-    if (type === 'yes') {
-      const existing = await getReviewForBooking(booking.id);
-      if (existing) {
-        goBackToLessons();
-        return;
-      }
-      setPhase('review');
+  // "yes" (or a late start that was still held) moves on to the star
+  // rating; anything else just confirms and leaves - class.html
+  async function goToReview() {
+    if (!booking) return;
+    const existing = await getReviewForBooking(booking.id);
+    if (existing) {
+      goBackToLessons();
       return;
     }
+    setPhase('review');
+  }
 
-    setCheckinBusy(true);
-    setCheckinError(false);
-    const result = await reportAttendanceIssue({
-      bookingId: booking.id,
-      teacherId: booking.teacherId,
-      studentId: profile.id,
-      type,
-    });
-    setCheckinBusy(false);
-
-    if (!result) {
-      setCheckinError(true);
+  function onCheckinFiled(report: AttendanceReport, message: string) {
+    if (report.type === 'late') {
+      goToReview();
       return;
     }
-    // nothing to rate for a lesson that didn't properly happen - same as
-    // web, a filed no_show/late report skips straight to leaving.
-    goBackToLessons();
+    setCheckinMessage(message);
   }
 
   async function submitReview() {
@@ -335,51 +334,35 @@ export default function Class() {
     );
   }
 
-  if (phase === 'checkin' && booking) {
-    const noShowReady = windowRef.current
-      ? new Date() >= new Date(windowRef.current.start.getTime() + NO_SHOW_GRACE_MINUTES * 60000)
-      : false;
-
-    if (checkinError) {
+  if (phase === 'checkin' && booking && profile) {
+    if (checkinMessage) {
       return (
         <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
-          <Text style={styles.reviewTitle}>Bildirim gönderilemedi</Text>
-          <Text style={styles.gateSubtitle}>Lütfen tekrar dene.</Text>
-          <View style={{ width: '100%', marginTop: 20, gap: 10 }}>
-            <Button label="Tekrar dene" onPress={() => setCheckinError(false)} />
-            <Pressable onPress={() => goBackToLessons()}>
-              <Text style={styles.skipText}>Atla</Text>
-            </Pressable>
+          <Text style={styles.reviewTitle}>Bildirimin alındı</Text>
+          <Text style={styles.gateSubtitle}>{checkinMessage}</Text>
+          <View style={{ width: '100%', marginTop: 22 }}>
+            <Button label="Çık" onPress={() => goBackToLessons()} />
           </View>
         </SafeAreaView>
       );
     }
 
     return (
-      <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
-        <Text style={styles.reviewTitle}>Bu ders gerçekleşti mi?</Text>
-        <Text style={[styles.gateSubtitle, { marginBottom: 20 }]}>
-          {formatLessonWhenForViewer(booking).dateLabel}, {formatLessonWhenForViewer(booking).timeRange} için planlanan ders.
-        </Text>
-        <View style={{ width: '100%', gap: 10 }}>
-          <Button label="Evet, zamanında oldu" onPress={() => submitCheckin('yes')} loading={checkinBusy} />
-          <Button
-            label="Evet ama öğretmen geç geldi"
-            variant="outline"
-            onPress={() => submitCheckin('late')}
-            loading={checkinBusy}
+      <SafeAreaView style={styles.screen}>
+        <ScrollView contentContainerStyle={styles.checkinContent} keyboardShouldPersistTaps="handled">
+          <Text style={styles.reviewTitle}>Bu ders gerçekleşti mi?</Text>
+          <Text style={[styles.gateSubtitle, { marginBottom: 20 }]}>
+            {formatLessonWhenForViewer(booking).dateLabel}, {formatLessonWhenForViewer(booking).timeRange} için planlanan ders.
+          </Text>
+          <AttendanceFlow
+            booking={booking}
+            studentId={profile.id}
+            noShowReady={noShowReady()}
+            askHappened
+            onHappened={goToReview}
+            onFiled={onCheckinFiled}
           />
-          <Button
-            label="Hayır, öğretmen gelmedi"
-            variant="outline"
-            onPress={() => submitCheckin('no_show')}
-            disabled={!noShowReady}
-            loading={checkinBusy}
-          />
-          {!noShowReady && (
-            <Text style={styles.skipText}>Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.</Text>
-          )}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -442,6 +425,11 @@ export default function Class() {
         <Text style={styles.roomWith} numberOfLines={1}>
           {otherName} · {formatLessonWhenForViewer(booking).timeRange}
         </Text>
+        {isStudent && (
+          <Pressable onPress={openReport} style={styles.reportBtn} accessibilityLabel="Bir sorun bildir">
+            <Ionicons name="flag-outline" size={15} color="#fff" />
+          </Pressable>
+        )}
         <Pressable onPress={handleLeave} style={styles.leave} accessibilityLabel="Dersten ayrıl">
           <Ionicons name="exit-outline" size={16} color="#fff" />
           <Text style={styles.leaveText}>Ayrıl</Text>
@@ -534,6 +522,42 @@ export default function Class() {
           />
         )}
       </View>
+
+      <Modal visible={reportOpen} transparent animationType="slide" onRequestClose={() => setReportOpen(false)}>
+        <Pressable style={styles.sheetShade} onPress={() => setReportOpen(false)} />
+        <View style={[styles.reportSheet, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
+          <View style={styles.sheetGrab} />
+          <Text style={styles.reportTitle}>Bir sorun bildir</Text>
+          {reportExisting ? (
+            <>
+              <Text style={styles.reportText}>Bu ders için zaten bir bildirim göndermiştin.</Text>
+              <View style={{ marginTop: 14 }}>
+                <Button label="Kapat" variant="outline" onPress={() => setReportOpen(false)} />
+              </View>
+            </>
+          ) : reportMessage ? (
+            <>
+              <Text style={styles.reportText}>{reportMessage}</Text>
+              <View style={{ marginTop: 14 }}>
+                <Button label="Kapat" variant="outline" onPress={() => setReportOpen(false)} />
+              </View>
+            </>
+          ) : (
+            profile && (
+              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <Text style={[styles.reportText, { marginBottom: 14 }]}>Öğretmenle ilgili ne bildirmek istiyorsun?</Text>
+                <AttendanceFlow
+                  booking={booking}
+                  studentId={profile.id}
+                  noShowReady={noShowReady()}
+                  onCancel={() => setReportOpen(false)}
+                  onFiled={(_report, message) => setReportMessage(message)}
+                />
+              </ScrollView>
+            )
+          )}
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -566,6 +590,28 @@ function Gate({
 }
 
 const styles = StyleSheet.create({
+  checkinContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 },
+  reportBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    marginRight: 8,
+  },
+  sheetShade: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  reportSheet: {
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    maxHeight: '86%',
+  },
+  sheetGrab: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 14 },
+  reportTitle: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, letterSpacing: -0.3, marginBottom: 6 },
+  reportText: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20, color: colors.muted },
   screen: {
     flex: 1,
     backgroundColor: colors.bg,

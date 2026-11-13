@@ -57,6 +57,7 @@ const ARMUS_I18N_EN = {
   "settings.saveFailed": "Couldn't save. Please try again.",
   "settings.uploadFailed": "The file couldn't be uploaded.",
   "settings.photoTooBig": "File is too big (max 5MB).",
+  "settings.photoLockedApproved": "Approved teachers can't change their profile photo here. Contact us to update your photo.",
   "settings.newPasswordLabel": "New password",
   "settings.confirmPasswordLabel": "Confirm new password",
   "settings.errPasswordShort": "Password must be at least 6 characters.",

@@ -16,7 +16,31 @@ export type Profile = {
   timezone?: string | null;
   // the invite code behind armus.com.tr/register?ref=... (Arkadaşını davet et)
   referral_code?: string | null;
+  // the 6-digit email code (send-verification-email / verify-email-code)
+  email_verified?: boolean | null;
+  created_at?: string | null;
+  // teachers: 'pending' | 'approved' | 'rejected'
+  status?: string | null;
+  // teachers: attendance-report hide / ban state (migration_41, 100, 104)
+  is_banned?: boolean | null;
+  hidden_from_new_students?: boolean | null;
+  hidden_until?: string | null;
+  hidden_reason?: string | null;
+  penalty_hide_reason?: string | null;
+  trial_hidden_tier?: number | null;
+  trial_noshow_count?: number | null;
+  trial_unhide_eligible_at?: string | null;
+  trial_unhide_requires_ack?: boolean | null;
 };
+
+// Same rule as the website (auth.js): accounts created from this date on
+// must confirm their email with the 6-digit code before using anything
+// else; older accounts are grandfathered in.
+const EMAIL_VERIFICATION_REQUIRED_FROM = new Date('2026-09-29T00:00:00Z');
+
+export function needsEmailVerification(profile: Profile | null | undefined): boolean {
+  return !!profile && !profile.email_verified && !!profile.created_at && new Date(profile.created_at) >= EMAIL_VERIFICATION_REQUIRED_FROM;
+}
 
 type AuthState = {
   session: Session | null;

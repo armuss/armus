@@ -18,11 +18,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import { useAuth } from '../../lib/auth';
+import { PHOTO_NEEDS_WHITE_BG, preparePhoto, STUDENT_PHOTO_MAX_BYTES } from '../../lib/photo';
 import { updateOwnProfile, uploadProfilePhoto } from '../../lib/profile';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 
 const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
+
+const NAME_PATTERN = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
 
 export default function EditProfile() {
   const { profile, refreshProfile } = useAuth();
@@ -35,6 +38,10 @@ export default function EditProfile() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [checkingPhoto, setCheckingPhoto] = useState(false);
+  // an approved teacher's photo is part of their checked application: the
+  // database refuses a direct change (application_locked), like the site
+  const [photoLocked, setPhotoLocked] = useState(false);
 
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -63,6 +70,7 @@ export default function EditProfile() {
         setName(data.name || '');
         setCity(data.city || '');
         setPhotoUrl(data.photo_url || null);
+        setPhotoLocked(data.role === 'teacher' && data.status === 'approved');
 
         const pending = data.pending_changes || null;
         setPendingChanges(pending);
@@ -74,7 +82,15 @@ export default function EditProfile() {
       });
   }, [profile]);
 
+  // the website's photo rules (lib/photo.ts): a teacher's photo needs a
+  // plain white background and is re-encoded like the site does; a
+  // student's may be at most 5MB
   async function pickPhoto() {
+    setStatus('');
+    if (photoLocked) {
+      setStatus('Onaylı öğretmenler profil fotoğrafını buradan değiştiremez. Fotoğrafını güncellemek için bize ulaş.');
+      return;
+    }
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setStatus('Fotoğraf seçmek için galeri izni gerekiyor.');
@@ -83,19 +99,49 @@ export default function EditProfile() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
+      // a teacher's photo keeps its own framing (the site doesn't crop it);
+      // a student's avatar is cropped square
+      allowsEditing: !isTeacher,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.9,
     });
     if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
 
-    setLocalPhotoUri(result.assets[0].uri);
+    if (!isTeacher) {
+      if (asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
+        setStatus('Dosya çok büyük (maks 5MB).');
+        return;
+      }
+      setLocalPhotoUri(asset.uri);
+      return;
+    }
+
+    setCheckingPhoto(true);
+    try {
+      const prepared = await preparePhoto(asset.uri, true);
+      if (!prepared.isWhiteBackground) {
+        setStatus(PHOTO_NEEDS_WHITE_BG);
+        return;
+      }
+      setLocalPhotoUri(prepared.uri);
+    } catch {
+      setStatus('Fotoğraf okunamadı.');
+    } finally {
+      setCheckingPhoto(false);
+    }
   }
 
   async function handleSave() {
     if (!profile || saving) return;
-    setSaving(true);
     setStatus('');
+    // the same rule as signup and the website's settings: a first and a
+    // last name, not a single word or a nickname
+    if (!NAME_PATTERN.test(name.trim())) {
+      setStatus('Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil).');
+      return;
+    }
+    setSaving(true);
 
     let nextPhotoUrl = photoUrl;
     if (localPhotoUri) {
@@ -174,7 +220,14 @@ export default function EditProfile() {
                 <Text style={styles.photoFallbackText}>{(name[0] || '?').toUpperCase()}</Text>
               </View>
             )}
-            <Text style={styles.photoEditText}>Fotoğrafı değiştir</Text>
+            <Text style={styles.photoEditText}>
+              {checkingPhoto
+                ? 'Fotoğraf kontrol ediliyor…'
+                : photoLocked
+                  ? 'Fotoğraf değişikliği için bize ulaş'
+                  : 'Fotoğrafı değiştir'}
+            </Text>
+            {isTeacher && !photoLocked && <Text style={styles.photoRule}>Arka plan düz beyaz olmalı</Text>}
           </Pressable>
 
           <View style={styles.field}>
@@ -316,6 +369,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     fontSize: 32,
     color: colors.red,
+  },
+  photoRule: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11.5,
+    color: 'rgba(250,245,226,0.8)',
+    marginTop: 2,
   },
   photoEditText: {
     fontFamily: fonts.bodyBold,

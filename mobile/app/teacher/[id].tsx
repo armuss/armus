@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ScrollBand } from '../../components/Band';
 import { TeacherPhoto } from '../../components/TeacherCard';
+import TeacherReportSheet from '../../components/TeacherReportSheet';
 import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
 import { DAY_NAMES, getTeacherBusyTimes, slotsForDate, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
@@ -38,6 +39,7 @@ export default function TeacherDetail() {
   // one trial per teacher (migration_110.sql) - after it, regular lessons
   const [trialTaken, setTrialTaken] = useState(false);
   const [tab, setTab] = useState<Tab>('about');
+  const [reportOpen, setReportOpen] = useState(false);
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>([]);
 
   useEffect(() => {
@@ -91,7 +93,11 @@ export default function TeacherDetail() {
   }
 
   async function handleMessage() {
-    if (!teacher || !profile || messaging) return;
+    if (!teacher || messaging) return;
+    if (!profile) {
+      router.push('/(auth)/login');
+      return;
+    }
     setMessaging(true);
     const conversation = await getOrCreateConversation(profile.id, profile.role, teacher.id);
     setMessaging(false);
@@ -140,7 +146,10 @@ export default function TeacherDetail() {
     { icon: 'chatbubble-outline', value: shortLanguages(teacher.languages), label: 'diller' },
     { icon: 'star-outline', value: teacher.levelRange.replace(/\s*[–-]\s*/, '–'), label: 'seviye' },
   ] as Fact[]).filter((f) => f.value && f.value !== '0');
-  const showMessage = !!teacher.isRegistered && !!profile;
+  // teacher.html: messaging and the complaint button are for students (a
+  // guest is sent to sign in first), never on a demo teacher
+  const showMessage = !!teacher.isRegistered && (!profile || profile.role === 'student');
+  const showReport = !!teacher.isRegistered && profile?.role === 'student';
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
@@ -290,7 +299,24 @@ export default function TeacherDetail() {
             <Text style={styles.lessonLinkText}>Deneme dersi yerine normal ders rezerve et →</Text>
           </Pressable>
         )}
+
+        {showReport && (
+          <Pressable onPress={() => setReportOpen(true)} hitSlop={8} style={styles.reportLink}>
+            <Ionicons name="flag-outline" size={13} color={colors.muted} />
+            <Text style={styles.reportLinkText}>Öğretmeni şikayet et</Text>
+          </Pressable>
+        )}
       </ScrollView>
+
+      {showReport && profile && (
+        <TeacherReportSheet
+          visible={reportOpen}
+          teacherId={teacher.id}
+          teacherName={shortDisplayName(teacher.name)}
+          reporterId={profile.id}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         {showMessage && (
@@ -413,6 +439,8 @@ const styles = StyleSheet.create({
   reviewStars: { fontSize: 12, color: colors.goldDot },
   reviewText: { fontFamily: fonts.body, fontSize: 14, color: '#444', lineHeight: 20 },
   lessonLink: { alignSelf: 'center', marginTop: 18 },
+  reportLink: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 22 },
+  reportLinkText: { fontFamily: fonts.bodySemibold, fontSize: 12.5, color: colors.muted, textDecorationLine: 'underline' },
   lessonLinkText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.muted, textDecorationLine: 'underline' },
   bar: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 10, backgroundColor: colors.bg },
   msgBtn: { width: 56, height: 56, borderRadius: 18, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
