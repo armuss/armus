@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Dimensions,
   Image,
@@ -65,7 +65,6 @@ function PhotoStack() {
 
 export default function Welcome() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
 
   function handleScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -87,7 +86,6 @@ export default function Welcome() {
       </View>
 
       <ScrollView
-        ref={scrollRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}

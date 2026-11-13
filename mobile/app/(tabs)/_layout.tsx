@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Redirect, Tabs } from 'expo-router';
-import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import { Redirect } from 'expo-router';
+import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,7 +23,7 @@ const ICONS: Record<string, IconName> = {
  * The floating red dock (design A, like the website panels): every tab
  * with its icon and name, the open one on a cream tile.
  */
-function Dock({ state, descriptors, navigation, home }: BottomTabBarProps & { home: IconName }) {
+function Dock({ state, descriptors, emitter, navigateToTab, home }: BottomTabBarProps & { home: IconName }) {
   const insets = useSafeAreaInsets();
   const visible = state.routes.filter(
     (r) => StyleSheet.flatten(descriptors[r.key].options.tabBarItemStyle)?.display !== 'none'
@@ -43,8 +43,8 @@ function Dock({ state, descriptors, navigation, home }: BottomTabBarProps & { ho
               accessibilityState={{ selected: focused }}
               accessibilityLabel={label}
               onPress={() => {
-                const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-                if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+                const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+                if (!focused && !event.defaultPrevented) navigateToTab(route.key);
               }}
               style={[styles.item, focused && styles.itemOn]}
             >
