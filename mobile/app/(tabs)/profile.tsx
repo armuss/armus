@@ -6,6 +6,7 @@ import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Switch, Text,
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
+import { SettingsGroup, SettingsRow as Row } from '../../components/SettingsRow';
 import { useAuth } from '../../lib/auth';
 import { getAvailableCredits } from '../../lib/credits';
 import { capitalizeName, capitalizeTurkish, shortDisplayName } from '../../lib/displayName';
@@ -24,9 +25,8 @@ type IconName = keyof typeof Ionicons.glyphMap;
  * same page with their own two shortcuts instead of the student tools.
  */
 export default function Profile() {
-  const { profile, signOut, deleteAccount } = useAuth();
+  const { profile, signOut } = useAuth();
   const isStudent = profile?.role !== 'teacher';
-  const [deleting, setDeleting] = useState(false);
   const [headBottom, setHeadBottom] = useState(230);
   const [vocab, setVocab] = useState<VocabEntry[] | null>(null);
   const [credits, setCredits] = useState<{ count: number; teachers: string[] } | null>(null);
@@ -63,46 +63,11 @@ export default function Profile() {
     }, [profile?.id, isStudent])
   );
 
-  function confirmDeleteAccount() {
-    Alert.alert(
-      'Hesabını silmek istediğine emin misin?',
-      'Bu işlem geri alınamaz. Profilin, rezervasyonların, mesajların ve tüm verilerin kalıcı olarak silinir.',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Hesabımı Sil',
-          style: 'destructive',
-          onPress: async () => {
-            setDeleting(true);
-            const result = await deleteAccount();
-            setDeleting(false);
-            if (!result.ok) {
-              Alert.alert('Bir şeyler ters gitti', result.error);
-              return;
-            }
-            router.replace('/welcome');
-          },
-        },
-      ]
-    );
-  }
-
   function confirmSignOut() {
     Alert.alert('Çıkış yapmak istiyor musun?', undefined, [
       { text: 'Vazgeç', style: 'cancel' },
       { text: 'Çıkış Yap', style: 'destructive', onPress: () => signOut() },
     ]);
-  }
-
-  function explainEmailLock() {
-    Alert.alert(
-      'E-posta adresi değiştirilemez',
-      'E-posta adresin hesabına bağlıdır. Yanlış bir adresle kaydolduysan ya da bu adrese artık erişemiyorsan bize ulaş.',
-      [
-        { text: 'Tamam', style: 'cancel' },
-        { text: 'Bize ulaş', onPress: () => open('/iletisim') },
-      ]
-    );
   }
 
   async function togglePush(next: boolean) {
@@ -258,16 +223,14 @@ export default function Profile() {
           </>
         )}
 
-        <Text style={styles.groupLabel}>HESAP</Text>
-        <View style={styles.group}>
+        <SettingsGroup label="HESAP">
           <Row icon="person-outline" label="Profili düzenle" onPress={() => router.push('/profile/edit')} />
-          {/* shown only: the sign-in email can't be changed (migration_117.sql) */}
-          <Row icon="mail-outline" label="E-posta" value={profile?.email} locked onPress={explainEmailLock} />
-          <Row icon="lock-closed-outline" label="Şifre değiştir" onPress={() => router.push('/settings/password')} last />
-        </View>
+          {/* the sensitive settings (email, password, deleting the account)
+              sit one step further in, so nothing there is a single stray tap away */}
+          <Row icon="shield-checkmark-outline" label="Hesap ve güvenlik" value="Şifre, hesabı sil" onPress={() => router.push('/settings/account')} last />
+        </SettingsGroup>
 
-        <Text style={styles.groupLabel}>BİLDİRİMLER</Text>
-        <View style={styles.group}>
+        <SettingsGroup label="BİLDİRİMLER">
           <Row
             icon="notifications-outline"
             label="Ders ve mesaj bildirimleri"
@@ -282,30 +245,21 @@ export default function Profile() {
               />
             }
           />
-        </View>
+        </SettingsGroup>
 
-        <Text style={styles.groupLabel}>DESTEK</Text>
-        <View style={styles.group}>
+        <SettingsGroup label="DESTEK">
           <Row icon="help-circle-outline" label="Sık sorulan sorular" onPress={() => open('/sss')} />
           <Row icon="chatbubble-ellipses-outline" label="Bize ulaş" onPress={() => open('/iletisim')} last />
-        </View>
+        </SettingsGroup>
 
-        <Text style={styles.groupLabel}>YASAL</Text>
-        <View style={styles.group}>
+        <SettingsGroup label="YASAL">
           <Row icon="shield-outline" label="Gizlilik Politikası" onPress={() => open('/gizlilik-politikasi')} />
           <Row icon="document-text-outline" label="Kullanım Şartları" onPress={() => open('/kullanim-sartlari')} last />
-        </View>
+        </SettingsGroup>
 
-        <View style={[styles.group, { marginTop: 16 }]}>
-          <Row icon="log-out-outline" label="Çıkış yap" onPress={confirmSignOut} />
-          <Row
-            icon="trash-outline"
-            label={deleting ? 'Siliniyor…' : 'Hesabımı sil'}
-            danger
-            last
-            onPress={deleting ? undefined : confirmDeleteAccount}
-          />
-        </View>
+        <SettingsGroup style={{ marginTop: 16 }}>
+          <Row icon="log-out-outline" label="Çıkış yap" onPress={confirmSignOut} last />
+        </SettingsGroup>
 
         <Text style={styles.version}>ARMUS {Constants.expoConfig?.version ?? ''}</Text>
       </ScrollView>
@@ -340,58 +294,6 @@ function Tile({
       <Text style={styles.tileSub} numberOfLines={2}>
         {sub}
       </Text>
-    </Pressable>
-  );
-}
-
-function Row({
-  icon,
-  label,
-  value,
-  onPress,
-  right,
-  danger,
-  locked,
-  last,
-}: {
-  icon: IconName;
-  label: string;
-  value?: string | null;
-  onPress?: () => void;
-  right?: React.ReactNode;
-  danger?: boolean;
-  /** a value that can't be changed: a small lock instead of the arrow */
-  locked?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      style={({ pressed }) => [styles.row, !last && styles.rowLine, pressed && onPress && { opacity: 0.7 }]}
-      accessibilityRole={onPress ? 'button' : undefined}
-    >
-      <View style={[styles.rowIcon, danger && styles.rowIconDanger]}>
-        <Ionicons name={icon} size={16} color={danger ? colors.error : colors.red} />
-      </View>
-      <Text style={[styles.rowLabel, danger && { color: colors.error }]}>{label}</Text>
-      {right ?? (
-        <>
-          {!!value && (
-            <Text style={styles.rowValue} numberOfLines={1}>
-              {value}
-            </Text>
-          )}
-          {!danger && (
-            <Ionicons
-              name={locked ? 'lock-closed' : 'chevron-forward'}
-              size={locked ? 13 : 16}
-              color={colors.faint}
-              style={{ marginLeft: value ? 6 : 'auto' }}
-            />
-          )}
-        </>
-      )}
     </Pressable>
   );
 }
@@ -485,13 +387,5 @@ const styles = StyleSheet.create({
   tileTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink, marginTop: 'auto', paddingTop: 12, lineHeight: 18 },
   tileSub: { fontFamily: fonts.body, fontSize: 11.5, lineHeight: 15, color: colors.muted, marginTop: 2 },
 
-  groupLabel: { fontFamily: fonts.bodyExtraBold, fontSize: 11, letterSpacing: 1, color: colors.muted, marginTop: 22, marginBottom: 8, marginLeft: 6 },
-  group: { backgroundColor: colors.panel, borderRadius: 18, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  rowLine: { borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  rowIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.redSoft },
-  rowIconDanger: { backgroundColor: '#fbeceb' },
-  rowLabel: { fontFamily: fonts.bodySemibold, fontSize: 14.5, color: colors.ink, flexShrink: 1 },
-  rowValue: { marginLeft: 'auto', flexShrink: 1, fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.muted, maxWidth: '50%' },
   version: { textAlign: 'center', fontFamily: fonts.body, fontSize: 11.5, color: colors.faint, marginTop: 16 },
 });
