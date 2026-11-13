@@ -407,6 +407,29 @@ export async function getPendingRescheduleRequests(bookingIds: string[]): Promis
   );
 }
 
+// migration_112.sql's limits, the website's constants (bookings.js): a
+// student can move one lesson at most 2 times, a teacher can propose a new
+// time at most 2 times per lesson.
+export const MAX_STUDENT_MOVES = 2;
+export const MAX_TEACHER_PROPOSALS = 2;
+
+// { [bookingId]: { studentMoves, teacherProposals } } - armusGetRescheduleCounts
+export async function getRescheduleCounts(
+  bookingIds: string[]
+): Promise<Record<string, { studentMoves: number; teacherProposals: number }>> {
+  const ids = bookingIds.filter(Boolean);
+  if (!ids.length) return {};
+  const { data, error } = await supabase.from('reschedule_requests').select('booking_id, requested_by, status').in('booking_id', ids);
+  if (error || !data) return {};
+  const counts: Record<string, { studentMoves: number; teacherProposals: number }> = {};
+  data.forEach((r: any) => {
+    const c = (counts[r.booking_id] = counts[r.booking_id] || { studentMoves: 0, teacherProposals: 0 });
+    if (r.requested_by === 'student' && r.status === 'accepted') c.studentMoves++;
+    if (r.requested_by === 'teacher') c.teacherProposals++;
+  });
+  return counts;
+}
+
 async function invokeReschedule(body: Record<string, unknown>, fallback: string) {
   const result = await invokeEdge('reschedule-booking', body);
   if (!result.ok) return { ok: false as const, error: result.error || fallback };

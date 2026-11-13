@@ -13,6 +13,8 @@ import {
   formatRescheduleSlot,
   getBookingsForTeacher,
   getPendingRescheduleRequests,
+  getRescheduleCounts,
+  MAX_TEACHER_PROPOSALS,
   isBookingPast,
   lessonTypeLabel,
   lessonWindow,
@@ -47,6 +49,8 @@ export default function TeacherHome() {
   const timeZone = profile?.timezone || 'Europe/Istanbul';
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [pending, setPending] = useState<Record<string, RescheduleRequest>>({});
+  // a teacher proposes a new time at most 2 times per lesson (migration_112.sql)
+  const [proposalCounts, setProposalCounts] = useState<Record<string, { studentMoves: number; teacherProposals: number }>>({});
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -61,7 +65,10 @@ export default function TeacherHome() {
       getTeacherCredits(profile.id),
       getWithdrawalRequests(profile.id),
     ]);
-    setPending(await getPendingRescheduleRequests(data.filter(bookingCancellable).map((b) => b.id)));
+    const openIds = data.filter(bookingCancellable).map((b) => b.id);
+    const [pendingData, countsData] = await Promise.all([getPendingRescheduleRequests(openIds), getRescheduleCounts(openIds)]);
+    setPending(pendingData);
+    setProposalCounts(countsData);
     setBookings(data);
     setEarnings(summarizeEarnings(data, credits, withdrawals, timeZone));
     setLoading(false);
@@ -191,7 +198,7 @@ export default function TeacherHome() {
 
         {cancellable && (
           <View style={[styles.actionRow, { marginTop: 12 }]}>
-            {!request && (
+            {!request && MAX_TEACHER_PROPOSALS - (proposalCounts[b.id]?.teacherProposals || 0) > 0 && (
               <Pressable disabled={busy} onPress={() => setProposing(b)} style={styles.smallBtn}>
                 <Text style={styles.smallBtnText}>Saat Öner</Text>
               </Pressable>
@@ -294,7 +301,7 @@ export default function TeacherHome() {
           busyTimes={active.map((b) => ({ date: b.date, time: b.time }))}
           current={{ date: proposing.date, time: proposing.time }}
           title="Öğrencine yeni bir saat öner"
-          note="Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez."
+          note={`Öğrencin onaylarsa ders yeni saate taşınır. Ders başlayana kadar onaylamazsa ders eski saatinde kalır. Saat önermek iptal hakkından düşmez. Bir ders için en fazla 2 kez saat önerebilirsin (kalan: ${MAX_TEACHER_PROPOSALS - (proposalCounts[proposing.id]?.teacherProposals || 0)}).`}
           confirmLabel="Bu Saati Öner"
           submitting={submittingMove}
           onClose={() => setProposing(null)}

@@ -170,8 +170,9 @@ export function subscribeToMessages(conversationId: string, onInsert: (message: 
     .subscribe();
 }
 
-// Whether the current user already has a booking with otherId - once they
-// do, the contact-sharing restriction lifts (matches migration_16.sql).
+// Whether the current user already has a confirmed (non-cancelled) booking
+// with otherId - once they do, the contact-sharing restriction lifts
+// (migration_16.sql / migration_36.sql, armusHasBookingWithOtherParty).
 export async function hasBookingWithOtherParty(
   myId: string,
   myRole: 'student' | 'teacher',
@@ -185,28 +186,30 @@ export async function hasBookingWithOtherParty(
     .select('id')
     .eq('student_id', studentId)
     .eq('teacher_id', teacherId)
+    // only a confirmed (not cancelled) booking lifts it, like the site
+    .eq('status', 'confirmed')
     .limit(1);
 
   if (error) return false;
   return Boolean(data && data.length);
 }
 
-// Same heuristic the messages_block_contact_sharing DB trigger enforces -
-// checked client-side too so a blocked message shows a clear inline
-// reason instead of a generic send failure. The trigger is the real
-// enforcement; this is just a friendlier first line.
+// Same heuristic the messages_block_contact_sharing DB trigger enforces
+// (enforce_no_contact_sharing) - checked client-side too so a blocked
+// message shows a clear inline reason instead of a generic send failure.
+// Word for word the website's armusMessageViolatesContactPolicy
+// (messages.js), which matches the trigger's own regex: "insta" and "imo"
+// only as whole words (so "instant", "limousine" pass), and the
+// "numaray"/"numaras" stems (so "numarayla" is caught too).
 export function messageViolatesContactPolicy(text: string): boolean {
   if (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) return true;
 
   // a run of 8+ digits, allowing up to 2 non-digit separators between
-  // consecutive digits - catches phone numbers written as "0532 111 22 33" etc.
+  // consecutive digits - catches phone numbers written as "0532 111 22 33",
+  // "+90-532-111-22-33", etc. without flagging unrelated short numbers.
   if (/(\d[\s\-.()]{0,2}){7,}\d/.test(text)) return true;
 
-  const keywords = [
-    'whatsapp', 'telegram', 'instagram', 'insta', 'snapchat', 'imo', 'viber', 'signal',
-    'numaram', 'numarayı', 'numarası', 'telefonum', 'e-posta', 'eposta',
-    'gmail', 'hotmail', 'outlook',
-  ];
-  const lower = text.toLowerCase();
-  return keywords.some((kw) => lower.includes(kw));
+  if (/whatsapp|telegram|instagram|\binsta\b|snapchat|\bimo\b|viber|signal|numaram|numaray|numaras|telefonum|e-?posta|eposta|gmail|hotmail|outlook/i.test(text)) return true;
+
+  return false;
 }

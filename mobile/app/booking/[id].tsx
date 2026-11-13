@@ -15,7 +15,9 @@ import WebView from 'react-native-webview';
 
 import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
+import PayerConsent from '../../components/PayerConsent';
 import WithdrawalConsent from '../../components/WithdrawalConsent';
+import { isValidTurkishIdentityNumber, normalizeTurkishPhone } from '../../lib/payer';
 import { useAuth } from '../../lib/auth';
 import {
   DAY_NAMES,
@@ -84,6 +86,7 @@ export default function Booking() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [identityNumber, setIdentityNumber] = useState('');
+  const [payerConsent, setPayerConsent] = useState(false);
   const [withdrawalConsent, setWithdrawalConsent] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -235,12 +238,17 @@ export default function Booking() {
     }
 
     if (needsCard) {
-      if (phone.replace(/\D/g, '').length < 10) {
-        setError('Lütfen geçerli bir telefon numarası gir.');
+      // the website checkout's own checks (lib/payer.ts)
+      if (!normalizeTurkishPhone(phone)) {
+        setError('Lütfen geçerli bir cep telefonu numarası gir.');
         return;
       }
-      if (!/^[1-9][0-9]{10}$/.test(identityNumber)) {
+      if (!isValidTurkishIdentityNumber(identityNumber)) {
         setError('Lütfen geçerli bir T.C. kimlik numarası gir (11 haneli).');
+        return;
+      }
+      if (!payerConsent) {
+        setError('Devam etmek için kimlik ve ödeme bilgilerinin işlenmesini kabul etmelisin.');
         return;
       }
       if (!withdrawalConsent) {
@@ -258,8 +266,8 @@ export default function Booking() {
       date: selectedDate,
       time: selectedTime,
       price: teacher.price,
-      phone,
-      identityNumber,
+      phone: normalizeTurkishPhone(phone) || phone,
+      identityNumber: identityNumber.replace(/\D/g, ''),
       withdrawalConsent: needsCard && withdrawalConsent,
     });
     setSubmitting(false);
@@ -582,6 +590,7 @@ export default function Booking() {
                     style={styles.input}
                   />
                 </View>
+                <PayerConsent checked={payerConsent} onChange={setPayerConsent} />
                 <WithdrawalConsent checked={withdrawalConsent} onChange={setWithdrawalConsent} />
               </>
             )}

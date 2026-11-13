@@ -19,6 +19,8 @@ import {
   formatTimeUntil,
   getBookingsForStudent,
   getPendingRescheduleRequests,
+  getRescheduleCounts,
+  MAX_STUDENT_MOVES,
   getTeacherBusyTimes,
   hoursUntilLesson,
   isBookingPast,
@@ -167,6 +169,8 @@ export default function Lessons() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [pending, setPending] = useState<Record<string, RescheduleRequest>>({});
+  // how many times each lesson has been moved (a lesson moves at most 2 times)
+  const [moveCounts, setMoveCounts] = useState<Record<string, { studentMoves: number; teacherProposals: number }>>({});
   const [credits, setCredits] = useState<LessonCredit[]>([]);
   const [stranded, setStranded] = useState<StrandedPackage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,12 +192,14 @@ export default function Lessons() {
       getAvailableCredits(profile.id),
       getStrandedPackages(),
     ]);
-    const pendingData = await getPendingRescheduleRequests(bookingsData.filter(bookingCancellable).map((b) => b.id));
+    const openIds = bookingsData.filter(bookingCancellable).map((b) => b.id);
+    const [pendingData, countsData] = await Promise.all([getPendingRescheduleRequests(openIds), getRescheduleCounts(openIds)]);
     setBookings(bookingsData);
     setDisputes(disputesData);
     setCredits(creditData || []);
     setStranded(strandedData);
     setPending(pendingData);
+    setMoveCounts(countsData);
     setLoading(false);
     // photos for the next-lesson banner (one lookup per teacher)
     Array.from(new Set(bookingsData.map((b) => b.teacherId))).forEach((tid) => {
@@ -459,6 +465,8 @@ export default function Lessons() {
   const sheetBooking = sheet ? bookings.find((b) => b.id === sheet.id) ?? sheet : null;
   const sheetRequest = sheetBooking ? pending[sheetBooking.id] : undefined;
   const sheetLate = sheetBooking ? hoursUntilLesson(sheetBooking) < FREE_CANCEL_HOURS : false;
+  // migration_112.sql: a lesson can be moved at most 2 times (like my-lessons)
+  const sheetMoveLimit = sheetBooking ? (moveCounts[sheetBooking.id]?.studentMoves || 0) >= MAX_STUDENT_MOVES : false;
 
   return (
     // the title row is fixed on plain red; the band under it scrolls with
@@ -613,7 +621,7 @@ export default function Lessons() {
 
             {bookingCancellable(sheetBooking) && (
               <>
-                {!(sheetRequest && sheetRequest.requestedBy === 'teacher') && (
+                {!(sheetRequest && sheetRequest.requestedBy === 'teacher') && !sheetMoveLimit && (
                   <Pressable
                     onPress={() => {
                       const b = sheetBooking;
@@ -637,6 +645,7 @@ export default function Lessons() {
                   <Ionicons name="close-circle-outline" size={20} color={colors.error} />
                   <Text style={[styles.sheetRowText, { color: colors.error }]}>Dersi iptal et</Text>
                 </Pressable>
+                {sheetMoveLimit && <Text style={styles.sheetHint}>Bu ders 2 kez taşındı - bir ders en fazla 2 kez taşınabilir.</Text>}
                 <Text style={styles.sheetHint}>
                   {!sheetLate
                     ? 'Derse 12 saatten fazla var: iptal edersen ders bakiyene geri eklenir. Saati değiştirirsen ders hemen yeni saate taşınır.'
