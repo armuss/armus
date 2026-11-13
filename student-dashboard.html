@@ -384,606 +384,755 @@
       object-fit: cover;
     }
 
-    /* hero band: full-bleed theme-colour gradient wrapping the greeting + stat
-       strip, breaking out of .container's max-width the same way
-       index.html's own .hero-band does, so the dashboard opens with the
-       same warm, designed moment the rest of the site has instead of
-       starting flat and white. */
-    .dashboard-hero {
-      position: relative;
-      width: 100vw;
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
-      padding: 44px calc(50vw - 50% + 20px) 54px;
-      background: linear-gradient(160deg, var(--armus-gold-2) 0%, var(--armus-gold-1) 55%, var(--armus-gold-2) 100%);
-      border-radius: 0 0 36px 36px;
-      overflow: hidden;
-      margin-bottom: 28px;
+    /* ---- the panel (design A, the teacher panel's twin) ----
+       logged in, the page opens on a red band (the header, the greeting,
+       the stats and the week) that fades into the champagne like the
+       teacher panel does; the cards sit on the champagne below it and a
+       red dock at the bottom is the menu. Logged out (the gate) keeps the
+       plain page. --band is set from JS to just under the week strip. */
+
+    body.is-panel {
+      --band: 330px;
+      background:
+        linear-gradient(180deg, var(--armus-gold-3) 0, var(--armus-gold-2) 200px, var(--armus-gold-1) calc(var(--band) - 40px), #d9b0b2 calc(var(--band) + 50px), var(--armus-champagne-wash) calc(var(--band) + 150px)) no-repeat,
+        var(--armus-champagne-wash);
     }
 
-    /* two soft radial highlights, purely decorative - echoes the little
-       dot accents used throughout index.html's own gold sections without
-       needing an actual image asset. */
-    .dashboard-hero::before,
-    .dashboard-hero::after {
-      content: "";
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, .14), transparent 70%);
-      pointer-events: none;
+    body.is-panel nav {
+      border-bottom: 0;
     }
 
-    .dashboard-hero::before {
-      width: 380px;
-      height: 380px;
-      top: -180px;
-      right: -80px;
+    body.is-panel .nav-inner,
+    body.is-panel main.container {
+      width: min(1248px, calc(100% - 72px));
     }
 
-    .dashboard-hero::after {
-      width: 260px;
-      height: 260px;
-      bottom: -160px;
-      left: 8%;
-      opacity: .6;
+    body.is-panel .nav-find-tutor {
+      color: rgba(250, 245, 226, .85);
     }
 
-    .dashboard-hero-inner {
-      position: relative;
-      width: min(940px, 100%);
-      margin: 0 auto;
+    body.is-panel .nav-find-tutor:hover {
+      color: var(--armus-cream);
+      border-bottom-color: var(--armus-cream);
     }
 
-    /* header greeting */
-
-    .greet-head {
+    body.is-panel .lang-toggle,
+    body.is-panel .icon-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
       display: flex;
       align-items: center;
-      gap: 18px;
-      margin-bottom: 30px;
+      justify-content: center;
+      border-radius: 12px;
+      border-color: transparent;
+      background: #fff;
+      color: var(--armus-ink);
     }
 
-    .greet-head .avatar {
-      width: 64px;
-      height: 64px;
-      font-size: 20px;
-      border-radius: 50%;
-      border: 3px solid rgba(255, 255, 255, .6);
-      box-shadow: 0 8px 20px rgba(10, 10, 10, .12);
+    body.is-panel .lang-toggle:hover,
+    body.is-panel .icon-btn:hover {
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
     }
 
-    .greet-name {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: clamp(30px, 4vw, 42px);
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      line-height: 1.08;
-      color: var(--armus-on-gold);
-    }
-
-    .greet-sub {
-      color: rgba(250, 245, 226, .9);
-      font-size: 14px;
-      margin-top: 6px;
-    }
-
-    h2 {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      color: var(--armus-muted);
-      margin: 34px 0 14px;
-    }
-
-    h2:first-of-type {
-      margin-top: 0;
-    }
-
-    .section-link {
-      float: right;
-      font-size: 12.5px;
-      color: var(--armus-gold-text);
-      font-weight: 700;
-      text-transform: none;
-      letter-spacing: 0;
-    }
-
-    /* hero: next lesson / onboarding - sits right under .dashboard-hero
-       and overlaps its bottom edge slightly, like a card set down on the
-       gold band, instead of starting flush at the top of the plain page
-       the way every other box here used to. */
-
-    .hero-lesson {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      background: var(--armus-panel-2);
-      border-radius: 22px;
-      padding: 26px 28px;
-      margin: -34px 0 26px;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04), 0 18px 40px rgba(10, 10, 10, .09);
-      position: relative;
-    }
-
-    .hero-lesson .avatar {
-      width: 62px;
-      height: 82px;
-      font-size: 19px;
-    }
-
-    .hero-eyebrow {
-      color: var(--armus-gold-text);
-      font-size: 11.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      margin-bottom: 6px;
-    }
-
-    .hero-lesson-name {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: 21px;
-      font-weight: 800;
-    }
-
-    .hero-lesson-meta {
-      color: var(--armus-muted);
-      font-size: 13px;
-      margin-top: 4px;
-    }
-
-    .hero-lesson-right {
-      margin-left: auto;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .join-btn {
+    body.is-panel .nav-refer-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      border: 1px solid #303030;
-      border-radius: 11px;
-      padding: 13px 24px;
-      background: #0a0a0a;
-      color: #eee;
-      font-family: inherit;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      background: rgba(250, 245, 226, .14);
+      border: 1px solid rgba(250, 245, 226, .3);
+      color: var(--armus-cream);
       font-weight: 700;
-      font-size: 13.5px;
-      text-decoration: none;
+    }
+
+    body.is-panel .nav-avatar-btn {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(250, 245, 226, .7);
+    }
+
+    body.is-panel .nav-badge {
+      box-shadow: 0 0 0 2px var(--armus-gold-2);
+    }
+
+    body.is-panel main.container {
+      padding: 6px 0 140px;
+    }
+
+    /* greeting, stats and the week on the band */
+
+    .sd-hi {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin: 20px 0 4px;
+    }
+
+    .sd-title {
+      font: 800 36px/1.15 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.2px;
+      color: var(--armus-cream);
+      text-wrap: balance;
+    }
+
+    .sd-date {
+      color: rgba(250, 245, 226, .85);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .sd-sub {
+      color: rgba(250, 245, 226, .9);
+      font-size: 14px;
+      margin: 2px 0 16px;
+    }
+
+    .sd-sub b {
+      color: var(--armus-cream);
+    }
+
+    .sd-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sd-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 14px;
+      background: rgba(250, 245, 226, .14);
+      border: 1px solid rgba(250, 245, 226, .22);
+      color: rgba(250, 245, 226, .88);
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+
+    .sd-stat b {
+      font: 800 18px/1.2 "Unbounded", "Inter", sans-serif;
+      color: var(--armus-cream);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sd-days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .sd-day {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .sd-day small {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #8a8a8a;
+    }
+
+    .sd-day b {
+      font: 800 22px/1.1 "Unbounded", "Inter", sans-serif;
+    }
+
+    .sd-day.past b {
+      color: #9a9a9a;
+    }
+
+    .sd-day.today {
+      background: var(--armus-cream);
+    }
+
+    .sd-day.today small,
+    .sd-day.today b {
+      color: var(--armus-gold-2);
+    }
+
+    .sd-dots {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 3px;
+      max-width: 31px;
+    }
+
+    .sd-dots i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #b08d57;
+    }
+
+    .sd-dots i.n {
+      background: var(--armus-petrol);
+    }
+
+    /* cards */
+
+    .sd-card {
+      min-width: 0;
+      padding: 22px;
+      border-radius: 24px;
+      background: #fff;
+      border: 1px solid #ece4d6;
+    }
+
+    .sd-ct {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 16px;
+      font: 800 15px/1.3 "Unbounded", "Inter", sans-serif;
+      color: var(--armus-ink);
+    }
+
+    .sd-ct > svg {
+      box-sizing: content-box;
+      flex-shrink: 0;
+      width: 17px;
+      height: 17px;
+      padding: 7px;
+      border-radius: 10px;
+      background: var(--armus-red-tint);
+      color: var(--armus-gold-2);
+    }
+
+    .sd-ct-link {
+      margin-left: auto;
+      padding: 4px 0;
+      border: 0;
+      background: none;
+      font: 700 12.5px Inter, sans-serif;
+      color: var(--armus-gold-2);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .sd-ct-link:hover {
+      text-decoration: underline;
+    }
+
+    .sd-btn-r,
+    .sd-btn-l {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border-radius: 13px;
+      font: 700 13.5px/1.2 Inter, sans-serif;
+      white-space: nowrap;
+      cursor: pointer;
       transition: transform .15s ease;
     }
 
-    .join-btn:hover {
+    .sd-btn-r {
+      border: 0;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .sd-btn-l {
+      border: 1px solid #e2d6c3;
+      background: #fff;
+      color: var(--armus-ink);
+    }
+
+    .sd-btn-r:hover,
+    .sd-btn-l:hover {
       transform: translateY(-1px);
     }
 
-    .join-hint {
-      color: var(--armus-muted);
+    .sd-btn-r svg,
+    .sd-btn-l svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .sd-tch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .sd-tch .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      font-size: 15px;
+    }
+
+    .sd-tch b {
+      display: block;
+      font-size: 14.5px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .sd-tch small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #7a6d58;
+    }
+
+    .sd-tch small .sd-tag {
+      margin-left: 2px;
+    }
+
+    .sd-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 99px;
       font-size: 11.5px;
-      max-width: 150px;
+      font-weight: 700;
+      line-height: 1.4;
+      white-space: nowrap;
     }
 
-    .onboarding-hero {
-      background: var(--armus-panel-2);
-      border-radius: 22px;
-      padding: 44px 32px;
+    .sd-tag::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .sd-tag.new {
+      color: var(--armus-petrol);
+      border: 1px solid var(--armus-petrol);
+    }
+
+    .sd-tag.les {
+      color: #6b5330;
+      background: var(--armus-champagne);
+      border: 1px solid var(--armus-champagne-deep);
+    }
+
+    .sd-empty {
+      padding: 2px 0 4px;
+      font-size: 12.5px;
+      color: #7a6d58;
+    }
+
+    /* the next lesson */
+
+    .sd-next {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 22px;
+      margin-top: 16px;
+      box-shadow: 0 18px 40px rgba(109, 22, 28, .1);
+    }
+
+    .sd-next-when {
+      padding-right: 22px;
+      border-right: 1px solid #f0ebe2;
+    }
+
+    .sd-next-when small {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--armus-gold-2);
+    }
+
+    .sd-next-when b {
+      display: block;
+      margin-top: 6px;
+      font: 800 40px/1.1 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sd-next-when span {
+      font-size: 12.5px;
+      color: #7a6d58;
+    }
+
+    .sd-next-act {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .sd-join-hint {
+      max-width: 200px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #7a6d58;
+      text-align: right;
+    }
+
+    .sd-onboard {
+      margin-top: 16px;
+      padding: 40px 28px;
       text-align: center;
-      margin: -34px 0 26px;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04), 0 18px 40px rgba(10, 10, 10, .09);
-      position: relative;
+      box-shadow: 0 18px 40px rgba(109, 22, 28, .1);
     }
 
-    .onboarding-hero h1 {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: 28px;
-      letter-spacing: -0.5px;
+    .sd-onboard h1 {
       margin-bottom: 10px;
+      font: 800 26px/1.25 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -.5px;
+      text-wrap: balance;
     }
 
-    .onboarding-hero p {
-      color: var(--armus-muted);
-      font-size: 13.5px;
+    .sd-onboard p {
       max-width: 440px;
       margin: 0 auto 22px;
+      font-size: 13.5px;
+      color: #7a6d58;
     }
 
     .onboarding-steps {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 22px;
       margin-bottom: 26px;
-      flex-wrap: wrap;
     }
 
     .onboarding-step {
-      max-width: 150px;
-      font-size: 12px;
-      color: var(--armus-muted);
+      max-width: 160px;
+      font-size: 12.5px;
+      color: #6b5330;
     }
 
     .onboarding-step .step-num {
-      width: 26px;
-      height: 26px;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 8px;
       border-radius: 50%;
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 12.5px;
-      margin: 0 auto 8px;
+      font: 800 12.5px "Unbounded", "Inter", sans-serif;
     }
 
-    /* stats - one unified strip inside .dashboard-hero instead of 4
-       separate bordered boxes, so it reads as a single designed piece
-       (like the stat row against the gold in index.html's own hero)
-       rather than 4 generic dashboard widgets. */
+    /* goal / confidence / words */
 
-    .stats {
+    .sd-cols {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: rgba(255, 255, 255, .78);
-      backdrop-filter: blur(6px);
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(10, 10, 10, .08);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
     }
 
-    .stat {
-      padding: 18px 16px;
-      text-align: center;
-      border-right: 1px solid rgba(10, 10, 10, .08);
+    .sd-goal-big,
+    .sd-words-big {
+      font: 800 34px/1.1 "Unbounded", "Inter", sans-serif;
+      font-variant-numeric: tabular-nums;
     }
 
-    .stat:last-child {
-      border-right: none;
+    .sd-goal-big small {
+      margin-left: 4px;
+      font: 600 14px Inter, sans-serif;
+      color: #7a6d58;
     }
 
-    .stat strong {
+    .sd-bar {
+      height: 10px;
+      margin: 14px 0 8px;
+      border-radius: 99px;
+      background: #efe9df;
+      overflow: hidden;
+    }
+
+    .sd-bar i {
       display: block;
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: 27px;
-      font-weight: 800;
-      color: var(--armus-ink);
+      width: 0;
+      height: 100%;
+      border-radius: 99px;
+      background: var(--armus-gold-gradient);
+      transition: width .4s ease;
     }
 
-    .stat span {
-      color: var(--armus-muted);
-      font-size: 11px;
-    }
-
-    @media (max-width: 700px) {
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .stat { border-right: none; border-bottom: 1px solid rgba(10, 10, 10, .08); }
-      .stat:nth-child(odd) { border-right: 1px solid rgba(10, 10, 10, .08); }
-      .stat:nth-last-child(-n+2) { border-bottom: none; }
-    }
-
-    /* goal box */
-
-    .goal-box {
-      border-radius: 20px;
-      padding: 22px 26px;
-      background: var(--armus-panel-2);
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .03), 0 10px 26px rgba(10, 10, 10, .05);
-    }
-
-    .goal-box-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .goal-box-top span {
-      color: var(--armus-muted);
+    .sd-note {
       font-size: 12px;
+      color: #7a6d58;
+    }
+
+    .sd-goal-weeks {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .sd-goal-weeks span {
+      flex: 1;
+      min-width: 0;
+      font-size: 11px;
+      color: #8a8a8a;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sd-goal-weeks i {
+      display: block;
+      height: 34px;
+      margin-bottom: 5px;
+      border-radius: 9px;
+      background: linear-gradient(0deg, var(--armus-gold-1) 0 var(--f, 0%), #efe9df var(--f, 0%) 100%);
+    }
+
+    .sd-goal-weeks i.full {
+      background: var(--armus-gold-gradient);
     }
 
     .goal-inputs {
       display: flex;
-      gap: 8px;
+      flex-wrap: wrap;
       align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #f0ebe2;
+      font-size: 12.5px;
+      color: #7a6d58;
+    }
+
+    .goal-inputs[hidden] {
+      display: none;
     }
 
     .goal-inputs input {
-      width: 70px;
-      background: var(--armus-bg);
-      border: 1px solid var(--armus-border);
-      border-radius: 10px;
+      width: 64px;
       padding: 8px 10px;
+      border: 1px solid #e2d6c3;
+      border-radius: 10px;
+      background: var(--armus-champagne-wash);
       color: var(--armus-ink);
-      font-family: inherit;
-      font-size: 13px;
+      font: inherit;
     }
 
     .goal-inputs button {
-      border: 1px solid var(--armus-border);
-      background: transparent;
-      color: var(--armus-ink);
-      border-radius: 10px;
       padding: 8px 14px;
-      font-family: inherit;
-      font-size: 12.5px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font: 700 12.5px Inter, sans-serif;
       cursor: pointer;
     }
 
     .goal-inputs button:disabled {
-      opacity: 0.5;
+      opacity: .5;
       cursor: default;
     }
 
-    .goal-track {
-      background: var(--armus-bg);
-      border-radius: 999px;
-      height: 12px;
-      overflow: hidden;
-    }
-
-    .goal-fill {
-      height: 100%;
-      background: var(--armus-gold-gradient);
-      border-radius: 999px;
-      transition: width .4s ease;
-    }
-
-    .goal-caption {
-      margin-top: 8px;
+    .save-status {
       font-size: 12px;
-      color: var(--armus-muted);
+      font-weight: 700;
+      color: var(--armus-petrol);
     }
 
-    /* badges */
-
-    .badge-row {
+    .sd-faces {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 24px;
+      justify-content: space-between;
+      gap: 6px;
+      margin: 4px 0 12px;
     }
 
-    .badge-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--armus-panel);
-      border: 1px solid rgba(109, 22, 28, .3);
-      border-radius: 999px;
-      padding: 9px 18px 9px 11px;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--armus-gold-text);
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04);
+    .sd-faces > * {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      background: #f7f2ea;
+      font: 20px/1 Inter, sans-serif;
     }
 
-    .badge-chip .badge-icon {
-      font-size: 16px;
-    }
-
-    .badge-empty {
-      color: var(--armus-muted);
-      font-size: 12.5px;
-    }
-
-    /* speaking confidence check-in */
-
-    .confidence-card {
-      border-radius: 20px;
-      padding: 22px 26px;
-      background: var(--armus-panel-2);
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .03), 0 10px 26px rgba(10, 10, 10, .05);
-    }
-
-    .confidence-prompt-q {
-      font-size: 13.5px;
-      margin-bottom: 12px;
-      color: var(--armus-ink);
-    }
-
-    .confidence-scale {
-      display: flex;
-      gap: 8px;
-    }
-
-    .confidence-btn {
-      flex: 1;
-      border: 1px solid var(--armus-border);
-      background: var(--armus-bg);
-      color: var(--armus-ink);
-      border-radius: 10px;
-      padding: 10px 0;
-      font-size: 19px;
+    .sd-faces button {
       cursor: pointer;
-      font-family: inherit;
+      transition: transform .15s ease, background .15s ease;
     }
 
-    .confidence-btn:hover {
-      border-color: var(--armus-gold-2);
-    }
-
-    .confidence-retry-btn {
-      margin-top: 8px;
-      border: 1px solid var(--armus-border);
-      background: var(--armus-bg);
-      color: var(--armus-ink);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 12.5px;
-      font-family: inherit;
-      cursor: pointer;
-    }
-
-    .confidence-retry-btn:hover {
-      border-color: var(--armus-gold-2);
-    }
-
-    .confidence-trend {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      flex-wrap: wrap;
-    }
-
-    .confidence-trend-text {
-      font-size: 12.5px;
-      color: var(--armus-muted);
-      max-width: 300px;
-    }
-
-    /* flashcards */
-
-    .flashcard-toggle-card {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      width: 100%;
-      border: none;
-      border-radius: 28px;
-      padding: 36px 40px;
-      min-height: 220px;
-      overflow: hidden;
-      background: #0a0a0a;
-      text-align: left;
-      font-family: inherit;
-      cursor: pointer;
-      margin-bottom: 20px;
-      transition: transform .15s ease;
-    }
-
-    .flashcard-toggle-card:hover {
+    .sd-faces button:hover {
+      background: var(--armus-champagne);
       transform: translateY(-2px);
     }
 
-    .flashcard-toggle-glow {
-      position: absolute;
-      width: 260px;
-      height: 260px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(140, 28, 36, .18), transparent 70%);
-      top: -90px;
-      right: -50px;
-      pointer-events: none;
+    .sd-faces .on {
+      background: var(--armus-petrol);
+      box-shadow: 0 8px 18px rgba(31, 95, 91, .3);
     }
 
-    .flashcard-toggle-icon {
-      position: relative;
-      z-index: 1;
-      width: 84px;
-      height: 84px;
-      flex-shrink: 0;
-      border-radius: 22px;
-      background: var(--armus-gold-gradient);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 14px 30px rgba(109, 22, 28, .32);
+    .sd-faces.muted > * {
+      filter: grayscale(1);
+      opacity: .45;
     }
 
-    .flashcard-toggle-icon svg {
-      width: 38px;
-      height: 38px;
-      color: var(--armus-on-gold);
-    }
-
-    .flashcard-toggle-mid {
-      position: relative;
-      z-index: 1;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .flashcard-toggle-eyebrow {
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--armus-red-on-dark);
-      margin-bottom: 8px;
-    }
-
-    .flashcard-toggle-title {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.4px;
-      color: #fff;
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-
-    .flashcard-toggle-sub {
+    .confidence-prompt-q {
+      margin-bottom: 12px;
       font-size: 13.5px;
-      color: rgba(255, 255, 255, .6);
-      margin-bottom: 20px;
+      line-height: 1.45;
     }
 
-    .flashcard-toggle-sub strong {
-      color: var(--armus-gold-1);
-      font-weight: 700;
+    .sd-spark {
+      position: relative;
+      height: 70px;
+      margin: 4px 0 10px;
     }
 
-    .flashcard-toggle-cta {
+    .sd-spark svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .sd-spark i {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--armus-petrol);
+      transform: translate(-50%, -50%);
+    }
+
+    .confidence-trend-text {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #7a6d58;
+    }
+
+    .confidence-retry-btn {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: 1px solid #e2d6c3;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--armus-ink);
+      font: 700 12.5px Inter, sans-serif;
+      cursor: pointer;
+    }
+
+    .sd-words {
+      position: relative;
+      overflow: hidden;
+      background: var(--armus-petrol);
+      border-color: transparent;
+      color: #eaf3f2;
+    }
+
+    .sd-words .sd-ct {
+      color: #fff;
+    }
+
+    .sd-words .sd-ct > svg {
+      background: rgba(255, 255, 255, .14);
+      color: #fff;
+    }
+
+    .sd-words-big {
+      margin-right: 124px;
+      color: #fff;
+    }
+
+    .sd-words-sub {
+      margin: 8px 124px 16px 0;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #cfe5e2;
+    }
+
+    .sd-stack {
+      position: absolute;
+      top: 64px;
+      right: 22px;
+      width: 104px;
+      height: 66px;
+    }
+
+    .sd-stack i {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: var(--armus-cream);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, .18);
+    }
+
+    .sd-stack i:nth-child(1) {
+      transform: rotate(-10deg) translate(-8px, 6px);
+      opacity: .55;
+    }
+
+    .sd-stack i:nth-child(2) {
+      transform: rotate(-4deg) translate(-3px, 2px);
+      opacity: .8;
+    }
+
+    .sd-stack i:nth-child(3) {
+      display: block;
+      padding: 0 8px;
+      font: 800 13px/66px "Unbounded", "Inter", sans-serif;
+      font-style: normal;
+      color: var(--armus-petrol);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sd-stack i svg {
+      width: 22px;
+      height: 22px;
+      vertical-align: middle;
+    }
+
+    .sd-words-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      border-radius: 14px;
-      padding: 14px 22px;
-      font-weight: 800;
-      font-size: 14px;
-      box-shadow: 0 8px 20px rgba(109, 22, 28, .3);
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--armus-cream);
+      color: var(--armus-petrol);
+      font: 800 13px/1.2 Inter, sans-serif;
+      cursor: pointer;
+      transition: transform .15s ease;
     }
 
-    .flashcard-toggle-cta svg {
+    .sd-words-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .sd-words-btn svg {
       width: 16px;
       height: 16px;
-    }
-
-    @media (max-width: 560px) {
-      .hero-lesson {
-        flex-wrap: wrap;
-      }
-
-      .hero-lesson-right {
-        margin-left: 0;
-        width: 100%;
-        padding-left: 82px;
-        text-align: left;
-      }
-
-      .join-hint {
-        max-width: none;
-      }
-
-      .flashcard-toggle-card {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 18px;
-        padding: 28px;
-      }
-
-      .flashcard-toggle-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 18px;
-      }
-
-      .flashcard-toggle-icon svg {
-        width: 28px;
-        height: 28px;
-      }
-
-      .flashcard-toggle-title {
-        font-size: 20px;
-      }
     }
 
     .flashcard-section {
@@ -1358,210 +1507,471 @@
       }
     }
 
-    /* lesson list (condensed) */
+    /* upcoming lessons, messages and badges */
 
-    .mini-lesson-row {
-      display: flex;
+    .sd-low {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .sd-row {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr) auto;
       align-items: center;
       gap: 14px;
-      padding: 15px 18px;
-      background: var(--armus-panel-2);
-      border-radius: 16px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .03), 0 8px 20px rgba(10, 10, 10, .04);
-      transition: transform .15s ease, box-shadow .15s ease;
+      padding: 12px 0;
+      border-top: 1px solid #f0ebe2;
     }
 
-    .mini-lesson-row:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04), 0 12px 26px rgba(10, 10, 10, .07);
+    .sd-row:first-child {
+      padding-top: 0;
+      border-top: 0;
     }
 
-    .mini-lesson-row .avatar {
-      width: 40px;
-      height: 40px;
-      font-size: 13px;
-      border-radius: 10px;
+    .sd-row:last-child {
+      padding-bottom: 0;
     }
 
-    .mini-lesson-name {
-      font-weight: 700;
-      font-size: 13.5px;
+    .sd-row-t b {
+      display: block;
+      font: 800 15px/1.3 "Unbounded", "Inter", sans-serif;
+      font-variant-numeric: tabular-nums;
     }
 
-    .mini-lesson-meta {
-      color: var(--armus-muted);
-      font-size: 11.5px;
-      margin-top: 2px;
+    .sd-row-t small {
+      font-size: 12px;
+      color: #7a6d58;
     }
 
-    .mini-lesson-when {
-      margin-left: auto;
-      text-align: right;
+    .sd-join-sm {
+      padding: 7px 14px;
+      border-radius: 11px;
       font-size: 12.5px;
     }
 
-    .mini-lesson-date {
-      font-weight: 700;
-    }
-
-    .mini-lesson-time {
-      color: var(--armus-gold-text);
-      margin-top: 2px;
-    }
-
-    .join-btn-sm {
-      display: inline-block;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 13px;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      font-family: inherit;
-      font-weight: 700;
-      font-size: 11.5px;
-      text-decoration: none;
-      margin-left: 10px;
-    }
-
-    /* messages preview */
-
-    .msg-row {
+    .sd-msg {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
-      padding: 15px 18px;
-      background: var(--armus-panel-2);
-      border-radius: 16px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .03), 0 8px 20px rgba(10, 10, 10, .04);
-      transition: transform .15s ease, box-shadow .15s ease;
+      padding: 11px 0;
+      border-top: 1px solid #f0ebe2;
     }
 
-    .msg-row:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04), 0 12px 26px rgba(10, 10, 10, .07);
+    .sd-msg:first-child {
+      padding-top: 0;
+      border-top: 0;
     }
 
-    .msg-row .avatar {
-      width: 40px;
-      height: 40px;
-      font-size: 13px;
+    .sd-msg .avatar {
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
+      font-size: 13px;
     }
 
-    .msg-name {
-      font-weight: 700;
+    .sd-msg-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sd-msg-body b {
+      display: block;
       font-size: 13.5px;
+      line-height: 1.35;
     }
 
-    .msg-snippet {
-      color: var(--armus-muted);
-      font-size: 12px;
+    .sd-msg:hover .sd-msg-body b {
+      color: var(--armus-gold-2);
+    }
+
+    .sd-msg-body p {
       margin-top: 2px;
+      font-size: 12.5px;
+      color: #6a6a6a;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .sd-msg-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      font-size: 11px;
+      color: #9a9a9a;
       white-space: nowrap;
-      max-width: 380px;
     }
 
     .unread-badge {
-      margin-left: auto;
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
-      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 99px;
+      background: var(--armus-gold-2);
+      color: var(--armus-cream);
+      font-size: 10.5px;
       font-weight: 800;
-      border-radius: 999px;
-      padding: 3px 9px;
-      flex-shrink: 0;
     }
 
-    /* recommended teachers */
+    .sd-badges-h {
+      margin: 18px 0 10px;
+      padding-top: 14px;
+      border-top: 1px solid #f0ebe2;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: #8a7c64;
+    }
 
-    .rec-grid {
+    .sd-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sd-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 99px;
+      background: #fff;
+      border: 1px solid #ece4d6;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .sd-badge svg {
+      width: 15px;
+      height: 15px;
+      color: var(--armus-gold-2);
+    }
+
+    /* recommended and favourite teachers */
+
+    .sd-recs,
+    #favSection {
+      margin-top: 16px;
+    }
+
+    .sd-rg {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 14px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
     }
 
-    .rec-card {
-      background: var(--armus-panel-2);
+    .sd-rc {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
       border-radius: 18px;
-      padding: 20px 16px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .03), 0 10px 24px rgba(10, 10, 10, .05);
-      transition: transform .15s ease, box-shadow .15s ease;
+      background: var(--armus-champagne-wash);
+      border: 1px solid #f0e6d6;
     }
 
-    .rec-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04), 0 14px 32px rgba(10, 10, 10, .08);
-    }
-
-    .rec-card .avatar {
-      width: 54px;
-      height: 54px;
-      font-size: 16px;
+    .sd-rc .avatar {
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      margin: 0 auto 10px;
+      font-size: 16px;
     }
 
-    .rec-name {
+    .sd-rc b {
+      display: block;
+      font-size: 14.5px;
+      line-height: 1.3;
+    }
+
+    .sd-rc small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #7a6d58;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sd-rc span {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
       font-weight: 700;
-      font-size: 13.5px;
+      color: var(--armus-gold-2);
     }
 
-    .rec-meta {
-      color: var(--armus-muted);
-      font-size: 11.5px;
-      margin: 4px 0 12px;
+    .sd-rc .sd-btn-l {
+      grid-column: 1 / -1;
     }
-
-    .rec-cta {
-      display: inline-block;
-      border: 1px solid rgba(109, 22, 28, .32);
-      color: var(--armus-gold-text);
-      border-radius: 999px;
-      padding: 7px 16px;
-      font-size: 11.5px;
-      font-weight: 700;
-    }
-
-    /* favorites */
 
     .fav-row {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 24px;
     }
 
     .fav-chip {
       display: flex;
       align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 6px 16px 6px 6px;
-      background: var(--armus-panel);
-      font-size: 12.5px;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(10, 10, 10, .04);
+      gap: 10px;
+      padding: 7px 16px 7px 7px;
+      border-radius: 99px;
+      background: var(--armus-champagne-wash);
+      border: 1px solid #f0e6d6;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .fav-chip:hover {
+      border-color: var(--armus-champagne-deep);
     }
 
     .fav-chip .avatar {
-      width: 28px;
-      height: 28px;
-      font-size: 11px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
+      font-size: 12px;
     }
 
-    /* empty states */
+    /* the menu: the teacher panel's red dock, floating at the bottom */
 
-    .empty-hint {
-      color: var(--armus-muted);
-      font-size: 12.5px;
-      padding: 4px 0 8px;
+    .dock {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      z-index: 60;
+      display: flex;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 22px;
+      background: var(--armus-gold-gradient);
+      box-shadow: 0 18px 40px rgba(109, 22, 28, .38);
+      transform: translateX(-50%);
+    }
+
+    .dock[hidden] {
+      display: none;
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 78px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 15px;
+      background: transparent;
+      color: rgba(250, 245, 226, .78);
+      font: 700 11px/1.2 Inter, sans-serif;
+      white-space: nowrap;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .nav-btn svg {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .12);
+    }
+
+    .nav-btn.active {
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
+    }
+
+    .nav-btn:focus-visible,
+    .sd-btn-r:focus-visible,
+    .sd-btn-l:focus-visible,
+    .sd-words-btn:focus-visible,
+    .sd-ct-link:focus-visible,
+    .sd-faces button:focus-visible {
+      outline: 2px solid var(--armus-petrol);
+      outline-offset: 2px;
+    }
+
+    .nav-btn:focus-visible {
+      outline-color: var(--armus-cream);
+    }
+
+    @media (max-width: 1060px) {
+      /* the next lesson: time and teacher side by side, the buttons on
+         their own row under them */
+      .sd-next {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .sd-next-act {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        padding-top: 14px;
+        border-top: 1px solid #f0ebe2;
+      }
+
+      .sd-join-hint {
+        max-width: none;
+        text-align: left;
+      }
+
+      .sd-cols {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sd-words {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .dock {
+        left: 10px;
+        right: 10px;
+        bottom: 12px;
+        justify-content: space-between;
+        padding: 6px;
+        border-radius: 20px;
+        transform: none;
+      }
+
+      .nav-btn {
+        flex: 1;
+        min-width: 0;
+        gap: 3px;
+        padding: 8px 2px;
+        font-size: 10px;
+      }
+
+      .nav-btn svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      /* the support chat button sits above the dock */
+      body.is-panel #armusChatRoot {
+        bottom: 92px !important;
+      }
+
+      .sd-low {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .sd-rg {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      body.is-panel .nav-inner,
+      body.is-panel main.container {
+        width: calc(100% - 28px);
+      }
+
+      /* the dock already has these on a phone; the header keeps the
+         language, the bell and the profile menu */
+      body.is-panel .nav-find-tutor,
+      body.is-panel .help-btn,
+      body.is-panel .nav-refer-btn,
+      body.is-panel .nav-utility > a.icon-btn {
+        display: none;
+      }
+
+      body.is-panel main.container {
+        padding-bottom: 120px;
+      }
+
+      .sd-title {
+        font-size: 28px;
+      }
+
+      .sd-stats {
+        gap: 8px;
+      }
+
+      .sd-stat {
+        padding: 7px 12px;
+      }
+
+      .sd-days {
+        grid-template-columns: repeat(7, minmax(64px, 1fr));
+        margin-right: -14px;
+        padding-right: 14px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .sd-day {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+      }
+
+      .sd-day b {
+        font-size: 18px;
+      }
+
+      .sd-dots {
+        justify-content: flex-start;
+        min-height: 7px;
+      }
+
+      .sd-next {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .sd-next-when {
+        padding: 0 0 14px;
+        border-right: 0;
+        border-bottom: 1px solid #f0ebe2;
+      }
+
+      .sd-next-act {
+        padding-top: 0;
+        border-top: 0;
+      }
+
+      .sd-cols {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .sd-card {
+        padding: 18px;
+      }
+
+      .sd-row {
+        grid-template-columns: 78px minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .sd-row .sd-tag {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sd-btn-r,
+      .sd-btn-l,
+      .sd-words-btn,
+      .sd-faces button,
+      .sd-bar i {
+        transition: none;
+      }
     }
   </style>
 </head>
@@ -1631,78 +2041,81 @@
 
   <main class="container" id="pageRoot">
 
-    <div class="dashboard-hero">
-      <div class="dashboard-hero-inner">
-        <div class="greet-head">
-          <div class="avatar" id="greetAvatar"></div>
-          <div>
-            <div class="greet-name" id="greetName"></div>
-            <div class="greet-sub" id="greetSub" data-i18n="studentDash.greetSub">Bugün İngilizce öğrenmeye devam etmeye ne dersin?</div>
-          </div>
-        </div>
-        <div class="stats" id="statsRow"></div>
-      </div>
+    <div class="sd-hi">
+      <h1 class="sd-title" id="greetName"></h1>
+      <span class="sd-date" id="greetDate"></span>
     </div>
+    <p class="sd-sub" id="greetSub"></p>
+    <div class="sd-stats" id="statsRow"></div>
+    <div class="sd-days" id="weekDays"></div>
 
     <div id="heroSlot"></div>
 
-    <div class="goal-box">
-      <div class="goal-box-top">
-        <div>
-          <strong id="goalTitle" data-i18n="studentDash.goalTitle">Bu Haftaki Hedefin</strong><br>
-          <span id="goalCaption">0 / 0 ders</span>
+    <div class="sd-cols">
+      <section class="sd-card sd-goal">
+        <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span data-i18n="studentDash.goalTitle">Bu Haftaki Hedefin</span><button type="button" class="sd-ct-link" id="goalEditBtn" aria-expanded="false" aria-controls="goalEditor" data-i18n="studentDash.goalEdit">Değiştir</button></div>
+        <div class="sd-goal-big" id="goalBig"></div>
+        <div class="sd-bar"><i id="goalFill"></i></div>
+        <p class="sd-note" id="goalCaption"></p>
+        <div class="sd-goal-weeks" id="goalWeeks"></div>
+        <div class="goal-inputs" id="goalEditor" hidden>
+          <label for="goalInput" data-i18n="studentDash.goalInputLabel">Haftalık ders hedefin</label>
+          <input type="number" id="goalInput" min="1" max="30">
+          <button type="button" id="goalSaveBtn" data-i18n="studentDash.save">Kaydet</button>
+          <span class="save-status" id="goalSaveStatus" role="status"></span>
         </div>
-        <div class="goal-inputs">
-          <input type="number" id="goalInput" min="1" max="30" />
-          <button id="goalSaveBtn" data-i18n="studentDash.save">Kaydet</button>
-          <span class="save-status" id="goalSaveStatus" style="color:var(--armus-gold-text);font-size:12px;"></span>
-        </div>
-      </div>
-      <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%;"></div></div>
-    </div>
+      </section>
 
-    <div id="confidenceSection">
-      <h2 data-i18n="studentDash.confidenceTitle">Konuşma Güvenin</h2>
-      <div class="confidence-card" id="confidenceCard"></div>
-    </div>
+      <section class="sd-card sd-conf" id="confidenceSection">
+        <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg><span data-i18n="studentDash.confidenceTitle">Konuşma Güvenin</span></div>
+        <div id="confidenceCard"></div>
+      </section>
 
-    <button type="button" class="flashcard-toggle-card" id="flashcardToggleBtn">
-      <div class="flashcard-toggle-glow"></div>
-      <div class="flashcard-toggle-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="16" height="12" rx="2"></rect><rect x="6" y="2" width="16" height="12" rx="2"></rect></svg>
-      </div>
-      <div class="flashcard-toggle-mid">
-        <div class="flashcard-toggle-eyebrow" data-i18n="studentDash.flashcardsEyebrow">Kelime Hazinen</div>
-        <div class="flashcard-toggle-title" data-i18n="studentDash.flashcardsTitle">Flaş Kartlarınla Pratik Yap</div>
-        <div class="flashcard-toggle-sub" id="flashcardToggleSub"></div>
-        <div class="flashcard-toggle-cta">
-          <span data-i18n="studentDash.flashcardsCta">Kartları Aç</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </div>
-      </div>
-    </button>
+      <section class="sd-card sd-words">
+        <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="16" height="12" rx="2"/><rect x="6" y="2" width="16" height="12" rx="2"/></svg><span data-i18n="studentDash.flashcardsEyebrow">Kelime Hazinen</span></div>
+        <div class="sd-stack" aria-hidden="true"><i></i><i></i><i id="wordsTop"></i></div>
+        <div class="sd-words-big" id="wordsCount">0</div>
+        <p class="sd-words-sub" id="flashcardToggleSub"></p>
+        <button type="button" class="sd-words-btn" id="flashcardToggleBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span id="flashcardToggleLabel">Kartları Aç</span></button>
+      </section>
+    </div>
     <div class="flashcard-section" id="flashcardSection" style="display:none;"></div>
 
-    <h2 data-i18n="studentDash.badges">Rozetlerin</h2>
-    <div class="badge-row" id="badgeRow"></div>
-
-    <h2><span data-i18n="studentDash.upcoming">Yaklaşan Dersler</span> <a class="section-link" href="my-lessons" data-i18n="studentDash.seeAll">Tümünü Gör →</a></h2>
-    <div id="upcomingList"></div>
-
-    <h2><span data-i18n="nav.messages">Mesajlar</span> <a class="section-link" href="mesajlar" data-i18n="studentDash.allMessages">Tüm Mesajlar →</a></h2>
-    <div id="msgList"></div>
-
-    <h2 data-i18n="studentDash.recommended">Senin İçin Önerilenler</h2>
-    <div class="rec-grid" id="recGrid"></div>
-
-    <div id="favSection" style="display:none;">
-      <h2 data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</h2>
-      <div class="fav-row" id="favRow"></div>
+    <div class="sd-low">
+      <section class="sd-card">
+        <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span data-i18n="studentDash.upcoming">Yaklaşan Dersler</span><a class="sd-ct-link" href="my-lessons" data-i18n="studentDash.seeAll">Tümünü Gör →</a></div>
+        <div id="upcomingList"></div>
+      </section>
+      <section class="sd-card">
+        <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span data-i18n="nav.messages">Mesajlar</span><a class="sd-ct-link" href="mesajlar" data-i18n="studentDash.allMessages">Tüm Mesajlar →</a></div>
+        <div id="msgList"></div>
+        <div class="sd-badges-h" data-i18n="studentDash.badges">Rozetlerin</div>
+        <div class="sd-badges" id="badgeRow"></div>
+      </section>
     </div>
+
+    <section class="sd-card sd-recs">
+      <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg><span data-i18n="studentDash.recommended">Senin İçin Önerilenler</span><a class="sd-ct-link" href="teachers" data-i18n="studentDash.findTeacherLink">Öğretmen Bul →</a></div>
+      <div class="sd-rg" id="recGrid"></div>
+    </section>
+
+    <section class="sd-card" id="favSection" style="display:none;">
+      <div class="sd-ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span data-i18n="studentDash.favTeachers">Favori Öğretmenlerin</span><a class="sd-ct-link" href="favorites" data-i18n="studentDash.favAll">Tümü →</a></div>
+      <div class="fav-row" id="favRow"></div>
+    </section>
 
   </main>
 
-  <script src="i18n.js?v=42"></script>
+  <div class="dock" id="sdDock" role="navigation" aria-label="Panel" hidden>
+    <a class="nav-btn active" href="student-dashboard" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span data-i18n="studentDash.dockToday">Bugün</span></a>
+    <a class="nav-btn" href="my-lessons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span data-i18n="studentDash.navSchedule">Derslerim</span></a>
+    <a class="nav-btn" href="teachers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span data-i18n="nav.findTutor">Öğretmen Bul</span></a>
+    <button type="button" class="nav-btn" id="dockCardsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="16" height="12" rx="2"/><rect x="6" y="2" width="16" height="12" rx="2"/></svg><span data-i18n="studentDash.dockCards">Kartlar</span></button>
+    <a class="nav-btn" href="mesajlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span data-i18n="nav.messages">Mesajlar</span></a>
+    <a class="nav-btn" href="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span data-i18n="studentDash.dockProfile">Profil</span></a>
+  </div>
+
+  <script src="i18n.js?v=43"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -1785,13 +2198,61 @@
 
     function studentBadges() {
       return [
-        { icon: "🎉", label: armusT("studentDash.badgeFirstLesson", "İlk Dersin"), test: s => s.completed >= 1 },
-        { icon: "📚", label: armusT("studentDash.badge5Lessons", "5 Ders Tamamladın"), test: s => s.completed >= 5 },
-        { icon: "🏆", label: armusT("studentDash.badge10Lessons", "10 Ders Tamamladın"), test: s => s.completed >= 10 },
-        { icon: "💎", label: armusT("studentDash.badge25Lessons", "25 Ders Tamamladın"), test: s => s.completed >= 25 },
-        { icon: "🔥", label: armusT("studentDash.badgeStreak", "Kararlı Öğrenci"), test: s => s.streak >= 3 },
-        { icon: "🌍", label: armusT("studentDash.badgeVersatile", "Çok Yönlü Öğrenci"), test: s => s.teacherCount >= 3 },
+        { icon: "spark", label: armusT("studentDash.badgeFirstLesson", "İlk Dersin"), test: s => s.completed >= 1 },
+        { icon: "book", label: armusT("studentDash.badge5Lessons", "5 Ders Tamamladın"), test: s => s.completed >= 5 },
+        { icon: "trophy", label: armusT("studentDash.badge10Lessons", "10 Ders Tamamladın"), test: s => s.completed >= 10 },
+        { icon: "gem", label: armusT("studentDash.badge25Lessons", "25 Ders Tamamladın"), test: s => s.completed >= 25 },
+        { icon: "flame", label: armusT("studentDash.badgeStreak", "Kararlı Öğrenci"), test: s => s.streak >= 3 },
+        { icon: "users", label: armusT("studentDash.badgeVersatile", "Çok Yönlü Öğrenci"), test: s => s.teacherCount >= 3 },
       ];
+    }
+
+    // line icons for the cards and badges (the same set as the markup)
+    const SD_ICONS = {
+      msg: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+      video: '<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+      plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+      spark: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/>',
+      book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+      trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+      gem: '<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+      flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+      users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    };
+
+    function sdIcon(name) {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SD_ICONS[name] || ""}</svg>`;
+    }
+
+    function sdLocale() {
+      return (typeof armusGetLang === "function" && armusGetLang() === "en") ? "en-GB" : "tr-TR";
+    }
+
+    // 11.7 -> "11,7" in Turkish
+    function sdNum(n) {
+      return Number(n).toLocaleString(sdLocale(), { maximumFractionDigits: 1 });
+    }
+
+    // a lesson's real start instant (b.date/b.time are the teacher's own
+    // wall clock), and that instant as the viewer's own 24-hour time
+    function sdStart(b) {
+      return armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone);
+    }
+
+    function sdTime(d) {
+      return d.toLocaleTimeString(sdLocale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+
+    // whole calendar days from the viewer's today to d (0 today, 1 tomorrow)
+    function sdDayDiff(d) {
+      return Math.round((new Date(localDateKey(d) + "T00:00:00") - new Date(localDateKey(new Date()) + "T00:00:00")) / 86400000);
+    }
+
+    function sdDayLabel(d) {
+      const diff = sdDayDiff(d);
+      if (diff === 0) return armusT("studentDash.today", "Bugün");
+      if (diff === 1) return armusT("studentDash.tomorrow", "Yarın");
+      return d.toLocaleDateString(sdLocale(), { weekday: "short", day: "numeric", month: "short" });
     }
 
     (async function() {
@@ -1820,9 +2281,16 @@
 
       pageRoot.style.display = "block";
 
-      document.getElementById("greetAvatar").innerHTML = avatarInnerFor(session.photo_url, session.name);
+      // the red band, the cream logo and the dock are the logged-in panel
+      // only - the gate above keeps the plain page
+      document.body.classList.add("is-panel");
+      const logoImg = document.querySelector(".logo-img");
+      if (logoImg) logoImg.src = "logo-cream.png";
+      document.getElementById("sdDock").hidden = false;
+
       function renderGreetName() {
-        document.getElementById("greetName").textContent = armusT("studentDash.greeting", "Merhaba, {name} 👋").replace("{name}", armusCapitalizeName(session.name).split(" ")[0]);
+        document.getElementById("greetName").textContent = armusT("studentDash.greeting", "Merhaba, {name}").replace("{name}", armusCapitalizeName(session.name).split(" ")[0]);
+        document.getElementById("greetDate").textContent = new Date().toLocaleDateString(sdLocale(), { weekday: "long", day: "numeric", month: "long" });
       }
       renderGreetName();
 
@@ -1962,91 +2430,31 @@
         streak: computeStreak(pastBookings, todayKey),
       };
 
-      // ---- hero: next lesson or onboarding ----
+      // a trial, or the first lesson with a teacher, is the "new" kind
+      // (petrol); every other lesson is champagne - the same rule and
+      // colours the teacher panel uses
+      const firstBookingIdByTeacher = new Map();
+      bookings.slice().sort((a, b) => sdStart(a) - sdStart(b)).forEach(b => {
+        if (!firstBookingIdByTeacher.has(b.teacherId)) firstBookingIdByTeacher.set(b.teacherId, b.id);
+      });
 
-      const heroSlot = document.getElementById("heroSlot");
-
-      function renderHero() {
-
-        if (upcomingBookings.length > 0) {
-
-          const next = upcomingBookings[0];
-          const teacher = teacherById.get(next.teacherId) || null;
-          const canJoin = armusCanJoinLessonNow(next);
-          // next.date is a wall-clock date in the TEACHER's own timezone
-          // (migration_37.sql) - comparing it directly against todayKey (the
-          // viewer's own local date) as if both were the same frame put the
-          // "Yarın"/"X gün sonra" label a day off for any student whose
-          // timezone differs meaningfully from their teacher's, right next
-          // to a time label (armusFormatSlotTimeRangeForViewer below) that's
-          // already correctly converted. Convert to the lesson's real start
-          // instant first, then read the VIEWER's own local calendar date
-          // off that, so both sides of the diff are in the same frame.
-          const lessonStartLocalKey = localDateKey(armusZonedTimeToUtc(next.date, next.time, next.teacherTimezone));
-          const diffDays = Math.round(
-            (new Date(lessonStartLocalKey + "T00:00:00") - new Date(todayKey + "T00:00:00")) / 86400000
-          );
-          const whenLabel = diffDays === 0 ? armusT("studentDash.today", "Bugün")
-            : diffDays === 1 ? armusT("studentDash.tomorrow", "Yarın")
-            : armusT("studentDash.daysLater", "{days} gün sonra").replace("{days}", diffDays);
-
-          heroSlot.innerHTML = `
-            <div class="hero-lesson">
-              <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
-              <div>
-                <div class="hero-eyebrow">${armusT("studentDash.nextLesson", "Sıradaki Dersin")}</div>
-                <div class="hero-lesson-name">${armusEscapeHtml(armusShortDisplayName(next.teacherName))}</div>
-                <div class="hero-lesson-meta">${whenLabel} · ${armusFormatSlotTimeRangeForViewer(next.date, next.time, next.teacherTimezone)} · ${next.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")}</div>
-              </div>
-              <div class="hero-lesson-right">
-                ${canJoin
-                  ? `<a class="join-btn" href="class?booking=${next.id}">${armusT("myLessons.joinBtn", "🎥 Derse Katıl")}</a>`
-                  : `<span class="join-hint">${armusT("studentDash.joinHintCard", "Ders saatinde bu karttan katılabileceksin.")}</span>`}
-              </div>
-            </div>
-          `;
-
-        } else if (bookings.length === 0) {
-
-          heroSlot.innerHTML = `
-            <div class="onboarding-hero">
-              <h1>${armusT("studentDash.onboardTitle", "İngilizce yolculuğun burada başlıyor")}</h1>
-              <p>${armusT("studentDash.onboardText", "Henüz hiç dersin yok. Sana uygun bir öğretmen bul, ilk dersini planla ve öğrenmeye başla.")}</p>
-              <div class="onboarding-steps">
-                <div class="onboarding-step"><div class="step-num">1</div>${armusT("studentDash.onboardStep1", "Sana uygun bir öğretmen seç")}</div>
-                <div class="onboarding-step"><div class="step-num">2</div>${armusT("studentDash.onboardStep2", "Uygun bir saat rezerve et")}</div>
-                <div class="onboarding-step"><div class="step-num">3</div>${armusT("studentDash.onboardStep3", "Ders saatinde odaya katıl")}</div>
-              </div>
-              <a class="btn btn-light" href="teachers">${armusT("studentDash.findTeacherCta", "Öğretmen Bul →")}</a>
-            </div>
-          `;
-
-        } else {
-
-          heroSlot.innerHTML = `
-            <div class="onboarding-hero">
-              <h1>${armusT("studentDash.noUpcomingTitle", "Sırada ders yok")}</h1>
-              <p>${armusT("studentDash.noUpcomingText", "Öğrenmeye devam etmek için yeni bir ders planla.")}</p>
-              <a class="btn btn-light" href="teachers">${armusT("studentDash.planNewLessonCta", "Yeni Ders Planla →")}</a>
-            </div>
-          `;
-        }
+      function sdIsNew(b) {
+        return b.type === "trial" || firstBookingIdByTeacher.get(b.teacherId) === b.id;
       }
-      renderHero();
 
-      // ---- stats ----
-
-      function renderStats() {
-        document.getElementById("statsRow").innerHTML = `
-          <div class="stat"><strong>${stats.completed}</strong><span>${armusT("studentDash.statCompleted", "TAMAMLANAN DERS")}</span></div>
-          <div class="stat"><strong>${stats.hours}</strong><span>${armusT("studentDash.statHours", "ÖĞRENME SAATİ")}</span></div>
-          <div class="stat"><strong>${stats.teacherCount}</strong><span>${armusT("studentDash.statTeachers", "FARKLI ÖĞRETMEN")}</span></div>
-          <div class="stat"><strong>${stats.streak}</strong><span>${armusT("studentDash.statStreak", "HAFTALIK SERİ")}</span></div>
-        `;
+      function sdTagFor(b) {
+        if (b.type === "trial") return `<span class="sd-tag new">${armusT("myLessons.trial", "Deneme Dersi")}</span>`;
+        if (sdIsNew(b)) return `<span class="sd-tag new">${armusT("studentDash.tagFirstLesson", "İlk ders")}</span>`;
+        return `<span class="sd-tag les">${armusT("myLessons.lesson", "Ders")}</span>`;
       }
-      renderStats();
 
-      // ---- weekly goal ----
+      // re-read on every render (not the list taken at load) so the page
+      // can sit open and still move on when a lesson ends
+      function sdUpcoming() {
+        return bookings.filter(b => !armusIsBookingPast(b)).sort((a, b) => sdStart(a) - sdStart(b));
+      }
+
+      // ---- weekly goal numbers (the greeting line reads them too) ----
 
       const currentWeekKey = weekKeyOf(todayKey);
       // pastBookings only (lessons actually attended, not just booked) -
@@ -2055,19 +2463,201 @@
       // showed the weekly goal as "3/3 tamamlandı" before attending any
       // of them, which defeats the point of a lesson-attendance goal.
       const thisWeekCount = pastBookings.filter(b => weekKeyOf(bookingLocalDateKey(b)) === currentWeekKey).length;
-      const goal = Math.max(1, Number(session.weekly_lesson_goal) || 3);
+      let currentGoal = Math.max(1, Number(session.weekly_lesson_goal) || 3);
+
+      // ---- greeting line, stats and the week (all on the band) ----
+
+      function renderGreetSub() {
+        const weekCount = bookings.filter(b => weekKeyOf(bookingLocalDateKey(b)) === currentWeekKey).length;
+        const left = Math.max(0, currentGoal - thisWeekCount);
+        let html;
+        if (bookings.length === 0) {
+          html = armusT("studentDash.subStart", "İlk dersini planlayarak başla.");
+        } else if (weekCount === 0) {
+          html = armusT("studentDash.subWeekNone", "Bu hafta henüz dersin yok.");
+        } else {
+          html = (weekCount === 1
+            ? armusT("studentDash.subWeekOne", "Bu hafta <b>1 dersin</b> var")
+            : armusT("studentDash.subWeekCount", "Bu hafta <b>{n} dersin</b> var").replace("{n}", weekCount))
+            + (left > 0
+              ? armusT("studentDash.subGoalLeft", " · hedefine <b>{n} ders</b> kaldı.").replace("{n}", left)
+              : armusT("studentDash.subGoalDone", " · bu haftaki hedefine ulaştın."));
+        }
+        document.getElementById("greetSub").innerHTML = html;
+      }
+
+      function renderStats() {
+        const items = [
+          [stats.completed, armusT("studentDash.statCompleted", "tamamlanan ders")],
+          [sdNum(stats.hours), armusT("studentDash.statHours", "öğrenme saati")],
+          [stats.teacherCount, armusT("studentDash.statTeachers", "öğretmen")],
+          [stats.streak, armusT("studentDash.statStreak", "haftalık seri")],
+        ];
+        document.getElementById("statsRow").innerHTML = items
+          .map(([n, label]) => `<div class="sd-stat"><b>${n}</b>${label}</div>`)
+          .join("");
+      }
+
+      const weekDays = document.getElementById("weekDays");
+
+      // Monday to Sunday of this week in the viewer's own calendar, a dot
+      // per lesson (petrol for a trial / first lesson, champagne otherwise)
+      function renderWeek() {
+        const nowKey = localDateKey(new Date());
+        const monday = new Date(weekKeyOf(nowKey) + "T00:00:00");
+        const byDay = new Map();
+        bookings.forEach(b => {
+          const k = bookingLocalDateKey(b);
+          if (!byDay.has(k)) byDay.set(k, []);
+          byDay.get(k).push(b);
+        });
+        let html = "";
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + i);
+          const k = localDateKey(d);
+          const list = (byDay.get(k) || []).slice().sort((a, b) => sdStart(a) - sdStart(b));
+          const isToday = k === nowKey;
+          const cls = isToday ? "today" : (k < nowKey ? "past" : "");
+          const name = isToday ? armusT("studentDash.today", "Bugün") : d.toLocaleDateString(sdLocale(), { weekday: "short" });
+          const tip = list.map(b => `${sdTime(sdStart(b))} ${armusShortDisplayName(b.teacherName)}`).join(" · ");
+          html += `
+            <div class="sd-day ${cls}"${tip ? ` title="${armusEscapeHtml(tip)}"` : ""}>
+              <div><small>${armusEscapeHtml(name)}</small><b>${d.getDate()}</b></div>
+              <span class="sd-dots">${list.slice(0, 4).map(b => `<i class="${sdIsNew(b) ? "n" : ""}"></i>`).join("")}</span>
+            </div>`;
+        }
+        weekDays.innerHTML = html;
+      }
+
+      // the band ends just under the week strip, wherever that lands
+      // (a longer name wraps the greeting, a banner pushes it down, ...)
+      function sdSetBand() {
+        if (!weekDays.offsetParent) return;
+        document.body.style.setProperty("--band", `${Math.round(weekDays.getBoundingClientRect().bottom + window.scrollY + 24)}px`);
+      }
+
+      // ---- hero: next lesson or onboarding ----
+
+      const heroSlot = document.getElementById("heroSlot");
+
+      function renderHero() {
+
+        const upcoming = sdUpcoming();
+
+        if (upcoming.length > 0) {
+
+          const next = upcoming[0];
+          const teacher = teacherById.get(next.teacherId) || null;
+          const canJoin = armusCanJoinLessonNow(next);
+          // the lesson's real start instant, read in the viewer's own
+          // calendar - next.date alone is the TEACHER's wall-clock date
+          // (migration_37.sql) and put "Yarın"/"X gün sonra" a day off for
+          // a student in another timezone
+          const start = sdStart(next);
+          const end = new Date(start.getTime() + ARMUS_LESSON_MINUTES * 60000);
+          const mins = Math.ceil((start.getTime() - Date.now()) / 60000);
+          const diffDays = sdDayDiff(start);
+          const rel = mins <= 0 ? armusT("studentDash.lessonNow", "Şimdi")
+            : mins < 60 ? armusT("studentDash.inMinutes", "{n} dk sonra").replace("{n}", mins)
+            : diffDays === 0 ? armusT("studentDash.inHours", "{n} saat sonra").replace("{n}", Math.round(mins / 60))
+            : diffDays === 1 ? armusT("studentDash.tomorrow", "Yarın")
+            : armusT("studentDash.daysLater", "{days} gün sonra").replace("{days}", diffDays);
+
+          heroSlot.innerHTML = `
+            <section class="sd-card sd-next">
+              <div class="sd-next-when">
+                <small>${armusT("studentDash.nextLesson", "Sıradaki Dersin")} · ${armusEscapeHtml(rel)}</small>
+                <b>${sdTime(start)}</b>
+                <span>${sdTime(start)} – ${sdTime(end)} · ${armusEscapeHtml(sdDayLabel(start))}</span>
+              </div>
+              <div class="sd-tch">
+                <div class="avatar">${avatarInnerFor(teacher && teacher.photo, next.teacherName)}</div>
+                <div>
+                  <b>${armusEscapeHtml(armusShortDisplayName(next.teacherName))}</b>
+                  <small>${teacher ? armusEscapeHtml(teacher.role) + " · " : ""}${sdTagFor(next)}</small>
+                </div>
+              </div>
+              <div class="sd-next-act">
+                <a class="sd-btn-l" href="mesajlar?teacher=${encodeURIComponent(next.teacherId)}">${sdIcon("msg")}${armusT("studentDash.messageTeacher", "Mesaj gönder")}</a>
+                ${canJoin
+                  ? `<a class="sd-btn-r" href="class?booking=${encodeURIComponent(next.id)}">${sdIcon("video")}${armusT("studentDash.joinLesson", "Derse katıl")}</a>`
+                  : `<span class="sd-join-hint">${armusT("studentDash.joinHintCard", "Ders saatinde bu karttan katılabileceksin.")}</span>`}
+              </div>
+            </section>
+          `;
+
+        } else if (bookings.length === 0) {
+
+          heroSlot.innerHTML = `
+            <section class="sd-card sd-onboard">
+              <h1>${armusT("studentDash.onboardTitle", "İngilizce yolculuğun burada başlıyor")}</h1>
+              <p>${armusT("studentDash.onboardText", "Henüz hiç dersin yok. Sana uygun bir öğretmen bul, ilk dersini planla ve öğrenmeye başla.")}</p>
+              <div class="onboarding-steps">
+                <div class="onboarding-step"><div class="step-num">1</div>${armusT("studentDash.onboardStep1", "Sana uygun bir öğretmen seç")}</div>
+                <div class="onboarding-step"><div class="step-num">2</div>${armusT("studentDash.onboardStep2", "Uygun bir saat rezerve et")}</div>
+                <div class="onboarding-step"><div class="step-num">3</div>${armusT("studentDash.onboardStep3", "Ders saatinde odaya katıl")}</div>
+              </div>
+              <a class="sd-btn-r" href="teachers">${armusT("studentDash.findTeacherCta", "Öğretmen Bul →")}</a>
+            </section>
+          `;
+
+        } else {
+
+          heroSlot.innerHTML = `
+            <section class="sd-card sd-onboard">
+              <h1>${armusT("studentDash.noUpcomingTitle", "Sırada ders yok")}</h1>
+              <p>${armusT("studentDash.noUpcomingText", "Öğrenmeye devam etmek için yeni bir ders planla.")}</p>
+              <a class="sd-btn-r" href="teachers">${armusT("studentDash.planNewLessonCta", "Yeni Ders Planla →")}</a>
+            </section>
+          `;
+        }
+      }
+
+      // ---- weekly goal ----
 
       const goalInput = document.getElementById("goalInput");
       const goalFill = document.getElementById("goalFill");
       const goalCaption = document.getElementById("goalCaption");
+      const goalEditor = document.getElementById("goalEditor");
+      const goalEditBtn = document.getElementById("goalEditBtn");
 
-      function renderGoal(currentGoal) {
+      // this week against the goal, then the last four weeks as small
+      // bars (attended lessons against today's goal)
+      function renderGoal() {
         goalInput.value = currentGoal;
-        goalCaption.textContent = armusT("studentDash.goalCaption", "{count} / {goal} ders bu hafta")
-          .replace("{count}", thisWeekCount).replace("{goal}", currentGoal);
+        document.getElementById("goalBig").innerHTML = `${thisWeekCount} / ${currentGoal} <small>${armusT("studentDash.goalUnit", "ders")}</small>`;
         goalFill.style.width = Math.min(100, Math.round((thisWeekCount / currentGoal) * 100)) + "%";
+        const left = Math.max(0, currentGoal - thisWeekCount);
+        goalCaption.textContent = left > 0
+          ? armusT("studentDash.goalLeft", "{n} ders daha, hedefe ulaşırsın.").replace("{n}", left)
+          : armusT("studentDash.goalDone", "Bu haftaki hedefine ulaştın.");
+
+        const countByWeek = new Map();
+        pastBookings.forEach(b => {
+          const k = weekKeyOf(bookingLocalDateKey(b));
+          countByWeek.set(k, (countByWeek.get(k) || 0) + 1);
+        });
+        let html = "";
+        for (let i = 3; i >= 0; i--) {
+          const k = shiftWeekKey(currentWeekKey, -i);
+          const n = countByWeek.get(k) || 0;
+          const pct = Math.min(100, Math.round((n / currentGoal) * 100));
+          const label = i === 0
+            ? armusT("studentDash.thisWeek", "Bu hafta")
+            : new Date(k + "T00:00:00").toLocaleDateString(sdLocale(), { day: "numeric", month: "short" });
+          const tip = armusT("studentDash.goalWeekTip", "{n} / {goal} ders").replace("{n}", n).replace("{goal}", currentGoal);
+          html += `<span title="${armusEscapeHtml(tip)}"><i class="${pct >= 100 ? "full" : ""}" style="--f:${pct}%"></i>${armusEscapeHtml(label)}</span>`;
+        }
+        document.getElementById("goalWeeks").innerHTML = html;
       }
-      renderGoal(goal);
+
+      goalEditBtn.addEventListener("click", () => {
+        const opening = goalEditor.hidden;
+        goalEditor.hidden = !opening;
+        goalEditBtn.setAttribute("aria-expanded", String(opening));
+        if (opening) goalInput.focus();
+      });
 
       const goalSaveBtn = document.getElementById("goalSaveBtn");
       goalSaveBtn.addEventListener("click", async () => {
@@ -2082,40 +2672,55 @@
         if (result === false) {
           status.textContent = armusT("studentDash.goalSaveFailed", "Kaydedilemedi");
         } else {
-          renderGoal(value);
+          currentGoal = value;
+          renderGoal();
+          renderGreetSub();
           status.textContent = armusT("studentDash.goalSaved", "Kaydedildi ✓");
         }
-        status.classList.add("visible");
         setTimeout(() => { status.textContent = ""; }, 2500);
       });
 
       // ---- speaking confidence check-in ----
 
-      const confidenceSection = document.getElementById("confidenceSection");
       const confidenceCard = document.getElementById("confidenceCard");
+      const SD_FACES = ["😟", "🙁", "😐", "🙂", "😄"];
 
+      // a petrol line across the card's full width (percent coordinates,
+      // so it stretches with the card) and a dot on the latest check-in
       function renderConfidenceSparkline(checkins) {
-        const w = 200, h = 46, pad = 6;
-        const stepX = checkins.length > 1 ? (w - pad * 2) / (checkins.length - 1) : 0;
-        const points = checkins.map((c, i) => {
-          const x = pad + i * stepX;
-          const y = pad + (h - pad * 2) * (1 - (c.score - 1) / 4);
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        }).join(" ");
-        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="#8c1c24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        const pts = checkins.map((c, i) => [
+          checkins.length > 1 ? (i / (checkins.length - 1)) * 100 : 50,
+          8 + (1 - (c.score - 1) / 4) * 84,
+        ]);
+        const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+        const area = `${pts[0][0].toFixed(1)},100 ${line} ${pts[pts.length - 1][0].toFixed(1)},100`;
+        const [lx, ly] = pts[pts.length - 1];
+        return `
+          <div class="sd-spark" aria-hidden="true">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+              <polygon points="${area}" fill="rgba(31, 95, 91, .1)"/>
+              <polyline points="${line}" fill="none" stroke="#1f5f5b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+            </svg>
+            <i style="left:${lx.toFixed(1)}%;top:${ly.toFixed(1)}%"></i>
+          </div>`;
       }
 
       function renderConfidenceTrend() {
 
+        // no lesson finished yet: the card stays, saying what will appear
         if (confidenceCheckins.length === 0) {
-          confidenceSection.style.display = "none";
+          confidenceCard.innerHTML = `
+            <div class="sd-faces muted" aria-hidden="true">${SD_FACES.map(f => `<span>${f}</span>`).join("")}</div>
+            <div class="confidence-trend-text">${armusT("studentDash.confidenceEmpty", "İlk dersinden sonra konuşma güvenini burada takip edeceksin.")}</div>
+          `;
           return;
         }
 
         const recent = confidenceCheckins.slice(-10);
+        const last = recent[recent.length - 1].score;
         const avg = Math.round((recent.reduce((sum, c) => sum + c.score, 0) / recent.length) * 10) / 10;
         let trendText = armusT("studentDash.confidenceTrendText", "Son {n} ders sonrası ortalama güvenin: {avg} / 5.")
-          .replace("{n}", recent.length).replace("{avg}", avg);
+          .replace("{n}", recent.length).replace("{avg}", sdNum(avg));
 
         if (recent.length >= 4) {
           const half = Math.floor(recent.length / 2);
@@ -2127,10 +2732,9 @@
         }
 
         confidenceCard.innerHTML = `
-          <div class="confidence-trend">
-            ${renderConfidenceSparkline(recent)}
-            <div class="confidence-trend-text">${trendText}</div>
-          </div>
+          <div class="sd-faces" aria-hidden="true">${SD_FACES.map((f, i) => `<span class="${i + 1 === last ? "on" : ""}">${f}</span>`).join("")}</div>
+          ${renderConfidenceSparkline(recent)}
+          <div class="confidence-trend-text">${trendText}</div>
         `;
       }
 
@@ -2141,20 +2745,19 @@
 
       // Re-run on armus:langchange too (see below) so toggling the site
       // language while this prompt is showing doesn't leave it stuck in
-      // the old language - it isn't reached by renderConfidenceTrend()
-      // since it renders its own markup up front, before any checkin
-      // exists to trend.
+      // the old language. Once that lesson has its check-in (answered
+      // here), the trend shows instead of asking again.
       function renderConfidencePrompt() {
 
-        if (!pendingCheckinBooking) {
+        if (!pendingCheckinBooking || confidenceCheckins.some(c => c.booking_id === pendingCheckinBooking.id)) {
           renderConfidenceTrend();
           return;
         }
 
         confidenceCard.innerHTML = `
           <div class="confidence-prompt-q">${armusT("studentDash.confidencePromptQ", "{name} ile olan dersin nasıldı? Ne kadar rahat konuştun?").replace("{name}", armusEscapeHtml(armusShortDisplayName(pendingCheckinBooking.teacherName)))}</div>
-          <div class="confidence-scale">
-            ${["😟", "🙁", "😐", "🙂", "😄"].map((emoji, i) => `<button type="button" class="confidence-btn" data-score="${i + 1}">${emoji}</button>`).join("")}
+          <div class="sd-faces">
+            ${SD_FACES.map((emoji, i) => `<button type="button" class="confidence-btn" data-score="${i + 1}" aria-label="${i + 1} / 5">${emoji}</button>`).join("")}
           </div>
         `;
 
@@ -2164,13 +2767,9 @@
             confidenceCard.innerHTML = `<div class="confidence-trend-text">${armusT("studentDash.saving", "Kaydediliyor...")}</div>`;
             const result = await armusAddConfidenceCheckin(session.id, pendingCheckinBooking.id, score);
 
-            // armusAddConfidenceCheckin returns false on failure - this
-            // used to fall straight into renderConfidenceTrend() either
-            // way, which on a failed FIRST checkin hides the whole
-            // widget (confidenceCheckins.length is still 0, nothing was
-            // pushed) and on any later one just silently renders the
-            // trend without the new point - either way the student's
-            // tap looked like it worked when it hadn't saved at all.
+            // armusAddConfidenceCheckin returns false on failure - a
+            // failed save has to say so, not quietly render the trend
+            // without the new point as if the tap had worked.
             if (!result) {
               confidenceCard.innerHTML = `
                 <div class="confidence-trend-text">${armusT("studentDash.confidenceCheckinFailed", "Kaydedilemedi. Lütfen tekrar dene.")}</div>
@@ -2186,7 +2785,13 @@
         });
       }
 
+      renderGreetSub();
+      renderStats();
+      renderWeek();
+      renderHero();
+      renderGoal();
       renderConfidencePrompt();
+      sdSetBand();
 
       // ---- flashcards ----
 
@@ -2211,17 +2816,25 @@
         });
       }
 
-      // the toggle card's stat line lives outside flashcardSection (it's
-      // visible before the modal ever opens), so it needs its own
-      // refresh call anywhere vocabEntries changes rather than piggy-
-      // backing on renderFlashcardSection.
+      // the words card lives outside flashcardSection (it's visible
+      // before the modal ever opens), so it needs its own refresh call
+      // anywhere vocabEntries changes rather than piggy-backing on
+      // renderFlashcardSection. The top card shows a real word from the
+      // deck - one still being learned when there is one.
       function renderFlashcardToggleSub() {
-        const masteredCount = vocabEntries.filter(e => e.mastered).length;
-        document.getElementById("flashcardToggleSub").innerHTML = vocabEntries.length === 0
+        const total = vocabEntries.length;
+        const left = vocabEntries.filter(e => !e.mastered).length;
+        document.getElementById("wordsCount").textContent = total;
+        document.getElementById("flashcardToggleSub").textContent = total === 0
           ? armusT("studentDash.flashcardsSubtitleEmpty", "Henüz kelime eklemedin. İlk kartını oluştur.")
-          : armusT("studentDash.flashcardsSubtitleCount", "<strong>{total} kelime</strong> kaydettin · {mastered} tanesini öğrendin")
-              .replace("{total}", vocabEntries.length)
-              .replace("{mastered}", masteredCount);
+          : left > 0
+            ? armusT("studentDash.wordsSubLeft", "kelime · {n} tanesi tekrar bekliyor").replace("{n}", left)
+            : armusT("studentDash.wordsSubDone", "kelime · hepsini öğrendin");
+        const top = vocabEntries.find(e => !e.mastered) || vocabEntries[0];
+        document.getElementById("wordsTop").innerHTML = top ? armusEscapeHtml(top.term) : sdIcon("plus");
+        document.getElementById("flashcardToggleLabel").textContent = total === 0
+          ? armusT("studentDash.flashcardsCtaEmpty", "İlk kartını ekle")
+          : armusT("studentDash.flashcardsCta", "Kartları Aç");
       }
       renderFlashcardToggleSub();
 
@@ -2448,82 +3061,93 @@
         document.addEventListener("keydown", handleFlashcardKeydown);
       });
 
+      // the dock's "Kartlar" opens the same flashcards as the words card
+      document.getElementById("dockCardsBtn").addEventListener("click", () => {
+        document.getElementById("flashcardToggleBtn").click();
+      });
+
       // ---- badges ----
 
       function renderBadges() {
         const earned = studentBadges().filter(b => b.test(stats));
-        const badgeRow = document.getElementById("badgeRow");
-        badgeRow.innerHTML = earned.length
-          ? earned.map(b => `<div class="badge-chip"><span class="badge-icon">${b.icon}</span>${b.label}</div>`).join("")
-          : `<div class="badge-empty">${armusT("studentDash.badgeEmpty", "İlk dersini tamamladığında burada rozetler görünmeye başlayacak.")}</div>`;
+        document.getElementById("badgeRow").innerHTML = earned.length
+          ? earned.map(b => `<span class="sd-badge">${sdIcon(b.icon)}${b.label}</span>`).join("")
+          : `<div class="sd-empty">${armusT("studentDash.badgeEmpty", "İlk dersini tamamladığında burada rozetler görünmeye başlayacak.")}</div>`;
       }
-      renderBadges();
 
       // ---- upcoming lessons (condensed) ----
 
       const upcomingList = document.getElementById("upcomingList");
-      const upcomingToShow = upcomingBookings.slice(0, 3);
 
       function renderUpcoming() {
-        if (upcomingToShow.length === 0) {
-          upcomingList.innerHTML = `<div class="empty-hint">${armusT("studentDash.noUpcoming", "Yaklaşan bir dersin yok.")}</div>`;
-        } else {
-          upcomingList.innerHTML = upcomingToShow.map(b => {
-            const teacher = teacherById.get(b.teacherId) || null;
-            const canJoin = armusCanJoinLessonNow(b);
-            // b.dateLabel is formatted straight from the raw lesson_date
-            // (the TEACHER's own wall-clock date, migration_37.sql) with
-            // no zone conversion at all, while the time below was
-            // already shown in the VIEWER's local time - two different
-            // zones in the same row could show the wrong day for a
-            // large enough timezone gap. armusFormatLessonWhen converts
-            // once and returns both from that same viewer-local instant
-            // (same fix already applied to my-lessons/class).
-            const when = armusFormatLessonWhen(b);
-            return `
-              <div class="mini-lesson-row">
-                <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
-                <div>
-                  <div class="mini-lesson-name">${armusEscapeHtml(armusShortDisplayName(b.teacherName))}</div>
-                  <div class="mini-lesson-meta">${b.type === "trial" ? armusT("myLessons.trial", "Deneme Dersi") : armusT("myLessons.lesson", "Ders")} · ₺${b.price}</div>
-                </div>
-                <div class="mini-lesson-when">
-                  <div class="mini-lesson-date">${when.dateLabel}</div>
-                  <div class="mini-lesson-time">${when.timeRange}</div>
-                </div>
-                ${canJoin ? `<a class="join-btn-sm" href="class?booking=${b.id}">${armusT("studentDash.joinShort", "Katıl")}</a>` : ""}
-              </div>
-            `;
-          }).join("");
+        const list = sdUpcoming().slice(0, 3);
+        if (list.length === 0) {
+          upcomingList.innerHTML = `<div class="sd-empty">${armusT("studentDash.noUpcoming", "Yaklaşan bir dersin yok.")}</div>`;
+          return;
         }
+        upcomingList.innerHTML = list.map(b => {
+          const teacher = teacherById.get(b.teacherId) || null;
+          const start = sdStart(b);
+          const canJoin = armusCanJoinLessonNow(b);
+          return `
+            <div class="sd-row">
+              <div class="sd-row-t"><b>${sdTime(start)}</b><small>${armusEscapeHtml(sdDayLabel(start))}</small></div>
+              <div class="sd-tch">
+                <div class="avatar">${avatarInnerFor(teacher && teacher.photo, b.teacherName)}</div>
+                <div><b>${armusEscapeHtml(armusShortDisplayName(b.teacherName))}</b><small>${teacher ? armusEscapeHtml(teacher.role) : ""}</small></div>
+              </div>
+              ${canJoin
+                ? `<a class="sd-btn-r sd-join-sm" href="class?booking=${encodeURIComponent(b.id)}">${armusT("studentDash.joinShort", "Katıl")}</a>`
+                : sdTagFor(b)}
+            </div>
+          `;
+        }).join("");
       }
-      renderUpcoming();
 
       // ---- messages preview ----
 
       const msgList = document.getElementById("msgList");
       const convosToShow = conversations.slice(0, 3);
 
+      // "12 dk", "14:05", "dün", "3 Kas" - how long ago, as short as it reads
+      function sdAgo(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+        if (mins < 1) return armusT("studentDash.justNow", "şimdi");
+        if (mins < 60) return armusT("studentDash.minutesAgo", "{n} dk").replace("{n}", mins);
+        const diff = sdDayDiff(d);
+        if (diff === 0) return sdTime(d);
+        if (diff === -1) return armusT("studentDash.yesterday", "dün");
+        return d.toLocaleDateString(sdLocale(), { day: "numeric", month: "short" });
+      }
+
       function renderMessagesPreview() {
         if (convosToShow.length === 0) {
-          msgList.innerHTML = `<div class="empty-hint">${armusT("studentDash.noConvos", "Henüz bir mesajlaşman yok.")}</div>`;
-        } else {
-          msgList.innerHTML = convosToShow.map(c => {
-            const snippet = c.lastMessage ? armusEscapeHtml(c.lastMessage.body) : armusT("messages.noMessageYet", "Henüz mesaj yok");
-            return `
-              <a class="msg-row" href="mesajlar?teacher=${c.otherId}" style="display:flex;">
-                <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
-                <div>
-                  <div class="msg-name">${armusEscapeHtml(armusShortDisplayName(c.otherName))}</div>
-                  <div class="msg-snippet">${snippet}</div>
-                </div>
-                ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
-              </a>
-            `;
-          }).join("");
+          msgList.innerHTML = `<div class="sd-empty">${armusT("studentDash.noConvos", "Henüz bir mesajlaşman yok.")}</div>`;
+          return;
         }
+        msgList.innerHTML = convosToShow.map(c => {
+          const snippet = !c.lastMessage
+            ? armusT("messages.noMessageYet", "Henüz mesaj yok")
+            : c.lastMessage.body
+              ? armusEscapeHtml(c.lastMessage.body)
+              : armusT("studentDash.navBellAttachment", "📎 Ek gönderdi");
+          return `
+            <a class="sd-msg" href="mesajlar?teacher=${encodeURIComponent(c.otherId)}">
+              <div class="avatar">${avatarInnerFor(c.otherPhoto, c.otherName)}</div>
+              <div class="sd-msg-body">
+                <b>${armusEscapeHtml(armusShortDisplayName(c.otherName))}</b>
+                <p>${snippet}</p>
+              </div>
+              <div class="sd-msg-side">
+                <time>${armusEscapeHtml(sdAgo(c.lastMessage && c.lastMessage.created_at))}</time>
+                ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
+              </div>
+            </a>
+          `;
+        }).join("");
       }
-      renderMessagesPreview();
 
       // ---- recommended teachers ----
 
@@ -2535,16 +3159,20 @@
       const recommended = (notYetBooked.length >= 3 ? notYetBooked : ranked).slice(0, 3);
 
       function renderRecommended() {
+        const recSection = document.querySelector(".sd-recs");
+        recSection.style.display = recommended.length ? "" : "none";
         document.getElementById("recGrid").innerHTML = recommended.map(t => `
-          <div class="rec-card">
+          <div class="sd-rc">
             <div class="avatar">${avatarInnerFor(t.photo, t.name)}</div>
-            <div class="rec-name">${armusEscapeHtml(t.name)}</div>
-            <div class="rec-meta">${t.rating ? "★ " + t.rating : armusT("studentDash.newTeacher", "Yeni Öğretmen")} · ₺${t.price}</div>
-            <a class="rec-cta" href="teacher?teacher=${encodeURIComponent(t.id)}">${armusT("studentDash.viewProfile", "Profili Gör")}</a>
+            <div>
+              <b>${armusEscapeHtml(armusShortDisplayName(t.name))}</b>
+              <small>${armusEscapeHtml(t.role)}</small>
+              <span>${t.rating ? "★ " + sdNum(t.rating) : armusT("studentDash.newTeacher", "Yeni Öğretmen")} · ₺${t.price} ${armusT("studentDash.perLesson", "/ ders")}</span>
+            </div>
+            <a class="sd-btn-l" href="teacher?teacher=${encodeURIComponent(t.id)}">${armusT("studentDash.viewProfile", "Profili Gör")}</a>
           </div>
         `).join("");
       }
-      renderRecommended();
 
       // ---- favorite teachers ----
 
@@ -2561,17 +3189,40 @@
         `).join("");
       }
 
+      renderBadges();
+      renderUpcoming();
+      renderMessagesPreview();
+      renderRecommended();
+
+      // the band follows the week strip as the page settles (web fonts,
+      // the announcement banner arriving, a resize)
+      sdSetBand();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(sdSetBand);
+      window.addEventListener("resize", sdSetBand);
+      if (typeof ResizeObserver === "function") new ResizeObserver(sdSetBand).observe(document.body);
+
+      // the countdown on the next lesson, the join buttons and the list
+      // move on by themselves while the page sits open
+      setInterval(() => {
+        renderHero();
+        renderUpcoming();
+      }, 60000);
+
       document.addEventListener("armus:langchange", () => {
         renderGreetName();
-        renderHero();
+        renderGreetSub();
         renderStats();
-        renderGoal(Number(goalInput.value) || goal);
+        renderWeek();
+        renderHero();
+        renderGoal();
         renderConfidencePrompt();
+        renderFlashcardToggleSub();
         if (document.getElementById("flashcardSection").style.display !== "none") renderFlashcardSection();
         renderBadges();
         renderUpcoming();
         renderMessagesPreview();
         renderRecommended();
+        sdSetBand();
       });
 
     })();
