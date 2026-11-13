@@ -17,20 +17,20 @@ function armusInjectRescheduleStyles() {
   style.id = "armusRescheduleStyles";
   style.textContent = `
     .rs-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .55); }
-    .rs-dialog { width: 100%; max-width: 560px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 14px; padding: 22px; border-radius: 18px; background: var(--armus-panel, #1a1712); border: 1px solid var(--armus-border, #2e2a22); color: var(--armus-ink, #f4f4f2); }
+    .rs-dialog { width: 100%; max-width: 560px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; gap: 14px; padding: 22px; border-radius: 0; background: var(--armus-panel, #1a1712); border: 1px solid var(--armus-border, #2e2a22); color: var(--armus-ink, #f4f4f2); }
     .rs-dialog h2 { font-size: 18px; margin: 0; }
     .rs-note { font-size: 12.5px; line-height: 1.5; color: var(--armus-muted, #a3a3a6); margin: 0; }
     .rs-dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-    .rs-date { flex: 0 0 auto; min-width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border-radius: 12px; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+    .rs-date { flex: 0 0 auto; min-width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border-radius: 0; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; cursor: pointer; }
     .rs-date span:first-child { font-size: 11px; color: var(--armus-muted, #a3a3a6); }
     .rs-date span:last-child { font-size: 15px; font-weight: 700; }
     .rs-date[aria-pressed="true"] { border-color: var(--armus-gold-text, #8c1c24); box-shadow: inset 0 0 0 1px var(--armus-gold-text, #8c1c24); }
     .rs-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; overflow-y: auto; min-height: 60px; }
-    .rs-slot { padding: 9px 6px; border-radius: 10px; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; font-size: 12.5px; cursor: pointer; }
+    .rs-slot { padding: 9px 6px; border-radius: 0; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; font-size: 12.5px; cursor: pointer; }
     .rs-slot[aria-pressed="true"] { border-color: var(--armus-gold-text, #8c1c24); box-shadow: inset 0 0 0 1px var(--armus-gold-text, #8c1c24); font-weight: 700; }
     .rs-empty { grid-column: 1 / -1; font-size: 12.5px; color: var(--armus-muted, #a3a3a6); }
     .rs-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-    .rs-btn { padding: 10px 16px; border-radius: 10px; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .rs-btn { padding: 10px 16px; border-radius: 0; border: 1px solid var(--armus-border, #2e2a22); background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
     .rs-btn-primary { border: none; background: var(--armus-gold-gradient, linear-gradient(90deg, #a54e54, #8c1c24)); color: var(--armus-on-gold, #faf5e2); }
     .rs-btn:disabled { opacity: .45; cursor: not-allowed; }
     .rs-date:focus-visible, .rs-slot:focus-visible, .rs-btn:focus-visible { outline: 2px solid var(--armus-gold-text, #8c1c24); outline-offset: 2px; }
