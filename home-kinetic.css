@@ -563,23 +563,15 @@ html[lang="en"] .hk-pc {
   -webkit-mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
   mask-position: var(--wx, 0px) calc(var(--fy, -40px) - 13px), 0 var(--fy, -40px);
 }
-/* steps 1 and 3 take the colour of their visual: night blue for the
-   teacher search, bordo for the weekly plan - the same outline and
-   rising fill as the gold "2", the outline a shade darker than the fill
-   as the gold one's is */
-.hk-num[data-n="1"],
-.hk-num[data-n="1"]::after {
+/* all three step numbers in night blue (the colour of the step 1 and
+   step 3 visuals): the same outline and rising fill, the outline a
+   shade darker than the fill */
+.hk-num,
+.hk-num::after {
   -webkit-text-stroke-color: #1f2a5c;
 }
-.hk-num[data-n="1"]::after {
+.hk-num::after {
   color: var(--armus-navy);
-}
-.hk-num[data-n="3"],
-.hk-num[data-n="3"]::after {
-  -webkit-text-stroke-color: #62232e;
-}
-.hk-num[data-n="3"]::after {
-  color: var(--armus-bordo);
 }
 .hk-txt h3 {
   font-size: 40px;
@@ -915,8 +907,8 @@ html[lang="en"] .hk-pc {
   transform: none;
 }
 
-/* step 3: weekly plan + progress line - white, with bordo where the
-   other steps use gold. The border marks the card's edge on the white page */
+/* step 3: weekly plan + progress line - white, with night blue for the
+   picked pills and the line. The border marks the card's edge on the white page */
 .hk-v3 {
   background: var(--armus-bg);
   color: var(--armus-ink);
@@ -966,7 +958,7 @@ html[lang="en"] .hk-pc {
   left: 4px;
   width: 78px;
   border-radius: 9px;
-  background: var(--armus-bordo);
+  background: var(--armus-navy);
   transform: translateX(calc(var(--s, 1) * 82px));
   transition: transform .6s var(--hk-spring);
 }
@@ -989,10 +981,10 @@ html[lang="en"] .hk-pc {
   transition: background .4s, color .4s, transform .5s var(--hk-spring), box-shadow .4s;
 }
 .hk-days span.is-on {
-  background: var(--armus-bordo);
+  background: var(--armus-navy);
   color: #fff;
   transform: translateY(-4px);
-  box-shadow: 0 10px 22px rgba(122, 46, 58, .28);
+  box-shadow: 0 10px 22px rgba(43, 58, 124, .28);
 }
 .hk-chart {
   flex: 1;
