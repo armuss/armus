@@ -996,16 +996,104 @@
           });
       }
 
+      // The website's photo rules, the same as apply-teacher.html: a
+      // teacher's photo needs a plain white background (a margin band
+      // around the edges mostly near-white - see apply-teacher.html for
+      // the full reasoning behind the numbers) and is re-encoded to a
+      // JPEG of at most 1024px; an approved teacher's photo is part of
+      // their checked application, so the database refuses a direct
+      // change (application_locked) - they're told to contact us instead
+      // of seeing that raw error. A student's photo keeps the plain 5MB
+      // limit. The mobile app applies the exact same rules (lib/photo.ts).
+      function armusIsWhiteish(r, g, b) {
+        return r >= 200 && g >= 200 && b >= 200 && (Math.max(r, g, b) - Math.min(r, g, b)) <= 45;
+      }
+      const PHOTO_WHITE_BG_MARGIN_RATIO = 0.08;
+      const PHOTO_WHITE_BG_MIN_RATIO = 0.6;
+      const PHOTO_MAX_DIMENSION = 1024;
+      const PHOTO_JPEG_QUALITY = 0.85;
+      const TEACHER_PHOTO_RAW_MAX_BYTES = 25 * 1024 * 1024;
+
+      function normalizePhoto(file) {
+        return new Promise((resolve, reject) => {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = () => {
+            URL.revokeObjectURL(url);
+            try {
+              const scale = Math.min(1, PHOTO_MAX_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+              canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+              const ctx = canvas.getContext("2d");
+              ctx.fillStyle = "#ffffff";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const margin = Math.max(1, Math.round(Math.min(width, height) * PHOTO_WHITE_BG_MARGIN_RATIO));
+              let whiteCount = 0, total = 0;
+              for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                  if (!(x < margin || x >= width - margin || y < margin || y >= height - margin)) continue;
+                  const i = (y * width + x) * 4;
+                  total++;
+                  if (armusIsWhiteish(data[i], data[i + 1], data[i + 2])) whiteCount++;
+                }
+              }
+              canvas.toBlob(blob => {
+                if (!blob) {
+                  reject(new Error(armusT("applyTeacher.photoReadFailed", "Fotoğraf okunamadı.")));
+                  return;
+                }
+                resolve({ blob, isWhiteBackground: total > 0 && (whiteCount / total) >= PHOTO_WHITE_BG_MIN_RATIO });
+              }, "image/jpeg", PHOTO_JPEG_QUALITY);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error(armusT("applyTeacher.photoReadFailed", "Fotoğraf okunamadı.")));
+          };
+          img.src = url;
+        });
+      }
+
       document.getElementById("photoInput").addEventListener("change", async (e) => {
-        const file = e.target.files[0];
+        const picked = e.target.files[0];
         const errorBox = document.getElementById("accountError");
         errorBox.style.display = "none";
-        if (!file) return;
+        if (!picked) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-          errorBox.textContent = armusT("settings.photoTooBig", "Dosya çok büyük (maks 5MB).");
+        const fail = message => {
+          errorBox.textContent = message;
           errorBox.style.display = "block";
           e.target.value = "";
+        };
+
+        let file = picked;
+        if (session.role === "teacher") {
+          if (session.status === "approved") {
+            fail(armusT("settings.photoLockedApproved", "Onaylı öğretmenler profil fotoğrafını buradan değiştiremez. Fotoğrafını güncellemek için bize ulaş."));
+            return;
+          }
+          if (picked.size > TEACHER_PHOTO_RAW_MAX_BYTES) {
+            fail(armusT("applyTeacher.fileTooBig", "Dosya çok büyük (maks {mb}MB).").replace("{mb}", "25"));
+            return;
+          }
+          try {
+            const { blob, isWhiteBackground } = await normalizePhoto(picked);
+            if (!isWhiteBackground) {
+              fail(armusT("applyTeacher.photoNeedsWhiteBg", "Fotoğrafın arka planı düz beyaz olmalı. Lütfen beyaz bir arka plan önünde çekilmiş bir fotoğraf yükle."));
+              return;
+            }
+            file = new File([blob], picked.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+          } catch (err) {
+            fail(err.message);
+            return;
+          }
+        } else if (picked.size > 5 * 1024 * 1024) {
+          fail(armusT("settings.photoTooBig", "Dosya çok büyük (maks 5MB)."));
           return;
         }
 

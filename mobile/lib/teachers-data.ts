@@ -33,13 +33,23 @@ export type Teacher = {
   /** Only set for real teachers who've configured a weekly availability grid. */
   weeklyAvailability?: string[][] | null;
   availabilityDates?: Record<string, string[]> | null;
+  /** migration_41.sql attendance-report state - real teachers only */
+  isBanned?: boolean;
+  hiddenFromNewStudents?: boolean;
+  hiddenUntil?: string | null;
 };
+
+// The demo teachers wear the website's own photos (teachers-data.js uses
+// avatars/<name>.jpg) - every one taken on the plain white background the
+// site requires of teacher photos, so the app's marketplace looks exactly
+// like the site's.
+const SITE_PHOTOS = 'https://armus.com.tr/avatars';
 
 export const TEACHERS: Teacher[] = [
   {
     id: 'sarah',
     initials: 'SM',
-    photo: 'https://i.pravatar.cc/300?img=47',
+    photo: `${SITE_PHOTOS}/sarah.jpg`,
     name: 'Sarah M.',
     role: 'IELTS & Speaking Uzmanı',
     price: 800,
@@ -69,7 +79,7 @@ export const TEACHERS: Teacher[] = [
   {
     id: 'david',
     initials: 'DK',
-    photo: 'https://i.pravatar.cc/300?img=13',
+    photo: `${SITE_PHOTOS}/david.jpg`,
     name: 'David K.',
     role: 'IELTS & YDS Uzmanı',
     price: 650,
@@ -98,7 +108,7 @@ export const TEACHERS: Teacher[] = [
   {
     id: 'emily',
     initials: 'EL',
-    photo: 'https://i.pravatar.cc/300?img=25',
+    photo: `${SITE_PHOTOS}/emily.jpg`,
     name: 'Emily L.',
     role: 'English Speaking Teacher',
     price: 500,
@@ -127,7 +137,7 @@ export const TEACHERS: Teacher[] = [
   {
     id: 'michael',
     initials: 'MJ',
-    photo: 'https://i.pravatar.cc/300?img=52',
+    photo: `${SITE_PHOTOS}/michael.jpg`,
     name: 'Michael J.',
     role: 'TOEFL Uzmanı',
     price: 900,
@@ -156,7 +166,7 @@ export const TEACHERS: Teacher[] = [
   {
     id: 'anna',
     initials: 'AP',
-    photo: 'https://i.pravatar.cc/300?img=44',
+    photo: `${SITE_PHOTOS}/anna.jpg`,
     name: 'Anna P.',
     role: 'Business English Coach',
     price: 550,
@@ -185,7 +195,7 @@ export const TEACHERS: Teacher[] = [
   {
     id: 'james',
     initials: 'JW',
-    photo: 'https://i.pravatar.cc/300?img=33',
+    photo: `${SITE_PHOTOS}/james.jpg`,
     name: 'James W.',
     role: 'Exam Preparation Teacher',
     price: 700,

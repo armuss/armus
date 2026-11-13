@@ -32,11 +32,21 @@ export default function Register() {
   const [password2, setPassword2] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState('');
 
+  // the website's signup rules (register.html), word for word
   async function handleRegister() {
     setError('');
-    if (!name || !email || !password) {
-      setError('Ad, e-posta ve şifre zorunlu.');
+    setNotice('');
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    // at least two letter-only words: first name and last name
+    if (!/^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u.test(cleanName)) {
+      setError('Lütfen adını ve soyadını yaz (tek bir kelime yeterli değil).');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Geçerli bir e-posta adresi gir.');
       return;
     }
     if (password.length < 6) {
@@ -44,21 +54,28 @@ export default function Register() {
       return;
     }
     if (password !== password2) {
-      setError('Şifreler eşleşmiyor.');
+      setError('Şifreler birbiriyle eşleşmiyor.');
       return;
     }
     setLoading(true);
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: cleanEmail,
       password,
-      options: { data: { name, role: 'student', city: city || null } },
+      options: { data: { name: cleanName, role: 'student', city: city.trim() || null } },
     });
     setLoading(false);
     if (signUpError) {
-      setError(signUpError.message);
+      // the same message whether or not the email already has an account,
+      // like the website - no "this email is registered" oracle
+      setError('Hesap oluşturulamadı. Bilgilerini kontrol et, ya da zaten bir hesabın varsa giriş yapmayı dene.');
       return;
     }
-    router.replace('/(tabs)');
+    if (!data.session) {
+      setNotice(`Hesabın oluşturuldu! ${cleanEmail} adresine gönderdiğimiz onay bağlantısına tıklayıp giriş yapabilirsin.`);
+      return;
+    }
+    // the last step, like the website: the 6-digit email code
+    router.replace('/verify-email');
   }
 
   return (
@@ -139,6 +156,7 @@ export default function Register() {
           </View>
 
           {!!error && <Text style={styles.error}>{error}</Text>}
+          {!!notice && <Text style={styles.notice}>{notice}</Text>}
 
           <View style={{ marginTop: 8 }}>
             <Button label="Kayıt Ol" onPress={handleRegister} loading={loading} />
@@ -219,6 +237,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     backgroundColor: colors.panel,
+  },
+  notice: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 13.5,
+    lineHeight: 19,
+    color: colors.petrol,
+    marginBottom: 14,
   },
   error: {
     fontFamily: fonts.bodyMedium,

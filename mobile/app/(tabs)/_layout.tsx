@@ -5,7 +5,7 @@ import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '../../lib/auth';
+import { needsEmailVerification, useAuth } from '../../lib/auth';
 import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -76,6 +76,9 @@ export default function TabsLayout() {
   }
 
   if (!session) return <Redirect href="/(auth)/login" />;
+  // like the website's armusEnforceEmailVerification: a new account that
+  // hasn't confirmed its email with the 6-digit code goes back there
+  if (needsEmailVerification(profile)) return <Redirect href="/verify-email" />;
 
   const isTeacher = profile?.role === 'teacher';
 
