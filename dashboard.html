@@ -95,6 +95,47 @@
       grid-template-columns: 1fr;
       background: var(--armus-champagne-wash);
       --ag-line: #ece4d6;
+      --band: 300px;
+    }
+
+    /* the overview opens on a red band (the header, the title and the week
+       strip) that fades into the champagne like the homepage hero does;
+       the other panels keep the plain ground under their tables */
+    .shell.is-overview {
+      background:
+        linear-gradient(180deg, var(--armus-gold-3) 0, var(--armus-gold-2) 200px, var(--armus-gold-1) calc(var(--band) - 40px), #d9b0b2 calc(var(--band) + 50px), var(--armus-champagne-wash) calc(var(--band) + 150px)) no-repeat,
+        var(--armus-champagne-wash);
+    }
+
+    .shell.is-overview .dash-brand img {
+      content: url("logo-cream.png");
+    }
+
+    .shell.is-overview .dash-sep {
+      background: rgba(250, 245, 226, .35);
+    }
+
+    .shell.is-overview .dash-who {
+      color: rgba(250, 245, 226, .82);
+    }
+
+    .shell.is-overview .dash-who b,
+    .shell.is-overview .dash-who .dash-name {
+      color: var(--armus-cream);
+    }
+
+    .shell.is-overview .presence-hint {
+      background: rgba(250, 245, 226, .14);
+      border-color: rgba(250, 245, 226, .3);
+      color: var(--armus-cream);
+    }
+
+    .shell.is-overview .dash-header .lang-toggle,
+    .shell.is-overview .dash-header .help-btn,
+    .shell.is-overview .dash-header .gnav-icon-btn {
+      background: #fff;
+      border-color: transparent;
+      color: var(--armus-ink);
     }
 
     /* the menu: a floating black dock at the bottom (design D, the same
@@ -109,8 +150,8 @@
       gap: 4px;
       padding: 8px;
       border-radius: 22px;
-      background: #0b0b0b;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+      background: var(--armus-gold-gradient);
+      box-shadow: 0 18px 40px rgba(109, 22, 28, .38);
     }
 
     .nav-btn {
@@ -123,7 +164,7 @@
       border: 0;
       border-radius: 15px;
       background: transparent;
-      color: #a8a8a8;
+      color: rgba(250, 245, 226, .78);
       font: 700 11px Inter, sans-serif;
       white-space: nowrap;
       text-decoration: none;
@@ -139,16 +180,16 @@
 
     .nav-btn:hover {
       color: #fff;
-      background: rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .12);
     }
 
     .nav-btn.active {
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
     }
 
     .nav-btn:focus-visible {
-      outline: 2px solid var(--armus-red-on-dark);
+      outline: 2px solid var(--armus-cream);
       outline-offset: 2px;
     }
 
@@ -467,23 +508,24 @@
       font: 800 36px/1.05 "Unbounded", "Inter", sans-serif;
       letter-spacing: -1.2px;
       margin: 0;
+      color: var(--armus-cream);
     }
 
     .ag-date {
       font-size: 14px;
       font-weight: 600;
-      color: var(--armus-muted);
+      color: rgba(250, 245, 226, .85);
     }
 
     .ag-digest {
       margin: 8px 0 18px;
       font-size: 14px;
       line-height: 1.6;
-      color: #5a5a5a;
+      color: rgba(250, 245, 226, .88);
     }
 
     .ag-digest strong {
-      color: var(--armus-ink);
+      color: var(--armus-cream);
     }
 
     .ag-days {
@@ -498,7 +540,7 @@
       justify-content: space-between;
       gap: 8px;
       padding: 12px 14px;
-      border: 1px solid var(--ag-line);
+      border: 1px solid transparent;
       border-radius: 18px;
       background: #fff;
       color: var(--armus-ink);
@@ -542,30 +584,24 @@
       background: var(--armus-gold-2);
     }
 
+    /* the picked day: cream with the theme red, so it stands out on the band */
     .ag-day.on {
-      background: var(--armus-ink);
-      border-color: var(--armus-ink);
-      color: #fff;
+      background: var(--armus-cream);
+      color: var(--armus-gold-2);
     }
 
     .ag-day.on small {
-      color: #a8a8a8;
+      color: var(--armus-gold-text);
     }
 
-    .ag-day.on .ag-dots i {
-      background: #fff;
-    }
 
-    .ag-day.on .ag-dots i.tr {
-      background: var(--armus-red-on-dark);
-    }
 
     .ag-day.off:not(.on) {
       opacity: .55;
     }
 
     .ag-day:focus-visible {
-      outline: 2px solid var(--armus-navy);
+      outline: 2px solid var(--armus-cream);
       outline-offset: 2px;
     }
 
@@ -594,12 +630,15 @@
       align-items: center;
       gap: 12px;
       margin-left: auto;
+      padding: 8px 8px 8px 16px;
+      border-radius: 16px;
+      background: #f6e3e4;
       font-size: 13px;
-      color: #5a5a5a;
+      color: var(--armus-gold-text);
     }
 
     .ag-next b {
-      color: var(--armus-ink);
+      color: var(--armus-gold-3);
     }
 
     .ag-join {
@@ -797,9 +836,25 @@
     }
 
     .ag-card h3 svg {
+      box-sizing: content-box;
       width: 17px;
       height: 17px;
+      padding: 7px;
+      border-radius: 10px;
+      background: #f6e3e4;
       color: var(--armus-gold-2);
+    }
+
+    /* the money card on the theme red */
+    .ag-money {
+      border-color: transparent;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-cream);
+    }
+
+    .ag-money h3 svg {
+      background: rgba(250, 245, 226, .16);
+      color: var(--armus-cream);
     }
 
     .ag-big {
@@ -818,6 +873,14 @@
 
     .ag-sub b {
       color: var(--armus-ink);
+    }
+
+    .ag-money .ag-sub {
+      color: rgba(250, 245, 226, .82);
+    }
+
+    .ag-money .ag-sub b {
+      color: var(--armus-cream);
     }
 
     .ag-weeks {
@@ -840,20 +903,24 @@
       text-align: center;
     }
 
+    .ag-weeks div {
+      color: rgba(250, 245, 226, .75);
+    }
+
     .ag-weeks i {
       display: block;
       min-height: 6px;
       border-radius: 10px;
-      background: #efe9df;
+      background: rgba(250, 245, 226, .2);
     }
 
     .ag-weeks .on {
-      color: var(--armus-ink);
+      color: var(--armus-cream);
       font-weight: 700;
     }
 
     .ag-weeks .on i {
-      background: var(--armus-gold-gradient);
+      background: var(--armus-cream);
     }
 
     .ag-row {
@@ -881,7 +948,7 @@
     .ag-row svg {
       width: 16px;
       height: 16px;
-      color: var(--armus-navy);
+      color: var(--armus-gold-2);
     }
 
     .ag-row b {
@@ -921,7 +988,7 @@
       display: block;
       height: 100%;
       border-radius: 99px;
-      background: var(--armus-petrol);
+      background: var(--armus-gold-gradient);
       transition: width .4s ease;
     }
 
@@ -2542,7 +2609,7 @@
   </div>
 
   <!-- DASHBOARD -->
-  <div class="shell" id="shell">
+  <div class="shell is-overview" id="shell">
 
     <!-- the menu: a floating dock (design D) -->
     <nav class="dock" aria-label="Öğretmen paneli">
@@ -3093,6 +3160,8 @@
         document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
         btn.classList.add("active");
         document.getElementById(`panel-${btn.dataset.panel}`).classList.add("active");
+        shell.classList.toggle("is-overview", btn.dataset.panel === "overview");
+        if (typeof window.armusAgSetBand === "function") window.armusAgSetBand();
         // the dock sits at the bottom, so a new panel starts from its top
         window.scrollTo(0, 0);
       });
@@ -4367,7 +4436,19 @@
         renderAgDays();
         renderAgNext();
         renderAgLine();
+        agSetBand();
       }
+
+      // the red band ends a little under the week strip, wherever that
+      // lands (a warning banner above or a wrapped header moves it)
+      function agSetBand() {
+        const days = document.getElementById("agDays");
+        if (!days.offsetParent) return;
+        const top = shell.getBoundingClientRect().top;
+        shell.style.setProperty("--band", `${Math.round(days.getBoundingClientRect().bottom - top + 24)}px`);
+      }
+      window.armusAgSetBand = agSetBand;
+      window.addEventListener("resize", agSetBand);
 
       // this month's net earnings, week by week (days 1-7, 8-14, ...)
       function renderAgWeeks() {
