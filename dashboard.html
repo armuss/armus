@@ -641,6 +641,10 @@
       color: var(--armus-gold-3);
     }
 
+    .ag-next[hidden] {
+      display: none;
+    }
+
     .ag-join {
       display: inline-flex;
       align-items: center;
@@ -3083,7 +3087,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=5"></script>
-  <script src="auth.js?v=15"></script>
+  <script src="auth.js?v=16"></script>
   <script src="bookings.js?v=12"></script>
   <script src="reschedule.js?v=4"></script>
   <script src="reviews.js?v=5"></script>
@@ -3162,10 +3166,23 @@
         document.getElementById(`panel-${btn.dataset.panel}`).classList.add("active");
         shell.classList.toggle("is-overview", btn.dataset.panel === "overview");
         if (typeof window.armusAgSetBand === "function") window.armusAgSetBand();
+        // the address keeps the open panel, so a reload (or the header
+        // menu's Panelim / Ayarlar links) lands on it
+        if (location.hash !== `#${btn.dataset.panel}`) history.replaceState(null, "", `#${btn.dataset.panel}`);
         // the dock sits at the bottom, so a new panel starts from its top
         window.scrollTo(0, 0);
       });
     });
+
+    // dashboard#profile, #bookings ... opens that panel (on load, and when
+    // the header menu changes the hash while the panel is already open)
+    function openPanelFromHash() {
+      const name = location.hash.slice(1);
+      const btn = name && document.querySelector(`.nav-btn[data-panel="${CSS.escape(name)}"]`);
+      if (btn && !btn.classList.contains("active")) btn.click();
+    }
+    openPanelFromHash();
+    window.addEventListener("hashchange", openPanelFromHash);
 
     (async function() {
 
