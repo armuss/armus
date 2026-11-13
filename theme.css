@@ -148,6 +148,13 @@
   --armus-pine: #256b4c;
   /* petrol green, beside the theme red; cream on it 6.8, it on cream 6.8 */
   --armus-petrol: #1f5f5b;
+  /* champagne (sampanya), the warm neutral beside the red, night blue and
+     petrol: the base for panels, a deeper one for their edges, and a
+     pale wash for whole sections. Ink, red and night blue all read on it
+     (red on champagne 7.5). */
+  --armus-champagne: #f3e5cf;
+  --armus-champagne-deep: #e2cba6;
+  --armus-champagne-wash: #fbf5ec;
   --armus-bordo: #7a2e3a;
 }
 

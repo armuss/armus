@@ -25,8 +25,11 @@
 /* ================= PROOF ================= */
 .hk-proof {
   position: relative;
-  padding: 70px 0 30px;
+  padding: 70px 0 60px;
   overflow: clip;
+  /* champagne grounds (option A): this section, the step 1 panel and the
+     testimonials, between the white ones */
+  background: var(--armus-champagne-wash);
 }
 .hk-src {
   font-size: 38px;
@@ -518,6 +521,9 @@ html[lang="en"] .hk-pc {
   padding: 56px 0;
   border-top: 1.5px solid var(--armus-border-soft);
 }
+.hk-step + .hk-step {
+  border-color: var(--armus-champagne-deep);
+}
 .hk-step::before {
   content: "";
   position: absolute;
@@ -627,6 +633,7 @@ html[lang="en"] .hk-pc {
 
 /* step 1: search + matching teacher cards */
 .hk-v1 {
+  --hk-paper: var(--armus-champagne);
   background: var(--hk-paper);
 }
 .hk-v1 .hk-par {
@@ -1258,8 +1265,13 @@ html[lang="en"] .hk-rate-n i {
    until it has - or without it - the reviews sit one under the other,
    each with its own name. */
 .hk-tst {
-  padding: 110px 10px 96px;
+  padding: 50px 10px;
   text-align: center;
+  /* the champagne wash runs edge to edge although the section sits in the
+     page column */
+  background: var(--armus-champagne-wash);
+  box-shadow: 0 0 0 100vmax var(--armus-champagne-wash);
+  clip-path: inset(0 -100vmax);
 }
 .hk-tst-h {
   font: 800 22px/1.2 Unbounded, Inter, sans-serif;
