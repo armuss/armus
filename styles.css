@@ -892,14 +892,14 @@ html.nav-sheet-open body {
   color: var(--armus-gold-text);
 }
 
-/* the text side on pine green: cream text, cream label and ticks, the
-   three points in a darker inset, and a cream button with pine text
-   (pine on cream 5.9) */
+/* the text side on petrol green: cream text, cream label and ticks, the
+   three points in a darker inset, and a cream button with petrol text
+   (petrol on cream 6.8) */
 .teacher-cta {
-  border-color: var(--armus-pine);
+  border-color: var(--armus-petrol);
 }
 .tcta-panel {
-  background: var(--armus-pine);
+  background: var(--armus-petrol);
 }
 .tcta-panel .section-label,
 .tcta-panel .tcta-points li::before {
@@ -925,7 +925,7 @@ html.nav-sheet-open body {
 }
 .tcta-panel .btn {
   background: var(--armus-cream);
-  color: var(--armus-pine);
+  color: var(--armus-petrol);
 }
 .tcta-panel .btn:focus-visible,
 .tcta-link:focus-visible {
