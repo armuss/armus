@@ -92,117 +92,64 @@
     .shell {
       display: none;
       min-height: 100vh;
-      grid-template-columns: 230px 1fr;
+      grid-template-columns: 1fr;
+      background: var(--armus-champagne-wash);
+      --ag-line: #ece4d6;
     }
 
-    /* solid theme-colour sidebar, white main content - the one coloured
-       "zone" on this page instead of scattered small accents (matches the
-       teacher panel mockup the user picked: option G). On the red the
-       text is cream and the active item is a black pill with light red. */
-    .sidebar {
-      background: linear-gradient(170deg, var(--armus-gold-1) 0%, var(--armus-gold-2) 55%, var(--armus-gold-3) 100%);
-      padding: 24px 14px;
+    /* the menu: a floating black dock at the bottom (design D, the same
+       on desktop and phone), the open panel in the theme red */
+    .dock {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      z-index: 60;
       display: flex;
-      flex-direction: column;
-    }
-
-    .sidebar .logo {
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: -1px;
-      padding: 4px 10px 4px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .sidebar .tag {
-      display: inline-block;
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      color: var(--armus-red-on-dark);
-      background: var(--armus-ink);
-      border: none;
-      border-radius: 999px;
-      padding: 3px 9px;
-      margin: 10px 0 18px 10px;
-    }
-
-    .sb-profile {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, .9);
-      border: 1px solid rgba(255, 255, 255, .5);
-      border-radius: 16px;
-      padding: 12px;
-      margin: 4px 2px 18px;
-    }
-
-    .sb-profile .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-      font-size: 13px;
-    }
-
-    .sb-profile > div:last-child {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .sb-profile .dash-name,
-    .sb-profile .dash-email {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .sb-profile .dash-name {
-      font-size: 12.5px;
-      font-weight: 700;
-      letter-spacing: normal;
-    }
-
-    .sb-profile .dash-email {
-      font-size: 10.5px;
-      margin-top: 1px;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 22px;
+      background: #0b0b0b;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
     }
 
     .nav-btn {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 11px;
-      width: 100%;
-      text-align: left;
+      gap: 4px;
+      min-width: 78px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 15px;
       background: transparent;
-      border: 1px solid transparent;
-      color: var(--armus-ink);
-      font-family: inherit;
-      font-size: 13.5px;
-      padding: 11px 13px;
-      border-radius: 13px;
-      cursor: pointer;
-      margin-bottom: 8px;
+      color: #a8a8a8;
+      font: 700 11px Inter, sans-serif;
+      white-space: nowrap;
       text-decoration: none;
+      cursor: pointer;
     }
 
     .nav-btn svg {
-      width: 17px;
-      height: 17px;
+      width: 20px;
+      height: 20px;
       flex-shrink: 0;
       color: currentColor;
     }
 
     .nav-btn:hover {
-      background: rgba(255, 255, 255, .35);
+      color: #fff;
+      background: rgba(255, 255, 255, .08);
     }
 
     .nav-btn.active {
-      background: var(--armus-ink);
-      color: var(--armus-red-on-dark);
-      font-weight: 700;
-      box-shadow: 0 6px 16px -10px rgba(10, 10, 10, .5);
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .nav-btn:focus-visible {
+      outline: 2px solid var(--armus-red-on-dark);
+      outline-offset: 2px;
     }
 
     .back-link {
@@ -257,40 +204,50 @@
       height: 17px;
     }
 
-    .sidebar .nav-btn:not(.active),
-    .sidebar .back-link,
-    .sidebar .lang-toggle,
-    .sidebar .help-btn {
-      color: var(--armus-on-gold);
-    }
-
-    .sidebar .nav-btn:not(.active):hover {
-      background: rgba(255, 255, 255, .14);
-    }
-
-    .sidebar .lang-toggle,
-    .sidebar .help-btn {
-      border-color: rgba(250, 245, 226, .35);
-    }
-
-    .sidebar .lang-toggle:hover,
-    .sidebar .help-btn:hover {
-      border-color: var(--armus-on-gold);
-      color: var(--armus-on-gold);
-    }
-
     /* ---- main ---- */
 
     main {
-      padding: 30px 34px 60px;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      /* room at the bottom for the dock */
+      padding: 26px 36px 140px;
       overflow-x: hidden;
     }
 
     .dash-header {
       display: flex;
       align-items: center;
-      gap: 18px;
-      margin-bottom: 30px;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .dash-brand img {
+      display: block;
+      height: 26px;
+    }
+
+    .dash-sep {
+      width: 1px;
+      height: 24px;
+      background: var(--armus-border);
+    }
+
+    .dash-who {
+      min-width: 0;
+      font-size: 13.5px;
+      color: var(--armus-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dash-who b,
+    .dash-who .dash-name {
+      color: var(--armus-ink);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0;
     }
 
     /* ---- attendance warning banner + explanation modal ---- */
@@ -496,169 +453,557 @@
       margin-top: 0;
     }
 
-    /* ---- overview panel: mesh-glow hero + icon stat row ---- */
+    /* ---- overview (design D, "Ajanda"): today's title, the week strip,
+       the selected day on a time line, then money / performance / goals ---- */
 
-    .ov-hero {
-      position: relative;
-      border-radius: 24px;
-      padding: 26px 28px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      background: #0a0a0a;
-      color: #fff;
-    }
-
-    .ov-hero-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(50px);
-      opacity: .55;
-      pointer-events: none;
-    }
-
-    .ov-hero-blob-1 {
-      width: 260px;
-      height: 260px;
-      background: var(--armus-gold-2);
-      top: -110px;
-      right: -50px;
-    }
-
-    .ov-hero-blob-2 {
-      width: 200px;
-      height: 200px;
-      background: var(--armus-gold-3);
-      bottom: -90px;
-      left: 8%;
-      opacity: .3;
-    }
-
-    .ov-hero-digest {
-      position: relative;
+    .ag-head {
       display: flex;
-      align-items: flex-start;
-      gap: 10px;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+    }
+
+    .ag-title {
+      font: 800 36px/1.05 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.2px;
+      margin: 0;
+    }
+
+    .ag-date {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--armus-muted);
+    }
+
+    .ag-digest {
+      margin: 8px 0 18px;
       font-size: 14px;
       line-height: 1.6;
-      color: #d8d8d8;
-      max-width: 58%;
+      color: #5a5a5a;
     }
 
-    .ov-hero-digest .icon {
-      color: var(--armus-red-on-dark);
-      flex-shrink: 0;
-      margin-top: 3px;
-    }
-
-    .ov-hero-digest strong {
-      color: var(--armus-red-on-dark);
-    }
-
-    .ov-hero .badge-row {
-      position: relative;
-      margin-top: 14px;
-      margin-bottom: 0;
-    }
-
-    .ov-hero .badge-chip {
-      background: rgba(255, 255, 255, .07);
-      border-color: rgba(255, 255, 255, .18);
-      color: #eee;
-    }
-
-    .ov-hero .badge-icon svg {
-      width: 14px;
-      height: 14px;
-      color: var(--armus-red-on-dark);
-      display: block;
-    }
-
-    .ov-spark-card {
-      position: absolute;
-      right: 28px;
-      top: 26px;
-      width: 260px;
-      background: rgba(255, 255, 255, .07);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, .14);
-      border-radius: 14px;
-      padding: 12px 14px;
-    }
-
-    .ov-spark-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      color: #a8a8a8;
-    }
-
-    .ov-spark-value {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      color: #fff;
-      margin-top: 4px;
-    }
-
-    .ov-spark-svg {
-      margin-top: 6px;
-      display: block;
-    }
-
-    /* STATS */
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .stat {
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 16px;
-      background: var(--armus-panel);
-    }
-
-    .stat-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
-      background: var(--armus-panel-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 10px;
-    }
-
-    .stat-icon svg {
-      width: 16px;
-      height: 16px;
-      color: var(--armus-gold-3);
-    }
-
-    .stat strong {
-      display: block;
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-weight: 700;
-      font-size: 21px;
+    .ag-digest strong {
       color: var(--armus-ink);
     }
 
-    .stat span {
-      color: var(--armus-muted);
-      font-size: 11px;
-    }
-
-    /* ---- commission + goal, side by side ---- */
-
-    .ov-lower-grid {
+    .ag-days {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 14px;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
     }
+
+    .ag-day {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      border: 1px solid var(--ag-line);
+      border-radius: 18px;
+      background: #fff;
+      color: var(--armus-ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .ag-day small {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #8a8a8a;
+    }
+
+    .ag-day b {
+      font: 800 22px/1 "Unbounded", "Inter", sans-serif;
+    }
+
+    .ag-day.today small {
+      color: var(--armus-gold-text);
+    }
+
+    .ag-dots {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 3px;
+      max-width: 42px;
+    }
+
+    .ag-dots i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--armus-navy);
+    }
+
+    .ag-dots i.tr {
+      background: var(--armus-gold-2);
+    }
+
+    .ag-day.on {
+      background: var(--armus-ink);
+      border-color: var(--armus-ink);
+      color: #fff;
+    }
+
+    .ag-day.on small {
+      color: #a8a8a8;
+    }
+
+    .ag-day.on .ag-dots i {
+      background: #fff;
+    }
+
+    .ag-day.on .ag-dots i.tr {
+      background: var(--armus-red-on-dark);
+    }
+
+    .ag-day.off:not(.on) {
+      opacity: .55;
+    }
+
+    .ag-day:focus-visible {
+      outline: 2px solid var(--armus-navy);
+      outline-offset: 2px;
+    }
+
+    .ag-line {
+      margin-top: 16px;
+      padding: 20px 22px 22px;
+      border: 1px solid var(--ag-line);
+      border-radius: 24px;
+      background: #fff;
+    }
+
+    .ag-line-hd {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin-bottom: 24px;
+    }
+
+    .ag-line-hd > b {
+      font: 800 16px "Unbounded", "Inter", sans-serif;
+    }
+
+    .ag-next {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      font-size: 13px;
+      color: #5a5a5a;
+    }
+
+    .ag-next b {
+      color: var(--armus-ink);
+    }
+
+    .ag-join {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .ag-join svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .ag-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+      color: #6a6a6a;
+    }
+
+    .ag-next[hidden] + .ag-legend {
+      margin-left: auto;
+    }
+
+    .ag-legend > span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ag-legend i {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: var(--armus-navy);
+    }
+
+    .ag-legend i.tr {
+      background: var(--armus-gold-2);
+    }
+
+    .ag-legend i.free {
+      background: repeating-linear-gradient(45deg, rgba(43, 58, 124, .14) 0 2px, #fff 2px 4px);
+      border: 1px dashed rgba(43, 58, 124, .45);
+    }
+
+    /* one column per hour (--ag-cols), set by the script from the day's
+       own range */
+    .ag-track {
+      position: relative;
+      height: 112px;
+      border-radius: 16px;
+      background: repeating-linear-gradient(90deg, #f7f4ee 0 calc(100% / var(--ag-cols, 12) - 1px), #ebe6dc calc(100% / var(--ag-cols, 12) - 1px) calc(100% / var(--ag-cols, 12)));
+    }
+
+    .ag-free {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      border: 1.5px dashed rgba(43, 58, 124, .28);
+      border-radius: 12px;
+      background: repeating-linear-gradient(45deg, rgba(43, 58, 124, .07) 0 4px, transparent 4px 8px);
+    }
+
+    .ag-les {
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      min-width: 84px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 2px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--armus-navy);
+      color: #fff;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .ag-les.tr {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .ag-les b {
+      font: 800 15px "Unbounded", "Inter", sans-serif;
+      white-space: nowrap;
+    }
+
+    .ag-les span {
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ag-les small {
+      font-size: 11px;
+      opacity: .82;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ag-les.past {
+      opacity: .45;
+    }
+
+    a.ag-les:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+    }
+
+    .ag-now {
+      position: absolute;
+      top: -6px;
+      bottom: -6px;
+      z-index: 2;
+      width: 2px;
+      margin-left: -1px;
+      background: var(--armus-gold-2);
+    }
+
+    .ag-now::before {
+      content: attr(data-time);
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--armus-gold-2);
+      color: var(--armus-on-gold);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .ag-hours {
+      display: grid;
+      grid-template-columns: repeat(var(--ag-cols, 12), 1fr);
+      margin-top: 8px;
+      font-size: 11px;
+      color: #8a8a8a;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ag-empty {
+      margin: 14px 0 0;
+      font-size: 13.5px;
+      color: #5a5a5a;
+    }
+
+    .ag-link {
+      margin-left: 4px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--armus-gold-text);
+      font: inherit;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .ag-cols {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0 20px;
+    }
+
+    .ag-card {
+      padding: 22px;
+      border: 1px solid var(--ag-line);
+      border-radius: 24px;
+      background: #fff;
+    }
+
+    .ag-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px;
+      font: 800 15px "Unbounded", "Inter", sans-serif;
+    }
+
+    .ag-card h3 svg {
+      width: 17px;
+      height: 17px;
+      color: var(--armus-gold-2);
+    }
+
+    .ag-big {
+      font: 800 38px/1 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.2px;
+    }
+
+    .ag-sub {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: #6a6a6a;
+    }
+
+    .ag-sub b {
+      color: var(--armus-ink);
+    }
+
+    .ag-weeks {
+      display: grid;
+      grid-template-columns: repeat(var(--ag-wk, 5), 1fr);
+      align-items: end;
+      gap: 10px;
+      height: 110px;
+      margin-top: 18px;
+    }
+
+    .ag-weeks div {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 6px;
+      height: 100%;
+      font-size: 11px;
+      color: #8a8a8a;
+      text-align: center;
+    }
+
+    .ag-weeks i {
+      display: block;
+      min-height: 6px;
+      border-radius: 10px;
+      background: #efe9df;
+    }
+
+    .ag-weeks .on {
+      color: var(--armus-ink);
+      font-weight: 700;
+    }
+
+    .ag-weeks .on i {
+      background: var(--armus-gold-gradient);
+    }
+
+    .ag-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 0;
+      border-top: 1px solid #f0ebe2;
+    }
+
+    .ag-row:first-of-type {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .ag-row > span {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: #4a4a4a;
+    }
+
+    .ag-row svg {
+      width: 16px;
+      height: 16px;
+      color: var(--armus-navy);
+    }
+
+    .ag-row b {
+      font: 800 18px "Unbounded", "Inter", sans-serif;
+    }
+
+    .ag-perf .badge-row {
+      margin: 14px 0 0;
+    }
+
+    .ag-goal + .ag-goal {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #f0ebe2;
+    }
+
+    .ag-goal-t {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .ag-goal-t b {
+      font-weight: 800;
+    }
+
+    .ag-bar {
+      height: 10px;
+      border-radius: 99px;
+      background: #efe9df;
+      overflow: hidden;
+    }
+
+    .ag-bar i {
+      display: block;
+      height: 100%;
+      border-radius: 99px;
+      background: var(--armus-petrol);
+      transition: width .4s ease;
+    }
+
+    .ag-goal small {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #7a7a7a;
+    }
+
+    .ag-goals .goal-inputs {
+      margin-top: 12px;
+    }
+
+    .ag-goals .goal-track {
+      height: 10px;
+      background: #efe9df;
+    }
+
+    @media (max-width: 1100px) {
+      .ag-cols {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .ag-money {
+        grid-column: 1 / -1;
+      }
+    }
+
+    /* on a phone the day reads as a list: the blocks stack in time order
+       and the hour grid, open slots and the now line step aside */
+    @media (max-width: 700px) {
+      .ag-line {
+        padding: 16px;
+      }
+
+      .ag-line-hd {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .ag-next {
+        flex-wrap: wrap;
+        margin: 0;
+      }
+
+      .ag-legend,
+      .ag-free,
+      .ag-hours,
+      .ag-now {
+        display: none;
+      }
+
+      .ag-track {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+        background: none;
+      }
+
+      .ag-les {
+        position: relative;
+        left: auto !important;
+        width: auto !important;
+        top: auto;
+        bottom: auto;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        min-height: 58px;
+      }
+
+      .ag-empty {
+        margin-top: 0;
+      }
+    }
+
+    /* ---- shared card ---- */
 
     .panel-card {
       background: var(--armus-panel);
@@ -675,53 +1020,6 @@
     .panel-card .goal-box-top {
       flex-direction: column;
       align-items: flex-start;
-    }
-
-    /* COMMISSION — a badge, not a literal progress gauge */
-
-    .ring-wrap {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .ring {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: var(--armus-gold-gradient);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .ring-inner {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      background: var(--armus-panel-2, var(--armus-bg));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .ring-inner strong {
-      font-family: "Unbounded", "Inter", sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--armus-gold-text);
-    }
-
-    .ring-wrap-range {
-      font-weight: 700;
-      font-size: 13px;
-    }
-
-    .ring-wrap-hint {
-      font-size: 12px;
-      color: var(--armus-muted);
-      margin-top: 3px;
     }
 
     /* ---- collapsible sections (goal / simulator / response) ---- */
@@ -1623,46 +1921,6 @@
       color: var(--armus-ink);
     }
 
-    /* ---- today widget ---- */
-
-    .today-card {
-      display: none;
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 20px;
-    }
-
-    .today-card h4 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      color: var(--armus-gold-text);
-      margin-bottom: 10px;
-    }
-
-    .today-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--armus-border-soft);
-      font-size: 13px;
-    }
-
-    .today-row:last-child {
-      border-bottom: none;
-    }
-
-    .today-row .today-when {
-      color: var(--armus-gold-text);
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
     .join-btn-sm {
       display: inline-block;
       border: none;
@@ -2123,76 +2381,70 @@
         grid-template-columns: 1fr;
       }
 
-      .sidebar {
-        position: sticky;
-        top: 0;
-        z-index: 5;
-        flex-direction: row;
-        align-items: center;
-        overflow-x: auto;
-        padding: 12px;
-        gap: 6px;
-        background: var(--armus-bg);
-      }
-
-      /* on a phone the strip is white again, so the tabs go back to ink */
-      .sidebar .nav-btn:not(.active) {
-        color: var(--armus-ink);
-      }
-
-      .sidebar .nav-btn:not(.active):hover {
-        background: rgba(10, 10, 10, .05);
-      }
-
-      /* no scrollbar is visible on most phones, so without this the tab
-         strip just looks like it ends mid-word with no hint that there's
-         more to swipe to - a sticky faded edge stays pinned to the
-         scrollport's right side as a permanent "more tabs" cue */
-      .sidebar::after {
-        content: "";
-        position: sticky;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 28px;
-        margin-left: auto;
-        flex-shrink: 0;
-        background: linear-gradient(to right, transparent, var(--armus-bg));
-        pointer-events: none;
-      }
-
-      .sidebar .logo,
-      .sidebar .tag,
-      .sb-profile {
-        display: none;
+      .dock {
+        left: 10px;
+        right: 10px;
+        bottom: 12px;
+        transform: none;
+        justify-content: space-between;
+        padding: 6px;
+        border-radius: 20px;
       }
 
       .nav-btn {
-        white-space: nowrap;
-        width: auto;
-        margin-bottom: 0;
+        flex: 1;
+        min-width: 0;
+        gap: 3px;
+        padding: 8px 2px;
+        font-size: 10px;
       }
 
-      .back-link {
-        display: none;
+      .nav-btn svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      /* the support chat button sits above the dock */
+      #armusChatRoot {
+        bottom: 92px !important;
       }
 
       main {
-        padding: 20px 16px 50px;
+        padding: 16px 14px 120px;
       }
 
-      .ov-hero-digest {
-        max-width: 100%;
+      .dash-sep,
+      .dash-who {
+        display: none;
       }
 
-      .ov-spark-card {
-        position: static;
-        width: 100%;
-        margin-top: 14px;
+      .ag-title {
+        font-size: 28px;
       }
 
-      .stats {
-        grid-template-columns: 1fr 1fr;
+      .ag-days {
+        grid-template-columns: repeat(7, minmax(64px, 1fr));
+        overflow-x: auto;
+        margin-right: -14px;
+        padding-right: 14px;
+      }
+
+      .ag-day {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+      }
+
+      .ag-day b {
+        font-size: 18px;
+      }
+
+      .ag-dots {
+        justify-content: flex-start;
+      }
+
+      .ag-cols {
+        grid-template-columns: 1fr;
       }
 
       /* the week tables on a phone: a slimmer hour gutter so the seven
@@ -2260,11 +2512,18 @@
         align-items: flex-start;
       }
 
+      /* logo and buttons on one line, the online hint under them */
       .dash-header {
         flex-wrap: wrap;
+        row-gap: 12px;
+      }
+
+      .nav-utility {
+        margin-left: auto;
       }
 
       .presence-hint {
+        order: 10;
         margin-left: 0;
       }
     }
@@ -2285,25 +2544,15 @@
   <!-- DASHBOARD -->
   <div class="shell" id="shell">
 
-    <div class="sidebar">
-      <div class="logo"><img src="logo-cream.png" alt="ARMUS" class="logo-img"></div>
-      <span class="tag" data-i18n="teacherDash.tag">ÖĞRETMEN PANELİ</span>
-
-      <div class="sb-profile">
-        <div class="avatar" id="avatar"></div>
-        <div>
-          <div class="dash-name" id="dashName"></div>
-          <div class="dash-email" id="dashEmail"></div>
-        </div>
-      </div>
-
+    <!-- the menu: a floating dock (design D) -->
+    <nav class="dock" aria-label="Öğretmen paneli">
       <button class="nav-btn active" data-panel="overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-        <span data-i18n="teacherDash.navOverview">Genel Bakış</span>
+        <span data-i18n="teacherDash.dockToday">Bugün</span>
       </button>
       <button class="nav-btn" data-panel="bookings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
-        <span data-i18n="teacherDash.navBookings">Rezervasyonlar</span>
+        <span data-i18n="teacherDash.dockLessons">Dersler</span>
       </button>
       <button class="nav-btn" data-panel="availability">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -2313,6 +2562,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
         <span data-i18n="teacherDash.navFinancial">Finansal</span>
       </button>
+      <a class="nav-btn" href="mesajlar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        <span data-i18n="nav.messages">Mesajlar</span>
+      </a>
       <button class="nav-btn" data-panel="profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span data-i18n="teacherDash.navProfile">Profil</span>
@@ -2321,11 +2574,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
         <span data-i18n="teacherDash.navSupport">Destek</span>
       </button>
-      <a class="nav-btn" href="mesajlar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-        <span data-i18n="nav.messages">Mesajlar</span>
-      </a>
-    </div>
+    </nav>
 
     <main>
 
@@ -2339,6 +2588,11 @@
       </button>
 
       <div class="dash-header">
+        <a href="/" class="dash-brand"><img src="logo-black.png" alt="ARMUS"></a>
+        <span class="dash-sep"></span>
+        <div class="dash-who"><span data-i18n="teacherDash.panelLabel">Öğretmen paneli</span> · <b class="dash-name" id="dashName"></b></div>
+        <!-- filled by the script, not shown: the header's own menu already carries the photo -->
+        <span id="avatar" hidden></span><span id="dashEmail" hidden></span>
         <div class="presence-hint">
           <span class="presence-dot"></span>
           <span data-i18n="teacherDash.presenceOnlineHint">Şu an çevrimiçi olarak görünüyorsun</span>
@@ -2353,83 +2607,66 @@
       </div>
 
       <div class="panel active" id="panel-overview">
-        <h2 data-i18n="teacherDash.navOverview">Genel Bakış</h2>
-
-        <div class="ov-hero">
-          <div class="ov-hero-blob ov-hero-blob-1"></div>
-          <div class="ov-hero-blob ov-hero-blob-2"></div>
-
-          <div class="ov-hero-digest">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
-            <span id="digestCard"></span>
-          </div>
-
-          <div class="badge-row" id="badgeRow"></div>
-
-          <div class="ov-spark-card">
-            <div class="ov-spark-label"><span data-i18n="teacherDash.spark7Days">Son 7 gün</span></div>
-            <div class="ov-spark-value" id="sparkValue">₺0</div>
-            <svg class="ov-spark-svg" width="248" height="40" viewBox="0 0 248 40">
-              <polyline id="sparkPolyline" points="0,37 248,37" fill="none" stroke="#ef6b73" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle id="sparkDot" cx="248" cy="37" r="4" fill="#ef6b73"/>
-            </svg>
-          </div>
+        <div class="ag-head">
+          <h2 class="ag-title" id="agTitle">Bugün</h2>
+          <span class="ag-date" id="agDate"></span>
         </div>
+        <p class="ag-digest" id="digestCard"></p>
 
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg></div>
-            <strong id="statLessons">0</strong>
-            <span data-i18n="teacherDash.statLessons">Tamamlanan ders</span>
-          </div>
-          <div class="stat">
-            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <strong id="statHours">0</strong>
-            <span data-i18n="teacherDash.statHours">Başarılı ders saati</span>
-          </div>
-          <div class="stat">
-            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div>
-            <strong id="statEarnings">₺0</strong>
-            <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
-          </div>
-          <div class="stat">
-            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg></div>
-            <strong id="statRating">—</strong>
-            <span data-i18n="teacherDash.statRating">Ortalama puan</span>
-          </div>
-        </div>
+        <div class="ag-days" id="agDays"></div>
 
-        <div class="today-card" id="todayCard">
-          <h4 data-i18n="teacherDash.today">Bugün</h4>
-          <div id="todayList"></div>
-        </div>
-
-        <div class="ov-lower-grid">
-          <div class="panel-card">
-            <h3 data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</h3>
-            <div class="ring-wrap">
-              <div class="ring">
-                <div class="ring-inner"><strong id="commissionRate">%30</strong></div>
-              </div>
-              <div>
-                <div class="ring-wrap-range" id="commissionRange">0–100 saat arası</div>
-                <div class="ring-wrap-hint" data-i18n="teacherDash.commissionHint">Daha çok ders ver, komisyonun düşsün.</div>
-              </div>
+        <section class="ag-line">
+          <div class="ag-line-hd">
+            <b data-i18n="teacherDash.dayFlow">Günün akışı</b>
+            <div class="ag-next" id="agNext" hidden></div>
+            <div class="ag-legend">
+              <span><i class="tr"></i><span data-i18n="teacherDash.trialLesson">Deneme Dersi</span></span>
+              <span><i></i><span data-i18n="teacherDash.regularLesson">Ders</span></span>
+              <span><i class="free"></i><span data-i18n="teacherDash.openSlot">Açık saat</span></span>
             </div>
           </div>
+          <div class="ag-track" id="agTrack"></div>
+          <div class="ag-hours" id="agHours"></div>
+          <p class="ag-empty" id="agEmpty" hidden></p>
+        </section>
 
-          <div class="panel-card">
-            <h3 data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</h3>
-            <div class="goal-box-top">
-              <span id="goalCaptionTop" data-i18n="teacherDash.goalCaptionTop">Bu ay için bir hedef belirle, ilerlemeni buradan takip et.</span>
+        <div class="ag-cols">
+          <section class="ag-card ag-money">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg><span data-i18n="teacherDash.earningsHeading">Kazanç</span></h3>
+            <div class="ag-big" id="statEarnings">₺0</div>
+            <div class="ag-sub">
+              <span data-i18n="teacherDash.statEarnings">Bu ay kazanç</span>
+              <span><span data-i18n="teacherDash.spark7Days">Son 7 gün</span> <b id="sparkValue">₺0</b></span>
+            </div>
+            <div class="ag-weeks" id="agWeeks"></div>
+          </section>
+
+          <section class="ag-card ag-perf">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg><span data-i18n="teacherDash.performanceHeading">Performans</span></h3>
+            <div class="ag-row"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg><span data-i18n="teacherDash.statRating">Ortalama puan</span></span><b id="statRating">—</b></div>
+            <div class="ag-row"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span data-i18n="teacherDash.statLessons">Tamamlanan ders</span></span><b id="statLessons">0</b></div>
+            <div class="ag-row"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="teacherDash.statHours">Başarılı ders saati</span></span><b id="statHours">0</b></div>
+            <div class="ag-row"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span data-i18n="teacherDash.responseShort">Mesajlara yanıt</span></span><b id="agResponse">—</b></div>
+            <div class="badge-row" id="badgeRow"></div>
+          </section>
+
+          <section class="ag-card ag-goals">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span data-i18n="teacherDash.goalsHeading">Hedefler</span></h3>
+            <div class="ag-goal">
+              <div class="ag-goal-t"><span><span data-i18n="teacherDash.commissionRateHeading">Komisyon oranın</span> <b id="commissionRate">%30</b><b id="agNextRate"></b></span><b id="agHoursOf"></b></div>
+              <div class="ag-bar"><i id="agCommFill" style="width:0%"></i></div>
+              <small><span id="commissionRange">0–100 saat arası</span> · <span id="agCommHint"></span></small>
+            </div>
+            <div class="ag-goal">
+              <div class="ag-goal-t"><span data-i18n="teacherDash.incomeGoalHeading">Aylık kazanç hedefin</span><b id="agGoalPct"></b></div>
+              <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+              <div class="goal-caption" id="goalCaption"></div>
               <div class="goal-inputs">
-                <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder">
+                <input type="number" id="goalInput" min="0" step="50" placeholder="örn. 5000" data-i18n-placeholder="teacherDash.goalPlaceholder" aria-label="Aylık kazanç hedefin">
                 <button type="button" id="saveGoalBtn" data-i18n="teacherDash.save">Kaydet</button>
               </div>
             </div>
-            <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
-            <div class="goal-caption" id="goalCaption"></div>
-          </div>
+          </section>
         </div>
 
         <details class="ov-details" open>
@@ -2775,7 +3012,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=39"></script>
+  <script src="i18n.js?v=40"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=5"></script>
@@ -2856,6 +3093,8 @@
         document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
         btn.classList.add("active");
         document.getElementById(`panel-${btn.dataset.panel}`).classList.add("active");
+        // the dock sits at the bottom, so a new panel starts from its top
+        window.scrollTo(0, 0);
       });
     });
 
@@ -3900,18 +4139,6 @@
       }
       const sparkTotal = sparkDays.reduce((sum, v) => sum + v, 0);
       document.getElementById("sparkValue").textContent = `₺${sparkTotal}`;
-      const sparkMax = Math.max(1, ...sparkDays);
-      const SPARK_W = 248, SPARK_H = 40, SPARK_PAD = 4;
-      const sparkPoints = sparkDays.map((v, i) => {
-        const x = (i / (sparkDays.length - 1)) * SPARK_W;
-        const y = SPARK_H - SPARK_PAD - (v / sparkMax) * (SPARK_H - SPARK_PAD * 2);
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      });
-      document.getElementById("sparkPolyline").setAttribute("points", sparkPoints.join(" "));
-      const [lastX, lastY] = sparkPoints[sparkPoints.length - 1].split(",");
-      document.getElementById("sparkDot").setAttribute("cx", lastX);
-      document.getElementById("sparkDot").setAttribute("cy", lastY);
-
       // ---- weekly narrative digest ----
 
       const weekAgoKey = localDateKey(new Date(Date.now() - 7 * 86400000));
@@ -3951,27 +4178,248 @@
       renderDigest();
       document.addEventListener("armus:langchange", renderDigest);
 
-      // ---- "today" widget ----
+      // ---- the day agenda (design D): the week strip, the selected day on a
+      // time line (lessons, open slots, "now"), the next lesson with its join
+      // button, this month's weekly earnings and the commission progress ----
 
-      const todayKey = localDateKey(new Date());
-      const todayBookings = activeBookings.filter(b => bookingLocalDateKey(b) === todayKey);
+      const AG_VIDEO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>';
+      // same precedence as the availability editor below and armusSlotsForDate
+      // (bookings.js): the saved weekly grid once it exists, else the signup pattern
+      const agHasDates = user.availability_dates && user.availability_dates._set === true;
+      function agOpenSlotsForDay(date) {
+        const raw = agHasDates
+          ? user.availability_dates[String(date.getDay())]
+          : (user.weekly_availability && user.weekly_availability[date.getDay()]);
+        return Array.isArray(raw) ? raw : [];
+      }
+      function agStart(b) { return armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone); }
+      function agMinutes(d) { return d.getHours() * 60 + d.getMinutes(); }
+      function agHhmm(min) { return String(Math.floor(min / 60) % 24).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0"); }
+      function agLocale() { return (typeof armusGetLang === "function" && armusGetLang() === "en") ? "en-GB" : "tr-TR"; }
+      function agNum(n) { return agLocale() === "tr-TR" ? String(n).replace(".", ",") : String(n); }
+      // "Ayşe Demir" -> "Ayşe D." so a 50-minute block still fits a name
+      function agShortName(name) {
+        const parts = armusCapitalizeName(name || "").trim().split(/\s+/);
+        return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1].charAt(0)}.` : parts[0];
+      }
+      function agTypeLabel(b) { return b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders"); }
 
-      function renderTodayList() {
-        if (todayBookings.length) {
-          document.getElementById("todayCard").style.display = "block";
-          document.getElementById("todayList").innerHTML = todayBookings.map(b => `
-            <div class="today-row">
-              <span>${armusEscapeHtml(b.studentName)} · ${b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")}</span>
-              <span class="today-when">
-                ${armusFormatTimeRange(b.time)}
-                ${armusCanJoinLessonNow(b) ? `<a class="join-btn-sm" href="class?booking=${b.id}">${armusT("teacherDash.joinShort", "🎥 Katıl")}</a>` : ""}
-              </span>
-            </div>
-          `).join("");
+      const agByDay = new Map();
+      activeBookings.forEach(b => {
+        const key = bookingLocalDateKey(b);
+        if (!agByDay.has(key)) agByDay.set(key, []);
+        agByDay.get(key).push(b);
+      });
+      agByDay.forEach(list => list.sort((a, b) => agStart(a) - agStart(b)));
+      const agWeekStart = bkStartOfWeek(new Date());
+      let agSelectedKey = localDateKey(new Date());
+
+      function agCountLabel(n, isToday, dayName) {
+        if (isToday) {
+          if (!n) return armusT("teacherDash.agTodayNone", "Bugün ders yok");
+          if (n === 1) return armusT("teacherDash.agTodayOne", "Bugün 1 ders");
+          return armusT("teacherDash.agTodayCount", "Bugün {n} ders").replace("{n}", n);
+        }
+        if (!n) return armusT("teacherDash.agDayNone", "{day} · ders yok").replace("{day}", dayName);
+        if (n === 1) return armusT("teacherDash.agDayOne", "{day} · 1 ders").replace("{day}", dayName);
+        return armusT("teacherDash.agDayCount", "{day} · {n} ders").replace("{day}", dayName).replace("{n}", n);
+      }
+
+      function renderAgHead() {
+        const sel = new Date(agSelectedKey + "T00:00:00");
+        const isToday = agSelectedKey === localDateKey(new Date());
+        const n = (agByDay.get(agSelectedKey) || []).length;
+        const dayName = sel.toLocaleDateString(agLocale(), { weekday: "long" });
+        document.getElementById("agTitle").textContent = agCountLabel(n, isToday, dayName.charAt(0).toLocaleUpperCase(agLocale()) + dayName.slice(1));
+        document.getElementById("agDate").textContent = isToday
+          ? sel.toLocaleDateString(agLocale(), { weekday: "long", day: "numeric", month: "long" })
+          : sel.toLocaleDateString(agLocale(), { day: "numeric", month: "long" });
+      }
+
+      function renderAgDays() {
+        const todayKeyNow = localDateKey(new Date());
+        const dows = bkDowLabels();
+        const el = document.getElementById("agDays");
+        el.innerHTML = "";
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(agWeekStart);
+          d.setDate(d.getDate() + i);
+          const key = localDateKey(d);
+          const list = agByDay.get(key) || [];
+          const isToday = key === todayKeyNow;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "ag-day" + (key === agSelectedKey ? " on" : "") + (isToday ? " today" : "") + (!list.length && !agOpenSlotsForDay(d).length ? " off" : "");
+          btn.setAttribute("aria-pressed", key === agSelectedKey ? "true" : "false");
+          btn.setAttribute("aria-label", `${d.toLocaleDateString(agLocale(), { weekday: "long", day: "numeric", month: "long" })} · ${agCountLabel(list.length, false, "").replace(/^ · /, "")}`);
+          const dots = list.slice(0, 6).map(b => `<i class="${b.type === "trial" ? "tr" : ""}"></i>`).join("");
+          btn.innerHTML = `<div><small>${isToday ? armusT("teacherDash.today", "Bugün") : dows[i]}</small><b>${d.getDate()}</b></div><span class="ag-dots">${dots}</span>`;
+          btn.addEventListener("click", () => {
+            agSelectedKey = key;
+            renderAgenda();
+          });
+          el.appendChild(btn);
         }
       }
-      renderTodayList();
-      document.addEventListener("armus:langchange", renderTodayList);
+
+      function renderAgNext() {
+        const el = document.getElementById("agNext");
+        const now = new Date();
+        const upcoming = activeBookings
+          .filter(b => agStart(b).getTime() + ARMUS_LESSON_MINUTES * 60000 > now.getTime())
+          .sort((a, b) => agStart(a) - agStart(b))[0];
+        if (!upcoming) {
+          el.hidden = true;
+          el.innerHTML = "";
+          return;
+        }
+        const start = agStart(upcoming);
+        const minsTo = Math.round((start - now) / 60000);
+        const sameDay = localDateKey(start) === localDateKey(now);
+        const when = sameDay
+          ? agHhmm(agMinutes(start))
+          : `${start.toLocaleDateString(agLocale(), { weekday: "short", day: "numeric", month: "short" })} · ${agHhmm(agMinutes(start))}`;
+        let lead = armusT("teacherDash.agNext", "Sıradaki");
+        let rel = "";
+        if (minsTo <= 0) lead = armusT("teacherDash.agNow", "Şu an");
+        else if (minsTo < 60) rel = armusT("teacherDash.agInMinutes", "{n} dk sonra").replace("{n}", minsTo);
+        else if (sameDay) rel = armusT("teacherDash.agInHours", "{n} sa sonra").replace("{n}", Math.round(minsTo / 60));
+        el.hidden = false;
+        el.innerHTML = `<span>${lead}: <b>${when} · ${armusEscapeHtml(upcoming.studentName)}</b>${rel ? " · " + rel : ""}</span>`
+          + (armusCanJoinLessonNow(upcoming) ? `<a class="ag-join" href="class?booking=${encodeURIComponent(upcoming.id)}">${AG_VIDEO_SVG}${armusT("teacherDash.agJoin", "Derse katıl")}</a>` : "");
+      }
+
+      function renderAgLine() {
+        const sel = new Date(agSelectedKey + "T00:00:00");
+        const now = new Date();
+        const isToday = agSelectedKey === localDateKey(now);
+        const list = agByDay.get(agSelectedKey) || [];
+
+        // open slots: the teacher's own pattern for this weekday, minus
+        // every half hour a lesson (50 min) on this day overlaps
+        const booked = list.map(b => agMinutes(agStart(b)));
+        const freeMins = agOpenSlotsForDay(sel)
+          .map(t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; })
+          .filter(m => !booked.some(bm => m < bm + ARMUS_LESSON_MINUTES && bm < m + 30))
+          .sort((a, b) => a - b);
+        const freeRanges = [];
+        freeMins.forEach(m => {
+          const last = freeRanges[freeRanges.length - 1];
+          if (last && last.end === m) last.end += 30;
+          else freeRanges.push({ start: m, end: m + 30 });
+        });
+
+        // 10:00-22:00, widened to whatever this day actually holds
+        let startH = 10;
+        let endH = 22;
+        booked.forEach(m => {
+          startH = Math.min(startH, Math.floor(m / 60));
+          endH = Math.max(endH, Math.ceil((m + ARMUS_LESSON_MINUTES) / 60));
+        });
+        freeRanges.forEach(r => {
+          startH = Math.min(startH, Math.floor(r.start / 60));
+          endH = Math.max(endH, Math.ceil(r.end / 60));
+        });
+        endH = Math.min(24, endH);
+        const span = (endH - startH) * 60;
+        const pos = min => `${((min - startH * 60) / span * 100).toFixed(3)}%`;
+        const size = min => `${(min / span * 100).toFixed(3)}%`;
+
+        const track = document.getElementById("agTrack");
+        const hours = document.getElementById("agHours");
+        track.style.setProperty("--ag-cols", endH - startH);
+        hours.style.setProperty("--ag-cols", endH - startH);
+
+        let html = freeRanges.map(r => `<div class="ag-free" style="left:${pos(r.start)};width:${size(r.end - r.start)}"></div>`).join("");
+        html += list.map(b => {
+          const m = agMinutes(agStart(b));
+          const past = armusIsBookingPast(b);
+          const join = armusCanJoinLessonNow(b);
+          const tag = join ? "a" : "div";
+          const href = join ? ` href="class?booking=${encodeURIComponent(b.id)}"` : "";
+          const name = armusEscapeHtml(b.studentName);
+          return `<${tag} class="ag-les${b.type === "trial" ? " tr" : ""}${past ? " past" : ""}" style="left:${pos(m)};width:${size(ARMUS_LESSON_MINUTES)}"${href} title="${past ? "✓ " : ""}${name} · ${agTypeLabel(b)} · ${armusFormatTimeRange(agHhmm(m))}"><b>${agHhmm(m)}</b><span>${armusEscapeHtml(agShortName(b.studentName))}</span><small>${past ? "✓ " : ""}${agTypeLabel(b)}</small></${tag}>`;
+        }).join("");
+        const nowMin = agMinutes(now);
+        if (isToday && nowMin >= startH * 60 && nowMin <= endH * 60) {
+          html += `<div class="ag-now" style="left:${pos(nowMin)}" data-time="${agHhmm(nowMin)}"></div>`;
+        }
+        track.innerHTML = html;
+        hours.innerHTML = Array.from({ length: endH - startH }, (_, i) => `<span>${String(startH + i).padStart(2, "0")}:00</span>`).join("");
+
+        const empty = document.getElementById("agEmpty");
+        if (list.length) {
+          empty.hidden = true;
+          return;
+        }
+        const openHours = Math.round(freeMins.length * 30 / 60 * 10) / 10;
+        empty.hidden = false;
+        empty.innerHTML = (isToday ? armusT("teacherDash.agEmptyToday", "Bugün dersin yok.") : armusT("teacherDash.agEmptyDay", "Bu gün dersin yok."))
+          + (openHours > 0
+            ? " " + armusT("teacherDash.agOpenHours", "{n} saat açık saatin var.").replace("{n}", agNum(openHours))
+            : ` <button type="button" class="ag-link" data-goto="availability">${armusT("teacherDash.agEditAvailability", "Uygunluğunu düzenle")}</button>`);
+        const link = empty.querySelector("[data-goto]");
+        if (link) link.addEventListener("click", () => document.querySelector('.nav-btn[data-panel="availability"]').click());
+      }
+
+      function renderAgenda() {
+        renderAgHead();
+        renderAgDays();
+        renderAgNext();
+        renderAgLine();
+      }
+
+      // this month's net earnings, week by week (days 1-7, 8-14, ...)
+      function renderAgWeeks() {
+        const today = new Date();
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const buckets = Math.ceil(daysInMonth / 7);
+        const gross = new Array(buckets).fill(0);
+        earnedBookings.forEach(b => {
+          const key = bookingLocalDateKey(b);
+          if (!key.startsWith(thisMonthKey)) return;
+          gross[Math.min(buckets - 1, Math.floor((Number(key.slice(8, 10)) - 1) / 7))] += earnablePrice(b);
+        });
+        const net = gross.map(g => Math.round(g * (1 - tier.rate / 100)));
+        const max = Math.max(1, ...net);
+        const current = Math.min(buckets - 1, Math.floor((today.getDate() - 1) / 7));
+        const el = document.getElementById("agWeeks");
+        el.style.setProperty("--ag-wk", buckets);
+        el.innerHTML = net.map((v, i) => `<div class="${i === current ? "on" : ""}" title="₺${v}"><i style="height:${Math.max(6, Math.round(v / max * 78))}%"></i>${i === current ? armusT("teacherDash.agThisWeek", "Bu hafta") : armusT("teacherDash.agWeekN", "{n}. hafta").replace("{n}", i + 1)}</div>`).join("");
+      }
+
+      // where the teacher stands inside the current commission tier
+      const AG_TIER_STARTS = [0, 100, 200, 300, 500];
+      function renderAgCommission() {
+        document.getElementById("statHours").textContent = agNum(totalHours);
+        const t = armusCommissionForHours(totalHours);
+        const nextStart = AG_TIER_STARTS[t.tierIndex + 1];
+        if (nextStart === undefined) {
+          document.getElementById("agNextRate").textContent = "";
+          document.getElementById("agHoursOf").textContent = armusT("teacherDash.agHoursTotal", "{n} saat").replace("{n}", agNum(totalHours));
+          document.getElementById("agCommFill").style.width = "100%";
+          document.getElementById("agCommHint").textContent = armusT("teacherDash.agLowestTier", "En düşük komisyon dilimindesin.");
+          return;
+        }
+        const from = AG_TIER_STARTS[t.tierIndex];
+        const nextRate = armusCommissionForHours(nextStart).rate;
+        const left = Math.round((nextStart - totalHours) * 10) / 10;
+        document.getElementById("agNextRate").textContent = ` → %${nextRate}`;
+        document.getElementById("agHoursOf").textContent = armusT("teacherDash.agHoursOf", "{n} / {max} saat").replace("{n}", agNum(totalHours)).replace("{max}", nextStart);
+        document.getElementById("agCommFill").style.width = `${Math.min(100, Math.max(0, (totalHours - from) / (nextStart - from) * 100))}%`;
+        document.getElementById("agCommHint").textContent = armusT("teacherDash.agToNextTier", "%{rate} dilimine {n} saat kaldı").replace("{rate}", nextRate).replace("{n}", agNum(left));
+      }
+
+      renderAgenda();
+      renderAgWeeks();
+      renderAgCommission();
+      document.addEventListener("armus:langchange", () => {
+        renderAgenda();
+        renderAgWeeks();
+        renderAgCommission();
+      });
+      // keeps "now", the next lesson and its join button current
+      setInterval(renderAgenda, 60000);
 
       // ---- achievement badges ----
 
@@ -4024,11 +4472,13 @@
       function renderGoal() {
         if (!incomeGoal) {
           goalFill.style.width = "0%";
+          document.getElementById("agGoalPct").textContent = "";
           goalCaption.textContent = armusT("teacherDash.noGoalSet", "Henüz bir hedef belirlemedin.");
           return;
         }
         const pct = Math.min(100, Math.round((netThisMonth / incomeGoal) * 100));
         goalFill.style.width = `${pct}%`;
+        document.getElementById("agGoalPct").textContent = `%${pct}`;
         goalCaption.textContent = `₺${netThisMonth} / ₺${incomeGoal} (%${pct})` +
           (netThisMonth >= incomeGoal ? armusT("teacherDash.goalReached", " — hedefine ulaştın! 🎉") : "");
       }
@@ -4124,8 +4574,10 @@
               ? armusT("teacherDash.responseHours", "{n} sa").replace("{n}", (avgMinutes / 60).toFixed(1))
               : armusT("teacherDash.responseDays", "{n} gün").replace("{n}", (avgMinutes / 1440).toFixed(1));
           document.getElementById("responseTimeValue").textContent = display;
+          document.getElementById("agResponse").textContent = display;
         } else {
           document.getElementById("responseTimeValue").textContent = "—";
+          document.getElementById("agResponse").textContent = "—";
         }
       }
       renderResponseTime();
