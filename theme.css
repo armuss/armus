@@ -113,6 +113,9 @@
   /* brushed silver for a wide band: light metal with a diagonal sheen
      across the middle. Black text on it reads at 10.5 or better */
   --armus-silver-sheen: linear-gradient(115deg, #f7f7f5 0%, #dcdbd6 30%, #c4c3bd 48%, #f2f1ee 58%, #cfcec8 74%, #b9b8b2 100%);
+  /* the same brushed sheen in the theme red; its lightest stop (#a2444b)
+     still holds cream text at 5.5 */
+  --armus-red-sheen: linear-gradient(115deg, #5e1318 0%, #8c1c24 30%, #7a1920 44%, #a2444b 56%, #8c1c24 72%, #5e1318 100%);
   --armus-silver-border: rgba(110, 109, 102, 0.25);
   --armus-silver-border-strong: rgba(110, 109, 102, 0.45);
 
