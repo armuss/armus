@@ -580,8 +580,9 @@
       background: var(--armus-navy);
     }
 
+    /* a trial or a student's first lesson: one colour, petrol green */
     .ag-dots i.tr {
-      background: var(--armus-gold-2);
+      background: var(--armus-petrol);
     }
 
     /* the picked day: cream with the theme red, so it stands out on the band */
@@ -689,7 +690,7 @@
     }
 
     .ag-legend i.tr {
-      background: var(--armus-gold-2);
+      background: var(--armus-petrol);
     }
 
     .ag-legend i.free {
@@ -733,8 +734,8 @@
     }
 
     .ag-les.tr {
-      background: var(--armus-gold-gradient);
-      color: var(--armus-on-gold);
+      background: var(--armus-petrol);
+      color: var(--armus-cream);
     }
 
     .ag-les b {
@@ -1545,16 +1546,11 @@
 
     /* two classes each, so they win over ".booking-row span" (which
        would otherwise grey every tag out - the star rating ended up
-       grey on red); first lesson in petrol, trial in night blue, with
-       a dot of the same colour instead of an emoji */
+       grey on red); a trial or a first lesson is one petrol-green tag,
+       with a dot of the same colour instead of an emoji */
     .booking-tag.tag-first {
       color: var(--armus-petrol);
       border: 1px solid var(--armus-petrol);
-    }
-
-    .booking-tag.tag-trial {
-      color: var(--armus-navy);
-      border: 1px solid var(--armus-navy);
     }
 
     /* a regular lesson in champagne: the champagne as the fill, with a
@@ -1570,7 +1566,6 @@
     }
 
     .booking-tag.tag-first::before,
-    .booking-tag.tag-trial::before,
     .booking-tag.tag-lesson::before {
       content: "";
       width: 8px;
@@ -1953,12 +1948,6 @@
       background: rgba(31, 95, 91, .12);
       border: 1px solid var(--armus-petrol);
       color: var(--armus-petrol);
-    }
-
-    .bk-block.tag-trial-block {
-      background: rgba(43, 58, 124, .1);
-      border: 1px solid var(--armus-navy);
-      color: var(--armus-navy);
     }
 
     .bk-block.tag-lesson-block {
@@ -2713,7 +2702,7 @@
             <b data-i18n="teacherDash.dayFlow">Günün akışı</b>
             <div class="ag-next" id="agNext" hidden></div>
             <div class="ag-legend">
-              <span><i class="tr"></i><span data-i18n="teacherDash.trialLesson">Deneme Dersi</span></span>
+              <span><i class="tr"></i><span data-i18n="teacherDash.agLegendNew">Deneme / İlk ders</span></span>
               <span><i></i><span data-i18n="teacherDash.regularLesson">Ders</span></span>
               <span><i class="free"></i><span data-i18n="teacherDash.openSlot">Açık saat</span></span>
             </div>
@@ -3105,7 +3094,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=41"></script>
+  <script src="i18n.js?v=42"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=5"></script>
@@ -3683,8 +3672,9 @@
       }
 
       function bkTagClass(booking) {
-        if (firstBookingIdByStudent.has(booking.id)) return "tag-first-block";
-        return booking.type === "trial" ? "tag-trial-block" : "tag-lesson-block";
+        // a trial and a student's first lesson share the green block
+        if (firstBookingIdByStudent.has(booking.id) || booking.type === "trial") return "tag-first-block";
+        return "tag-lesson-block";
       }
 
       function renderBookingsCalendar() {
@@ -4310,7 +4300,14 @@
         const parts = armusCapitalizeName(name || "").trim().split(/\s+/);
         return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1].charAt(0)}.` : parts[0];
       }
-      function agTypeLabel(b) { return b.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders"); }
+      // a trial and a student's first lesson with this teacher are the
+      // same moment for the teacher (someone new), so they share a colour
+      function agIsNew(b) { return b.type === "trial" || firstBookingIdByStudent.has(b.id); }
+      function agTypeLabel(b) {
+        if (b.type === "trial") return armusT("teacherDash.trialLesson", "Deneme Dersi");
+        if (firstBookingIdByStudent.has(b.id)) return armusT("teacherDash.tagFirstLesson", "İlk Ders");
+        return armusT("teacherDash.regularLesson", "Ders");
+      }
 
       const agByDay = new Map();
       activeBookings.forEach(b => {
@@ -4360,7 +4357,7 @@
           btn.className = "ag-day" + (key === agSelectedKey ? " on" : "") + (isToday ? " today" : "") + (!list.length && !agOpenSlotsForDay(d).length ? " off" : "");
           btn.setAttribute("aria-pressed", key === agSelectedKey ? "true" : "false");
           btn.setAttribute("aria-label", `${d.toLocaleDateString(agLocale(), { weekday: "long", day: "numeric", month: "long" })} · ${agCountLabel(list.length, false, "").replace(/^ · /, "")}`);
-          const dots = list.slice(0, 6).map(b => `<i class="${b.type === "trial" ? "tr" : ""}"></i>`).join("");
+          const dots = list.slice(0, 6).map(b => `<i class="${agIsNew(b) ? "tr" : ""}"></i>`).join("");
           btn.innerHTML = `<div><small>${isToday ? armusT("teacherDash.today", "Bugün") : dows[i]}</small><b>${d.getDate()}</b></div><span class="ag-dots">${dots}</span>`;
           btn.addEventListener("click", () => {
             agSelectedKey = key;
@@ -4446,7 +4443,7 @@
           const tag = join ? "a" : "div";
           const href = join ? ` href="class?booking=${encodeURIComponent(b.id)}"` : "";
           const name = armusEscapeHtml(b.studentName);
-          return `<${tag} class="ag-les${b.type === "trial" ? " tr" : ""}${past ? " past" : ""}" style="left:${pos(m)};width:${size(ARMUS_LESSON_MINUTES)}"${href} title="${past ? "✓ " : ""}${name} · ${agTypeLabel(b)} · ${armusFormatTimeRange(agHhmm(m))}"><b>${agHhmm(m)}</b><span>${armusEscapeHtml(agShortName(b.studentName))}</span><small>${past ? "✓ " : ""}${agTypeLabel(b)}</small></${tag}>`;
+          return `<${tag} class="ag-les${agIsNew(b) ? " tr" : ""}${past ? " past" : ""}" style="left:${pos(m)};width:${size(ARMUS_LESSON_MINUTES)}"${href} title="${past ? "✓ " : ""}${name} · ${agTypeLabel(b)} · ${armusFormatTimeRange(agHhmm(m))}"><b>${agHhmm(m)}</b><span>${armusEscapeHtml(agShortName(b.studentName))}</span><small>${past ? "✓ " : ""}${agTypeLabel(b)}</small></${tag}>`;
         }).join("");
         const nowMin = agMinutes(now);
         if (isToday && nowMin >= startH * 60 && nowMin <= endH * 60) {
@@ -4780,8 +4777,12 @@
               const net = Math.round(booking.price * (1 - tier.rate / 100));
 
               const tags = [
-                firstBookingIdByStudent.has(booking.id) ? `<span class="booking-tag tag-first">${armusT("teacherDash.tagFirstLesson", "İlk Ders")}</span>` : "",
-                booking.type === "trial" ? `<span class="booking-tag tag-trial">${armusT("teacherDash.tagTrial", "Deneme Dersi")}</span>` : `<span class="booking-tag tag-lesson">${armusT("teacherDash.tagLesson", "Ders")}</span>`,
+                // a trial and a first lesson are one green tag (a trial wins the label)
+                booking.type === "trial"
+                  ? `<span class="booking-tag tag-first">${armusT("teacherDash.tagTrial", "Deneme Dersi")}</span>`
+                  : firstBookingIdByStudent.has(booking.id)
+                    ? `<span class="booking-tag tag-first">${armusT("teacherDash.tagFirstLesson", "İlk Ders")}</span>`
+                    : `<span class="booking-tag tag-lesson">${armusT("teacherDash.tagLesson", "Ders")}</span>`,
                 isCancelled
                   ? `<span class="booking-tag tag-cancelled">${booking.teacherNoShow ? armusT("teacherDash.tagTeacherNoShow", "⊘ Gelmedin (doğrulandı)") : booking.lateCancel ? armusT("teacherDash.tagLateCancelled", "⊘ Son dakika iptali") : armusT("teacherDash.tagCancelled", "⊘ İptal edildi")}</span>`
                   : (isPast ? `<span class="booking-tag tag-done">${armusT("teacherDash.tagCompleted", "✓ Tamamlandı")}</span>` : `<span class="booking-tag tag-upcoming">${armusT("teacherDash.tagUpcoming", "🕒 Yaklaşıyor")}</span>`),

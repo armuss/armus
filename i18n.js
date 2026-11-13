@@ -764,6 +764,7 @@ const ARMUS_I18N_EN = {
   "teacherDash.regularLesson": "Lesson",
   "teacherDash.joinShort": "🎥 Join",
   "teacherDash.dockToday": "Today",
+  "teacherDash.agLegendNew": "Trial / first lesson",
   "teacherDash.dockLessons": "Lessons",
   "teacherDash.panelLabel": "Teacher panel",
   "teacherDash.dayFlow": "Your day",
