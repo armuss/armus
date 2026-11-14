@@ -4235,7 +4235,10 @@
             const ok = await armusSetTicketStatus(id, newStatus);
             btn.disabled = false;
 
-            if (!ok) return;
+            if (!ok) {
+              alert(armusT("teacherDash.blockActionFailed", "İşlem başarısız oldu, tekrar dene."));
+              return;
+            }
             ticket.status = newStatus;
             expandedTicketIds.add(id);
             renderTicketsList();
@@ -4691,10 +4694,13 @@
         button.disabled = true;
         const result = await armusUpdateOwnProfile({ income_goal: value || null });
         button.disabled = false;
-        if (result !== false) {
-          incomeGoal = value || null;
-          renderGoal();
+        if (result === false) {
+          // used to fail without a word, the old goal still showing
+          alert(armusT("teacherDash.saveFailed", "Kaydedilemedi ✕"));
+          return;
         }
+        incomeGoal = value || null;
+        renderGoal();
       });
 
       // ---- earnings simulator ----
