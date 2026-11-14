@@ -31,7 +31,7 @@ function isWhiteish(r: number, g: number, b: number) {
 
 // base64 -> bytes without relying on a global atob / Buffer
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-function base64ToBytes(b64: string): Uint8Array {
+export function base64ToBytes(b64: string): Uint8Array {
   const clean = b64.replace(/[^A-Za-z0-9+/]/g, '');
   const out = new Uint8Array(Math.floor((clean.length * 3) / 4));
   let o = 0;
@@ -70,7 +70,10 @@ function whiteEdgeRatio(data: Uint8Array, width: number, height: number) {
  * check. The check runs on a 256px copy - the same edge-band ratio, far
  * less to decode on a phone.
  */
-export async function preparePhoto(uri: string, checkWhiteBackground: boolean): Promise<{ uri: string; isWhiteBackground: boolean }> {
+export async function preparePhoto(
+  uri: string,
+  checkWhiteBackground: boolean
+): Promise<{ uri: string; base64: string; isWhiteBackground: boolean }> {
   const full = await ImageManipulator.manipulate(uri).renderAsync();
   const scale = Math.min(1, PHOTO_MAX_DIMENSION / Math.max(full.width, full.height));
   const sized =
@@ -79,9 +82,12 @@ export async function preparePhoto(uri: string, checkWhiteBackground: boolean): 
           .resize({ width: Math.round(full.width * scale), height: Math.round(full.height * scale) })
           .renderAsync()
       : full;
-  const saved = await sized.saveAsync({ format: SaveFormat.JPEG, compress: PHOTO_JPEG_QUALITY });
+  // the bytes come back with it: they're what gets uploaded (a JPEG the
+  // storage bucket accepts, whatever format the phone picked)
+  const saved = await sized.saveAsync({ format: SaveFormat.JPEG, compress: PHOTO_JPEG_QUALITY, base64: true });
+  if (!saved.base64) throw new Error('Fotoğraf okunamadı.');
 
-  if (!checkWhiteBackground) return { uri: saved.uri, isWhiteBackground: true };
+  if (!checkWhiteBackground) return { uri: saved.uri, base64: saved.base64, isWhiteBackground: true };
 
   const small = Math.min(1, 256 / Math.max(full.width, full.height));
   const probe = await ImageManipulator.manipulate(uri)
@@ -90,5 +96,9 @@ export async function preparePhoto(uri: string, checkWhiteBackground: boolean): 
   const probeSaved = await probe.saveAsync({ format: SaveFormat.JPEG, compress: 0.9, base64: true });
   if (!probeSaved.base64) throw new Error(tr("Fotoğraf okunamadı."));
   const pixels = decode(base64ToBytes(probeSaved.base64), { useTArray: true, formatAsRGBA: true });
-  return { uri: saved.uri, isWhiteBackground: whiteEdgeRatio(pixels.data, pixels.width, pixels.height) >= PHOTO_WHITE_BG_MIN_RATIO };
+  return {
+    uri: saved.uri,
+    base64: saved.base64,
+    isWhiteBackground: whiteEdgeRatio(pixels.data, pixels.width, pixels.height) >= PHOTO_WHITE_BG_MIN_RATIO,
+  };
 }

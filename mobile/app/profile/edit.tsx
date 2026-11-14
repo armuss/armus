@@ -38,7 +38,9 @@ export default function EditProfile() {
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  // the picked photo, already turned into the JPEG that gets uploaded
+  const [localPhoto, setLocalPhoto] = useState<{ uri: string; base64: string } | null>(null);
+  const localPhotoUri = localPhoto?.uri ?? null;
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [checkingPhoto, setCheckingPhoto] = useState(false);
   // an approved teacher's photo is part of their checked application: the
@@ -110,23 +112,21 @@ export default function EditProfile() {
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
 
-    if (!isTeacher) {
-      if (asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
-        setStatus(t("Dosya çok büyük (maks 5MB)."));
-        return;
-      }
-      setLocalPhotoUri(asset.uri);
+    if (!isTeacher && asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
+      setStatus(t("Dosya çok büyük (maks 5MB)."));
       return;
     }
 
+    // every photo becomes a JPEG of at most 1024px before upload (the
+    // bucket takes JPEG/PNG only); a teacher's also needs the white background
     setCheckingPhoto(true);
     try {
-      const prepared = await preparePhoto(asset.uri, true);
+      const prepared = await preparePhoto(asset.uri, isTeacher);
       if (!prepared.isWhiteBackground) {
         setStatus(t(PHOTO_NEEDS_WHITE_BG));
         return;
       }
-      setLocalPhotoUri(prepared.uri);
+      setLocalPhoto({ uri: prepared.uri, base64: prepared.base64 });
     } catch {
       setStatus(t("Fotoğraf okunamadı."));
     } finally {
@@ -146,9 +146,9 @@ export default function EditProfile() {
     setSaving(true);
 
     let nextPhotoUrl = photoUrl;
-    if (localPhotoUri) {
+    if (localPhoto) {
       setUploadingPhoto(true);
-      const uploaded = await uploadProfilePhoto(profile.id, localPhotoUri);
+      const uploaded = await uploadProfilePhoto(profile.id, localPhoto.base64);
       setUploadingPhoto(false);
       if (!uploaded) {
         setSaving(false);

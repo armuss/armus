@@ -1,3 +1,4 @@
+import { base64ToBytes } from './photo';
 import { supabase } from './supabase';
 
 // Updates the signed-in user's own profile row. Mirrors armusUpdateOwnProfile
@@ -13,28 +14,32 @@ export async function updateOwnProfile(updates: Record<string, unknown>): Promis
   return !error;
 }
 
-// Uploads a local image to the same public "teacher-uploads" bucket and
-// the same "<user id>/profile-<time>.<ext>" path the website's settings
-// page uses. The bucket's insert policy only accepts paths inside the
-// caller's own "<uid>/" folder (migration_74.sql) - the app used to write
-// to "profile-photos/...", which that policy refused every time.
+// Uploads a profile photo to the "teacher-uploads" bucket at
+// "<user id>/profile-<time>.jpg", the path the website's settings page uses
+// (the bucket's insert policy only accepts the caller's own "<uid>/"
+// folder - migration_74.sql).
+//
+// It takes the JPEG preparePhoto made, as base64, and sends the raw bytes:
+//   - the bucket only accepts image/jpeg and image/png (migration_49.sql),
+//     so a photo straight from the phone (often HEIC on an iPhone) was
+//     refused - every photo is re-encoded to JPEG first now;
+//   - a React Native Blob from fetch(file://...) uploads unreliably to
+//     Supabase Storage (empty files, failed requests), bytes don't.
 // Returns the public URL, or null on failure.
-export async function uploadProfilePhoto(userId: string, localUri: string): Promise<string | null> {
+export async function uploadProfilePhoto(userId: string, jpegBase64: string): Promise<string | null> {
   try {
-    const response = await fetch(localUri);
-    const blob = await response.blob();
-
-    const rawExt = localUri.includes('.') ? localUri.split('.').pop()!.split('?')[0] : '';
-    const ext = /^[a-zA-Z0-9]{1,10}$/.test(rawExt) ? rawExt.toLowerCase() : 'jpg';
-    const path = `${userId}/profile-${Date.now()}.${ext}`;
-    const contentType = blob.type || (ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`);
-
-    const { error } = await supabase.storage.from('teacher-uploads').upload(path, blob, { upsert: true, contentType });
-    if (error) return null;
-
+    const bytes = base64ToBytes(jpegBase64);
+    if (!bytes.length) return null;
+    const path = `${userId}/profile-${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from('teacher-uploads').upload(path, bytes, { upsert: true, contentType: 'image/jpeg' });
+    if (error) {
+      console.warn('profile photo upload failed', error.message);
+      return null;
+    }
     const { data } = supabase.storage.from('teacher-uploads').getPublicUrl(path);
     return data.publicUrl;
-  } catch {
+  } catch (err) {
+    console.warn('profile photo upload failed', err);
     return null;
   }
 }
