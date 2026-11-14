@@ -3979,11 +3979,19 @@
       const lifetimeGross = releasedEarned.reduce((sum, b) => sum + earnablePrice(b), 0);
       const lifetimeNetEstimate = Math.round(lifetimeGross * (1 - tier.rate / 100));
       const heldNetEstimate = Math.round(heldEarned.reduce((sum, b) => sum + earnablePrice(b), 0) * (1 - tier.rate / 100));
-      const claimedAmount = withdrawalRequests
-        .filter(w => w.status !== "rejected")
-        .reduce((sum, w) => sum + Number(w.amount), 0);
-      const availableBalance = Math.max(0, lifetimeNetEstimate - claimedAmount);
-      document.getElementById("availableBalanceValue").textContent = `₺${availableBalance}`;
+      // recomputed after every new request - it used to be worked out once
+      // at load, so the balance shown (and the "more than your balance"
+      // check below) ignored a request just sent, and the same money could
+      // be requested again and again until the page was reloaded
+      let availableBalance = 0;
+      function renderAvailableBalance() {
+        const claimedAmount = withdrawalRequests
+          .filter(w => w.status !== "rejected")
+          .reduce((sum, w) => sum + Number(w.amount), 0);
+        availableBalance = Math.max(0, lifetimeNetEstimate - claimedAmount);
+        document.getElementById("availableBalanceValue").textContent = `₺${availableBalance}`;
+      }
+      renderAvailableBalance();
 
       function renderHeldBalance() {
         const note = document.getElementById("heldBalanceNote");
@@ -4054,7 +4062,16 @@
           showStatus(armusT("teacherDash.withdrawErrTooMuch", "Bu tutar çekilebilir bakiyenden fazla."));
           return;
         }
-        if (!/^TR\d{24}$/.test(iban)) {
+        // the format alone let a mistyped IBAN through (the money would go
+        // to the wrong account or bounce) - also check its two check
+        // digits, the standard ISO 13616 mod-97 test
+        const ibanChecksumOk = () => {
+          const digits = (iban.slice(4) + iban.slice(0, 4)).replace(/[A-Z]/g, ch => String(ch.charCodeAt(0) - 55));
+          let rest = 0;
+          for (const d of digits) rest = (rest * 10 + Number(d)) % 97;
+          return rest === 1;
+        };
+        if (!/^TR\d{24}$/.test(iban) || !ibanChecksumOk()) {
           showStatus(armusT("teacherDash.withdrawErrIban", "Geçerli bir IBAN gir (TR ile başlayan 26 karakter)."));
           return;
         }
@@ -4078,6 +4095,7 @@
         }
 
         withdrawalRequests.unshift(data);
+        renderAvailableBalance();
         renderWithdrawalHistory();
         document.getElementById("withdrawalForm").reset();
         showStatus(armusT("teacherDash.withdrawSuccess", "Talebin gönderildi ✓"));
