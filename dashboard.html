@@ -1529,6 +1529,16 @@
       text-align: right;
       color: var(--armus-gold-text);
       font-weight: 700;
+      /* on a phone the student's details used to squeeze this column
+         until the time and the Saat Öner / Dersi İptal Et buttons broke
+         over two or three lines - it keeps its width, the details wrap */
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .booking-row > div:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .booking-tags {
