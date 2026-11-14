@@ -5,6 +5,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -18,6 +19,7 @@ import { useLightStatusBar } from '../../components/Band';
 import { amIBlockedBy } from '../../lib/blocks';
 import { useAuth } from '../../lib/auth';
 import {
+  attachmentPreviewLabel,
   getMessages,
   hasBookingWithOtherParty,
   markMessagesRead,
@@ -173,7 +175,23 @@ export default function Chat() {
               return (
                 <View style={[styles.row, isMine && styles.rowMine]}>
                   <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                    <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{item.body}</Text>
+                    {/* a photo / video / voice message sent from the website:
+                        the photo shows here, the others open in the browser */}
+                    {item.attachmentUrl && item.attachmentType === 'image' && (
+                      <Pressable onPress={() => Linking.openURL(item.attachmentUrl!).catch(() => {})} accessibilityLabel={attachmentPreviewLabel('image')}>
+                        <Image source={{ uri: item.attachmentUrl }} style={styles.attachmentImage} resizeMode="cover" />
+                      </Pressable>
+                    )}
+                    {item.attachmentUrl && item.attachmentType !== 'image' && (
+                      <Pressable onPress={() => Linking.openURL(item.attachmentUrl!).catch(() => {})} hitSlop={6}>
+                        <Text style={[styles.bubbleText, styles.attachmentLink, isMine && styles.bubbleTextMine]}>
+                          {attachmentPreviewLabel(item.attachmentType)}
+                        </Text>
+                      </Pressable>
+                    )}
+                    {!!item.body && (
+                      <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine, !!item.attachmentUrl && { marginTop: 6 }]}>{item.body}</Text>
+                    )}
                   </View>
                 </View>
               );
@@ -290,6 +308,16 @@ const styles = StyleSheet.create({
   },
   bubbleTextMine: {
     color: colors.onRed,
+  },
+  attachmentImage: {
+    width: 200,
+    height: 200,
+    borderRadius: radius.md,
+    backgroundColor: colors.panel2,
+  },
+  attachmentLink: {
+    fontFamily: fonts.bodyBold,
+    textDecorationLine: 'underline',
   },
   empty: {
     fontFamily: fonts.body,

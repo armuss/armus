@@ -9,8 +9,9 @@ import { TeacherPhoto } from '../../components/TeacherCard';
 import TeacherReportSheet from '../../components/TeacherReportSheet';
 import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
-import { DAY_NAMES, getTeacherBusyTimes, slotsForDate, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
+import { DAY_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
 import { hasTakenTrialWith } from '../../lib/credits';
+import { notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
 import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
@@ -21,11 +22,6 @@ import { useT } from '../../lib/i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type Tab = 'about' | 'times' | 'reviews';
-
-// same local-calendar key the booking screen uses
-function toDateKey(date: Date) {
-  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-}
 
 export default function TeacherDetail() {
   const t = useT();
@@ -75,13 +71,17 @@ export default function TeacherDetail() {
     };
   }, [tab, teacher]);
 
+  // the days start on the teacher's own today, like the booking screen's
+  // (lesson dates are the teacher's calendar dates), so a day picked here
+  // is one the booking screen offers too
   const week = useMemo(() => {
     if (!teacher) return [];
     const now = Date.now();
+    const today = todayIn(teacher.timezone);
     return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      const key = toDateKey(date);
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const key = localDateKey(date);
       const open = slotsForDate(teacher, key, date.getDay(), busyTimes).filter(
         (slot) => slot.available && zonedTimeToUtc(key, slot.time, teacher.timezone).getTime() > now
       );
@@ -103,7 +103,11 @@ export default function TeacherDetail() {
     setMessaging(true);
     const conversation = await getOrCreateConversation(profile.id, profile.role, teacher.id);
     setMessaging(false);
-    if (!conversation) return;
+    if (!conversation) {
+      // the tap used to do nothing at all
+      notify(t("Sohbet başlatılamadı. Lütfen tekrar dene."));
+      return;
+    }
     router.push({
       pathname: '/chat/[id]',
       params: { id: conversation.id, otherName: shortDisplayName(teacher.name), otherPhoto: teacher.photo ?? '' },

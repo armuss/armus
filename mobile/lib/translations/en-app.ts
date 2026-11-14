@@ -285,6 +285,11 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Mesaj gönderilemedi. Tekrar dene.': "The message couldn't be sent. Try again.",
   'Kullanıcı': 'User',
   'Mesaj yaz...': 'Write a message...',
+  '📷 Fotoğraf': '📷 Photo',
+  '🎥 Video': '🎥 Video',
+  '🎤 Sesli mesaj': '🎤 Voice message',
+  'Mesaj': 'Message',
+  'Sohbet başlatılamadı. Lütfen tekrar dene.': "The conversation couldn't be started. Please try again.",
   'Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.': "This teacher has blocked you. You can no longer message them or book a new lesson with them.",
 
   // ---- Profil
