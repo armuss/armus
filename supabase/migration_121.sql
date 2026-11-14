@@ -1,4 +1,6 @@
--- ARMUS migration 121: a teacher's profile edit can be approved again.
+-- ARMUS migration 121: two teacher-side fixes.
+--
+-- A. A teacher's profile edit can be approved again.
 --
 -- An approved teacher's title/price/bio/languages edits wait in
 -- profiles.pending_changes until an admin approves or rejects them.
@@ -18,7 +20,15 @@
 --      rejected right away instead of waiting for the teacher to send
 --      them again.
 --
+-- B. A trial no-show hide the teacher may lift themselves ("Profilimi
+--    Görünür Yap", self_unhide_from_new_students) was refused while ANY
+--    of their reports waited for review. Since migration_112.sql only a
+--    no-show report hides a teacher - a late or technical one is a
+--    warning - so only an open/explained no-show report blocks it now.
+--
 -- Run this whole file once in Supabase Dashboard -> SQL Editor.
+
+-- === A. pending_changes.submitted_at ===
 
 create or replace function public.stamp_pending_changes()
 returns trigger
@@ -58,5 +68,58 @@ begin
     and not (pending_changes ? 'submitted_at');
 
   perform set_config('armus.attendance_system_update', 'off', true);
+end;
+$$;
+
+-- === B. self_unhide_from_new_students ===
+-- unchanged from migration_104.sql except "and type = 'no_show'"
+
+create or replace function public.self_unhide_from_new_students(p_ack boolean default false)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  t record;
+begin
+  select * into t from profiles where id = auth.uid();
+  if t is null then
+    return 'no_action';
+  end if;
+
+  if t.penalty_hide_reason is distinct from 'trial_no_show' or t.trial_hidden_tier = 0 then
+    return 'no_action';
+  end if;
+
+  if exists (
+    select 1 from attendance_reports
+    where teacher_id = auth.uid()::text and status in ('open', 'explained')
+      and type = 'no_show'
+  ) then
+    return 'not_eligible';
+  end if;
+
+  if t.trial_unhide_eligible_at is null or now() < t.trial_unhide_eligible_at then
+    return 'not_eligible';
+  end if;
+
+  if t.trial_unhide_requires_ack and not p_ack then
+    return 'ack_required';
+  end if;
+
+  perform set_config('armus.attendance_system_update', 'on', true);
+
+  update profiles
+  set hidden_from_new_students = false,
+      hidden_reason = null,
+      hidden_at = null,
+      penalty_hide_reason = null,
+      trial_hidden_tier = 0,
+      trial_unhide_eligible_at = null,
+      trial_unhide_requires_ack = false
+  where id = auth.uid();
+
+  return 'ok';
 end;
 $$;

@@ -3791,10 +3791,13 @@ begin
 
   -- migration_104.sql: a report still waiting for review keeps the hide
   -- in place (dashboard.html never even offers the button then - this
-  -- closes the direct-RPC path to escaping a pending report's hide early)
+  -- closes the direct-RPC path to escaping a pending report's hide early).
+  -- migration_121.sql: only a no-show report hides (migration_112.sql) -
+  -- a late or technical one waiting for review no longer blocks this
   if exists (
     select 1 from attendance_reports
     where teacher_id = auth.uid()::text and status in ('open', 'explained')
+      and type = 'no_show'
   ) then
     return 'not_eligible';
   end if;
