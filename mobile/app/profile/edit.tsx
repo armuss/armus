@@ -25,6 +25,8 @@ import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
 const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
+// apply-teacher.html's and dashboard.html's minimum
+const TEACHER_MIN_BIO_CHARS = 400;
 
 const NAME_PATTERN = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
 
@@ -172,15 +174,29 @@ export default function EditProfile() {
 
   async function handleSubmitTeacherFields() {
     if (!profile || saving) return;
-    setSaving(true);
     setTeacherStatus('');
 
+    // dashboard.html's checks: a price of 0 or a short bio went through
+    // here and only failed later, when the admin approved it (the
+    // profile's "price > 0" constraint), with no word to the teacher
+    const priceValue = Number(price.trim().replace(',', '.'));
+    if (!priceValue || priceValue <= 0) {
+      setTeacherStatus(t("Geçerli bir ders ücreti gir."));
+      return;
+    }
+    const bioValue = bio.trim();
+    if (bioValue.length < TEACHER_MIN_BIO_CHARS) {
+      setTeacherStatus(t("Açıklama en az {0} karakter olmalı (şu an {1} karakter).", TEACHER_MIN_BIO_CHARS, bioValue.length));
+      return;
+    }
+
+    setSaving(true);
     const newPendingChanges = {
       ...(pendingChanges || {}),
       title: title.trim(),
-      price: Number(price) || 0,
+      price: priceValue,
       availability: availability.trim(),
-      bio: bio.trim(),
+      bio: bioValue,
     };
 
     const ok = await updateOwnProfile({ pending_changes: newPendingChanges });

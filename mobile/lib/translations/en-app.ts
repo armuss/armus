@@ -376,6 +376,8 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'IELTS & Speaking Uzmanı': 'IELTS & Speaking Specialist',
   'Müsaitlik notu': 'Availability note',
   'Onaya Gönder': 'Send for approval',
+  'Geçerli bir ders ücreti gir.': 'Enter a valid lesson price.',
+  'Açıklama en az {0} karakter olmalı (şu an {1} karakter).': 'Your bio must be at least {0} characters (currently {1} characters).',
 
   // ---- referral
   'Sen de aynı öğretmenle ücretsiz bir ders kazanırsın': 'You also earn a free lesson with the same teacher',
