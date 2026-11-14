@@ -1094,7 +1094,10 @@
       const list = document.getElementById("convoList");
 
       if (conversations.length === 0) {
-        list.innerHTML = `<div class="convo-empty">${armusT("messages.emptyConvoList", 'Henüz bir yazışman yok. Bir öğretmenin profilinden "Mesaj Gönder" ile başlayabilirsin.')}</div>`;
+        // a teacher can't start one from a teacher's profile - students write first
+        list.innerHTML = `<div class="convo-empty">${currentSession && currentSession.role === "teacher"
+          ? armusT("messages.emptyConvoListTeacher", "Henüz bir yazışman yok. Bir öğrenci sana yazdığında burada görünecek.")
+          : armusT("messages.emptyConvoList", 'Henüz bir yazışman yok. Bir öğretmenin profilinden "Mesaj Gönder" ile başlayabilirsin.')}</div>`;
         return;
       }
 

@@ -678,6 +678,7 @@ const ARMUS_I18N_EN = {
   "messages.micTitle": "Send a voice message",
   "messages.inputPlaceholder": "Write a message...",
   "messages.emptyConvoList": "You don't have any conversations yet. Start one from a teacher's profile with \"Send Message\".",
+  "messages.emptyConvoListTeacher": "You don't have any conversations yet. When a student writes to you, it shows up here.",
   "messages.noMessageYet": "No message yet",
   "messages.photo": "📷 Photo",
   "messages.video": "🎥 Video",
