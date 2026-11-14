@@ -3939,7 +3939,7 @@
         const empty = document.getElementById("reviewsEmpty");
         list.innerHTML = teacherReviews.map(r => {
           const stars = "★".repeat(r.stars) + "☆".repeat(5 - r.stars);
-          const dateLabel = new Date(r.createdAt).toLocaleDateString();
+          const dateLabel = new Date(r.createdAt).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR");
           return `
             <div class="review-card">
               <div class="review-card-top">
@@ -4292,7 +4292,9 @@
       const sparkDays = [];
       for (let i = 6; i >= 0; i--) {
         const dayKey = localDateKey(new Date(Date.now() - i * 86400000));
-        const dayGross = completedBookings
+        // earnedBookings, like "this month" above: a paid late
+        // cancellation is money earned in these 7 days too
+        const dayGross = earnedBookings
           .filter(b => bookingLocalDateKey(b) === dayKey)
           .reduce((sum, b) => sum + earnablePrice(b), 0);
         sparkDays.push(Math.round(dayGross * (1 - tier.rate / 100)));
@@ -4314,7 +4316,10 @@
       // the UTC calendar date, not this teacher's own local one, which
       // can disagree with weekAgoKey (a local date) by a day. Read the
       // viewer's own local date off the real instant instead.
-      const recentReviews = teacherReviews.filter(r => r.created_at && localDateKey(new Date(r.created_at)) >= weekAgoKey);
+      // (armusMapReviewRow exposes it as createdAt - reading created_at
+      // here always came back undefined, so the digest never mentioned a
+      // new review)
+      const recentReviews = teacherReviews.filter(r => r.createdAt && localDateKey(new Date(r.createdAt)) >= weekAgoKey);
 
       function renderDigest() {
         const digestParts = [
@@ -4625,7 +4630,8 @@
           { test: () => completedBookings.length >= 50, icon: "trophy", label: armusT("teacherDash.badge50Lessons", "50 Ders Tamamlandı") },
           { test: () => completedBookings.length >= 100, icon: "target", label: armusT("teacherDash.badge100Lessons", "100 Ders Tamamlandı") },
           {
-            test: () => teacherReviews.length >= 5 && teacherReviews.slice(-5).every(r => r.stars === 5),
+            // teacherReviews comes newest first - the streak is the latest 5
+            test: () => teacherReviews.length >= 5 && teacherReviews.slice(0, 5).every(r => r.stars === 5),
             icon: "star", label: armusT("teacherDash.badge5StarStreak", "5 Yıldız Serisi"),
           },
           { test: () => teacherReviews.length >= 1 && avgRating !== "—" && Number(avgRating) >= 4.8, icon: "gem", label: armusT("teacherDash.badgeTopRated", "Üstün Puan") },
