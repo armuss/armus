@@ -484,6 +484,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Yönlendiriliyor…': 'Redirecting…',
   'Farkı öde ({0})': 'Pay {0} more',
   'Ödemeye geç': 'Go to payment',
+  'Rezervasyon yapılamaz': "Can't be booked",
   'Ödemeye Geç': 'Go to Payment',
   '{0} ile ders': 'Lesson with {0}',
   '{0} · 50 dk · ₺{1}': '{0} · 50 min · ₺{1}',

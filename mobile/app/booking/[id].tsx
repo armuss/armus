@@ -40,6 +40,7 @@ import {
   type CreditCoverage,
   type LessonCredit,
 } from '../../lib/credits';
+import { amIBlockedBy } from '../../lib/blocks';
 import { shortDisplayName } from '../../lib/displayName';
 import { createPayment, parsePaymentRedirect, paymentRedirectType } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
@@ -76,6 +77,10 @@ export default function Booking() {
   // with this teacher is switched to a regular lesson, with a notice
   const [type, setType] = useState<'trial' | 'lesson'>(typeParam === 'lesson' ? 'lesson' : 'trial');
   const [trialTakenNotice, setTrialTakenNotice] = useState(false);
+  // a teacher who blocked this student (migration_101.sql): the booking
+  // insert is refused, but only after a card has been charged - so the
+  // screen says so and offers no checkout (the chat screen does the same)
+  const [blockedByTeacher, setBlockedByTeacher] = useState(false);
 
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,6 +114,17 @@ export default function Booking() {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!profile || !teacher?.isRegistered) return;
+    let active = true;
+    amIBlockedBy(teacher.id).then((blocked) => {
+      if (active) setBlockedByTeacher(blocked);
+    });
+    return () => {
+      active = false;
+    };
+  }, [profile?.id, teacher]);
 
   useEffect(() => {
     if (!profile || !teacher) return;
@@ -249,7 +265,7 @@ export default function Booking() {
   }
 
   async function handleConfirm() {
-    if (!teacher || !profile || !selectedDate || !selectedTime || submitting || confirming.current) return;
+    if (!teacher || !profile || !selectedDate || !selectedTime || submitting || confirming.current || blockedByTeacher) return;
     confirming.current = true;
     setSubmitting(true);
     try {
@@ -484,6 +500,12 @@ export default function Booking() {
           <View style={{ width: 40 }} />
         </View>
 
+        {blockedByTeacher && (
+          <Text style={styles.notice}>
+            {t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.")}
+          </Text>
+        )}
+
         {trialTakenNotice && (
           <Text style={styles.notice}>
             {t("Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her öğretmenle bir kez alınabilir.")}</Text>
@@ -649,7 +671,11 @@ export default function Booking() {
       </ScrollView>
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        {selectedDate && selectedTime ? (
+        {blockedByTeacher ? (
+          <View style={[styles.go, styles.goIdle]}>
+            <Text style={styles.goIdleText}>{t("Rezervasyon yapılamaz")}</Text>
+          </View>
+        ) : selectedDate && selectedTime ? (
           <Pressable
             onPress={handleConfirm}
             disabled={submitting}
