@@ -3333,11 +3333,17 @@
       const title = document.getElementById("attendanceModalTitle");
       const body = document.getElementById("attendanceModalBody");
 
+      // fills "Bir öğrenci {type} bildirdi" / "A student reported {type}" -
+      // a technical report says whose side the problem was on
+      // (migration_112.sql tech_side); one on the student's own side
+      // used to read as the teacher's
       const typeLabel = report && report.type === "no_show"
-        ? armusT("teacherDash.attendanceTypeNoShow", "derse gelmedin")
+        ? armusT("teacherDash.attendanceTypeNoShow", "derse gelmediğini")
         : report && report.type === "technical"
-          ? armusT("teacherDash.attendanceTypeTechnical", "senin tarafında teknik bir sorun yaşandığını")
-          : armusT("teacherDash.attendanceTypeLate", "derse geç kaldın");
+          ? (report.techSide === "student"
+            ? armusT("teacherDash.attendanceTypeTechnicalStudent", "kendi tarafında teknik bir sorun yaşandığını")
+            : armusT("teacherDash.attendanceTypeTechnical", "senin tarafında teknik bir sorun yaşandığını"))
+          : armusT("teacherDash.attendanceTypeLate", "derse geç kaldığını");
 
       if (user.is_banned) {
 
@@ -3380,7 +3386,13 @@
           await renderAttendanceBanner(user);
         });
 
-      } else if (report && report.status === "explained") {
+      } else if (report && report.status === "explained" && report.type === "no_show") {
+
+        // only a no-show report hides the teacher while it's reviewed
+        // (migration_112.sql) - an explained late/technical one used to
+        // land here too, telling a teacher hidden for another reason (a
+        // trial no-show they could lift themselves, below) that this
+        // report was what kept them hidden, with no way to unhide
 
         title.textContent = armusT("teacherDash.attendancePendingTitle", "Açıklaman inceleniyor");
         body.innerHTML = `
