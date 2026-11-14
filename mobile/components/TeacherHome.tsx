@@ -304,7 +304,7 @@ export default function TeacherHome() {
 
             {bookings.length > 0 && (
               <Text style={styles.allowance}>
-                {t("Bu ay kalan iptal hakkın: ")}<Text style={{ fontFamily: fonts.bodyExtraBold }}>{cancelsLeft} / {TEACHER_MONTHLY_CANCEL_LIMIT}</Text>{t(" · Derse 12 saatten az kala yapılan iptal 2 hak sayılır.")} {t(" · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan, iptal hakkından düşmez.")}</Text>
+                {t("Bu ay kalan iptal hakkın: ")}<Text style={{ fontFamily: fonts.bodyExtraBold }}>{cancelsLeft} / {TEACHER_MONTHLY_CANCEL_LIMIT}</Text>{t(" · Derse 12 saatten az kala yapılan iptal 2 hak sayılır.")}{t(" · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan, iptal hakkından düşmez.")}</Text>
             )}
           </View>
         }

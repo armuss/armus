@@ -8,6 +8,7 @@ import { ScrollBand } from '../../components/Band';
 import { useAuth } from '../../lib/auth';
 import { BLOCK_REASONS, blockStudent, getBlockedStudents, unblockStudent, type BlockReason } from '../../lib/blocks';
 import { getBookingsForTeacher } from '../../lib/bookings';
+import { notify } from '../../lib/dialogs';
 import { getOrCreateConversation } from '../../lib/messages';
 import { supabase } from '../../lib/supabase';
 import { capitalizeName } from '../../lib/displayName';
@@ -91,7 +92,7 @@ export default function Students() {
     // the database refuses a new conversation with a blocked student
     // (is_pair_blocked) - the tap used to do nothing at all
     if (!conversation) {
-      Alert.alert(
+      notify(
         blocked.has(studentId)
           ? t("Bu öğrenciyi engelledin. Ona mesaj göndermek için önce engelini kaldır.")
           : t("Sohbet açılamadı. Lütfen tekrar dene.")
