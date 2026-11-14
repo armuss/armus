@@ -4340,7 +4340,10 @@
 
       function renderDigest() {
         const digestParts = [
-          lessonsThisWeek > 0
+          // the "One" keys: English needs "1 lesson", not "1 lessons"
+          lessonsThisWeek === 1
+            ? armusT("teacherDash.digestLessonsThisWeekOne", "bu hafta <strong>1</strong> ders tamamladın")
+            : lessonsThisWeek > 0
             ? armusT("teacherDash.digestLessonsThisWeek", "bu hafta <strong>{n}</strong> ders tamamladın").replace("{n}", lessonsThisWeek)
             : armusT("teacherDash.digestNoLessonsThisWeek", "bu hafta henüz tamamlanan ders yok"),
         ];
@@ -4351,7 +4354,9 @@
             : armusT("teacherDash.digestFewerThanLastWeek", "geçen haftaya göre <strong>{n}</strong> ders daha az").replace("{n}", Math.abs(diff)));
         }
         if (recentReviews.length) {
-          digestParts.push(armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
+          digestParts.push(recentReviews.length === 1
+            ? armusT("teacherDash.digestNewReviewsOne", "<strong>1</strong> yeni değerlendirme aldın")
+            : armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
         }
         const firstName = armusEscapeHtml(armusCapitalizeName(user.name).split(" ")[0]);
         document.getElementById("digestCard").innerHTML =
