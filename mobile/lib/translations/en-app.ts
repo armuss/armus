@@ -524,6 +524,8 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Öğrenciyi engelle': 'Block student',
   'Engeli kaldır': 'Unblock',
   'Öğrenci engellendi': 'Student blocked',
+  'Bu öğrenciyi engelledin. Ona mesaj göndermek için önce engelini kaldır.': 'You blocked this student. To message them, unblock them first.',
+  'Sohbet açılamadı. Lütfen tekrar dene.': "The chat couldn't be opened. Please try again.",
   'Bu öğrenciyle aranızdaki {0} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.': 'The {0} upcoming lessons with this student were cancelled automatically and returned to them as lesson credits.',
   'Henüz bir rezervasyonun yok — öğrencilerin burada listelenecek.': "You don't have any bookings yet — your students will be listed here.",
   'Öğrenciler sadece buradaki saatlerde ders alabilir. Program her hafta tekrarlanır.': 'Students can only book the times set here. The schedule repeats every week.',

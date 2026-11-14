@@ -88,7 +88,16 @@ export default function Students() {
     setOpeningId(studentId);
     const conversation = await getOrCreateConversation(profile.id, 'teacher', studentId);
     setOpeningId(null);
-    if (!conversation) return;
+    // the database refuses a new conversation with a blocked student
+    // (is_pair_blocked) - the tap used to do nothing at all
+    if (!conversation) {
+      Alert.alert(
+        blocked.has(studentId)
+          ? t("Bu öğrenciyi engelledin. Ona mesaj göndermek için önce engelini kaldır.")
+          : t("Sohbet açılamadı. Lütfen tekrar dene.")
+      );
+      return;
+    }
     const student = students.find((s) => s.id === studentId);
     router.push({
       pathname: '/chat/[id]',

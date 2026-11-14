@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLightStatusBar } from '../../components/Band';
-import { amIBlockedBy } from '../../lib/blocks';
+import { amIBlockedBy, getBlockedStudents } from '../../lib/blocks';
 import { useAuth } from '../../lib/auth';
 import {
   getMessages,
@@ -92,6 +92,14 @@ export default function Chat() {
           amIBlockedBy(otherId).then((isBlocked) => {
             setBlockedByTeacher(isBlocked);
             if (isBlocked) setWarning(t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın."));
+          });
+        } else {
+          // the teacher's own block stops their messages too (is_pair_blocked
+          // in messages_insert_own) - say so instead of "try again"
+          getBlockedStudents(profile.id).then((blockedIds) => {
+            if (!blockedIds.has(otherId)) return;
+            setBlockedByTeacher(true);
+            setWarning(t("Bu öğrenciyi engelledin. Ona mesaj göndermek için önce engelini kaldır."));
           });
         }
       });
