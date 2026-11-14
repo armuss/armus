@@ -89,3 +89,13 @@ export function parsePaymentRedirect(
     return status;
   return null;
 }
+
+// The lesson type a successful redirect reports - what the booking really
+// became. payment-callback books a trial as a regular lesson when the
+// student's one trial with this teacher was taken while they paid (AR005),
+// and says so with &type=lesson.
+export function paymentRedirectType(url: string): 'trial' | 'lesson' | null {
+  if (!parsePaymentRedirect(url)) return null;
+  const type = new URL(url).searchParams.get('type');
+  return type === 'trial' || type === 'lesson' ? type : null;
+}

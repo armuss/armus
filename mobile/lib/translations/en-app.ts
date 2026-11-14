@@ -401,6 +401,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   '← Vazgeç': '← Cancel',
   'Güvenli ödeme': 'Secure payment',
   'Rezervasyon tamamlandı!': 'Booking complete!',
+  '{0} ile {1} · {2}': 'With {0} on {1} · {2}',
   'Ders hakkınla ödeme yapılmadan tamamlandı.': 'Completed with your lesson credit, no payment needed.',
   'Derslerime Git': 'Go to My Lessons',
   'Bir sorun çıktı': 'Something went wrong',
