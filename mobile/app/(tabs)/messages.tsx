@@ -87,14 +87,27 @@ export default function Messages() {
             </Pressable>
           )}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>{t("Hiç sorun yok mu?")}</Text>
-              <Text style={styles.emptyText}>
-                {t("Burada öğretmenlerine istediğini sorabilir, öğrenme hedeflerini konuşabilirsin.")}</Text>
-              <View style={styles.emptyBtn}>
-                <Button label={t("Öğretmen bul")} onPress={() => router.push('/(tabs)')} />
+            // a teacher was told to "find a teacher" here, a button that
+            // only led back to their own Bugün tab
+            profile?.role === 'teacher' ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyTitle}>{t("Henüz mesajın yok")}</Text>
+                <Text style={styles.emptyText}>
+                  {t("Öğrencilerin sana buradan yazabilir. Bir öğrencine yazmak için Öğrenciler sekmesini kullan.")}</Text>
+                <View style={styles.emptyBtn}>
+                  <Button label={t("Öğrencilerim")} onPress={() => router.push('/(tabs)/students')} />
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.empty}>
+                <Text style={styles.emptyTitle}>{t("Hiç sorun yok mu?")}</Text>
+                <Text style={styles.emptyText}>
+                  {t("Burada öğretmenlerine istediğini sorabilir, öğrenme hedeflerini konuşabilirsin.")}</Text>
+                <View style={styles.emptyBtn}>
+                  <Button label={t("Öğretmen bul")} onPress={() => router.push('/(tabs)')} />
+                </View>
+              </View>
+            )
           }
         />
       )}

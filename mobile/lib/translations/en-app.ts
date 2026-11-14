@@ -281,6 +281,8 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Öğretmenlerinle ve ARMUS destekle': 'With your teachers and ARMUS support',
   'Hiç sorun yok mu?': 'Any questions?',
   'Burada öğretmenlerine istediğini sorabilir, öğrenme hedeflerini konuşabilirsin.': 'Here you can ask your teachers anything and talk about your learning goals.',
+  'Henüz mesajın yok': 'No messages yet',
+  'Öğrencilerin sana buradan yazabilir. Bir öğrencine yazmak için Öğrenciler sekmesini kullan.': 'Your students can write to you here. To write to one of your students, use the Students tab.',
   'Bu mesaj gönderilemedi: platform dışı iletişim bilgisi paylaşımı henüz yasak.': "This message couldn't be sent: sharing contact details for outside the platform isn't allowed yet.",
   'Mesaj gönderilemedi. Tekrar dene.': "The message couldn't be sent. Try again.",
   'Kullanıcı': 'User',
