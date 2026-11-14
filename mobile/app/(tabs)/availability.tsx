@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,24 +36,48 @@ export default function Availability() {
   const [dirty, setDirty] = useState(false);
   const [weekSlots, setWeekSlots] = useState<Record<number, string[]>>({});
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<'' | 'saved' | 'failed'>('');
+  // the schedule couldn't be read: never show it as empty (saving that
+  // would wipe the real one)
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  // unsaved edits survive a visit to another tab (coming back used to
+  // re-read the saved schedule over them without a word)
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  const profileId = profile?.id;
 
   useFocusEffect(
     useCallback(() => {
-      if (!profile) return;
+      if (!profileId || dirtyRef.current) return;
       let active = true;
       setLoading(true);
+      setLoadFailed(false);
       supabase
         .from('profiles')
-        .select('availability_dates')
-        .eq('id', profile.id)
+        .select('availability_dates, weekly_availability')
+        .eq('id', profileId)
         .single()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
           if (!active) return;
-          const raw = (data?.availability_dates as Record<string, string[]> | null) || {};
+          if (error || !data) {
+            setLoadFailed(true);
+            setLoading(false);
+            return;
+          }
+          // the same precedence as booking and dashboard.html's editor:
+          // availability_dates once the teacher has saved it (_set),
+          // otherwise the weekly_availability from their application -
+          // reading only availability_dates showed a teacher who never
+          // saved here every day "closed" while students could book those
+          // hours, and the first save then wiped them
+          const dates = data.availability_dates as Record<string, unknown> | null;
+          const weekly = data.weekly_availability as unknown[] | null;
+          const hasDates = !!dates && dates._set === true;
           const next: Record<number, string[]> = {};
           DAY_COLUMNS.forEach(([, dayIdx]) => {
-            next[dayIdx] = Array.isArray(raw[String(dayIdx)]) ? raw[String(dayIdx)] : [];
+            const raw = hasDates ? dates![String(dayIdx)] : Array.isArray(weekly) ? weekly[dayIdx] : null;
+            next[dayIdx] = Array.isArray(raw) ? (raw as string[]).filter((s) => ALL_SLOTS.includes(s)).sort() : [];
           });
           setWeekSlots(next);
           setDirty(false);
@@ -62,7 +86,7 @@ export default function Availability() {
       return () => {
         active = false;
       };
-    }, [profile])
+    }, [profileId, reloadKey])
   );
 
   function edit(updater: (prev: Record<number, string[]>) => Record<number, string[]>) {
@@ -97,6 +121,7 @@ export default function Availability() {
   }
 
   async function handleSave() {
+    if (saving) return;
     setSaving(true);
     // _set:true marks this as a real, deliberate save - without it, a
     // teacher who manages their schedule only from the app would have it
@@ -116,15 +141,26 @@ export default function Availability() {
     const ok = await updateOwnProfile({ availability_dates: cleaned });
     setSaving(false);
     if (ok) setDirty(false);
-    setStatus(ok ? t("Kaydedildi") : t("Kaydedilemedi, tekrar dene"));
+    setStatus(ok ? 'saved' : 'failed');
   }
 
-  if (loading) {
+  // translated as it's drawn (comparing a translated text to the Turkish
+  // one showed a successful save with the error icon in English)
+  const statusText = status === 'saved' ? t("Kaydedildi") : status === 'failed' ? t("Kaydedilemedi, tekrar dene") : '';
+
+  if (loading || loadFailed) {
     return (
       <View style={styles.screen}>
         <Band height={150} />
         <SafeAreaView style={[styles.safe, styles.centered]}>
-          <ActivityIndicator color={colors.onRed} />
+          {loading ? (
+            <ActivityIndicator color={colors.onRed} />
+          ) : (
+            <Pressable onPress={() => setReloadKey((k) => k + 1)} style={styles.retry}>
+              <Text style={styles.retryText}>{t("Programın yüklenemedi.")}</Text>
+              <Text style={[styles.retryText, styles.retryLink]}>{t("Tekrar dene")}</Text>
+            </Pressable>
+          )}
         </SafeAreaView>
       </View>
     );
@@ -193,15 +229,15 @@ export default function Availability() {
 
         {!!status && !dirty && (
           <View style={styles.statusRow}>
-            <Ionicons name={status === 'Kaydedildi' ? 'checkmark-circle' : 'alert-circle'} size={16} color={status === 'Kaydedildi' ? colors.success : colors.error} />
-            <Text style={styles.status}>{status}</Text>
+            <Ionicons name={status === 'saved' ? 'checkmark-circle' : 'alert-circle'} size={16} color={status === 'saved' ? colors.success : colors.error} />
+            <Text style={styles.status}>{statusText}</Text>
           </View>
         )}
       </ScrollView>
 
       {dirty && (
         <View style={styles.bar}>
-          {!!status && <Text style={[styles.status, { color: colors.error, marginBottom: 6 }]}>{status}</Text>}
+          {!!status && <Text style={[styles.status, { color: colors.error, marginBottom: 6 }]}>{statusText}</Text>}
           <Pressable onPress={handleSave} disabled={saving} style={({ pressed }) => [styles.save, { opacity: saving ? 0.7 : pressed ? 0.88 : 1 }]}>
             {saving ? <ActivityIndicator color={colors.onRed} /> : <Text style={styles.saveText}>{t("Değişiklikleri kaydet")}</Text>}
           </Pressable>
@@ -232,6 +268,9 @@ const styles = StyleSheet.create({
   safeRed: { flex: 1, backgroundColor: colors.red },
   list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
+  retry: { alignItems: 'center', gap: 6, padding: 20 },
+  retryText: { fontFamily: fonts.bodySemibold, fontSize: 14, color: colors.ink, textAlign: 'center' },
+  retryLink: { fontFamily: fonts.bodyExtraBold, color: colors.red },
   content: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 24 },
   title: { fontFamily: fonts.display, fontSize: 26, color: colors.onRed, letterSpacing: -0.8 },
   subtitle: { fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 19, color: 'rgba(250,245,226,0.85)', marginTop: 4 },

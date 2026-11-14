@@ -533,6 +533,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Değişiklikleri kaydet': 'Save changes',
   'Kaydedildi': 'Saved',
   'Kaydedilemedi, tekrar dene': "Couldn't save, try again",
+  'Programın yüklenemedi.': "Your schedule couldn't be loaded.",
   'Programı temizle': 'Clear schedule',
   'Bütün günlerdeki saatler kaldırılsın mı? Kaydetmeden önce geri alabilirsin.': 'Remove the times on every day? You can undo this before saving.',
   'Temizle': 'Clear',
