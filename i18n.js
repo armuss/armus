@@ -943,6 +943,7 @@ const ARMUS_I18N_EN = {
   "teacherDash.withdrawStatusPaid": "Paid",
   "teacherDash.withdrawHistoryActionCol": "Receipt",
   "teacherDash.withdrawReceiptBtn": "View Receipt",
+  "teacherDash.withdrawReceiptBlocked": "The receipt couldn't open. Allow pop-ups for this site in your browser and try again.",
   "teacherDash.receiptNo": "Receipt No",
   "teacherDash.receiptTeacher": "Teacher",
   "teacherDash.receiptRequestedAt": "Requested On",

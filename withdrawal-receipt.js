@@ -26,7 +26,7 @@ function armusOpenWithdrawalReceipt(withdrawal, teacher) {
   const receiptNo = withdrawal.id.replace(/-/g, "").slice(0, 10).toUpperCase();
   const rows = [
     [armusT("teacherDash.receiptNo", "Makbuz No"), receiptNo],
-    [armusT("teacherDash.receiptTeacher", "Öğretmen"), `${armusEscapeHtmlForReceipt(teacher.name)} (${armusEscapeHtmlForReceipt(teacher.email)})`],
+    [armusT("teacherDash.receiptTeacher", "Öğretmen"), `${armusEscapeHtmlForReceipt(typeof armusCapitalizeName === "function" ? armusCapitalizeName(teacher.name) : teacher.name)} (${armusEscapeHtmlForReceipt(teacher.email)})`],
     [armusT("teacherDash.receiptRequestedAt", "Talep Tarihi"), dateLabel(withdrawal.requested_at)],
     [armusT("teacherDash.receiptPaidAt", "Ödeme Tarihi"), dateLabel(withdrawal.processed_at)],
     [armusT("teacherDash.receiptAmount", "Tutar"), `₺${withdrawal.amount}`],

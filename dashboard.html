@@ -4042,7 +4042,10 @@
         document.querySelectorAll("[data-receipt]").forEach(button => {
           button.addEventListener("click", () => {
             const w = withdrawalRequests.find(x => x.id === button.dataset.receipt);
-            if (w) armusOpenWithdrawalReceipt(w, user);
+            // a blocked pop-up used to just do nothing at all
+            if (w && armusOpenWithdrawalReceipt(w, user) === false) {
+              alert(armusT("teacherDash.withdrawReceiptBlocked", "Makbuz açılamadı. Tarayıcının açılır pencere engelini kaldırıp tekrar dene."));
+            }
           });
         });
       }
