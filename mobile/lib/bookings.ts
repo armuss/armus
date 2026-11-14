@@ -29,6 +29,9 @@ export type Booking = {
   // migration_112.sql: one less than 12 hours before the lesson weighs 2
   // toward that cap
   cancelWeight: number;
+  // migration_112.sql: the payment got a chargeback - not paid out until
+  // the admin settles it
+  payoutHold: boolean;
   createdAt: string | null;
 };
 
@@ -204,6 +207,7 @@ function mapBookingRow(row: any): Booking {
     teacherNoShow: row.teacher_no_show === true,
     countsAsTeacherCancel: row.counts_as_teacher_cancel === true,
     cancelWeight: Number(row.cancel_weight) || 1,
+    payoutHold: row.payout_hold === true,
     createdAt: row.created_at ?? null,
   };
 }
