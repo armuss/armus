@@ -971,6 +971,15 @@
 
       gate.style.display = "block";
 
+    } else if (session.status === "approved") {
+
+      // an approved teacher's application can't be sent again - the
+      // database refuses it (application_locked / profile_locked), so
+      // the 8 steps would end in "Başvuru kaydedilemedi" (the homepage
+      // footer's teacher-guide link lands here too) - their panel is
+      // where their profile is edited
+      window.location.replace("dashboard");
+
     } else {
 
       wizardRoot.style.display = "block";
@@ -1182,6 +1191,15 @@
           pill.classList.toggle("active", step === currentStep);
           pill.classList.toggle("done", step < currentStep);
         });
+        // on a phone the pills scroll sideways and only the first few fit -
+        // keep the current step's pill in view (scrollLeft only, so the
+        // page's own scroll to the top isn't disturbed)
+        const activePill = tracker.querySelector(".tracker-step.active");
+        if (activePill && tracker.scrollWidth > tracker.clientWidth) {
+          const pillRect = activePill.getBoundingClientRect();
+          const trackerRect = tracker.getBoundingClientRect();
+          tracker.scrollLeft += (pillRect.left + pillRect.width / 2) - (trackerRect.left + tracker.clientWidth / 2);
+        }
       }
 
       document.addEventListener("armus:langchange", () => {
