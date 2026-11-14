@@ -64,10 +64,14 @@ export default function Chat() {
       markMessagesRead(id, profile.id);
     });
 
-    const channel = subscribeToMessages(id, (message) => {
-      setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
-      if (message.senderId !== profile.id) markMessagesRead(id, profile.id);
-    });
+    const channel = subscribeToMessages(
+      id,
+      (message) => {
+        setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
+        if (message.senderId !== profile.id) markMessagesRead(id, profile.id);
+      },
+      (message) => setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)))
+    );
 
     return () => {
       active = false;

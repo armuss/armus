@@ -189,16 +189,24 @@ export async function markMessagesRead(conversationId: string, myUserId: string)
     .is('read_at', null);
 }
 
-// Calls onInsert whenever a new message arrives in this conversation.
+// Calls onInsert whenever a new message arrives in this conversation, and
+// onUpdate when one changes - the website lets the sender correct a message
+// for 2 minutes (mesajlar.html), and the open chat kept showing the old text.
 // Returns the channel so the caller can supabase.removeChannel(channel)
 // when leaving the thread.
-export function subscribeToMessages(conversationId: string, onInsert: (message: Message) => void): RealtimeChannel {
+export function subscribeToMessages(
+  conversationId: string,
+  onInsert: (message: Message) => void,
+  onUpdate?: (message: Message) => void
+): RealtimeChannel {
+  const filter = `conversation_id=eq.${conversationId}`;
   return supabase
     .channel(`messages-${conversationId}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
-      (payload) => onInsert(mapMessageRow(payload.new))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter }, (payload) =>
+      onInsert(mapMessageRow(payload.new))
+    )
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter }, (payload) =>
+      onUpdate?.(mapMessageRow(payload.new))
     )
     .subscribe();
 }
