@@ -84,7 +84,10 @@ export default function EditProfile() {
         setBio(pending?.bio ?? data.bio ?? '');
         setLoading(false);
       });
-  }, [profile]);
+    // the profile's id, not the object: a token refresh reloads the profile
+    // (a new object), and re-reading the row then wiped what was being typed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
 
   // the website's photo rules (lib/photo.ts): a teacher's photo needs a
   // plain white background and is re-encoded like the site does; a
