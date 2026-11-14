@@ -3570,6 +3570,7 @@
       document.getElementById("dashEmail").textContent = user.email;
 
       await renderAttendanceBanner(user);
+      document.addEventListener("armus:langchange", () => renderAttendanceBanner(user));
 
       // fields with a pending (not-yet-approved) change show the
       // proposed value, not the live one, so the teacher can see what
@@ -4840,6 +4841,11 @@
                  <button type="button" class="propose-btn-sm" data-rs-withdraw="${req.id}">${armusT("teacherDash.rescheduleWithdraw", "Geri Çek")}</button></div>`;
         }
 
+        // a function so the language toggle can redraw it - every label in
+        // these cards is set from script, and they used to stay in the
+        // language the page was opened in
+        function renderStudentGroups() {
+        incomingList.innerHTML = "";
         bookingsByStudent.forEach((studentBookings, studentId) => {
 
           const group = document.createElement("div");
@@ -4990,6 +4996,8 @@
             button.disabled = true;
             const result = await armusSaveTeacherNote(user.id, studentId, textarea.value.trim());
             button.disabled = false;
+            // kept for a redraw (language toggle) of this card
+            if (result !== false) teacherNotes[studentId] = result;
             status.textContent = result === false ? armusT("teacherDash.saveFailed", "Kaydedilemedi ✕") : armusT("teacherDash.saved", "Kaydedildi ✓");
             status.classList.add("visible");
             setTimeout(() => status.classList.remove("visible"), 2000);
@@ -5080,6 +5088,9 @@
 
           incomingList.appendChild(group);
         });
+        }
+        renderStudentGroups();
+        document.addEventListener("armus:langchange", renderStudentGroups);
       }
 
       // matches apply-teacher's own signup-time checks exactly (same
@@ -5854,6 +5865,8 @@
         }
       }
       renderPushToggle();
+      // its label is set from script, so data-i18n can't switch it
+      document.addEventListener("armus:langchange", renderPushToggle);
 
       document.getElementById("pushToggleBtn").addEventListener("click", async event => {
         const btn = event.target;
