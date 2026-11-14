@@ -3,24 +3,43 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { tr } from './i18n';
 
+export type AttachmentType = 'image' | 'video' | 'audio';
+
 export type Message = {
   id: string;
   conversationId: string;
   senderId: string;
   body: string;
+  // a photo, video or voice message sent from the website (mesajlar.html) -
+  // such a message often has no text at all (body '')
+  attachmentUrl: string | null;
+  attachmentType: AttachmentType | null;
   readAt: string | null;
   createdAt: string;
 };
 
 function mapMessageRow(row: any): Message {
+  const url = typeof row.attachment_url === 'string' && /^https:\/\//i.test(row.attachment_url) ? row.attachment_url : null;
+  const type = row.attachment_type === 'image' || row.attachment_type === 'video' || row.attachment_type === 'audio' ? row.attachment_type : null;
   return {
     id: row.id,
     conversationId: row.conversation_id,
     senderId: row.sender_id,
-    body: row.body,
+    body: row.body || '',
+    attachmentUrl: url && type ? url : null,
+    attachmentType: url && type ? type : null,
     readAt: row.read_at,
     createdAt: row.created_at,
   };
+}
+
+// The conversation list's preview of a message without text - the
+// website's attachmentPreviewLabel (mesajlar.html)
+export function attachmentPreviewLabel(type: string | null | undefined) {
+  if (type === 'image') return tr("📷 Fotoğraf");
+  if (type === 'video') return tr("🎥 Video");
+  if (type === 'audio') return tr("🎤 Sesli mesaj");
+  return tr("Mesaj");
 }
 
 export type Conversation = {
@@ -78,7 +97,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
         otherId,
         otherName: otherProfile.name,
         otherPhoto: otherProfile.photo_url,
-        lastMessageText: lastMessage?.body ?? null,
+        lastMessageText: lastMessage ? lastMessage.body || attachmentPreviewLabel(lastMessage.attachment_type) : null,
         lastMessageAt: lastMessage?.created_at ?? null,
         unreadCount,
       };
@@ -112,8 +131,21 @@ export async function getOrCreateConversation(
     .select()
     .single();
 
-  if (error) return null;
-  return data as { id: string };
+  if (!error) return data as { id: string };
+
+  // 23505 = unique_violation (student_id, teacher_id): a second tap (or the
+  // website) created it between the check above and this insert - it
+  // exists now, so open it rather than fail. Same as messages.js.
+  if (error.code === '23505') {
+    const { data: nowExisting } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('teacher_id', teacherId)
+      .maybeSingle();
+    if (nowExisting) return nowExisting as { id: string };
+  }
+  return null;
 }
 
 export async function getMessages(conversationId: string): Promise<Message[]> {
@@ -157,16 +189,24 @@ export async function markMessagesRead(conversationId: string, myUserId: string)
     .is('read_at', null);
 }
 
-// Calls onInsert whenever a new message arrives in this conversation.
+// Calls onInsert whenever a new message arrives in this conversation, and
+// onUpdate when one changes - the website lets the sender correct a message
+// for 2 minutes (mesajlar.html), and the open chat kept showing the old text.
 // Returns the channel so the caller can supabase.removeChannel(channel)
 // when leaving the thread.
-export function subscribeToMessages(conversationId: string, onInsert: (message: Message) => void): RealtimeChannel {
+export function subscribeToMessages(
+  conversationId: string,
+  onInsert: (message: Message) => void,
+  onUpdate?: (message: Message) => void
+): RealtimeChannel {
+  const filter = `conversation_id=eq.${conversationId}`;
   return supabase
     .channel(`messages-${conversationId}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
-      (payload) => onInsert(mapMessageRow(payload.new))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter }, (payload) =>
+      onInsert(mapMessageRow(payload.new))
+    )
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter }, (payload) =>
+      onUpdate?.(mapMessageRow(payload.new))
     )
     .subscribe();
 }

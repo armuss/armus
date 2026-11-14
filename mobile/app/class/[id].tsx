@@ -1,7 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
@@ -19,6 +31,7 @@ import {
   type Booking,
 } from '../../lib/bookings';
 import { capitalizeName, shortDisplayName } from '../../lib/displayName';
+import { notify } from '../../lib/dialogs';
 import { getLessonNotes, saveLessonNotes } from '../../lib/lessonNotes';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { supabase } from '../../lib/supabase';
@@ -52,6 +65,7 @@ export default function Class() {
   const [overtime, setOvertime] = useState(false);
   const [timerShort, setTimerShort] = useState('');
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
 
   // the bottom panel: words and a note for this lesson, kept on the device
   const [panelOpen, setPanelOpen] = useState(false);
@@ -129,7 +143,11 @@ export default function Class() {
     return () => {
       active = false;
     };
-  }, [id, profile]);
+    // the profile's id, not the object: a token refresh reloads the profile
+    // (a new object), and re-running this reset the phase - a student on
+    // the check-in or rating step was thrown back into the room
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, profile?.id]);
 
   // "tooEarly" only reflects the moment the booking was first fetched - a
   // student who opened the link early would otherwise be stuck on this
@@ -266,7 +284,7 @@ export default function Class() {
 
     setSavingReview(true);
     if (stars > 0) {
-      await addReview({
+      const saved = await addReview({
         bookingId: booking.id,
         teacherId: booking.teacherId,
         studentId: profile.id,
@@ -274,6 +292,12 @@ export default function Class() {
         stars,
         text: comment.trim(),
       });
+      if (!saved) {
+        // it used to leave as if the rating had been saved
+        setSavingReview(false);
+        notify(t("Kaydedilemedi"), t("Değerlendirme kaydedilemedi."));
+        return;
+      }
     }
     setSavingReview(false);
     goBackToLessons();
@@ -370,7 +394,9 @@ export default function Class() {
 
   if (phase === 'review') {
     return (
-      <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
+      <SafeAreaView style={styles.screen}>
+        {/* on iPhone the keyboard otherwise covers the note box and "Gönder" */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
         <Text style={styles.reviewTitle}>{t("Bu ders nasıldı?")}</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((n) => (
@@ -393,6 +419,7 @@ export default function Class() {
             <Text style={styles.skipText}>{t("Atla")}</Text>
           </Pressable>
         </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -526,7 +553,9 @@ export default function Class() {
 
       <Modal visible={reportOpen} transparent animationType="slide" onRequestClose={() => setReportOpen(false)}>
         <Pressable style={styles.sheetShade} onPress={() => setReportOpen(false)} />
-        <View style={[styles.reportSheet, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
+        {/* "how many minutes late" is typed here: keep the sheet above the keyboard */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={[styles.reportSheet, { maxHeight: windowHeight * 0.86, paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
           <View style={styles.sheetGrab} />
           <Text style={styles.reportTitle}>{t("Bir sorun bildir")}</Text>
           {reportExisting ? (
@@ -558,6 +587,7 @@ export default function Class() {
             )
           )}
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -608,7 +638,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 22,
     paddingHorizontal: 22,
     paddingTop: 10,
-    maxHeight: '86%',
   },
   sheetGrab: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 14 },
   reportTitle: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, letterSpacing: -0.3, marginBottom: 6 },

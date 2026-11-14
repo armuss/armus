@@ -1,3 +1,4 @@
+import { tr } from './i18n';
 import { supabase } from './supabase';
 
 export type EdgeResult<T = any> =
@@ -22,5 +23,8 @@ export async function invokeEdge<T = any>(name: string, body?: Record<string, un
       errorBody = null;
     }
   }
-  return { ok: false, error: (errorBody && typeof errorBody.error === 'string' && errorBody.error) || null, body: errorBody };
+  // the functions answer in Turkish; looked up like any text of the app, so
+  // the app in English shows the English one (an unknown one stays as is)
+  const message = (errorBody && typeof errorBody.error === 'string' && errorBody.error) || null;
+  return { ok: false, error: message ? tr(message) : null, body: errorBody };
 }

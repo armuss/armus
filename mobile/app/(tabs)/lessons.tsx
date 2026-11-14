@@ -2,7 +2,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ActivityIndicator, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
@@ -555,6 +568,11 @@ export default function Lessons() {
           style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          // the rating box and the check-in's minutes field sit at the
+          // bottom of a past lesson's card: on iPhone the keyboard covered
+          // them, and the first tap on "Gönder" only closed the keyboard
+          automaticallyAdjustKeyboardInsets
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -663,6 +681,8 @@ export default function Lessons() {
 
       <Modal visible={!!sheetBooking} transparent animationType="slide" onRequestClose={() => setSheet(null)}>
         <Pressable style={styles.sheetShade} onPress={() => setSheet(null)} />
+        {/* the "Bir sorun bildir" form types into this sheet - keep it above the keyboard */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {sheetBooking && (
           <View style={styles.sheet}>
             <View style={styles.grab} />
@@ -735,6 +755,7 @@ export default function Lessons() {
             )}
           </View>
         )}
+        </KeyboardAvoidingView>
       </Modal>
 
       {profile && (
