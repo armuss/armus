@@ -1529,6 +1529,16 @@
       text-align: right;
       color: var(--armus-gold-text);
       font-weight: 700;
+      /* on a phone the student's details used to squeeze this column
+         until the time and the Saat Öner / Dersi İptal Et buttons broke
+         over two or three lines - it keeps its width, the details wrap */
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .booking-row > div:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .booking-tags {
@@ -3139,7 +3149,24 @@
       return localDateKey(armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone));
     }
 
-    const gate = document.getElementById("gate");
+    // the same lesson's start on this teacher's own current clock - minutes
+    // after midnight, "HH:MM – HH:MM" and its date label - for the bookings
+    // calendar and list, so they agree with the agenda (and the reschedule
+    // requests, armusFormatRescheduleSlot) instead of showing the frozen
+    // b.time from another zone
+    function bookingLocalStartMinutes(b) {
+      const start = armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone);
+      return start.getHours() * 60 + start.getMinutes();
+    }
+    function bookingLocalTimeRange(b) {
+      const min = bookingLocalStartMinutes(b);
+      return armusFormatTimeRange(String(Math.floor(min / 60)).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0"));
+    }
+    function bookingLocalDateLabel(b) {
+      return armusFormatDateLabel(bookingLocalDateKey(b));
+    }
+
+    const gate =document.getElementById("gate");
     const shell = document.getElementById("shell");
 
     function showGate(title, text, actionsHtml) {
@@ -3193,7 +3220,10 @@
     // dashboard#profile, #bookings ... opens that panel (on load, and when
     // the header menu changes the hash while the panel is already open)
     function openPanelFromHash() {
-      const name = location.hash.slice(1);
+      // ?panel= too: a new-booking push notification links to
+      // dashboard.html?panel=bookings (send-push-notification), which
+      // used to land on Bugün instead of the lessons
+      const name = location.hash.slice(1) || new URLSearchParams(location.search).get("panel");
       const btn = name && document.querySelector(`.nav-btn[data-panel="${CSS.escape(name)}"]`);
       if (btn && !btn.classList.contains("active")) btn.click();
     }
@@ -3333,11 +3363,17 @@
       const title = document.getElementById("attendanceModalTitle");
       const body = document.getElementById("attendanceModalBody");
 
+      // fills "Bir öğrenci {type} bildirdi" / "A student reported {type}" -
+      // a technical report says whose side the problem was on
+      // (migration_112.sql tech_side); one on the student's own side
+      // used to read as the teacher's
       const typeLabel = report && report.type === "no_show"
-        ? armusT("teacherDash.attendanceTypeNoShow", "derse gelmedin")
+        ? armusT("teacherDash.attendanceTypeNoShow", "derse gelmediğini")
         : report && report.type === "technical"
-          ? armusT("teacherDash.attendanceTypeTechnical", "senin tarafında teknik bir sorun yaşandığını")
-          : armusT("teacherDash.attendanceTypeLate", "derse geç kaldın");
+          ? (report.techSide === "student"
+            ? armusT("teacherDash.attendanceTypeTechnicalStudent", "kendi tarafında teknik bir sorun yaşandığını")
+            : armusT("teacherDash.attendanceTypeTechnical", "senin tarafında teknik bir sorun yaşandığını"))
+          : armusT("teacherDash.attendanceTypeLate", "derse geç kaldığını");
 
       if (user.is_banned) {
 
@@ -3380,7 +3416,13 @@
           await renderAttendanceBanner(user);
         });
 
-      } else if (report && report.status === "explained") {
+      } else if (report && report.status === "explained" && report.type === "no_show") {
+
+        // only a no-show report hides the teacher while it's reviewed
+        // (migration_112.sql) - an explained late/technical one used to
+        // land here too, telling a teacher hidden for another reason (a
+        // trial no-show they could lift themselves, below) that this
+        // report was what kept them hidden, with no way to unhide
 
         title.textContent = armusT("teacherDash.attendancePendingTitle", "Açıklaman inceleniyor");
         body.innerHTML = `
@@ -3531,6 +3573,7 @@
       document.getElementById("dashEmail").textContent = user.email;
 
       await renderAttendanceBanner(user);
+      document.addEventListener("armus:langchange", () => renderAttendanceBanner(user));
 
       // fields with a pending (not-yet-approved) change show the
       // proposed value, not the live one, so the teacher can see what
@@ -3655,10 +3698,16 @@
 
       let bkWeekStart = bkStartOfWeek(new Date());
 
+      // filed by the lesson's real instant on this teacher's own clock
+      // (bookingLocalDateKey), like the agenda on the Bugün tab - b.date/
+      // b.time are frozen in whatever zone the teacher was in when it was
+      // booked, so a teacher who has since moved zones saw the same lesson
+      // at two different times on the two tabs
       const bookingsByDateKey = new Map();
       activeBookings.forEach(b => {
-        if (!bookingsByDateKey.has(b.date)) bookingsByDateKey.set(b.date, []);
-        bookingsByDateKey.get(b.date).push(b);
+        const key = bookingLocalDateKey(b);
+        if (!bookingsByDateKey.has(key)) bookingsByDateKey.set(key, []);
+        bookingsByDateKey.get(key).push(b);
       });
 
       // "first lesson" per student, computed once and shared with both
@@ -3744,7 +3793,7 @@
 
           dayBookings.forEach(booking => {
 
-            const startMin = bkTimeToMinutes(booking.time);
+            const startMin = bookingLocalStartMinutes(booking);
             const endMin = startMin + ARMUS_LESSON_MINUTES;
             const isPast = armusIsBookingPast(booking);
 
@@ -3757,7 +3806,7 @@
             el.title = `${booking.studentName} — ${booking.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")} — ₺${booking.price}`;
             el.innerHTML = `
               <div class="tl-block-label">${isPast ? "✓ " : ""}${armusEscapeHtml(booking.studentName)}</div>
-              <div class="bk-block-time">${armusFormatTimeRange(booking.time)}</div>
+              <div class="bk-block-time">${bookingLocalTimeRange(booking)}</div>
             `;
             wrap.appendChild(el);
           });
@@ -3785,13 +3834,17 @@
       // while the page loads and a hidden box can't be scrolled, so this
       // is done when the panel is first opened
       let bkScrolledToMorning = false;
+      function bkScrollToMorning() {
+        const bkScroll = document.getElementById("bkTimelineScroll");
+        if (bkScrolledToMorning || !bkScroll.clientHeight) return;
+        bkScroll.scrollTop = 7 * BK_HOUR_PX;
+        bkScrolledToMorning = true;
+      }
+      // the panel can already be open by now (dashboard#bookings, a
+      // reload) - its click below happened before this listener existed
+      bkScrollToMorning();
       document.querySelector('.nav-btn[data-panel="bookings"]').addEventListener("click", () => {
-        requestAnimationFrame(() => {
-          const bkScroll = document.getElementById("bkTimelineScroll");
-          if (bkScrolledToMorning || !bkScroll.clientHeight) return;
-          bkScroll.scrollTop = 7 * BK_HOUR_PX;
-          bkScrolledToMorning = true;
-        });
+        requestAnimationFrame(bkScrollToMorning);
       });
       document.addEventListener("armus:langchange", renderBookingsCalendar);
 
@@ -3900,7 +3953,7 @@
         const empty = document.getElementById("reviewsEmpty");
         list.innerHTML = teacherReviews.map(r => {
           const stars = "★".repeat(r.stars) + "☆".repeat(5 - r.stars);
-          const dateLabel = new Date(r.createdAt).toLocaleDateString();
+          const dateLabel = new Date(r.createdAt).toLocaleDateString(armusGetLang() === "en" ? "en-US" : "tr-TR");
           return `
             <div class="review-card">
               <div class="review-card-top">
@@ -3940,11 +3993,19 @@
       const lifetimeGross = releasedEarned.reduce((sum, b) => sum + earnablePrice(b), 0);
       const lifetimeNetEstimate = Math.round(lifetimeGross * (1 - tier.rate / 100));
       const heldNetEstimate = Math.round(heldEarned.reduce((sum, b) => sum + earnablePrice(b), 0) * (1 - tier.rate / 100));
-      const claimedAmount = withdrawalRequests
-        .filter(w => w.status !== "rejected")
-        .reduce((sum, w) => sum + Number(w.amount), 0);
-      const availableBalance = Math.max(0, lifetimeNetEstimate - claimedAmount);
-      document.getElementById("availableBalanceValue").textContent = `₺${availableBalance}`;
+      // recomputed after every new request - it used to be worked out once
+      // at load, so the balance shown (and the "more than your balance"
+      // check below) ignored a request just sent, and the same money could
+      // be requested again and again until the page was reloaded
+      let availableBalance = 0;
+      function renderAvailableBalance() {
+        const claimedAmount = withdrawalRequests
+          .filter(w => w.status !== "rejected")
+          .reduce((sum, w) => sum + Number(w.amount), 0);
+        availableBalance = Math.max(0, lifetimeNetEstimate - claimedAmount);
+        document.getElementById("availableBalanceValue").textContent = `₺${availableBalance}`;
+      }
+      renderAvailableBalance();
 
       function renderHeldBalance() {
         const note = document.getElementById("heldBalanceNote");
@@ -3985,7 +4046,10 @@
         document.querySelectorAll("[data-receipt]").forEach(button => {
           button.addEventListener("click", () => {
             const w = withdrawalRequests.find(x => x.id === button.dataset.receipt);
-            if (w) armusOpenWithdrawalReceipt(w, user);
+            // a blocked pop-up used to just do nothing at all
+            if (w && armusOpenWithdrawalReceipt(w, user) === false) {
+              alert(armusT("teacherDash.withdrawReceiptBlocked", "Makbuz açılamadı. Tarayıcının açılır pencere engelini kaldırıp tekrar dene."));
+            }
           });
         });
       }
@@ -4015,7 +4079,16 @@
           showStatus(armusT("teacherDash.withdrawErrTooMuch", "Bu tutar çekilebilir bakiyenden fazla."));
           return;
         }
-        if (!/^TR\d{24}$/.test(iban)) {
+        // the format alone let a mistyped IBAN through (the money would go
+        // to the wrong account or bounce) - also check its two check
+        // digits, the standard ISO 13616 mod-97 test
+        const ibanChecksumOk = () => {
+          const digits = (iban.slice(4) + iban.slice(0, 4)).replace(/[A-Z]/g, ch => String(ch.charCodeAt(0) - 55));
+          let rest = 0;
+          for (const d of digits) rest = (rest * 10 + Number(d)) % 97;
+          return rest === 1;
+        };
+        if (!/^TR\d{24}$/.test(iban) || !ibanChecksumOk()) {
           showStatus(armusT("teacherDash.withdrawErrIban", "Geçerli bir IBAN gir (TR ile başlayan 26 karakter)."));
           return;
         }
@@ -4039,6 +4112,7 @@
         }
 
         withdrawalRequests.unshift(data);
+        renderAvailableBalance();
         renderWithdrawalHistory();
         document.getElementById("withdrawalForm").reset();
         showStatus(armusT("teacherDash.withdrawSuccess", "Talebin gönderildi ✓"));
@@ -4165,7 +4239,10 @@
             const ok = await armusSetTicketStatus(id, newStatus);
             btn.disabled = false;
 
-            if (!ok) return;
+            if (!ok) {
+              alert(armusT("teacherDash.blockActionFailed", "İşlem başarısız oldu, tekrar dene."));
+              return;
+            }
             ticket.status = newStatus;
             expandedTicketIds.add(id);
             renderTicketsList();
@@ -4235,7 +4312,9 @@
       const sparkDays = [];
       for (let i = 6; i >= 0; i--) {
         const dayKey = localDateKey(new Date(Date.now() - i * 86400000));
-        const dayGross = completedBookings
+        // earnedBookings, like "this month" above: a paid late
+        // cancellation is money earned in these 7 days too
+        const dayGross = earnedBookings
           .filter(b => bookingLocalDateKey(b) === dayKey)
           .reduce((sum, b) => sum + earnablePrice(b), 0);
         sparkDays.push(Math.round(dayGross * (1 - tier.rate / 100)));
@@ -4257,11 +4336,17 @@
       // the UTC calendar date, not this teacher's own local one, which
       // can disagree with weekAgoKey (a local date) by a day. Read the
       // viewer's own local date off the real instant instead.
-      const recentReviews = teacherReviews.filter(r => r.created_at && localDateKey(new Date(r.created_at)) >= weekAgoKey);
+      // (armusMapReviewRow exposes it as createdAt - reading created_at
+      // here always came back undefined, so the digest never mentioned a
+      // new review)
+      const recentReviews = teacherReviews.filter(r => r.createdAt && localDateKey(new Date(r.createdAt)) >= weekAgoKey);
 
       function renderDigest() {
         const digestParts = [
-          lessonsThisWeek > 0
+          // the "One" keys: English needs "1 lesson", not "1 lessons"
+          lessonsThisWeek === 1
+            ? armusT("teacherDash.digestLessonsThisWeekOne", "bu hafta <strong>1</strong> ders tamamladın")
+            : lessonsThisWeek > 0
             ? armusT("teacherDash.digestLessonsThisWeek", "bu hafta <strong>{n}</strong> ders tamamladın").replace("{n}", lessonsThisWeek)
             : armusT("teacherDash.digestNoLessonsThisWeek", "bu hafta henüz tamamlanan ders yok"),
         ];
@@ -4272,7 +4357,9 @@
             : armusT("teacherDash.digestFewerThanLastWeek", "geçen haftaya göre <strong>{n}</strong> ders daha az").replace("{n}", Math.abs(diff)));
         }
         if (recentReviews.length) {
-          digestParts.push(armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
+          digestParts.push(recentReviews.length === 1
+            ? armusT("teacherDash.digestNewReviewsOne", "<strong>1</strong> yeni değerlendirme aldın")
+            : armusT("teacherDash.digestNewReviews", "<strong>{n}</strong> yeni değerlendirme aldın").replace("{n}", recentReviews.length));
         }
         const firstName = armusEscapeHtml(armusCapitalizeName(user.name).split(" ")[0]);
         document.getElementById("digestCard").innerHTML =
@@ -4482,9 +4569,24 @@
 
       // the red band ends a little under the week strip, wherever that
       // lands (a warning banner above or a wrapped header moves it)
+      // on a phone the week strip scrolls sideways and shows about five
+      // days, so on a Saturday or Sunday "today" opened off screen - bring
+      // the picked day into view once, the first time the strip is shown
+      let agDaysScrolled = false;
+      function agScrollDaysOnce(days) {
+        if (agDaysScrolled) return;
+        agDaysScrolled = true;
+        const on = days.querySelector(".ag-day.on");
+        if (!on || days.scrollWidth <= days.clientWidth) return;
+        const r = on.getBoundingClientRect();
+        const box = days.getBoundingClientRect();
+        if (r.right > box.left + days.clientWidth) days.scrollLeft += r.right - (box.left + days.clientWidth) + 14;
+      }
+
       function agSetBand() {
         const days = document.getElementById("agDays");
         if (!days.offsetParent) return;
+        agScrollDaysOnce(days);
         const top = shell.getBoundingClientRect().top;
         shell.style.setProperty("--band", `${Math.round(days.getBoundingClientRect().bottom - top + 24)}px`);
       }
@@ -4568,7 +4670,8 @@
           { test: () => completedBookings.length >= 50, icon: "trophy", label: armusT("teacherDash.badge50Lessons", "50 Ders Tamamlandı") },
           { test: () => completedBookings.length >= 100, icon: "target", label: armusT("teacherDash.badge100Lessons", "100 Ders Tamamlandı") },
           {
-            test: () => teacherReviews.length >= 5 && teacherReviews.slice(-5).every(r => r.stars === 5),
+            // teacherReviews comes newest first - the streak is the latest 5
+            test: () => teacherReviews.length >= 5 && teacherReviews.slice(0, 5).every(r => r.stars === 5),
             icon: "star", label: armusT("teacherDash.badge5StarStreak", "5 Yıldız Serisi"),
           },
           { test: () => teacherReviews.length >= 1 && avgRating !== "—" && Number(avgRating) >= 4.8, icon: "gem", label: armusT("teacherDash.badgeTopRated", "Üstün Puan") },
@@ -4615,10 +4718,13 @@
         button.disabled = true;
         const result = await armusUpdateOwnProfile({ income_goal: value || null });
         button.disabled = false;
-        if (result !== false) {
-          incomeGoal = value || null;
-          renderGoal();
+        if (result === false) {
+          // used to fail without a word, the old goal still showing
+          alert(armusT("teacherDash.saveFailed", "Kaydedilemedi ✕"));
+          return;
         }
+        incomeGoal = value || null;
+        renderGoal();
       });
 
       // ---- earnings simulator ----
@@ -4758,6 +4864,11 @@
                  <button type="button" class="propose-btn-sm" data-rs-withdraw="${req.id}">${armusT("teacherDash.rescheduleWithdraw", "Geri Çek")}</button></div>`;
         }
 
+        // a function so the language toggle can redraw it - every label in
+        // these cards is set from script, and they used to stay in the
+        // language the page was opened in
+        function renderStudentGroups() {
+        incomingList.innerHTML = "";
         bookingsByStudent.forEach((studentBookings, studentId) => {
 
           const group = document.createElement("div");
@@ -4823,7 +4934,7 @@
                   ${rescheduleHtml(booking)}
                 </div>
                 <div class="booking-when">
-                  ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
+                  ${bookingLocalDateLabel(booking)}<br><span style="color:inherit">${bookingLocalTimeRange(booking)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
                   ${armusBookingCancellable(booking) && !pendingRescheduleByBooking[booking.id] && proposalsLeft(booking.id) > 0 ? `<br><button type="button" class="propose-btn-sm" data-propose-booking="${booking.id}">${armusT("teacherDash.proposeTime", "Saat Öner")}</button>` : ""}
                   ${armusBookingCancellable(booking) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
@@ -4860,6 +4971,14 @@
                 return;
               }
 
+              // unblocking within 30 days counts the lessons the block
+              // cancelled toward this month's cancel cap after all
+              // (migration_112.sql) - reload so the cap shown here, and the
+              // check before every cancel, see that
+              if (studentBookings.some(b => b.status === "cancelled" && b.cancelledBy === "teacher" && !b.countsAsTeacherCancel)) {
+                window.location.reload();
+                return;
+              }
               blockedStudents.delete(studentId);
               button.classList.remove("is-blocked");
               button.textContent = armusT("teacherDash.blockStudent", "Engelle");
@@ -4887,6 +5006,9 @@
 
             if (result.cancelledCount > 0) {
               alert(armusT("teacherDash.blockCancelledLessons", "Bu öğrenciyle aranızdaki {count} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.").replace("{count}", result.cancelledCount));
+              // those lessons still showed as upcoming, with cancel/propose
+              // buttons that could only fail now
+              window.location.reload();
             }
           });
 
@@ -4897,6 +5019,8 @@
             button.disabled = true;
             const result = await armusSaveTeacherNote(user.id, studentId, textarea.value.trim());
             button.disabled = false;
+            // kept for a redraw (language toggle) of this card
+            if (result !== false) teacherNotes[studentId] = result;
             status.textContent = result === false ? armusT("teacherDash.saveFailed", "Kaydedilemedi ✕") : armusT("teacherDash.saved", "Kaydedildi ✓");
             status.classList.add("visible");
             setTimeout(() => status.classList.remove("visible"), 2000);
@@ -4987,6 +5111,9 @@
 
           incomingList.appendChild(group);
         });
+        }
+        renderStudentGroups();
+        document.addEventListener("armus:langchange", renderStudentGroups);
       }
 
       // matches apply-teacher's own signup-time checks exactly (same
@@ -5038,9 +5165,17 @@
           price: priceValue,
           availability: document.getElementById("availability").value,
           bio: bioValue,
+          // admin.html approves/rejects only while pending_changes->>submitted_at
+          // still matches what it loaded (its stale-edit guard) - without
+          // it every approve and reject ended in "Bu talep değişmiş, lütfen
+          // sayfayı yenile", so a teacher's edits could never go live
+          submitted_at: new Date().toISOString(),
         };
 
+        const btn = event.target.querySelector(".save-btn");
+        btn.disabled = true;
         const result = await armusUpdateOwnProfile({ pending_changes: newPendingChanges });
+        btn.disabled = false;
 
         if (result === false) {
           status.textContent = armusT("teacherDash.submitFailed", "Gönderilemedi ✕");
@@ -5753,6 +5888,8 @@
         }
       }
       renderPushToggle();
+      // its label is set from script, so data-i18n can't switch it
+      document.addEventListener("armus:langchange", renderPushToggle);
 
       document.getElementById("pushToggleBtn").addEventListener("click", async event => {
         const btn = event.target;
