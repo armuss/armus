@@ -683,7 +683,9 @@
         jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
           roomName: armusRoomNameForBooking(booking.id),
           parentNode: document.getElementById("jitsiContainer"),
-          userInfo: { displayName: session.name },
+          // the student sees this name in the call - a teacher's full
+          // name is never shown to a student (armusShortDisplayName)
+          userInfo: { displayName: isTeacher ? armusShortDisplayName(session.name) : armusCapitalizeName(session.name) },
           configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
           interfaceConfigOverwrite: {
             MOBILE_APP_PROMO: false,
