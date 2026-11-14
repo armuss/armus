@@ -26,6 +26,9 @@ export type Booking = {
   // a teacher's own cancellation counted toward their monthly cap
   // (migration_107.sql)
   countsAsTeacherCancel: boolean;
+  // migration_112.sql: one less than 12 hours before the lesson weighs 2
+  // toward that cap
+  cancelWeight: number;
   createdAt: string | null;
 };
 
@@ -200,6 +203,7 @@ function mapBookingRow(row: any): Booking {
     lateCancel: row.late_cancel === true,
     teacherNoShow: row.teacher_no_show === true,
     countsAsTeacherCancel: row.counts_as_teacher_cancel === true,
+    cancelWeight: Number(row.cancel_weight) || 1,
     createdAt: row.created_at ?? null,
   };
 }
@@ -376,12 +380,22 @@ export function isPaidLateCancel(booking: Booking) {
   return booking.status === 'cancelled' && booking.lateCancel && booking.type === 'lesson';
 }
 
-// this calendar month's own cancellations, in the teacher's timezone
+// this calendar month's own cancellations, in the teacher's timezone. A
+// last-minute one weighs 2 (migration_112.sql's cancel_weight, which the
+// server's cap sums) - counting rows showed a teacher more cancellations
+// left than they had. Mirrors armusTeacherCancelsThisMonth (bookings.js).
 export function teacherCancelsThisMonth(bookings: Booking[], timeZone: string) {
   const monthKey = (d: Date) =>
     new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || 'Europe/Istanbul', year: 'numeric', month: '2-digit' }).format(d);
   const current = monthKey(new Date());
-  return bookings.filter((b) => b.countsAsTeacherCancel && b.cancelledAt && monthKey(new Date(b.cancelledAt)) === current).length;
+  return bookings
+    .filter((b) => b.countsAsTeacherCancel && b.cancelledAt && monthKey(new Date(b.cancelledAt)) === current)
+    .reduce((sum, b) => sum + (b.cancelWeight || 1), 0);
+}
+
+// what cancelling this lesson now would take off that cap
+export function teacherCancelWeight(booking: BookingTiming) {
+  return hoursUntilLesson(booking) < FREE_CANCEL_HOURS ? 2 : 1;
 }
 
 export async function cancelBooking(
