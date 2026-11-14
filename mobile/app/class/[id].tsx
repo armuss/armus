@@ -426,11 +426,18 @@ export default function Class() {
 
   if (!booking) return null;
 
+  const isStudent = profile?.id === booking.studentId;
+  // the other person sees this name in the call - a teacher's full name is
+  // never shown to a student (class.html does the same)
+  const callName = profile?.name
+    ? isStudent
+      ? capitalizeName(profile.name)
+      : shortDisplayName(profile.name)
+    : 'ARMUS';
   const roomUrl = `https://meet.jit.si/${roomNameForBooking(booking.id)}#config.prejoinPageEnabled=false&userInfo.displayName=%22${encodeURIComponent(
-    profile?.name || 'ARMUS'
+    callName
   )}%22`;
 
-  const isStudent = profile?.id === booking.studentId;
   const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
 
   function addWord() {
