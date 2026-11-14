@@ -3220,7 +3220,10 @@
     // dashboard#profile, #bookings ... opens that panel (on load, and when
     // the header menu changes the hash while the panel is already open)
     function openPanelFromHash() {
-      const name = location.hash.slice(1);
+      // ?panel= too: a new-booking push notification links to
+      // dashboard.html?panel=bookings (send-push-notification), which
+      // used to land on Bugün instead of the lessons
+      const name = location.hash.slice(1) || new URLSearchParams(location.search).get("panel");
       const btn = name && document.querySelector(`.nav-btn[data-panel="${CSS.escape(name)}"]`);
       if (btn && !btn.classList.contains("active")) btn.click();
     }
