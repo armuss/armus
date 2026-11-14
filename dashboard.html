@@ -4569,9 +4569,24 @@
 
       // the red band ends a little under the week strip, wherever that
       // lands (a warning banner above or a wrapped header moves it)
+      // on a phone the week strip scrolls sideways and shows about five
+      // days, so on a Saturday or Sunday "today" opened off screen - bring
+      // the picked day into view once, the first time the strip is shown
+      let agDaysScrolled = false;
+      function agScrollDaysOnce(days) {
+        if (agDaysScrolled) return;
+        agDaysScrolled = true;
+        const on = days.querySelector(".ag-day.on");
+        if (!on || days.scrollWidth <= days.clientWidth) return;
+        const r = on.getBoundingClientRect();
+        const box = days.getBoundingClientRect();
+        if (r.right > box.left + days.clientWidth) days.scrollLeft += r.right - (box.left + days.clientWidth) + 14;
+      }
+
       function agSetBand() {
         const days = document.getElementById("agDays");
         if (!days.offsetParent) return;
+        agScrollDaysOnce(days);
         const top = shell.getBoundingClientRect().top;
         shell.style.setProperty("--band", `${Math.round(days.getBoundingClientRect().bottom - top + 24)}px`);
       }
