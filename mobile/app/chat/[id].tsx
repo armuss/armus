@@ -159,11 +159,11 @@ export default function Chat() {
         </Text>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.body}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+      {/* no keyboardVerticalOffset: this view's own layout already starts
+          below the header (its parent sits at the top of the screen), and
+          the extra 90 left a blank band between the keyboard and the
+          message box on iPhone */}
+      <KeyboardAvoidingView style={styles.body} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {loading ? (
           <ActivityIndicator color={colors.red} style={{ marginTop: 40 }} />
         ) : (
