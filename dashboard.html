@@ -4923,6 +4923,14 @@
                 return;
               }
 
+              // unblocking within 30 days counts the lessons the block
+              // cancelled toward this month's cancel cap after all
+              // (migration_112.sql) - reload so the cap shown here, and the
+              // check before every cancel, see that
+              if (studentBookings.some(b => b.status === "cancelled" && b.cancelledBy === "teacher" && !b.countsAsTeacherCancel)) {
+                window.location.reload();
+                return;
+              }
               blockedStudents.delete(studentId);
               button.classList.remove("is-blocked");
               button.textContent = armusT("teacherDash.blockStudent", "Engelle");
@@ -4950,6 +4958,9 @@
 
             if (result.cancelledCount > 0) {
               alert(armusT("teacherDash.blockCancelledLessons", "Bu öğrenciyle aranızdaki {count} ders otomatik iptal edildi ve kendisine ders hakkı olarak geri verildi.").replace("{count}", result.cancelledCount));
+              // those lessons still showed as upcoming, with cancel/propose
+              // buttons that could only fail now
+              window.location.reload();
             }
           });
 
