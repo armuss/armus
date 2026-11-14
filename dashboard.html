@@ -3139,7 +3139,24 @@
       return localDateKey(armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone));
     }
 
-    const gate = document.getElementById("gate");
+    // the same lesson's start on this teacher's own current clock - minutes
+    // after midnight, "HH:MM – HH:MM" and its date label - for the bookings
+    // calendar and list, so they agree with the agenda (and the reschedule
+    // requests, armusFormatRescheduleSlot) instead of showing the frozen
+    // b.time from another zone
+    function bookingLocalStartMinutes(b) {
+      const start = armusZonedTimeToUtc(b.date, b.time, b.teacherTimezone);
+      return start.getHours() * 60 + start.getMinutes();
+    }
+    function bookingLocalTimeRange(b) {
+      const min = bookingLocalStartMinutes(b);
+      return armusFormatTimeRange(String(Math.floor(min / 60)).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0"));
+    }
+    function bookingLocalDateLabel(b) {
+      return armusFormatDateLabel(bookingLocalDateKey(b));
+    }
+
+    const gate =document.getElementById("gate");
     const shell = document.getElementById("shell");
 
     function showGate(title, text, actionsHtml) {
@@ -3667,10 +3684,16 @@
 
       let bkWeekStart = bkStartOfWeek(new Date());
 
+      // filed by the lesson's real instant on this teacher's own clock
+      // (bookingLocalDateKey), like the agenda on the Bugün tab - b.date/
+      // b.time are frozen in whatever zone the teacher was in when it was
+      // booked, so a teacher who has since moved zones saw the same lesson
+      // at two different times on the two tabs
       const bookingsByDateKey = new Map();
       activeBookings.forEach(b => {
-        if (!bookingsByDateKey.has(b.date)) bookingsByDateKey.set(b.date, []);
-        bookingsByDateKey.get(b.date).push(b);
+        const key = bookingLocalDateKey(b);
+        if (!bookingsByDateKey.has(key)) bookingsByDateKey.set(key, []);
+        bookingsByDateKey.get(key).push(b);
       });
 
       // "first lesson" per student, computed once and shared with both
@@ -3756,7 +3779,7 @@
 
           dayBookings.forEach(booking => {
 
-            const startMin = bkTimeToMinutes(booking.time);
+            const startMin = bookingLocalStartMinutes(booking);
             const endMin = startMin + ARMUS_LESSON_MINUTES;
             const isPast = armusIsBookingPast(booking);
 
@@ -3769,7 +3792,7 @@
             el.title = `${booking.studentName} — ${booking.type === "trial" ? armusT("teacherDash.trialLesson", "Deneme Dersi") : armusT("teacherDash.regularLesson", "Ders")} — ₺${booking.price}`;
             el.innerHTML = `
               <div class="tl-block-label">${isPast ? "✓ " : ""}${armusEscapeHtml(booking.studentName)}</div>
-              <div class="bk-block-time">${armusFormatTimeRange(booking.time)}</div>
+              <div class="bk-block-time">${bookingLocalTimeRange(booking)}</div>
             `;
             wrap.appendChild(el);
           });
@@ -3797,13 +3820,17 @@
       // while the page loads and a hidden box can't be scrolled, so this
       // is done when the panel is first opened
       let bkScrolledToMorning = false;
+      function bkScrollToMorning() {
+        const bkScroll = document.getElementById("bkTimelineScroll");
+        if (bkScrolledToMorning || !bkScroll.clientHeight) return;
+        bkScroll.scrollTop = 7 * BK_HOUR_PX;
+        bkScrolledToMorning = true;
+      }
+      // the panel can already be open by now (dashboard#bookings, a
+      // reload) - its click below happened before this listener existed
+      bkScrollToMorning();
       document.querySelector('.nav-btn[data-panel="bookings"]').addEventListener("click", () => {
-        requestAnimationFrame(() => {
-          const bkScroll = document.getElementById("bkTimelineScroll");
-          if (bkScrolledToMorning || !bkScroll.clientHeight) return;
-          bkScroll.scrollTop = 7 * BK_HOUR_PX;
-          bkScrolledToMorning = true;
-        });
+        requestAnimationFrame(bkScrollToMorning);
       });
       document.addEventListener("armus:langchange", renderBookingsCalendar);
 
@@ -4835,7 +4862,7 @@
                   ${rescheduleHtml(booking)}
                 </div>
                 <div class="booking-when">
-                  ${booking.dateLabel}<br><span style="color:inherit">${armusFormatTimeRange(booking.time)}</span>
+                  ${bookingLocalDateLabel(booking)}<br><span style="color:inherit">${bookingLocalTimeRange(booking)}</span>
                   ${armusCanJoinLessonNow(booking) ? `<br><a class="join-btn-sm" href="class?booking=${booking.id}">${armusT("teacherDash.joinLesson", "🎥 Derse Katıl")}</a>` : ""}
                   ${armusBookingCancellable(booking) && !pendingRescheduleByBooking[booking.id] && proposalsLeft(booking.id) > 0 ? `<br><button type="button" class="propose-btn-sm" data-propose-booking="${booking.id}">${armusT("teacherDash.proposeTime", "Saat Öner")}</button>` : ""}
                   ${armusBookingCancellable(booking) ? `<br><button type="button" class="cancel-btn-sm" data-cancel-booking="${booking.id}">${armusT("teacherDash.cancelLesson", "Dersi İptal Et")}</button>` : ""}
