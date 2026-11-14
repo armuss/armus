@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
@@ -9,6 +9,7 @@ import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
 import PayerConsent from '../../components/PayerConsent';
 import WithdrawalConsent from '../../components/WithdrawalConsent';
+import { formatLessonWhenForViewer } from '../../lib/bookings';
 import { isValidTurkishIdentityNumber, normalizeTurkishPhone } from '../../lib/payer';
 import { shortDisplayName } from '../../lib/displayName';
 import { createPayment, parsePaymentRedirect } from '../../lib/payments';
@@ -36,7 +37,9 @@ type Phase = 'options' | 'confirm' | 'checkout' | 'success';
 
 export default function PackageOffer() {
   const t = useT();
-  const { teacherId } = useLocalSearchParams<{ teacherId: string }>();
+  // bookedDate / bookedTime: the trial just booked (the booking screen
+  // comes here right after it)
+  const { teacherId, bookedDate, bookedTime } = useLocalSearchParams<{ teacherId: string; bookedDate?: string; bookedTime?: string }>();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>('options');
@@ -50,6 +53,10 @@ export default function PackageOffer() {
   // the red band reaches just past the heading block
   const [heroH, setHeroH] = useState(200);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  // a second tap while the payment is starting must not start a second one
+  const confirming = useRef(false);
+  // the checkout WebView reports the same redirect more than once
+  const checkoutHandled = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -75,7 +82,7 @@ export default function PackageOffer() {
   }
 
   async function handleConfirm() {
-    if (!teacher || !selected || submitting) return;
+    if (!teacher || !selected || submitting || confirming.current) return;
 
     // the website checkout's own checks (lib/payer.ts)
     if (!normalizeTurkishPhone(phone)) {
@@ -96,6 +103,7 @@ export default function PackageOffer() {
     }
 
     setError('');
+    confirming.current = true;
     setSubmitting(true);
     const result = await createPayment({
       teacherId: teacher.id,
@@ -106,8 +114,10 @@ export default function PackageOffer() {
       phone: normalizeTurkishPhone(phone) || phone,
       identityNumber: identityNumber.replace(/\D/g, ''),
       withdrawalConsent: withdrawalConsent,
+    }).finally(() => {
+      confirming.current = false;
+      setSubmitting(false);
     });
-    setSubmitting(false);
 
     if (!result.ok) {
       setError(result.error);
@@ -117,6 +127,7 @@ export default function PackageOffer() {
       setPhase('success');
       return;
     }
+    checkoutHandled.current = false;
     setCheckoutUrl(result.paymentPageUrl);
     setPhase('checkout');
   }
@@ -141,7 +152,13 @@ export default function PackageOffer() {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.checkoutHeader}>
-          <Pressable onPress={() => setPhase('confirm')} style={styles.iconBtn}>
+          <Pressable
+            onPress={() => {
+              checkoutHandled.current = true;
+              setPhase('confirm');
+            }}
+            style={styles.iconBtn}
+          >
             <Text style={styles.iconBtnText}>{t("← Vazgeç")}</Text>
           </Pressable>
           <Text style={styles.checkoutTitle}>{t("Güvenli ödeme")}</Text>
@@ -152,6 +169,8 @@ export default function PackageOffer() {
           renderLoading={() => <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
             const status = parsePaymentRedirect(navState.url);
+            if (!status || checkoutHandled.current) return;
+            checkoutHandled.current = true;
             if (status === 'success') {
               setPhase('success');
             } else if (status === 'failed') {
@@ -191,7 +210,9 @@ export default function PackageOffer() {
             <Text style={styles.iconBtnText}>{t("← Geri")}</Text>
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={styles.content}>
+        {/* automaticallyAdjustKeyboardInsets: on iPhone the keyboard otherwise
+            covers the T.C. kimlik field and the pay button */}
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
           <Text style={styles.sectionTitle}>{t("Özet")}</Text>
           <View style={styles.confirmBox}>
             <View style={styles.summaryRow}>
@@ -252,6 +273,8 @@ export default function PackageOffer() {
   }
 
   const options = buildOptions(teacher.price);
+  const booked =
+    bookedDate && bookedTime ? formatLessonWhenForViewer({ date: bookedDate, time: bookedTime, teacherTimezone: teacher.timezone }) : null;
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
@@ -266,6 +289,14 @@ export default function PackageOffer() {
             <Text style={styles.iconBtnTextLight}>✕</Text>
           </Pressable>
         </View>
+        {booked && (
+          <View style={styles.bookedNote}>
+            <Ionicons name="checkmark-circle" size={16} color={colors.red} />
+            <Text style={styles.bookedNoteText}>
+              {t("Deneme dersin ayrıldı: {0} · {1}", booked.dateLabel, booked.timeRange)}
+            </Text>
+          </View>
+        )}
         <View style={styles.heroIcon}>
           <Ionicons name="trending-up" size={22} color={colors.red} />
         </View>
@@ -334,6 +365,23 @@ const styles = StyleSheet.create({
   iconBtnTextLight: {
     fontSize: 20,
     color: colors.onRed,
+  },
+  bookedNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.cream,
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 14,
+  },
+  bookedNoteText: {
+    flexShrink: 1,
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.red,
   },
   heroIcon: {
     width: 44,

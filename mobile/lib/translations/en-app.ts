@@ -444,6 +444,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   '{0} ders / hafta': ['{0} lesson / week', '{0} lessons / week'],
   'Toplam ders': 'Total lessons',
   'Gelişimin burada başlıyor!': 'Your progress starts here!',
+  'Deneme dersin ayrıldı: {0} · {1}': 'Your trial lesson is booked: {0} · {1}',
   '{0} ile haftalık ders paketini seç. Fiyatlar 50 dakikalık standart dersi kapsar — tüm ders hakların istediğin zaman kullanılabilir, otomatik yenilenmez.': 'Choose a weekly lesson package with {0} — prices cover the standard 50-minute lesson; all your lesson credits can be used whenever you like, and nothing renews automatically.',
   'ders x ₺': 'lessons x ₺',
   'haftada bir': 'weeks:',

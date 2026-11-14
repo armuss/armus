@@ -233,7 +233,15 @@ export default function Booking() {
   // was already taken meanwhile).
   function finishBooking(creditApplied: boolean, bookedType: string = type) {
     if (bookedType === 'trial' && teacher) {
-      router.replace({ pathname: '/package/[teacherId]', params: { teacherId: teacher.id } });
+      // the booked slot comes along, so the package screen confirms the
+      // trial first - it used to open with no word that the trial (maybe
+      // just paid for by card) was booked at all
+      const params: Record<string, string> = { teacherId: teacher.id };
+      if (selectedDate && selectedTime) {
+        params.bookedDate = selectedDate;
+        params.bookedTime = selectedTime;
+      }
+      router.replace({ pathname: '/package/[teacherId]', params });
       return;
     }
     setCreditApplied(creditApplied);
