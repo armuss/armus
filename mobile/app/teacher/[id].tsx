@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -44,10 +44,20 @@ export default function TeacherDetail() {
     checkIsFavorite(id).then(setIsFav);
   }, [id]);
 
-  useEffect(() => {
-    if (!profile || profile.role !== 'student') return;
-    hasTakenTrialWith(profile.id, id).then(setTrialTaken);
-  }, [profile, id]);
+  // re-read whenever the page comes back into view: after booking the
+  // trial (booking -> package offer -> back here) it still offered one
+  useFocusEffect(
+    useCallback(() => {
+      if (!profile || profile.role !== 'student') return;
+      let active = true;
+      hasTakenTrialWith(profile.id, id).then((taken) => {
+        if (active) setTrialTaken(taken);
+      });
+      return () => {
+        active = false;
+      };
+    }, [profile?.id, profile?.role, id])
+  );
 
   function book(type: 'trial' | 'lesson', date?: string) {
     if (!teacher) return;
