@@ -2,11 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AnnouncementFrame from '../../components/AnnouncementBanner';
 import { needsEmailVerification, useAuth } from '../../lib/auth';
+import { supabase } from '../../lib/supabase';
 import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
@@ -66,9 +68,46 @@ function Dock({ state, descriptors, emitter, navigateToTab, home }: BottomTabBar
   );
 }
 
+// A teacher shows as online to students for 5 minutes after
+// profiles.last_active_at (migration_85.sql) - the website refreshes it
+// on every page and every 2 minutes (auth.js armusMaybeRefreshPresence).
+// The app never did, so a teacher working from the app always looked
+// offline on their profile and in the teacher list.
+const PRESENCE_REFRESH_MS = 2 * 60 * 1000;
+
+function useTeacherPresence(teacherId: string | null) {
+  const lastWrite = useRef(0);
+  useEffect(() => {
+    if (!teacherId) return;
+    const beat = () => {
+      if (AppState.currentState !== 'active') return;
+      if (Date.now() - lastWrite.current < PRESENCE_REFRESH_MS - 5000) return;
+      lastWrite.current = Date.now();
+      supabase
+        .from('profiles')
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('id', teacherId)
+        .then(
+          () => {},
+          () => {}
+        );
+    };
+    beat();
+    const interval = setInterval(beat, PRESENCE_REFRESH_MS);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') beat();
+    });
+    return () => {
+      clearInterval(interval);
+      sub.remove();
+    };
+  }, [teacherId]);
+}
+
 export default function TabsLayout() {
   const t = useT();
   const { session, profile, loading } = useAuth();
+  useTeacherPresence(session && profile?.role === 'teacher' ? profile.id : null);
 
   if (loading) {
     return (
