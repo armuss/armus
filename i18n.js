@@ -1359,6 +1359,7 @@ const ARMUS_I18N_EN = {
   "admin.approveChange": "Approve Change",
   "admin.rejectChange": "Reject Change",
   "admin.cancelledLabel": "Cancelled{r}",
+  "admin.lessonStatusConfirmed": "Confirmed",
   "admin.creditAddedSuffix": " · lesson credit added",
   "admin.teacherNoShowSuffix": " · teacher didn't show up",
   "admin.attendanceUpholdNoShowConfirm": "If you confirm, this lesson is cancelled, returned to the student as a lesson credit, and not paid to the teacher. Continue?",

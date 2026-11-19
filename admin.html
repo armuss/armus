@@ -4856,6 +4856,15 @@
       });
     }
 
+    // just the kind of report, by its stored type ("no_show", "late",
+    // "technical") - for the places that have no more detail than that
+    function attendanceTypeName(type) {
+      if (type === "technical") return armusT("admin.attendanceTypeTechnical", "Teknik sorun");
+      if (type === "no_show") return armusT("admin.attendanceTypeNoShow", "Derse gelmedi");
+      if (type === "late") return armusT("admin.attendanceTypeLate", "Derse geç kaldı");
+      return armusEscapeHtml(type);
+    }
+
     // migration_112.sql: technical problems, a long wait counted as not held
     function attendanceTypeLabel(r) {
       if (r.type === "technical") {
@@ -5245,13 +5254,25 @@
       const fmt = iso => iso ? new Date(iso).toLocaleString(lang) : "—";
       const pay = data.payment || {};
       const student = data.student || {};
+      // this summary goes to the bank - named, not the stored codes
+      // ("no_show · upheld", "trial", "confirmed")
+      const reportStatuses = attendanceStatusLabels();
+      const paymentTypes = {
+        trial: armusT("admin.trialLessonType", "Deneme Dersi"),
+        lesson: armusT("admin.regularLessonType", "Ders"),
+        package: armusT("admin.packageType", "Paket"),
+      };
+      const lessonStatuses = {
+        confirmed: armusT("admin.lessonStatusConfirmed", "Onaylı"),
+        cancelled: armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", ""),
+      };
       const lessons = (data.lessons || []).map(l => `
         <tr>
           <td>${armusEscapeHtml(l.date)} ${armusEscapeHtml(l.time)} <small>(${armusEscapeHtml(l.timezone || "")})</small></td>
           <td>${armusEscapeHtml(l.teacher_name || "")}</td>
-          <td>${armusEscapeHtml(l.status)}</td>
-          <td>${(l.presence || []).map(p => `${p.role === "teacher" ? armusT("admin.colTeacher", "Öğretmen") : armusT("admin.colStudent", "Öğrenci")}: ${fmt(p.first_seen_at)} · ~${p.minutes} dk`).join("<br>") || armusT("admin.presenceNoneRecorded", "kayıt yok")}</td>
-          <td>${l.report ? armusEscapeHtml(`${l.report.type} · ${l.report.status}`) : "—"}</td>
+          <td>${armusEscapeHtml(lessonStatuses[l.status] || l.status)}</td>
+          <td>${(l.presence || []).map(p => `${p.role === "teacher" ? armusT("admin.colTeacher", "Öğretmen") : armusT("admin.colStudent", "Öğrenci")}: ${fmt(p.first_seen_at)} · ~${p.minutes} ${armusT("admin.minutesShort", "dk")}`).join("<br>") || armusT("admin.presenceNoneRecorded", "kayıt yok")}</td>
+          <td>${l.report ? `${attendanceTypeName(l.report.type)} · ${armusEscapeHtml(reportStatuses[l.report.status] || l.report.status)}` : "—"}</td>
           <td>${l.review ? `${"★".repeat(l.review.stars)} ${armusEscapeHtml(l.review.comment || "")}` : "—"}</td>
         </tr>
       `).join("");
@@ -5259,7 +5280,7 @@
       document.getElementById("detailBody").innerHTML = `
         <div class="app-details" style="margin-bottom:16px;">
           <div><h4>${armusT("admin.colStudent", "Öğrenci")}</h4><p>${armusEscapeHtml(student.name || "")}<br>${armusEscapeHtml(student.email || "")}<br>${armusT("admin.memberSince", "Üyelik:")} ${fmt(student.created_at)}</p></div>
-          <div><h4>${armusT("admin.paymentLabel", "Ödeme")}</h4><p>₺${armusEscapeHtml(String(pay.price))} · ${armusEscapeHtml(pay.type || "")}<br>${fmt(pay.created_at)}<br>iyzico: ${armusEscapeHtml(pay.iyzico_payment_id || "—")}<br>${armusT("admin.cardLabel", "Kart:")} ${armusEscapeHtml(pay.card_fingerprint || "—")}<br>${armusT("admin.consentLabel", "Cayma onayı:")} ${fmt(pay.withdrawal_consent_at)}</p></div>
+          <div><h4>${armusT("admin.paymentLabel", "Ödeme")}</h4><p>₺${armusEscapeHtml(String(pay.price))} · ${armusEscapeHtml(paymentTypes[pay.type] || pay.type || "")}<br>${fmt(pay.created_at)}<br>iyzico: ${armusEscapeHtml(pay.iyzico_payment_id || "—")}<br>${armusT("admin.cardLabel", "Kart:")} ${armusEscapeHtml(pay.card_fingerprint || "—")}<br>${armusT("admin.consentLabel", "Cayma onayı:")} ${fmt(pay.withdrawal_consent_at)}</p></div>
         </div>
         <table>
           <thead><tr><th>${armusT("admin.colDate", "Tarih")}</th><th>${armusT("admin.colTeacher", "Öğretmen")}</th><th>${armusT("admin.colStatus", "Durum")}</th><th>${armusT("admin.attendancePresence", "Derse kim, ne zaman girdi?")}</th><th>${armusT("admin.colReport", "Bildirim")}</th><th>${armusT("admin.colReview", "Değerlendirme")}</th></tr></thead>
@@ -6010,9 +6031,8 @@
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "attendance_reports" }, payload => {
           const a = payload.new;
           const teacher = armusAdminProfiles.find(p => p.id === a.teacher_id);
-          const typeLabel = a.type === "no_show"
-            ? armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
-            : armusT("admin.attendanceTypeLate", "Derse geç kaldı");
+          // a technical-problem report used to read "Derse geç kaldı"
+          const typeLabel = attendanceTypeName(a.type);
           pushPulseEvent("alert", armusT("admin.pulseAttendanceReport", "Devamsızlık bildirimi: <strong>{teacher}</strong> - {type}")
             .replace("{teacher}", armusEscapeHtml(teacher ? teacher.name : a.teacher_id)).replace("{type}", typeLabel));
         })
