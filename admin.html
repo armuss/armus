@@ -3153,6 +3153,10 @@
       ];
     }
 
+    // A teacher writes weekly_availability (and pending_changes) as raw
+    // JSON on their own row - nothing checks its shape or that a slot is
+    // a real "HH:MM", so a day that isn't a list, or a slot that isn't a
+    // time, must neither break this render nor reach the markup as HTML.
     function renderAvailabilityGrid(weeklyAvailability) {
 
       if (!Array.isArray(weeklyAvailability)) {
@@ -3160,9 +3164,10 @@
       }
 
       const days = dayColumns().map(([label, dayIndex]) => {
-        const slots = (weeklyAvailability[dayIndex] || []).slice().sort();
+        const daySlots = weeklyAvailability[dayIndex];
+        const slots = (Array.isArray(daySlots) ? daySlots : []).map(String).sort();
         const inner = slots.length
-          ? slots.map(s => `<div class="slot">${armusFormatTimeRange(s)}</div>`).join("")
+          ? slots.map(s => `<div class="slot">${armusEscapeHtml(/^\d{2}:\d{2}$/.test(s) ? armusFormatTimeRange(s) : s)}</div>`).join("")
           : '<div class="none">—</div>';
         return `<div class="avail-day"><div class="day-label">${label}</div>${inner}</div>`;
       }).join("");
@@ -3172,6 +3177,15 @@
 
     function initials(name) {
       return armusEscapeHtml(name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase());
+    }
+
+    // "English (C2), Turkish (Native)" - languages is teacher-written JSON
+    // too, so an entry that isn't an object is skipped, not dereferenced
+    function languagesLabel(languages) {
+      const list = (Array.isArray(languages) ? languages : [])
+        .filter(l => l && typeof l === "object")
+        .map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`);
+      return list.join(", ") || "—";
     }
 
     function renderTeacherCard(user) {
@@ -3265,16 +3279,12 @@
           </div>
           <div>
             <h4>${armusT("admin.priceAvailability", "Ücret / Uygunluk")}</h4>
-            <p>₺${user.price ?? "—"} / 50 dk · ${armusEscapeHtml(user.availability) || "—"}</p>
+            <p>₺${armusEscapeHtml(user.price ?? "—")} / 50 dk · ${armusEscapeHtml(user.availability) || "—"}</p>
           </div>
 
           <div>
             <h4>${armusT("teacherProfile.languages", "Diller")}</h4>
-            <p>
-              ${user.languages && user.languages.length
-                ? user.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ")
-                : "—"}
-            </p>
+            <p>${languagesLabel(user.languages)}</p>
           </div>
           <div>
             <h4>${armusT("admin.phone", "Telefon")}</h4>
@@ -3445,7 +3455,7 @@
         rows += `<div><h4>${armusT("admin.specialtyTitle", "Uzmanlık başlığı")}</h4><p>${armusEscapeHtml(user.title) || "—"} → <strong>${armusEscapeHtml(pc.title)}</strong></p></div>`;
       }
       if (pc.price !== undefined) {
-        rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${armusEscapeHtml(user.price ?? "—")} → <strong>₺${armusEscapeHtml(pc.price)}</strong></p></div>`;
       }
       if (pc.availability !== undefined) {
         rows += `<div><h4>${armusT("admin.availabilityStatus", "Uygunluk durumu")}</h4><p>${armusEscapeHtml(user.availability) || "—"} → <strong>${armusEscapeHtml(pc.availability)}</strong></p></div>`;
@@ -3457,11 +3467,7 @@
         rows += `<div><h4>${armusT("applyTeacher.subject", "Öğrettiğin konu")}</h4><p>${armusEscapeHtml(user.subject_taught) || "—"} → <strong>${armusEscapeHtml(pc.subject_taught)}</strong></p></div>`;
       }
       if (Array.isArray(pc.languages)) {
-        const oldLangs = (user.languages && user.languages.length)
-          ? user.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ")
-          : "—";
-        const newLangs = pc.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ") || "—";
-        rows += `<div class="app-full"><h4>${armusT("teacherProfile.languages", "Diller")}</h4><p>${oldLangs} → <strong>${newLangs}</strong></p></div>`;
+        rows += `<div class="app-full"><h4>${armusT("teacherProfile.languages", "Diller")}</h4><p>${languagesLabel(user.languages)} → <strong>${languagesLabel(pc.languages)}</strong></p></div>`;
       }
       if (Array.isArray(pc.weekly_availability)) {
         rows += `<div class="app-full"><h4>${armusT("admin.newWeeklyAvailability", "Yeni haftalık uygunluk")}</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
