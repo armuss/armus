@@ -3354,6 +3354,7 @@
               "profile", user.id, user.name
             );
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -3373,6 +3374,7 @@
               armusLogAdminAction(accountAction === "ban" ? "profile_ban" : "profile_clear_ban_suggestion", "profile", user.id, user.name);
               await loadAll();
             } else {
+              alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
               button.disabled = false;
             }
             return;
@@ -3400,6 +3402,7 @@
             applyProfileUpdate(updated);
             armusLogAdminAction(isUnban ? "profile_unban" : "profile_unhide", "profile", user.id, user.name);
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -3671,6 +3674,7 @@
             armusLogAdminAction(`student_${action}`, "profile", student.id, student.name);
             await loadAll();
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -4658,6 +4662,10 @@
       document.getElementById("bulkApproveBtn").disabled = false;
       document.getElementById("bulkRejectBtn").disabled = false;
       renderAllFromState();
+      // the ones that failed stay selected
+      if (results.some(updated => !updated)) {
+        alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
+      }
     }
 
     document.getElementById("bulkApproveBtn").addEventListener("click", () => armusRunBulkAction("approved"));
@@ -4758,7 +4766,8 @@
       const badge = document.getElementById("attendanceBadge");
       list.innerHTML = "";
 
-      const openCount = reports.filter(r => r.status === "open" || r.status === "explained").length;
+      // the nav badge counts every report, not just the ones the search shows
+      const openCount = armusAdminAttendanceReports.filter(r => r.status === "open" || r.status === "explained").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -4945,7 +4954,8 @@
       const badge = document.getElementById("withdrawalsBadge");
       body.innerHTML = "";
 
-      const pendingCount = requests.filter(w => w.status === "pending").length;
+      // the nav badge counts every request, not just the ones the search shows
+      const pendingCount = armusAdminWithdrawalRequests.filter(w => w.status === "pending").length;
       if (pendingCount) {
         badge.textContent = pendingCount;
         badge.classList.add("visible");
@@ -5030,7 +5040,8 @@
       const badge = document.getElementById("supportTicketsBadge");
       body.innerHTML = "";
 
-      const openCount = tickets.filter(t => t.status === "open").length;
+      // the nav badge counts every ticket, not just the ones the search shows
+      const openCount = armusAdminSupportTickets.filter(t => t.status === "open").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -5513,7 +5524,8 @@
       const badge = document.getElementById("messageReportsBadge");
       body.innerHTML = "";
 
-      const openCount = reports.filter(r => r.status === "open").length;
+      // the nav badge counts every report, not just the ones the search shows
+      const openCount = armusAdminMessageReports.filter(r => r.status === "open").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -5695,7 +5707,8 @@
       const badge = document.getElementById("disputesBadge");
       list.innerHTML = "";
 
-      const openCount = disputes.filter(d => d.status !== "resolved").length;
+      // the nav badge counts every dispute, not just the ones the search shows
+      const openCount = armusAdminDisputes.filter(d => d.status !== "resolved").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
