@@ -2785,8 +2785,9 @@
           Her öğretmenin tamamlanan derslerden elde ettiği ciro, komisyon
           dilimi ve ARMUS'un aldığı komisyon. Dilimler ana sayfadaki
           komisyon oranlarıyla aynıdır. Bir dersin ücreti dersten 7 gün
-          sonra ödenebilir olur; para çekme talebini "Ödenebilir" sütununa
-          göre kontrol et.
+          sonra ödenebilir olur; "Ödenebilir" sütunundan daha önce ödenen
+          para çekme talepleri düşülür. Para çekme talebini bu sütuna göre
+          kontrol et.
         </p>
         <table id="earningsTable">
           <thead>
@@ -4900,16 +4901,22 @@
       };
     }
 
+    // only while the request is still pending: the list isn't live, so
+    // another admin (or this one, in another tab) may have paid or
+    // rejected it since it loaded - a second "paid" would log a second
+    // payout, and a stale "reject" over a paid one would hand the teacher
+    // that balance back to request again. "stale" when nothing matched.
     async function armusAdminResolveWithdrawalRequest(id, status) {
       const session = await armusGetSession();
       const { data, error } = await armusSupabase
         .from("withdrawal_requests")
         .update({ status, processed_at: new Date().toISOString(), processed_by: session ? session.id : null })
         .eq("id", id)
+        .eq("status", "pending")
         .select()
-        .single();
+        .maybeSingle();
       if (error) return null;
-      return data;
+      return data || "stale";
     }
 
     function renderWithdrawalsPanel(requests, profileById) {
@@ -4964,14 +4971,20 @@
           const id = button.dataset.withdrawalAction;
           const newStatus = button.dataset.newStatus;
           const updated = await armusAdminResolveWithdrawalRequest(id, newStatus);
+          if (updated === "stale") {
+            alert(armusT("admin.withdrawalAlreadyProcessed", "Bu talep zaten işlenmiş (ödendi ya da reddedildi). Liste yenileniyor."));
+            await loadAll();
+            return;
+          }
           if (updated) {
             armusAdminWithdrawalRequests = armusAdminWithdrawalRequests.map(x => x.id === id ? updated : x);
             armusLogAdminAction(
               newStatus === "paid" ? "withdrawal_paid" : "withdrawal_rejected",
-              "withdrawal_request", id, teacherIdLabel(updated.teacher_id)
+              "withdrawal_request", id, teacherIdLabel(updated.teacher_id), `₺${updated.amount}`
             );
             renderAllFromState();
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -5829,7 +5842,7 @@
       };
     }
 
-    function computeEarnings(teachers, bookings, credits) {
+    function computeEarnings(teachers, bookings, credits, withdrawals) {
       return teachers
         .filter(t => t.status === "approved")
         .map(teacher => {
@@ -5855,10 +5868,16 @@
           // withdrawable balance
           const heldGross = earned.filter(b => !armusIsPayoutReleased(b)).reduce((sum, b) => sum + earnable(b), 0);
           const heldPayout = Math.round(heldGross * (1 - tier.rate / 100));
+          // what was already sent to the teacher (a withdrawal marked
+          // paid) isn't payable again - a new request is checked against
+          // what's left, the same balance dashboard.html shows the teacher
+          const paidOut = (withdrawals || [])
+            .filter(w => w.teacher_id === teacher.id && w.status === "paid")
+            .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
           return {
             teacher, completedCount: completed.length, lateCancelCount: paidLateCancels.length, hours, gross,
             tier, commission, payout: gross - commission,
-            payableNow: (gross - commission) - heldPayout, heldPayout,
+            payableNow: Math.max(0, (gross - commission) - heldPayout - paidOut), heldPayout,
           };
         })
         .filter(row => row.completedCount > 0 || row.lateCancelCount > 0)
@@ -6563,7 +6582,7 @@
       renderMessageReportsPanel(filteredMessageReports, profileById);
       renderTeacherReportsPanel(armusAdminTeacherReports, profileById);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
-      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
+      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits, armusAdminWithdrawalRequests));
       renderHeatmap(computeHeatmap(armusAdminBookings));
       renderCityBreakdown(computeCityBreakdown(armusAdminProfiles));
       // after every panel, so it reads their badges' counts
