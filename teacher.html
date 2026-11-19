@@ -1167,7 +1167,6 @@
       const calPrevBtn = document.getElementById("calPrevBtn");
       const calNextBtn = document.getElementById("calNextBtn");
       const calExpandBtn = document.getElementById("calExpandBtn");
-      const CAL_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
       // Preply-style peek: only show a handful of slots per day at first,
       // with a button below the whole grid to reveal the rest - a
       // popular teacher's fully-open availability can otherwise render
@@ -1232,7 +1231,7 @@
           const header = document.createElement("div");
           header.className = "cal-day-header";
           header.innerHTML = `
-            <div class="cal-day-name">${CAL_DAY_NAMES[date.getDay()]}</div>
+            <div class="cal-day-name">${armusDayNames()[date.getDay()]}</div>
             <div class="cal-day-num">${date.getDate()}</div>
           `;
           col.appendChild(header);
