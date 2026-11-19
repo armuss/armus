@@ -431,6 +431,10 @@
         })
         .catch(() => {});
 
+      // a second click inside the 2 seconds read "Kopyalandı ✓" as the
+      // label to go back to, so the button stuck on it for good - always
+      // go back to the real label, from the last click's timer only
+      let copyResetTimer = null;
       document.getElementById("referralCopyBtn").addEventListener("click", async () => {
         const input = document.getElementById("referralLinkInput");
         if (!input.value) return;
@@ -441,9 +445,9 @@
           document.execCommand("copy");
         }
         const btn = document.getElementById("referralCopyBtn");
-        const original = btn.textContent;
         btn.textContent = armusT("studentDash.referralCopied", "Kopyalandı ✓");
-        setTimeout(() => { btn.textContent = original; }, 2000);
+        clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(() => { btn.textContent = armusT("studentDash.referralCopy", "Kopyala"); }, 2000);
       });
 
       if (typeof armusApplyTranslations === "function") armusApplyTranslations();

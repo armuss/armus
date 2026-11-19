@@ -1335,6 +1335,10 @@
       const CHECK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
       const shareBtn = document.getElementById("shareBtn");
+      // taken once: a second click inside the 1.5 seconds used to read the
+      // check mark as the icon to go back to, so it stuck on "copied"
+      const shareBtnIcon = shareBtn.innerHTML;
+      let shareResetTimer = null;
       shareBtn.addEventListener("click", async () => {
         if (navigator.share) {
           try { await navigator.share({ title: document.title, url: window.location.href }); }
@@ -1343,9 +1347,9 @@
         }
         try {
           await navigator.clipboard.writeText(window.location.href);
-          const original = shareBtn.innerHTML;
           shareBtn.innerHTML = CHECK_ICON_SVG;
-          setTimeout(() => { shareBtn.innerHTML = original; }, 1500);
+          clearTimeout(shareResetTimer);
+          shareResetTimer = setTimeout(() => { shareBtn.innerHTML = shareBtnIcon; }, 1500);
         } catch (e) {}
       });
 
