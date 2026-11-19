@@ -1844,17 +1844,29 @@
         right: 10px;
         bottom: 12px;
         justify-content: space-between;
+        gap: 2px;
         padding: 6px;
         border-radius: 20px;
         transform: none;
       }
 
+      /* six labels in a phone-wide row: "Öğretmen Bul" / "My Lessons"
+         are wider than their button, and with nowrap they ran into the
+         next label - they wrap onto a second line instead */
       .nav-btn {
         flex: 1;
         min-width: 0;
         gap: 3px;
-        padding: 8px 2px;
+        padding: 8px 0;
         font-size: 10px;
+        line-height: 1.15;
+        white-space: normal;
+        text-align: center;
+      }
+
+      .nav-btn span {
+        max-width: 100%;
+        overflow: hidden;
       }
 
       .nav-btn svg {
@@ -1873,6 +1885,12 @@
 
       .sd-rg {
         grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 340px) {
+      .nav-btn {
+        font-size: 9px;
       }
     }
 
