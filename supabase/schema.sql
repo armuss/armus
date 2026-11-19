@@ -3401,8 +3401,9 @@ begin
       and bs.teacher_id::text = new.teacher_id
   ) into is_blocked;
 
+  -- AR008 (migration_123.sql): create-payment / payment-callback read it
   if is_blocked then
-    raise exception 'teacher_blocked_student: bu ogretmen bu ogrenciyle yeni bir rezervasyonu engellemis';
+    raise exception using errcode = 'AR008', message = 'teacher_blocked_student: bu ogretmen bu ogrenciyle yeni bir rezervasyonu engellemis';
   end if;
 
   return new;

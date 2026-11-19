@@ -33,7 +33,8 @@
 // right of withdrawal ends once a lesson starts (body.withdrawalConsent,
 // stored as pending_payments.withdrawal_consent_at); the buyer's IP is
 // stored for fraud checks. A banned or locked (chargeback) account can't
-// book or pay at all.
+// book or pay at all, nor can a student with the teacher who blocked them
+// (refused before any charge, { blocked: true }).
 //
 // type: "package" (migration_29.sql) always goes to card - it's what a
 // student buys after a trial to lock in weekly lessons with that same
@@ -333,6 +334,15 @@ const TRIAL_TAKEN_ERROR = "Bu öğretmenle daha önce deneme dersi aldın. Aynı
 
 const ACCOUNT_LOCKED_ERROR = "Hesabın şu anda inceleme nedeniyle kilitli, bu yüzden ders alamazsın. Bilgi için destek ekibimize yazabilirsin.";
 
+// the wording mesajlar.html and the app already show a blocked student
+const BLOCKED_ERROR = "Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.";
+
+// bookings_enforce_teacher_block: AR008 since migration_123.sql, before
+// that a plain exception with this message
+function isTeacherBlockError(error: any) {
+  return error?.code === "AR008" || String(error?.message || "").includes("teacher_blocked_student");
+}
+
 // the last x-forwarded-for entry - the one our own edge network appended
 // (the first is whatever the caller sent; see the buyer.ip note below)
 function trustedClientIp(req: Request) {
@@ -493,6 +503,20 @@ Deno.serve(async (req) => {
         if (!priorBookingCount) {
           return jsonResponse({ error: "Öğretmen bulunamadı ya da şu anda ders vermiyor." }, 400);
         }
+      }
+      // a teacher who blocked this student (blocked_students, the same
+      // pair am_i_blocked_by checks): bookings_enforce_teacher_block
+      // refuses the booking itself, but only once payment-callback writes
+      // it - after the card was charged. A package would only buy lessons
+      // that can never be booked. Refused here, before any charge.
+      const { data: block } = await supabaseAdmin
+        .from("blocked_students")
+        .select("id")
+        .eq("teacher_id", teacherId)
+        .eq("student_id", user.id)
+        .maybeSingle();
+      if (block) {
+        return jsonResponse({ error: BLOCKED_ERROR, blocked: true }, 403);
       }
       pricePerLesson = Number(teacherProfile.price);
       teacherTimezone = teacherProfile.timezone || "Europe/Istanbul";
@@ -666,6 +690,10 @@ Deno.serve(async (req) => {
         // AR007 = bookings_enforce_student_can_book (migration_112.sql)
         if (bookingError?.code === "AR007") {
           return jsonResponse({ error: ACCOUNT_LOCKED_ERROR, accountLocked: true }, 403);
+        }
+        // bookings_enforce_teacher_block: blocked since the check above
+        if (isTeacherBlockError(bookingError)) {
+          return jsonResponse({ error: BLOCKED_ERROR, blocked: true }, 403);
         }
         console.error("credit-covered booking insert failed", bookingError);
         return jsonResponse({ error: "Rezervasyon oluşturulamadı." }, 500);

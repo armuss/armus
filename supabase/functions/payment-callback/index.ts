@@ -240,6 +240,12 @@ async function creditForUnbookedPayment(supabaseAdmin: any, pending: any) {
 
 type Settled = { outcome: "success" | "error" | "slot_taken" | "time_passed"; bookedType?: string };
 
+// bookings_enforce_teacher_block: AR008 since migration_123.sql, before
+// that a plain exception with this message
+function isTeacherBlockError(error: any) {
+  return error?.code === "AR008" || String(error?.message || "").includes("teacher_blocked_student");
+}
+
 // Everything after iyzico has confirmed the charge, for a row this
 // request has already claimed ('processing'). Shared by the browser
 // redirect and the reconcile run, so a payment whose callback never
@@ -434,8 +440,11 @@ async function settlePaidCheckout(supabaseAdmin: any, pending: any, result: any)
     // credit-instead outcome (reusing the slot_taken state rather than a
     // dedicated one for something this rare). AR005 here is a top-up
     // trial refused by the one-trial rule; AR007 (migration_112.sql) the
-    // student's account was locked while they were paying.
-    if (["23505", "AR001", "AR002", "AR005", "AR007"].includes(bookingError?.code)) {
+    // student's account was locked while they were paying; AR008
+    // (bookings_enforce_teacher_block) the teacher blocked the student -
+    // that one used to end in the manual paid_no_booking state below,
+    // and every checkout a blocked student started reached it.
+    if (["23505", "AR001", "AR002", "AR005", "AR007", "AR008"].includes(bookingError?.code) || isTeacherBlockError(bookingError)) {
       await creditForUnbookedPayment(supabaseAdmin, pending);
       // 'slot_taken' (migration_84.sql), not 'paid_no_booking' - this is
       // a fully resolved outcome (credit already granted), not a stuck
