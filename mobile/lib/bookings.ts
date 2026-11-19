@@ -212,7 +212,9 @@ function mapBookingRow(row: any): Booking {
   };
 }
 
-export async function getBookingsForStudent(studentId: string): Promise<Booking[]> {
+// null when the read failed (no connection) - Derslerim tells that apart
+// from a student who simply has no lessons
+export async function getBookingsForStudent(studentId: string): Promise<Booking[] | null> {
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
@@ -220,7 +222,7 @@ export async function getBookingsForStudent(studentId: string): Promise<Booking[
     .order('lesson_date', { ascending: true })
     .order('lesson_time', { ascending: true });
 
-  if (error || !data) return [];
+  if (error || !data) return null;
   return data.map(mapBookingRow);
 }
 

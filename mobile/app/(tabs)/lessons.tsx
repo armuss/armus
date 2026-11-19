@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -213,15 +213,29 @@ export default function Lessons() {
   const [reviews, setReviews] = useState<Record<string, Review>>({});
   const [saidYes, setSaidYes] = useState<Record<string, boolean>>({});
   const [reportTeacherFor, setReportTeacherFor] = useState<Booking | null>(null);
+  // the lessons couldn't be read (no connection): not the same as having none
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(async () => {
-    if (!profile) return;
+    if (!profile) {
+      setRefreshing(false);
+      return;
+    }
     const [bookingsData, disputesData, creditData, strandedData] = await Promise.all([
       getBookingsForStudent(profile.id),
       getOwnDisputes(profile.id),
       getAvailableCredits(profile.id),
       getStrandedPackages(),
     ]);
+    if (!bookingsData) {
+      // keep whatever is already on screen and say so - an empty list read
+      // "Planlanmış dersin yok" to a student whose lessons just didn't load
+      setLoadFailed(true);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    setLoadFailed(false);
     const openIds = bookingsData.filter(bookingCancellable).map((b) => b.id);
     const doneIds = bookingsData.filter((b) => b.status !== 'cancelled' && isBookingPast(b)).map((b) => b.id);
     const [pendingData, countsData, reportsData, reviewsData, yesPairs] = await Promise.all([
@@ -295,6 +309,28 @@ export default function Lessons() {
           : ''
     );
     load();
+  }
+
+  // The "..." sheet is a Modal. On iOS a second one (the time picker, the
+  // complaint form) can't be presented while the sheet is still sliding
+  // away - UIKit drops it, so "Saati değiştir" and "Öğretmeni şikayet et"
+  // did nothing on iPhone. The follow-up waits for the sheet to be gone
+  // (Modal onDismiss is iOS-only; elsewhere it runs right away).
+  const afterSheet = useRef<(() => void) | null>(null);
+  function runAfterSheet() {
+    const next = afterSheet.current;
+    afterSheet.current = null;
+    next?.();
+  }
+  function closeSheetThen(next: () => void) {
+    setSheet(null);
+    if (Platform.OS !== 'ios') {
+      next();
+      return;
+    }
+    afterSheet.current = next;
+    // in case onDismiss never comes, it still runs (only once)
+    setTimeout(runAfterSheet, 900);
   }
 
   async function openReschedule(b: Booking) {
@@ -413,7 +449,7 @@ export default function Lessons() {
                 {when.timeRange} · ₺{item.price}
               </Text>
             </View>
-            <Pressable onPress={() => setSheet(item)} hitSlop={10} style={styles.dots} accessibilityLabel={t("Ders seçenekleri")}>
+            <Pressable onPress={() => setSheet(item)} disabled={busy} hitSlop={10} style={styles.dots} accessibilityLabel={t("Ders seçenekleri")}>
               {busy ? <ActivityIndicator size="small" color={colors.ink} /> : <Ionicons name="ellipsis-horizontal" size={18} color={colors.ink} />}
             </Pressable>
           </View>
@@ -585,6 +621,21 @@ export default function Lessons() {
           }
         >
           <ScrollBand height={mode === 'agenda' ? 80 : 0} />
+          {loadFailed && (
+            <View style={styles.loadError}>
+              <Text style={styles.loadErrorText}>{t("Derslerin yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.")}</Text>
+              <Pressable
+                onPress={() => {
+                  setRefreshing(true);
+                  load();
+                }}
+                disabled={refreshing}
+                style={styles.emptyBannerBtn}
+              >
+                <Text style={styles.emptyBannerBtnText}>{t("Tekrar dene")}</Text>
+              </Pressable>
+            </View>
+          )}
           {mode === 'agenda' ? (
             <>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.week} contentContainerStyle={styles.weekInner}>
@@ -602,7 +653,7 @@ export default function Lessons() {
 
               {next ? (
                 renderBanner(next)
-              ) : (
+              ) : loadFailed ? null : (
                 <View style={styles.emptyBanner}>
                   <Text style={styles.emptyBannerTitle}>{t("Planlanmış dersin yok")}</Text>
                   <Text style={styles.emptyBannerText}>{t("Bir öğretmen seç, deneme dersiyle başla.")}</Text>
@@ -661,6 +712,13 @@ export default function Lessons() {
                             {shortDisplayName(b.teacherName)} · {lessonTypeLabel(b.type)}
                           </Text>
                           <Text style={styles.laterTime}>{when.timeRange}</Text>
+                          {/* the answer buttons sit on that day's card - say so here,
+                              or a proposal for another day went unseen */}
+                          {pending[b.id]?.requestedBy === 'teacher' && (
+                            <Text style={styles.laterRequest} numberOfLines={1}>
+                              {t("Öğretmenin yeni bir saat önerdi")}
+                            </Text>
+                          )}
                         </View>
                         <Ionicons name="chevron-forward" size={17} color={colors.faint} />
                       </Pressable>
@@ -671,7 +729,7 @@ export default function Lessons() {
             </>
           ) : history.length > 0 ? (
             history.map(renderHistoryItem)
-          ) : (
+          ) : loadFailed ? null : (
             <View style={styles.agEmpty}>
               <Text style={styles.agEmptyText}>{t("Geçmiş derslerin burada görünecek")}</Text>
             </View>
@@ -679,7 +737,7 @@ export default function Lessons() {
         </ScrollView>
       )}
 
-      <Modal visible={!!sheetBooking} transparent animationType="slide" onRequestClose={() => setSheet(null)}>
+      <Modal visible={!!sheetBooking} transparent animationType="slide" onRequestClose={() => setSheet(null)} onDismiss={runAfterSheet}>
         <Pressable style={styles.sheetShade} onPress={() => setSheet(null)} />
         {/* the "Bir sorun bildir" form types into this sheet - keep it above the keyboard */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -699,8 +757,7 @@ export default function Lessons() {
                   <Pressable
                     onPress={() => {
                       const b = sheetBooking;
-                      setSheet(null);
-                      openReschedule(b);
+                      closeSheetThen(() => openReschedule(b));
                     }}
                     style={styles.sheetRow}
                   >
@@ -734,8 +791,7 @@ export default function Lessons() {
               <Pressable
                 onPress={() => {
                   const b = sheetBooking;
-                  setSheet(null);
-                  setReportTeacherFor(b);
+                  closeSheetThen(() => setReportTeacherFor(b));
                 }}
                 style={styles.sheetRow}
               >
@@ -851,6 +907,8 @@ const styles = StyleSheet.create({
   emptyBannerText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.muted, marginTop: 3 },
   emptyBannerBtn: { alignSelf: 'flex-start', backgroundColor: colors.red, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 11, marginTop: 12 },
   emptyBannerBtnText: { fontFamily: fonts.bodyExtraBold, fontSize: 13.5, color: colors.onRed },
+  loadError: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 16, marginBottom: 14 },
+  loadErrorText: { fontFamily: fonts.bodySemibold, fontSize: 13.5, lineHeight: 19, color: colors.error },
   credits: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14, gap: 4 },
   creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   creditsTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
@@ -885,6 +943,7 @@ const styles = StyleSheet.create({
   laterNum: { fontFamily: fonts.bodyExtraBold, fontSize: 16, color: colors.ink },
   laterName: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
   laterTime: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.muted, marginTop: 1 },
+  laterRequest: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.red, marginTop: 2 },
   hist: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, marginBottom: 10 },
   statusPill: { backgroundColor: colors.panel2, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4 },
   statusPillCancelled: { backgroundColor: '#fbeceb' },
