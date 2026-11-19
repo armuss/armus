@@ -434,7 +434,7 @@
   <main class="container" id="pageRoot">
 
     <div class="eyebrow" data-i18n="favoritesPage.eyebrow">FAVORİLERİM</div>
-    <h1 id="pageTitle" data-i18n="favoritesPage.title">Favori Öğretmenlerim</h1>
+    <h1 id="pageTitle">Favori Öğretmenlerim</h1>
 
     <div class="favorites-grid" id="favoritesGrid"></div>
 
@@ -499,6 +499,7 @@
         event.stopPropagation();
         armusToggleFavorite(btn.dataset.fav);
         article.remove();
+        favoriteTeachers = favoriteTeachers.filter(t => t.id !== teacher.id);
         renderCountAndEmptyState();
       });
 
@@ -508,6 +509,19 @@
       });
 
       return article;
+    }
+
+    // The title is set from here - it used to carry data-i18n as well,
+    // and the armusApplyTranslations() call below (and every language
+    // switch) put the plain "Favori Öğretmenlerim" back over the count.
+    // The cards bake armusT() text in when they're built, so a language
+    // switch rebuilds them from this list.
+    let favoriteTeachers = [];
+
+    function renderCards() {
+      grid.innerHTML = "";
+      favoriteTeachers.forEach(t => grid.appendChild(renderTeacherCard(t)));
+      renderCountAndEmptyState();
     }
 
     const grid = document.getElementById("favoritesGrid");
@@ -540,12 +554,11 @@
 
       if (favoriteIds.length > 0) {
         const allTeachers = await armusGetMarketplaceTeachers(session.id).catch(() => []);
-        allTeachers
-          .filter(t => favoriteIds.includes(t.id))
-          .forEach(t => grid.appendChild(renderTeacherCard(t)));
+        favoriteTeachers = allTeachers.filter(t => favoriteIds.includes(t.id));
       }
 
-      renderCountAndEmptyState();
+      renderCards();
+      document.addEventListener("armus:langchange", renderCards);
 
       if (typeof armusApplyTranslations === "function") armusApplyTranslations();
 

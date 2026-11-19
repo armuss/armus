@@ -72,7 +72,7 @@ const ARMUS_I18N_EN = {
   // favorites
   "favoritesPage.eyebrow": "MY FAVORITES",
   "favoritesPage.title": "My Favorite Teachers",
-  "favoritesPage.countTitle": "{n} Saved Teacher",
+  "favoritesPage.countTitle": "Saved Teachers: {n}",
   "favoritesPage.gateTitle": "Log in to see your favorite teachers",
   "favoritesPage.gateText": "You need an account before you can see the teachers you've saved.",
   "favoritesPage.emptyText": "You haven't saved any teachers yet.",
