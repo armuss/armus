@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,7 +12,7 @@ import {
   canJoinLessonNow,
   formatLessonWhenForViewer,
   formatRescheduleSlot,
-  getBookingsForTeacher,
+  getAllBookingsForTeacher,
   getPendingRescheduleRequests,
   getRescheduleCounts,
   MAX_TEACHER_PROPOSALS,
@@ -24,7 +24,6 @@ import {
   respondReschedule,
   teacherCancelsThisMonth,
   teacherCancelWeight,
-  todayIn,
   withdrawReschedule,
   type Booking,
   type RescheduleRequest,
@@ -66,20 +65,32 @@ export default function TeacherHome() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+  // a second tap before the screen redraws must not send the same call twice
+  const actingRef = useRef(false);
   const [proposing, setProposing] = useState<Booking | null>(null);
   const [submittingMove, setSubmittingMove] = useState(false);
   // bumps on every refresh so the attendance banner re-reads its report
   const [reloadKey, setReloadKey] = useState(0);
 
+  // the lessons couldn't be read: say so instead of "no lessons today"
+  const [loadFailed, setLoadFailed] = useState(false);
+
   const load = useCallback(async () => {
     if (!profile) return;
     setReloadKey((k) => k + 1);
     const [data, credits, withdrawals, blockedIds] = await Promise.all([
-      getBookingsForTeacher(profile.id),
+      getAllBookingsForTeacher(profile.id),
       getTeacherCredits(profile.id),
       getWithdrawalRequests(profile.id),
       getBlockedStudents(profile.id),
     ]);
+    setLoadFailed(!data);
+    if (!data) {
+      // what was already on screen stays
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     const openIds = data.filter(bookingCancellable).map((b) => b.id);
     const [pendingData, countsData] = await Promise.all([getPendingRescheduleRequests(openIds), getRescheduleCounts(openIds)]);
     setPending(pendingData);
@@ -97,21 +108,43 @@ export default function TeacherHome() {
     }, [load])
   );
 
-  // lesson dates are wall-clock dates in the teacher's own timezone - "today"
-  // must be too (a UTC date string was a day off around midnight)
-  const todayKey = localDateKey(todayIn(timeZone));
+  // The join button, "tamamlandı" and the cancel / propose buttons all
+  // depend on the clock: redraw every minute while the tab is open, like
+  // dashboard.html's agenda (setInterval(renderAgenda, 60000)). The list
+  // used to stay as it was drawn, so "Derse katıl" never showed up for a
+  // teacher who opened the tab before the lesson's join window.
+  const [, setClock] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setInterval(() => setClock((n) => n + 1), 60_000);
+      return () => clearInterval(timer);
+    }, [])
+  );
+
+  // A lesson belongs to the day its real start falls on, on this phone's
+  // clock - the clock its time is shown in (formatLessonWhenForViewer),
+  // like dashboard.html's agenda (bookingLocalDateKey). Comparing the
+  // booking's frozen lesson_date (wall-clock in the zone it was booked in)
+  // with today in profiles.timezone put a lesson under the wrong day when
+  // the two zones differ, e.g. a lesson at 01:00 on the phone listed
+  // under "upcoming" while its time read today.
+  const todayKey = localDateKey(new Date());
+  const dayOf = (b: Booking) => localDateKey(lessonWindow(b).start);
   const active = bookings.filter((b) => b.status !== 'cancelled');
   const startOf = (b: Booking) => lessonWindow(b).start.getTime();
-  const today = active.filter((b) => b.date === todayKey).sort((a, b) => startOf(a) - startOf(b));
-  const upcoming = active.filter((b) => b.date > todayKey).sort((a, b) => startOf(a) - startOf(b));
+  // a lesson that began before midnight stays here while it can still be joined
+  const today = active.filter((b) => dayOf(b) === todayKey || canJoinLessonNow(b)).sort((a, b) => startOf(a) - startOf(b));
+  const upcoming = active.filter((b) => dayOf(b) > todayKey && !canJoinLessonNow(b)).sort((a, b) => startOf(a) - startOf(b));
   const studentCount = new Set(active.map((b) => b.studentId)).size;
   const cancelsLeft = Math.max(0, TEACHER_MONTHLY_CANCEL_LIMIT - teacherCancelsThisMonth(bookings, timeZone));
 
   const rows: Row[] = [
     { kind: 'heading', key: 'h-today', title: t("Bugünkü derslerin") },
-    ...(today.length
-      ? today.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b, compact: false }))
-      : [{ kind: 'empty' as const, key: 'e-today', text: t("Bugün planlanmış bir dersin yok.") }]),
+    ...(loadFailed && !bookings.length
+      ? [{ kind: 'empty' as const, key: 'e-failed', text: t("Derslerin yüklenemedi. Aşağı çekerek tekrar dene.") }]
+      : today.length
+        ? today.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b, compact: false }))
+        : [{ kind: 'empty' as const, key: 'e-today', text: t("Bugün planlanmış bir dersin yok.") }]),
     ...(upcoming.length ? [{ kind: 'heading' as const, key: 'h-up', title: t("Yaklaşan dersler") }] : []),
     ...upcoming.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b, compact: true })),
   ];
@@ -119,7 +152,7 @@ export default function TeacherHome() {
   // mirrors dashboard.html's cancel button: a blocked student's lesson
   // doesn't count, a last-minute one counts 2
   async function handleCancel(b: Booking) {
-    if (actingId) return;
+    if (actingRef.current) return;
     const counts = !blocked.has(b.studentId);
     const weight = teacherCancelWeight(b);
     if (counts && cancelsLeft < weight) {
@@ -135,9 +168,11 @@ export default function TeacherHome() {
           : t("Bu iptal, bu ayki iptal hakkından düşer (kalan: {0}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.", cancelsLeft));
     }
     const ok = await confirmAsync(t("Dersi iptal et"), message, t("İptal Et"), true);
-    if (!ok) return;
+    if (!ok || actingRef.current) return;
+    actingRef.current = true;
     setActingId(b.id);
     const result = await cancelBooking(b.id);
+    actingRef.current = false;
     setActingId(null);
     if (!result.ok) {
       notify(t("İptal edilemedi"), result.limitReached ? t(weight === 2 ? LATE_LIMIT_MESSAGE : LIMIT_MESSAGE) : t(result.error));
@@ -147,8 +182,11 @@ export default function TeacherHome() {
   }
 
   async function act(bookingId: string, call: () => Promise<{ ok: boolean; error?: string }>) {
+    if (actingRef.current) return;
+    actingRef.current = true;
     setActingId(bookingId);
     const result = await call();
+    actingRef.current = false;
     setActingId(null);
     if (!result.ok) {
       notify(t("İşlem yapılamadı"), result.error);

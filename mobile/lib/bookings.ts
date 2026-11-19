@@ -226,16 +226,33 @@ export async function getBookingsForStudent(studentId: string): Promise<Booking[
   return data.map(mapBookingRow);
 }
 
-export async function getBookingsForTeacher(teacherId: string): Promise<Booking[]> {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('teacher_id', teacherId)
-    .order('lesson_date', { ascending: true })
-    .order('lesson_time', { ascending: true });
+// PostgREST answers at most 1000 rows a request, and this list runs oldest
+// first: a teacher with more than 1000 bookings (cancelled ones count) lost
+// the newest ones - their upcoming lessons among them - from the Bugün tab,
+// the students list and the earnings. Read page by page instead (id breaks
+// ties, so no row falls between two pages). null when a read fails.
+const TEACHER_BOOKINGS_PAGE = 1000;
 
-  if (error || !data) return [];
-  return data.map(mapBookingRow);
+export async function getAllBookingsForTeacher(teacherId: string): Promise<Booking[] | null> {
+  const rows: any[] = [];
+  for (let from = 0; ; from += TEACHER_BOOKINGS_PAGE) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('lesson_date', { ascending: true })
+      .order('lesson_time', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + TEACHER_BOOKINGS_PAGE - 1);
+    if (error || !data) return null;
+    rows.push(...data);
+    if (data.length < TEACHER_BOOKINGS_PAGE) break;
+  }
+  return rows.map(mapBookingRow);
+}
+
+export async function getBookingsForTeacher(teacherId: string): Promise<Booking[]> {
+  return (await getAllBookingsForTeacher(teacherId)) ?? [];
 }
 
 // A single booking by id - RLS already restricts this to the student, the

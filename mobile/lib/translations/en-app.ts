@@ -585,6 +585,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Bugünkü ders': "Today's lessons",
   'Bugünkü derslerin': "Today's lessons",
   'Bugün planlanmış bir dersin yok.': 'You have no lessons planned today.',
+  'Derslerin yüklenemedi. Aşağı çekerek tekrar dene.': "Your lessons couldn't be loaded. Pull down to try again.",
   'Bu ayki kazancın (tahmini)': "This month's earnings (estimated)",
   'Çekilebilir: {0}': 'Withdrawable: {0}',
   'Bu ay kalan iptal hakkın:': 'Cancellations left this month:',
