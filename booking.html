@@ -1045,7 +1045,8 @@
         slotStep.style.display = "block";
         slotGrid.innerHTML = "";
 
-        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes);
+        const slots = armusSlotsForDate(teacher, dateKey, dayOfWeek, busyTimes)
+          .map(s => (s.available && armusSlotHasStarted(dateKey, s.time, teacher.timezone)) ? { ...s, available: false } : s);
 
         if (!slots.some(s => s.available)) {
           slotGrid.innerHTML =
@@ -1198,7 +1199,23 @@
         }
       }
 
+      // The button was only disabled after the credit re-check below had
+      // come back, so a double tap (or an impatient second tap on a slow
+      // connection) started create-payment twice - two iyzico checkouts,
+      // or a credit spent and then "slot taken" on the second call. One
+      // submission at a time, from the first tap on.
+      let submitting = false;
       confirmBtn.addEventListener("click", async () => {
+        if (submitting) return;
+        submitting = true;
+        try {
+          await submitBooking();
+        } finally {
+          submitting = false;
+        }
+      });
+
+      async function submitBooking() {
 
         if (!selectedDate || !selectedTime) return;
 
@@ -1331,7 +1348,7 @@
         }
 
         window.location.href = data.paymentPageUrl;
-      });
+      }
     }
 
     })();

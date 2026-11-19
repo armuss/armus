@@ -1222,7 +1222,8 @@
         days.forEach(date => {
 
           const dateKey = calToDateKey(date);
-          const allSlots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes).filter(s => s.available);
+          const allSlots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes)
+            .filter(s => s.available && !armusSlotHasStarted(dateKey, s.time, teacher.timezone));
           const slots = calExpanded ? allSlots : allSlots.slice(0, CAL_SLOT_PEEK);
           if (allSlots.length > slots.length) anyHidden = true;
 
