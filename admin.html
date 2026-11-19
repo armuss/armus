@@ -4279,6 +4279,7 @@
         booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
         attendance_upheld: armusT("admin.logAttendanceUpheld", "Katılım bildirimi haklı bulundu"),
         attendance_dismissed: armusT("admin.logAttendanceDismissed", "Katılım bildirimi reddedildi"),
+        attendance_false_report: armusT("admin.logAttendanceFalseReport", "Katılım bildirimi asılsız bulundu"),
         withdrawal_paid: armusT("admin.logWithdrawalPaid", "Para çekme talebi ödendi"),
         withdrawal_rejected: armusT("admin.logWithdrawalRejected", "Para çekme talebi reddedildi"),
         teacher_report_resolved: armusT("admin.logTeacherReportResolved", "Öğretmen şikâyeti kapatıldı"),
@@ -4842,15 +4843,20 @@
           const updated = await armusAdminResolveAttendanceReport(id, newStatus, falseReport);
           if (updated) {
             armusAdminAttendanceReports = armusAdminAttendanceReports.map(x => x.id === id ? updated : x);
+            // a false report is a strike against the student (the third
+            // closes their account) - its own entry, not a plain dismissal
             armusLogAdminAction(
-              newStatus === "upheld" ? "attendance_upheld" : "attendance_dismissed",
+              newStatus === "upheld" ? "attendance_upheld" : falseReport ? "attendance_false_report" : "attendance_dismissed",
               "attendance_report", id, teacherIdLabel(updated.teacherId)
             );
             // hide/ban/escalation state on profiles changed server-side -
             // a full reload keeps the teachers/at-risk panels in sync too
             await loadAll();
           } else {
-            button.disabled = false;
+            // most often another admin decided it first (migration_122.sql
+            // keeps a decided report's outcome) - show what it is now
+            alert(armusT("admin.attendanceResolveFailed", "Bildirim güncellenemedi. Başka bir yönetici karar vermiş olabilir; liste yenileniyor."));
+            await loadAll();
           }
         });
       });
@@ -6395,7 +6401,7 @@
       const term = query.trim().toLowerCase();
       const all = buildPaletteIndex();
       armusPaletteResults = term
-        ? all.filter(item => item.label.toLowerCase().includes(term) || (item.sub || "").toLowerCase().includes(term)).slice(0, 30)
+        ? all.filter(item => String(item.label || "").toLowerCase().includes(term) || String(item.sub || "").toLowerCase().includes(term)).slice(0, 30)
         : all.slice(0, 12);
       armusPaletteActiveIndex = 0;
 
@@ -6433,10 +6439,14 @@
       const item = armusPaletteResults[armusPaletteActiveIndex];
       if (!item) return;
       closePalette();
-      const navBtn = document.querySelector(`[data-panel="${item.panel}"]`);
+      const navBtn = document.querySelector(`.nav-btn[data-panel="${item.panel}"]`);
       if (navBtn) navBtn.click();
       setTimeout(() => {
-        const target = document.querySelector(`[data-id="${item.id}"]`);
+        // inside the page just opened: the same id is also on the
+        // overview's "waiting" buttons and on a teacher's card in the
+        // profile-changes page, both hidden - the first match on the
+        // whole document was one of those, so nothing came into view
+        const target = document.querySelector(`#panel-${item.panel} [data-id="${CSS.escape(String(item.id))}"]`);
         if (target) {
           target.scrollIntoView({ behavior: "smooth", block: "center" });
           target.classList.add("kbd-focus");

@@ -1460,7 +1460,9 @@ create table message_reports (
   status text not null default 'open' check (status in ('open', 'resolved')),
   created_at timestamptz not null default now(),
   resolved_at timestamptz,
-  resolved_by uuid references profiles(id),
+  -- migration_122.sql: set null - an admin who closed a report can
+  -- still delete their account
+  resolved_by uuid references profiles(id) on delete set null,
   unique (message_id, reporter_id)
 );
 
@@ -2199,7 +2201,27 @@ security definer
 set search_path = public
 as $$
 begin
+  -- migration_122.sql: the resolving admin's profile was deleted
+  -- (resolved_by "on delete set null", below) - this null used to be
+  -- refused like a teacher's write, so that admin couldn't delete their
+  -- account
+  if new.resolved_by is null and old.resolved_by is not null
+     and (to_jsonb(new) - 'resolved_by') = (to_jsonb(old) - 'resolved_by') then
+    return new;
+  end if;
+
   if public.is_admin() then
+    -- migration_122.sql: a decided report keeps its outcome and who
+    -- decided it - a second admin's stale page could flip upheld to
+    -- dismissed (unhiding the teacher, a false-report strike)
+    if old.status in ('upheld', 'dismissed') then
+      if new.status is distinct from old.status or new.false_report is distinct from old.false_report then
+        raise exception 'attendance_report_decided: this report has already been resolved';
+      end if;
+      new.resolved_by := old.resolved_by;
+      new.resolved_at := old.resolved_at;
+      return new;
+    end if;
     new.resolved_by := auth.uid();
     if new.status is distinct from old.status and new.status in ('upheld', 'dismissed') then
       new.resolved_at := now();
@@ -2216,12 +2238,18 @@ begin
     raise exception 'attendance_report_locked: only an admin can set the final outcome';
   end if;
 
+  -- migration_122.sql: tech_side/minutes_held (whether an upheld
+  -- technical report refunds the student) and false_report (a student's
+  -- strikes) were left writable by the reported teacher
   if new.booking_id is distinct from old.booking_id
     or new.teacher_id is distinct from old.teacher_id
     or new.student_id is distinct from old.student_id
     or new.type is distinct from old.type
     or new.late_minutes is distinct from old.late_minutes
     or new.student_note is distinct from old.student_note
+    or new.tech_side is distinct from old.tech_side
+    or new.minutes_held is distinct from old.minutes_held
+    or new.false_report is distinct from old.false_report
   then
     raise exception 'attendance_report_locked: cannot modify the original report';
   end if;
@@ -3277,7 +3305,9 @@ create table withdrawal_requests (
   admin_note text,
   requested_at timestamptz not null default now(),
   processed_at timestamptz,
-  processed_by uuid references profiles(id)
+  -- migration_122.sql: set null - an admin who processed a request can
+  -- still delete their account
+  processed_by uuid references profiles(id) on delete set null
 );
 
 alter table withdrawal_requests enable row level security;
