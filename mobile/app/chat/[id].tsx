@@ -5,6 +5,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -15,9 +16,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLightStatusBar } from '../../components/Band';
-import { amIBlockedBy } from '../../lib/blocks';
+import { amIBlockedBy, getBlockedStudents } from '../../lib/blocks';
 import { useAuth } from '../../lib/auth';
 import {
+  attachmentPreviewLabel,
   getMessages,
   hasBookingWithOtherParty,
   markMessagesRead,
@@ -62,10 +64,14 @@ export default function Chat() {
       markMessagesRead(id, profile.id);
     });
 
-    const channel = subscribeToMessages(id, (message) => {
-      setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
-      if (message.senderId !== profile.id) markMessagesRead(id, profile.id);
-    });
+    const channel = subscribeToMessages(
+      id,
+      (message) => {
+        setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
+        if (message.senderId !== profile.id) markMessagesRead(id, profile.id);
+      },
+      (message) => setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)))
+    );
 
     return () => {
       active = false;
@@ -92,6 +98,14 @@ export default function Chat() {
           amIBlockedBy(otherId).then((isBlocked) => {
             setBlockedByTeacher(isBlocked);
             if (isBlocked) setWarning(t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın."));
+          });
+        } else {
+          // the teacher's own block stops their messages too (is_pair_blocked
+          // in messages_insert_own) - say so instead of "try again"
+          getBlockedStudents(profile.id).then((blockedIds) => {
+            if (!blockedIds.has(otherId)) return;
+            setBlockedByTeacher(true);
+            setWarning(t("Bu öğrenciyi engelledin. Ona mesaj göndermek için önce engelini kaldır."));
           });
         }
       });
@@ -153,11 +167,11 @@ export default function Chat() {
         </Text>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.body}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+      {/* no keyboardVerticalOffset: this view's own layout already starts
+          below the header (its parent sits at the top of the screen), and
+          the extra 90 left a blank band between the keyboard and the
+          message box on iPhone */}
+      <KeyboardAvoidingView style={styles.body} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {loading ? (
           <ActivityIndicator color={colors.red} style={{ marginTop: 40 }} />
         ) : (
@@ -173,7 +187,23 @@ export default function Chat() {
               return (
                 <View style={[styles.row, isMine && styles.rowMine]}>
                   <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                    <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{item.body}</Text>
+                    {/* a photo / video / voice message sent from the website:
+                        the photo shows here, the others open in the browser */}
+                    {item.attachmentUrl && item.attachmentType === 'image' && (
+                      <Pressable onPress={() => Linking.openURL(item.attachmentUrl!).catch(() => {})} accessibilityLabel={attachmentPreviewLabel('image')}>
+                        <Image source={{ uri: item.attachmentUrl }} style={styles.attachmentImage} resizeMode="cover" />
+                      </Pressable>
+                    )}
+                    {item.attachmentUrl && item.attachmentType !== 'image' && (
+                      <Pressable onPress={() => Linking.openURL(item.attachmentUrl!).catch(() => {})} hitSlop={6}>
+                        <Text style={[styles.bubbleText, styles.attachmentLink, isMine && styles.bubbleTextMine]}>
+                          {attachmentPreviewLabel(item.attachmentType)}
+                        </Text>
+                      </Pressable>
+                    )}
+                    {!!item.body && (
+                      <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine, !!item.attachmentUrl && { marginTop: 6 }]}>{item.body}</Text>
+                    )}
                   </View>
                 </View>
               );
@@ -290,6 +320,16 @@ const styles = StyleSheet.create({
   },
   bubbleTextMine: {
     color: colors.onRed,
+  },
+  attachmentImage: {
+    width: 200,
+    height: 200,
+    borderRadius: radius.md,
+    backgroundColor: colors.panel2,
+  },
+  attachmentLink: {
+    fontFamily: fonts.bodyBold,
+    textDecorationLine: 'underline',
   },
   empty: {
     fontFamily: fonts.body,

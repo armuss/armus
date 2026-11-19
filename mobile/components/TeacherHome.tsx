@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Tex
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../lib/auth';
+import { getBlockedStudents } from '../lib/blocks';
 import {
   TEACHER_MONTHLY_CANCEL_LIMIT,
   bookingCancellable,
@@ -22,6 +23,7 @@ import {
   rescheduleBooking,
   respondReschedule,
   teacherCancelsThisMonth,
+  teacherCancelWeight,
   todayIn,
   withdrawReschedule,
   type Booking,
@@ -39,6 +41,9 @@ import { useT } from '../lib/i18n';
 
 const LIMIT_MESSAGE =
   'Bu ay 3 ders iptal hakkını kullandın. Dersin saatini değiştirmek için öğrencine "Saat Öner" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.';
+// migration_112.sql: a cancellation less than 12 hours before the lesson weighs 2
+const LATE_LIMIT_MESSAGE =
+  'Derse 12 saatten az kala yapılan iptal 2 iptal hakkı sayılır ve bu ay bunun için yeterli hakkın kalmadı. Öğrencine "Saat Öner" ile yeni bir saat önerebilirsin; gerçekten acil bir durumsa destek ekibimize yaz.';
 
 type Row = { kind: 'heading'; key: string; title: string } | { kind: 'lesson'; key: string; booking: Booking; compact: boolean } | { kind: 'empty'; key: string; text: string };
 
@@ -55,6 +60,9 @@ export default function TeacherHome() {
   // a teacher proposes a new time at most 2 times per lesson (migration_112.sql)
   const [proposalCounts, setProposalCounts] = useState<Record<string, { studentMoves: number; teacherProposals: number }>>({});
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
+  // cancelling a blocked student's lesson doesn't count toward the cap
+  // (cancel-booking checks blocked_students)
+  const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -66,15 +74,17 @@ export default function TeacherHome() {
   const load = useCallback(async () => {
     if (!profile) return;
     setReloadKey((k) => k + 1);
-    const [data, credits, withdrawals] = await Promise.all([
+    const [data, credits, withdrawals, blockedIds] = await Promise.all([
       getBookingsForTeacher(profile.id),
       getTeacherCredits(profile.id),
       getWithdrawalRequests(profile.id),
+      getBlockedStudents(profile.id),
     ]);
     const openIds = data.filter(bookingCancellable).map((b) => b.id);
     const [pendingData, countsData] = await Promise.all([getPendingRescheduleRequests(openIds), getRescheduleCounts(openIds)]);
     setPending(pendingData);
     setProposalCounts(countsData);
+    setBlocked(blockedIds);
     setBookings(data);
     setEarnings(summarizeEarnings(data, credits, withdrawals, timeZone));
     setLoading(false);
@@ -106,23 +116,31 @@ export default function TeacherHome() {
     ...upcoming.map((b) => ({ kind: 'lesson' as const, key: b.id, booking: b, compact: true })),
   ];
 
+  // mirrors dashboard.html's cancel button: a blocked student's lesson
+  // doesn't count, a last-minute one counts 2
   async function handleCancel(b: Booking) {
-    if (cancelsLeft <= 0) {
-      notify(t("İptal hakkın kalmadı"), t(LIMIT_MESSAGE));
+    if (actingId) return;
+    const counts = !blocked.has(b.studentId);
+    const weight = teacherCancelWeight(b);
+    if (counts && cancelsLeft < weight) {
+      notify(t("İptal hakkın kalmadı"), weight === 2 && cancelsLeft > 0 ? t(LATE_LIMIT_MESSAGE) : t(LIMIT_MESSAGE));
       return;
     }
-    const ok = await confirmAsync(
-      t("Dersi iptal et"),
-      t("Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.\n\nBu iptal, bu ayki iptal hakkından düşer (kalan: {0}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.", cancelsLeft),
-      t("İptal Et"),
-      true
-    );
+    let message = t("Bu dersi iptal etmek istediğine emin misin? Ödenmişse öğrenciye bir ders hakkı eklenir.");
+    if (counts) {
+      message +=
+        '\n\n' +
+        (weight === 2
+          ? t("Derse 12 saatten az kaldığı için bu iptal, bu ayki iptal hakkından 2 hak düşer (kalan: {0}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.", cancelsLeft)
+          : t("Bu iptal, bu ayki iptal hakkından düşer (kalan: {0}). Öğrencine yeni bir saat önermek istersen \"Saat Öner\"i kullan.", cancelsLeft));
+    }
+    const ok = await confirmAsync(t("Dersi iptal et"), message, t("İptal Et"), true);
     if (!ok) return;
     setActingId(b.id);
     const result = await cancelBooking(b.id);
     setActingId(null);
     if (!result.ok) {
-      notify(t("İptal edilemedi"), result.limitReached ? t(LIMIT_MESSAGE) : result.error);
+      notify(t("İptal edilemedi"), result.limitReached ? t(weight === 2 ? LATE_LIMIT_MESSAGE : LIMIT_MESSAGE) : t(result.error));
       return;
     }
     load();
@@ -286,7 +304,7 @@ export default function TeacherHome() {
 
             {bookings.length > 0 && (
               <Text style={styles.allowance}>
-                {t("Bu ay kalan iptal hakkın: ")}<Text style={{ fontFamily: fonts.bodyExtraBold }}>{cancelsLeft} / {TEACHER_MONTHLY_CANCEL_LIMIT}</Text> {t(" · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan, iptal hakkından düşmez.")}</Text>
+                {t("Bu ay kalan iptal hakkın: ")}<Text style={{ fontFamily: fonts.bodyExtraBold }}>{cancelsLeft} / {TEACHER_MONTHLY_CANCEL_LIMIT}</Text>{t(" · Derse 12 saatten az kala yapılan iptal 2 hak sayılır.")}{t(" · Bir dersin saatini değiştirmek için iptal yerine \"Saat Öner\"i kullan, iptal hakkından düşmez.")}</Text>
             )}
           </View>
         }

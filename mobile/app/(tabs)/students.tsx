@@ -8,6 +8,7 @@ import { ScrollBand } from '../../components/Band';
 import { useAuth } from '../../lib/auth';
 import { BLOCK_REASONS, blockStudent, getBlockedStudents, unblockStudent, type BlockReason } from '../../lib/blocks';
 import { getBookingsForTeacher } from '../../lib/bookings';
+import { notify } from '../../lib/dialogs';
 import { getOrCreateConversation } from '../../lib/messages';
 import { supabase } from '../../lib/supabase';
 import { capitalizeName } from '../../lib/displayName';
@@ -88,7 +89,16 @@ export default function Students() {
     setOpeningId(studentId);
     const conversation = await getOrCreateConversation(profile.id, 'teacher', studentId);
     setOpeningId(null);
-    if (!conversation) return;
+    // the database refuses a new conversation with a blocked student
+    // (is_pair_blocked) - the tap used to do nothing at all
+    if (!conversation) {
+      notify(
+        blocked.has(studentId)
+          ? t("Bu öğrenciyi engelledin. Ona mesaj göndermek için önce engelini kaldır.")
+          : t("Sohbet açılamadı. Lütfen tekrar dene.")
+      );
+      return;
+    }
     const student = students.find((s) => s.id === studentId);
     router.push({
       pathname: '/chat/[id]',

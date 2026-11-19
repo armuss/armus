@@ -50,6 +50,15 @@ export function payoutReleaseAt(booking: Booking) {
   return new Date(lessonWindow(booking).end.getTime() + PAYOUT_HOLD_DAYS * 86_400_000);
 }
 
+// A lesson whose payment got a chargeback (bookings.payout_hold,
+// migration_112.sql) isn't paid out until the admin settles it - it used
+// to count as withdrawable here once its 7 days passed. Mirrors
+// armusIsPayoutReleased (bookings.js).
+export function isPayoutReleased(booking: Booking, now = new Date()) {
+  if (booking.payoutHold) return false;
+  return payoutReleaseAt(booking) <= now;
+}
+
 export type EarningsSummary = {
   rate: number;
   range: string;
@@ -94,12 +103,12 @@ export function summarizeEarnings(
   const thisMonth = byMonth.get(monthKeyOf(new Date()));
 
   const now = new Date();
-  const released = earned.filter((b) => payoutReleaseAt(b) <= now);
-  const held = earned.filter((b) => payoutReleaseAt(b) > now);
+  const released = earned.filter((b) => isPayoutReleased(b, now));
+  const held = earned.filter((b) => !isPayoutReleased(b, now));
   const claimed = withdrawals.filter((w) => w.status !== 'rejected').reduce((sum, w) => sum + Number(w.amount), 0);
   const nextReleaseAt =
     held
-      .filter((b) => earnable(b) > 0)
+      .filter((b) => earnable(b) > 0 && !b.payoutHold)
       .map(payoutReleaseAt)
       .sort((a, b) => a.getTime() - b.getTime())[0] || null;
 

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -25,7 +25,9 @@ import {
   formatLessonWhenForViewer,
   getTeacherBusyTimes,
   lessonTypeLabel,
+  localDateKey,
   slotsForDate,
+  todayIn,
   zonedTimeToUtc,
   type BusyTime,
   type Slot,
@@ -38,33 +40,30 @@ import {
   type CreditCoverage,
   type LessonCredit,
 } from '../../lib/credits';
+import { amIBlockedBy } from '../../lib/blocks';
 import { shortDisplayName } from '../../lib/displayName';
-import { createPayment, parsePaymentRedirect } from '../../lib/payments';
+import { createPayment, parsePaymentRedirect, paymentRedirectType } from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
-// getDate()/getMonth()/getFullYear() read the device's own local
-// calendar day - date.toISOString() reads the UTC date instead, which
-// silently disagrees with the day number/name shown on each pill (built
-// from the same local Date with getDate()/getDay() below) for any device
-// in a positive-UTC-offset timezone (Turkey is UTC+3) during the few
-// hours right after local midnight. Mirrors the identical fix already
-// made to booking.html's own toDateKey().
-function toDateKey(date: Date) {
-  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+// The next 10 days, starting on the TEACHER's own today - lesson dates are
+// wall-clock dates in the teacher's timezone (booking.html's
+// teacherTodayAnchor does the same). Built when the screen opens, not when
+// the app starts: a phone keeps the app in memory for days, and a list
+// made once at startup began on a day already gone after the first
+// midnight (no times on it, the last bookable day missing). localDateKey
+// reads the calendar day of the plain local Date todayIn() returns, never
+// toISOString()'s UTC day.
+function buildDateOptions(timeZone: string) {
+  const today = todayIn(timeZone);
+  return Array.from({ length: 10 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    return { date, key: localDateKey(date) };
+  });
 }
-
-const DATE_OPTIONS = Array.from({ length: 10 }, (_, i) => {
-  const date = new Date();
-  date.setDate(date.getDate() + i);
-  return {
-    date,
-    key: toDateKey(date),
-    label: `${date.getDate()} ${MONTH_NAMES[date.getMonth()]}, ${DAY_NAMES[date.getDay()]}`,
-  };
-});
 
 type Phase = 'picking' | 'checkout' | 'success' | 'error';
 
@@ -78,9 +77,14 @@ export default function Booking() {
   // with this teacher is switched to a regular lesson, with a notice
   const [type, setType] = useState<'trial' | 'lesson'>(typeParam === 'lesson' ? 'lesson' : 'trial');
   const [trialTakenNotice, setTrialTakenNotice] = useState(false);
+  // a teacher who blocked this student (migration_101.sql): the booking
+  // insert is refused, but only after a card has been charged - so the
+  // screen says so and offers no checkout (the chat screen does the same)
+  const [blockedByTeacher, setBlockedByTeacher] = useState(false);
 
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
+  const dateOptions = useMemo(() => buildDateOptions(teacher?.timezone || 'Europe/Istanbul'), [teacher]);
   const [credits, setCredits] = useState<LessonCredit[]>([]);
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>([]);
 
@@ -110,6 +114,17 @@ export default function Booking() {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!profile || !teacher?.isRegistered) return;
+    let active = true;
+    amIBlockedBy(teacher.id).then((blocked) => {
+      if (active) setBlockedByTeacher(blocked);
+    });
+    return () => {
+      active = false;
+    };
+  }, [profile?.id, teacher]);
 
   useEffect(() => {
     if (!profile || !teacher) return;
@@ -155,7 +170,23 @@ export default function Booking() {
     if (teacher) getTeacherBusyTimes(teacher.id).then(setBusyTimes);
   }
 
-  const selectedDateInfo = DATE_OPTIONS.find((d) => d.key === selectedDate) || null;
+  // re-read whenever the student comes back from the card page: a lost
+  // slot or a passed time turns the payment into a lesson credit, a failed
+  // or abandoned payment gives a held credit back. Without this the screen
+  // still asked for the card (and the next tap only said "your credit was
+  // used in the meantime") although a credit now covered the lesson.
+  function refreshCredits() {
+    if (profile) getAvailableCredits(profile.id).then((list) => list && setCredits(list));
+  }
+
+  // one checkout's outcome is handled once: the WebView reports the same
+  // redirect more than once (loading start, loading end)
+  const checkoutHandled = useRef(false);
+  // a second tap while the first is still checking the credits / starting
+  // the payment must not start a second one
+  const confirming = useRef(false);
+
+  const selectedDateInfo = dateOptions.find((d) => d.key === selectedDate) || null;
 
   const slots: Slot[] = useMemo(() => {
     if (!teacher || !selectedDateInfo) return [];
@@ -173,7 +204,7 @@ export default function Booking() {
     const out: Record<string, boolean> = {};
     if (!teacher) return out;
     const now = Date.now();
-    for (const d of DATE_OPTIONS) {
+    for (const d of dateOptions) {
       out[d.key] = slotsForDate(teacher, d.key, d.date.getDay(), busyTimes).some(
         (slot) => slot.available && zonedTimeToUtc(d.key, slot.time, teacher.timezone).getTime() > now
       );
@@ -185,7 +216,7 @@ export default function Booking() {
   useEffect(() => {
     if (selectedDate || !teacher) return;
     // a day picked on the profile's "Saatler" tab comes along as ?date=
-    const first = DATE_OPTIONS.find((d) => d.key === dateParam && openDays[d.key]) ?? DATE_OPTIONS.find((d) => openDays[d.key]);
+    const first = dateOptions.find((d) => d.key === dateParam && openDays[d.key]) ?? dateOptions.find((d) => openDays[d.key]);
     if (first) setSelectedDate(first.key);
   }, [openDays, teacher, selectedDate]);
 
@@ -213,9 +244,20 @@ export default function Booking() {
   // A trial that just completed is the moment to offer a real weekly
   // package with this same teacher instead of the plain success screen -
   // matches booking a regular lesson, which still shows the checkmark.
-  function finishBooking(creditApplied: boolean) {
-    if (type === 'trial' && teacher) {
-      router.replace({ pathname: '/package/[teacherId]', params: { teacherId: teacher.id } });
+  // bookedType: what the booking really became (payment-callback books a
+  // trial as a regular lesson when the student's trial with this teacher
+  // was already taken meanwhile).
+  function finishBooking(creditApplied: boolean, bookedType: string = type) {
+    if (bookedType === 'trial' && teacher) {
+      // the booked slot comes along, so the package screen confirms the
+      // trial first - it used to open with no word that the trial (maybe
+      // just paid for by card) was booked at all
+      const params: Record<string, string> = { teacherId: teacher.id };
+      if (selectedDate && selectedTime) {
+        params.bookedDate = selectedDate;
+        params.bookedTime = selectedTime;
+      }
+      router.replace({ pathname: '/package/[teacherId]', params });
       return;
     }
     setCreditApplied(creditApplied);
@@ -223,12 +265,22 @@ export default function Booking() {
   }
 
   async function handleConfirm() {
-    if (!teacher || !profile || !selectedDate || !selectedTime || submitting) return;
+    if (!teacher || !profile || !selectedDate || !selectedTime || submitting || confirming.current || blockedByTeacher) return;
+    confirming.current = true;
+    setSubmitting(true);
+    try {
+      await confirmBooking(teacher, profile.id, selectedDate, selectedTime);
+    } finally {
+      confirming.current = false;
+      setSubmitting(false);
+    }
+  }
 
+  async function confirmBooking(teacher: Teacher, studentId: string, selectedDate: string, selectedTime: string) {
     // the credit picture was read when the screen opened - if a credit got
     // used somewhere else since (another device), the card fields may be
     // hidden while the card is now needed. Re-check right before paying.
-    const fresh = await getAvailableCredits(profile.id);
+    const fresh = await getAvailableCredits(studentId);
     if (fresh) {
       const freshCoverage = pickCreditForBooking(fresh, teacher.id, type, Number(teacher.price));
       const mode = (c: CreditCoverage | null) => (!c ? 'none' : c.topUp > 0 ? `topup-${c.topUp}` : 'full');
@@ -260,7 +312,6 @@ export default function Booking() {
     }
 
     setError('');
-    setSubmitting(true);
     const result = await createPayment({
       teacherId: teacher.id,
       teacherName: teacher.name,
@@ -272,7 +323,6 @@ export default function Booking() {
       identityNumber: identityNumber.replace(/\D/g, ''),
       withdrawalConsent: needsCard && withdrawalConsent,
     });
-    setSubmitting(false);
 
     if (!result.ok) {
       if (result.trialAlreadyTaken && type === 'trial') {
@@ -290,6 +340,7 @@ export default function Booking() {
       return;
     }
 
+    checkoutHandled.current = false;
     setCheckoutUrl(result.paymentPageUrl);
     setPhase('checkout');
   }
@@ -314,7 +365,14 @@ export default function Booking() {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.checkoutHeader}>
-          <Pressable onPress={() => setPhase('picking')} style={styles.backBtn}>
+          <Pressable
+            onPress={() => {
+              checkoutHandled.current = true;
+              setPhase('picking');
+              refreshCredits();
+            }}
+            style={styles.backBtn}
+          >
             <Text style={styles.backText}>{t("← Vazgeç")}</Text>
           </Pressable>
           <Text style={styles.checkoutTitle}>{t("Güvenli ödeme")}</Text>
@@ -325,9 +383,14 @@ export default function Booking() {
           renderLoading={() => <ActivityIndicator color={colors.ink} style={{ marginTop: 40 }} />}
           onNavigationStateChange={(navState) => {
             const status = parsePaymentRedirect(navState.url);
+            if (!status || checkoutHandled.current) return;
+            checkoutHandled.current = true;
             if (status === 'success') {
-              finishBooking(false);
-            } else if (status === 'failed') {
+              finishBooking(false, paymentRedirectType(navState.url) ?? type);
+              return;
+            }
+            refreshCredits();
+            if (status === 'failed') {
               setPhase('picking');
               setError(t("Ödeme tamamlanmadı ya da iptal edildi. Rezervasyon oluşturulmadı — istersen tekrar deneyebilirsin."));
             } else if (status === 'slot_taken') {
@@ -361,7 +424,7 @@ export default function Booking() {
         </View>
         <Text style={styles.successTitle}>{t("Rezervasyon tamamlandı!")}</Text>
         <Text style={styles.successSubtitle}>
-          {shortDisplayName(teacher.name)} ile {selectedWhen?.dateLabel} · {selectedWhen?.timeRange ?? ''}
+          {t("{0} ile {1} · {2}", shortDisplayName(teacher.name), selectedWhen?.dateLabel, selectedWhen?.timeRange ?? '')}
         </Text>
         {creditApplied && <Text style={styles.creditNote}>{t("Ders hakkınla ödeme yapılmadan tamamlandı.")}</Text>}
         <View style={{ width: '100%', marginTop: 28 }}>
@@ -414,7 +477,15 @@ export default function Booking() {
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
-      <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      {/* automaticallyAdjustKeyboardInsets: on iPhone the keyboard otherwise
+          covers the phone / T.C. kimlik fields at the bottom of the summary */}
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         <ScrollBand height={weekBottom - 24} fade={64} />
         <View style={styles.head}>
           <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
@@ -429,6 +500,12 @@ export default function Booking() {
           <View style={{ width: 40 }} />
         </View>
 
+        {blockedByTeacher && (
+          <Text style={styles.notice}>
+            {t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.")}
+          </Text>
+        )}
+
         {trialTakenNotice && (
           <Text style={styles.notice}>
             {t("Bu öğretmenle daha önce deneme dersi aldın, bu yüzden bu rezervasyon normal ders olarak yapılacak. Deneme dersi her öğretmenle bir kez alınabilir.")}</Text>
@@ -441,7 +518,7 @@ export default function Booking() {
           contentContainerStyle={styles.weekInner}
           onLayout={(e) => setWeekBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
         >
-          {DATE_OPTIONS.map(({ date, key }) => {
+          {dateOptions.map(({ date, key }) => {
             const on = selectedDate === key;
             const open = openDays[key];
             return (
@@ -594,7 +671,11 @@ export default function Booking() {
       </ScrollView>
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        {selectedDate && selectedTime ? (
+        {blockedByTeacher ? (
+          <View style={[styles.go, styles.goIdle]}>
+            <Text style={styles.goIdleText}>{t("Rezervasyon yapılamaz")}</Text>
+          </View>
+        ) : selectedDate && selectedTime ? (
           <Pressable
             onPress={handleConfirm}
             disabled={submitting}

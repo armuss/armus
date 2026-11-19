@@ -971,6 +971,15 @@
 
       gate.style.display = "block";
 
+    } else if (session.status === "approved") {
+
+      // an approved teacher's application can't be sent again - the
+      // database refuses it (application_locked / profile_locked), so
+      // the 8 steps would end in "Başvuru kaydedilemedi" (the homepage
+      // footer's teacher-guide link lands here too) - their panel is
+      // where their profile is edited
+      window.location.replace("dashboard");
+
     } else {
 
       wizardRoot.style.display = "block";
@@ -1182,6 +1191,15 @@
           pill.classList.toggle("active", step === currentStep);
           pill.classList.toggle("done", step < currentStep);
         });
+        // on a phone the pills scroll sideways and only the first few fit -
+        // keep the current step's pill in view (scrollLeft only, so the
+        // page's own scroll to the top isn't disturbed)
+        const activePill = tracker.querySelector(".tracker-step.active");
+        if (activePill && tracker.scrollWidth > tracker.clientWidth) {
+          const pillRect = activePill.getBoundingClientRect();
+          const trackerRect = tracker.getBoundingClientRect();
+          tracker.scrollLeft += (pillRect.left + pillRect.width / 2) - (trackerRect.left + tracker.clientWidth / 2);
+        }
       }
 
       document.addEventListener("armus:langchange", () => {
@@ -1250,6 +1268,25 @@
         box.querySelector(".upload-note").textContent = note;
       }
 
+      // A failed upload used to leave its file picked (choosing the same
+      // file again then fired no change event, so nothing retried), its
+      // box reading "uploaded" and its step passable - only the final
+      // "Başvuruyu Gönder" failed. It's undone, so the teacher can just
+      // pick the file again. kind: "photo" | "certificate" | "video" (the
+      // uploads key; its box/preview ids start with it too).
+      function undoFailedUpload(kind, input, promise) {
+        if (!uploads[kind] || uploads[kind].promise !== promise) return; // a newer pick replaced it
+        uploads[kind] = null;
+        input.value = "";
+        const box = document.getElementById(`${kind}Box`);
+        box.classList.remove("has-file");
+        box.querySelectorAll("[data-i18n]").forEach(el => {
+          const en = ARMUS_I18N_EN[el.dataset.i18n];
+          el.innerHTML = armusGetLang() === "en" && en !== undefined ? en : (el.dataset.trText !== undefined ? el.dataset.trText : el.innerHTML);
+        });
+        document.getElementById(`${kind}Preview`).style.display = "none";
+      }
+
       function uploadToStorage(file, folder) {
         // file.name is attacker-controllable (a script can construct its
         // own File object with any name, bypassing the <input accept>
@@ -1285,8 +1322,11 @@
             const promise = uploadToStorage(file, folder).catch(err => {
               errorBox.textContent = armusT("applyTeacher.couldntUpload", "Yüklenemedi: {msg}").replace("{msg}", err.message);
               errorBox.style.display = "block";
+              undoFailedUpload(folder, document.getElementById(inputId), promise);
               throw err;
             });
+            // shown above already; submitApplication() still sees the rejection
+            promise.catch(() => {});
 
             onSuccess({ name: file.name, previewUrl, promise });
           } catch (err) {
@@ -1436,8 +1476,10 @@
           const promise = uploadToStorage(uploadFile, "photo").catch(err => {
             errorBox.textContent = armusT("applyTeacher.couldntUpload", "Yüklenemedi: {msg}").replace("{msg}", err.message);
             errorBox.style.display = "block";
+            undoFailedUpload("photo", document.getElementById("photoInput"), promise);
             throw err;
           });
+          promise.catch(() => {});
 
           uploads.photo = { name: file.name, previewUrl, promise };
           document.getElementById("photoPreviewImg").src = previewUrl;
@@ -1521,8 +1563,10 @@
           const promise = uploadToStorage(file, "video").catch(err => {
             errorBox.textContent = armusT("applyTeacher.couldntUpload", "Yüklenemedi: {msg}").replace("{msg}", err.message);
             errorBox.style.display = "block";
+            undoFailedUpload("video", document.getElementById("videoInput"), promise);
             throw err;
           });
+          promise.catch(() => {});
           uploads.video = { name: file.name, previewUrl, promise };
 
           const minutes = Math.floor(meta.duration / 60);

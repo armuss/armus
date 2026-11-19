@@ -25,6 +25,8 @@ import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
 const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
+// apply-teacher.html's and dashboard.html's minimum
+const TEACHER_MIN_BIO_CHARS = 400;
 
 const NAME_PATTERN = /^\p{L}+(?:['-]\p{L}+)*(?:\s+\p{L}+(?:['-]\p{L}+)*)+$/u;
 
@@ -38,7 +40,9 @@ export default function EditProfile() {
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  // the picked photo, already turned into the JPEG that gets uploaded
+  const [localPhoto, setLocalPhoto] = useState<{ uri: string; base64: string } | null>(null);
+  const localPhotoUri = localPhoto?.uri ?? null;
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [checkingPhoto, setCheckingPhoto] = useState(false);
   // an approved teacher's photo is part of their checked application: the
@@ -82,7 +86,10 @@ export default function EditProfile() {
         setBio(pending?.bio ?? data.bio ?? '');
         setLoading(false);
       });
-  }, [profile]);
+    // the profile's id, not the object: a token refresh reloads the profile
+    // (a new object), and re-reading the row then wiped what was being typed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
 
   // the website's photo rules (lib/photo.ts): a teacher's photo needs a
   // plain white background and is re-encoded like the site does; a
@@ -110,23 +117,21 @@ export default function EditProfile() {
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
 
-    if (!isTeacher) {
-      if (asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
-        setStatus(t("Dosya çok büyük (maks 5MB)."));
-        return;
-      }
-      setLocalPhotoUri(asset.uri);
+    if (!isTeacher && asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
+      setStatus(t("Dosya çok büyük (maks 5MB)."));
       return;
     }
 
+    // every photo becomes a JPEG of at most 1024px before upload (the
+    // bucket takes JPEG/PNG only); a teacher's also needs the white background
     setCheckingPhoto(true);
     try {
-      const prepared = await preparePhoto(asset.uri, true);
+      const prepared = await preparePhoto(asset.uri, isTeacher);
       if (!prepared.isWhiteBackground) {
         setStatus(t(PHOTO_NEEDS_WHITE_BG));
         return;
       }
-      setLocalPhotoUri(prepared.uri);
+      setLocalPhoto({ uri: prepared.uri, base64: prepared.base64 });
     } catch {
       setStatus(t("Fotoğraf okunamadı."));
     } finally {
@@ -146,9 +151,9 @@ export default function EditProfile() {
     setSaving(true);
 
     let nextPhotoUrl = photoUrl;
-    if (localPhotoUri) {
+    if (localPhoto) {
       setUploadingPhoto(true);
-      const uploaded = await uploadProfilePhoto(profile.id, localPhotoUri);
+      const uploaded = await uploadProfilePhoto(profile.id, localPhoto.base64);
       setUploadingPhoto(false);
       if (!uploaded) {
         setSaving(false);
@@ -172,15 +177,29 @@ export default function EditProfile() {
 
   async function handleSubmitTeacherFields() {
     if (!profile || saving) return;
-    setSaving(true);
     setTeacherStatus('');
 
+    // dashboard.html's checks: a price of 0 or a short bio went through
+    // here and only failed later, when the admin approved it (the
+    // profile's "price > 0" constraint), with no word to the teacher
+    const priceValue = Number(price.trim().replace(',', '.'));
+    if (!priceValue || priceValue <= 0) {
+      setTeacherStatus(t("Geçerli bir ders ücreti gir."));
+      return;
+    }
+    const bioValue = bio.trim();
+    if (bioValue.length < TEACHER_MIN_BIO_CHARS) {
+      setTeacherStatus(t("Açıklama en az {0} karakter olmalı (şu an {1} karakter).", TEACHER_MIN_BIO_CHARS, bioValue.length));
+      return;
+    }
+
+    setSaving(true);
     const newPendingChanges = {
       ...(pendingChanges || {}),
       title: title.trim(),
-      price: Number(price) || 0,
+      price: priceValue,
       availability: availability.trim(),
-      bio: bio.trim(),
+      bio: bioValue,
     };
 
     const ok = await updateOwnProfile({ pending_changes: newPendingChanges });

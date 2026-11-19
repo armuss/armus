@@ -932,6 +932,31 @@ create trigger profiles_lock_teacher_fields
   before update on profiles
   for each row execute procedure public.enforce_teacher_profile_lock();
 
+-- migration_121.sql: admin.html approves/rejects a pending profile change
+-- only while pending_changes->>submitted_at still matches what it loaded,
+-- and no client ever wrote submitted_at - so the database stamps it on
+-- every write of pending_changes. Named to fire after
+-- profiles_lock_teacher_fields (before-triggers run in name order).
+create or replace function public.stamp_pending_changes()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.pending_changes is not null
+     and jsonb_typeof(new.pending_changes) = 'object'
+     and new.pending_changes is distinct from old.pending_changes then
+    new.pending_changes := new.pending_changes
+      || jsonb_build_object('submitted_at', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'));
+  end if;
+  return new;
+end;
+$$;
+
+create trigger profiles_stamp_pending_changes
+  before update on profiles
+  for each row execute procedure public.stamp_pending_changes();
+
 -- migration_116.sql: what only an owner may do. Only an owner gives or
 -- removes admin rights, an admin can't change an owner's account, and
 -- nobody makes an owner from the browser. A trigger of its own rather
@@ -3766,10 +3791,13 @@ begin
 
   -- migration_104.sql: a report still waiting for review keeps the hide
   -- in place (dashboard.html never even offers the button then - this
-  -- closes the direct-RPC path to escaping a pending report's hide early)
+  -- closes the direct-RPC path to escaping a pending report's hide early).
+  -- migration_121.sql: only a no-show report hides (migration_112.sql) -
+  -- a late or technical one waiting for review no longer blocks this
   if exists (
     select 1 from attendance_reports
     where teacher_id = auth.uid()::text and status in ('open', 'explained')
+      and type = 'no_show'
   ) then
     return 'not_eligible';
   end if;

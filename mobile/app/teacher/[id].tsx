@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,8 +9,9 @@ import { TeacherPhoto } from '../../components/TeacherCard';
 import TeacherReportSheet from '../../components/TeacherReportSheet';
 import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
-import { DAY_NAMES, getTeacherBusyTimes, slotsForDate, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
+import { DAY_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
 import { hasTakenTrialWith } from '../../lib/credits';
+import { notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
 import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
@@ -21,11 +22,6 @@ import { useT } from '../../lib/i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type Tab = 'about' | 'times' | 'reviews';
-
-// same local-calendar key the booking screen uses
-function toDateKey(date: Date) {
-  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-}
 
 export default function TeacherDetail() {
   const t = useT();
@@ -48,10 +44,20 @@ export default function TeacherDetail() {
     checkIsFavorite(id).then(setIsFav);
   }, [id]);
 
-  useEffect(() => {
-    if (!profile || profile.role !== 'student') return;
-    hasTakenTrialWith(profile.id, id).then(setTrialTaken);
-  }, [profile, id]);
+  // re-read whenever the page comes back into view: after booking the
+  // trial (booking -> package offer -> back here) it still offered one
+  useFocusEffect(
+    useCallback(() => {
+      if (!profile || profile.role !== 'student') return;
+      let active = true;
+      hasTakenTrialWith(profile.id, id).then((taken) => {
+        if (active) setTrialTaken(taken);
+      });
+      return () => {
+        active = false;
+      };
+    }, [profile?.id, profile?.role, id])
+  );
 
   function book(type: 'trial' | 'lesson', date?: string) {
     if (!teacher) return;
@@ -75,13 +81,17 @@ export default function TeacherDetail() {
     };
   }, [tab, teacher]);
 
+  // the days start on the teacher's own today, like the booking screen's
+  // (lesson dates are the teacher's calendar dates), so a day picked here
+  // is one the booking screen offers too
   const week = useMemo(() => {
     if (!teacher) return [];
     const now = Date.now();
+    const today = todayIn(teacher.timezone);
     return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      const key = toDateKey(date);
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const key = localDateKey(date);
       const open = slotsForDate(teacher, key, date.getDay(), busyTimes).filter(
         (slot) => slot.available && zonedTimeToUtc(key, slot.time, teacher.timezone).getTime() > now
       );
@@ -103,7 +113,11 @@ export default function TeacherDetail() {
     setMessaging(true);
     const conversation = await getOrCreateConversation(profile.id, profile.role, teacher.id);
     setMessaging(false);
-    if (!conversation) return;
+    if (!conversation) {
+      // the tap used to do nothing at all
+      notify(t("Sohbet başlatılamadı. Lütfen tekrar dene."));
+      return;
+    }
     router.push({
       pathname: '/chat/[id]',
       params: { id: conversation.id, otherName: shortDisplayName(teacher.name), otherPhoto: teacher.photo ?? '' },

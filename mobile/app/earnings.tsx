@@ -118,11 +118,14 @@ export default function Earnings() {
           <Text style={styles.balanceValue}>{formatMoney(summary.withdrawableBalance)}</Text>
           {summary.heldNet > 0 && (
             <Text style={styles.held}>
-              {t("Bekleyen: ")}{formatMoney(summary.heldNet)}{t(". Son ")}{PAYOUT_HOLD_DAYS} {t(" günün derslerinden gelir, her dersin ücreti dersten")}{' '}
-              {PAYOUT_HOLD_DAYS} {t(" gün sonra çekilebilir olur")}{summary.nextReleaseAt
-                ? t(" (sıradaki: {0} {1})", summary.nextReleaseAt.getDate(), MONTH_NAMES[summary.nextReleaseAt.getMonth()])
-                : ''}
-              .
+              {t(
+                "Bekleyen: {0}. Son {1} günün derslerinden gelir, her dersin ücreti dersten {1} gün sonra çekilebilir olur{2}.",
+                formatMoney(summary.heldNet),
+                PAYOUT_HOLD_DAYS,
+                summary.nextReleaseAt
+                  ? t(" (sıradaki: {0} {1})", summary.nextReleaseAt.getDate(), MONTH_NAMES[summary.nextReleaseAt.getMonth()])
+                  : ''
+              )}
             </Text>
           )}
           <Text style={styles.hint}>

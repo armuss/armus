@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney, refundStrandedPackage, transferStrandedPackage, type StrandedPackage } from '../lib/credits';
-import { confirmAsync } from '../lib/dialogs';
+import { confirmAsync, notify } from '../lib/dialogs';
 import { shortDisplayName } from '../lib/displayName';
 import { getMarketplaceTeachers } from '../lib/teachers';
 import type { Teacher } from '../lib/teachers-data';
@@ -40,9 +40,11 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
       setError(r.error);
       return;
     }
-    setResult(
-      t("{0} dersin ücreti ({1}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.", r.refundedLessons, formatMoney(r.refundedAmount))
-    );
+    const done = t("{0} dersin ücreti ({1}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.", r.refundedLessons, formatMoney(r.refundedAmount));
+    setResult(done);
+    // onDone reloads Derslerim, which drops this package and this card with
+    // it - the confirmation only flashed for a moment. It stays up now.
+    notify(done);
     onDone();
   }
 
@@ -67,7 +69,9 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
       return;
     }
     setPickerOpen(false);
-    setResult(t("{0} dersin {1} ile kullanılabilir. Rezervasyonu öğretmenin profilinden yapabilirsin.", r.transferred, r.teacherName || shortDisplayName(chosen.name)));
+    const done = t("{0} dersin {1} ile kullanılabilir. Rezervasyonu öğretmenin profilinden yapabilirsin.", r.transferred, r.teacherName || shortDisplayName(chosen.name));
+    setResult(done);
+    notify(done);
     onDone();
   }
 
