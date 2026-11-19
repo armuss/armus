@@ -1486,6 +1486,18 @@
       height: 17px;
     }
 
+    .flashcard-add-form button[type="submit"]:disabled {
+      opacity: .6;
+      cursor: default;
+    }
+
+    .flashcard-form-error {
+      margin: 0;
+      color: #b3261e;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
     @media (max-width: 760px) {
       .flashcard-panel {
         padding: 22px;
@@ -2559,6 +2571,12 @@
 
       const heroSlot = document.getElementById("heroSlot");
 
+      // A demo teacher (teachers-data.js, an id like "sarah") has no
+      // account to write to - conversations.teacher_id is a profile uuid,
+      // so "Mesaj gönder" for one opened Mesajlar with nothing in it.
+      // teacher.html already hides its message button for them.
+      const sdIsRealTeacherId = id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ""));
+
       function renderHero() {
 
         const upcoming = sdUpcoming();
@@ -2597,7 +2615,7 @@
                 </div>
               </div>
               <div class="sd-next-act">
-                <a class="sd-btn-l" href="mesajlar?teacher=${encodeURIComponent(next.teacherId)}">${sdIcon("msg")}${armusT("studentDash.messageTeacher", "Mesaj gönder")}</a>
+                ${sdIsRealTeacherId(next.teacherId) ? `<a class="sd-btn-l" href="mesajlar?teacher=${encodeURIComponent(next.teacherId)}">${sdIcon("msg")}${armusT("studentDash.messageTeacher", "Mesaj gönder")}</a>` : ""}
                 ${canJoin
                   ? `<a class="sd-btn-r" href="class?booking=${encodeURIComponent(next.id)}">${sdIcon("video")}${armusT("studentDash.joinLesson", "Derse katıl")}</a>`
                   : `<span class="sd-join-hint">${armusT("studentDash.joinHintCard", "Ders saatinde bu karttan katılabileceksin.")}</span>`}
@@ -2936,6 +2954,7 @@
                     <input type="text" id="flashcardCategoryInput" placeholder="${armusT("studentDash.flashcardCategoryPlaceholder", "Kategori (örn. Seyahat)")}" maxlength="30" list="flashcardCategoryList">
                   </div>
                   <datalist id="flashcardCategoryList">${categories.map(c => `<option value="${armusEscapeHtml(c)}">`).join("")}</datalist>
+                  <p class="flashcard-form-error" id="flashcardAddError" role="alert" hidden></p>
                   <button type="submit">
                     ${armusT("studentDash.flashcardCreateBtn", "Kart Oluştur")}
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -3023,13 +3042,29 @@
           });
         }
 
-        document.getElementById("flashcardAddForm").addEventListener("submit", async event => {
+        // a double tap on "Kart Oluştur" (or Enter pressed twice) saved
+        // the same word twice, and a failed save did nothing at all
+        const addForm = document.getElementById("flashcardAddForm");
+        addForm.addEventListener("submit", async event => {
           event.preventDefault();
+          if (addForm.dataset.saving) return;
           const term = document.getElementById("flashcardWordInput").value.trim();
           const meaning = document.getElementById("flashcardMeaningInput").value.trim();
           const category = document.getElementById("flashcardCategoryInput").value.trim();
           if (!term || !meaning) return;
-          const newEntry = await armusAddVocabEntry(session.id, term, meaning, category);
+          const addError = document.getElementById("flashcardAddError");
+          const addBtn = addForm.querySelector('button[type="submit"]');
+          addForm.dataset.saving = "1";
+          addBtn.disabled = true;
+          addError.hidden = true;
+          const newEntry = await armusAddVocabEntry(session.id, term, meaning, category).catch(() => false);
+          delete addForm.dataset.saving;
+          addBtn.disabled = false;
+          if (!newEntry) {
+            addError.textContent = armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene.");
+            addError.hidden = false;
+            return;
+          }
           if (newEntry) {
             vocabEntries.unshift(newEntry);
             flashcardCategory = "Tümü";
