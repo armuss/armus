@@ -626,6 +626,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   '(sıradaki: {0} {1})': '(next: {0} {1})',
   'Para çekme talebi': 'Withdrawal request',
   'Not (isteğe bağlı)': 'Note (optional)',
+  'Önceki para çekme taleplerin yüklenemedi, bu yüzden bakiyen şu anda kesin değil. Lütfen tekrar dene.': "Your earlier withdrawal requests couldn't be loaded, so your balance isn't certain right now. Please try again.",
   'Geçmiş talepler': 'Past requests',
   'Henüz bir para çekme talebin yok.': "You don't have any withdrawal requests yet.",
   'Aylık kazanç': 'Monthly earnings',
