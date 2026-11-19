@@ -3798,21 +3798,26 @@
       document.getElementById("detailBody").innerHTML = `<p class="section-hint">${armusT("admin.loading", "Yükleniyor...")}</p>`;
       document.getElementById("detailOverlay").classList.add("visible");
 
-      const [messagesRes, historyRes] = await Promise.all([
-        armusSupabase.from("messages").select("*").eq("conversation_id", conversation.id).order("created_at", { ascending: true }),
-        // all of it, filtered down to this conversation's messages client-side below -
-        // message_edit_history has no conversation_id of its own to filter by server-side
-        armusSupabase.from("message_edit_history").select("*").order("edited_at", { ascending: true }),
-      ]);
-
+      const messagesRes = await armusAdminFetchAll(() => armusSupabase.from("messages").select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true }).order("id", { ascending: true }));
       const messages = messagesRes.data || [];
-      const messageIds = new Set(messages.map(m => m.id));
+
+      // message_edit_history has no conversation_id of its own, so it's
+      // asked for by this conversation's edited messages - reading the
+      // whole table got only its oldest 1000 rows, and a newer
+      // conversation's earlier versions never showed
+      const editedIds = messages.filter(m => m.edited_at).map(m => m.id);
+      const historyParts = await armusAdminInChunks(editedIds, ids => armusSupabase
+        .from("message_edit_history").select("*").in("message_id", ids)
+        .order("edited_at", { ascending: true }).limit(ARMUS_ADMIN_PAGE_SIZE));
       const historyByMessage = new Map();
-      (historyRes.data || []).forEach(h => {
-        if (!messageIds.has(h.message_id)) return;
-        if (!historyByMessage.has(h.message_id)) historyByMessage.set(h.message_id, []);
-        historyByMessage.get(h.message_id).push(h);
-      });
+      historyParts.flatMap(res => res.data || [])
+        .sort((a, b) => (a.edited_at || "").localeCompare(b.edited_at || ""))
+        .forEach(h => {
+          if (!historyByMessage.has(h.message_id)) historyByMessage.set(h.message_id, []);
+          historyByMessage.get(h.message_id).push(h);
+        });
 
       const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
       const timeLabel = iso => new Date(iso).toLocaleString(lang);
@@ -6646,44 +6651,89 @@
       ], rows);
     });
 
+    // The API returns at most 1000 rows per request (Supabase's max rows),
+    // whatever .limit() asks for - a plain select("*") of profiles or
+    // bookings silently stopped at the first 1000, and every count,
+    // list and earnings row past that was missing. A whole table is read
+    // page by page with .range(); build() makes a fresh query each time,
+    // ordered with id last so pages never overlap or skip a row.
+    const ARMUS_ADMIN_PAGE_SIZE = 1000;
+
+    async function armusAdminFetchAll(build, max = Infinity) {
+      const rows = [];
+      const seen = new Set();
+      while (rows.length < max) {
+        const want = Math.min(ARMUS_ADMIN_PAGE_SIZE, max - rows.length);
+        const { data, error } = await build().range(rows.length, rows.length + want - 1);
+        if (error) return rows.length ? { data: rows, error: null } : { data: null, error };
+        (data || []).forEach(row => {
+          // a row written while paging can shift a later page by one
+          if (row && row.id !== undefined) {
+            if (seen.has(row.id)) return;
+            seen.add(row.id);
+          }
+          rows.push(row);
+        });
+        if (!data || data.length < want) break;
+      }
+      return { data: rows, error: null };
+    }
+
+    // .in() puts every id in the URL - a long list is asked for in parts
+    async function armusAdminInChunks(ids, fetchChunk, size = 150) {
+      const list = [...new Set((ids || []).filter(Boolean))];
+      const parts = [];
+      for (let i = 0; i < list.length; i += size) parts.push(list.slice(i, i + size));
+      return Promise.all(parts.map(fetchChunk));
+    }
+
+    async function armusAdminLessonPresence(bookingIds) {
+      const parts = await armusAdminInChunks(bookingIds, ids => armusGetLessonPresence(ids).catch(() => ({})));
+      return Object.assign({}, ...parts);
+    }
+
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes, messageReportsRes] = await Promise.all([
-        armusSupabase.from("profiles").select("*"),
-        armusSupabase.from("bookings").select("*"),
-        armusSupabase.from("reviews").select("*"),
+      const all = (table, column, ascending = true) => armusAdminFetchAll(() =>
+        armusSupabase.from(table).select("*").order(column, { ascending }).order("id", { ascending: true }));
+
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRaw, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes, messageReportsRes, teacherReportsRes] = await Promise.all([
+        all("profiles", "created_at"),
+        all("bookings", "created_at"),
+        all("reviews", "created_at"),
         armusCanSeeAdminLog
-          ? armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).limit(3000)
+          ? armusAdminFetchAll(() => armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).order("id", { ascending: true }), 3000)
           : Promise.resolve({ data: [] }),
         armusAdminGetAllTestimonials(),
-        armusAdminGetAllDisputes(),
-        armusAdminGetAllAttendanceReports(),
-        armusSupabase.from("lesson_credits").select("*"),
+        all("disputes", "created_at", false),
+        all("attendance_reports", "created_at", false),
+        all("lesson_credits", "created_at"),
         armusSupabase.from("client_errors").select("*").order("created_at", { ascending: false }).limit(200),
         // list only - the messages/message_edit_history themselves are
         // fetched lazily per conversation (openConversationDetail) rather
         // than all at once here, since a busy inbox's full message history
         // could be large and the admin only ever needs to read one
         // conversation at a time
-        armusSupabase.from("conversations").select("*").order("created_at", { ascending: false }),
-        armusSupabase.from("withdrawal_requests").select("*").order("requested_at", { ascending: false }),
-        armusSupabase.from("support_tickets").select("*").order("updated_at", { ascending: false }),
-        armusAdminGetAllMessageReports(),
+        all("conversations", "created_at", false),
+        all("withdrawal_requests", "requested_at", false),
+        all("support_tickets", "updated_at", false),
+        // same rows armusAdminGetAllMessageReports reads, with the message
+        armusAdminFetchAll(() => armusSupabase.from("message_reports")
+          .select("*, message:messages(body, attachment_type, created_at)")
+          .order("created_at", { ascending: false }).order("id", { ascending: true })),
+        all("teacher_reports", "created_at", false),
       ]);
-      const [teacherReportsRes, presenceRes] = await Promise.all([
-        armusAdminGetTeacherReports().catch(() => []),
-        armusGetLessonPresence((attendanceRes || []).map(r => r.bookingId)).catch(() => ({})),
-      ]);
-      armusAdminTeacherReports = teacherReportsRes || [];
-      armusAdminPresence = presenceRes || {};
+      const attendanceRes = (attendanceRaw.data || []).map(armusMapAttendanceReportRow);
+      armusAdminTeacherReports = teacherReportsRes.data || [];
+      armusAdminPresence = await armusAdminLessonPresence(attendanceRes.map(r => r.bookingId));
 
       armusAdminProfiles = profilesRes.data || [];
       armusAdminBookings = (bookingsRaw.data || []).map(armusMapBookingRow);
       armusAdminReviews = reviewsRes.data || [];
       armusAdminLogs = logsRes.data || [];
       armusAdminTestimonials = testimonialsRes || [];
-      armusAdminDisputes = disputesRes || [];
-      armusAdminAttendanceReports = attendanceRes || [];
+      armusAdminDisputes = disputesRes.data || [];
+      armusAdminAttendanceReports = attendanceRes;
       // best-effort: client_errors (migration_72.sql) may not exist in
       // Supabase yet, same defensive pattern as admin_actions above
       armusAdminClientErrors = clientErrorsRes.data || [];
@@ -6694,7 +6744,7 @@
       armusAdminConversations = conversationsRes.data || [];
       armusAdminWithdrawalRequests = withdrawalsRes.data || [];
       armusAdminSupportTickets = supportTicketsRes.data || [];
-      armusAdminMessageReports = messageReportsRes || [];
+      armusAdminMessageReports = messageReportsRes.data || [];
 
       renderAllFromState();
     }
