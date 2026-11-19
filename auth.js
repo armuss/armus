@@ -327,8 +327,14 @@ function armusNeedsEmailVerification(profile) {
 // verification actually happens, and login never renders gated
 // content itself - whatever it redirects to after a successful sign-in
 // gets caught by this same check on its own next page load.
+// sifre-sifirla is exempt too: the reset link in the email opens it
+// with a recovery session, and for an account that never verified its
+// email that session was bounced straight to register's code step
+// before the new password could be set - the person locked out of
+// their password was sent to a code they never asked for. That page
+// only sets a password and then signs out to login.
 async function armusEnforceEmailVerification() {
-  if (/(^|\/)(register|login)(\.html)?\/?$/.test(location.pathname)) return;
+  if (/(^|\/)(register|login|sifre-sifirla)(\.html)?\/?$/.test(location.pathname)) return;
   const session = await armusGetSession().catch(() => null);
   if (!armusNeedsEmailVerification(session)) return;
   window.location.href = "register?resume=1";
