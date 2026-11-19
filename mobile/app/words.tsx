@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
-  Alert,
   Animated,
   Easing,
   KeyboardAvoidingView,
@@ -18,11 +17,13 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Band from '../components/Band';
 import { useAuth } from '../lib/auth';
+import { confirmAsync, notify } from '../lib/dialogs';
 import { colors, fonts, radius, redGradient } from '../lib/theme';
 import { addVocabEntry, deleteVocabEntry, getVocabEntries, setVocabMastered, type VocabEntry } from '../lib/vocab';
 import { useT } from '../lib/i18n';
@@ -49,10 +50,25 @@ export default function Words() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [adding, setAdding] = useState(params.add === '1');
   const [busy, setBusy] = useState(false);
+  // the cards couldn't be read (no connection) - not the same as having none
+  const [loadFailed, setLoadFailed] = useState(false);
+  // on a short phone (iPhone SE, small Androids) the card gives up some
+  // height so the buttons under it stay on screen
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const cardHeight = Math.max(240, Math.min(330, windowHeight - insets.top - insets.bottom - 360));
+
+  function loadEntries() {
+    if (!profile) return;
+    setLoadFailed(false);
+    getVocabEntries(profile.id).then((list) => {
+      if (list) setEntries(list);
+      else setLoadFailed(true);
+    });
+  }
 
   useEffect(() => {
-    if (!profile) return;
-    getVocabEntries(profile.id).then((list) => setEntries(list ?? []));
+    loadEntries();
   }, [profile?.id]);
 
   const categories = useMemo(() => [...new Set((entries ?? []).map((e) => e.category))].sort((a, b) => a.localeCompare(b, 'tr')), [entries]);
@@ -161,7 +177,7 @@ export default function Words() {
     const updated = await setVocabMastered(current.id, !current.mastered);
     setBusy(false);
     if (!updated) {
-      Alert.alert(t("Kaydedilemedi"), t("Lütfen tekrar dene."));
+      notify(t("Kaydedilemedi"), t("Lütfen tekrar dene."));
       return;
     }
     setEntries((prev) => (prev ?? []).map((e) => (e.id === updated.id ? updated : e)));
@@ -170,24 +186,19 @@ export default function Words() {
     if (!(hideMastered && updated.mastered)) setIndex(deck.length ? (position + 1) % deck.length : 0);
   }
 
-  function confirmDelete() {
-    if (!current) return;
-    Alert.alert(t("Kartı sil"), t("\"{0}\" kartı silinsin mi?", current.term), [
-      { text: t("Vazgeç"), style: 'cancel' },
-      {
-        text: t("Sil"),
-        style: 'destructive',
-        onPress: async () => {
-          const ok = await deleteVocabEntry(current.id);
-          if (!ok) {
-            Alert.alert(t("Silinemedi"), t("Lütfen tekrar dene."));
-            return;
-          }
-          setEntries((prev) => (prev ?? []).filter((e) => e.id !== current.id));
-          setFlipped(false);
-        },
-      },
-    ]);
+  async function confirmDelete() {
+    if (!current || busy) return;
+    const card = current;
+    if (!(await confirmAsync(t("Kartı sil"), t("\"{0}\" kartı silinsin mi?", card.term), t("Sil"), true))) return;
+    setBusy(true);
+    const ok = await deleteVocabEntry(card.id);
+    setBusy(false);
+    if (!ok) {
+      notify(t("Silinemedi"), t("Lütfen tekrar dene."));
+      return;
+    }
+    setEntries((prev) => (prev ?? []).filter((e) => e.id !== card.id));
+    setFlipped(false);
   }
 
   function onAdded(entry: VocabEntry) {
@@ -207,7 +218,12 @@ export default function Words() {
       <Band height={112} />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.head}>
-          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/profile'))}
+            style={styles.roundBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("Geri")}
+          >
             <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <View style={styles.headText}>
@@ -223,7 +239,17 @@ export default function Words() {
         </View>
 
         {entries === null ? (
-          <ActivityIndicator color={colors.onRed} style={{ marginTop: 60 }} />
+          loadFailed ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>{t("Kelimelerin yüklenemedi")}</Text>
+              <Text style={styles.emptyText}>{t("İnternet bağlantını kontrol edip tekrar dene.")}</Text>
+              <Pressable onPress={loadEntries} style={styles.primary}>
+                <Text style={styles.primaryText}>{t("Tekrar dene")}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <ActivityIndicator color={colors.onRed} style={{ marginTop: 60 }} />
+          )
         ) : entries.length === 0 ? (
           <View style={styles.empty}>
             <View style={styles.emptyIcon}>
@@ -237,7 +263,8 @@ export default function Words() {
             </Pressable>
           </View>
         ) : (
-          <>
+          // scrolls only where the phone is too short (or the text too big) for it all
+          <ScrollView alwaysBounceVertical={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips} contentContainerStyle={styles.chipsInner}>
               {[ALL, ...categories].map((c) => (
                 <Pressable key={c} onPress={() => pickCategory(c)} style={[styles.chip, category === c && styles.chipOn]}>
@@ -251,7 +278,7 @@ export default function Words() {
             {current ? (
               <Pressable
                 onPress={() => setFlipped((f) => !f)}
-                style={styles.cardWrap}
+                style={[styles.cardWrap, { height: cardHeight }]}
                 accessibilityRole="button"
                 accessibilityLabel={flipped ? t("{0}: {1}. Kelimeye dönmek için dokun", current.term, current.meaning) : t("{0}. Anlamını görmek için dokun", current.term)}
               >
@@ -306,7 +333,7 @@ export default function Words() {
                 </View>
               </Pressable>
             ) : (
-              <View style={[styles.cardWrap, styles.doneBox]}>
+              <View style={[styles.cardWrap, styles.doneBox, { height: cardHeight }]}>
                 <Ionicons name="checkmark-done" size={30} color={colors.petrol} />
                 <Text style={styles.doneTitle}>{t("Burada çalışılacak kart kalmadı")}</Text>
                 <Text style={styles.doneText}>{t("Öğrendiklerini gizlemeyi kapat ya da başka bir kategori seç.")}</Text>
@@ -372,7 +399,7 @@ export default function Words() {
                 </Animated.View>
               )}
             </View>
-          </>
+          </ScrollView>
         )}
       </SafeAreaView>
 
@@ -403,6 +430,10 @@ function AddWordSheet({
   const [newCategory, setNewCategory] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // two quick taps on "Kartı ekle" both got in before the button turned
+  // off (state is a render behind) and saved the word twice
+  const savingRef = useRef(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (visible) {
@@ -416,6 +447,7 @@ function AddWordSheet({
   const options = [...new Set(['Genel', ...categories])];
 
   async function save() {
+    if (savingRef.current) return;
     const w = term.trim();
     const m = meaning.trim();
     const c = (newCategory ?? category).trim() || 'Genel';
@@ -423,8 +455,11 @@ function AddWordSheet({
       setError(t("Kelimeyi ve anlamını yaz."));
       return;
     }
+    savingRef.current = true;
     setSaving(true);
+    setError('');
     const entry = await addVocabEntry(studentId, w, m, c);
+    savingRef.current = false;
     setSaving(false);
     if (!entry) {
       setError(t("Kaydedilemedi. Lütfen tekrar dene."));
@@ -437,9 +472,17 @@ function AddWordSheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.shade} onPress={onClose} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap} pointerEvents="box-none">
+      {/* with the keyboard up an iPhone SE has ~400pt left: the sheet stops
+          under the status bar and scrolls, instead of pushing the title and
+          the word field off the top of the screen */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.sheetWrap, { paddingTop: insets.top + 8 }]}
+        pointerEvents="box-none"
+      >
         <View style={styles.sheet}>
           <View style={styles.grab} />
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} alwaysBounceVertical={false}>
           <Text style={styles.sheetTitle}>{t("Yeni kelime")}</Text>
 
           <Text style={styles.label}>{t("Kelime")}</Text>
@@ -496,6 +539,7 @@ function AddWordSheet({
               </>
             )}
           </Pressable>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -661,7 +705,7 @@ const styles = StyleSheet.create({
 
   shade: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(20,6,8,0.45)' },
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 34 },
+  sheet: { flexShrink: 1, backgroundColor: colors.bg, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 34 },
   grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: colors.silver2, alignSelf: 'center', marginBottom: 14 },
   sheetTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.ink, letterSpacing: -0.5 },
   label: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.muted, marginTop: 14, marginBottom: 6, marginLeft: 2 },

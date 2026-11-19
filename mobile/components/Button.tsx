@@ -20,6 +20,10 @@ export default function Button({ label, onPress, variant = 'primary', loading, d
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
+      // a spinner has no text: VoiceOver still reads the label, and that it's busy
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!isDisabled, busy: !!loading }}
       style={({ pressed }) => [
         styles.base,
         variant === 'gold' && { backgroundColor: colors.cream, borderWidth: 1, borderColor: colors.champagneDeep },

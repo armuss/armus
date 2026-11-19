@@ -547,6 +547,8 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Kelime kartlarım': 'My word cards',
   '{0} kelime · {1} öğrendin': ['{0} word · {1} learned', '{0} words · {1} learned'],
   'Henüz kelimen yok': 'No words yet',
+  'Kelimelerin yüklenemedi': "Your words couldn't be loaded",
+  'İnternet bağlantını kontrol edip tekrar dene.': 'Check your internet connection and try again.',
   'Derste öğrendiğin kelimeleri anlamlarıyla birlikte ekle, sonra kart kart çalış.': 'Add the words you learn in lessons with their meanings, then study them card by card.',
   '{0}: {1}. Kelimeye dönmek için dokun': '{0}: {1}. Tap to go back to the word',
   '{0}. Anlamını görmek için dokun': '{0}. Tap to see the meaning',

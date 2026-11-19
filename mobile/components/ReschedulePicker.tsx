@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   ANY_TIME_AVAILABILITY,
@@ -57,6 +58,7 @@ export default function ReschedulePicker({
   onConfirm: (pick: { date: string; time: string }) => void;
 }) {
   const t = useT();
+  const insets = useSafeAreaInsets();
   const dates = useMemo(() => {
     const today = todayIn(timeZone);
     return Array.from({ length: DAYS_SHOWN }, (_, i) => {
@@ -93,7 +95,8 @@ export default function ReschedulePicker({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <View style={styles.sheet}>
+        {/* the buttons stay clear of the home indicator */}
+        <View style={[styles.sheet, { paddingBottom: Math.max(28, insets.bottom + 14) }]}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.note}>{note}</Text>
 
