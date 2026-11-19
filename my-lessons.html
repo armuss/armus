@@ -1132,6 +1132,12 @@
     // migration_112.sql: lesson credits with their expiry, packages that can
     // still be withdrawn (14 days, nothing used), credits stuck with a
     // teacher who can't teach this student anymore (refund after 30 days)
+    // a withdraw/refund below re-renders this panel right away (so the
+    // package or credits it paid back leave the list) - that used to
+    // clear the success message along with everything else before the
+    // student could read it; these are put back on every re-render
+    const creditsPanelNotices = [];
+
     async function renderCreditsPanel(viewerId) {
       const wrap = document.getElementById("creditsPanel");
       let credits = [], withdrawable = [], stuck = [];
@@ -1146,6 +1152,7 @@
         stuck = stuckRes.data || [];
       } catch (err) {}
       wrap.innerHTML = "";
+      creditsPanelNotices.forEach(notice => wrap.appendChild(notice));
 
       withdrawable.forEach(pkg => {
         const card = document.createElement("div");
@@ -1173,6 +1180,7 @@
             return;
           }
           card.innerHTML = `<p class="package-status">${armusEscapeHtml(armusT("myLessons.withdrawDone", "Paketin iptal edildi, {price} kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.").replace("{price}", formatMoney(result.refundedAmount)))}</p>`;
+          creditsPanelNotices.push(card);
           renderCreditsPanel(viewerId);
         });
         wrap.appendChild(card);
@@ -1210,6 +1218,7 @@
           }
           card.innerHTML = `<p class="package-status">${armusEscapeHtml(armusT("myLessons.packageRefunded", "{n} dersin ücreti ({total}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.")
             .replace("{n}", result.refundedLessons).replace("{total}", formatMoney(result.refundedAmount)))}</p>`;
+          creditsPanelNotices.push(card);
           renderCreditsPanel(viewerId);
         });
         wrap.appendChild(card);
@@ -1272,7 +1281,9 @@
       // date is still ahead (Preply: an in-time cancel leaves the upcoming
       // list, a late one shows under Past as "Cancelled and Paid").
       const inHistory = b => b.status === "cancelled" || (armusIsBookingPast(b) && !armusCanJoinLessonNow(b));
-      bookings.sort((a, b) => {
+      // re-run on every render: a lesson cancelled on this page moves to
+      // the history side on the next one (a language switch)
+      const sortBookings = () => bookings.sort((a, b) => {
         const aPast = inHistory(a);
         const bPast = inHistory(b);
         if (aPast !== bPast) return aPast ? 1 : -1;
@@ -1566,8 +1577,18 @@
 
       const isRealTeacherId = id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ""));
 
+      // renderLessons awaits several fetches before it adds the cards, and
+      // a language switch starts it again - two runs in flight (switch
+      // while the page is still loading, or twice quickly) both added
+      // their cards, so every lesson showed up twice. Only the latest run
+      // carries on after each await.
+      let renderRun = 0;
+
       async function renderLessons() {
 
+        const run = ++renderRun;
+        const stale = () => run !== renderRun;
+        sortBookings();
         list.innerHTML = "";
 
         if (bookings.length === 0) {
@@ -1623,6 +1644,7 @@
               (reportRows || []).forEach(r => reportByBooking.set(r.booking_id, armusMapAttendanceReportRow(r)));
             } catch (err) {}
           }
+          if (stale()) return;
 
           // "Yaklaşan" / "Geçmiş" headings, same split as the sort above
           const upcomingHeading = document.createElement("div");
@@ -1833,6 +1855,16 @@
                   return;
                 }
 
+                // the page's own copy of the lesson too - a later re-render
+                // (language switch) rebuilt it from the load-time data, as
+                // an upcoming lesson with a live "Dersi İptal Et" button
+                // that could only fail
+                booking.status = "cancelled";
+                booking.cancelledBy = "student";
+                booking.cancelledAt = new Date().toISOString();
+                booking.refunded = !!result.refunded;
+                booking.lateCancel = !!result.lateCancel;
+
                 cancelWrap.outerHTML = `
                   <div class="lesson-cancel-badge">
                     ${lateCancelBadgeOr(result.lateCancel, `${armusT("myLessons.cancelled", "⊘ İptal edildi")}${result.refunded ? armusT("myLessons.creditAdded", " · Ders hakkın eklendi") : armusT("myLessons.creditNotAdded", " · Ders hakkı eklenmedi")}`)}
@@ -1857,7 +1889,10 @@
               const report = reportByBooking.get(booking.id);
               if (report) card.appendChild(buildReportStatus(report));
               else if (checkinOpen(booking)) card.appendChild(buildCheckinBox(booking));
-              card.appendChild(await buildReviewBlock(booking));
+              // the review was already fetched above, with every other one
+              const reviewBlock = await buildReviewBlock(booking, reviewByBooking.has(booking.id) ? reviewByBooking.get(booking.id) : undefined);
+              if (stale()) return;
+              card.appendChild(reviewBlock);
             }
             if (!isCancelled) {
               disputeBlock = buildDisputeBlock(booking);
