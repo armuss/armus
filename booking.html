@@ -983,11 +983,22 @@
 
       const today = teacherTodayAnchor(teacher.timezone);
 
+      // teacher.html's calendar pages on week after week, but this row
+      // only ever offered the next 10 days - a slot picked there two or
+      // more weeks out arrived here with its date missing from the row,
+      // so nothing was selected and the student had to start over. The
+      // row reaches that date instead (up to 90 days out).
+      let dateRowDays = 10;
+      if (preselectedDate && /^\d{4}-\d{2}-\d{2}$/.test(preselectedDate)) {
+        const daysAhead = Math.round((new Date(preselectedDate + "T00:00:00") - today) / 86400000);
+        if (daysAhead >= dateRowDays && daysAhead <= 90) dateRowDays = daysAhead + 1;
+      }
+
       function renderDateRow() {
         const dayNames = armusDayNames();
         dateRow.innerHTML = "";
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < dateRowDays; i++) {
 
           const date = new Date(today);
           date.setDate(today.getDate() + i);
@@ -1192,6 +1203,7 @@
         const pill = dateRow.querySelector(`[data-date="${preselectedDate}"]`);
         if (pill) {
           pill.click();
+          dateRow.scrollLeft = pill.offsetLeft - dateRow.offsetLeft - 20;
           if (preselectedTime && /^\d{2}:\d{2}$/.test(preselectedTime)) {
             const slotEl = slotGrid.querySelector(`[data-time="${preselectedTime}"]:not(.unavailable)`);
             if (slotEl) slotEl.click();
