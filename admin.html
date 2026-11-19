@@ -3419,15 +3419,27 @@
           // pending_changes->>submitted_at still matching what was loaded;
           // if it doesn't, someone else's newer submission is sitting there
           // now and this stale click should stop, not blow it away.
-          const { data: updated, error: updateError } = await armusSupabase
+          // The database stamps submitted_at on every write
+          // (migration_121.sql, and dashboard.html sends one too). An edit
+          // sent before that has no stamp, and "= undefined" matched
+          // nothing, so it could never be approved or rejected: that one is
+          // guarded on still being there and still having no stamp - any
+          // newer edit would carry one.
+          let query = armusSupabase
             .from("profiles")
             .update(approved ? { ...fieldsToApply, pending_changes: null } : { pending_changes: null })
-            .eq("id", user.id)
-            .eq("pending_changes->>submitted_at", submitted_at)
-            .select()
-            .maybeSingle();
+            .eq("id", user.id);
+          query = submitted_at
+            ? query.eq("pending_changes->>submitted_at", submitted_at)
+            : query.not("pending_changes", "is", null).is("pending_changes->>submitted_at", null);
+          const { data: updated, error: updateError } = await query.select().maybeSingle();
 
-          if (updateError || !updated) {
+          if (updateError) {
+            alert(armusT("admin.actionFailed", "İşlem yapılamadı: ") + updateError.message);
+            button.disabled = false;
+            return;
+          }
+          if (!updated) {
             alert(armusT("admin.pendingChangeStale", "Bu talep değişmiş, lütfen sayfayı yenile."));
             button.disabled = false;
             return;
