@@ -2,8 +2,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -13,7 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useLightStatusBar } from '../../components/Band';
 import { amIBlockedBy, getBlockedStudents } from '../../lib/blocks';
@@ -31,7 +33,14 @@ import {
 import { supabase } from '../../lib/supabase';
 import { capitalizeName } from '../../lib/displayName';
 import { colors, fonts, radius } from '../../lib/theme';
-import { useT } from '../../lib/i18n';
+import { getLocale, useT } from '../../lib/i18n';
+
+// "14 Kas 15:30" under each message, like mesajlar.html's formatTime
+function formatMessageTime(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
 
 export default function Chat() {
   const t = useT();
@@ -44,6 +53,10 @@ export default function Chat() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const loadRef = useRef<() => void>(() => {});
+  const insets = useSafeAreaInsets();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
@@ -57,28 +70,76 @@ export default function Chat() {
     if (!profile) return;
 
     let active = true;
-    getMessages(id).then((data) => {
-      if (!active) return;
-      setMessages(data);
-      setLoading(false);
-      markMessagesRead(id, profile.id);
-    });
+    const myId = profile.id;
+
+    function load() {
+      getMessages(id).then((data) => {
+        if (!active) return;
+        setLoading(false);
+        if (data === null) {
+          // what is already on screen stays; an empty screen says it failed
+          // (it used to look like a conversation with no messages)
+          setLoadError(true);
+          return;
+        }
+        setLoadError(false);
+        // a message that came in live while this was loading stays
+        setMessages((prev) => {
+          const ids = new Set(data.map((m) => m.id));
+          const last = data.length ? data[data.length - 1].createdAt : '';
+          return [...data, ...prev.filter((m) => !ids.has(m.id) && m.createdAt > last)];
+        });
+        markMessagesRead(id, myId);
+      });
+    }
+    loadRef.current = () => {
+      setLoading(true);
+      load();
+    };
+    load();
 
     const channel = subscribeToMessages(
       id,
       (message) => {
         setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
-        if (message.senderId !== profile.id) markMessagesRead(id, profile.id);
+        if (message.senderId !== myId) markMessagesRead(id, myId);
       },
       (message) => setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)))
     );
 
+    // the live connection drops while the app is in the background, and
+    // whatever arrived meanwhile never showed up in the open chat - read
+    // the conversation again when the app comes back
+    const appState = AppState.addEventListener('change', (state) => {
+      if (state === 'active') load();
+    });
+
     return () => {
       active = false;
+      appState.remove();
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, profile?.id]);
+
+  // the message box sits above the iPhone's home indicator, and right on
+  // top of the keyboard while it's open
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  function goBack() {
+    // opened from a notification with nothing under it: back goes to Messages
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/messages');
+  }
 
   // Figure out the other participant once we know the conversation, so we
   // can check whether contact info is allowed (a real booking together).
@@ -152,7 +213,7 @@ export default function Chat() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={goBack} style={styles.backBtn} hitSlop={10} accessibilityRole="button" accessibilityLabel={t("Geri")}>
           <Text style={styles.backText}>←</Text>
         </Pressable>
         {otherPhoto ? (
@@ -170,10 +231,21 @@ export default function Chat() {
       {/* no keyboardVerticalOffset: this view's own layout already starts
           below the header (its parent sits at the top of the screen), and
           the extra 90 left a blank band between the keyboard and the
-          message box on iPhone */}
-      <KeyboardAvoidingView style={styles.body} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {loading ? (
+          message box on iPhone. 'padding' on Android too: an edge-to-edge
+          Android app isn't resized for the keyboard any more, so the
+          message box ended up under it; where the window is still
+          resized, the view no longer overlaps the keyboard and nothing
+          is added. */}
+      <KeyboardAvoidingView style={styles.body} behavior="padding">
+        {loading && !messages.length ? (
           <ActivityIndicator color={colors.red} style={{ marginTop: 40 }} />
+        ) : loadError && !messages.length ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{t("Mesajlar yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.")}</Text>
+            <Pressable onPress={() => loadRef.current()} style={styles.retryBtn} accessibilityRole="button">
+              <Text style={styles.retryText}>{t("Tekrar dene")}</Text>
+            </Pressable>
+          </View>
         ) : (
           <FlatList
             extraData={t}
@@ -204,6 +276,11 @@ export default function Chat() {
                     {!!item.body && (
                       <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine, !!item.attachmentUrl && { marginTop: 6 }]}>{item.body}</Text>
                     )}
+                    {/* when it was sent - the website shows this on every message */}
+                    <Text style={[styles.time, isMine && styles.timeMine]}>
+                      {formatMessageTime(item.createdAt)}
+                      {item.editedAt ? ` ${t("(düzenlendi)")}` : ''}
+                    </Text>
                   </View>
                 </View>
               );
@@ -216,7 +293,7 @@ export default function Chat() {
 
         {warning && <Text style={styles.warning}>{warning}</Text>}
 
-        <View style={styles.inputRow}>
+        <View style={[styles.inputRow, { paddingBottom: keyboardOpen ? 10 : Math.max(14, insets.bottom + 6) }]}>
           <TextInput
             value={text}
             onChangeText={setText}
@@ -330,6 +407,43 @@ const styles = StyleSheet.create({
   attachmentLink: {
     fontFamily: fonts.bodyBold,
     textDecorationLine: 'underline',
+  },
+  time: {
+    fontFamily: fonts.body,
+    fontSize: 10.5,
+    color: colors.faint,
+    marginTop: 4,
+    alignSelf: 'flex-end',
+  },
+  timeMine: {
+    color: 'rgba(250,245,226,0.6)',
+  },
+  errorBox: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 28,
+    paddingTop: 48,
+    gap: 14,
+  },
+  errorText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.muted,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.dark,
+  },
+  retryText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13.5,
+    color: colors.onRed,
   },
   empty: {
     fontFamily: fonts.body,

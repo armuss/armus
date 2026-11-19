@@ -16,6 +16,9 @@ export type Message = {
   attachmentType: AttachmentType | null;
   readAt: string | null;
   createdAt: string;
+  // the sender corrected it on the website (within 2 minutes) - shown as
+  // "(düzenlendi)" like mesajlar.html
+  editedAt: string | null;
 };
 
 function mapMessageRow(row: any): Message {
@@ -30,7 +33,20 @@ function mapMessageRow(row: any): Message {
     attachmentType: url && type ? type : null,
     readAt: row.read_at,
     createdAt: row.created_at,
+    editedAt: row.edited_at || null,
   };
+}
+
+let channelSeq = 0;
+// A realtime topic of its own for every subscription. supabase-js hands
+// back the EXISTING channel for a topic it already has, and adding
+// listeners to a channel that has already joined throws - so a second
+// chat screen for the same conversation (a tapped message notification
+// while that chat is open) crashed, and reopening a chat right after
+// leaving it could get the old, closing channel and no live messages.
+function uniqueTopic(base: string) {
+  channelSeq += 1;
+  return `${base}-${Date.now().toString(36)}-${channelSeq}`;
 }
 
 // The conversation list's preview of a message without text - the
@@ -52,17 +68,20 @@ export type Conversation = {
   unreadCount: number;
 };
 
-export async function getConversations(userId: string): Promise<Conversation[]> {
+// null when the list couldn't be loaded (so the screen can say so instead
+// of showing "no messages yet")
+export async function getConversations(userId: string): Promise<Conversation[] | null> {
   const { data: conversations, error } = await supabase
     .from('conversations')
     .select('*')
     .or(`student_id.eq.${userId},teacher_id.eq.${userId}`);
 
-  if (error || !conversations || !conversations.length) return [];
+  if (error || !conversations) return null;
+  if (!conversations.length) return [];
 
   const otherIds = conversations.map((c: any) => (c.student_id === userId ? c.teacher_id : c.student_id));
 
-  const [{ data: profiles }, { data: allMessages }] = await Promise.all([
+  const [{ data: profiles }, { data: previews, error: previewsError }] = await Promise.all([
     // masked_profiles, not the raw profiles table - a teacher's full
     // real name must never be shown to a student (see displayName.ts's
     // shortDisplayName), so a student can't take that name off ARMUS
@@ -72,34 +91,37 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
     // only, which still ships the real name over the wire in the raw
     // JSON response even though the UI re-shortens it before rendering.
     supabase.from('masked_profiles').select('id, name, photo_url').in('id', otherIds),
-    supabase
-      .from('messages')
-      .select('*')
-      .in(
-        'conversation_id',
-        conversations.map((c: any) => c.id)
-      )
-      .order('created_at', { ascending: true }),
+    // each conversation's last message and unread count, worked out by
+    // the database (migration_89.sql, what messages.js uses). This list
+    // used to download every message of every conversation - and the API
+    // returns at most 1000 rows, oldest first, so for anyone with more
+    // than that the newest messages were cut off: wrong previews, wrong
+    // order and unread counts that never showed new messages.
+    supabase.rpc('conversation_previews'),
   ]);
 
+  if (previewsError) return null;
+
   const profileById = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
+  const previewByConvo = Object.fromEntries((previews || []).map((p: any) => [p.conversation_id, p]));
 
   return conversations
     .map((c: any) => {
       const otherId = c.student_id === userId ? c.teacher_id : c.student_id;
-      const otherProfile = profileById[otherId] || { name: tr("Kullanıcı"), photo_url: null };
-      const convoMessages = (allMessages || []).filter((m: any) => m.conversation_id === c.id);
-      const lastMessage = convoMessages[convoMessages.length - 1] || null;
-      const unreadCount = convoMessages.filter((m: any) => m.sender_id !== userId && !m.read_at).length;
+      const otherProfile = profileById[otherId] || {};
+      const preview = previewByConvo[c.id] || null;
+      const hasLast = !!(preview && preview.last_message_id);
 
       return {
         id: c.id,
         otherId,
-        otherName: otherProfile.name,
-        otherPhoto: otherProfile.photo_url,
-        lastMessageText: lastMessage ? lastMessage.body || attachmentPreviewLabel(lastMessage.attachment_type) : null,
-        lastMessageAt: lastMessage?.created_at ?? null,
-        unreadCount,
+        // a profile without a name used to crash the whole Messages tab
+        // (its first letter is the avatar)
+        otherName: otherProfile.name || tr("Kullanıcı"),
+        otherPhoto: otherProfile.photo_url || null,
+        lastMessageText: hasLast ? preview.last_message_body || attachmentPreviewLabel(preview.last_message_attachment_type) : null,
+        lastMessageAt: hasLast ? preview.last_message_created_at : null,
+        unreadCount: preview ? Number(preview.unread_count) || 0 : 0,
       };
     })
     .sort((a, b) => (b.lastMessageAt || '0').localeCompare(a.lastMessageAt || '0'));
@@ -148,14 +170,16 @@ export async function getOrCreateConversation(
   return null;
 }
 
-export async function getMessages(conversationId: string): Promise<Message[]> {
+// null when the conversation couldn't be loaded (a failed load used to
+// look like an empty conversation)
+export async function getMessages(conversationId: string): Promise<Message[] | null> {
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true });
 
-  if (error || !data) return [];
+  if (error || !data) return null;
   return data.map(mapMessageRow);
 }
 
@@ -201,7 +225,7 @@ export function subscribeToMessages(
 ): RealtimeChannel {
   const filter = `conversation_id=eq.${conversationId}`;
   return supabase
-    .channel(`messages-${conversationId}`)
+    .channel(uniqueTopic(`messages-${conversationId}`))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter }, (payload) =>
       onInsert(mapMessageRow(payload.new))
     )
