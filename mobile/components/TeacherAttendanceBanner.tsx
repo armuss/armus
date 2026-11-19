@@ -168,12 +168,18 @@ function Details({
   const contact = <Button label={t("Bize Ulaş")} variant="gold" onPress={() => Linking.openURL('https://armus.com.tr/iletisim')} />;
   const close = <Button label={t("Kapat")} variant="outline" onPress={onClose} />;
 
+  // fills "Bir öğrenci {0} bildirdi", like dashboard.html: "derse gelmedin"
+  // read as broken Turkish there ("Bir öğrenci derse gelmedin bildirdi"),
+  // and a technical problem the student had on their own side
+  // (migration_112.sql tech_side) read as the teacher's
   const typeLabel =
     report?.type === 'no_show'
-      ? t("derse gelmedin")
+      ? t("derse gelmediğini")
       : report?.type === 'technical'
-        ? t("senin tarafında teknik bir sorun yaşandığını")
-        : t("derse geç kaldın");
+        ? report.techSide === 'student'
+          ? t("kendi tarafında teknik bir sorun yaşandığını")
+          : t("senin tarafında teknik bir sorun yaşandığını")
+        : t("derse geç kaldığını");
 
   if (profile.is_banned) {
     return (
@@ -214,7 +220,12 @@ function Details({
     );
   }
 
-  if (report?.status === 'explained') {
+  // only a no-show report hides the teacher while it's reviewed
+  // (migration_112.sql): an explained late / technical one used to take
+  // over here, telling a teacher hidden for another reason (a trial
+  // no-show they can lift themselves, below) that this report kept them
+  // hidden, with no way to make the profile visible again
+  if (report?.status === 'explained' && report.type === 'no_show') {
     return (
       <>
         <Text style={styles.title}>{t("Açıklaman inceleniyor")}</Text>
