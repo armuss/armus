@@ -58,7 +58,7 @@ async function armusRenderAnnouncementBanner() {
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
-  closeBtn.setAttribute("aria-label", "Kapat");
+  closeBtn.setAttribute("aria-label", typeof armusT === "function" ? armusT("class.close", "Kapat") : "Kapat");
   closeBtn.textContent = "✕";
   closeBtn.style.cssText = [
     "position:absolute", "right:12px", "top:50%", "transform:translateY(-50%)",

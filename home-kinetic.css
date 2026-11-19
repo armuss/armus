@@ -1530,14 +1530,16 @@ html[lang="en"] .hk-rate-n i {
     font-size: 15px;
   }
   /* the names become one row that slides sideways, out to the screen's
-     edges (the section sits 30px in: .shell's 20 + its own 10). The auto
-     margins centre the row when it happens to fit. */
+     edges (the section sits 21px in at this width: .shell's 11 - see
+     styles.css - plus its own 10; 30px went 9px past the edge and made
+     the whole page scroll sideways). The auto margins centre the row
+     when it happens to fit. */
   .hk-people {
     flex-wrap: nowrap;
     justify-content: flex-start;
     gap: 8px;
-    margin: 30px -30px 0;
-    padding: 0 30px 4px;
+    margin: 30px -21px 0;
+    padding: 0 21px 4px;
     overflow-x: auto;
     scrollbar-width: none;
     overscroll-behavior-x: contain;

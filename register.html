@@ -657,6 +657,11 @@
       // flow auto-sent yet another code. Confirm the flag really flipped
       // before navigating anywhere; on a mismatch stay on this step with
       // the error visible so the user can retry or resend from here.
+      // armusGetSession() caches the profile for the page's lifetime, and
+      // the resume flow above (a user sent back here from another page)
+      // had already loaded it - unverified - so this check kept reading
+      // that copy and the user could never get past this step.
+      armusInvalidateSessionCache();
       const freshProfile = await armusGetSession().catch(() => null);
       if (!freshProfile || !freshProfile.email_verified) {
         verifyError.textContent = armusT("register.errCodeVerifyStuck", "Kodun doğru görünüyor ama hesabın hâlâ doğrulanmamış görünüyor. Sayfayı yenileyip tekrar dene, sorun sürerse 'Kodu tekrar gönder'i kullan.");

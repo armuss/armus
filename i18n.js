@@ -72,7 +72,7 @@ const ARMUS_I18N_EN = {
   // favorites
   "favoritesPage.eyebrow": "MY FAVORITES",
   "favoritesPage.title": "My Favorite Teachers",
-  "favoritesPage.countTitle": "{n} Saved Teacher",
+  "favoritesPage.countTitle": "Saved Teachers: {n}",
   "favoritesPage.gateTitle": "Log in to see your favorite teachers",
   "favoritesPage.gateText": "You need an account before you can see the teachers you've saved.",
   "favoritesPage.emptyText": "You haven't saved any teachers yet.",
@@ -310,6 +310,14 @@ const ARMUS_I18N_EN = {
   "contact.submit": "Send",
   "contact.submitting": "Sending...",
   "contact.sentMsg": "Your message was received, thanks! We'll get back to you as soon as we can.",
+  "contact.sendFailed": "Your message couldn't be sent. Please try again.",
+  "chat.title": "ARMUS Assistant",
+  "chat.subtitle": "I answer your questions about the site",
+  "chat.greeting": "Hi! I'm the ARMUS assistant. Ask me anything about lessons, teachers, pricing, cancellations and refunds, or becoming a teacher.",
+  "chat.placeholder": "Type a question...",
+  "chat.open": "Open chat",
+  "chat.unavailable": "Chat isn't available right now, please refresh the page.",
+  "chat.noReply": "Couldn't get an answer, could you try again?",
 
   // gizlilik-politikasi
   "privacy.eyebrow": "LEGAL",
@@ -1214,6 +1222,7 @@ const ARMUS_I18N_EN = {
   "admin.logStudentUnlock": "Student account unlocked",
   "admin.logAttendanceUpheld": "Attendance report upheld",
   "admin.logAttendanceDismissed": "Attendance report dismissed",
+  "admin.logAttendanceFalseReport": "Attendance report found false",
   "admin.logWithdrawalPaid": "Withdrawal request paid",
   "admin.logWithdrawalRejected": "Withdrawal request rejected",
   "admin.logTeacherReportResolved": "Teacher report closed",
@@ -1263,7 +1272,7 @@ const ARMUS_I18N_EN = {
   "admin.reviewsHint": "Reviews with low ratings or negative language are flagged here automatically, so you don't have to read every single one.",
   "admin.flaggedReviewsEmpty": "No reviews to flag.",
   "admin.earningsHeading": "Earnings / Commission",
-  "admin.earningsHint": "Each teacher's revenue from completed lessons, their commission tier, and ARMUS's commission. Tiers match the commission rates shown on the homepage. A lesson's fee becomes payable 7 days after the lesson; check withdrawal requests against the \"Payable now\" column.",
+  "admin.earningsHint": "Each teacher's revenue from completed lessons, their commission tier, and ARMUS's commission. Tiers match the commission rates shown on the homepage. A lesson's fee becomes payable 7 days after the lesson; withdrawals already paid are taken off the \"Payable now\" column. Check withdrawal requests against that column.",
   "admin.colCompletedLessons": "Completed Lessons",
   "admin.colTotalHours": "Total Hours",
   "admin.colRevenue": "Revenue",
@@ -1314,6 +1323,7 @@ const ARMUS_I18N_EN = {
   "admin.withdrawalStatusPaid": "Paid",
   "admin.withdrawalStatusRejected": "Rejected",
   "admin.withdrawalMarkPaid": "Mark paid",
+  "admin.withdrawalAlreadyProcessed": "This request has already been processed (paid or rejected). Refreshing the list.",
   "admin.announcementHint": "The message you write here, once activated, shows as a fixed banner at the top of the site for everyone (students, teachers, visitors). Users who dismiss it won't see the same message again.",
   "admin.announcementPlaceholder": "E.g: Maintenance is happening today, lessons won't be affected.",
   "admin.announcementActiveLabel": "Active (show on site)",
@@ -1358,6 +1368,7 @@ const ARMUS_I18N_EN = {
   "admin.approveChange": "Approve Change",
   "admin.rejectChange": "Reject Change",
   "admin.cancelledLabel": "Cancelled{r}",
+  "admin.lessonStatusConfirmed": "Confirmed",
   "admin.creditAddedSuffix": " · lesson credit added",
   "admin.teacherNoShowSuffix": " · teacher didn't show up",
   "admin.attendanceUpholdNoShowConfirm": "If you confirm, this lesson is cancelled, returned to the student as a lesson credit, and not paid to the teacher. Continue?",
@@ -1946,6 +1957,7 @@ const ARMUS_I18N_EN = {
   "admin.attendanceFalse": "False",
   "admin.attendanceFalseBadge": "False",
   "admin.attendanceFalseConfirm": "This report will be closed as false and the student gets a warning email. On a third false report the student's account is closed and their lesson credits are lost. Continue?",
+  "admin.attendanceResolveFailed": "The report couldn't be updated. Another admin may have decided it already; refreshing the list.",
   "admin.attendanceUpholdTechConfirm": "If you confirm, this lesson is cancelled, given back to the student as a lesson credit and not paid to the teacher (no penalty for the teacher). Continue?",
   "admin.attendancePresence": "Who joined, and when?",
   "admin.attendanceTypeTechnical": "Technical problem",
@@ -2433,7 +2445,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // run.
 (function () {
 
-  const GREETING = "Merhaba! Ben ARMUS asistanıyım. Dersler, öğretmenler, fiyatlandırma, iptal/iade ya da öğretmen olmak hakkında merak ettiğin her şeyi sorabilirsin.";
+  // every string here used to be hard-coded Turkish, so the bubble stayed
+  // Turkish on an English page - read through armusT (at the moment it's
+  // shown) and refreshed on a language switch like the rest of the page
+  const greeting = () => armusT("chat.greeting", "Merhaba! Ben ARMUS asistanıyım. Dersler, öğretmenler, fiyatlandırma, iptal/iade ya da öğretmen olmak hakkında merak ettiğin her şeyi sorabilirsin.");
   const HISTORY_LIMIT = 10;
 
   function getSessionId() {
@@ -2533,20 +2548,20 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="armus-chat-panel" id="armusChatPanel">
         <div class="armus-chat-head">
           <div>
-            <strong>ARMUS Asistan</strong>
-            <span>Site hakkında sorularını yanıtlıyorum</span>
+            <strong id="armusChatTitle"></strong>
+            <span id="armusChatSubtitle"></span>
           </div>
-          <button type="button" class="armus-chat-close" id="armusChatCloseBtn" aria-label="Kapat">&times;</button>
+          <button type="button" class="armus-chat-close" id="armusChatCloseBtn">&times;</button>
         </div>
         <div class="armus-chat-body" id="armusChatBody"></div>
         <form class="armus-chat-form" id="armusChatForm">
-          <textarea class="armus-chat-input" id="armusChatInput" rows="1" placeholder="Bir soru yaz..." maxlength="2000"></textarea>
-          <button type="submit" class="armus-chat-send" id="armusChatSendBtn" aria-label="Gönder">
+          <textarea class="armus-chat-input" id="armusChatInput" rows="1" maxlength="2000"></textarea>
+          <button type="submit" class="armus-chat-send" id="armusChatSendBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </form>
       </div>
-      <button type="button" class="armus-chat-toggle" id="armusChatToggleBtn" aria-label="Sohbeti aç">
+      <button type="button" class="armus-chat-toggle" id="armusChatToggleBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
       </button>
     `;
@@ -2559,6 +2574,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("armusChatSendBtn");
     const toggleBtn = document.getElementById("armusChatToggleBtn");
     const closeBtn = document.getElementById("armusChatCloseBtn");
+
+    function renderWidgetText() {
+      document.getElementById("armusChatTitle").textContent = armusT("chat.title", "ARMUS Asistan");
+      document.getElementById("armusChatSubtitle").textContent = armusT("chat.subtitle", "Site hakkında sorularını yanıtlıyorum");
+      closeBtn.setAttribute("aria-label", armusT("nav.close", "Kapat"));
+      input.setAttribute("placeholder", armusT("chat.placeholder", "Bir soru yaz..."));
+      sendBtn.setAttribute("aria-label", armusT("contact.submit", "Gönder"));
+      toggleBtn.setAttribute("aria-label", armusT("chat.open", "Sohbeti aç"));
+    }
+    renderWidgetText();
+    document.addEventListener("armus:langchange", renderWidgetText);
 
     const history = [];
     let opened = false;
@@ -2588,7 +2614,7 @@ document.addEventListener("DOMContentLoaded", () => {
       panel.classList.toggle("open");
       if (!opened && panel.classList.contains("open")) {
         opened = true;
-        addMessage("bot", GREETING);
+        addMessage("bot", greeting());
       }
       if (panel.classList.contains("open")) input.focus();
     });
@@ -2613,7 +2639,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!text || sending) return;
 
       if (typeof armusSupabase === "undefined") {
-        addMessage("error", "Sohbet şu anda kullanılamıyor, lütfen sayfayı yenile.");
+        addMessage("error", armusT("chat.unavailable", "Sohbet şu anda kullanılamıyor, lütfen sayfayı yenile."));
         return;
       }
 
@@ -2635,7 +2661,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setTyping(false);
 
         if (error || !data || (!data.reply && !data.error)) {
-          addMessage("error", "Cevap alınamadı, lütfen tekrar dener misin?");
+          addMessage("error", armusT("chat.noReply", "Cevap alınamadı, lütfen tekrar dener misin?"));
         } else if (data.error) {
           addMessage("error", data.error);
         } else {
@@ -2645,7 +2671,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (err) {
         setTyping(false);
-        addMessage("error", "Cevap alınamadı, lütfen tekrar dener misin?");
+        addMessage("error", armusT("chat.noReply", "Cevap alınamadı, lütfen tekrar dener misin?"));
       }
 
       sending = false;

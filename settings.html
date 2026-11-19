@@ -1092,9 +1092,25 @@
             fail(err.message);
             return;
           }
-        } else if (picked.size > 5 * 1024 * 1024) {
-          fail(armusT("settings.photoTooBig", "Dosya çok büyük (maks 5MB)."));
-          return;
+        } else {
+          // the picker offers WebP, but the teacher-uploads bucket only
+          // takes JPEG and PNG (migration_49.sql), so a WebP photo
+          // failed with Storage's raw "mime type not supported" error -
+          // anything else is re-encoded to a JPEG first, the same way a
+          // teacher's photo already is
+          if (picked.type !== "image/jpeg" && picked.type !== "image/png") {
+            try {
+              const { blob } = await normalizePhoto(picked);
+              file = new File([blob], picked.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+            } catch (err) {
+              fail(err.message);
+              return;
+            }
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            fail(armusT("settings.photoTooBig", "Dosya çok büyük (maks 5MB)."));
+            return;
+          }
         }
 
         try {

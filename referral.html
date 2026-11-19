@@ -301,10 +301,19 @@
       color: var(--armus-muted);
     }
 
+    @media (max-width: 480px) {
+      .nav-find-tutor { display: none; }
+    }
+
     @media (max-width: 560px) {
       .logo { font-size: 24px; }
       .nav-utility { gap: 6px; }
       .help-btn { display: none; }
+      /* the header's row was wider than a phone, so the whole page
+         scrolled sideways */
+      .nav-inner { gap: 12px; }
+      .nav-buttons { gap: 6px; }
+      .nav-buttons .btn { padding: 9px 12px; font-size: 12px; }
       .ref-hero { padding: 28px 24px; }
       .ref-hero-stat { margin: 0 auto; }
       .ref-link-row { flex-direction: column; }
@@ -422,6 +431,10 @@
         })
         .catch(() => {});
 
+      // a second click inside the 2 seconds read "Kopyalandı ✓" as the
+      // label to go back to, so the button stuck on it for good - always
+      // go back to the real label, from the last click's timer only
+      let copyResetTimer = null;
       document.getElementById("referralCopyBtn").addEventListener("click", async () => {
         const input = document.getElementById("referralLinkInput");
         if (!input.value) return;
@@ -432,9 +445,9 @@
           document.execCommand("copy");
         }
         const btn = document.getElementById("referralCopyBtn");
-        const original = btn.textContent;
         btn.textContent = armusT("studentDash.referralCopied", "Kopyalandı ✓");
-        setTimeout(() => { btn.textContent = original; }, 2000);
+        clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(() => { btn.textContent = armusT("studentDash.referralCopy", "Kopyala"); }, 2000);
       });
 
       if (typeof armusApplyTranslations === "function") armusApplyTranslations();

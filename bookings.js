@@ -557,6 +557,17 @@ function armusLessonWindow(booking) {
   return { start, end, joinsFrom, joinsUntil };
 }
 
+// Whether a slot that isn't booked yet (teacher-local dateKey/time, same
+// as armusSlotsForDate) has already started. armusSlotsForDate only knows
+// the teacher's weekly grid, so on "today" it still offered every slot
+// that had already gone by - create-payment refuses those
+// (lessonStart < now) with an error after the student had already filled
+// in the payment form. The booking picker and teacher.html's calendar
+// preview grey them out with this instead.
+function armusSlotHasStarted(dateKey, time, teacherTimezone) {
+  return armusZonedTimeToUtc(dateKey, time, teacherTimezone) <= new Date();
+}
+
 function armusCanJoinLessonNow(booking) {
   const { joinsFrom, joinsUntil } = armusLessonWindow(booking);
   const now = new Date();

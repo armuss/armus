@@ -2785,8 +2785,9 @@
           Her öğretmenin tamamlanan derslerden elde ettiği ciro, komisyon
           dilimi ve ARMUS'un aldığı komisyon. Dilimler ana sayfadaki
           komisyon oranlarıyla aynıdır. Bir dersin ücreti dersten 7 gün
-          sonra ödenebilir olur; para çekme talebini "Ödenebilir" sütununa
-          göre kontrol et.
+          sonra ödenebilir olur; "Ödenebilir" sütunundan daha önce ödenen
+          para çekme talepleri düşülür. Para çekme talebini bu sütuna göre
+          kontrol et.
         </p>
         <table id="earningsTable">
           <thead>
@@ -3153,6 +3154,10 @@
       ];
     }
 
+    // A teacher writes weekly_availability (and pending_changes) as raw
+    // JSON on their own row - nothing checks its shape or that a slot is
+    // a real "HH:MM", so a day that isn't a list, or a slot that isn't a
+    // time, must neither break this render nor reach the markup as HTML.
     function renderAvailabilityGrid(weeklyAvailability) {
 
       if (!Array.isArray(weeklyAvailability)) {
@@ -3160,9 +3165,10 @@
       }
 
       const days = dayColumns().map(([label, dayIndex]) => {
-        const slots = (weeklyAvailability[dayIndex] || []).slice().sort();
+        const daySlots = weeklyAvailability[dayIndex];
+        const slots = (Array.isArray(daySlots) ? daySlots : []).map(String).sort();
         const inner = slots.length
-          ? slots.map(s => `<div class="slot">${armusFormatTimeRange(s)}</div>`).join("")
+          ? slots.map(s => `<div class="slot">${armusEscapeHtml(/^\d{2}:\d{2}$/.test(s) ? armusFormatTimeRange(s) : s)}</div>`).join("")
           : '<div class="none">—</div>';
         return `<div class="avail-day"><div class="day-label">${label}</div>${inner}</div>`;
       }).join("");
@@ -3172,6 +3178,15 @@
 
     function initials(name) {
       return armusEscapeHtml(name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase());
+    }
+
+    // "English (C2), Turkish (Native)" - languages is teacher-written JSON
+    // too, so an entry that isn't an object is skipped, not dereferenced
+    function languagesLabel(languages) {
+      const list = (Array.isArray(languages) ? languages : [])
+        .filter(l => l && typeof l === "object")
+        .map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`);
+      return list.join(", ") || "—";
     }
 
     function renderTeacherCard(user) {
@@ -3265,16 +3280,12 @@
           </div>
           <div>
             <h4>${armusT("admin.priceAvailability", "Ücret / Uygunluk")}</h4>
-            <p>₺${user.price ?? "—"} / 50 dk · ${armusEscapeHtml(user.availability) || "—"}</p>
+            <p>₺${armusEscapeHtml(user.price ?? "—")} / 50 dk · ${armusEscapeHtml(user.availability) || "—"}</p>
           </div>
 
           <div>
             <h4>${armusT("teacherProfile.languages", "Diller")}</h4>
-            <p>
-              ${user.languages && user.languages.length
-                ? user.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ")
-                : "—"}
-            </p>
+            <p>${languagesLabel(user.languages)}</p>
           </div>
           <div>
             <h4>${armusT("admin.phone", "Telefon")}</h4>
@@ -3343,6 +3354,7 @@
               "profile", user.id, user.name
             );
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -3362,6 +3374,7 @@
               armusLogAdminAction(accountAction === "ban" ? "profile_ban" : "profile_clear_ban_suggestion", "profile", user.id, user.name);
               await loadAll();
             } else {
+              alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
               button.disabled = false;
             }
             return;
@@ -3389,6 +3402,7 @@
             applyProfileUpdate(updated);
             armusLogAdminAction(isUnban ? "profile_unban" : "profile_unhide", "profile", user.id, user.name);
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -3409,15 +3423,27 @@
           // pending_changes->>submitted_at still matching what was loaded;
           // if it doesn't, someone else's newer submission is sitting there
           // now and this stale click should stop, not blow it away.
-          const { data: updated, error: updateError } = await armusSupabase
+          // The database stamps submitted_at on every write
+          // (migration_121.sql, and dashboard.html sends one too). An edit
+          // sent before that has no stamp, and "= undefined" matched
+          // nothing, so it could never be approved or rejected: that one is
+          // guarded on still being there and still having no stamp - any
+          // newer edit would carry one.
+          let query = armusSupabase
             .from("profiles")
             .update(approved ? { ...fieldsToApply, pending_changes: null } : { pending_changes: null })
-            .eq("id", user.id)
-            .eq("pending_changes->>submitted_at", submitted_at)
-            .select()
-            .maybeSingle();
+            .eq("id", user.id);
+          query = submitted_at
+            ? query.eq("pending_changes->>submitted_at", submitted_at)
+            : query.not("pending_changes", "is", null).is("pending_changes->>submitted_at", null);
+          const { data: updated, error: updateError } = await query.select().maybeSingle();
 
-          if (updateError || !updated) {
+          if (updateError) {
+            alert(armusT("admin.actionFailed", "İşlem yapılamadı: ") + updateError.message);
+            button.disabled = false;
+            return;
+          }
+          if (!updated) {
             alert(armusT("admin.pendingChangeStale", "Bu talep değişmiş, lütfen sayfayı yenile."));
             button.disabled = false;
             return;
@@ -3445,7 +3471,7 @@
         rows += `<div><h4>${armusT("admin.specialtyTitle", "Uzmanlık başlığı")}</h4><p>${armusEscapeHtml(user.title) || "—"} → <strong>${armusEscapeHtml(pc.title)}</strong></p></div>`;
       }
       if (pc.price !== undefined) {
-        rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${user.price ?? "—"} → <strong>₺${pc.price}</strong></p></div>`;
+        rows += `<div><h4>${armusT("admin.price", "Ücret")}</h4><p>₺${armusEscapeHtml(user.price ?? "—")} → <strong>₺${armusEscapeHtml(pc.price)}</strong></p></div>`;
       }
       if (pc.availability !== undefined) {
         rows += `<div><h4>${armusT("admin.availabilityStatus", "Uygunluk durumu")}</h4><p>${armusEscapeHtml(user.availability) || "—"} → <strong>${armusEscapeHtml(pc.availability)}</strong></p></div>`;
@@ -3457,11 +3483,7 @@
         rows += `<div><h4>${armusT("applyTeacher.subject", "Öğrettiğin konu")}</h4><p>${armusEscapeHtml(user.subject_taught) || "—"} → <strong>${armusEscapeHtml(pc.subject_taught)}</strong></p></div>`;
       }
       if (Array.isArray(pc.languages)) {
-        const oldLangs = (user.languages && user.languages.length)
-          ? user.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ")
-          : "—";
-        const newLangs = pc.languages.map(l => `${armusEscapeHtml(l.language)} (${armusEscapeHtml(l.level)})`).join(", ") || "—";
-        rows += `<div class="app-full"><h4>${armusT("teacherProfile.languages", "Diller")}</h4><p>${oldLangs} → <strong>${newLangs}</strong></p></div>`;
+        rows += `<div class="app-full"><h4>${armusT("teacherProfile.languages", "Diller")}</h4><p>${languagesLabel(user.languages)} → <strong>${languagesLabel(pc.languages)}</strong></p></div>`;
       }
       if (Array.isArray(pc.weekly_availability)) {
         rows += `<div class="app-full"><h4>${armusT("admin.newWeeklyAvailability", "Yeni haftalık uygunluk")}</h4>${renderAvailabilityGrid(pc.weekly_availability)}</div>`;
@@ -3652,6 +3674,7 @@
             armusLogAdminAction(`student_${action}`, "profile", student.id, student.name);
             await loadAll();
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -3779,21 +3802,26 @@
       document.getElementById("detailBody").innerHTML = `<p class="section-hint">${armusT("admin.loading", "Yükleniyor...")}</p>`;
       document.getElementById("detailOverlay").classList.add("visible");
 
-      const [messagesRes, historyRes] = await Promise.all([
-        armusSupabase.from("messages").select("*").eq("conversation_id", conversation.id).order("created_at", { ascending: true }),
-        // all of it, filtered down to this conversation's messages client-side below -
-        // message_edit_history has no conversation_id of its own to filter by server-side
-        armusSupabase.from("message_edit_history").select("*").order("edited_at", { ascending: true }),
-      ]);
-
+      const messagesRes = await armusAdminFetchAll(() => armusSupabase.from("messages").select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true }).order("id", { ascending: true }));
       const messages = messagesRes.data || [];
-      const messageIds = new Set(messages.map(m => m.id));
+
+      // message_edit_history has no conversation_id of its own, so it's
+      // asked for by this conversation's edited messages - reading the
+      // whole table got only its oldest 1000 rows, and a newer
+      // conversation's earlier versions never showed
+      const editedIds = messages.filter(m => m.edited_at).map(m => m.id);
+      const historyParts = await armusAdminInChunks(editedIds, ids => armusSupabase
+        .from("message_edit_history").select("*").in("message_id", ids)
+        .order("edited_at", { ascending: true }).limit(ARMUS_ADMIN_PAGE_SIZE));
       const historyByMessage = new Map();
-      (historyRes.data || []).forEach(h => {
-        if (!messageIds.has(h.message_id)) return;
-        if (!historyByMessage.has(h.message_id)) historyByMessage.set(h.message_id, []);
-        historyByMessage.get(h.message_id).push(h);
-      });
+      historyParts.flatMap(res => res.data || [])
+        .sort((a, b) => (a.edited_at || "").localeCompare(b.edited_at || ""))
+        .forEach(h => {
+          if (!historyByMessage.has(h.message_id)) historyByMessage.set(h.message_id, []);
+          historyByMessage.get(h.message_id).push(h);
+        });
 
       const lang = armusGetLang() === "en" ? "en-US" : "tr-TR";
       const timeLabel = iso => new Date(iso).toLocaleString(lang);
@@ -4255,6 +4283,7 @@
         booking_cancel: armusT("admin.logBookingCancelled", "Rezervasyon iptal edildi"),
         attendance_upheld: armusT("admin.logAttendanceUpheld", "Katılım bildirimi haklı bulundu"),
         attendance_dismissed: armusT("admin.logAttendanceDismissed", "Katılım bildirimi reddedildi"),
+        attendance_false_report: armusT("admin.logAttendanceFalseReport", "Katılım bildirimi asılsız bulundu"),
         withdrawal_paid: armusT("admin.logWithdrawalPaid", "Para çekme talebi ödendi"),
         withdrawal_rejected: armusT("admin.logWithdrawalRejected", "Para çekme talebi reddedildi"),
         teacher_report_resolved: armusT("admin.logTeacherReportResolved", "Öğretmen şikâyeti kapatıldı"),
@@ -4633,6 +4662,10 @@
       document.getElementById("bulkApproveBtn").disabled = false;
       document.getElementById("bulkRejectBtn").disabled = false;
       renderAllFromState();
+      // the ones that failed stay selected
+      if (results.some(updated => !updated)) {
+        alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
+      }
     }
 
     document.getElementById("bulkApproveBtn").addEventListener("click", () => armusRunBulkAction("approved"));
@@ -4733,7 +4766,8 @@
       const badge = document.getElementById("attendanceBadge");
       list.innerHTML = "";
 
-      const openCount = reports.filter(r => r.status === "open" || r.status === "explained").length;
+      // the nav badge counts every report, not just the ones the search shows
+      const openCount = armusAdminAttendanceReports.filter(r => r.status === "open" || r.status === "explained").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -4818,18 +4852,32 @@
           const updated = await armusAdminResolveAttendanceReport(id, newStatus, falseReport);
           if (updated) {
             armusAdminAttendanceReports = armusAdminAttendanceReports.map(x => x.id === id ? updated : x);
+            // a false report is a strike against the student (the third
+            // closes their account) - its own entry, not a plain dismissal
             armusLogAdminAction(
-              newStatus === "upheld" ? "attendance_upheld" : "attendance_dismissed",
+              newStatus === "upheld" ? "attendance_upheld" : falseReport ? "attendance_false_report" : "attendance_dismissed",
               "attendance_report", id, teacherIdLabel(updated.teacherId)
             );
             // hide/ban/escalation state on profiles changed server-side -
             // a full reload keeps the teachers/at-risk panels in sync too
             await loadAll();
           } else {
-            button.disabled = false;
+            // most often another admin decided it first (migration_122.sql
+            // keeps a decided report's outcome) - show what it is now
+            alert(armusT("admin.attendanceResolveFailed", "Bildirim güncellenemedi. Başka bir yönetici karar vermiş olabilir; liste yenileniyor."));
+            await loadAll();
           }
         });
       });
+    }
+
+    // just the kind of report, by its stored type ("no_show", "late",
+    // "technical") - for the places that have no more detail than that
+    function attendanceTypeName(type) {
+      if (type === "technical") return armusT("admin.attendanceTypeTechnical", "Teknik sorun");
+      if (type === "no_show") return armusT("admin.attendanceTypeNoShow", "Derse gelmedi");
+      if (type === "late") return armusT("admin.attendanceTypeLate", "Derse geç kaldı");
+      return armusEscapeHtml(type);
     }
 
     // migration_112.sql: technical problems, a long wait counted as not held
@@ -4882,16 +4930,22 @@
       };
     }
 
+    // only while the request is still pending: the list isn't live, so
+    // another admin (or this one, in another tab) may have paid or
+    // rejected it since it loaded - a second "paid" would log a second
+    // payout, and a stale "reject" over a paid one would hand the teacher
+    // that balance back to request again. "stale" when nothing matched.
     async function armusAdminResolveWithdrawalRequest(id, status) {
       const session = await armusGetSession();
       const { data, error } = await armusSupabase
         .from("withdrawal_requests")
         .update({ status, processed_at: new Date().toISOString(), processed_by: session ? session.id : null })
         .eq("id", id)
+        .eq("status", "pending")
         .select()
-        .single();
+        .maybeSingle();
       if (error) return null;
-      return data;
+      return data || "stale";
     }
 
     function renderWithdrawalsPanel(requests, profileById) {
@@ -4900,7 +4954,8 @@
       const badge = document.getElementById("withdrawalsBadge");
       body.innerHTML = "";
 
-      const pendingCount = requests.filter(w => w.status === "pending").length;
+      // the nav badge counts every request, not just the ones the search shows
+      const pendingCount = armusAdminWithdrawalRequests.filter(w => w.status === "pending").length;
       if (pendingCount) {
         badge.textContent = pendingCount;
         badge.classList.add("visible");
@@ -4946,14 +5001,20 @@
           const id = button.dataset.withdrawalAction;
           const newStatus = button.dataset.newStatus;
           const updated = await armusAdminResolveWithdrawalRequest(id, newStatus);
+          if (updated === "stale") {
+            alert(armusT("admin.withdrawalAlreadyProcessed", "Bu talep zaten işlenmiş (ödendi ya da reddedildi). Liste yenileniyor."));
+            await loadAll();
+            return;
+          }
           if (updated) {
             armusAdminWithdrawalRequests = armusAdminWithdrawalRequests.map(x => x.id === id ? updated : x);
             armusLogAdminAction(
               newStatus === "paid" ? "withdrawal_paid" : "withdrawal_rejected",
-              "withdrawal_request", id, teacherIdLabel(updated.teacher_id)
+              "withdrawal_request", id, teacherIdLabel(updated.teacher_id), `₺${updated.amount}`
             );
             renderAllFromState();
           } else {
+            alert(armusT("admin.messageReportResolveFailed", "İşlem başarısız oldu, tekrar dene."));
             button.disabled = false;
           }
         });
@@ -4979,7 +5040,8 @@
       const badge = document.getElementById("supportTicketsBadge");
       body.innerHTML = "";
 
-      const openCount = tickets.filter(t => t.status === "open").length;
+      // the nav badge counts every ticket, not just the ones the search shows
+      const openCount = armusAdminSupportTickets.filter(t => t.status === "open").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -5209,13 +5271,25 @@
       const fmt = iso => iso ? new Date(iso).toLocaleString(lang) : "—";
       const pay = data.payment || {};
       const student = data.student || {};
+      // this summary goes to the bank - named, not the stored codes
+      // ("no_show · upheld", "trial", "confirmed")
+      const reportStatuses = attendanceStatusLabels();
+      const paymentTypes = {
+        trial: armusT("admin.trialLessonType", "Deneme Dersi"),
+        lesson: armusT("admin.regularLessonType", "Ders"),
+        package: armusT("admin.packageType", "Paket"),
+      };
+      const lessonStatuses = {
+        confirmed: armusT("admin.lessonStatusConfirmed", "Onaylı"),
+        cancelled: armusT("admin.cancelledLabel", "İptal edildi{r}").replace("{r}", ""),
+      };
       const lessons = (data.lessons || []).map(l => `
         <tr>
           <td>${armusEscapeHtml(l.date)} ${armusEscapeHtml(l.time)} <small>(${armusEscapeHtml(l.timezone || "")})</small></td>
           <td>${armusEscapeHtml(l.teacher_name || "")}</td>
-          <td>${armusEscapeHtml(l.status)}</td>
-          <td>${(l.presence || []).map(p => `${p.role === "teacher" ? armusT("admin.colTeacher", "Öğretmen") : armusT("admin.colStudent", "Öğrenci")}: ${fmt(p.first_seen_at)} · ~${p.minutes} dk`).join("<br>") || armusT("admin.presenceNoneRecorded", "kayıt yok")}</td>
-          <td>${l.report ? armusEscapeHtml(`${l.report.type} · ${l.report.status}`) : "—"}</td>
+          <td>${armusEscapeHtml(lessonStatuses[l.status] || l.status)}</td>
+          <td>${(l.presence || []).map(p => `${p.role === "teacher" ? armusT("admin.colTeacher", "Öğretmen") : armusT("admin.colStudent", "Öğrenci")}: ${fmt(p.first_seen_at)} · ~${p.minutes} ${armusT("admin.minutesShort", "dk")}`).join("<br>") || armusT("admin.presenceNoneRecorded", "kayıt yok")}</td>
+          <td>${l.report ? `${attendanceTypeName(l.report.type)} · ${armusEscapeHtml(reportStatuses[l.report.status] || l.report.status)}` : "—"}</td>
           <td>${l.review ? `${"★".repeat(l.review.stars)} ${armusEscapeHtml(l.review.comment || "")}` : "—"}</td>
         </tr>
       `).join("");
@@ -5223,7 +5297,7 @@
       document.getElementById("detailBody").innerHTML = `
         <div class="app-details" style="margin-bottom:16px;">
           <div><h4>${armusT("admin.colStudent", "Öğrenci")}</h4><p>${armusEscapeHtml(student.name || "")}<br>${armusEscapeHtml(student.email || "")}<br>${armusT("admin.memberSince", "Üyelik:")} ${fmt(student.created_at)}</p></div>
-          <div><h4>${armusT("admin.paymentLabel", "Ödeme")}</h4><p>₺${armusEscapeHtml(String(pay.price))} · ${armusEscapeHtml(pay.type || "")}<br>${fmt(pay.created_at)}<br>iyzico: ${armusEscapeHtml(pay.iyzico_payment_id || "—")}<br>${armusT("admin.cardLabel", "Kart:")} ${armusEscapeHtml(pay.card_fingerprint || "—")}<br>${armusT("admin.consentLabel", "Cayma onayı:")} ${fmt(pay.withdrawal_consent_at)}</p></div>
+          <div><h4>${armusT("admin.paymentLabel", "Ödeme")}</h4><p>₺${armusEscapeHtml(String(pay.price))} · ${armusEscapeHtml(paymentTypes[pay.type] || pay.type || "")}<br>${fmt(pay.created_at)}<br>iyzico: ${armusEscapeHtml(pay.iyzico_payment_id || "—")}<br>${armusT("admin.cardLabel", "Kart:")} ${armusEscapeHtml(pay.card_fingerprint || "—")}<br>${armusT("admin.consentLabel", "Cayma onayı:")} ${fmt(pay.withdrawal_consent_at)}</p></div>
         </div>
         <table>
           <thead><tr><th>${armusT("admin.colDate", "Tarih")}</th><th>${armusT("admin.colTeacher", "Öğretmen")}</th><th>${armusT("admin.colStatus", "Durum")}</th><th>${armusT("admin.attendancePresence", "Derse kim, ne zaman girdi?")}</th><th>${armusT("admin.colReport", "Bildirim")}</th><th>${armusT("admin.colReview", "Değerlendirme")}</th></tr></thead>
@@ -5450,7 +5524,8 @@
       const badge = document.getElementById("messageReportsBadge");
       body.innerHTML = "";
 
-      const openCount = reports.filter(r => r.status === "open").length;
+      // the nav badge counts every report, not just the ones the search shows
+      const openCount = armusAdminMessageReports.filter(r => r.status === "open").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -5632,7 +5707,8 @@
       const badge = document.getElementById("disputesBadge");
       list.innerHTML = "";
 
-      const openCount = disputes.filter(d => d.status !== "resolved").length;
+      // the nav badge counts every dispute, not just the ones the search shows
+      const openCount = armusAdminDisputes.filter(d => d.status !== "resolved").length;
       if (openCount) {
         badge.textContent = openCount;
         badge.classList.add("visible");
@@ -5811,7 +5887,7 @@
       };
     }
 
-    function computeEarnings(teachers, bookings, credits) {
+    function computeEarnings(teachers, bookings, credits, withdrawals) {
       return teachers
         .filter(t => t.status === "approved")
         .map(teacher => {
@@ -5837,10 +5913,16 @@
           // withdrawable balance
           const heldGross = earned.filter(b => !armusIsPayoutReleased(b)).reduce((sum, b) => sum + earnable(b), 0);
           const heldPayout = Math.round(heldGross * (1 - tier.rate / 100));
+          // what was already sent to the teacher (a withdrawal marked
+          // paid) isn't payable again - a new request is checked against
+          // what's left, the same balance dashboard.html shows the teacher
+          const paidOut = (withdrawals || [])
+            .filter(w => w.teacher_id === teacher.id && w.status === "paid")
+            .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
           return {
             teacher, completedCount: completed.length, lateCancelCount: paidLateCancels.length, hours, gross,
             tier, commission, payout: gross - commission,
-            payableNow: (gross - commission) - heldPayout, heldPayout,
+            payableNow: Math.max(0, (gross - commission) - heldPayout - paidOut), heldPayout,
           };
         })
         .filter(row => row.completedCount > 0 || row.lateCancelCount > 0)
@@ -5968,9 +6050,8 @@
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "attendance_reports" }, payload => {
           const a = payload.new;
           const teacher = armusAdminProfiles.find(p => p.id === a.teacher_id);
-          const typeLabel = a.type === "no_show"
-            ? armusT("admin.attendanceTypeNoShow", "Derse gelmedi")
-            : armusT("admin.attendanceTypeLate", "Derse geç kaldı");
+          // a technical-problem report used to read "Derse geç kaldı"
+          const typeLabel = attendanceTypeName(a.type);
           pushPulseEvent("alert", armusT("admin.pulseAttendanceReport", "Devamsızlık bildirimi: <strong>{teacher}</strong> - {type}")
             .replace("{teacher}", armusEscapeHtml(teacher ? teacher.name : a.teacher_id)).replace("{type}", typeLabel));
         })
@@ -6333,7 +6414,7 @@
       const term = query.trim().toLowerCase();
       const all = buildPaletteIndex();
       armusPaletteResults = term
-        ? all.filter(item => item.label.toLowerCase().includes(term) || (item.sub || "").toLowerCase().includes(term)).slice(0, 30)
+        ? all.filter(item => String(item.label || "").toLowerCase().includes(term) || String(item.sub || "").toLowerCase().includes(term)).slice(0, 30)
         : all.slice(0, 12);
       armusPaletteActiveIndex = 0;
 
@@ -6371,10 +6452,14 @@
       const item = armusPaletteResults[armusPaletteActiveIndex];
       if (!item) return;
       closePalette();
-      const navBtn = document.querySelector(`[data-panel="${item.panel}"]`);
+      const navBtn = document.querySelector(`.nav-btn[data-panel="${item.panel}"]`);
       if (navBtn) navBtn.click();
       setTimeout(() => {
-        const target = document.querySelector(`[data-id="${item.id}"]`);
+        // inside the page just opened: the same id is also on the
+        // overview's "waiting" buttons and on a teacher's card in the
+        // profile-changes page, both hidden - the first match on the
+        // whole document was one of those, so nothing came into view
+        const target = document.querySelector(`#panel-${item.panel} [data-id="${CSS.escape(String(item.id))}"]`);
         if (target) {
           target.scrollIntoView({ behavior: "smooth", block: "center" });
           target.classList.add("kbd-focus");
@@ -6545,7 +6630,7 @@
       renderMessageReportsPanel(filteredMessageReports, profileById);
       renderTeacherReportsPanel(armusAdminTeacherReports, profileById);
       renderFlaggedReviewsPanel(computeFlaggedReviews(armusAdminReviews), teachers);
-      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits));
+      renderEarningsPanel(computeEarnings(teachers, armusAdminBookings, armusAdminCredits, armusAdminWithdrawalRequests));
       renderHeatmap(computeHeatmap(armusAdminBookings));
       renderCityBreakdown(computeCityBreakdown(armusAdminProfiles));
       // after every panel, so it reads their badges' counts
@@ -6609,44 +6694,89 @@
       ], rows);
     });
 
+    // The API returns at most 1000 rows per request (Supabase's max rows),
+    // whatever .limit() asks for - a plain select("*") of profiles or
+    // bookings silently stopped at the first 1000, and every count,
+    // list and earnings row past that was missing. A whole table is read
+    // page by page with .range(); build() makes a fresh query each time,
+    // ordered with id last so pages never overlap or skip a row.
+    const ARMUS_ADMIN_PAGE_SIZE = 1000;
+
+    async function armusAdminFetchAll(build, max = Infinity) {
+      const rows = [];
+      const seen = new Set();
+      while (rows.length < max) {
+        const want = Math.min(ARMUS_ADMIN_PAGE_SIZE, max - rows.length);
+        const { data, error } = await build().range(rows.length, rows.length + want - 1);
+        if (error) return rows.length ? { data: rows, error: null } : { data: null, error };
+        (data || []).forEach(row => {
+          // a row written while paging can shift a later page by one
+          if (row && row.id !== undefined) {
+            if (seen.has(row.id)) return;
+            seen.add(row.id);
+          }
+          rows.push(row);
+        });
+        if (!data || data.length < want) break;
+      }
+      return { data: rows, error: null };
+    }
+
+    // .in() puts every id in the URL - a long list is asked for in parts
+    async function armusAdminInChunks(ids, fetchChunk, size = 150) {
+      const list = [...new Set((ids || []).filter(Boolean))];
+      const parts = [];
+      for (let i = 0; i < list.length; i += size) parts.push(list.slice(i, i + size));
+      return Promise.all(parts.map(fetchChunk));
+    }
+
+    async function armusAdminLessonPresence(bookingIds) {
+      const parts = await armusAdminInChunks(bookingIds, ids => armusGetLessonPresence(ids).catch(() => ({})));
+      return Object.assign({}, ...parts);
+    }
+
     async function loadAll() {
 
-      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRes, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes, messageReportsRes] = await Promise.all([
-        armusSupabase.from("profiles").select("*"),
-        armusSupabase.from("bookings").select("*"),
-        armusSupabase.from("reviews").select("*"),
+      const all = (table, column, ascending = true) => armusAdminFetchAll(() =>
+        armusSupabase.from(table).select("*").order(column, { ascending }).order("id", { ascending: true }));
+
+      const [profilesRes, bookingsRaw, reviewsRes, logsRes, testimonialsRes, disputesRes, attendanceRaw, creditsRes, clientErrorsRes, conversationsRes, withdrawalsRes, supportTicketsRes, messageReportsRes, teacherReportsRes] = await Promise.all([
+        all("profiles", "created_at"),
+        all("bookings", "created_at"),
+        all("reviews", "created_at"),
         armusCanSeeAdminLog
-          ? armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).limit(3000)
+          ? armusAdminFetchAll(() => armusSupabase.from("admin_actions").select("*").order("created_at", { ascending: false }).order("id", { ascending: true }), 3000)
           : Promise.resolve({ data: [] }),
         armusAdminGetAllTestimonials(),
-        armusAdminGetAllDisputes(),
-        armusAdminGetAllAttendanceReports(),
-        armusSupabase.from("lesson_credits").select("*"),
+        all("disputes", "created_at", false),
+        all("attendance_reports", "created_at", false),
+        all("lesson_credits", "created_at"),
         armusSupabase.from("client_errors").select("*").order("created_at", { ascending: false }).limit(200),
         // list only - the messages/message_edit_history themselves are
         // fetched lazily per conversation (openConversationDetail) rather
         // than all at once here, since a busy inbox's full message history
         // could be large and the admin only ever needs to read one
         // conversation at a time
-        armusSupabase.from("conversations").select("*").order("created_at", { ascending: false }),
-        armusSupabase.from("withdrawal_requests").select("*").order("requested_at", { ascending: false }),
-        armusSupabase.from("support_tickets").select("*").order("updated_at", { ascending: false }),
-        armusAdminGetAllMessageReports(),
+        all("conversations", "created_at", false),
+        all("withdrawal_requests", "requested_at", false),
+        all("support_tickets", "updated_at", false),
+        // same rows armusAdminGetAllMessageReports reads, with the message
+        armusAdminFetchAll(() => armusSupabase.from("message_reports")
+          .select("*, message:messages(body, attachment_type, created_at)")
+          .order("created_at", { ascending: false }).order("id", { ascending: true })),
+        all("teacher_reports", "created_at", false),
       ]);
-      const [teacherReportsRes, presenceRes] = await Promise.all([
-        armusAdminGetTeacherReports().catch(() => []),
-        armusGetLessonPresence((attendanceRes || []).map(r => r.bookingId)).catch(() => ({})),
-      ]);
-      armusAdminTeacherReports = teacherReportsRes || [];
-      armusAdminPresence = presenceRes || {};
+      const attendanceRes = (attendanceRaw.data || []).map(armusMapAttendanceReportRow);
+      armusAdminTeacherReports = teacherReportsRes.data || [];
+      armusAdminPresence = await armusAdminLessonPresence(attendanceRes.map(r => r.bookingId));
 
       armusAdminProfiles = profilesRes.data || [];
       armusAdminBookings = (bookingsRaw.data || []).map(armusMapBookingRow);
       armusAdminReviews = reviewsRes.data || [];
       armusAdminLogs = logsRes.data || [];
       armusAdminTestimonials = testimonialsRes || [];
-      armusAdminDisputes = disputesRes || [];
-      armusAdminAttendanceReports = attendanceRes || [];
+      armusAdminDisputes = disputesRes.data || [];
+      armusAdminAttendanceReports = attendanceRes;
       // best-effort: client_errors (migration_72.sql) may not exist in
       // Supabase yet, same defensive pattern as admin_actions above
       armusAdminClientErrors = clientErrorsRes.data || [];
@@ -6657,7 +6787,7 @@
       armusAdminConversations = conversationsRes.data || [];
       armusAdminWithdrawalRequests = withdrawalsRes.data || [];
       armusAdminSupportTickets = supportTicketsRes.data || [];
-      armusAdminMessageReports = messageReportsRes || [];
+      armusAdminMessageReports = messageReportsRes.data || [];
 
       renderAllFromState();
     }

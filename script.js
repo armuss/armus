@@ -124,6 +124,24 @@ function armusInitHeroRotator(){
   const stack=document.querySelector('.teacher-stack');
   if(!stack||typeof TEACHERS==='undefined'||!TEACHERS.length)return;
   const cardEls=Array.from(stack.querySelectorAll('.teacher-card'));
+
+  // The card buttons only got a click handler from fillCard() below, i.e.
+  // once a card had rotated out and back in (10s+) - the four cards in
+  // the page's HTML had dead "Deneme Dersi Al" buttons until then, and
+  // forever with reduced motion (no rotation at all). Wire them to the
+  // teacher their portrait already shows (.portrait-<id>).
+  function wireCardButton(article,teacherId){
+    const btn=article.querySelector('.card-body button');
+    if(btn)btn.onclick=function(){
+      window.location.href='teacher?teacher='+encodeURIComponent(teacherId);
+    };
+  }
+  cardEls.forEach(article=>{
+    const portrait=article.querySelector('.portrait');
+    const match=portrait&&portrait.className.match(/portrait-([\w-]+)/);
+    if(match&&TEACHERS.some(t=>t.id===match[1]))wireCardButton(article,match[1]);
+  });
+
   if(cardEls.length<4)return;
 
   const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -143,9 +161,7 @@ function armusInitHeroRotator(){
     article.querySelector('.role-label').textContent=teacher.role;
     article.querySelector('.tags').innerHTML=teacher.tags.slice(0,3).map(t=>'<span>'+t+'</span>').join('');
     article.querySelector('.price').innerHTML='₺'+teacher.price+' <small>/ ders</small>';
-    article.querySelector('.card-body button').onclick=function(){
-      window.location.href='teacher?teacher='+encodeURIComponent(teacher.id);
-    };
+    wireCardButton(article,teacher.id);
   }
 
   const roles=['left','main','right','stage'];
@@ -156,7 +172,14 @@ function armusInitHeroRotator(){
 
   function applyRoles(){
     roleOrder.forEach((elIndex,roleIdx)=>{
-      cardEls[elIndex].className='teacher-card pos-'+roles[roleIdx];
+      const card=cardEls[elIndex];
+      card.className='teacher-card pos-'+roles[roleIdx];
+      // only the hidden staging card is out of reach - the one that
+      // started there used to keep aria-hidden/tabindex=-1 on screen
+      const hidden=roles[roleIdx]==='stage';
+      if(hidden)card.setAttribute('aria-hidden','true');else card.removeAttribute('aria-hidden');
+      const btn=card.querySelector('.card-body button');
+      if(btn){if(hidden)btn.setAttribute('tabindex','-1');else btn.removeAttribute('tabindex');}
     });
   }
 

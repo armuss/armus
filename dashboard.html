@@ -2484,16 +2484,29 @@
         bottom: 12px;
         transform: none;
         justify-content: space-between;
+        gap: 2px;
         padding: 6px;
         border-radius: 20px;
       }
 
+      /* "Uygunluk" / "Availability" are wider than their button on a
+         phone, and with nowrap they ran into the next label - they wrap
+         onto a second line instead (same as student-dashboard.html) */
       .nav-btn {
         flex: 1;
         min-width: 0;
         gap: 3px;
-        padding: 8px 2px;
+        padding: 8px 0;
         font-size: 10px;
+        line-height: 1.15;
+        white-space: normal;
+        text-align: center;
+      }
+
+      .nav-btn span {
+        max-width: 100%;
+        -webkit-hyphens: auto;
+        hyphens: auto;
       }
 
       .nav-btn svg {
@@ -2622,6 +2635,19 @@
       .presence-hint {
         order: 10;
         margin-left: 0;
+      }
+    }
+
+    /* seven dock buttons on a small phone are ~45px wide */
+    @media (max-width: 400px) {
+      .dock {
+        gap: 0;
+        padding: 6px 4px;
+      }
+
+      .nav-btn {
+        font-size: 9px;
+        letter-spacing: -0.1px;
       }
     }
   </style>

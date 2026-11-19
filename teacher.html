@@ -1167,7 +1167,6 @@
       const calPrevBtn = document.getElementById("calPrevBtn");
       const calNextBtn = document.getElementById("calNextBtn");
       const calExpandBtn = document.getElementById("calExpandBtn");
-      const CAL_DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
       // Preply-style peek: only show a handful of slots per day at first,
       // with a button below the whole grid to reveal the rest - a
       // popular teacher's fully-open availability can otherwise render
@@ -1222,7 +1221,8 @@
         days.forEach(date => {
 
           const dateKey = calToDateKey(date);
-          const allSlots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes).filter(s => s.available);
+          const allSlots = armusSlotsForDate(teacher, dateKey, date.getDay(), busyTimes)
+            .filter(s => s.available && !armusSlotHasStarted(dateKey, s.time, teacher.timezone));
           const slots = calExpanded ? allSlots : allSlots.slice(0, CAL_SLOT_PEEK);
           if (allSlots.length > slots.length) anyHidden = true;
 
@@ -1231,7 +1231,7 @@
           const header = document.createElement("div");
           header.className = "cal-day-header";
           header.innerHTML = `
-            <div class="cal-day-name">${CAL_DAY_NAMES[date.getDay()]}</div>
+            <div class="cal-day-name">${armusDayNames()[date.getDay()]}</div>
             <div class="cal-day-num">${date.getDate()}</div>
           `;
           col.appendChild(header);
@@ -1334,6 +1334,10 @@
       const CHECK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
       const shareBtn = document.getElementById("shareBtn");
+      // taken once: a second click inside the 1.5 seconds used to read the
+      // check mark as the icon to go back to, so it stuck on "copied"
+      const shareBtnIcon = shareBtn.innerHTML;
+      let shareResetTimer = null;
       shareBtn.addEventListener("click", async () => {
         if (navigator.share) {
           try { await navigator.share({ title: document.title, url: window.location.href }); }
@@ -1342,9 +1346,9 @@
         }
         try {
           await navigator.clipboard.writeText(window.location.href);
-          const original = shareBtn.innerHTML;
           shareBtn.innerHTML = CHECK_ICON_SVG;
-          setTimeout(() => { shareBtn.innerHTML = original; }, 1500);
+          clearTimeout(shareResetTimer);
+          shareResetTimer = setTimeout(() => { shareBtn.innerHTML = shareBtnIcon; }, 1500);
         } catch (e) {}
       });
 

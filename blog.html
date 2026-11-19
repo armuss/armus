@@ -203,6 +203,11 @@
       .bl-cta-btns, .bl-btn { width: 100%; }
       .bl-btn { justify-content: space-between; }
     }
+    /* the page's gutter is 11px here (styles.css .shell), so the bar's
+       -20px bleed went past the screen edge and the page scrolled sideways */
+    @media (max-width: 560px) {
+      .bl-filters { margin-left: -11px; margin-right: -11px; padding: 0 11px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .bl-feature .kb { animation: none; }
       .bl-cursor { display: none; }

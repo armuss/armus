@@ -972,7 +972,7 @@
 
     <div class="page-head">
       <h1 data-i18n="teachersPage.heading">Sana uygun İngilizce öğretmenini bul.</h1>
-      <p id="resultsCount" data-i18n="teachersPage.resultsCountInitial">6 öğretmen bulundu</p>
+      <p id="resultsCount">6 öğretmen bulundu</p>
       <p id="loadingNote" class="loading-note" data-i18n="teachersPage.loadingMore">Diğer öğretmenler yükleniyor…</p>
     </div>
 
@@ -982,7 +982,7 @@
         <button type="button" class="filter-trigger filter-box">
           <span class="filter-box-text">
             <span class="filter-box-label" data-i18n="teachersPage.whatToLearn">Ne öğrenmek istiyorum</span>
-            <span class="filter-box-value" id="subjectBoxValue" data-i18n="teachersPage.english">İngilizce</span>
+            <span class="filter-box-value" id="subjectBoxValue">İngilizce</span>
           </span>
           <span class="chev">▾</span>
         </button>
@@ -1018,7 +1018,7 @@
         <button type="button" class="filter-trigger filter-box">
           <span class="filter-box-text">
             <span class="filter-box-label" data-i18n="teachersPage.level">Seviye</span>
-            <span class="filter-box-value" id="levelBoxValue" data-i18n="teachersPage.all">Tümü</span>
+            <span class="filter-box-value" id="levelBoxValue">Tümü</span>
           </span>
           <span class="chev">▾</span>
         </button>
@@ -1033,16 +1033,16 @@
         <button type="button" class="filter-trigger filter-box">
           <span class="filter-box-text">
             <span class="filter-box-label" data-i18n="teachersPage.languages">Diller</span>
-            <span class="filter-box-value" id="langBoxValue" data-i18n="teachersPage.all">Tümü</span>
+            <span class="filter-box-value" id="langBoxValue">Tümü</span>
           </span>
           <span class="chev">▾</span>
         </button>
         <div class="filter-panel">
-          <label class="filter-option"><input type="checkbox" value="İngilizce" class="lang-filter"> <span data-i18n="teachersPage.langEnglish">İngilizce</span></label>
-          <label class="filter-option"><input type="checkbox" value="Türkçe" class="lang-filter"> <span data-i18n="teachersPage.langTurkish">Türkçe</span></label>
-          <label class="filter-option"><input type="checkbox" value="Almanca" class="lang-filter"> <span data-i18n="teachersPage.langGerman">Almanca</span></label>
-          <label class="filter-option"><input type="checkbox" value="Fransızca" class="lang-filter"> <span data-i18n="teachersPage.langFrench">Fransızca</span></label>
-          <label class="filter-option"><input type="checkbox" value="İspanyolca" class="lang-filter"> <span data-i18n="teachersPage.langSpanish">İspanyolca</span></label>
+          <label class="filter-option"><input type="checkbox" value="English" class="lang-filter"> <span data-i18n="teachersPage.langEnglish">İngilizce</span></label>
+          <label class="filter-option"><input type="checkbox" value="Turkish" class="lang-filter"> <span data-i18n="teachersPage.langTurkish">Türkçe</span></label>
+          <label class="filter-option"><input type="checkbox" value="German" class="lang-filter"> <span data-i18n="teachersPage.langGerman">Almanca</span></label>
+          <label class="filter-option"><input type="checkbox" value="French" class="lang-filter"> <span data-i18n="teachersPage.langFrench">Fransızca</span></label>
+          <label class="filter-option"><input type="checkbox" value="Spanish" class="lang-filter"> <span data-i18n="teachersPage.langSpanish">İspanyolca</span></label>
         </div>
       </div>
 
@@ -1444,6 +1444,7 @@
 
     const SUBJECT_LABELS = {
       English: ["teachersPage.langEnglish", "İngilizce"],
+      Turkish: ["teachersPage.langTurkish", "Türkçe"],
       German: ["teachersPage.langGerman", "Almanca"],
       French: ["teachersPage.langFrench", "Fransızca"],
       Spanish: ["teachersPage.langSpanish", "İspanyolca"],
@@ -1451,6 +1452,42 @@
       Arabic: ["teachersPage.langArabic", "Arapça"],
       Italian: ["teachersPage.langItalian", "İtalyanca"],
     };
+
+    const LEVEL_LABELS = {
+      "Başlangıç": ["teachersPage.levelBeginner", "Başlangıç"],
+      "Orta": ["teachersPage.levelIntermediate", "Orta"],
+      "İleri": ["teachersPage.levelAdvanced", "İleri"],
+    };
+
+    // A teacher's languages are free text: the demo teachers say
+    // "English / Türkçe", a registered teacher types whatever they like
+    // ("İngilizce", "English", "almanca"). The Diller filter used to
+    // compare its Turkish values and the Ders dili filter its English
+    // ones as plain substrings, so "İngilizce" matched none of the demo
+    // teachers and "Almanca" never matched a teacher who wrote it in
+    // Turkish. Every filter value now matches its Turkish and English
+    // names, folded to plain ASCII lowercase.
+    const LANGUAGE_NAMES = {
+      English: ["english", "ingilizce"],
+      Turkish: ["turkish", "turkce"],
+      German: ["german", "almanca", "deutsch"],
+      French: ["french", "fransizca", "francais"],
+      Spanish: ["spanish", "ispanyolca", "espanol"],
+      Russian: ["russian", "rusca"],
+      Arabic: ["arabic", "arapca"],
+      Italian: ["italian", "italyanca"],
+    };
+    function foldLanguageText(text) {
+      return String(text || "")
+        .replace(/[İI]/g, "i")
+        .toLowerCase()
+        .replace(/ı/g, "i")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    }
+    function teacherSpeaks(foldedLanguages, languageKey) {
+      return (LANGUAGE_NAMES[languageKey] || [foldLanguageText(languageKey)]).some(name => foldedLanguages.includes(name));
+    }
 
     function updateTeachers(options) {
       const resetPage = options && options.resetPage;
@@ -1489,7 +1526,7 @@
 
         const name = teacher.name.toLowerCase();
         const tags = teacher.tags.join(" ").toLowerCase();
-        const languages = (teacher.languages || "").toLowerCase();
+        const languages = foldLanguageText(teacher.languages);
         const price = Number(teacher.price);
 
         const matchesSearch =
@@ -1509,9 +1546,7 @@
 
         const matchesLangs =
           selectedLangs.length === 0 ||
-          selectedLangs.some(lang =>
-            languages.includes(lang.toLowerCase())
-          );
+          selectedLangs.some(lang => teacherSpeaks(languages, lang));
 
         // "English" matches ARMUS's whole current teacher base (every
         // teacher here teaches/speaks English) same as before this
@@ -1519,7 +1554,7 @@
         // matches a teacher who actually lists it (teacher.languages,
         // same field the Diller filter above already reads).
         const matchesSubject =
-          selectedSubject === "English" || languages.includes(selectedSubject.toLowerCase());
+          selectedSubject === "English" || teacherSpeaks(languages, selectedSubject);
 
         const matchesPrice =
           price >= minPrice && (maxPrice >= 1000 || price <= maxPrice);
@@ -1564,12 +1599,16 @@
       renderPagination(totalPages);
 
 
+      // these used to carry data-i18n too, so the re-translation that
+      // runs after a language switch (auth.js re-renders the nav, then
+      // calls armusApplyTranslations) put back a stale count ("6
+      // öğretmen bulundu") and "Tümü" over the picked filters
       count.textContent =
         armusT("teachersPage.resultsCount", "{n} öğretmen bulundu").replace("{n}", matches.length);
 
       // reflect the picked values on the row-1 boxes themselves
-      levelBoxValue.textContent = selectedLevels.length ? selectedLevels.join(", ") : armusT("teachersPage.all", "Tümü");
-      langBoxValue.textContent = selectedLangs.length ? selectedLangs.join(", ") : armusT("teachersPage.all", "Tümü");
+      levelBoxValue.textContent = selectedLevels.length ? selectedLevels.map(v => LEVEL_LABELS[v] ? armusT(...LEVEL_LABELS[v]) : v).join(", ") : armusT("teachersPage.all", "Tümü");
+      langBoxValue.textContent = selectedLangs.length ? selectedLangs.map(v => SUBJECT_LABELS[v] ? armusT(...SUBJECT_LABELS[v]) : v).join(", ") : armusT("teachersPage.all", "Tümü");
       subjectBoxValue.textContent = armusT(...SUBJECT_LABELS[selectedSubject]);
 
       // reflect active state on the filter triggers themselves

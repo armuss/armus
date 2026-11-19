@@ -837,6 +837,20 @@
       }
     }
 
+    /* the header's row was wider than a phone, so the whole page
+       scrolled sideways */
+    @media (max-width: 560px) {
+      .nav-inner {
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-find-tutor {
+        display: none;
+      }
+    }
+
     .report-modal-overlay {
       position: fixed;
       inset: 0;
@@ -1273,6 +1287,10 @@
       header.style.display = "flex";
       const avatarInner = armusSafeUrl(otherPhoto) ? `<img src="${armusSafeUrl(otherPhoto)}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;">` : "";
       header.innerHTML = `${avatarInner}<span>${escapeHtml(otherPartyDisplayName(otherName))}</span>`;
+      // the previous conversation's bubbles otherwise stay on screen under
+      // this one's name until loadThread() below gets its turn
+      document.getElementById("threadBody").innerHTML = "";
+      messagesById = {};
 
       document.getElementById("threadForm").style.display = "flex";
 
@@ -1685,6 +1703,10 @@
       messagesById = {};
 
       const messages = await armusGetMessages(conversationId);
+      // the user may have opened another conversation while this one's
+      // messages were loading - its thread has been cleared for that one
+      // by now, and these don't belong in it
+      if (activeConversationId !== conversationId) return;
 
       if (messages.length === 0) {
         body.innerHTML = `<div class="thread-placeholder">${armusT("messages.emptyThread", "Henüz mesaj yok, ilk mesajı sen gönder.")}</div>`;
@@ -1735,7 +1757,14 @@
       hideChatWarning();
       input.value = "";
 
-      const result = await armusSendMessage(activeConversationId, body);
+      // captured before the await: a message sent from one conversation
+      // was appended into whichever one was open when the send came back
+      const conversationId = activeConversationId;
+      const result = await armusSendMessage(conversationId, body);
+      if (activeConversationId !== conversationId) {
+        if (!result || result === "blocked") showChatWarning(armusT("messages.sendFailed", "Mesaj gönderilemedi. Lütfen tekrar dene."));
+        return;
+      }
 
       if (result === "blocked") {
         input.value = body;
@@ -1818,6 +1847,21 @@
 
     // ---- voice messages ----
 
+    // MediaRecorder records in whatever format the browser has: audio/webm
+    // (Chrome, Edge, Firefox), audio/mp4 (Safari, every iPhone browser) or
+    // audio/ogg (older Firefox). Every recording used to be labelled
+    // audio/webm and named .webm regardless, so an iPhone voice note -
+    // really MP4/AAC - was stored and served as webm and wouldn't play
+    // back in Safari. Keeps the recorder's real format, within what the
+    // chat-attachments bucket accepts.
+    function voiceFileFormat(recorderMime) {
+      const base = String(recorderMime || "").split(";")[0].trim().toLowerCase();
+      if (base === "audio/mp4" || base === "audio/aac" || base === "audio/x-m4a" || base === "video/mp4") return { mime: "audio/mp4", ext: "m4a" };
+      if (base === "audio/ogg") return { mime: "audio/ogg", ext: "ogg" };
+      if (base === "audio/mpeg") return { mime: "audio/mpeg", ext: "mp3" };
+      return { mime: "audio/webm", ext: "webm" };
+    }
+
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordingCancelled = false;
@@ -1870,6 +1914,7 @@
       recordedChunks = [];
       recordingCancelled = false;
       mediaRecorder = new MediaRecorder(stream);
+      const recorder = mediaRecorder;
 
       // captured now, at the moment recording STARTS, not re-read from
       // the shared activeConversationId once onstop runs - a recording
@@ -1898,13 +1943,14 @@
           return;
         }
 
-        const blob = new Blob(recordedChunks, { type: "audio/webm" });
+        const format = voiceFileFormat(recorder.mimeType || (recordedChunks[0] && recordedChunks[0].type));
+        const blob = new Blob(recordedChunks, { type: format.mime });
         if (blob.size > 15 * 1024 * 1024) {
           showChatWarning(armusT("messages.recordingTooBig", "Ses kaydı çok büyük, daha kısa bir kayıt dene."));
           return;
         }
 
-        const file = new File([blob], "voice-message.webm", { type: "audio/webm" });
+        const file = new File([blob], `voice-message.${format.ext}`, { type: format.mime });
         const uploaded = await armusUploadChatAttachment(file, conversationIdAtStart);
 
         if (!uploaded) {

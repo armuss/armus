@@ -360,7 +360,20 @@
       btn.textContent = originalLabel;
 
       if (error || !data || !data.ok) {
-        errorBox.textContent = (data && data.error) || "Mesajın gönderilemedi. Lütfen tekrar dene.";
+        // send-contact-email answers every refusal (too many messages,
+        // a missing field, ...) with a non-2xx status, which
+        // functions.invoke reports as { data: null, error } with the
+        // server's JSON on error.context - so its reason never showed,
+        // only the generic line (in Turkish, on the English page too).
+        // auth.js's armusEdgeErrorMessage isn't loaded here.
+        let serverReason = null;
+        try {
+          if (error && error.context && typeof error.context.json === "function") {
+            const body = await error.context.json();
+            serverReason = body && body.error;
+          }
+        } catch (err) {}
+        errorBox.textContent = serverReason || (data && data.error) || armusT("contact.sendFailed", "Mesajın gönderilemedi. Lütfen tekrar dene.");
         errorBox.style.display = "block";
         return;
       }

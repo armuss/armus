@@ -42,6 +42,21 @@ async function armusAddVocabEntry(studentId, term, meaning, category) {
   return data;
 }
 
+// class.html's mid-lesson "Kelime Ekle", for either participant. The
+// teacher may INSERT into the student's vault (vocab_entries_insert_teacher,
+// migration_21.sql) but has no SELECT policy on it, so asking for the
+// new row back (armusAddVocabEntry's .select()) made PostgREST refuse
+// the whole insert under RLS - a teacher's pin was never saved, and
+// nothing said so. Returns true/false; no row is read back.
+async function armusPinVocabEntry(studentId, term, meaning) {
+
+  const { error } = await armusSupabase
+    .from("vocab_entries")
+    .insert({ student_id: studentId, term, meaning, category: "Genel" });
+
+  return !error;
+}
+
 async function armusDeleteVocabEntry(id) {
   const { error } = await armusSupabase.from("vocab_entries").delete().eq("id", id);
   return !error;

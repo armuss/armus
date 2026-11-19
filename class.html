@@ -285,6 +285,17 @@
       gap: 8px;
     }
 
+    .vocab-pin-error {
+      margin: 0;
+      color: var(--armus-red-on-dark);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .vocab-pin-error[hidden] {
+      display: none;
+    }
+
     .vocab-pin-actions .btn {
       padding: 7px 12px;
       font-size: 12px;
@@ -483,6 +494,7 @@
         <form class="vocab-pin-form" id="vocabPinForm" hidden>
           <input type="text" id="vocabTermInput" placeholder="Kelime" required data-i18n-placeholder="class.wordPlaceholder">
           <input type="text" id="vocabMeaningInput" placeholder="Anlamı" required data-i18n-placeholder="class.meaningPlaceholder">
+          <p class="vocab-pin-error" id="vocabPinError" role="alert" hidden></p>
           <div class="vocab-pin-actions">
             <button type="submit" class="btn btn-light" data-i18n="class.add">Ekle</button>
             <button type="button" class="btn" id="vocabPinCancel" data-i18n="class.cancel">İptal</button>
@@ -842,28 +854,42 @@
       });
 
       document.getElementById("vocabPinCancel").addEventListener("click", () => {
+        document.getElementById("vocabPinError").hidden = true;
         vocabPinForm.reset();
         vocabPinForm.hidden = true;
         vocabPinBtn.hidden = false;
       });
 
+      const vocabPinError = document.getElementById("vocabPinError");
+      let vocabPinSaving = false;
+
       vocabPinForm.addEventListener("submit", async event => {
         event.preventDefault();
+        if (vocabPinSaving) return;
 
         const term = document.getElementById("vocabTermInput").value.trim();
         const meaning = document.getElementById("vocabMeaningInput").value.trim();
         if (!term || !meaning) return;
 
-        const saved = await armusAddVocabEntry(booking.studentId, term, meaning);
+        // the form used to close whether or not the word was saved, so a
+        // failed save (every teacher's pin, before armusPinVocabEntry)
+        // just vanished - now it stays open with the words and says so
+        vocabPinSaving = true;
+        vocabPinError.hidden = true;
+        const saved = await armusPinVocabEntry(booking.studentId, term, meaning).catch(() => false);
+        vocabPinSaving = false;
+
+        if (!saved) {
+          vocabPinError.textContent = armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene.");
+          vocabPinError.hidden = false;
+          return;
+        }
 
         vocabPinForm.reset();
         vocabPinForm.hidden = true;
         vocabPinBtn.hidden = false;
-
-        if (saved) {
-          vocabPinToast.hidden = false;
-          setTimeout(() => { vocabPinToast.hidden = true; }, 2200);
-        }
+        vocabPinToast.hidden = false;
+        setTimeout(() => { vocabPinToast.hidden = true; }, 2200);
       });
 
       // ---- leaving: a quick review (student) or private note (teacher)
