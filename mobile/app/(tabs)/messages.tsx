@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
@@ -16,21 +16,48 @@ export default function Messages() {
   const { profile } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const focused = useRef(false);
 
   // The other participant in any conversation here is a teacher exactly
   // when the viewer is a student (conversations are always
   // student<->teacher) - so their full name never shows, only "Ahmet Y.".
   const displayName = (name: string) => (profile?.role === 'student' ? shortDisplayName(name) : capitalizeName(name));
 
+  const load = useCallback(async () => {
+    if (!profile) return;
+    const data = await getConversations(profile.id);
+    setLoading(false);
+    setRefreshing(false);
+    if (data === null) {
+      // a failed load used to show "no messages yet" - the list on screen
+      // stays, an empty one says it failed
+      setLoadError(true);
+      return;
+    }
+    setLoadError(false);
+    setConversations(data);
+  }, [profile]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!profile) return;
-      getConversations(profile.id).then((data) => {
-        setConversations(data);
-        setLoading(false);
-      });
-    }, [profile])
+      focused.current = true;
+      load();
+      return () => {
+        focused.current = false;
+      };
+    }, [load])
   );
+
+  // new messages that came in while the app was in the background show
+  // when it comes back, not only after switching tabs
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && focused.current) load();
+    });
+    return () => sub.remove();
+  }, [load]);
 
   return (
     // the title is fixed on plain red; the band's fade scrolls with the list
@@ -41,14 +68,43 @@ export default function Messages() {
       </View>
 
       {loading ? (
-        <View style={styles.list}>
+        // clipped: the band reaches 600px up and painted over the title
+        // while the list loaded
+        <View style={[styles.list, styles.clip]}>
           <ScrollBand height={0} />
           <ActivityIndicator color={colors.red} style={{ marginTop: 60 }} />
+        </View>
+      ) : loadError && !conversations.length ? (
+        <View style={[styles.list, styles.clip]}>
+          <ScrollBand height={0} />
+          <View style={styles.errorBox}>
+            <Text style={styles.emptyText}>{t("Mesajlar yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.")}</Text>
+            <View style={styles.emptyBtn}>
+              <Button
+                label={t("Tekrar dene")}
+                onPress={() => {
+                  setLoading(true);
+                  load();
+                }}
+              />
+            </View>
+          </View>
         </View>
       ) : (
         <FlatList
           extraData={t}
           style={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                load();
+              }}
+              tintColor={colors.red}
+              colors={[colors.red]}
+            />
+          }
           ListHeaderComponent={<ScrollBand height={conversations.length ? 40 : 0} />}
           data={conversations}
           keyExtractor={(item) => item.id}
@@ -68,7 +124,7 @@ export default function Messages() {
                 <Image source={{ uri: item.otherPhoto }} style={styles.avatar} />
               ) : (
                 <View style={[styles.avatar, styles.avatarFallback]}>
-                  <Text style={styles.avatarInitial}>{item.otherName[0]?.toUpperCase()}</Text>
+                  <Text style={styles.avatarInitial}>{(item.otherName || '?')[0]?.toUpperCase()}</Text>
                 </View>
               )}
               <View style={{ flex: 1 }}>
@@ -123,6 +179,7 @@ const styles = StyleSheet.create({
   // the status bar and title are plain red; the list paints the ground and carries the band
   safeRed: { flex: 1, backgroundColor: colors.red },
   list: { flex: 1, backgroundColor: colors.bg },
+  clip: { overflow: 'hidden' },
   headerBlock: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -220,5 +277,9 @@ const styles = StyleSheet.create({
   },
   emptyBtn: {
     width: '100%',
+  },
+  errorBox: {
+    paddingHorizontal: 20,
+    marginTop: 60,
   },
 });
