@@ -724,11 +724,26 @@ document.addEventListener("armus:langchange", armusRenderNavAuth);
 // them in sync. TOKEN_REFRESHED/USER_UPDATED/etc. are ignored on purpose
 // - a full nav re-render (another armusGetSession() round trip) isn't
 // needed for those, only for an actual sign-in/sign-out.
-armusSupabase.auth.onAuthStateChange((event) => {
-  if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-    // a real identity transition - the cached session (if any) is for
-    // whoever was signed in a moment ago, not anymore.
-    armusInvalidateSessionCache();
-    armusRenderNavAuth();
-  }
-});
+//
+// teachers.html loads this file before the Supabase SDK and
+// supabase-config.js (its card grid renders from local data first), so
+// armusSupabase may not exist yet when this runs - calling it straight
+// away threw "armusSupabase is not defined" on every load of that page
+// and the listener was never set up there. Wait for DOMContentLoaded in
+// that case; every classic script has run by then.
+function armusWatchAuthState() {
+  if (typeof armusSupabase === "undefined") return;
+  armusSupabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+      // a real identity transition - the cached session (if any) is for
+      // whoever was signed in a moment ago, not anymore.
+      armusInvalidateSessionCache();
+      armusRenderNavAuth();
+    }
+  });
+}
+if (typeof armusSupabase !== "undefined") {
+  armusWatchAuthState();
+} else {
+  document.addEventListener("DOMContentLoaded", armusWatchAuthState);
+}
