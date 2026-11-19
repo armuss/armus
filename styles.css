@@ -1191,6 +1191,13 @@ html.nav-sheet-open body {
   .hero h1 {
     font-size: 48px;
   }
+  /* "öğrenmenin" alone is ~7.3 times the font size wide - at 48px it no
+     longer fits a phone under ~414px and pushed the page sideways */
+  @media (max-width: 413px) {
+    .hero h1 {
+      font-size: 11.6vw;
+    }
+  }
   .features,
   .testimonial-grid {
     grid-template-columns: 1fr;

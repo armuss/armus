@@ -301,10 +301,19 @@
       color: var(--armus-muted);
     }
 
+    @media (max-width: 480px) {
+      .nav-find-tutor { display: none; }
+    }
+
     @media (max-width: 560px) {
       .logo { font-size: 24px; }
       .nav-utility { gap: 6px; }
       .help-btn { display: none; }
+      /* the header's row was wider than a phone, so the whole page
+         scrolled sideways */
+      .nav-inner { gap: 12px; }
+      .nav-buttons { gap: 6px; }
+      .nav-buttons .btn { padding: 9px 12px; font-size: 12px; }
       .ref-hero { padding: 28px 24px; }
       .ref-hero-stat { margin: 0 auto; }
       .ref-link-row { flex-direction: column; }
