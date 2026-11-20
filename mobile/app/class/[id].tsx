@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   BackHandler,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -667,6 +668,13 @@ export default function Class() {
           // the background): the video went blank for good - load it again
           onContentProcessDidTerminate={() => setWebViewKey((k) => k + 1)}
           onRenderProcessGone={() => setWebViewKey((k) => k + 1)}
+          // a link opened from the room (Jitsi's chat, its help pages) goes
+          // to the phone's browser: loaded in here it would replace the
+          // lesson and get the camera and microphone without asking
+          onOpenWindow={(e) => {
+            const url = e.nativeEvent.targetUrl;
+            if (/^https:\/\//i.test(url)) Linking.openURL(url).catch(() => {});
+          }}
           startInLoadingState
           renderLoading={() => (
             <View style={styles.videoLoading}>

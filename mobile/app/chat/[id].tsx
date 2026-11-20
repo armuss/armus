@@ -42,14 +42,28 @@ function formatMessageTime(iso: string) {
   return d.toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+const OWN_STORAGE = 'https://rwdxubadjbwdsmrmgmkr.supabase.co/storage/v1/object/public/';
+
 export default function Chat() {
   const t = useT();
-  const { id, otherName, otherPhoto } = useLocalSearchParams<{
+  const params = useLocalSearchParams<{
     id: string;
     otherName?: string;
     otherPhoto?: string;
   }>();
+  const { id } = params;
   const { profile } = useAuth();
+  // The name/photo in the link only fill the header until the conversation
+  // itself is read - an armus://chat/<id>?otherName=ARMUS%20Destek link
+  // made up by someone else would otherwise show any name and picture over
+  // their own messages. A photo from the link is only shown when it's a
+  // file of ARMUS's own storage (where every profile photo is).
+  const [other, setOther] = useState<{ name?: string; photo?: string }>(() => ({
+    name: typeof params.otherName === 'string' ? params.otherName : undefined,
+    photo: typeof params.otherPhoto === 'string' && params.otherPhoto.startsWith(OWN_STORAGE) ? params.otherPhoto : undefined,
+  }));
+  const otherName = other.name;
+  const otherPhoto = other.photo;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,9 +165,27 @@ export default function Chat() {
       .select('*')
       .eq('id', id)
       .maybeSingle()
-      .then(({ data }) => {
-        if (!data) return;
+      .then(({ data, error }) => {
+        if (!data) {
+          // not one of this user's conversations: nothing from the link stays
+          if (!error) setOther({});
+          return;
+        }
         const otherId = data.student_id === profile.id ? data.teacher_id : data.student_id;
+        // the other side as the database shows them (a teacher's name
+        // already short, "Ayşe Y.") - not as the link says
+        supabase
+          .from('masked_profiles')
+          .select('name, photo_url')
+          .eq('id', otherId)
+          .maybeSingle()
+          .then(({ data: person }) => {
+            if (!person) return;
+            setOther({
+              name: person.name || undefined,
+              photo: typeof person.photo_url === 'string' && /^https:\/\//i.test(person.photo_url) ? person.photo_url : undefined,
+            });
+          });
         hasBookingWithOtherParty(profile.id, profile.role, otherId).then(setCanShareContact);
         if (profile.role === 'student') {
           amIBlockedBy(otherId).then((isBlocked) => {
