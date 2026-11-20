@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnnouncementFrame from '../../components/AnnouncementBanner';
 import { teacherGate } from '../../components/TeacherStatusGate';
 import { needsEmailVerification, useAuth } from '../../lib/auth';
+import { syncOwnTimezone } from '../../lib/profile';
 import { supabase } from '../../lib/supabase';
 import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
@@ -107,9 +108,37 @@ function useTeacherPresence(teacherId: string | null) {
   }, [teacherId]);
 }
 
+// profiles.timezone follows the phone (lib/profile.ts syncOwnTimezone):
+// checked when the app opens and each time it comes back to the front -
+// a phone that crossed time zones while the app was in the background.
+function useOwnTimezoneSync(profile: { id: string; timezone?: string | null } | null, refreshProfile: () => Promise<void>) {
+  const latest = useRef(profile);
+  latest.current = profile;
+  const refresh = useRef(refreshProfile);
+  refresh.current = refreshProfile;
+  const id = profile?.id;
+  useEffect(() => {
+    if (!id) return;
+    const check = () => {
+      const current = latest.current;
+      if (!current) return;
+      syncOwnTimezone(current).then((changed) => {
+        // screens that read the zone (cancellations this month, earnings) see the new one
+        if (changed) refresh.current();
+      });
+    };
+    check();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') check();
+    });
+    return () => sub.remove();
+  }, [id]);
+}
+
 export default function TabsLayout() {
   const t = useT();
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, refreshProfile } = useAuth();
+  useOwnTimezoneSync(session ? profile : null, refreshProfile);
   // a teacher still waiting for approval, or with a closed account, isn't
   // listed for students (and a closed profile can't be written at all)
   const teacherPanelOpen = profile?.role === 'teacher' && !teacherGate(profile);
