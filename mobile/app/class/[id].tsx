@@ -40,6 +40,32 @@ import { useT } from '../../lib/i18n';
 
 type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'checkin' | 'review';
 
+// class.html's toolbar: no "invite", "embed" or "share link" buttons, so the
+// call's own UI doesn't hand the room's link to anyone past the two of them
+const JITSI_TOOLBAR = [
+  'microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection',
+  'hangup', 'profile', 'chat', 'raisehand', 'videoquality', 'filmstrip',
+  'tileview', 'settings', 'shortcuts',
+];
+
+// The meet.jit.si room, its settings in the URL's hash (Jitsi reads each
+// value as JSON, and only the keys on its URL whitelist). Opened in a phone
+// browser - which a WebView is to Jitsi - meet.jit.si first shows its
+// "get the Jitsi Meet app" page unless deep linking is off, and the old
+// `prejoinPageEnabled` key is no longer on the whitelist (the name-and-camera
+// page before joining kept showing).
+function jitsiRoomUrl(bookingId: string, displayName: string) {
+  const settings: [string, unknown][] = [
+    ['config.prejoinConfig.enabled', false],
+    ['config.disableDeepLinking', true],
+    ['config.deeplinking.disabled', true],
+    ['config.toolbarButtons', JITSI_TOOLBAR],
+    ['userInfo.displayName', displayName],
+  ];
+  const hash = settings.map(([key, value]) => `${key}=${encodeURIComponent(JSON.stringify(value))}`).join('&');
+  return `https://meet.jit.si/${roomNameForBooking(bookingId)}#${hash}`;
+}
+
 function formatClock(ms: number) {
   const totalSeconds = Math.max(0, Math.round(ms / 1000));
   const m = Math.floor(totalSeconds / 60);
@@ -434,9 +460,7 @@ export default function Class() {
       ? capitalizeName(profile.name)
       : shortDisplayName(profile.name)
     : 'ARMUS';
-  const roomUrl = `https://meet.jit.si/${roomNameForBooking(booking.id)}#config.prejoinPageEnabled=false&userInfo.displayName=%22${encodeURIComponent(
-    callName
-  )}%22`;
+  const roomUrl = jitsiRoomUrl(booking.id, callName);
 
   const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
 
