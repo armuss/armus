@@ -334,6 +334,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Dersten ayrıl': 'Leave the lesson',
   'Ayrıl': 'Leave',
   'Ders odası açılıyor…': 'Opening the lesson room…',
+  'Görüntülü ders bağlantısı yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.': "The video lesson couldn't be loaded. Check your internet connection and try again.",
   'Paneli kapat': 'Close panel',
   'Paneli aç': 'Open panel',
   'Kelimeler{0}': 'Words{0}',

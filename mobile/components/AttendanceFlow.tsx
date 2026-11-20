@@ -34,6 +34,12 @@ type Fields = {
 type Props = {
   booking: { id: string; teacherId: string };
   studentId: string;
+  /**
+   * false before the lesson's start time: the database takes no report
+   * until then (attendance_reports_insert_own_student), so "late" and
+   * "technical" only ended on a refused send
+   */
+  lessonStarted?: boolean;
   /** a "didn't show up" report opens 10 minutes after the start */
   noShowReady?: boolean;
   /** also offer "yes, it happened" */
@@ -51,7 +57,7 @@ type Props = {
  * (whose side, how many minutes were held - under 25 on the teacher's
  * side gives the lesson back).
  */
-export default function AttendanceFlow({ booking, studentId, noShowReady = true, askHappened, onHappened, onFiled, onCancel }: Props) {
+export default function AttendanceFlow({ booking, studentId, lessonStarted = true, noShowReady = true, askHappened, onHappened, onFiled, onCancel }: Props) {
   const t = useT();
   const [step, setStep] = useState<Step>({ kind: 'main' });
   const [minutesText, setMinutesText] = useState('');
@@ -244,9 +250,9 @@ export default function AttendanceFlow({ booking, studentId, noShowReady = true,
   return (
     <View style={styles.wrap}>
       {askHappened && <Choice icon="checkmark-circle-outline" label={t("Evet, ders yapıldı")} onPress={() => onHappened?.()} strong />}
-      <Choice icon="time-outline" label={t("Öğretmen geç geldi")} onPress={() => go({ kind: 'late' })} />
+      <Choice icon="time-outline" label={t("Öğretmen geç geldi")} onPress={() => go({ kind: 'late' })} disabled={!lessonStarted} />
       <Choice icon="warning-outline" label={t("Öğretmen derse gelmedi")} onPress={() => go({ kind: 'noShow' })} disabled={!noShowReady} />
-      <Choice icon="wifi-outline" label={t("Teknik bir sorun yaşandı")} onPress={() => go({ kind: 'technical' })} />
+      <Choice icon="wifi-outline" label={t("Teknik bir sorun yaşandı")} onPress={() => go({ kind: 'technical' })} disabled={!lessonStarted} />
       {!noShowReady && <Text style={styles.rule}>{t("Öğretmen hâlâ gelmediyse birkaç dakika sonra tekrar dene.")}</Text>}
       {onCancel && (
         <View style={styles.actions}>
