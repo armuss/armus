@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useRef, useState, type ComponentProps, type ReactNode } from 'react';
-import { Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useT } from '../lib/i18n';
+import { tr, useT } from '../lib/i18n';
 import type { Teacher } from '../lib/teachers-data';
 import { colors, fonts, radius } from '../lib/theme';
 
@@ -88,13 +88,14 @@ const LEVELS: [string, string][] = [
   ['İleri', 'C1–C2'],
 ];
 const TAGS = ['Konuşma', 'IELTS', 'TOEFL', 'YDS', 'İş İngilizcesi'];
-// a language and the ways a teacher's profile may write it
+// a language and the ways a teacher's profile may write it, already folded
+// (see fold) - the website's LANGUAGE_NAMES (teachers.html)
 const LANGS: [string, string[]][] = [
-  ['İngilizce', ['ingilizce', 'english']],
-  ['Türkçe', ['türkçe', 'turkce', 'turkish']],
-  ['Almanca', ['almanca', 'german', 'deutsch']],
-  ['Fransızca', ['fransızca', 'french', 'français', 'francais']],
-  ['İspanyolca', ['ispanyolca', 'spanish', 'español', 'espanol']],
+  ['İngilizce', ['english', 'ingilizce']],
+  ['Türkçe', ['turkish', 'turkce']],
+  ['Almanca', ['german', 'almanca', 'deutsch']],
+  ['Fransızca', ['french', 'fransizca', 'francais']],
+  ['İspanyolca', ['spanish', 'ispanyolca', 'espanol']],
 ];
 const SORTS: [Sort, string][] = [
   ['default', 'Önerilen'],
@@ -106,43 +107,114 @@ const SORTS: [Sort, string][] = [
 const blockKey = (start: string, end: string) => `${start}-${end}`;
 const blockLabel = (key: string) => key.split('-').map((x) => String(Number(x.slice(0, 2)))).join('-');
 
-// teachers.html teacherMatchesDayBlock: null when the teacher has no grid
-// to check (demo teachers, a new teacher) - they're not hidden over it
-function matchesDayBlock(t: Teacher, day: number, start: string, end: string): boolean | null {
-  let slots: string[];
-  const dates = t.availabilityDates as any;
-  if (dates && dates._set === true) slots = dates[String(day)] || [];
-  else if (t.weeklyAvailability) slots = t.weeklyAvailability[day] || [];
-  else return null;
-  return slots.some((time) => time >= start && time < end);
+// How far ahead of UTC a zone is right now, in minutes - kept for a few
+// minutes per zone, since the filter asks for every teacher on every tap
+const zoneOffsets = new Map<string, { at: number; minutes: number }>();
+function zoneOffsetMinutes(timeZone: string): number {
+  const now = Date.now();
+  const hit = zoneOffsets.get(timeZone);
+  if (hit && now - hit.at < 5 * 60000) return hit.minutes;
+  const at = new Date(Math.floor(now / 60000) * 60000);
+  let minutes: number;
+  try {
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+        .formatToParts(at)
+        .map((x) => [x.type, x.value])
+    );
+    const asUtc = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), p.hour === '24' ? 0 : Number(p.hour), Number(p.minute));
+    minutes = Math.round((asUtc - at.getTime()) / 60000);
+  } catch {
+    // an unknown zone name: read the grid as the viewer's own time
+    minutes = -at.getTimezoneOffset();
+  }
+  zoneOffsets.set(timeZone, { at: now, minutes });
+  return minutes;
 }
 
-function matchesAvailability(t: Teacher, f: Filters) {
-  if (!f.blocks.length && !f.days.length) return true;
-  const days = f.days.length ? f.days : [0, 1, 2, 3, 4, 5, 6];
-  const blocks = f.blocks.length ? f.blocks.map((k) => k.split('-')) : [['00:00', '24:00']];
-  for (const day of days) {
-    for (const [start, end] of blocks) {
-      const r = matchesDayBlock(t, day, start, end);
-      if (r === null || r === true) return true;
+const DAY_MIN = 24 * 60;
+const toMinutes = (hhmm: string) => {
+  const [h, m] = String(hhmm).split(':').map(Number);
+  return h * 60 + (m || 0);
+};
+
+// The teacher's weekly grid (teachers.html teacherMatchesDayBlock's
+// precedence: a saved availability_dates grid, else weekly_availability),
+// as [day, minute] pairs in the VIEWER's own week. The grid is wall-clock
+// time in the teacher's zone, while the booking screen shows every time in
+// the student's own ("Saatler senin saat dilimine göre") - read as-is, a
+// student abroad (or a teacher abroad) filtering for evenings got teachers
+// free hours away from them. Null when there's no grid to check (demo
+// teachers, a new teacher) - they're not hidden over it.
+function viewerWeekSlots(t: Teacher): [number, number][] | null {
+  const dates = t.availabilityDates as any;
+  let slotsOf: (day: number) => unknown;
+  if (dates && dates._set === true) slotsOf = (day) => dates[String(day)];
+  else if (t.weeklyAvailability) slotsOf = (day) => t.weeklyAvailability![day];
+  else return null;
+  const shift = -new Date().getTimezoneOffset() - zoneOffsetMinutes(t.timezone || 'Europe/Istanbul');
+  const week = 7 * DAY_MIN;
+  const out: [number, number][] = [];
+  for (let day = 0; day < 7; day++) {
+    const slots = slotsOf(day);
+    if (!Array.isArray(slots)) continue;
+    for (const time of slots) {
+      const m = toMinutes(time);
+      if (!Number.isFinite(m)) continue;
+      const at = (((day * DAY_MIN + m + shift) % week) + week) % week;
+      out.push([Math.floor(at / DAY_MIN), at % DAY_MIN]);
     }
   }
-  return false;
+  return out;
 }
 
-// search text compared without caring about case or the Turkish dotted /
-// dotless i ("IELTS", "ielts" and "ıelts" all match)
-const fold = (x: string) => x.replace(/[İIı]/g, 'i').toLowerCase();
+// teachers.html teacherMatchesAvailability: any picked day with a slot in
+// any picked block (nothing picked on one side = no limit on it)
+function matchesAvailability(t: Teacher, f: Filters) {
+  if (!f.blocks.length && !f.days.length) return true;
+  const slots = viewerWeekSlots(t);
+  if (!slots) return true;
+  const blocks = f.blocks.length ? f.blocks.map((k) => k.split('-').map(toMinutes)) : [[0, DAY_MIN]];
+  return slots.some(([day, m]) => (!f.days.length || f.days.includes(day)) && blocks.some(([start, end]) => m >= start && m < end));
+}
+
+// Search and language text compared without caring about case, the
+// Turkish dotted / dotless i or accents ("IELTS", "ielts" and "ıelts";
+// "ayse" and "Ayşe"; "Français" and "francais") - the website's
+// foldLanguageText (teachers.html). The letter map covers an engine
+// without String.normalize.
+const PLAIN: Record<string, string> = { ç: 'c', ğ: 'g', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i', û: 'u' };
+function fold(x: string | null | undefined) {
+  let s = String(x || '')
+    .replace(/[İI]/g, 'i')
+    .toLowerCase()
+    .replace(/ı/g, 'i');
+  try {
+    s = s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  } catch {}
+  return s.replace(/[çğöşüâîû]/g, (c) => PLAIN[c]);
+}
 
 export function matchesFilters(t: Teacher, f: Filters, favoriteIds: string[]) {
   const q = fold(f.query.trim());
   const tags = fold(t.tags.join(' '));
-  const langs = fold(t.languages || '');
+  const langs = fold(t.languages);
   const price = Number(t.price);
-  if (q && !(fold(t.name).includes(q) || tags.includes(q) || fold(t.role).includes(q) || fold(t.specialties.join(' ')).includes(q))) return false;
+  // the card shows the topic in the app's language ("Speaking" for
+  // "Konuşma"), so the search finds it by that word too
+  const searchText = fold([t.name, t.role, tr(t.role), ...t.tags, ...t.tags.map((x) => tr(x)), ...t.specialties].join(' '));
+  if (q && !searchText.includes(q)) return false;
   if (f.tags.length && !f.tags.some((tag) => tags.includes(fold(tag)))) return false;
   if (f.levels.length && !f.levels.includes(t.level)) return false;
-  if (f.langs.length && !f.langs.some((l) => (LANGS.find(([k]) => k === l)?.[1] || [l]).some((w) => langs.includes(fold(w)))))
+  if (f.langs.length && !f.langs.some((l) => (LANGS.find(([k]) => k === l)?.[1] || [fold(l)]).some((w) => langs.includes(w))))
     return false;
   if (price < f.priceMin || (f.priceMax < PRICE_TOP && price > f.priceMax)) return false;
   if (f.favoritesOnly && !favoriteIds.includes(t.id)) return false;
@@ -227,7 +299,12 @@ export function FilterBar({
         {chips.map((c) => (
           <Pressable
             key={c.kind}
-            onPress={() => setOpen(c.kind)}
+            onPress={() => {
+              // the search field's keyboard stayed up over the sheet and
+              // hid its "göster" button
+              Keyboard.dismiss();
+              setOpen(c.kind);
+            }}
             style={({ pressed }) => [styles.chip, c.on && styles.chipOn, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
           >
@@ -379,7 +456,9 @@ function FilterSheet({
             );
           })}
         </View>
-        <Text style={styles.note}>{t('Öğretmenin kendi haftalık programına göre.')}</Text>
+        <Text style={styles.note}>
+          {t('Öğretmenin kendi haftalık programına göre.')} {t('Saatler senin saat dilimine göre.')}
+        </Text>
       </>
     );
   } else if (kind === 'level' || kind === 'tags' || kind === 'langs') {
@@ -529,7 +608,7 @@ function RangeSlider({
       {...responder.panHandlers}
       accessibilityRole="adjustable"
       accessibilityLabel={t('Ders ücreti')}
-      accessibilityValue={{ text: `₺${low} – ₺${high}` }}
+      accessibilityValue={{ text: `${money(low)} – ${money(high, true)}` }}
     >
       <View style={styles.track} pointerEvents="none" />
       <View style={[styles.trackOn, { left: toX(low), width: Math.max(0, toX(high) - toX(low)) }]} pointerEvents="none" />
