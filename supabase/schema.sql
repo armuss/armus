@@ -679,6 +679,8 @@ create policy "referrals_insert_self"
 -- caller any broader read access to that profile's row (name, email,
 -- etc stay invisible - register.html only ever gets the id back, just
 -- enough to file the referrals insert above).
+-- migration_124.sql: the code's real owner first (the code is derived
+-- from the owner's id), then the oldest account - never an arbitrary row
 create or replace function public.resolve_referral_code(code text)
 returns uuid
 language sql
@@ -686,7 +688,10 @@ security definer
 stable
 set search_path = public
 as $$
-  select id from profiles where referral_code = upper(code) limit 1;
+  select id from profiles
+  where referral_code = upper(code)
+  order by (referral_code = upper(left(replace(id::text, '-', ''), 10))) desc, created_at
+  limit 1;
 $$;
 
 grant execute on function public.resolve_referral_code(text) to anon, authenticated;
@@ -1002,6 +1007,37 @@ create trigger profiles_enforce_owner_lock
   before update on profiles
   for each row execute procedure public.enforce_owner_lock();
 
+-- migration_124.sql: the headers every trigger / cron call to an Edge
+-- Function sends. The x-armus-trigger-secret proves the call comes from
+-- this database (the functions compare it with their TRIGGER_SECRET). It
+-- used to be written here as a literal - in a public repository - so it
+-- now lives in Supabase Vault only; before running this file:
+--   select vault.create_secret('<a new random value>', 'armus_trigger_secret');
+-- and give the Edge Functions the same value as TRIGGER_SECRET. Only the
+-- database itself (the security-definer triggers below, cron) calls this.
+create or replace function public.armus_trigger_headers()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_secret text;
+begin
+  select decrypted_secret into v_secret
+    from vault.decrypted_secrets
+    where name = 'armus_trigger_secret'
+    limit 1;
+  return jsonb_build_object(
+    'Content-Type', 'application/json',
+    'x-armus-trigger-secret', coalesce(v_secret, '')
+  );
+end;
+$$;
+
+revoke all on function public.armus_trigger_headers() from public, anon, authenticated;
+
 -- migration_63.sql: emails a teacher applicant when their status changes
 -- to approved or rejected - covers both admin.html's single approve/
 -- reject buttons and its bulk action (both are a plain profiles.update,
@@ -1022,7 +1058,7 @@ begin
   if new.status in ('approved', 'rejected') then
     perform net.http_post(
       url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-teacher-status-email',
-      headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+      headers := public.armus_trigger_headers(),
       body := jsonb_build_object('profile_id', new.id, 'status', new.status)
     );
   end if;
@@ -1126,7 +1162,7 @@ as $$
 begin
   perform net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-review-notification',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := jsonb_build_object('review_id', new.id)
   );
   return new;
@@ -1572,13 +1608,39 @@ grant execute on function public.conversation_previews() to anon, authenticated;
 -- have a booking together - see migration_16.sql for the full reasoning.
 -- A cancelled booking doesn't count (migration_36.sql) - otherwise
 -- booking-then-cancelling would permanently unlock this for free.
+-- migration_124.sql: it also runs on an edit (the 2-minute "Düzenle"
+-- used to turn a sent "merhaba" into a phone number with no check), and
+-- an attachment must be a file in this conversation's own
+-- chat-attachments folder - a bare https:// let a direct API call send
+-- https://wa.me/... as an "image" that opens on a tap.
 create or replace function public.enforce_no_contact_sharing()
 returns trigger
 language plpgsql
 as $$
 declare
   already_booked boolean;
+  v_attachment_prefix text;
 begin
+
+  -- an edit that leaves the text and the attachment as they were (or
+  -- any other update that names those columns) is not checked again
+  if tg_op = 'UPDATE'
+     and new.body is not distinct from old.body
+     and new.attachment_url is not distinct from old.attachment_url then
+    return new;
+  end if;
+
+  -- an attachment is a file uploaded into this conversation's own folder
+  -- of the chat-attachments bucket (armusUploadChatAttachment,
+  -- messages.js) - never a link to somewhere else
+  if new.attachment_url is not null then
+    v_attachment_prefix := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/storage/v1/object/public/chat-attachments/'
+      || new.conversation_id::text || '/';
+    if left(new.attachment_url, length(v_attachment_prefix)) <> v_attachment_prefix
+       or position('..' in new.attachment_url) > 0 then
+      raise exception 'attachment_url_invalid: an attachment must be a file uploaded to this conversation';
+    end if;
+  end if;
 
   select exists (
     select 1
@@ -1605,7 +1667,7 @@ end;
 $$;
 
 create trigger messages_block_contact_sharing
-  before insert on messages
+  before insert or update of body, attachment_url on messages
   for each row execute procedure public.enforce_no_contact_sharing();
 
 -- migration_62.sql: emails whichever participant did NOT send this
@@ -1627,7 +1689,7 @@ as $$
 begin
   perform net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-message-notification',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := jsonb_build_object('message_id', new.id)
   );
   -- migration_98.sql: a second, independent notification for the same
@@ -1635,7 +1697,7 @@ begin
   -- subscribed from (push_subscriptions), on top of the email above.
   perform net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-push-notification',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := jsonb_build_object('type', 'message_new', 'message_id', new.id)
   );
   return new;
@@ -2420,7 +2482,7 @@ begin
   while i <= n loop
     perform net.http_post(
       url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/notify-lessons-cancelled',
-      headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+      headers := public.armus_trigger_headers(),
       body := jsonb_build_object('booking_ids', to_jsonb(p_booking_ids[i:i + 499]), 'reason', 'teacher_no_show')
     );
     i := i + 500;
@@ -3019,7 +3081,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-lesson-reminder',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := jsonb_build_object('booking_id', b.id)
   )
   from bookings b
@@ -3050,7 +3112,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-review-reminder',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := jsonb_build_object('booking_id', b.id)
   )
   from bookings b
@@ -3074,7 +3136,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/payment-callback',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := '{"action": "reconcile"}'::jsonb
   )
   where exists (
@@ -3262,13 +3324,19 @@ grant select on public.masked_profiles to anon, authenticated;
 -- view instead, which reuses short_display_name() the same way
 -- masked_profiles does. Review rows themselves stay fully public (no
 -- WHERE clause here) - only the name column's content changes.
+-- migration_124.sql: the reviewer's account id and the booking id are
+-- only shown to the reviewer, the reviewed teacher and admins too.
 create or replace view public.masked_reviews
 as
 select
   r.id,
-  r.booking_id,
+  case
+    when auth.uid() = r.student_id or auth.uid()::text = r.teacher_id or public.is_admin() then r.booking_id
+  end as booking_id,
   r.teacher_id,
-  r.student_id,
+  case
+    when auth.uid() = r.student_id or auth.uid()::text = r.teacher_id or public.is_admin() then r.student_id
+  end as student_id,
   case
     when auth.uid() = r.student_id then r.student_name
     when auth.uid()::text = r.teacher_id then r.student_name
@@ -3610,7 +3678,7 @@ as $$
 begin
   perform net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/send-push-notification',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := jsonb_build_object('type', 'booking_new', 'booking_id', new.id)
   );
   return new;
@@ -3901,7 +3969,7 @@ begin
      ) then
     perform net.http_post(
       url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/notify-lessons-cancelled',
-      headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+      headers := public.armus_trigger_headers(),
       body := jsonb_build_object('booking_ids', to_jsonb(cancelled_ids), 'reason', 'teacher_banned', 'teacher_id', new.id)
     );
   end if;
@@ -4254,7 +4322,7 @@ as $$
 begin
   perform net.http_post(
     url := 'https://rwdxubadjbwdsmrmgmkr.supabase.co/functions/v1/policy-notices',
-    headers := '{"Content-Type": "application/json", "x-armus-trigger-secret": "053fe0b45c511da9f45e22f09f345d0e2ff74f84eada181a632ddb0737f0ec34"}'::jsonb,
+    headers := public.armus_trigger_headers(),
     body := p_body
   );
 end;
@@ -4281,6 +4349,16 @@ begin
      or new.account_locked_reason is distinct from old.account_locked_reason
      or new.account_locked_at is distinct from old.account_locked_at then
     raise exception 'policy_lock: these fields can only be changed by an admin';
+  end if;
+
+  -- migration_124.sql: set once at signup (handle_new_user) and never
+  -- written again by the site or the app. A copied referral_code could
+  -- take a friend's sign-up (and the free lesson) from the code's real
+  -- owner; a created_at moved back skipped the email-code gate, which
+  -- only applies to accounts created from 29 Sep 2026 on.
+  if new.referral_code is distinct from old.referral_code
+     or new.created_at is distinct from old.created_at then
+    raise exception 'identity_lock: referral_code and created_at cannot be changed';
   end if;
 
   return new;
