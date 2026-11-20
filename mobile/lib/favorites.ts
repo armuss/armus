@@ -1,10 +1,38 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { supabase } from './supabase';
+
 // A personal, per-device convenience (like a bookmark) - mirrors
 // favorites.js on the web, which keeps this in localStorage rather than
 // the database since it doesn't need to sync across devices or be
 // visible to anyone else.
 const KEY = 'armus_favorite_teachers';
+
+// One list per person signed in on this phone: with a single list, whoever
+// signed in after someone else saw (and changed) that person's favourite
+// teachers. The list kept from before goes to the first account that opens
+// its favourites here - in practice the phone's owner.
+async function storageKey(): Promise<string> {
+  let uid: string | undefined;
+  try {
+    const { data } = await supabase.auth.getSession();
+    uid = data.session?.user.id;
+  } catch {
+    uid = undefined;
+  }
+  if (!uid) return KEY;
+  const own = `${KEY}:${uid}`;
+  try {
+    const legacy = await AsyncStorage.getItem(KEY);
+    if (legacy !== null) {
+      if ((await AsyncStorage.getItem(own)) === null) await AsyncStorage.setItem(own, legacy);
+      await AsyncStorage.removeItem(KEY);
+    }
+  } catch {
+    // the old list just stays where it was
+  }
+  return own;
+}
 
 // Every change reads the list, edits it and writes it back - unlike the
 // website's synchronous localStorage, AsyncStorage awaits in between, so
@@ -15,12 +43,12 @@ let queue: Promise<unknown> = Promise.resolve();
 
 export async function getFavorites(): Promise<string[]> {
   await queue;
-  return readFavorites();
+  return readFavorites(await storageKey());
 }
 
-async function readFavorites(): Promise<string[]> {
+async function readFavorites(key: string): Promise<string[]> {
   try {
-    const raw = await AsyncStorage.getItem(KEY);
+    const raw = await AsyncStorage.getItem(key);
     const list = raw ? JSON.parse(raw) : [];
     return Array.isArray(list) ? list.filter((id) => typeof id === 'string') : [];
   } catch {
@@ -35,10 +63,11 @@ export async function isFavorite(teacherId: string): Promise<boolean> {
 
 function change(edit: (favorites: string[]) => boolean): Promise<boolean> {
   const run = queue.then(async () => {
-    const favorites = await readFavorites();
+    const key = await storageKey();
+    const favorites = await readFavorites(key);
     const nowFavorited = edit(favorites);
     try {
-      await AsyncStorage.setItem(KEY, JSON.stringify(favorites));
+      await AsyncStorage.setItem(key, JSON.stringify(favorites));
     } catch {
       // storage full/unavailable - favoriting silently no-ops
     }
