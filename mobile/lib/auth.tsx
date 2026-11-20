@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import { unregisterPushNotifications } from './push';
 import { supabase } from './supabase';
@@ -61,37 +62,68 @@ const AuthContext = createContext<AuthState>({
   deleteAccount: async () => ({ ok: false, error: tr("Giriş yapmalısın.") }),
 });
 
+// The same row read again: only a teacher's presence beat (last_active_at,
+// written every 2 minutes) differs, which no screen shows for oneself.
+function sameProfile(a: Profile, b: Profile): boolean {
+  const strip = ({ last_active_at, ...rest }: any) => rest;
+  return JSON.stringify(strip(a)) === JSON.stringify(strip(b));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const t = useT();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  // whose session this is now: a profile read that answers after a sign-out,
+  // or after someone else signed in on this phone, must not land on them
+  const userIdRef = useRef<string | null>(null);
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-    setProfile((data as Profile) ?? null);
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (userIdRef.current !== userId) return;
+    // a failed read (no network) keeps the profile we have - wiping it turned
+    // a teacher into a student and back until the next successful read
+    if (error) return;
+    const next = (data as Profile) ?? null;
+    // the same data keeps the same object, so the screens' effects that
+    // depend on the profile don't all reload for nothing
+    setProfile((prev) => (prev && next && sameProfile(prev, next) ? prev : next));
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (data.session) {
-        loadProfile(data.session.user.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
-
+    // INITIAL_SESSION (the session restored from the phone, or none) first,
+    // then every sign-in, token refresh and sign-out
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const nextId = nextSession?.user.id ?? null;
       setSession(nextSession);
-      if (nextSession) {
-        loadProfile(nextSession.user.id);
-      } else {
+      if (!nextId) {
+        userIdRef.current = null;
         setProfile(null);
+        setLoading(false);
+        return;
       }
+      if (nextId === userIdRef.current) return; // a token refresh: same person, same profile
+      // someone (else) signed in: the app waits for their profile, so a
+      // teacher never sees the student tabs first and a new account the
+      // app before its email code
+      userIdRef.current = nextId;
+      setProfile(null);
+      setLoading(true);
+      loadProfile(nextId).finally(() => {
+        if (userIdRef.current === nextId) setLoading(false);
+      });
     });
 
-    return () => sub.subscription.unsubscribe();
+    // back in the app: read the profile again (an approval, a ban, or a
+    // first read that failed offline); unchanged, it stays the same object
+    const appState = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && userIdRef.current) loadProfile(userIdRef.current);
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+      appState.remove();
+    };
   }, []);
 
   return (
@@ -106,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await supabase.auth.signOut();
         },
         refreshProfile: async () => {
-          if (session) await loadProfile(session.user.id);
+          if (userIdRef.current) await loadProfile(userIdRef.current);
         },
         deleteAccount: async () => {
           const { data, error } = await supabase.functions.invoke('delete-account');
