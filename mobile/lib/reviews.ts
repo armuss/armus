@@ -52,6 +52,11 @@ export async function addReview(review: {
     .select()
     .single();
 
+  // one review per lesson (reviews.booking_id is unique): already rated -
+  // from the other device, the website or Derslerim while the class room
+  // was open - is the rating saved, not a failure that leaves the student
+  // stuck on "couldn't be saved"
+  if (error?.code === '23505') return getReviewForBooking(review.bookingId);
   if (error) return null;
   return mapReviewRow(data);
 }
