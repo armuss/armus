@@ -101,7 +101,8 @@ export default function Messages() {
                 setRefreshing(true);
                 load();
               }}
-              tintColor={colors.red}
+              // iOS draws it over the red band above the list - in red it was invisible
+              tintColor={colors.onRed}
               colors={[colors.red]}
             />
           }
