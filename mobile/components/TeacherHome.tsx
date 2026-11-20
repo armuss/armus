@@ -36,6 +36,7 @@ import { colors, fonts, radius } from '../lib/theme';
 import Band, { ScrollBand } from './Band';
 import ReschedulePicker from './ReschedulePicker';
 import TeacherAttendanceBanner from './TeacherAttendanceBanner';
+import TeacherStatusGate, { teacherGate } from './TeacherStatusGate';
 import { useT } from '../lib/i18n';
 
 const LIMIT_MESSAGE =
@@ -46,11 +47,18 @@ const LATE_LIMIT_MESSAGE =
 
 type Row = { kind: 'heading'; key: string; title: string } | { kind: 'lesson'; key: string; booking: Booking; compact: boolean } | { kind: 'empty'; key: string; text: string };
 
-// The teacher's "Bugün" tab: today's and every upcoming lesson, with the
-// same actions dashboard.html offers - propose a new time (doesn't count
-// toward the monthly cap), answer a student's request, cancel (3 a month,
-// migration_107.sql).
+// The teacher's "Bugün" tab. A teacher who isn't approved yet (or whose
+// account is closed) gets dashboard.html's status page instead.
 export default function TeacherHome() {
+  const { profile } = useAuth();
+  const gate = teacherGate(profile);
+  return gate ? <TeacherStatusGate gate={gate} /> : <ApprovedTeacherHome />;
+}
+
+// Today's and every upcoming lesson, with the same actions dashboard.html
+// offers - propose a new time (doesn't count toward the monthly cap),
+// answer a student's request, cancel (3 a month, migration_107.sql).
+function ApprovedTeacherHome() {
   const t = useT();
   const { profile } = useAuth();
   const timeZone = profile?.timezone || 'Europe/Istanbul';

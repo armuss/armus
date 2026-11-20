@@ -585,6 +585,16 @@ export const EN_APP: Record<string, string | [string, string]> = {
 
   // ---- teacher side: today, students, availability, earnings
   'ÖĞRETMEN PANELİ · BUGÜN': 'TEACHER PANEL · TODAY',
+  // the status page of a teacher who isn't approved (dashboard.html's gate)
+  'ÖĞRETMEN PANELİ': 'TEACHER PANEL',
+  'Başvurunu tamamlamalısın': 'You need to complete your application',
+  'Panelini görebilmen için önce öğretmen başvuru formunu doldurman gerekiyor.': 'You need to fill out the teacher application form before you can see your panel.',
+  'Başvuruyu Tamamla': 'Complete Application',
+  'Başvurun inceleniyor': 'Your application is under review',
+  'ARMUS ekibi profilini ve belgelerini inceliyor. Onaylandığında profilin Öğretmenler sayfasında yayına girecek ve bu panel açılacak.': 'The ARMUS team is reviewing your profile and documents. Once approved, your profile will go live on the Teachers page and this panel will open.',
+  'Başvurun onaylanmadı': "Your application wasn't approved",
+  'Başvurunu gözden geçirip tekrar gönderebilirsin.': 'You can review your application and submit it again.',
+  'Tekrar Başvur': 'Apply Again',
   'Merhaba,': 'Hello,',
   'Bugünkü ders': "Today's lessons",
   'Bugünkü derslerin': "Today's lessons",

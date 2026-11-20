@@ -24,7 +24,9 @@ import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
-const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
+// every field dashboard.html sends for review (subject and languages are
+// edited there only, but a change waiting for them is still a pending change)
+const PENDING_FIELDS = ['title', 'price', 'availability', 'bio', 'subject_taught', 'languages'] as const;
 // apply-teacher.html's and dashboard.html's minimum
 const TEACHER_MIN_BIO_CHARS = 400;
 
@@ -47,7 +49,8 @@ export default function EditProfile() {
   const [checkingPhoto, setCheckingPhoto] = useState(false);
   // an approved teacher's photo is part of their checked application: the
   // database refuses a direct change (application_locked), like the site
-  const [photoLocked, setPhotoLocked] = useState(false);
+  const [approvedTeacher, setApprovedTeacher] = useState(false);
+  const photoLocked = approvedTeacher;
   // a second tap while the picker or the photo check is still busy
   const pickingRef = useRef(false);
 
@@ -78,7 +81,7 @@ export default function EditProfile() {
         setName(data.name || '');
         setCity(data.city || '');
         setPhotoUrl(data.photo_url || null);
-        setPhotoLocked(data.role === 'teacher' && data.status === 'approved');
+        setApprovedTeacher(data.role === 'teacher' && data.status === 'approved');
 
         const pending = data.pending_changes || null;
         setPendingChanges(pending);
@@ -291,7 +294,10 @@ export default function EditProfile() {
             loading={saving}
           />
 
-          {isTeacher && (
+          {/* edits for review are an approved teacher's: admin.html only lists
+              pending changes of approved teachers, so one sent while the
+              application waited was "sent for approval" and never seen */}
+          {isTeacher && approvedTeacher && (
             <View style={styles.teacherSection}>
               <Text style={styles.sectionTitle}>{t("Öğretmen profili")}</Text>
               <Text style={styles.sectionNote}>

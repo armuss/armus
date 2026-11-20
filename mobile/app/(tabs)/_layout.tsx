@@ -7,6 +7,7 @@ import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AnnouncementFrame from '../../components/AnnouncementBanner';
+import { teacherGate } from '../../components/TeacherStatusGate';
 import { needsEmailVerification, useAuth } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
 import { colors, floatShadow, fonts, redGradient } from '../../lib/theme';
@@ -79,6 +80,8 @@ function useTeacherPresence(teacherId: string | null) {
   const lastWrite = useRef(0);
   useEffect(() => {
     if (!teacherId) return;
+    // a new sign-in writes right away, not 2 minutes after the last account's write
+    lastWrite.current = 0;
     const beat = () => {
       if (AppState.currentState !== 'active') return;
       if (Date.now() - lastWrite.current < PRESENCE_REFRESH_MS - 5000) return;
@@ -107,7 +110,10 @@ function useTeacherPresence(teacherId: string | null) {
 export default function TabsLayout() {
   const t = useT();
   const { session, profile, loading } = useAuth();
-  useTeacherPresence(session && profile?.role === 'teacher' ? profile.id : null);
+  // a teacher still waiting for approval, or with a closed account, isn't
+  // listed for students (and a closed profile can't be written at all)
+  const teacherPanelOpen = profile?.role === 'teacher' && !teacherGate(profile);
+  useTeacherPresence(session && teacherPanelOpen ? profile!.id : null);
 
   if (loading) {
     return (
@@ -131,8 +137,10 @@ export default function TabsLayout() {
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}
     >
       <Tabs.Screen name="index" options={{ title: isTeacher ? t("Bugün") : t("Keşfet") }} />
-      <Tabs.Screen name="students" options={{ title: t("Öğrenciler"), href: isTeacher ? undefined : null }} />
-      <Tabs.Screen name="availability" options={{ title: t("Programım"), href: isTeacher ? undefined : null }} />
+      {/* dashboard.html shows a teacher who isn't approved only their status
+          page (TeacherHome), not the students or the schedule */}
+      <Tabs.Screen name="students" options={{ title: t("Öğrenciler"), href: teacherPanelOpen ? undefined : null }} />
+      <Tabs.Screen name="availability" options={{ title: t("Programım"), href: teacherPanelOpen ? undefined : null }} />
       <Tabs.Screen name="messages" options={{ title: t("Mesajlar") }} />
       <Tabs.Screen name="lessons" options={{ title: t("Derslerim"), href: isTeacher ? null : undefined }} />
       <Tabs.Screen name="profile" options={{ title: t("Profil") }} />
