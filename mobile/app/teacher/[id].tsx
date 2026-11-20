@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,6 +9,7 @@ import { TeacherPhoto } from '../../components/TeacherCard';
 import TeacherReportSheet from '../../components/TeacherReportSheet';
 import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
+import { amIBlockedBy } from '../../lib/blocks';
 import { DAY_NAMES, MONTH_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
 import { hasTakenTrialWith } from '../../lib/credits';
 import { notify } from '../../lib/dialogs';
@@ -71,6 +72,16 @@ export default function TeacherDetail() {
     router.push({ pathname: '/booking/[id]', params: date ? { id: teacher.id, type, date } : { id: teacher.id, type } });
   }
 
+  // bumped each time the page comes back into view (from the booking
+  // screen, a chat): the open times are worked out again then - a time just
+  // booked, or one that has passed meanwhile, used to stay listed as open
+  const [focusCount, setFocusCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setFocusCount((n) => n + 1);
+    }, [])
+  );
+
   // the "Saatler" tab: open times for each of the next 7 days, read the
   // same way the booking screen reads them (taken and past times excluded)
   useEffect(() => {
@@ -82,7 +93,7 @@ export default function TeacherDetail() {
     return () => {
       active = false;
     };
-  }, [tab, teacher]);
+  }, [tab, teacher, focusCount]);
 
   // the days start on the teacher's own today, like the booking screen's
   // (lesson dates are the teacher's calendar dates), so a day picked here
@@ -100,25 +111,47 @@ export default function TeacherDetail() {
       );
       return { key, dayName: DAY_NAMES[date.getDay()], dayNum: date.getDate(), open: open.length };
     });
-  }, [teacher, busyTimes]);
+    // focusCount: "now" and "today" read again on coming back; t: the day
+    // names follow a language change
+  }, [teacher, busyTimes, focusCount, t]);
 
+  // a quick second tap read the same stored list before the first one had
+  // saved it, so both "added" the teacher (the heart stayed on)
+  const favBusy = useRef(false);
   async function handleToggleFavorite() {
-    const next = await toggleFavorite(id);
-    setIsFav(next);
+    if (favBusy.current) return;
+    favBusy.current = true;
+    try {
+      setIsFav(await toggleFavorite(id));
+    } finally {
+      favBusy.current = false;
+    }
   }
 
+  // set at once: `messaging` only disables the button after a redraw, and a
+  // quick second tap opened the chat twice
+  const messagingRef = useRef(false);
   async function handleMessage() {
-    if (!teacher || messaging) return;
+    if (!teacher || messagingRef.current) return;
     if (!profile) {
       router.push('/(auth)/login');
       return;
     }
+    messagingRef.current = true;
     setMessaging(true);
     const conversation = await getOrCreateConversation(profile.id, profile.role, teacher.id);
+    // a teacher who blocked this student refuses a new conversation
+    // (is_pair_blocked) - say that, not "try again", which can never work
+    const blocked = !conversation && profile.role === 'student' && (await amIBlockedBy(teacher.id));
+    messagingRef.current = false;
     setMessaging(false);
     if (!conversation) {
       // the tap used to do nothing at all
-      notify(t("Sohbet başlatılamadı. Lütfen tekrar dene."));
+      notify(
+        blocked
+          ? t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.")
+          : t("Sohbet başlatılamadı. Lütfen tekrar dene.")
+      );
       return;
     }
     router.push({
@@ -391,11 +424,25 @@ function formatReviewDate(iso: string) {
   return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-// "English / Türkçe" → "EN / TR" so it fits the fact tile
+// "English / Türkçe" → "EN / TR" so it fits the fact tile. A real teacher's
+// languages are typed on the application form, usually in Turkish
+// ("Türkçe (Ana dil), İngilizce (C1)") - only the English names used to be
+// known, so the tile read "TR / İngilizce", in English mode too.
 function shortLanguages(languages: string) {
-  const map: Record<string, string> = { english: 'EN', türkçe: 'TR', turkish: 'TR', deutsch: 'DE', german: 'DE', español: 'ES', spanish: 'ES', français: 'FR', french: 'FR', arabic: 'AR', русский: 'RU', russian: 'RU' };
+  const map: Record<string, string> = {
+    english: 'EN', ingilizce: 'EN',
+    türkçe: 'TR', turkce: 'TR', turkish: 'TR',
+    deutsch: 'DE', german: 'DE', almanca: 'DE',
+    español: 'ES', spanish: 'ES', ispanyolca: 'ES',
+    français: 'FR', french: 'FR', fransizca: 'FR',
+    italiano: 'IT', italian: 'IT', italyanca: 'IT',
+    arabic: 'AR', arapça: 'AR', arapca: 'AR',
+    русский: 'RU', russian: 'RU', rusça: 'RU', rusca: 'RU',
+  };
+  // Turkish İ/ı and plain I/i read as the same letter ("İngilizce", "INGILIZCE", "ingilizce")
+  const key = (p: string) => p.replace(/[İIı]/g, 'i').toLowerCase();
   const parts = languages.split(/\s*[\/,]\s*/).map((p) => p.replace(/\s*\(.*?\)\s*/g, '').trim()).filter(Boolean);
-  return parts.map((p) => map[p.toLowerCase()] ?? p).join(' / ');
+  return [...new Set(parts.map((p) => map[key(p)] ?? p))].join(' / ');
 }
 
 const styles = StyleSheet.create({
