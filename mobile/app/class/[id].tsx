@@ -14,6 +14,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -36,6 +37,7 @@ import {
 import { capitalizeName, shortDisplayName } from '../../lib/displayName';
 import { notify } from '../../lib/dialogs';
 import { getLessonNotes, saveLessonNotes } from '../../lib/lessonNotes';
+import { pinVocabEntry } from '../../lib/vocab';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -117,12 +119,18 @@ export default function Class() {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
 
-  // the bottom panel: words and a note for this lesson, kept on the device
+  // the bottom panel: a word and its meaning go onto the student's word
+  // cards (class.html's "pin a word", either side can add one); the list of
+  // words pinned in this lesson and the note stay on this device
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<'words' | 'notes'>('words');
   const [words, setWords] = useState<string[]>([]);
   const [note, setNote] = useState('');
   const [wordInput, setWordInput] = useState('');
+  const [meaningInput, setMeaningInput] = useState('');
+  const [pinning, setPinning] = useState(false);
+  const pinningRef = useRef(false);
+  const meaningField = useRef<TextInputInstance>(null);
   const notesLoaded = useRef(false);
   const latestNotes = useRef({ words, note });
   latestNotes.current = { words, note };
@@ -590,14 +598,36 @@ export default function Class() {
 
   const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
 
-  function addWord() {
+  // The words used to be kept only in this screen, which closes for good
+  // 15 minutes after the lesson - "they stay after the lesson" was never
+  // true, and a teacher's words never reached the student. Each one now
+  // goes onto the student's word cards (Kelime kartlarım), with its meaning.
+  async function addWord() {
+    if (!booking || pinningRef.current) return;
     const w = wordInput.trim();
-    if (!w || words.some((x) => x.toLowerCase() === w.toLowerCase())) {
+    const m = meaningInput.trim();
+    if (!w) return;
+    if (words.some((x) => x.toLowerCase() === w.toLowerCase())) {
       setWordInput('');
+      setMeaningInput('');
+      return;
+    }
+    if (!m) {
+      meaningField.current?.focus();
+      return;
+    }
+    pinningRef.current = true;
+    setPinning(true);
+    const saved = await pinVocabEntry(booking.studentId, w, m);
+    pinningRef.current = false;
+    setPinning(false);
+    if (!saved) {
+      notify(t("Kaydedilemedi"), t("Kaydedilemedi. Lütfen tekrar dene."));
       return;
     }
     setWords((prev) => [...prev, w]);
     setWordInput('');
+    setMeaningInput('');
   }
 
   return (
@@ -690,26 +720,44 @@ export default function Class() {
           <>
             <View style={styles.words}>
               {words.map((w) => (
-                <Pressable key={w} onPress={() => setWords((prev) => prev.filter((x) => x !== w))} style={styles.word} accessibilityLabel={t("{0} kelimesini sil", w)}>
+                <View key={w} style={styles.word}>
+                  <Ionicons name="checkmark" size={12} color={colors.faint} />
                   <Text style={styles.wordText}>{w}</Text>
-                  <Ionicons name="close" size={12} color={colors.faint} />
-                </Pressable>
+                </View>
               ))}
-              {words.length === 0 && <Text style={styles.panelHint}>{t("Derste duyduğun yeni kelimeleri buraya yaz, ders bitince de burada kalır.")}</Text>}
+              {words.length === 0 && (
+                <Text style={styles.panelHint}>
+                  {isStudent
+                    ? t("Derste duyduğun yeni kelimeyi anlamıyla yaz, kelime kartlarına eklenir.")
+                    : t("Yeni bir kelimeyi anlamıyla yaz, öğrencinin kelime kartlarına eklenir.")}
+                </Text>
+              )}
             </View>
             <View style={styles.addRow}>
               <TextInput
                 value={wordInput}
                 onChangeText={setWordInput}
-                onSubmitEditing={addWord}
+                onSubmitEditing={() => meaningField.current?.focus()}
                 placeholder={t("Yeni kelime")}
+                placeholderTextColor={colors.faint}
+                autoCapitalize="none"
+                returnKeyType="next"
+                submitBehavior="submit"
+                style={styles.addInput}
+              />
+              <TextInput
+                ref={meaningField}
+                value={meaningInput}
+                onChangeText={setMeaningInput}
+                onSubmitEditing={addWord}
+                placeholder={t("Anlamı")}
                 placeholderTextColor={colors.faint}
                 autoCapitalize="none"
                 returnKeyType="done"
                 style={styles.addInput}
               />
-              <Pressable onPress={addWord} style={styles.addBtn} accessibilityLabel={t("Kelime ekle")}>
-                <Ionicons name="add" size={20} color={colors.gold2} />
+              <Pressable onPress={addWord} disabled={pinning} style={[styles.addBtn, pinning && { opacity: 0.6 }]} accessibilityLabel={t("Kelime ekle")}>
+                {pinning ? <ActivityIndicator size="small" color={colors.gold2} /> : <Ionicons name="add" size={20} color={colors.gold2} />}
               </Pressable>
             </View>
           </>
@@ -863,7 +911,7 @@ const styles = StyleSheet.create({
   wordText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
   panelHint: { fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 18, color: colors.faint },
   addRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  addInput: { flex: 1, height: 46, borderRadius: 14, backgroundColor: colors.panel2, paddingHorizontal: 14, fontFamily: fonts.bodyMedium, fontSize: 14.5, color: colors.ink },
+  addInput: { flex: 1, minWidth: 0, height: 46, borderRadius: 14, backgroundColor: colors.panel2, paddingHorizontal: 14, fontFamily: fonts.bodyMedium, fontSize: 14.5, color: colors.ink },
   addBtn: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
   noteInput: {
     minHeight: 96,
