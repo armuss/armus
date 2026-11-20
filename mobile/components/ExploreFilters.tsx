@@ -205,17 +205,21 @@ function fold(x: string | null | undefined) {
 
 export function matchesFilters(t: Teacher, f: Filters, favoriteIds: string[]) {
   const q = fold(f.query.trim());
-  const tags = fold(t.tags.join(' '));
-  const langs = fold(t.languages);
   const price = Number(t.price);
   // the card shows the topic in the app's language ("Speaking" for
-  // "Konuşma"), so the search finds it by that word too
-  const searchText = fold([t.name, t.role, tr(t.role), ...t.tags, ...t.tags.map((x) => tr(x)), ...t.specialties].join(' '));
-  if (q && !searchText.includes(q)) return false;
-  if (f.tags.length && !f.tags.some((tag) => tags.includes(fold(tag)))) return false;
-  if (f.levels.length && !f.levels.includes(t.level)) return false;
-  if (f.langs.length && !f.langs.some((l) => (LANGS.find(([k]) => k === l)?.[1] || [fold(l)]).some((w) => langs.includes(w))))
+  // "Konuşma"), so the search finds it by that word too (built only for a
+  // search: the sheets run this for every teacher on every option)
+  if (q && !fold([t.name, t.role, tr(t.role), ...t.tags, ...t.tags.map((x) => tr(x)), ...t.specialties].join(' ')).includes(q))
     return false;
+  if (f.tags.length) {
+    const tags = fold(t.tags.join(' '));
+    if (!f.tags.some((tag) => tags.includes(fold(tag)))) return false;
+  }
+  if (f.levels.length && !f.levels.includes(t.level)) return false;
+  if (f.langs.length) {
+    const langs = fold(t.languages);
+    if (!f.langs.some((l) => (LANGS.find(([k]) => k === l)?.[1] || [fold(l)]).some((w) => langs.includes(w)))) return false;
+  }
   if (price < f.priceMin || (f.priceMax < PRICE_TOP && price > f.priceMax)) return false;
   if (f.favoritesOnly && !favoriteIds.includes(t.id)) return false;
   return matchesAvailability(t, f);
