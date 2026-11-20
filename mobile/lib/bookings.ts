@@ -286,20 +286,30 @@ export function roomNameForBooking(bookingId: string) {
 // off from the real scheduled time.
 export function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
   const guess = new Date(`${dateStr}T${timeStr}:00Z`);
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: timeZone || 'Europe/Istanbul',
-      hour12: false,
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-    }).formatToParts(guess).map((p) => [p.type, p.value])
-  );
-  const hour = parts.hour === '24' ? 0 : Number(parts.hour);
-  const asIfUtc = Date.UTC(
-    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
-    hour, Number(parts.minute), Number(parts.second)
-  );
-  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+  // the zone's UTC offset (ms) at one instant
+  const offsetAt = (instant: Date) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone || 'Europe/Istanbul',
+        hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }).formatToParts(instant).map((p) => [p.type, p.value])
+    );
+    const hour = parts.hour === '24' ? 0 : Number(parts.hour);
+    const asIfUtc = Date.UTC(
+      Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+      hour, Number(parts.minute), Number(parts.second)
+    );
+    return asIfUtc - instant.getTime();
+  };
+  // The offset is read a second time at the first answer: the guess sits
+  // hours away from the real instant, so on a DST-change day it could fall
+  // on the other side of the change - a 03:30 New York lesson on the day
+  // the clocks go forward came out an hour late (and the database, which
+  // converts it correctly, refused a report the app allowed).
+  const first = new Date(guess.getTime() - offsetAt(guess));
+  return new Date(guess.getTime() - offsetAt(first));
 }
 
 const JOIN_EARLY_MINUTES = 15;
