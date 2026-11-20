@@ -2737,6 +2737,13 @@ alter publication supabase_realtime add table attendance_reports;
 alter table profiles add column is_online boolean not null default false;
 alter table profiles add column income_goal numeric;
 
+-- migration_85.sql: automatic presence in place of the is_online toggle
+-- (left in place, unused) - a logged-in teacher's site (auth.js
+-- armusMaybeRefreshPresence) and app ((tabs)/_layout.tsx) refresh it every
+-- couple of minutes, and a student sees the teacher as online for 5
+-- minutes after it (masked_profiles carries it, below).
+alter table profiles add column if not exists last_active_at timestamptz;
+
 -- a teacher's private notes about a specific student - never shown to
 -- the student or anyone else
 create table teacher_notes (
@@ -3302,7 +3309,10 @@ select
   p.hidden_from_new_students,
   p.hidden_until,
   p.role,
-  p.status
+  p.status,
+  -- migration_85.sql, appended at the end: CREATE OR REPLACE VIEW only
+  -- adds columns after the existing ones
+  p.last_active_at
 from public.profiles p
 where
   p.status = 'approved'

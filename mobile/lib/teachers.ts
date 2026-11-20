@@ -72,11 +72,48 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], stats: { complet
     weeklyAvailability: Array.isArray(profile.weekly_availability) ? profile.weekly_availability : null,
     availabilityDates:
       profile.availability_dates && typeof profile.availability_dates === 'object' ? profile.availability_dates : null,
+    // migration_85.sql - activity-derived presence, like marketplace.js;
+    // the card re-derives "online" from the timestamp (isTeacherOnline)
+    lastActiveAt: profile.last_active_at || null,
     // migration_41.sql - the attendance-report hide/ban state (filterVisibleTeachers)
     isBanned: Boolean(profile.is_banned),
     hiddenFromNewStudents: Boolean(profile.hidden_from_new_students),
     hiddenUntil: profile.hidden_until || null,
   };
+}
+
+// A teacher reads as online for 5 minutes after profiles.last_active_at -
+// the website's armusIsTeacherOnline / ARMUS_PRESENCE_WINDOW_MS (auth.js).
+// A teacher's app refreshes it every 2 minutes ((tabs)/_layout.tsx).
+const PRESENCE_WINDOW_MS = 5 * 60 * 1000;
+
+export function isTeacherOnline(t: Pick<Teacher, 'lastActiveAt'>): boolean {
+  if (!t.lastActiveAt) return false;
+  return Date.now() - new Date(t.lastActiveAt).getTime() < PRESENCE_WINDOW_MS;
+}
+
+// PostgREST returns at most 1000 rows per request (Supabase's max_rows),
+// for a view and for a set-returning RPC alike - so once there are more
+// approved teachers than that (or more teachers with reviews / lessons),
+// the rest silently never reached the list. The first page is asked for
+// unordered, exactly as before, so the usual short list keeps its order;
+// only a full page goes on to read everything in a stable order, page by
+// page.
+const PAGE_ROWS = 1000;
+
+async function selectAllRows(
+  query: (ordered: boolean) => any
+): Promise<{ data: any[] | null; error: any }> {
+  const first = await query(false).range(0, PAGE_ROWS - 1);
+  if (first.error || !first.data || first.data.length < PAGE_ROWS) return first;
+  const rows: any[] = [];
+  for (let from = 0; from < PAGE_ROWS * 100; from += PAGE_ROWS) {
+    const { data, error } = await query(true).range(from, from + PAGE_ROWS - 1);
+    if (error || !data) return { data: null, error: error || new Error('no data') };
+    rows.push(...data);
+    if (data.length < PAGE_ROWS) break;
+  }
+  return { data: rows, error: null };
 }
 
 // Whether a teacher is hidden from EVERYONE right now: banned, or the
@@ -98,7 +135,13 @@ async function filterVisibleTeachers(teachers: Teacher[]): Promise<Teacher[]> {
     const { data: auth } = await supabase.auth.getSession();
     const viewerId = auth.session?.user.id;
     if (viewerId) {
-      const { data } = await supabase.from('bookings').select('teacher_id').eq('student_id', viewerId);
+      // only these teachers' bookings: all of a student's own bookings
+      // could pass the 1000-row cap and drop the one that matters
+      const { data } = await supabase
+        .from('bookings')
+        .select('teacher_id')
+        .eq('student_id', viewerId)
+        .in('teacher_id', hiddenFromNewOnly.map((t) => t.id));
       booked = new Set((data || []).map((b: any) => b.teacher_id));
     }
   }
@@ -135,14 +178,25 @@ async function enrichDemoTeacherReviews(teacher: Teacher): Promise<Teacher> {
 // short-formed server-side), teacher_review_stats (rating and count without
 // downloading every review) and teacher_marketplace_stats (real lesson /
 // student counts) - then the same visibility filter.
+// Throws when the teacher list itself can't be read (no connection), so a
+// caller can tell "no real teachers" from "couldn't load them".
 async function getRegisteredTeachers(): Promise<Teacher[]> {
   const [profilesRes, reviewStatsRes, statsRes] = await Promise.all([
-    supabase.from('masked_profiles').select('*').eq('role', 'teacher').eq('status', 'approved'),
-    supabase.rpc('teacher_review_stats'),
-    supabase.rpc('teacher_marketplace_stats'),
+    selectAllRows((ordered) => {
+      const q = supabase.from('masked_profiles').select('*').eq('role', 'teacher').eq('status', 'approved');
+      return ordered ? q.order('id') : q;
+    }),
+    selectAllRows((ordered) => {
+      const q = supabase.rpc('teacher_review_stats');
+      return ordered ? q.order('teacher_id') : q;
+    }),
+    selectAllRows((ordered) => {
+      const q = supabase.rpc('teacher_marketplace_stats');
+      return ordered ? q.order('teacher_id') : q;
+    }),
   ]);
 
-  if (profilesRes.error || !profilesRes.data) return [];
+  if (profilesRes.error || !profilesRes.data) throw profilesRes.error || new Error('masked_profiles');
 
   const reviewStats = new Map<string, any>((reviewStatsRes.data || []).map((r: any) => [r.teacher_id, r]));
   const stats = new Map<string, any>((statsRes.data || []).map((r: any) => [r.teacher_id, r]));
@@ -158,10 +212,17 @@ async function getRegisteredTeachers(): Promise<Teacher[]> {
 }
 
 export async function getMarketplaceTeachers(): Promise<Teacher[]> {
+  return (await loadMarketplaceTeachers()).teachers;
+}
+
+// The same list, plus whether the real teachers could be read at all -
+// without a connection only the demo teachers came back, and Keşfet showed
+// them as if they were everyone, with no word that the rest were missing.
+export async function loadMarketplaceTeachers(): Promise<{ teachers: Teacher[]; complete: boolean }> {
   try {
-    return TEACHERS.concat(await getRegisteredTeachers());
+    return { teachers: TEACHERS.concat(await getRegisteredTeachers()), complete: true };
   } catch {
-    return TEACHERS;
+    return { teachers: TEACHERS, complete: false };
   }
 }
 
@@ -182,7 +243,9 @@ export async function loadMarketplaceTeacher(id: string): Promise<Teacher | null
     const [profileRes, reviewsRes, statsRes] = await Promise.all([
       supabase.from('masked_profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
       supabase.from('masked_reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
-      supabase.rpc('teacher_marketplace_stats'),
+      // just this teacher's row: the whole table stops at 1000 rows, and a
+      // teacher past that showed 0 lessons and 0 students
+      supabase.rpc('teacher_marketplace_stats').eq('teacher_id', id),
     ]);
 
     // 22P02: not a uuid at all (a mistyped link) - simply no such teacher
