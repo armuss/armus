@@ -313,7 +313,7 @@ async function settlePaidCheckout(supabaseAdmin: any, pending: any, result: any)
       await sendEmail(
         buyerProfile.email,
         "Paketin satın alındı - ARMUS",
-        packagePurchasedEmailHtml(buyerProfile.name, pending.teacher_name, quantity, `${SITE_URL}/my-lessons.html`),
+        packagePurchasedEmailHtml(buyerProfile.name, shortDisplayName(pending.teacher_name), quantity, `${SITE_URL}/my-lessons.html`),
       );
     }
 
