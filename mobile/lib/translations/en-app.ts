@@ -478,6 +478,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Deneme dersi al': 'Book a trial lesson',
   'Tanıtım videosunu oynat': 'Play the intro video',
   'Öğretmen bulunamadı.': 'Teacher not found.',
+  'Öğretmen yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.': "The teacher couldn't be loaded. Check your internet connection and try again.",
   '← Vazgeç': '← Cancel',
   'Güvenli ödeme': 'Secure payment',
   'Rezervasyon tamamlandı!': 'Booking complete!',

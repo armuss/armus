@@ -166,20 +166,35 @@ export async function getMarketplaceTeachers(): Promise<Teacher[]> {
 }
 
 export async function findMarketplaceTeacher(id: string): Promise<Teacher | null> {
-  const demoTeacher = TEACHERS.find((t) => t.id === id);
-  if (demoTeacher) return enrichDemoTeacherReviews(demoTeacher);
+  const result = await loadMarketplaceTeacher(id);
+  return result === 'error' ? null : result;
+}
 
-  const [profileRes, reviewsRes, statsRes] = await Promise.all([
-    supabase.from('masked_profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
-    supabase.from('masked_reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
-    supabase.rpc('teacher_marketplace_stats'),
-  ]);
+// The same, telling "no such teacher" (null: a wrong or stale id, a pending,
+// banned or hidden teacher) apart from "couldn't load it" ('error': no
+// connection) - the profile page offers a retry for the second, where it
+// used to say "not found" for both.
+export async function loadMarketplaceTeacher(id: string): Promise<Teacher | null | 'error'> {
+  try {
+    const demoTeacher = TEACHERS.find((t) => t.id === id);
+    if (demoTeacher) return await enrichDemoTeacherReviews(demoTeacher);
 
-  if (profileRes.error || !profileRes.data) return null;
-  const stats = (statsRes.data || []).find((r: any) => r.teacher_id === id) || null;
-  const teacher = buildTeacherFromParts(profileRes.data, reviewsRes.data || [], stats);
-  // a hidden teacher's page is closed to anyone who couldn't find them in
-  // the list either (a stale link, a notification) - like the website
-  const [visible] = await filterVisibleTeachers([teacher]);
-  return visible || null;
+    const [profileRes, reviewsRes, statsRes] = await Promise.all([
+      supabase.from('masked_profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
+      supabase.from('masked_reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
+      supabase.rpc('teacher_marketplace_stats'),
+    ]);
+
+    // 22P02: not a uuid at all (a mistyped link) - simply no such teacher
+    if (profileRes.error) return profileRes.error.code === '22P02' ? null : 'error';
+    if (!profileRes.data) return null;
+    const stats = (statsRes.data || []).find((r: any) => r.teacher_id === id) || null;
+    const teacher = buildTeacherFromParts(profileRes.data, reviewsRes.data || [], stats);
+    // a hidden teacher's page is closed to anyone who couldn't find them in
+    // the list either (a stale link, a notification) - like the website
+    const [visible] = await filterVisibleTeachers([teacher]);
+    return visible || null;
+  } catch {
+    return 'error';
+  }
 }

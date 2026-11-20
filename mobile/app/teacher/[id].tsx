@@ -15,7 +15,7 @@ import { notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
 import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
-import { findMarketplaceTeacher } from '../../lib/teachers';
+import { loadMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
@@ -30,6 +30,9 @@ export default function TeacherDetail() {
   const insets = useSafeAreaInsets();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
+  // couldn't load (no connection) - not the same as "no such teacher"
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [messaging, setMessaging] = useState(false);
   const [isFav, setIsFav] = useState(false);
   // the red band reaches just past the photo and the name
@@ -127,29 +130,51 @@ export default function TeacherDetail() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    findMarketplaceTeacher(id).then((t) => {
+    setLoadError(false);
+    loadMarketplaceTeacher(id).then((result) => {
       if (active) {
-        setTeacher(t);
+        setTeacher(result === 'error' ? null : result);
+        setLoadError(result === 'error');
         setLoading(false);
       }
     });
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, reloadKey]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.ink} />
-      </SafeAreaView>
-    );
+  // opened straight from a link (nothing under it in the stack): back goes
+  // home - router.back() alone did nothing there, and with no dock on this
+  // page that left no way out
+  function goBack() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
   }
 
-  if (!teacher) {
+  if (loading || !teacher) {
     return (
       <SafeAreaView style={styles.screen}>
-        <Text style={styles.notFound}>{t("Öğretmen bulunamadı.")}</Text>
+        <View style={styles.plainTop}>
+          <Pressable onPress={goBack} style={styles.plainBackBtn} hitSlop={6} accessibilityLabel={t("Geri")}>
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+          </Pressable>
+        </View>
+        {loading ? (
+          <View style={[styles.screen, styles.centered]}>
+            <ActivityIndicator color={colors.ink} />
+          </View>
+        ) : (
+          <>
+            <Text style={styles.notFound}>
+              {loadError ? t("Öğretmen yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.") : t("Öğretmen bulunamadı.")}
+            </Text>
+            {loadError && (
+              <Pressable onPress={() => setReloadKey((k) => k + 1)} hitSlop={8} style={styles.retryBtn}>
+                <Text style={styles.retryText}>{t("Tekrar dene")}</Text>
+              </Pressable>
+            )}
+          </>
+        )}
       </SafeAreaView>
     );
   }
@@ -172,7 +197,7 @@ export default function TeacherDetail() {
       <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScrollBand height={headBottom - 4} fade={72} />
         <View style={styles.topBar}>
-          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
+          <Pressable onPress={goBack} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
             <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <Pressable
@@ -367,7 +392,11 @@ const styles = StyleSheet.create({
   list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 16, paddingBottom: 30 },
-  notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 60 },
+  notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 40, paddingHorizontal: 28, lineHeight: 21 },
+  plainTop: { paddingHorizontal: 16, marginTop: 6 },
+  plainBackBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
+  retryBtn: { alignSelf: 'center', marginTop: 14 },
+  retryText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.red, textDecorationLine: 'underline' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, marginBottom: 12 },
   // on the red band: see-through cream buttons, the name in cream
   roundBtn: {
