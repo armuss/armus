@@ -3761,6 +3761,27 @@ $$;
 revoke all on function public.register_expo_push_token(text, text) from public, anon;
 grant execute on function public.register_expo_push_token(text, text) to authenticated;
 
+-- migration_129.sql: the app takes its token off the account when it signs
+-- out - also after the session is gone (the plain delete above needs it),
+-- so a signed-out phone stops getting that person's notifications. Having
+-- the token means having the phone, as above.
+create or replace function public.unregister_expo_push_token(p_token text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_token is null or p_token !~ '^(Exponent|Expo)PushToken\[[^]]+\]$' then
+    return;
+  end if;
+  delete from expo_push_tokens where token = p_token;
+end;
+$$;
+
+revoke all on function public.unregister_expo_push_token(text) from public;
+grant execute on function public.unregister_expo_push_token(text) to anon, authenticated;
+
 -- === LOGIN ATTEMPT THROTTLING (migration_99.sql) ========================
 -- A temporary, auto-expiring throttle on repeated failed logins for ONE
 -- email address (6 failed attempts / 15 minutes, reset immediately on a

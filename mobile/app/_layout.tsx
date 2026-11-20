@@ -24,21 +24,39 @@ import { colors } from '../lib/theme';
 // screen a tapped notification points at (data.path, set by
 // send-push-notification).
 function PushNotifications() {
-  const { profile } = useAuth();
+  const { session, profile, loading } = useAuth();
   const lastResponse = Platform.OS === 'web' ? null : Notifications.useLastNotificationResponse();
+  // a new account is asked about notifications once its email code is done,
+  // not over the code screen
+  const ready = !!profile && !needsEmailVerification(profile);
 
   useEffect(() => {
-    if (profile) registerForPushNotifications();
-  }, [profile?.id]);
+    if (!ready) return;
+    registerForPushNotifications();
+    // the phone's push token can change (an OS update, a restore): register
+    // the new one, or the notifications stop arriving
+    if (Platform.OS === 'web') return;
+    const sub = Notifications.addPushTokenListener(() => registerForPushNotifications());
+    return () => sub.remove();
+  }, [profile?.id, ready]);
 
   useEffect(() => {
-    if (!profile || !lastResponse || lastResponse.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    if (!lastResponse || lastResponse.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    // opened from a notification: wait until it's known who is signed in
+    if (loading) return;
+    // tapped while signed out: dropped, not kept for whoever signs in next
+    // (their own lesson or someone else's chat would open for them)
+    if (!session) {
+      Notifications.clearLastNotificationResponse();
+      return;
+    }
+    if (!ready) return;
     const path = lastResponse.notification.request.content.data?.path;
     // a screen of this app only: expo-router hands "//host/..." to the OS
     // as an outside web link (hasUrlProtocolPrefix)
     if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) router.push(path as any);
     Notifications.clearLastNotificationResponse();
-  }, [lastResponse, profile?.id]);
+  }, [lastResponse, profile?.id, ready, loading, !!session]);
 
   return null;
 }
