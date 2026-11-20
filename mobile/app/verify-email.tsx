@@ -13,6 +13,8 @@ import { colors, fonts, radius } from '../lib/theme';
 import { useT } from '../lib/i18n';
 
 const RESEND_COOLDOWN = 45;
+// send-verification-email's answer inside its own 45-second cooldown
+const RESEND_TOO_SOON = 'Çok sık istek gönderdin, biraz sonra tekrar dene.';
 
 /**
  * "E-postanı doğrula": the website's last signup step (register.html) - a
@@ -27,12 +29,27 @@ export default function VerifyEmail() {
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const sentOnce = useRef(false);
 
-  async function sendCode() {
+  async function sendCode(onArrival = false) {
+    // one request at a time: quick taps on "Kodu tekrar gönder" each
+    // mailed another code (and used up the day's 8)
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
     setError('');
     const res = await invokeEdge('send-verification-email');
+    sendingRef.current = false;
+    setSending(false);
     if (!res.ok) {
+      // reopening the app within 45 seconds of the last code: that code is
+      // still on its way and still good - wait it out instead of an error
+      if (onArrival && res.body?.error === RESEND_TOO_SOON) {
+        setCooldown(RESEND_COOLDOWN);
+        return;
+      }
       // no cooldown for a send that never went out
       setError(res.error || t("Kod gönderilemedi. \"Kodu tekrar gönder\" ile tekrar dene."));
       return;
@@ -48,7 +65,7 @@ export default function VerifyEmail() {
       return;
     }
     sentOnce.current = true;
-    sendCode();
+    sendCode(true);
   }, [profile?.id]);
 
   useEffect(() => {
@@ -59,7 +76,7 @@ export default function VerifyEmail() {
 
   async function verify() {
     const value = code.trim();
-    if (!value) return;
+    if (!value || !profile || verifying) return;
     setError('');
     setVerifying(true);
     const res = await invokeEdge('verify-email-code', { code: value });
@@ -70,7 +87,7 @@ export default function VerifyEmail() {
     }
     // confirm the flag really flipped before moving on (the website does
     // the same, so a failed write can't bounce the user in a loop)
-    const { data } = await supabase.from('profiles').select('email_verified').eq('id', profile!.id).maybeSingle();
+    const { data } = await supabase.from('profiles').select('email_verified').eq('id', profile.id).maybeSingle();
     setVerifying(false);
     if (!data?.email_verified) {
       setError(t("Kodun doğru görünüyor ama hesabın hâlâ doğrulanmamış görünüyor. Tekrar dene, sorun sürerse \"Kodu tekrar gönder\"i kullan."));
@@ -108,13 +125,13 @@ export default function VerifyEmail() {
           />
           {!!error && <Text style={styles.error}>{error}</Text>}
           <View style={{ marginTop: 8 }}>
-            <Button label={t("Doğrula")} onPress={verify} loading={verifying} disabled={code.length < 6} />
+            <Button label={t("Doğrula")} onPress={verify} loading={verifying} disabled={code.length < 6 || !profile} />
           </View>
 
           <View style={styles.resendRow}>
             <Text style={styles.resendText}>{t("Kod gelmedi mi? ")}</Text>
-            <Pressable onPress={cooldown > 0 ? undefined : sendCode} disabled={cooldown > 0} hitSlop={8}>
-              <Text style={[styles.resendLink, cooldown > 0 && styles.resendOff]}>
+            <Pressable onPress={() => sendCode()} disabled={cooldown > 0 || sending} hitSlop={8}>
+              <Text style={[styles.resendLink, (cooldown > 0 || sending) && styles.resendOff]}>
                 {cooldown > 0 ? t("Kodu tekrar gönder ({0})", cooldown) : t("Kodu tekrar gönder")}
               </Text>
             </Pressable>
