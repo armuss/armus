@@ -42,7 +42,15 @@ import {
 } from '../../lib/credits';
 import { amIBlockedBy } from '../../lib/blocks';
 import { shortDisplayName } from '../../lib/displayName';
-import { createPayment, parsePaymentRedirect, paymentRedirectType } from '../../lib/payments';
+import {
+  createPayment,
+  forgetCheckout,
+  openCheckoutFor,
+  parsePaymentRedirect,
+  paymentRedirectType,
+  rememberCheckout,
+  type CreatePaymentParams,
+} from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -185,6 +193,8 @@ export default function Booking() {
   // a second tap while the first is still checking the credits / starting
   // the payment must not start a second one
   const confirming = useRef(false);
+  // what the open checkout page is paying for
+  const checkoutParams = useRef<CreatePaymentParams | null>(null);
 
   const selectedDateInfo = dateOptions.find((d) => d.key === selectedDate) || null;
 
@@ -312,7 +322,7 @@ export default function Booking() {
     }
 
     setError('');
-    const result = await createPayment({
+    const params: CreatePaymentParams = {
       teacherId: teacher.id,
       teacherName: teacher.name,
       type,
@@ -322,7 +332,20 @@ export default function Booking() {
       phone: normalizeTurkishPhone(phone) || phone,
       identityNumber: identityNumber.replace(/\D/g, ''),
       withdrawalConsent: needsCard && withdrawalConsent,
-    });
+    };
+
+    // this lesson's checkout the student stepped back out of: opened again
+    // (create-payment refuses a second one while it's open)
+    const reopen = needsCard ? openCheckoutFor(studentId, params) : null;
+    if (reopen) {
+      checkoutParams.current = params;
+      checkoutHandled.current = false;
+      setCheckoutUrl(reopen);
+      setPhase('checkout');
+      return;
+    }
+
+    const result = await createPayment(params);
 
     if (!result.ok) {
       if (result.trialAlreadyTaken && type === 'trial') {
@@ -340,6 +363,8 @@ export default function Booking() {
       return;
     }
 
+    rememberCheckout(studentId, params, result.paymentPageUrl);
+    checkoutParams.current = params;
     checkoutHandled.current = false;
     setCheckoutUrl(result.paymentPageUrl);
     setPhase('checkout');
@@ -365,11 +390,14 @@ export default function Booking() {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
         <View style={styles.checkoutHeader}>
+          {/* the page stays open on iyzico's side (it's opened again for the
+              same time) - and a credit it holds for a top-up only comes back
+              once it expires, so the credits aren't re-read here: a re-read
+              showed that credit as gone and the full price */}
           <Pressable
             onPress={() => {
               checkoutHandled.current = true;
               setPhase('picking');
-              refreshCredits();
             }}
             style={styles.backBtn}
           >
@@ -385,6 +413,7 @@ export default function Booking() {
             const status = parsePaymentRedirect(navState.url);
             if (!status || checkoutHandled.current) return;
             checkoutHandled.current = true;
+            if (checkoutParams.current) forgetCheckout(profile?.id || '', checkoutParams.current);
             if (status === 'success') {
               finishBooking(false, paymentRedirectType(navState.url) ?? type);
               return;
@@ -605,7 +634,7 @@ export default function Booking() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{t("Ücret")}</Text>
-              <Text style={styles.summaryValue}>₺{teacher.price}</Text>
+              <Text style={styles.summaryValue}>{formatMoney(teacher.price)}</Text>
             </View>
             {coverage && (
               <View style={styles.summaryRow}>

@@ -124,6 +124,10 @@ export async function transferStrandedPackage(teacherId: string, newTeacherId: s
   return { ok: true as const, transferred: Number(result.data.transferred) || 0, teacherName: String(result.data.teacherName || '') };
 }
 
-export function formatMoney(amount: number | string) {
-  return `₺${Number(amount).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`;
+// lira in the app's language ("₺1.250" / "₺1,250"); kuruş, when there are
+// any, always as two digits - "₺412,5" read like a typo for ₺412,50
+export function formatMoney(amount: number | string | null | undefined) {
+  const value = Number(amount) || 0;
+  const kurus = Math.round(Math.abs(value) * 100) % 100 !== 0;
+  return `₺${value.toLocaleString(getLocale(), kurus ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 })}`;
 }
