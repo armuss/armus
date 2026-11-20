@@ -9,7 +9,7 @@ import { TeacherPhoto } from '../../components/TeacherCard';
 import TeacherReportSheet from '../../components/TeacherReportSheet';
 import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
-import { DAY_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
+import { DAY_NAMES, MONTH_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
 import { hasTakenTrialWith } from '../../lib/credits';
 import { notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
@@ -327,7 +327,12 @@ export default function TeacherDetail() {
                   <View style={styles.reviewAvatar}>
                     <Text style={styles.reviewAvatarText}>{r.name.charAt(0)}</Text>
                   </View>
-                  <Text style={styles.reviewName}>{r.name}</Text>
+                  <View style={styles.reviewWho}>
+                    <Text style={styles.reviewName} numberOfLines={1}>
+                      {r.name}
+                    </Text>
+                    {!!r.date && <Text style={styles.reviewDate}>{formatReviewDate(r.date)}</Text>}
+                  </View>
                   <Text style={styles.reviewStars}>{'★'.repeat(r.stars)}</Text>
                 </View>
                 {!!r.text && <Text style={styles.reviewText}>{r.text}</Text>}
@@ -376,6 +381,14 @@ export default function TeacherDetail() {
       </View>
     </SafeAreaView>
   );
+}
+
+// "12 Kas 2026" / "12 Nov 2026" - teacher.html's formatReviewDate, in the
+// phone's own time zone (when the student wrote it)
+function formatReviewDate(iso: string) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 // "English / Türkçe" → "EN / TR" so it fits the fact tile
@@ -480,7 +493,9 @@ const styles = StyleSheet.create({
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 6 },
   reviewAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   reviewAvatarText: { fontFamily: fonts.bodyExtraBold, fontSize: 13, color: colors.muted },
-  reviewName: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  reviewWho: { flex: 1, minWidth: 0 },
+  reviewName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  reviewDate: { fontFamily: fonts.bodyMedium, fontSize: 11.5, color: colors.faint, marginTop: 1 },
   reviewStars: { fontSize: 12, color: colors.goldDot },
   reviewText: { fontFamily: fonts.body, fontSize: 14, color: '#444', lineHeight: 20 },
   lessonLink: { alignSelf: 'center', marginTop: 18 },

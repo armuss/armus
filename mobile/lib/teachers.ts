@@ -17,6 +17,12 @@ function formatReviewerName(fullName: string) {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
+// a masked_reviews row as the profile shows it - with its date, which
+// teacher.html prints under the reviewer's name
+function toReview(r: any): Teacher['reviews'][number] {
+  return { name: formatReviewerName(r.student_name), stars: r.stars, text: r.comment || '', date: r.created_at || undefined };
+}
+
 // stats: a teacher_marketplace_stats row (migration_48.sql) - real counts
 // computed server-side. Counting a plain bookings query here was wrong for
 // almost every viewer: bookings_select_participant only returns the
@@ -31,11 +37,7 @@ function buildTeacherFromParts(profile: any, rawReviews: any[], stats: { complet
     .join('')
     .toUpperCase();
 
-  const reviews = rawReviews.map((r) => ({
-    name: formatReviewerName(r.student_name),
-    stars: r.stars,
-    text: r.comment || '',
-  }));
+  const reviews = rawReviews.map(toReview);
   const rating = rawReviews.length
     ? Math.round((rawReviews.reduce((sum, r) => sum + r.stars, 0) / rawReviews.length) * 10) / 10
     : null;
@@ -164,13 +166,7 @@ async function enrichDemoTeacherReviews(teacher: Teacher): Promise<Teacher> {
 
   if (error || !data || !data.length) return teacher;
 
-  const liveReviews = data.map((r: any) => ({
-    name: formatReviewerName(r.student_name),
-    stars: r.stars,
-    text: r.comment || '',
-  }));
-
-  return { ...teacher, reviews: liveReviews.concat(teacher.reviews) };
+  return { ...teacher, reviews: data.map(toReview).concat(teacher.reviews) };
 }
 
 // Only the real, self-registered teachers (a Supabase round trip), the same
@@ -240,12 +236,14 @@ export async function loadMarketplaceTeacher(id: string): Promise<Teacher | null
     const demoTeacher = TEACHERS.find((t) => t.id === id);
     if (demoTeacher) return await enrichDemoTeacherReviews(demoTeacher);
 
-    const [profileRes, reviewsRes, statsRes] = await Promise.all([
+    const [profileRes, reviewsRes, statsRes, reviewStatsRes] = await Promise.all([
       supabase.from('masked_profiles').select('*').eq('id', id).eq('status', 'approved').maybeSingle(),
       supabase.from('masked_reviews').select('*').eq('teacher_id', id).order('created_at', { ascending: false }),
       // just this teacher's row: the whole table stops at 1000 rows, and a
       // teacher past that showed 0 lessons and 0 students
       supabase.rpc('teacher_marketplace_stats').eq('teacher_id', id),
+      // the same for the rating and review count
+      supabase.rpc('teacher_review_stats').eq('teacher_id', id),
     ]);
 
     // 22P02: not a uuid at all (a mistyped link) - simply no such teacher
@@ -253,6 +251,15 @@ export async function loadMarketplaceTeacher(id: string): Promise<Teacher | null
     if (!profileRes.data) return null;
     const stats = (statsRes.data || []).find((r: any) => r.teacher_id === id) || null;
     const teacher = buildTeacherFromParts(profileRes.data, reviewsRes.data || [], stats);
+    // the rating and count the Keşfet card shows (teacher_review_stats):
+    // averaged here instead, the two could differ (4.35 rounds to 4.4 in
+    // the database, 4.3 in JavaScript), and a list cut at 1000 reviews
+    // undercounted
+    const rs = (reviewStatsRes.data || []).find((r: any) => r.teacher_id === id);
+    if (rs) {
+      teacher.rating = Number(rs.avg_rating);
+      teacher.reviewCount = Number(rs.review_count);
+    }
     // a hidden teacher's page is closed to anyone who couldn't find them in
     // the list either (a stale link, a notification) - like the website
     const [visible] = await filterVisibleTeachers([teacher]);

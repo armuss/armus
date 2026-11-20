@@ -27,7 +27,8 @@ export type Teacher = {
   languages: string;
   levelRange: string;
   specialties: string[];
-  reviews: { name: string; stars: number; text: string }[];
+  /** date: when a real student wrote it (reviews.created_at) - the hand-written demo ones have none */
+  reviews: { name: string; stars: number; text: string; date?: string }[];
   /** Only set for real, self-registered teachers — used to link to messaging. */
   isRegistered?: boolean;
   /** Only set for real teachers who've configured a weekly availability grid. */
