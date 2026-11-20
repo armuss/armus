@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,8 +9,8 @@ import { EMPTY_FILTERS, FilterBar, applyFilters, hasActiveFilters, type Filters 
 import TeacherCard from '../../components/TeacherCard';
 import TeacherHome from '../../components/TeacherHome';
 import { useAuth } from '../../lib/auth';
-import { getFavorites, toggleFavorite } from '../../lib/favorites';
-import { getMarketplaceTeachers } from '../../lib/teachers';
+import { getFavorites, setFavorite } from '../../lib/favorites';
+import { loadMarketplaceTeachers } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
@@ -29,12 +29,31 @@ function StudentBrowse() {
   // search + filters (design A): the website's filters, one chip each
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  // the real teachers couldn't be read (no connection) - only the demo
+  // teachers are in the list, so it says so instead of passing for all
+  const [incomplete, setIncomplete] = useState(false);
   const favoritesOnly = filters.favoritesOnly;
   const { width } = useWindowDimensions();
+  // the online dots come from a timestamp (isTeacherOnline): redrawn every
+  // minute like teachers.html, not frozen at whenever the list loaded
+  const [minute, setMinute] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setMinute((m) => m + 1), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
+  // the tab reloads on every visit: an older, slower load finishing after
+  // a newer one put the older list back
+  const loadSeq = useRef(0);
   const load = useCallback(async () => {
-    const [list, favorites] = await Promise.all([getMarketplaceTeachers(), getFavorites()]);
-    setTeachers(list);
+    const seq = ++loadSeq.current;
+    const list = await loadMarketplaceTeachers();
+    // read after the network: a heart tapped while the list was loading
+    // flipped back when an earlier read of the favourites landed
+    const favorites = await getFavorites();
+    if (seq !== loadSeq.current) return;
+    setTeachers(list.teachers);
+    setIncomplete(!list.complete);
     setFavoriteIds(favorites);
     setLoading(false);
     setRefreshing(false);
@@ -46,14 +65,21 @@ function StudentBrowse() {
     }, [load])
   );
 
-  async function handleToggleFavorite(teacherId: string) {
-    const nowFavorited = await toggleFavorite(teacherId);
-    setFavoriteIds((prev) => (nowFavorited ? [...prev, teacherId] : prev.filter((id) => id !== teacherId)));
+  // the heart changes at once, and storage gets the state the heart shows -
+  // a double tap waiting on the old toggle could list a teacher twice
+  function handleToggleFavorite(teacherId: string) {
+    const on = !favoriteIds.includes(teacherId);
+    setFavoriteIds((prev) => (on ? [...prev.filter((id) => id !== teacherId), teacherId] : prev.filter((id) => id !== teacherId)));
+    setFavorite(teacherId, on);
   }
 
   const filtered = useMemo(() => applyFilters(teachers, filters, favoriteIds), [teachers, filters, favoriteIds]);
+  const listExtra = useMemo(() => ({ t, minute }), [t, minute]);
 
   const activeFilters = hasActiveFilters(filters);
+  // "no favourites yet" only when there are none to show - not when the
+  // heart filter is on together with a search or filter that hides them
+  const hasFavorites = teachers.some((x) => favoriteIds.includes(x.id));
   const tileW = Math.floor((width - 32 - 10) / 2);
   // an odd result count under a filter ends on a tile that offers to widen it,
   // so the last photo doesn't sit alone
@@ -77,7 +103,7 @@ function StudentBrowse() {
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
       <FlatList
-          extraData={t}
+        extraData={listExtra}
         style={styles.list}
         data={gridData}
         numColumns={2}
@@ -86,6 +112,7 @@ function StudentBrowse() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -123,6 +150,22 @@ function StudentBrowse() {
                 </Pressable>
               )}
             </View>
+            {incomplete && (
+              <View style={styles.failRow}>
+                <Ionicons name="cloud-offline-outline" size={16} color={colors.red} />
+                <Text style={styles.failText}>{t("Bazı öğretmenler yüklenemedi.")}</Text>
+                <Pressable
+                  onPress={() => {
+                    setRefreshing(true);
+                    load();
+                  }}
+                  hitSlop={8}
+                  disabled={refreshing}
+                >
+                  <Text style={styles.countClear}>{t("Tekrar dene")}</Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         }
         renderItem={({ item }) =>
@@ -144,7 +187,9 @@ function StudentBrowse() {
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Text style={styles.empty}>
-              {favoritesOnly ? t("Henüz favori öğretmenin yok. Bir fotoğraftaki kalbe dokunarak ekleyebilirsin.") : t("Aramanla eşleşen öğretmen bulunamadı.")}
+              {favoritesOnly && !hasFavorites
+                ? t("Henüz favori öğretmenin yok. Bir fotoğraftaki kalbe dokunarak ekleyebilirsin.")
+                : t("Aramanla eşleşen öğretmen bulunamadı.")}
             </Text>
             {activeFilters && (
               <Pressable onPress={clearFilters} style={styles.emptyBtn}>
@@ -170,6 +215,8 @@ const styles = StyleSheet.create({
   countRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, marginLeft: 2 },
   countText: { fontFamily: fonts.bodyExtraBold, fontSize: 12.5, color: colors.ink },
   countClear: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.red, textDecorationLine: 'underline' },
+  failRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 10, marginLeft: 2 },
+  failText: { flexShrink: 1, fontFamily: fonts.bodySemibold, fontSize: 12.5, color: colors.muted },
   screen: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1, backgroundColor: 'transparent' },
   // the status bar area is plain red; the list paints the ground and carries the band

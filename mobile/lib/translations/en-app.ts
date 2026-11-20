@@ -214,8 +214,10 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Daha fazla öğretmen için filtreyi temizle': 'Clear the filter to see more teachers',
   'Henüz favori öğretmenin yok. Bir fotoğraftaki kalbe dokunarak ekleyebilirsin.': "You don't have favourite teachers yet. Tap the heart on a photo to add one.",
   'Aramanla eşleşen öğretmen bulunamadı.': 'No teachers match your search.',
+  'Bazı öğretmenler yüklenemedi.': "Some teachers couldn't be loaded.",
   'Filtreyi temizle': 'Clear filter',
   'Yeni öğretmen': 'New teacher',
+  'Öğretmen şu an çevrimiçi': 'Teacher is currently online',
   'Duyuruyu kapat': 'Close announcement',
 
   // ---- Derslerim

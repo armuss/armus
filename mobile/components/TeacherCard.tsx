@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { shortDisplayName } from '../lib/displayName';
 import { colors, fonts, radius } from '../lib/theme';
+import { isTeacherOnline } from '../lib/teachers';
 import type { Teacher } from '../lib/teachers-data';
 import { useT } from '../lib/i18n';
 
@@ -36,9 +38,17 @@ export default function TeacherCard({ teacher, width, onPress, isFavorite, onTog
         </Pressable>
       )}
       <View style={styles.text}>
-        <Text style={styles.name} numberOfLines={1}>
-          {shortDisplayName(teacher.name)}
-        </Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {shortDisplayName(teacher.name)}
+          </Text>
+          {/* teachers.html's online dot: green with a check, not colour alone */}
+          {isTeacherOnline(teacher) && (
+            <View style={styles.online} accessible accessibilityRole="image" accessibilityLabel={t("Öğretmen şu an çevrimiçi")}>
+              <Ionicons name="checkmark" size={9} color="#fff" />
+            </View>
+          )}
+        </View>
         <View style={styles.meta}>
           <Text style={styles.topic} numberOfLines={1}>
             {t(teacher.tags[0] ?? teacher.role)}
@@ -51,7 +61,12 @@ export default function TeacherCard({ teacher, width, onPress, isFavorite, onTog
 }
 
 export function TeacherPhoto({ teacher, style, initialsSize = 18 }: { teacher: Teacher; style: any; initialsSize?: number }) {
-  if (teacher.photo) return <Image source={{ uri: teacher.photo }} style={[style, styles.photoBg]} resizeMode="cover" />;
+  // a photo that doesn't load (deleted from storage, no connection) left a
+  // blank tile - the initials stand in, like a teacher with no photo
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [teacher.photo]);
+  if (teacher.photo && !failed)
+    return <Image source={{ uri: teacher.photo }} style={[style, styles.photoBg]} resizeMode="cover" onError={() => setFailed(true)} />;
   return (
     <View style={[style, styles.photoBg, styles.fallback]}>
       <Text style={[styles.fallbackText, { fontSize: initialsSize }]}>{teacher.initials}</Text>
@@ -93,7 +108,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: { position: 'absolute', left: 11, right: 11, bottom: 10 },
-  name: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  name: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: '#fff', flexShrink: 1 },
+  online: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#3ecf7a',
+    borderWidth: 1.5,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   meta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 1 },
   topic: { fontFamily: fonts.bodySemibold, fontSize: 12, color: 'rgba(255,255,255,0.85)', flexShrink: 1 },
   price: { fontFamily: fonts.bodyExtraBold, fontSize: 12.5, color: '#fff' },
