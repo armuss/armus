@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AnnouncementFrame from '../../components/AnnouncementBanner';
+import Button from '../../components/Button';
 import { teacherGate } from '../../components/TeacherStatusGate';
 import { needsEmailVerification, useAuth } from '../../lib/auth';
 import { syncOwnTimezone } from '../../lib/profile';
@@ -135,6 +136,45 @@ function useOwnTimezoneSync(profile: { id: string; timezone?: string | null } | 
   }, [id]);
 }
 
+// Signed in, but the profile row hasn't arrived: the role isn't known yet.
+// The tabs used to draw anyway as a student's - a teacher saw Keşfet and
+// Derslerim, for good if that one read failed (nothing read it again).
+// This waits, and after a while offers to try again or to sign out.
+function ProfileWait() {
+  const t = useT();
+  const { refreshProfile, signOut } = useAuth();
+  const [slow, setSlow] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <View style={styles.wait}>
+      <ActivityIndicator color={colors.ink} />
+      {slow && (
+        <>
+          <Text style={styles.waitText}>{t("Hesabın yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.")}</Text>
+          <View style={{ alignSelf: 'stretch' }}>
+            <Button
+              label={t("Tekrar dene")}
+              loading={retrying}
+              onPress={async () => {
+                setRetrying(true);
+                await refreshProfile().catch(() => {});
+                setRetrying(false);
+              }}
+            />
+          </View>
+          <Pressable onPress={() => signOut()} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.waitLink}>{t("Çıkış yap")}</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
 export default function TabsLayout() {
   const t = useT();
   const { session, profile, loading, refreshProfile } = useAuth();
@@ -153,6 +193,7 @@ export default function TabsLayout() {
   }
 
   if (!session) return <Redirect href="/(auth)/login" />;
+  if (!profile) return <ProfileWait />;
   // like the website's armusEnforceEmailVerification: a new account that
   // hasn't confirmed its email with the 6-digit code goes back there
   if (needsEmailVerification(profile)) return <Redirect href="/verify-email" />;
@@ -179,6 +220,9 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  wait: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32, backgroundColor: colors.bg },
+  waitText: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 20, color: colors.muted, textAlign: 'center' },
+  waitLink: { fontFamily: fonts.bodySemibold, fontSize: 13.5, color: colors.muted, textDecorationLine: 'underline' },
   dockWrap: { backgroundColor: colors.bg, paddingTop: 8, paddingHorizontal: 14 },
   dock: {
     flexDirection: 'row',

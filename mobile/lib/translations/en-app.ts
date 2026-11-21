@@ -407,6 +407,7 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Bize ulaş': 'Contact us',
   'YASAL': 'LEGAL',
   'Çıkış yap': 'Log out',
+  'Hesabın yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.': "Your account couldn't be loaded. Check your internet connection and try again.",
   'Çıkış Yap': 'Log Out',
   'Çıkış yapmak istiyor musun?': 'Do you want to log out?',
   'UYGULAMA': 'APP',
