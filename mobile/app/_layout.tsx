@@ -20,6 +20,9 @@ import { LanguageProvider } from '../lib/i18n';
 import { registerForPushNotifications } from '../lib/push';
 import { colors } from '../lib/theme';
 
+// the screens of the tab bar (app/(tabs)/*)
+const TAB_PATHS = new Set(['/lessons', '/messages', '/students', '/availability', '/profile']);
+
 // Registers this device for push once someone is signed in, and opens the
 // screen a tapped notification points at (data.path, set by
 // send-push-notification).
@@ -54,7 +57,16 @@ function PushNotifications() {
     const path = lastResponse.notification.request.content.data?.path;
     // a screen of this app only: expo-router hands "//host/..." to the OS
     // as an outside web link (hasUrlProtocolPrefix)
-    if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) router.push(path as any);
+    if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) {
+      // "/" is the root index (it only redirects to the tabs), and a tab
+      // ("/lessons") is already in the stack: pushing either stacked a
+      // second copy of the tabs over the first. Go back to the tabs
+      // instead; other screens (a chat) are opened on top.
+      const bare = path.split('?')[0].replace(/\/+$/, '') || '/';
+      if (bare === '/') router.navigate('/(tabs)');
+      else if (TAB_PATHS.has(bare)) router.navigate(path as any);
+      else router.push(path as any);
+    }
     Notifications.clearLastNotificationResponse();
   }, [lastResponse, profile?.id, ready, loading, !!session]);
 

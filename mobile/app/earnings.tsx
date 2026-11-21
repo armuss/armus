@@ -58,8 +58,14 @@ export default function Earnings() {
   // a second one
   const submitting = useRef(false);
 
+  // a teacher's screen: a student who reached it from a link saw the
+  // withdrawal form
+  useEffect(() => {
+    if (profile && profile.role !== 'teacher') router.replace('/(tabs)');
+  }, [profile?.role]);
+
   const load = useCallback(async () => {
-    if (!profile) return;
+    if (!profile || profile.role !== 'teacher') return;
     const [bookings, credits, withdrawals] = await Promise.all([
       getBookingsForTeacher(profile.id),
       getTeacherCredits(profile.id),
