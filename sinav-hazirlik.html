@@ -12,11 +12,11 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>YDS, YÖKDİL, YDT ve IELTS Hazırlık: Birebir Online Ders | ARMUS</title>
-  <meta name="description" content="YDS, YÖKDİL, YDT ya da IELTS: sınavı bilen öğretmenlerle birebir online derslerle planlı hazırlan. Önce ücretsiz seviye testiyle seviyeni öğren.">
+  <title>YDS, YÖKDİL, YDT, IELTS ve TOEFL Hazırlık: Birebir Online Ders | ARMUS</title>
+  <meta name="description" content="YDS, YÖKDİL, YDT, IELTS ya da TOEFL: sınavı bilen öğretmenlerle birebir online derslerle planlı hazırlan. Önce ücretsiz seviye testiyle seviyeni öğren.">
   <link rel="canonical" href="https://armus.com.tr/sinav-hazirlik">
   <meta property="og:title" content="Hangi sınava hazırlanıyorsun? · ARMUS">
-  <meta property="og:description" content="YDS, YÖKDİL, YDT ve IELTS için sınavı bilen öğretmenlerle birebir, planlı hazırlık.">
+  <meta property="og:description" content="YDS, YÖKDİL, YDT, IELTS ve TOEFL için sınavı bilen öğretmenlerle birebir, planlı hazırlık.">
   <meta property="og:url" content="https://armus.com.tr/sinav-hazirlik">
   <meta property="og:image" content="https://armus.com.tr/og-image.png">
 
@@ -24,12 +24,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="theme.css?v=18">
-  <link rel="stylesheet" href="styles.css?v=38">
+  <link rel="stylesheet" href="styles.css?v=39">
 
   <style>
-    /* which exam: YDS and IELTS as two big cards, YÖKDİL and YDT under
-       them (each with its own page), a YDS vs IELTS comparison, then a way
-       into the free level test */
+    /* which exam: YDS and IELTS as two big cards, YÖKDİL, YDT and TOEFL
+       under them (each with its own page), any two exams side by side,
+       the guides, then a way into the free level test */
 
     .ex-intro {
       text-align: center;
@@ -173,25 +173,20 @@
       color: var(--armus-on-gold);
     }
 
-    /* YÖKDİL and YDT: each card is one link to that exam's own page */
-    .ex-pair {
+    /* YÖKDİL, YDT and TOEFL: three cards under YDS / IELTS, each with its
+       teachers and its own page */
+    .ex-trio {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-top: 16px;
     }
 
     .ex-mini {
       border-radius: 28px;
-      padding: 28px 32px 26px;
+      padding: 28px 28px 24px;
       display: flex;
       flex-direction: column;
-      text-decoration: none;
-      transition: transform 0.15s;
-    }
-
-    .ex-mini:hover {
-      transform: translateY(-2px);
     }
 
     .ex-mini.yokdil {
@@ -204,8 +199,15 @@
       color: var(--armus-ink);
     }
 
+    .ex-mini.toefl {
+      background: #fff;
+      color: var(--armus-ink);
+      box-shadow: inset 0 0 0 2px var(--armus-gold-2);
+    }
+
     .ex-mini .ex-tag {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 10px;
       opacity: 1;
@@ -215,7 +217,8 @@
       color: var(--armus-champagne-deep);
     }
 
-    .ex-mini.ydt .ex-tag {
+    .ex-mini.ydt .ex-tag,
+    .ex-mini.toefl .ex-tag {
       color: var(--armus-gold-text);
     }
 
@@ -236,14 +239,14 @@
       margin: 12px 0 10px;
     }
 
-    .ex-mini.ydt h2 {
+    .ex-mini.ydt h2,
+    .ex-mini.toefl h2 {
       color: var(--armus-gold-2);
     }
 
     .ex-mini p {
       font-size: 15px;
       line-height: 1.6;
-      max-width: 420px;
       margin: 0;
     }
 
@@ -255,18 +258,61 @@
       color: #4a3f33;
     }
 
-    .ex-mini-go {
-      margin-top: 18px;
-      font: 700 15px Inter, sans-serif;
-      display: inline-flex;
-      gap: 10px;
+    .ex-mini.toefl p {
+      color: #4b4b4b;
     }
 
-    .ex-mini.yokdil .ex-mini-go {
+    .ex-mini-acts {
+      margin-top: auto;
+      padding-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+    }
+
+    .ex-mini-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font: 700 14.5px Inter, sans-serif;
+      text-decoration: none;
+      transition: transform 0.15s;
+    }
+
+    .ex-mini-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .ex-mini-link {
+      font: 700 14px Inter, sans-serif;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .ex-mini.yokdil .ex-mini-btn {
+      background: var(--armus-champagne);
+      color: #141b2e;
+    }
+
+    .ex-mini.yokdil .ex-mini-link {
       color: var(--armus-champagne);
     }
 
-    .ex-mini.ydt .ex-mini-go {
+    .ex-mini.ydt .ex-mini-btn {
+      background: var(--armus-gold-2);
+      color: #fff;
+    }
+
+    .ex-mini.toefl .ex-mini-btn {
+      background: var(--armus-gold-gradient);
+      color: var(--armus-on-gold);
+    }
+
+    .ex-mini.ydt .ex-mini-link,
+    .ex-mini.toefl .ex-mini-link {
       color: var(--armus-gold-2);
     }
 
@@ -280,36 +326,181 @@
       margin: 0;
     }
 
-    .ex-table-wrap {
-      overflow-x: auto;
-      margin-top: 22px;
-    }
-
-    .ex-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14.5px;
-      min-width: 560px;
-    }
-
-    .ex-table th,
-    .ex-table td {
-      text-align: left;
-      padding: 16px 14px;
-      border-bottom: 1px solid var(--armus-border-soft);
-      vertical-align: top;
-    }
-
-    .ex-table th {
-      font: 700 12px Inter, sans-serif;
-      letter-spacing: 1px;
+    .ex-compare-lead {
       color: var(--armus-muted);
-      text-transform: uppercase;
+      font-size: 15px;
+      margin: 8px 0 0;
     }
 
-    .ex-table td:first-child {
-      font-weight: 700;
-      width: 22%;
+    /* two exams side by side: a ready-made question, or pick each side */
+    .cmp-pairs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .cmp-pair {
+      border: 1px solid var(--armus-border);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font: 700 13.5px Inter, sans-serif;
+      background: #fff;
+      color: var(--armus-ink);
+      cursor: pointer;
+    }
+
+    .cmp-pair[aria-pressed="true"] {
+      background: var(--armus-ink);
+      border-color: var(--armus-ink);
+      color: #fff;
+    }
+
+    .cmp {
+      display: grid;
+      grid-template-columns: 1fr 64px 1fr;
+      margin-top: 22px;
+      align-items: stretch;
+    }
+
+    .cmp-vs {
+      display: grid;
+      place-items: center;
+      font: 800 18px "Unbounded", "Inter", sans-serif;
+      color: var(--armus-gold-2);
+    }
+
+    /* each side takes its exam's colours, the same as its card above */
+    .cmp-side {
+      --cmp-line: rgba(255, 255, 255, 0.16);
+      --cmp-chip-line: rgba(255, 255, 255, 0.35);
+      --cmp-on-bg: #fff;
+      --cmp-on-fg: var(--armus-ink);
+      --cmp-btn-bg: #fff;
+      --cmp-btn-fg: var(--armus-ink);
+      border-radius: 26px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cmp-side[data-exam="yds"] {
+      background: linear-gradient(160deg, var(--armus-gold-1), var(--armus-gold-2) 55%, var(--armus-gold-3));
+      color: var(--armus-cream);
+    }
+
+    .cmp-side[data-exam="yokdil"] {
+      background: linear-gradient(160deg, #1f2a44, #141b2e);
+      color: #f4efe4;
+    }
+
+    .cmp-side[data-exam="ielts"] {
+      background: #0b0b0b;
+      color: #f4f4f2;
+    }
+
+    .cmp-side[data-exam="ielts"] h3 {
+      color: var(--armus-red-on-dark);
+    }
+
+    .cmp-side[data-exam="ydt"],
+    .cmp-side[data-exam="toefl"] {
+      --cmp-line: rgba(70, 40, 20, 0.14);
+      --cmp-chip-line: rgba(140, 28, 36, 0.4);
+      --cmp-on-bg: var(--armus-gold-2);
+      --cmp-on-fg: #fff;
+      --cmp-btn-bg: var(--armus-gold-2);
+      --cmp-btn-fg: #fff;
+      color: var(--armus-ink);
+    }
+
+    .cmp-side[data-exam="ydt"] {
+      background: var(--armus-champagne);
+    }
+
+    .cmp-side[data-exam="toefl"] {
+      background: #fff;
+      box-shadow: inset 0 0 0 2px var(--armus-gold-2);
+    }
+
+    .cmp-side[data-exam="ydt"] h3,
+    .cmp-side[data-exam="toefl"] h3 {
+      color: var(--armus-gold-2);
+    }
+
+    .cmp-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .cmp-chip {
+      border: 1px solid var(--cmp-chip-line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: transparent;
+      color: inherit;
+      font: 800 12px "Unbounded", "Inter", sans-serif;
+      cursor: pointer;
+    }
+
+    .cmp-chip[aria-pressed="true"] {
+      background: var(--cmp-on-bg);
+      border-color: var(--cmp-on-bg);
+      color: var(--cmp-on-fg);
+    }
+
+    .cmp-chip:focus-visible,
+    .cmp-pair:focus-visible {
+      outline: 2px solid var(--armus-gold-2);
+      outline-offset: 2px;
+    }
+
+    .cmp-side h3 {
+      font: 800 40px/1 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -1.6px;
+      margin: 18px 0 14px;
+    }
+
+    .cmp-side dl {
+      margin: 0;
+    }
+
+    .cmp-side dl div {
+      padding: 11px 0;
+      border-top: 1px solid var(--cmp-line);
+    }
+
+    .cmp-side dt {
+      font: 700 11px Inter, sans-serif;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      opacity: 0.72;
+    }
+
+    .cmp-side dd {
+      margin: 3px 0 0;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .cmp-btn {
+      margin-top: auto;
+      align-self: flex-start;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      border-radius: 12px;
+      padding: 14px 18px;
+      background: var(--cmp-btn-bg);
+      color: var(--cmp-btn-fg);
+      font: 700 14.5px Inter, sans-serif;
+      text-decoration: none;
+    }
+
+    .cmp-side dl + .cmp-btn {
+      margin-top: 16px;
     }
 
     /* guides: the blog's YDS / IELTS articles, one column per exam */
@@ -430,8 +621,17 @@
       }
 
       .ex-split,
-      .ex-pair {
+      .ex-trio,
+      .cmp {
         grid-template-columns: 1fr;
+      }
+
+      .cmp-vs {
+        padding: 10px 0;
+      }
+
+      .cmp-side h3 {
+        font-size: 32px;
       }
 
       .ex-mini {
@@ -459,10 +659,6 @@
         font-size: 22px;
       }
 
-      .ex-table {
-        font-size: 13px;
-      }
-
       .ex-guides {
         margin-top: 40px;
       }
@@ -482,43 +678,9 @@
       }
     }
 
-    /* phones: each row as a small block, YDS and IELTS stacked */
-    @media (max-width: 600px) {
-      .ex-table {
-        min-width: 0;
-      }
-
-      .ex-table thead {
-        display: none;
-      }
-
-      .ex-table tr {
-        display: block;
-        padding: 14px 0;
-        border-bottom: 1px solid var(--armus-border-soft);
-      }
-
-      .ex-table td {
-        display: block;
-        border: 0;
-        padding: 3px 0;
-      }
-
-      .ex-table td:first-child {
-        width: auto;
-        margin-bottom: 4px;
-      }
-
-      .ex-table td[data-label]::before {
-        content: attr(data-label) " · ";
-        font-weight: 700;
-        color: var(--armus-gold-text);
-      }
-    }
-
     @media (prefers-reduced-motion: reduce) {
       .ex-go a,
-      .ex-mini {
+      .ex-mini-btn {
         transition: none;
       }
     }
@@ -579,35 +741,49 @@
       </div>
     </section>
 
-    <section class="ex-pair">
-      <a class="ex-mini yokdil" href="yokdil">
+    <section class="ex-trio">
+      <div class="ex-mini yokdil">
         <div class="ex-tag"><span data-i18n="exam.yokdilTag">ÖSYM · AKADEMİK</span> <em class="ex-new" data-i18n="nav.examNew">Yeni</em></div>
         <h2>YÖKDİL</h2>
         <p data-i18n="exam.yokdilText">Lisansüstü başvurular için. Metinler kendi alanından gelir: Fen, Sağlık ya da Sosyal Bilimler.</p>
-        <span class="ex-mini-go"><span data-i18n="exam.yokdilGo">YÖKDİL hazırlığına bak</span> <span aria-hidden="true">→</span></span>
-      </a>
-      <a class="ex-mini ydt" href="ydt">
+        <div class="ex-mini-acts">
+          <a class="ex-mini-btn" href="teachers?q=YÖKDİL"><span data-i18n="exam.yokdilCta">YÖKDİL Öğretmenleri</span> <span aria-hidden="true">→</span></a>
+          <a class="ex-mini-link" href="yokdil" data-i18n="exam.pageLink">Sınav sayfası</a>
+        </div>
+      </div>
+      <div class="ex-mini ydt">
         <div class="ex-tag"><span data-i18n="exam.ydtTag">YKS · YABANCI DİL TESTİ</span> <em class="ex-new" data-i18n="nav.examNew">Yeni</em></div>
         <h2>YDT</h2>
         <p data-i18n="exam.ydtText">Dil bölümlerini hedefleyen liseliler için. 80 soru, 120 dakika; DİL puanının %60’ı.</p>
-        <span class="ex-mini-go"><span data-i18n="exam.ydtGo">YDT hazırlığına bak</span> <span aria-hidden="true">→</span></span>
-      </a>
+        <div class="ex-mini-acts">
+          <a class="ex-mini-btn" href="teachers?q=YDT"><span data-i18n="exam.ydtCta">YDT Öğretmenleri</span> <span aria-hidden="true">→</span></a>
+          <a class="ex-mini-link" href="ydt" data-i18n="exam.pageLink">Sınav sayfası</a>
+        </div>
+      </div>
+      <div class="ex-mini toefl" id="toefl">
+        <div class="ex-tag"><span data-i18n="exam.toeflTag">YURT DIŞI · ETS · iBT</span> <em class="ex-new" data-i18n="nav.examNew">Yeni</em></div>
+        <h2>TOEFL</h2>
+        <p data-i18n="exam.toeflText">Özellikle ABD’de üniversite başvuruları için. Dört beceri; Ocak 2026’dan beri 1–6 puan.</p>
+        <div class="ex-mini-acts">
+          <a class="ex-mini-btn" href="teachers?q=TOEFL"><span data-i18n="exam.toeflCta">TOEFL Öğretmenleri</span> <span aria-hidden="true">→</span></a>
+          <a class="ex-mini-link" href="toefl" data-i18n="exam.pageLink">Sınav sayfası</a>
+        </div>
+      </div>
     </section>
 
     <section class="ex-compare">
-      <h2 data-i18n="exam.compareTitle">YDS mi, IELTS mi?</h2>
-      <div class="ex-table-wrap">
-        <table class="ex-table">
-          <thead>
-            <tr><th></th><th>YDS / YÖKDİL</th><th>IELTS</th></tr>
-          </thead>
-          <tbody>
-            <tr><td data-i18n="exam.rowWho">Kimin için</td><td data-label="YDS / YÖKDİL" data-i18n="exam.ydsWho">Türkiye'de lisansüstü, akademik kariyer, kamu</td><td data-label="IELTS" data-i18n="exam.ieltsWho">Yurt dışında eğitim, iş ve göç</td></tr>
-            <tr><td data-i18n="exam.rowFormat">Biçim</td><td data-label="YDS / YÖKDİL" data-i18n="exam.ydsFormat">80 çoktan seçmeli soru, 180 dakika</td><td data-label="IELTS" data-i18n="exam.ieltsFormat">Listening, Reading, Writing, Speaking</td></tr>
-            <tr><td data-i18n="exam.rowScore">Puan</td><td data-label="YDS / YÖKDİL" data-i18n="exam.ydsScore">100 üzerinden</td><td data-label="IELTS" data-i18n="exam.ieltsScore">0–9 band</td></tr>
-            <tr><td data-i18n="exam.rowTeacher">Öğretmenle en çok</td><td data-label="YDS / YÖKDİL" data-i18n="exam.ydsTeacher">Kelime, gramer, çeviri ve hız</td><td data-label="IELTS" data-i18n="exam.ieltsTeacher">Writing ve Speaking geri bildirimi</td></tr>
-          </tbody>
-        </table>
+      <h2 data-i18n="exam.compareTitle">İki sınavı yan yana koy</h2>
+      <p class="ex-compare-lead" data-i18n="exam.compareLead">En çok sorulanlar bir dokunuşta; ya da iki sınavı kendin seç.</p>
+      <div class="cmp-pairs" id="cmpPairs">
+        <button type="button" class="cmp-pair" data-pair="yds,ielts" aria-pressed="false" data-i18n="exam.pairYdsIelts">YDS mi, IELTS mi?</button>
+        <button type="button" class="cmp-pair" data-pair="yds,yokdil" aria-pressed="true" data-i18n="exam.pairYdsYokdil">YDS mi, YÖKDİL mi?</button>
+        <button type="button" class="cmp-pair" data-pair="ielts,toefl" aria-pressed="false" data-i18n="exam.pairIeltsToefl">IELTS mi, TOEFL mu?</button>
+        <button type="button" class="cmp-pair" data-pair="ydt,yds" aria-pressed="false" data-i18n="exam.pairYdtYds">YDT mi, YDS mi?</button>
+      </div>
+      <div class="cmp" id="cmp">
+        <div class="cmp-side" data-side="0" data-exam="yds"></div>
+        <div class="cmp-vs" aria-hidden="true">VS</div>
+        <div class="cmp-side" data-side="1" data-exam="yokdil"></div>
       </div>
 
       <div class="ex-guides">
@@ -622,12 +798,13 @@
             <a href="blog/yds-yokdil-hazirlik"><span data-i18n="exam.guideYds4">YDS/YÖKDİL hazırlığında özel ders</span> <span aria-hidden="true">→</span></a>
           </div>
           <div class="ex-guides-col ielts">
-            <h3>IELTS</h3>
+            <h3>IELTS / TOEFL</h3>
             <a href="blog/ielts-kac-ayda-hazirlanilir"><span data-i18n="exam.guideIelts1">IELTS'e kaç ayda hazırlanılır?</span> <span aria-hidden="true">→</span></a>
             <a href="blog/ielts-band-skorlari"><span data-i18n="exam.guideIelts2">IELTS band skorları: 6.5 ne demek?</span> <span aria-hidden="true">→</span></a>
             <a href="blog/ielts-writing-task-2"><span data-i18n="exam.guideIelts3">IELTS Writing Task 2: yapı ve örnek</span> <span aria-hidden="true">→</span></a>
             <a href="blog/ielts-speaking-rehberi"><span data-i18n="exam.guideIelts4">IELTS Speaking: 3 bölüm, 4 kriter</span> <span aria-hidden="true">→</span></a>
             <a href="blog/ielts-academic-mi-general-training-mi"><span data-i18n="exam.guideIelts5">Academic mi, General Training mi?</span> <span aria-hidden="true">→</span></a>
+            <a href="blog/toefl-vs-ielts"><span data-i18n="exam.guideToefl1">TOEFL mu, IELTS mi?</span> <span aria-hidden="true">→</span></a>
           </div>
         </div>
       </div>
@@ -644,9 +821,114 @@
 
   </main>
 
-  <script src="i18n.js?v=46"></script>
-  <script src="nav-sheet.js?v=2"></script>
-  <script src="exam-menu.js?v=1"></script>
+  <script src="i18n.js?v=47"></script>
+  <script src="nav-sheet.js?v=3"></script>
+  <script src="exam-menu.js?v=2"></script>
+  <script>
+    // "İki sınavı yan yana koy": a side shows one exam's facts in its
+    // colours; picking the exam already on the other side swaps them
+    (function () {
+      const NAMES = { yds: "YDS", yokdil: "YÖKDİL", ydt: "YDT", ielts: "IELTS", toefl: "TOEFL" };
+      const ORDER = ["yds", "yokdil", "ydt", "ielts", "toefl"];
+      const FACTS = {
+        yds: {
+          who: ["Kamu, akademik kariyer, lisansüstü", "Public sector, academic career, graduate study"],
+          format: ["80 çoktan seçmeli soru", "80 multiple-choice questions"],
+          time: ["180 dakika", "180 minutes"],
+          score: ["100 üzerinden", "Out of 100"],
+          teach: ["Kelime, gramer, çeviri ve hız", "Vocabulary, grammar, translation and speed"],
+        },
+        yokdil: {
+          who: ["Lisansüstü ve akademik başvurular", "Graduate and academic applications"],
+          format: ["80 soru; metinler alanından (Fen, Sağlık, Sosyal)", "80 questions; texts from your field (Science, Health, Social)"],
+          time: ["180 dakika", "180 minutes"],
+          score: ["100 üzerinden", "Out of 100"],
+          teach: ["Alan metinleri, çeviri ve hız", "Texts from your field, translation and speed"],
+        },
+        ydt: {
+          who: ["Dil bölümlerini hedefleyen liseliler", "High-school students aiming at language degrees"],
+          format: ["80 soru; 4 yanlış 1 doğruyu götürür", "80 questions; 4 wrong answers cancel 1 right one"],
+          time: ["120 dakika", "120 minutes"],
+          score: ["DİL puanının %60’ı (kalanı TYT’den)", "60% of the DİL score (the rest comes from TYT)"],
+          teach: ["Kelime, paragraf ve net artırma", "Vocabulary, paragraphs and raising your net score"],
+        },
+        ielts: {
+          who: ["Yurt dışında eğitim, iş ve göç", "Study, work and immigration abroad"],
+          format: ["Listening, Reading, Writing, Speaking", "Listening, Reading, Writing, Speaking"],
+          time: ["Yaklaşık 2 saat 45 dakika", "About 2 hours 45 minutes"],
+          score: ["0–9 band", "0–9 band"],
+          teach: ["Writing ve Speaking geri bildirimi", "Feedback on Writing and Speaking"],
+        },
+        toefl: {
+          who: ["Yurt dışında, özellikle ABD’de üniversite", "University abroad, especially in the US"],
+          format: ["Reading, Listening, Writing, Speaking", "Reading, Listening, Writing, Speaking"],
+          time: ["Yaklaşık 2 saat", "About 2 hours"],
+          score: ["1–6 (Ocak 2026’dan beri)", "1–6 (since January 2026)"],
+          teach: ["Akademik Speaking ve Writing", "Academic Speaking and Writing"],
+        },
+      };
+      const ROWS = [
+        ["who", "exam.rowWho", "Kimin için"],
+        ["format", "exam.rowFormat", "Biçim"],
+        ["time", "exam.rowTime", "Süre"],
+        ["score", "exam.rowScore", "Puan"],
+        ["teach", "exam.rowTeacher", "Öğretmenle en çok"],
+      ];
+
+      const sides = [...document.querySelectorAll("#cmp .cmp-side")];
+      const pairs = [...document.querySelectorAll("#cmpPairs .cmp-pair")];
+      const picked = sides.map((side) => side.dataset.exam);
+
+      function render(focusSide, focusExam) {
+        const en = armusGetLang() === "en";
+        sides.forEach((side, i) => {
+          const exam = picked[i];
+          side.dataset.exam = exam;
+          side.setAttribute("aria-label", NAMES[exam]);
+          side.innerHTML = `
+            <div class="cmp-chips" role="group" aria-label="${armusT("exam.cmpPick", "Sınav seç")}">
+              ${ORDER.map((k) => `<button type="button" class="cmp-chip" data-exam="${k}" aria-pressed="${k === exam}">${NAMES[k]}</button>`).join("")}
+            </div>
+            <h3>${NAMES[exam]}</h3>
+            <dl>${ROWS.map(([key, labelKey, label]) => `<div><dt>${armusT(labelKey, label)}</dt><dd>${FACTS[exam][key][en ? 1 : 0]}</dd></div>`).join("")}</dl>
+            <a class="cmp-btn" href="teachers?q=${encodeURIComponent(NAMES[exam])}">${armusT("exam.cmpTeachers", "{name} Öğretmenleri").replace("{name}", NAMES[exam])} <span aria-hidden="true">→</span></a>`;
+        });
+        pairs.forEach((btn) => {
+          const [a, b] = btn.dataset.pair.split(",");
+          const on = (picked[0] === a && picked[1] === b) || (picked[0] === b && picked[1] === a);
+          btn.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        if (focusSide !== undefined) {
+          const chip = sides[focusSide].querySelector(`.cmp-chip[data-exam="${focusExam}"]`);
+          if (chip) chip.focus();
+        }
+      }
+
+      sides.forEach((side, i) => {
+        side.addEventListener("click", (e) => {
+          const chip = e.target.closest(".cmp-chip");
+          if (!chip) return;
+          const exam = chip.dataset.exam;
+          const other = 1 - i;
+          if (picked[other] === exam) picked[other] = picked[i];
+          picked[i] = exam;
+          render(i, exam);
+        });
+      });
+
+      pairs.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [a, b] = btn.dataset.pair.split(",");
+          picked[0] = a;
+          picked[1] = b;
+          render();
+        });
+      });
+
+      render();
+      document.addEventListener("armus:langchange", () => render());
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=16"></script>

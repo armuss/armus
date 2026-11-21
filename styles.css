@@ -97,11 +97,12 @@ body {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  /* --nav-exam-shift: exam-menu.js keeps the box inside the window */
+  transform: translateX(calc(-50% + var(--nav-exam-shift, 0px)));
   /* the transparent top padding is the bridge the pointer crosses from
      "Sınavlar" down to the box without closing it */
   padding-top: 18px;
-  width: 600px;
+  width: 720px;
   z-index: 30;
   visibility: hidden;
   opacity: 0;
@@ -122,10 +123,23 @@ body {
   box-shadow: 0 24px 60px rgba(35, 26, 10, 0.16);
   padding: 12px;
 }
+/* two groups side by side: Türkiye · ÖSYM (three exams), Yurt dışı (two) */
 .nav-exam-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 14px;
+}
+.nav-exam-group {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+.nav-exam-group-head {
+  font: 700 11px Inter, sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--armus-muted);
+  margin: 4px 8px 0;
 }
 .nav .nav-exam-panel a {
   white-space: normal;
@@ -174,6 +188,11 @@ body {
 .nav-exam-badge.ielts {
   background: #0b0b0b;
   color: var(--armus-red-on-dark);
+}
+.nav-exam-badge.toefl {
+  background: #fff;
+  color: var(--armus-gold-2);
+  box-shadow: inset 0 0 0 1.5px var(--armus-gold-2);
 }
 .nav-exam-text b {
   display: block;
@@ -388,10 +407,11 @@ html.nav-sheet-open body {
 }
 .nav-sheet-exam-chips {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
 }
 .nav-sheet-exam-chips a {
+  grid-column: span 2;
   display: block;
   text-align: center;
   padding: 11px 0;
@@ -402,6 +422,10 @@ html.nav-sheet-open body {
   text-decoration: none;
   font: 800 11.5px "Unbounded", Inter, sans-serif;
   letter-spacing: -0.2px;
+}
+/* the last two (IELTS, TOEFL) share the second row */
+.nav-sheet-exam-chips a:nth-child(n + 4) {
+  grid-column: span 3;
 }
 .nav-sheet-exam-chips a[aria-current="page"],
 .nav-sheet-exams-head[aria-current="page"] b {

@@ -1,4 +1,4 @@
-/* One exam's own page (ydt.html, yokdil.html), opened from the header's
+/* One exam's own page (ydt.html, yokdil.html, toefl.html), opened from the header's
    "Sınavlar" menu: a hero with the exam's format card, four facts, who it
    is for, how to prepare on ARMUS, questions, then the other exams. */
 
@@ -89,13 +89,20 @@
   color: #f4efe4;
 }
 
+.xp-format.toefl {
+  background: #fff;
+  color: var(--armus-ink);
+  box-shadow: inset 0 0 0 2px var(--armus-gold-2);
+}
+
 .xp-format-head {
   font: 700 12px Inter, sans-serif;
   letter-spacing: 1.8px;
   text-transform: uppercase;
 }
 
-.xp-format.ydt .xp-format-head {
+.xp-format.ydt .xp-format-head,
+.xp-format.toefl .xp-format-head {
   color: var(--armus-gold-text);
 }
 
@@ -124,6 +131,40 @@
 
 .xp-format.ydt .xp-types li {
   background: #fff;
+}
+
+.xp-format.toefl .xp-types li {
+  background: #faf5ec;
+}
+
+/* TOEFL: the 1-6 score scale in half steps */
+.xp-scale {
+  margin-top: 16px;
+}
+
+.xp-scale-row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 4px;
+}
+
+.xp-scale-row li {
+  height: 34px;
+  border-radius: 8px;
+  background: var(--armus-champagne);
+  display: grid;
+  place-items: center;
+  font: 800 11px "Unbounded", Inter, sans-serif;
+  color: var(--armus-gold-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.xp-scale-row li.whole {
+  background: var(--armus-gold-2);
+  color: #fff;
 }
 
 .xp-format.yokdil .xp-types li {
@@ -398,7 +439,7 @@
 
 .xp-others {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 10px;
 }
 
@@ -533,6 +574,15 @@
   .xp-ctas .xp-btn {
     flex: 1 1 100%;
     justify-content: center;
+  }
+
+  .xp-scale-row {
+    gap: 3px;
+  }
+
+  .xp-scale-row li {
+    height: 30px;
+    font-size: 9.5px;
   }
 }
 

@@ -66,7 +66,7 @@ const TOPIC_OPTIONS_BASE = [
   'Yeni Başlayanlar için İngilizce',
   'Amerikan İngilizcesi',
 ];
-const TOPIC_OPTIONS_ALL = [...TOPIC_OPTIONS_BASE, 'IELTS', 'YDS', 'TOEFL', 'Dilbilgisi'];
+const TOPIC_OPTIONS_ALL = [...TOPIC_OPTIONS_BASE, 'IELTS', 'YDS', 'YÖKDİL', 'YDT', 'TOEFL', 'Dilbilgisi'];
 
 const LEVEL_OPTIONS = ['Yeni başlıyorum', 'Temel bilgim var', 'Günlük konuşabiliyorum', 'Akıcı konuşabiliyorum'];
 
