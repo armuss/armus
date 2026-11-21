@@ -290,6 +290,17 @@ export default function Lessons() {
     }, [load])
   );
 
+  // "Katıl", the countdown, and which lessons are past all depend on the
+  // clock: redraw every minute while the tab is open (like TeacherHome).
+  // The join button only showed after leaving and reopening the tab.
+  const [, setClock] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setInterval(() => setClock((n) => n + 1), 60_000);
+      return () => clearInterval(timer);
+    }, [])
+  );
+
   // not-yet-past lessons first (soonest first), then history (most recent
   // first) - a cancelled lesson goes to history even while its date is
   // still ahead. Mirrors my-lessons.html.
