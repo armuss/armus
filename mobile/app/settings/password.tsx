@@ -1,12 +1,22 @@
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 
 import Button from '../../components/Button';
 import FormScreen, { Field, FormMessage } from '../../components/FormScreen';
+import { useAuth } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
 import { useT } from '../../lib/i18n';
 
 /** Şifre değiştir: same rules as the website's settings (at least 6 characters, typed twice). */
 export default function PasswordSettings() {
+  const { profile } = useAuth();
+  // an admin (not an owner) doesn't change their password - also when this
+  // screen is opened from a link
+  if (profile?.is_admin && profile?.is_owner !== true) return <Redirect href="/settings/account" />;
+  return <PasswordForm />;
+}
+
+function PasswordForm() {
   const t = useT();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');

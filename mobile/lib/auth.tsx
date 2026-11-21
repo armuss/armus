@@ -13,6 +13,8 @@ export type Profile = {
   name: string;
   role: 'student' | 'teacher';
   is_admin: boolean;
+  // the company's owners (migration_116.sql), above the admins
+  is_owner?: boolean | null;
   city: string | null;
   photo_url: string | null;
   // IANA zone - a teacher's lesson times are wall-clock in it

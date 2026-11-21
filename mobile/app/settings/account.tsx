@@ -28,6 +28,9 @@ const confirmed = (text: string) => ['SİL', 'SIL'].includes(text.trim().toLocal
 export default function AccountSecurity() {
   const t = useT();
   const { profile, deleteAccount } = useAuth();
+  // an admin doesn't change their password (only the two owners do, like
+  // the admin panel's "Şifremi Değiştir")
+  const canChangePassword = !(profile?.is_admin && profile?.is_owner !== true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [typed, setTyped] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -75,8 +78,10 @@ export default function AccountSecurity() {
         <Text style={styles.intro}>{t("Giriş bilgilerin ve hesabınla ilgili geri alınamayan işlemler burada.")}</Text>
         <SettingsGroup style={{ marginTop: 6 }}>
           {/* shown only: the sign-in email can't be changed (migration_117.sql) */}
-          <SettingsRow icon="mail-outline" label={t("E-posta")} value={profile?.email} locked onPress={explainEmailLock} />
-          <SettingsRow icon="lock-closed-outline" label={t("Şifre değiştir")} onPress={() => router.push('/settings/password')} last />
+          <SettingsRow icon="mail-outline" label={t("E-posta")} value={profile?.email} locked onPress={explainEmailLock} last={!canChangePassword} />
+          {canChangePassword && (
+            <SettingsRow icon="lock-closed-outline" label={t("Şifre değiştir")} onPress={() => router.push('/settings/password')} last />
+          )}
         </SettingsGroup>
         <Text style={styles.note}>{t("E-posta adresin hesabına bağlıdır ve değiştirilemez.")}</Text>
 

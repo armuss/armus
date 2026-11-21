@@ -2409,6 +2409,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </a>
         </div>
+        <!-- owners only (is_owner): an admin can't change a password from the panel -->
+        <button type="button" class="logout-btn" id="ownerPasswordBtn" style="display: none; margin-bottom: 8px;" data-i18n="admin.ownerPasswordBtn">Şifremi Değiştir</button>
         <button class="logout-btn" id="logoutBtn" data-i18n="nav.logout">Çıkış Yap</button>
       </div>
     </div>
@@ -2608,6 +2610,23 @@
           <tbody id="studentsBody"></tbody>
         </table>
         <div class="empty-note" id="studentsEmpty" style="display: none;" data-i18n="admin.studentsEmpty">Henüz öğrenci yok.</div>
+      </div>
+
+      <!-- the company owners' own password; removed for every other admin -->
+      <div class="panel" id="panel-ownerpass">
+        <h2 data-i18n="admin.ownerPasswordBtn">Şifremi Değiştir</h2>
+        <p class="section-hint" data-i18n="admin.ownerPasswordHint">
+          Bu bölümü yalnızca şirket sahipleri görür. Yöneticiler panelden
+          şifre değiştiremez.
+        </p>
+        <div class="app-card" style="max-width: 420px;">
+          <form id="ownerPasswordForm">
+            <input type="password" class="admin-search" id="ownerNewPassword" autocomplete="new-password" placeholder="Yeni şifre" data-i18n-placeholder="settings.newPasswordLabel" aria-label="Yeni şifre" style="margin-bottom: 10px;">
+            <input type="password" class="admin-search" id="ownerConfirmPassword" autocomplete="new-password" placeholder="Yeni şifreyi tekrar yaz" data-i18n-placeholder="settings.confirmPasswordLabel" aria-label="Yeni şifreyi tekrar yaz" style="margin-bottom: 12px;">
+            <button type="submit" class="btn btn-approve" id="ownerPasswordSave" data-i18n="admin.saveBtn">Kaydet</button>
+            <p id="ownerPasswordNote" role="status" style="margin: 10px 0 0; font-size: 12.5px; display: none;"></p>
+          </form>
+        </div>
       </div>
 
       <div class="panel" id="panel-log">
@@ -6792,6 +6811,70 @@
       renderAllFromState();
     }
 
+    // "Şifremi Değiştir" (owners only): the button above "Çıkış Yap" opens
+    // the page, and the form sets the signed-in owner's own new password
+    function armusInitOwnerPassword() {
+      const btn = document.getElementById("ownerPasswordBtn");
+      const form = document.getElementById("ownerPasswordForm");
+      const note = document.getElementById("ownerPasswordNote");
+      const save = document.getElementById("ownerPasswordSave");
+      btn.style.display = "block";
+
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        document.getElementById("panel-ownerpass").classList.add("active");
+        openSheet(false);
+      });
+
+      function showNote(text, ok) {
+        note.textContent = text;
+        note.style.color = ok ? "#1f7a4d" : "#b3261e";
+        note.style.display = "block";
+      }
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (save.disabled) return;
+        const newPassword = document.getElementById("ownerNewPassword").value;
+        const confirmPassword = document.getElementById("ownerConfirmPassword").value;
+
+        // an owner account opens everything: a longer minimum than the
+        // site's 6 for everyone else
+        if (newPassword.length < 10) {
+          showNote(armusT("admin.ownerPasswordShort", "Şifre en az 10 karakter olmalı."), false);
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          showNote(armusT("settings.errPasswordMismatch", "Şifreler eşleşmiyor."), false);
+          return;
+        }
+
+        save.disabled = true;
+        note.style.display = "none";
+        const { error } = await armusUpdatePassword(newPassword);
+        save.disabled = false;
+
+        if (error) {
+          const code = error.code || "";
+          showNote(
+            code === "same_password"
+              ? armusT("admin.ownerPasswordSame", "Yeni şifre eskisiyle aynı olamaz.")
+              : code === "weak_password"
+                ? armusT("admin.ownerPasswordWeak", "Bu şifre çok zayıf. Harf, rakam ve sembol karıştır.")
+                : code === "reauthentication_needed" || code === "session_not_found"
+                  ? armusT("admin.ownerPasswordRelogin", "Güvenlik için çıkış yapıp tekrar giriş yap, sonra yeniden dene.")
+                  : armusT("settings.saveFailed", "Kaydedilemedi. Lütfen tekrar dene."),
+            false
+          );
+          return;
+        }
+
+        form.reset();
+        showNote(armusT("settings.passwordSaved", "Şifren güncellendi."), true);
+      });
+    }
+
     (async function() {
 
       // caught so a slow/blocked Supabase SDK still reaches showGate()
@@ -6815,6 +6898,15 @@
       if (!armusCanSeeAdminLog) {
         document.querySelector('.nav-btn[data-panel="log"]').style.display = "none";
         document.getElementById("panel-log").remove();
+      }
+
+      // changing one's own password from the panel: the two owners only
+      // (strictly is_owner = true), never an admin
+      if (session.is_owner === true) {
+        armusInitOwnerPassword();
+      } else {
+        document.getElementById("ownerPasswordBtn").remove();
+        document.getElementById("panel-ownerpass").remove();
       }
 
       shell.style.display = "grid";
