@@ -14,7 +14,7 @@ import { DAY_NAMES, MONTH_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate
 import { hasTakenTrialWith } from '../../lib/credits';
 import { notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
-import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
+import { isFavorite as checkIsFavorite, setFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
 import { loadMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
@@ -42,6 +42,9 @@ export default function TeacherDetail() {
   const [trialTaken, setTrialTaken] = useState(false);
   const [tab, setTab] = useState<Tab>('about');
   const [reportOpen, setReportOpen] = useState(false);
+  // the intro video wouldn't play (a deleted file, a format the phone can't
+  // play): the big photo again
+  const [videoFailed, setVideoFailed] = useState(false);
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>([]);
 
   useEffect(() => {
@@ -115,17 +118,13 @@ export default function TeacherDetail() {
     // names follow a language change
   }, [teacher, busyTimes, focusCount, t]);
 
-  // a quick second tap read the same stored list before the first one had
-  // saved it, so both "added" the teacher (the heart stayed on)
-  const favBusy = useRef(false);
-  async function handleToggleFavorite() {
-    if (favBusy.current) return;
-    favBusy.current = true;
-    try {
-      setIsFav(await toggleFavorite(id));
-    } finally {
-      favBusy.current = false;
-    }
+  // the heart changes at once and storage gets the state it shows (like
+  // Keşfet): a quick second tap read the same stored list before the first
+  // had saved it, so both "added" the teacher and the heart stayed on
+  function handleToggleFavorite() {
+    const on = !isFav;
+    setIsFav(on);
+    setFavorite(id, on);
   }
 
   // set at once: `messaging` only disables the button after a redraw, and a
@@ -277,8 +276,13 @@ export default function TeacherDetail() {
         {tab === 'about' && (
           <>
             {/* the intro video when the teacher has one (like the website), else the big photo */}
-            {teacher.video && /^https:\/\//i.test(teacher.video) ? (
-              <TeacherVideo uri={teacher.video} style={styles.mediaVideo} badge={teacher.availability ? t(teacher.availability) : undefined} />
+            {teacher.video && /^https:\/\//i.test(teacher.video) && !videoFailed ? (
+              <TeacherVideo
+                uri={teacher.video}
+                style={styles.mediaVideo}
+                badge={teacher.availability ? t(teacher.availability) : undefined}
+                onError={() => setVideoFailed(true)}
+              />
             ) : (
               <View style={styles.media}>
                 <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={48} />
