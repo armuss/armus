@@ -126,6 +126,8 @@
       color: var(--armus-gold-2);
       font: 900 18px "Unbounded", "Inter", sans-serif;
       text-decoration: none;
+      cursor: default;
+      user-select: none;
     }
 
     .rail-btn {
@@ -2336,10 +2338,8 @@
   <div class="shell" id="shell">
 
     <nav class="rail" id="adminRail" aria-label="Admin">
-      <!-- the panel's own home (Genel Bakış): "/" sent an admin to the
-           homepage, which redirects every admin straight back here - a
-           flash of the homepage and a full reload of the panel -->
-      <a class="rail-mark" href="admin" aria-label="ARMUS">A</a>
+      <!-- only the mark, not a link: clicking it does nothing -->
+      <div class="rail-mark" aria-hidden="true">A</div>
       <button type="button" class="rail-btn active" data-group="general"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span data-i18n="admin.groupGeneral">Genel</span><em class="rail-badge"></em></button>
       <button type="button" class="rail-btn" data-group="people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-i18n="admin.groupPeople">İnsanlar</span><em class="rail-badge"></em></button>
       <button type="button" class="rail-btn" data-group="lessons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span data-i18n="admin.groupLessons">Dersler</span><em class="rail-badge"></em></button>
@@ -3123,16 +3123,6 @@
         showGroup(groupOfPanel(btn.dataset.panel));
         openSheet(false);
       });
-    });
-
-    // the "A" at the top of the rail: back to Genel Bakış, without
-    // leaving the panel (a new tab or a middle click still gets "admin")
-    document.querySelector(".rail-mark").addEventListener("click", e => {
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-      e.preventDefault();
-      const overview = document.querySelector('.nav-btn[data-panel="overview"]');
-      if (overview) overview.click();
-      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     // desktop: a group opens its first page; phone: it opens the sheet
