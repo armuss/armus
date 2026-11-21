@@ -23,7 +23,7 @@ import { CHECKIN_OK_KEY, CheckinBox, ReportStatus, ReviewBlock, checkinOpen } fr
 import TeacherReportSheet from '../../components/TeacherReportSheet';
 import { getAttendanceReportsForBookings, type AttendanceReport } from '../../lib/attendance';
 import ReschedulePicker from '../../components/ReschedulePicker';
-import StrandedPackageCard from '../../components/StrandedPackageCard';
+import StrandedPackageCard, { StuckCreditsCard, WithdrawablePackageCard } from '../../components/StrandedPackageCard';
 import { useAuth } from '../../lib/auth';
 import {
   DAY_NAMES,
@@ -51,7 +51,17 @@ import {
   type BusyTime,
   type RescheduleRequest,
 } from '../../lib/bookings';
-import { formatMoney, getAvailableCredits, getStrandedPackages, type LessonCredit, type StrandedPackage } from '../../lib/credits';
+import {
+  formatMoney,
+  getAvailableCredits,
+  getStrandedPackages,
+  getStuckCredits,
+  getWithdrawablePackages,
+  type LessonCredit,
+  type StrandedPackage,
+  type StuckCredits,
+  type WithdrawablePackage,
+} from '../../lib/credits';
 import { confirmAsync, notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
 import { createDispute, getOwnDisputes, type Dispute } from '../../lib/disputes';
@@ -59,7 +69,7 @@ import { getReviewsForBookings, type Review } from '../../lib/reviews';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
-import { useT, tr } from '../../lib/i18n';
+import { getLocale, useT, tr } from '../../lib/i18n';
 
 // a real (signed-up) teacher's id - the demo teachers can't be reported (my-lessons.html)
 const isRealTeacherId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ''));
@@ -197,6 +207,10 @@ export default function Lessons() {
   const [moveCounts, setMoveCounts] = useState<Record<string, { studentMoves: number; teacherProposals: number }>>({});
   const [credits, setCredits] = useState<LessonCredit[]>([]);
   const [stranded, setStranded] = useState<StrandedPackage[]>([]);
+  // migration_112.sql: packages still within their 14-day withdrawal, and
+  // credits stuck with a teacher who can't teach anymore (my-lessons.html)
+  const [withdrawable, setWithdrawable] = useState<WithdrawablePackage[]>([]);
+  const [stuck, setStuck] = useState<StuckCredits[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -221,11 +235,13 @@ export default function Lessons() {
       setRefreshing(false);
       return;
     }
-    const [bookingsData, disputesData, creditData, strandedData] = await Promise.all([
+    const [bookingsData, disputesData, creditData, strandedData, withdrawableData, stuckData] = await Promise.all([
       getBookingsForStudent(profile.id),
       getOwnDisputes(profile.id),
       getAvailableCredits(profile.id),
       getStrandedPackages(),
+      getWithdrawablePackages(),
+      getStuckCredits(),
     ]);
     if (!bookingsData) {
       // keep whatever is already on screen and say so - an empty list read
@@ -252,6 +268,8 @@ export default function Lessons() {
     setDisputes(disputesData);
     setCredits(creditData || []);
     setStranded(strandedData);
+    setWithdrawable(withdrawableData);
+    setStuck(stuckData);
     setPending(pendingData);
     setMoveCounts(countsData);
     setLoading(false);
@@ -557,14 +575,19 @@ export default function Lessons() {
   // lesson credits on the balance, grouped by teacher
   const creditGroups = Array.from(
     credits.reduce((map, c) => {
-      const entry = map.get(c.teacher_id) || { name: c.teacher_name, count: 0, values: [] as number[] };
+      const entry = map.get(c.teacher_id) || { name: c.teacher_name, count: 0, values: [] as number[], firstExpiry: null as string | null };
       entry.count += 1;
       if (c.value !== null && c.value !== undefined) entry.values.push(Number(c.value));
+      // credits run out 6 months after they were given (migration_112.sql):
+      // the first one to go, like my-lessons.html
+      if (c.expires_at && (!entry.firstExpiry || c.expires_at < entry.firstExpiry)) entry.firstExpiry = c.expires_at;
       map.set(c.teacher_id, entry);
       return map;
-    }, new Map<string, { name: string; count: number; values: number[] }>())
+    }, new Map<string, { name: string; count: number; values: number[]; firstExpiry: string | null }>())
   );
-  const strandedIds = new Set(stranded.map((p) => p.teacherId));
+  // package lessons and credits with a teacher who can't teach anymore have
+  // their own cards above
+  const strandedIds = new Set([...stranded.map((p) => p.teacherId), ...stuck.map((g) => g.teacherId)]);
   const shownCredits = creditGroups.filter(([teacherId]) => !strandedIds.has(teacherId));
   const creditTotal = shownCredits.reduce((n, [, g]) => n + g.count, 0);
 
@@ -666,6 +689,12 @@ export default function Lessons() {
               {stranded.map((pkg) => (
                 <StrandedPackageCard key={pkg.teacherId} pkg={pkg} onDone={load} />
               ))}
+              {withdrawable.map((pkg) => (
+                <WithdrawablePackageCard key={pkg.paymentId} pkg={pkg} onDone={load} />
+              ))}
+              {stuck.map((group) => (
+                <StuckCreditsCard key={group.teacherId} group={group} onDone={load} />
+              ))}
 
               {shownCredits.length > 0 && (
                 <Pressable onPress={() => setCreditsOpen((v) => !v)} style={styles.credits}>
@@ -679,10 +708,16 @@ export default function Lessons() {
                       {shownCredits.map(([teacherId, g]) => (
                         <Text key={teacherId} style={styles.creditsLine}>
                           {shortDisplayName(g.name)} · {g.count} {t(" ders hakkı")}{g.values.length ? t(" (her biri {0}{1})", formatMoney(Math.min(...g.values)), Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : '') : ''}
+                          {!!g.firstExpiry && (
+                            <Text style={new Date(g.firstExpiry).getTime() < Date.now() + 14 * 86_400_000 ? styles.creditsExpirySoon : styles.creditsExpiry}>
+                              {' · '}
+                              {t("son gün {0}", new Date(g.firstExpiry).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' }))}
+                            </Text>
+                          )}
                         </Text>
                       ))}
                       <Text style={styles.creditsHint}>
-                        {t("Bir ders hakkı aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir. Rezervasyon sırasında otomatik uygulanır.")}</Text>
+                        {t("Ders hakları alındıktan 6 ay sonra geçersiz olur. Aynı öğretmenle her ders için, başka bir öğretmenle sadece deneme dersi için kullanılabilir; rezervasyonda otomatik uygulanır.")}</Text>
                     </>
                   )}
                 </Pressable>
@@ -913,6 +948,8 @@ const styles = StyleSheet.create({
   creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   creditsTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   creditsLine: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.ink, marginTop: 4 },
+  creditsExpiry: { fontFamily: fonts.body, color: colors.muted },
+  creditsExpirySoon: { fontFamily: fonts.bodySemibold, color: colors.error },
   creditsHint: { fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16, color: colors.muted, marginTop: 4 },
   ag: { flexDirection: 'row', gap: 12, marginBottom: 10 },
   agHour: { width: 46, fontFamily: fonts.bodyBold, fontSize: 13, color: colors.faint, paddingTop: 13 },

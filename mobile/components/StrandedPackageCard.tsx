@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { formatMoney, refundStrandedPackage, transferStrandedPackage, type StrandedPackage } from '../lib/credits';
+import {
+  formatMoney,
+  refundStrandedPackage,
+  refundStuckCredits,
+  transferStrandedPackage,
+  withdrawPackage,
+  type StrandedPackage,
+  type StuckCredits,
+  type WithdrawablePackage,
+} from '../lib/credits';
 import { confirmAsync, notify } from '../lib/dialogs';
 import { shortDisplayName } from '../lib/displayName';
 import { getMarketplaceTeachers } from '../lib/teachers';
 import type { Teacher } from '../lib/teachers-data';
 import { colors, fonts, radius } from '../lib/theme';
 import Button from './Button';
-import { useT } from '../lib/i18n';
+import { getLocale, useT } from '../lib/i18n';
 
 // Package lessons whose teacher can't teach this student anymore (banned,
 // blocking them, account closed - migration_110.sql): get them refunded to
@@ -145,6 +154,109 @@ export default function StrandedPackageCard({ pkg, onDone }: { pkg: StrandedPack
           </View>
         </View>
       </Modal>
+    </View>
+  );
+}
+
+function formatDay(iso: string | null) {
+  return iso ? new Date(iso).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+}
+
+// The 14-day right of withdrawal for a package with none of its lessons
+// used (migration_112.sql, package-credits "withdraw") - the checkout's
+// consent box promises it. Mirrors my-lessons.html's credits panel.
+export function WithdrawablePackageCard({ pkg, onDone }: { pkg: WithdrawablePackage; onDone: () => void }) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function withdraw() {
+    if (busy) return;
+    const ok = await confirmAsync(
+      t("Paketi İptal Et"),
+      t("{0} derslik paketin iptal edilecek ve {1} ödeme yaptığın karta iade edilecek. Onaylıyor musun?", pkg.lessons, formatMoney(pkg.price)),
+      t("Paketi İptal Et"),
+      true
+    );
+    if (!ok) return;
+    setBusy(true);
+    setError('');
+    const r = await withdrawPackage(pkg.paymentId);
+    setBusy(false);
+    if (!r.ok) {
+      setError(r.error);
+      return;
+    }
+    // onDone reloads Derslerim, which drops this card - the message stays up
+    notify(t("Paketin iptal edildi, {0} kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.", formatMoney(r.refundedAmount)));
+    onDone();
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>{t("Paketini iptal edebilirsin")}</Text>
+      <Text style={styles.text}>
+        {t("{0} ile aldığın {1} derslik paketten henüz ders kullanmadın. {2} tarihine kadar paketi iptal edip ödediğin {3} tutarın tamamını geri alabilirsin. Paketteki ilk ders başladığında bu hak sona erer.", shortDisplayName(pkg.teacherName), pkg.lessons, formatDay(pkg.withdrawUntil), formatMoney(pkg.price))}
+      </Text>
+      <View style={styles.actions}>
+        <Pressable onPress={withdraw} disabled={busy} style={[styles.btn, busy && styles.disabled]}>
+          <Text style={styles.btnText}>{t("Paketi İptal Et")}</Text>
+        </Pressable>
+      </View>
+      {!!error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+}
+
+// Lesson credits that came back from a paid lesson, stuck with a teacher
+// who can't teach this student anymore (migration_112.sql): still good for
+// a trial with another teacher, and back to the card 30 days after they
+// got stuck (package-credits "refund_credits"). Mirrors my-lessons.html.
+export function StuckCreditsCard({ group, onDone }: { group: StuckCredits; onDone: () => void }) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const refundableNow = group.refundable && !!group.refundableFrom && new Date(group.refundableFrom).getTime() <= Date.now();
+
+  async function refund() {
+    if (busy) return;
+    const ok = await confirmAsync(
+      t("Paramı iade et"),
+      t("{0} ders hakkının ücreti ödeme yaptığın karta iade edilecek ve bu haklar bakiyenden silinecek. Onaylıyor musun?", group.lessons),
+      t("İade Et")
+    );
+    if (!ok) return;
+    setBusy(true);
+    setError('');
+    const r = await refundStuckCredits(group.teacherId);
+    setBusy(false);
+    if (!r.ok) {
+      setError(r.error);
+      return;
+    }
+    notify(t("{0} dersin ücreti ({1}) kartına iade edildi. Tutarın hesabına geçmesi bankana göre birkaç iş günü sürebilir.", r.refundedLessons, formatMoney(r.refundedAmount)));
+    onDone();
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>{t("{0} artık sana ders veremiyor", shortDisplayName(group.teacherName))}</Text>
+      <Text style={styles.text}>
+        {t("Bu öğretmenle {0} ders hakkın var ({1}). Bu haklar başka bir öğretmenle deneme dersi için kullanılabilir.", group.lessons, formatMoney(group.totalValue))}{' '}
+        {!group.refundable
+          ? t("Bu paketin iadesi otomatik yapılamıyor - iade istersen destek ekibimize yaz.")
+          : refundableNow
+            ? t("İstersen ödediğin tutarı kartına iade ettirebilirsin.")
+            : t("{0} tarihinden itibaren istersen ödediğin tutarı kartına iade ettirebilirsin.", formatDay(group.refundableFrom))}
+      </Text>
+      {refundableNow && (
+        <View style={styles.actions}>
+          <Pressable onPress={refund} disabled={busy} style={[styles.btn, styles.btnPrimary, busy && styles.disabled]}>
+            <Text style={[styles.btnText, styles.btnTextPrimary]}>{t("Paramı İade Et ({0})", formatMoney(group.totalValue))}</Text>
+          </Pressable>
+        </View>
+      )}
+      {!!error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }

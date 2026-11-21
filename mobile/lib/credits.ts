@@ -11,6 +11,8 @@ export type LessonCredit = {
   source: string | null;
   transferred_at: string | null;
   created_at: string | null;
+  // migration_112.sql: a credit runs out 6 months after it was given
+  expires_at?: string | null;
 };
 
 // The student's lesson credits still on their balance. Purely for the UI -
@@ -122,6 +124,69 @@ export async function transferStrandedPackage(teacherId: string, newTeacherId: s
   const result = await invokeEdge('package-credits', { action: 'transfer', teacher_id: teacherId, new_teacher_id: newTeacherId });
   if (!result.ok) return { ok: false as const, error: result.error || tr("İşlem yapılamadı. Lütfen tekrar dene.") };
   return { ok: true as const, transferred: Number(result.data.transferred) || 0, teacherName: String(result.data.teacherName || '') };
+}
+
+// ---- migration_112.sql: the package withdrawal right and stuck credits ---
+// (my-lessons.html's credits panel). The app sells the packages and its
+// checkout promises the 14-day withdrawal, but there was no way to use it -
+// nor to get back credits stuck with a teacher who can't teach anymore.
+
+// a package bought within the last 14 days, none of its lessons used
+export type WithdrawablePackage = {
+  paymentId: string;
+  teacherName: string;
+  lessons: number;
+  price: number;
+  withdrawUntil: string;
+};
+
+export async function getWithdrawablePackages(): Promise<WithdrawablePackage[]> {
+  const { data, error } = await supabase.rpc('my_withdrawable_packages');
+  if (error || !Array.isArray(data)) return [];
+  return data.map((r: any) => ({
+    paymentId: r.payment_id,
+    teacherName: r.teacher_name,
+    lessons: Number(r.lessons) || 0,
+    price: Number(r.price) || 0,
+    withdrawUntil: r.withdraw_until,
+  }));
+}
+
+export async function withdrawPackage(paymentId: string) {
+  const result = await invokeEdge('package-credits', { action: 'withdraw', payment_id: paymentId });
+  if (!result.ok) return { ok: false as const, error: result.error || tr("İşlem yapılamadı. Lütfen tekrar dene.") };
+  return { ok: true as const, refundedAmount: Number(result.data.refundedAmount) || 0 };
+}
+
+// lesson credits (not package lessons) that came back from a paid lesson,
+// stuck with a teacher who can't teach this student anymore: back to the
+// card 30 days after they got stuck (refundable_from)
+export type StuckCredits = {
+  teacherId: string;
+  teacherName: string;
+  lessons: number;
+  totalValue: number;
+  refundableFrom: string | null;
+  refundable: boolean;
+};
+
+export async function getStuckCredits(): Promise<StuckCredits[]> {
+  const { data, error } = await supabase.rpc('my_stranded_lesson_credits');
+  if (error || !Array.isArray(data)) return [];
+  return data.map((r: any) => ({
+    teacherId: r.teacher_id,
+    teacherName: r.teacher_name,
+    lessons: Number(r.lessons) || 0,
+    totalValue: Number(r.total_value) || 0,
+    refundableFrom: r.refundable_from || null,
+    refundable: r.refundable === true,
+  }));
+}
+
+export async function refundStuckCredits(teacherId: string) {
+  const result = await invokeEdge('package-credits', { action: 'refund_credits', teacher_id: teacherId });
+  if (!result.ok) return { ok: false as const, error: result.error || tr("İşlem yapılamadı. Lütfen tekrar dene.") };
+  return { ok: true as const, refundedLessons: Number(result.data.refundedLessons) || 0, refundedAmount: Number(result.data.refundedAmount) || 0 };
 }
 
 // lira in the app's language ("₺1.250" / "₺1,250"); kuruş, when there are
