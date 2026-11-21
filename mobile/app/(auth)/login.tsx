@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -28,6 +28,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
   const [resetting, setResetting] = useState(false);
+  const { next } = useLocalSearchParams<{ next?: string }>();
+  // a screen of this app only ("/teacher/..."), never "//host" or a web address
+  const nextPath = typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : null;
 
   // Same as the site's "Şifremi unuttum" (auth.js armusRequestPasswordReset):
   // the email's link opens armus.com.tr/sifre-sifirla, where the new
@@ -67,7 +70,11 @@ export default function Login() {
       setError(signInError);
       return;
     }
-    router.replace('/(tabs)');
+    // sent here from a screen (a teacher's page, as a guest): back to it,
+    // like the website's login?next= - the email-code gate still applies
+    // there. Otherwise the tabs.
+    if (nextPath) router.dismissTo(nextPath as any);
+    else router.replace('/(tabs)');
   }
 
   return (

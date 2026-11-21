@@ -69,7 +69,8 @@ export default function TeacherDetail() {
   function book(type: 'trial' | 'lesson', date?: string) {
     if (!teacher) return;
     if (!profile) {
-      router.push('/(auth)/login');
+      // back to this teacher once signed in
+      router.push({ pathname: '/(auth)/login', params: { next: `/teacher/${id}` } });
       return;
     }
     router.push({ pathname: '/booking/[id]', params: date ? { id: teacher.id, type, date } : { id: teacher.id, type } });
@@ -133,7 +134,7 @@ export default function TeacherDetail() {
   async function handleMessage() {
     if (!teacher || messagingRef.current) return;
     if (!profile) {
-      router.push('/(auth)/login');
+      router.push({ pathname: '/(auth)/login', params: { next: `/teacher/${id}` } });
       return;
     }
     messagingRef.current = true;
