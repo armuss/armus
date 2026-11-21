@@ -89,6 +89,10 @@ export default function Booking() {
   // insert is refused, but only after a card has been charged - so the
   // screen says so and offers no checkout (the chat screen does the same)
   const [blockedByTeacher, setBlockedByTeacher] = useState(false);
+  // lessons are booked from a student account - a teacher could open this
+  // screen from another teacher's profile (or their own) and pay
+  const teacherAccount = profile?.role === 'teacher';
+  const cannotBook = blockedByTeacher || teacherAccount;
 
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
@@ -275,7 +279,7 @@ export default function Booking() {
   }
 
   async function handleConfirm() {
-    if (!teacher || !profile || !selectedDate || !selectedTime || submitting || confirming.current || blockedByTeacher) return;
+    if (!teacher || !profile || !selectedDate || !selectedTime || submitting || confirming.current || cannotBook) return;
     confirming.current = true;
     setSubmitting(true);
     try {
@@ -379,9 +383,13 @@ export default function Booking() {
   }
 
   if (!teacher) {
+    // a way out: this screen can be the first one (a notification, a link)
     return (
       <SafeAreaView style={styles.screen}>
         <Text style={styles.notFound}>{t("Öğretmen bulunamadı.")}</Text>
+        <View style={{ paddingHorizontal: 32, marginTop: 24 }}>
+          <Button label={t("Geri Dön")} variant="outline" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -533,6 +541,9 @@ export default function Booking() {
           <Text style={styles.notice}>
             {t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.")}
           </Text>
+        )}
+        {teacherAccount && (
+          <Text style={styles.notice}>{t("Ders rezervasyonu öğrenci hesabıyla yapılır. Öğretmen hesabınla ders alamazsın.")}</Text>
         )}
 
         {trialTakenNotice && (
@@ -700,7 +711,7 @@ export default function Booking() {
       </ScrollView>
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        {blockedByTeacher ? (
+        {cannotBook ? (
           <View style={[styles.go, styles.goIdle]}>
             <Text style={styles.goIdleText}>{t("Rezervasyon yapılamaz")}</Text>
           </View>

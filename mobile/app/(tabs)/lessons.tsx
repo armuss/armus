@@ -718,7 +718,7 @@ export default function Lessons() {
                     <>
                       {shownCredits.map(([teacherId, g]) => (
                         <Text key={teacherId} style={styles.creditsLine}>
-                          {shortDisplayName(g.name)} · {g.count} {t(" ders hakkı")}{g.values.length ? t(" (her biri {0}{1})", formatMoney(Math.min(...g.values)), Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : '') : ''}
+                          {shortDisplayName(g.name)} · {g.count}{t(" ders hakkı")}{g.values.length ? t(" (her biri {0}{1})", formatMoney(Math.min(...g.values)), Math.max(...g.values) !== Math.min(...g.values) ? `–${formatMoney(Math.max(...g.values))}` : '') : ''}
                           {!!g.firstExpiry && (
                             <Text style={new Date(g.firstExpiry).getTime() < Date.now() + 14 * 86_400_000 ? styles.creditsExpirySoon : styles.creditsExpiry}>
                               {' · '}
