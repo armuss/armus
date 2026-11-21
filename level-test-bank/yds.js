@@ -1,0 +1,153 @@
+// Level test pool: YDS / YÖKDİL. Academic sentences and texts in the
+// exam's style (science, health, society), A1 to C2. The first option is
+// always the right answer; level-test.js shuffles them.
+armusAddLevelTestBank("yds", {
+  A1: {
+    grammar: [
+      ["Water ___ at 100 degrees Celsius.", "boils", "boil", "boiling", "is boil"],
+      ["The students ___ in the library right now.", "are studying", "studies", "is studying", "studying"],
+      ["There ___ many books on the table.", "are", "is", "be", "has"],
+      ["My professor ___ in Ankara.", "lives", "live", "living", "are live"],
+      ["This is ___ interesting article.", "an", "a", "any", "much"],
+      ["We ___ an exam yesterday.", "had", "have", "has", "having"],
+      ["Can you ___ this word, please?", "spell", "spells", "spelling", "to spell"],
+    ],
+    vocabulary: [
+      ["A ___ is a place where you can borrow books.", "library", "kitchen", "hospital", "bank"],
+      ["The opposite of *big* is ___.", "small", "tall", "long", "heavy"],
+      ["Monday, Tuesday, ___, Thursday.", "Wednesday", "Friday", "Sunday", "Saturday"],
+      ["We study at a ___. It has many students and teachers.", "university", "restaurant", "airport", "hotel"],
+      ["A doctor works in a ___.", "hospital", "library", "factory", "farm"],
+      ["I write with a ___.", "pen", "book", "chair", "bag"],
+    ],
+    reading: [
+      ["Ali is a student at Ankara University. He studies biology. He has classes every morning, and in the afternoon he works in the library.", "Where does Ali work?", "In the library", "At a hospital", "In a laboratory", "At home"],
+      ["The lab is open from 9:00 to 17:00, Monday to Friday. Please wear a white coat in the lab. Do not eat or drink inside.", "What must you do in the lab?", "Wear a white coat", "Eat your lunch", "Come on Saturday", "Bring a drink"],
+      ["Elif reads a book every week. She likes science books best. Her favourite book is about the stars and the planets.", "What is Elif's favourite book about?", "Space", "History", "Animals", "Cooking"],
+    ],
+  },
+  A2: {
+    grammar: [
+      ["The results ___ in a journal last year.", "were published", "published", "are published", "publish"],
+      ["Scientists ___ a new type of frog in 2019.", "discovered", "discover", "have discovered", "discovering"],
+      ["This method is ___ than the old one.", "cheaper", "cheap", "cheapest", "more cheap"],
+      ["We ___ the report yet.", "haven't finished", "hasn't finished", "didn't finished", "not finish"],
+      ["You ___ use your phone during the exam.", "mustn't", "don't have", "needn't to", "haven't"],
+      ["The researcher ___ was interviewed is from İzmir.", "who", "which", "where", "whose"],
+      ["If you heat ice, it ___.", "melts", "melted", "will melted", "melting"],
+    ],
+    vocabulary: [
+      ["The professor gave us a lot of ___ to do at home.", "homework", "classroom", "timetable", "break"],
+      ["Plants need water and ___ to grow.", "sunlight", "plastic", "noise", "metal"],
+      ["A person who studies the stars is an ___.", "astronomer", "farmer", "pilot", "dentist"],
+      ["Please ___ the form and sign it at the bottom.", "fill in", "look up", "give up", "take off"],
+      ["The ___ of the study was to test a new medicine.", "aim", "price", "size", "weather"],
+      ["The number of students has ___ from 200 to 350.", "increased", "decreased", "reduced", "fallen"],
+    ],
+    reading: [
+      ["Bees are very important for farmers. When they move from flower to flower, they carry pollen. This helps plants make fruit. Without bees, many fruits would be difficult to grow.", "Why are bees important for farmers?", "They help plants produce fruit.", "They eat harmful insects.", "They make the soil better.", "They protect flowers from rain."],
+      ["Our university will hold a free conference on climate change on 12 May. Students who want to attend must register online before 5 May. Places are limited.", "What must students do to attend?", "Register online before 5 May", "Pay a small fee", "Arrive before 12 May", "Write a short report"],
+      ["In the past, people sent letters to communicate with friends in other cities. Today, most people use email and messaging apps, which are faster and cheaper.", "According to the text, why do people prefer email today?", "It is faster and cheaper.", "It is more personal.", "It is easier to read.", "It is safer than letters."],
+    ],
+  },
+  B1: {
+    grammar: [
+      ["The data ___ by two researchers every month.", "is checked", "checks", "is checking", "checking"],
+      ["___ the experiment was difficult, the team finished it on time.", "Although", "Because", "Despite", "However"],
+      ["The patients ___ took the new drug recovered faster.", "who", "which", "whose", "whom"],
+      ["If the temperature rises, the ice ___ melt.", "will", "would", "had", "was"],
+      ["Researchers have been studying this disease ___ more than ten years.", "for", "since", "during", "from"],
+      ["The book ___ I borrowed from the library was very useful.", "that", "who", "what", "where"],
+      ["Students are not allowed ___ in the laboratory.", "to eat", "eating", "eat", "ate"],
+      ["She suggested ___ the survey online.", "doing", "to do", "do", "to doing"],
+    ],
+    vocabulary: [
+      ["The scientist ___ an experiment to test her idea.", "carried out", "looked after", "ran into", "got over"],
+      ["The new medicine had serious side ___, so it was taken off the market.", "effects", "affects", "causes", "reasons"],
+      ["Most experts ___ that sleep is important for memory, and there is a lot of evidence for this.", "agree", "deny", "doubt", "refuse"],
+      ["To protect the environment, the government plans to ___ the number of plastic bags used in shops.", "reduce", "raise", "produce", "supply"],
+      ["This chapter gives a brief ___ of the history of medicine.", "overview", "overtime", "overload", "overweight"],
+      ["The survey ___ of 20 questions about daily habits.", "consists", "includes", "contains", "involves"],
+      ["Regular exercise can ___ the risk of heart disease.", "lower", "grow", "rise", "gain"],
+    ],
+    reading: [
+      ["A recent study found that students who sleep at least eight hours a night get better exam results than those who sleep less. The researchers believe that sleep helps the brain store new information.", "According to the researchers, why does sleep improve exam results?", "It helps the brain store new information.", "It gives students more time to study.", "It makes students less hungry.", "It reduces stress before exams."],
+      ["Coffee was first used in Ethiopia and later became popular in the Arab world. By the 17th century, coffee houses had opened in many European cities, where people met to discuss business and politics.", "What were European coffee houses used for?", "Meeting to talk about business and politics", "Growing coffee plants", "Teaching people about Ethiopia", "Selling books about the Arab world"],
+      ["Many cities are planting more trees along their streets. Trees provide shade, which can lower street temperatures in summer. They also absorb some of the pollution produced by traffic.", "Which benefit of trees is NOT mentioned in the text?", "They reduce noise.", "They provide shade.", "They lower temperatures.", "They absorb pollution."],
+    ],
+  },
+  B2: {
+    grammar: [
+      ["The findings ___ in the next issue of the journal.", "will be published", "will publish", "are publishing", "have published"],
+      ["___ the lack of funding, the project was completed successfully.", "Despite", "Although", "Even though", "Whereas"],
+      ["If the samples had been stored correctly, the results ___ more reliable.", "would have been", "will be", "had been", "are"],
+      ["The number of international students ___ steadily over the last decade.", "has risen", "have risen", "was risen", "rising"],
+      ["It is widely ___ that climate change affects food production.", "accepted", "accepting", "accept", "acceptance"],
+      ["Not all participants completed the survey, ___ made the analysis more difficult.", "which", "that", "what", "it"],
+      ["The more data we collect, ___ our conclusions will be.", "the more reliable", "more reliable", "the most reliable", "most reliable"],
+      ["The researchers are thought ___ a cure for the disease.", "to have found", "having found", "that they found", "have found"],
+    ],
+    vocabulary: [
+      ["The study ___ that air pollution can damage the brain.", "suggests", "suggestion", "suggestive", "suggesting"],
+      ["The scientist's ___ was proved correct when the experiment produced the expected results.", "hypothesis", "hypocrisy", "hydrogen", "hyphen"],
+      ["The company was ___ for polluting the river and had to pay a large fine.", "held responsible", "held up", "held back", "held on"],
+      ["Researchers must obtain ___ from participants before collecting any data.", "consent", "content", "contest", "context"],
+      ["The results of the two studies were ___, so the researchers could not draw a clear conclusion.", "inconsistent", "reliable", "identical", "accurate"],
+      ["Fossil fuels such as coal and oil are ___ resources; once used, they cannot be replaced.", "non-renewable", "renewable", "recyclable", "sustainable"],
+      ["The new policy aims to ___ the gap between rich and poor regions.", "narrow", "deepen", "lengthen", "thicken"],
+    ],
+    reading: [
+      ["Antibiotics have saved millions of lives since the 1940s. However, their overuse has led to the rise of resistant bacteria, which can no longer be killed by common drugs. Experts warn that without new treatments, simple infections could once again become deadly.", "What do experts warn about?", "Simple infections may become dangerous again.", "Antibiotics are no longer produced.", "Bacteria are disappearing.", "New treatments are too expensive."],
+      ["Bilingual children often perform better on tasks that require switching attention between different activities. Some researchers argue that constantly managing two languages trains the brain's control system, although others claim the advantage is smaller than first reported.", "What do some researchers think explains the advantage?", "Managing two languages trains the brain's control system.", "Bilingual children receive more attention at school.", "Bilingual children sleep more.", "Bilingual children start school earlier."],
+      ["Urban farming, which means growing food on rooftops and in empty city spaces, is becoming increasingly popular. While it cannot replace traditional agriculture, supporters say it shortens supply chains and gives city residents access to fresh produce.", "What does the writer say about urban farming?", "It cannot take the place of traditional farming.", "It is cheaper than traditional farming.", "It has replaced most rural farms.", "It makes supply chains longer."],
+    ],
+  },
+  C1: {
+    grammar: [
+      ["Only after the results were checked ___ to publish them.", "did the team decide", "the team decided", "decided the team", "the team did decide"],
+      ["___ the samples been stored correctly, the results would have been more reliable.", "Had", "If", "Were", "Should"],
+      ["The theory, ___ was proposed in 1905, is still widely accepted.", "which", "that", "who", "what"],
+      ["Such ___ the impact of the discovery that textbooks had to be rewritten.", "was", "were", "had", "did"],
+      ["Were the policy ___, thousands of jobs could be lost.", "to be introduced", "being introduced", "to introduce", "introducing"],
+      ["Rarely ___ such a rapid change in global temperatures.", "have scientists observed", "scientists have observed", "scientists observed", "did scientists observed"],
+      ["The participants were asked to avoid caffeine, ___ might affect their heart rate.", "as it", "which it", "so it", "that it"],
+    ],
+    vocabulary: [
+      ["The evidence for the new treatment is still ___, so doctors are cautious about recommending it.", "inconclusive", "incontrovertible", "indispensable", "inevitable"],
+      ["The report ___ the importance of early diagnosis.", "underlines", "undermines", "undergoes", "undertakes"],
+      ["Rising sea levels pose a serious ___ to coastal cities.", "threat", "thread", "treat", "trend"],
+      ["The author's argument is ___ on the assumption that all consumers act rationally.", "premised", "promised", "pressed", "prevented"],
+      ["Funding cuts have ___ the progress of the research.", "hampered", "hammered", "harmonised", "harvested"],
+      ["The new evidence ___ doubt on the original theory.", "casts", "makes", "puts", "gives"],
+    ],
+    reading: [
+      ["Proponents of standardised testing maintain that it provides an objective measure of student achievement. Critics counter that such tests reward memorisation over critical thinking and disadvantage students from less privileged backgrounds, who may lack access to test preparation.", "What is one criticism of standardised testing mentioned in the text?", "It may favour students who can afford preparation.", "It is too subjective.", "It takes too long to grade.", "It focuses too much on critical thinking."],
+      ["The placebo effect demonstrates the remarkable influence of expectation on physical health. In clinical trials, patients given inactive pills frequently report genuine improvements, which is why new drugs must outperform a placebo, not merely produce some benefit, to be approved.", "Why must new drugs be compared with a placebo?", "Patients may improve simply because they expect to.", "Placebos are cheaper to produce.", "Inactive pills have no effect at all.", "Patients prefer inactive pills."],
+      ["Although the Industrial Revolution brought unprecedented economic growth, its benefits were unevenly distributed. Factory owners amassed considerable wealth, while many workers endured long hours, dangerous conditions and wages that barely covered their basic needs.", "What is the main point of the passage?", "The gains of the Industrial Revolution were not shared fairly.", "Factory work was well paid.", "Economic growth stopped during the period.", "Workers became factory owners."],
+    ],
+  },
+  C2: {
+    grammar: [
+      ["Little ___ that their findings would transform the field.", "did the researchers realise", "the researchers realised", "realised the researchers", "had realised the researchers"],
+      ["Under no circumstances ___ be shared with third parties.", "should participants' data", "participants' data should", "participants' data are to", "do participants' data"],
+      ["So complex ___ that few experts fully understand it.", "is the model", "the model is", "does the model", "the model does"],
+      ["The committee recommended that the study ___ for another year.", "be extended", "extends", "extending", "to extend"],
+      ["Not until the data were reanalysed ___ the error.", "did anyone notice", "anyone noticed", "anyone did notice", "noticed anyone"],
+      ["___ it not been for the generous grant, the project would have been abandoned.", "Had", "Were", "Should", "Did"],
+      ["The results, ___ preliminary, are nonetheless encouraging.", "albeit", "despite", "however", "notwithstanding"],
+    ],
+    vocabulary: [
+      ["The professor's lecture was so ___ that even experts struggled to follow it.", "abstruse", "abundant", "abrasive", "abstinent"],
+      ["The new data ___ the hypothesis that the drug reduces inflammation.", "corroborate", "collaborate", "correspond", "corrode"],
+      ["The link between the two variables is ___ at best; more evidence is needed.", "tenuous", "tenacious", "tedious", "tremendous"],
+      ["The government has been accused of trying to ___ the scandal.", "whitewash", "brainwash", "backwash", "hogwash"],
+      ["The researcher's meticulous approach left no room for ___.", "ambiguity", "ambition", "amenity", "ambience"],
+      ["Critics argue that the new law will ___ academic freedom.", "curtail", "curate", "cultivate", "curdle"],
+    ],
+    reading: [
+      ["The notion that technological progress inevitably leads to social improvement is, the author suggests, a comforting fiction. History offers ample examples of innovations that entrenched existing inequalities rather than dismantling them.", "What does the author suggest?", "Technological progress does not automatically improve society.", "Technology always reduces inequality.", "History has no examples of useful innovations.", "Social improvement leads to technological progress."],
+      ["While the correlation between screen time and poor sleep in adolescents is well documented, establishing causation has proved elusive; it is equally plausible that teenagers who already sleep badly simply spend more time on their phones.", "What point does the writer make?", "It is unclear which one causes the other.", "Screens are proven to cause poor sleep.", "Teenagers who sleep badly avoid their phones.", "There is no link between screens and sleep."],
+      ["Far from being a neutral record of events, the archive reflects the priorities of those who compiled it; voices deemed unimportant at the time were seldom preserved, leaving historians to reconstruct them from fragmentary sources.", "According to the passage, why is the archive not neutral?", "It mostly preserves what its compilers considered important.", "It contains too many voices.", "Historians have changed its records.", "It was compiled very recently."],
+    ],
+  },
+});
