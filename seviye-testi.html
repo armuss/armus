@@ -803,6 +803,8 @@
     <div class="lt-qa"><h3 data-i18n="levelTest.faq2q">Ne kadar sürer?</h3><p data-i18n="levelTest.faq2a">20 soru, her biri için en fazla 60 saniye; genelde 10 dakika kadar sürer.</p></div>
     <div class="lt-qa"><h3 data-i18n="levelTest.faq3q">Sonuç ne kadar doğru?</h3><p data-i18n="levelTest.faq3a">Hızlı bir ön değerlendirmedir; konuşma ve dinlemeyi ölçmez. İlk derste öğretmenin seviyeni birlikte netleştirir.</p></div>
     <div class="lt-qa"><h3 data-i18n="levelTest.faq4q">Sonra ne olur?</h3><p data-i18n="levelTest.faq4a">Seviyeni, beceri puanlarını ve hedefine göre bir öneri görürsün; istersen sonucunu hesabına kaydedersin.</p></div>
+    <div class="lt-qa"><h3 data-i18n="levelTest.faq5q">Hedef seçmek neyi değiştirir?</h3><p data-i18n="levelTest.faq5a">Sorular o hedef için yazılmış: YDS / YÖKDİL'de akademik metinler, IELTS'te sınav konuları, iş için e-posta ve toplantı dili, seyahatte havalimanı ve otel gibi.</p></div>
+    <div class="lt-qa"><h3 data-i18n="levelTest.faq6q">Herkese aynı sorular mı gelir?</h3><p data-i18n="levelTest.faq6a">Hayır. Her hedefin yaklaşık 100 soruluk bir havuzu var; her seferinde kolaydan zora 20 soru rastgele seçilir. Testi tekrar çözersen önce görmediğin sorular gelir.</p></div>
   </section>
 
   <main class="lt" id="ltApp" hidden>
@@ -810,7 +812,7 @@
     <!-- 2 · goal -->
     <section class="lt-screen" id="ltGoal" hidden>
       <h2 data-i18n="levelTest.goalTitle">İngilizceyi en çok ne için istiyorsun?</h2>
-      <p class="lt-sub" data-i18n="levelTest.goalSub">Sonuçtaki önerini buna göre hazırlayalım.</p>
+      <p class="lt-sub" data-i18n="levelTest.goalSub">Sorular da sonuçtaki önerin de buna göre hazırlanır.</p>
       <div class="lt-goals" id="ltGoals">
         <button type="button" class="lt-goal" data-goal="yds" data-i18n="levelTest.goal.yds">YDS / YÖKDİL</button>
         <button type="button" class="lt-goal" data-goal="ielts" data-i18n="levelTest.goal.ielts">IELTS / TOEFL</button>
@@ -819,7 +821,7 @@
         <button type="button" class="lt-goal" data-goal="travel" data-i18n="levelTest.goal.travel">Seyahat</button>
         <button type="button" class="lt-goal" data-goal="school" data-i18n="levelTest.goal.school">Okul / üniversite</button>
       </div>
-      <button type="button" class="lt-skip-goal" id="ltSkipGoal" data-i18n="levelTest.goalSkip">Atla, teste geç</button>
+      <button type="button" class="lt-skip-goal" id="ltSkipGoal" data-i18n="levelTest.goalSkip">Atla, karışık sorularla başla</button>
     </section>
 
     <!-- 3 · question -->
@@ -886,7 +888,13 @@
   <script src="i18n.js?v=46"></script>
   <script src="nav-sheet.js?v=2"></script>
   <script src="exam-menu.js?v=1"></script>
-  <script src="level-test.js?v=1"></script>
+  <script src="level-test.js?v=2"></script>
+  <script src="level-test-bank/yds.js?v=1"></script>
+  <script src="level-test-bank/ielts.js?v=1"></script>
+  <script src="level-test-bank/work.js?v=1"></script>
+  <script src="level-test-bank/speaking.js?v=1"></script>
+  <script src="level-test-bank/travel.js?v=1"></script>
+  <script src="level-test-bank/school.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=16"></script>
@@ -967,8 +975,28 @@
 
     // ---- questions ----
 
+    // the question ids this browser has already been asked, so a retake
+    // draws new ones first (level-test.js); only a convenience, so any
+    // storage error just means no memory
+    const LT_SEEN_KEY = "armusLevelTestSeen";
+    function seenQuestions() {
+      try {
+        const ids = JSON.parse(localStorage.getItem(LT_SEEN_KEY) || "[]");
+        return Array.isArray(ids) ? ids : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    function rememberQuestions(questions) {
+      try {
+        const ids = seenQuestions().filter(id => !questions.some(q => q.id === id)).concat(questions.map(q => q.id));
+        localStorage.setItem(LT_SEEN_KEY, JSON.stringify(ids.slice(-600)));
+      } catch (e) {}
+    }
+
     function startTest() {
-      state.questions = armusDrawLevelTest();
+      state.questions = armusDrawLevelTest({ goal: state.goal, seen: seenQuestions() });
+      rememberQuestions(state.questions);
       state.answers = new Array(state.questions.length).fill(null);
       state.current = 0;
       state.startedAt = Date.now();
