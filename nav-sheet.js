@@ -1,7 +1,7 @@
 // Phone menu. Below 901px the header's link row (.nav nav) is hidden, so
 // this adds a menu button to the header that opens a full-screen sheet:
-// the free level test and the YDS / IELTS page first, as two big cards,
-// then the rest of the site's links.
+// the free level test and the exams (with the four exam pages) first, as
+// two big cards, then the rest of the site's links.
 //
 // Runs while the page is still parsing (it's a plain script at the end of
 // <body>), so the sheet already exists when i18n.js applies translations
@@ -45,13 +45,21 @@
       </span>
       ${ARROW}
     </a>
-    <a class="nav-sheet-card nav-sheet-exam" href="sinav-hazirlik">
-      <span>
-        <b>YDS / IELTS</b>
-        <small data-i18n="nav.sheetExamSub">Sınavına birebir hazırlan</small>
-      </span>
-      ${ARROW}
-    </a>
+    <div class="nav-sheet-card nav-sheet-exam nav-sheet-exams">
+      <a class="nav-sheet-exams-head" href="sinav-hazirlik">
+        <span>
+          <b data-i18n="nav.exams">Sınavlar</b>
+          <small data-i18n="nav.sheetExamSub">Sınavına birebir hazırlan</small>
+        </span>
+        ${ARROW}
+      </a>
+      <div class="nav-sheet-exam-chips">
+        <a href="sinav-hazirlik#yds">YDS</a>
+        <a href="yokdil">YÖKDİL</a>
+        <a href="ydt">YDT</a>
+        <a href="sinav-hazirlik#ielts">IELTS</a>
+      </div>
+    </div>
     <ul class="nav-sheet-links">
       <li><a href="teachers" data-i18n="nav.teachers">Öğretmenler</a></li>
       <li><a href="how-it-works" data-i18n="nav.how">Nasıl Çalışır?</a></li>

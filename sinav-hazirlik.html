@@ -12,11 +12,11 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>YDS ve IELTS Hazırlık: Birebir Online Ders | ARMUS</title>
-  <meta name="description" content="YDS, YÖKDİL, e-YDS ya da IELTS: sınavı bilen öğretmenlerle birebir online derslerle planlı hazırlan. Önce ücretsiz seviye testiyle seviyeni öğren.">
+  <title>YDS, YÖKDİL, YDT ve IELTS Hazırlık: Birebir Online Ders | ARMUS</title>
+  <meta name="description" content="YDS, YÖKDİL, YDT ya da IELTS: sınavı bilen öğretmenlerle birebir online derslerle planlı hazırlan. Önce ücretsiz seviye testiyle seviyeni öğren.">
   <link rel="canonical" href="https://armus.com.tr/sinav-hazirlik">
   <meta property="og:title" content="Hangi sınava hazırlanıyorsun? · ARMUS">
-  <meta property="og:description" content="YDS ve IELTS için sınavı bilen öğretmenlerle birebir, planlı hazırlık.">
+  <meta property="og:description" content="YDS, YÖKDİL, YDT ve IELTS için sınavı bilen öğretmenlerle birebir, planlı hazırlık.">
   <meta property="og:url" content="https://armus.com.tr/sinav-hazirlik">
   <meta property="og:image" content="https://armus.com.tr/og-image.png">
 
@@ -24,11 +24,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="theme.css?v=18">
-  <link rel="stylesheet" href="styles.css?v=37">
+  <link rel="stylesheet" href="styles.css?v=38">
 
   <style>
-    /* design D ("İki Yol"): which exam, two cards side by side, a YDS vs
-       IELTS comparison, then a way into the free level test */
+    /* which exam: YDS and IELTS as two big cards, YÖKDİL and YDT under
+       them (each with its own page), a YDS vs IELTS comparison, then a way
+       into the free level test */
 
     .ex-intro {
       text-align: center;
@@ -170,6 +171,103 @@
     .ex-card.ielts .ex-go a {
       background: var(--armus-gold-gradient);
       color: var(--armus-on-gold);
+    }
+
+    /* YÖKDİL and YDT: each card is one link to that exam's own page */
+    .ex-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .ex-mini {
+      border-radius: 28px;
+      padding: 28px 32px 26px;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      transition: transform 0.15s;
+    }
+
+    .ex-mini:hover {
+      transform: translateY(-2px);
+    }
+
+    .ex-mini.yokdil {
+      background: linear-gradient(160deg, #1f2a44, #141b2e);
+      color: #f4efe4;
+    }
+
+    .ex-mini.ydt {
+      background: var(--armus-champagne);
+      color: var(--armus-ink);
+    }
+
+    .ex-mini .ex-tag {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 1;
+    }
+
+    .ex-mini.yokdil .ex-tag {
+      color: var(--armus-champagne-deep);
+    }
+
+    .ex-mini.ydt .ex-tag {
+      color: var(--armus-gold-text);
+    }
+
+    .ex-new {
+      font: 800 10px Inter, sans-serif;
+      font-style: normal;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      background: var(--armus-gold-2);
+      color: #fff;
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+
+    .ex-mini h2 {
+      font: 800 44px/1 "Unbounded", "Inter", sans-serif;
+      letter-spacing: -2px;
+      margin: 12px 0 10px;
+    }
+
+    .ex-mini.ydt h2 {
+      color: var(--armus-gold-2);
+    }
+
+    .ex-mini p {
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0;
+    }
+
+    .ex-mini.yokdil p {
+      color: #d9d2c3;
+    }
+
+    .ex-mini.ydt p {
+      color: #4a3f33;
+    }
+
+    .ex-mini-go {
+      margin-top: 18px;
+      font: 700 15px Inter, sans-serif;
+      display: inline-flex;
+      gap: 10px;
+    }
+
+    .ex-mini.yokdil .ex-mini-go {
+      color: var(--armus-champagne);
+    }
+
+    .ex-mini.ydt .ex-mini-go {
+      color: var(--armus-gold-2);
     }
 
     .ex-compare {
@@ -331,8 +429,17 @@
         font-size: 15.5px;
       }
 
-      .ex-split {
+      .ex-split,
+      .ex-pair {
         grid-template-columns: 1fr;
+      }
+
+      .ex-mini {
+        padding: 24px 22px;
+      }
+
+      .ex-mini h2 {
+        font-size: 36px;
       }
 
       .ex-card {
@@ -410,7 +517,8 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .ex-go a {
+      .ex-go a,
+      .ex-mini {
         transition: none;
       }
     }
@@ -450,7 +558,7 @@
       <div class="ex-card yds" id="yds">
         <div class="ex-tag" data-i18n="exam.ydsTag">TÜRKİYE · ÖSYM</div>
         <h2>YDS</h2>
-        <p data-i18n="exam.ydsText">Lisansüstü, akademik kadro ve kamuda dil tazminatı için. YÖKDİL ve e-YDS de dahil.</p>
+        <p data-i18n="exam.ydsText">Lisansüstü, akademik kadro ve kamuda dil tazminatı için. e-YDS de dahil.</p>
         <ul>
           <li data-i18n="exam.ydsLi1">Kelime ve dil bilgisi</li>
           <li data-i18n="exam.ydsLi2">Çeviri ve paragraf soruları</li>
@@ -469,6 +577,21 @@
         </ul>
         <div class="ex-go"><a href="teachers?q=IELTS"><span data-i18n="exam.ieltsCta">IELTS Öğretmenleri</span> <span aria-hidden="true">→</span></a></div>
       </div>
+    </section>
+
+    <section class="ex-pair">
+      <a class="ex-mini yokdil" href="yokdil">
+        <div class="ex-tag"><span data-i18n="exam.yokdilTag">ÖSYM · AKADEMİK</span> <em class="ex-new" data-i18n="nav.examNew">Yeni</em></div>
+        <h2>YÖKDİL</h2>
+        <p data-i18n="exam.yokdilText">Lisansüstü başvurular için. Metinler kendi alanından gelir: Fen, Sağlık ya da Sosyal Bilimler.</p>
+        <span class="ex-mini-go"><span data-i18n="exam.yokdilGo">YÖKDİL hazırlığına bak</span> <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="ex-mini ydt" href="ydt">
+        <div class="ex-tag"><span data-i18n="exam.ydtTag">YKS · YABANCI DİL TESTİ</span> <em class="ex-new" data-i18n="nav.examNew">Yeni</em></div>
+        <h2>YDT</h2>
+        <p data-i18n="exam.ydtText">Dil bölümlerini hedefleyen liseliler için. 80 soru, 120 dakika; DİL puanının %60’ı.</p>
+        <span class="ex-mini-go"><span data-i18n="exam.ydtGo">YDT hazırlığına bak</span> <span aria-hidden="true">→</span></span>
+      </a>
     </section>
 
     <section class="ex-compare">
@@ -521,8 +644,9 @@
 
   </main>
 
-  <script src="i18n.js?v=45"></script>
-  <script src="nav-sheet.js?v=1"></script>
+  <script src="i18n.js?v=46"></script>
+  <script src="nav-sheet.js?v=2"></script>
+  <script src="exam-menu.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=16"></script>
