@@ -23,11 +23,17 @@
   link.parentNode.insertBefore(wrap, link);
   wrap.appendChild(link);
 
-  const exams = [
-    ["sinav-hazirlik#yds", "YDS", "yds", "nav.examYdsSub", "Kamu ve akademik kariyer", false],
-    ["yokdil", "YÖKDİL", "yokdil", "nav.examYokdilSub", "Lisansüstü · Fen, Sağlık, Sosyal", true],
-    ["ydt", "YDT", "ydt", "nav.examYdtSub", "YKS dil sınavı · liseliler", true],
-    ["sinav-hazirlik#ielts", "IELTS", "ielts", "nav.examIeltsSub", "Yurt dışında eğitim ve iş", false],
+  // two groups: the ÖSYM exams taken in Turkey, and the ones for abroad
+  const groups = [
+    ["nav.examGroupTr", "Türkiye · ÖSYM", [
+      ["sinav-hazirlik#yds", "YDS", "yds", "nav.examYdsSub", "Kamu ve akademik kariyer", false],
+      ["yokdil", "YÖKDİL", "yokdil", "nav.examYokdilSub", "Lisansüstü · Fen, Sağlık, Sosyal", true],
+      ["ydt", "YDT", "ydt", "nav.examYdtSub", "YKS dil sınavı · liseliler", true],
+    ]],
+    ["nav.examGroupAbroad", "Yurt dışı", [
+      ["sinav-hazirlik#ielts", "IELTS", "ielts", "nav.examIeltsSub", "Yurt dışında eğitim ve iş", false],
+      ["toefl", "TOEFL", "toefl", "nav.examToeflSub", "ABD’de üniversite başvurusu", true],
+    ]],
   ];
 
   const panel = document.createElement("div");
@@ -36,17 +42,21 @@
   panel.innerHTML = `
     <div class="nav-exam-box">
       <div class="nav-exam-grid">
-        ${exams.map(([href, name, cls, key, sub, isNew]) => `
-          <a class="nav-exam-tile" href="${href}">
-            <span class="nav-exam-badge ${cls}">${name}</span>
-            <span class="nav-exam-text">
-              <b>${name} <span data-i18n="nav.examPrepWord">hazırlık</span>${isNew ? ' <em data-i18n="nav.examNew">Yeni</em>' : ""}</b>
-              <small data-i18n="${key}">${sub}</small>
-            </span>
-          </a>`).join("")}
+        ${groups.map(([headKey, head, exams]) => `
+          <div class="nav-exam-group">
+            <div class="nav-exam-group-head" data-i18n="${headKey}">${head}</div>
+            ${exams.map(([href, name, cls, key, sub, isNew]) => `
+              <a class="nav-exam-tile" href="${href}">
+                <span class="nav-exam-badge ${cls}">${name}</span>
+                <span class="nav-exam-text">
+                  <b>${name} <span data-i18n="nav.examPrepWord">hazırlık</span>${isNew ? ' <em data-i18n="nav.examNew">Yeni</em>' : ""}</b>
+                  <small data-i18n="${key}">${sub}</small>
+                </span>
+              </a>`).join("")}
+          </div>`).join("")}
       </div>
       <a class="nav-exam-all" href="sinav-hazirlik">
-        <span data-i18n="nav.examCompare">Hangisi senin için? Dört sınavı karşılaştır</span>
+        <span data-i18n="nav.examCompare">Hangisi senin için? Sınavları yan yana karşılaştır</span>
         <b><span data-i18n="nav.examAll">Tüm sınavlar</span> <span aria-hidden="true">→</span></b>
       </a>
     </div>`;
@@ -58,9 +68,22 @@
     if (a.getAttribute("href") === here) a.setAttribute("aria-current", "page");
   });
 
+  // the panel is centred under "Sınavlar"; on a narrow laptop that can
+  // put an edge outside the window, so it's nudged back in
+  const fitPanel = () => {
+    panel.style.removeProperty("--nav-exam-shift");
+    const box = panel.querySelector(".nav-exam-box").getBoundingClientRect();
+    const room = document.documentElement.clientWidth;
+    let shift = 0;
+    if (box.left < 12) shift = 12 - box.left;
+    else if (box.right > room - 12) shift = room - 12 - box.right;
+    if (shift) panel.style.setProperty("--nav-exam-shift", `${Math.round(shift)}px`);
+  };
+
   const setOpen = (open) => {
     wrap.classList.toggle("open", open);
     link.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) fitPanel();
   };
 
   let closeTimer = null;

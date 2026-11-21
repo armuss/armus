@@ -1,6 +1,6 @@
 // Phone menu. Below 901px the header's link row (.nav nav) is hidden, so
 // this adds a menu button to the header that opens a full-screen sheet:
-// the free level test and the exams (with the four exam pages) first, as
+// the free level test and the exams (with the five exams) first, as
 // two big cards, then the rest of the site's links.
 //
 // Runs while the page is still parsing (it's a plain script at the end of
@@ -58,6 +58,7 @@
         <a href="yokdil">YÖKDİL</a>
         <a href="ydt">YDT</a>
         <a href="sinav-hazirlik#ielts">IELTS</a>
+        <a href="toefl">TOEFL</a>
       </div>
     </div>
     <ul class="nav-sheet-links">
