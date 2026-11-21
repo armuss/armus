@@ -10,7 +10,13 @@ export default function SimpleHeader({ title, sub }: { title: string; sub?: stri
   const t = useT();
   return (
     <View style={styles.head}>
-      <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
+      {/* opened straight from a link there is nothing to go back to - go home instead of a dead button */}
+      <Pressable
+        onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
+        style={styles.roundBtn}
+        accessibilityRole="button"
+        accessibilityLabel={t("Geri")}
+      >
         <Ionicons name="chevron-back" size={20} color={colors.onRed} />
       </Pressable>
       <View style={styles.text}>

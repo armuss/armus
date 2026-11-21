@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,10 +11,11 @@ import { formatMoney } from '../lib/credits';
 import {
   PAYOUT_HOLD_DAYS,
   createWithdrawalRequest,
+  fetchWithdrawalRequests,
   getTeacherCredits,
-  getWithdrawalRequests,
   isValidTurkishIban,
   normalizeIban,
+  parseWithdrawalAmount,
   summarizeEarnings,
   type EarningsSummary,
   type WithdrawalRequest,
@@ -50,15 +51,29 @@ export default function Earnings() {
   // the red band reaches just past the two figures at the top
   const [statsBottom, setStatsBottom] = useState(150);
 
+  // the earlier requests couldn't be read: the balance can't take them off,
+  // so no new request until they are
+  const [requestsFailed, setRequestsFailed] = useState(false);
+  // a second tap while the first request is still on its way must not send
+  // a second one
+  const submitting = useRef(false);
+
+  // a teacher's screen: a student who reached it from a link saw the
+  // withdrawal form
+  useEffect(() => {
+    if (profile && profile.role !== 'teacher') router.replace('/(tabs)');
+  }, [profile?.role]);
+
   const load = useCallback(async () => {
-    if (!profile) return;
+    if (!profile || profile.role !== 'teacher') return;
     const [bookings, credits, withdrawals] = await Promise.all([
       getBookingsForTeacher(profile.id),
       getTeacherCredits(profile.id),
-      getWithdrawalRequests(profile.id),
+      fetchWithdrawalRequests(profile.id),
     ]);
-    setSummary(summarizeEarnings(bookings, credits, withdrawals, timeZone));
-    setRequests(withdrawals);
+    setRequestsFailed(withdrawals === null);
+    setSummary(summarizeEarnings(bookings, credits, withdrawals || [], timeZone));
+    setRequests(withdrawals || []);
     setLoading(false);
   }, [profile, timeZone]);
 
@@ -67,22 +82,32 @@ export default function Earnings() {
   }, [load]);
 
   async function submit() {
-    if (!profile || !summary) return;
-    const value = Number(amount.replace(',', '.'));
+    if (!profile || !summary || submitting.current || requestsFailed) return;
+    const value = parseWithdrawalAmount(amount);
     const cleanIban = normalizeIban(iban);
-    if (!value || value <= 0) return setStatus({ text: t("Geçerli bir tutar gir."), error: true });
+    if (value === null) return setStatus({ text: t("Geçerli bir tutar gir."), error: true });
     if (value > summary.withdrawableBalance) return setStatus({ text: t("Bu tutar çekilebilir bakiyenden fazla."), error: true });
     if (!isValidTurkishIban(cleanIban)) return setStatus({ text: t("Geçerli bir IBAN gir (TR ile başlayan 26 karakter)."), error: true });
     if (!ibanName.trim()) return setStatus({ text: t("Hesap sahibinin adını gir."), error: true });
 
+    submitting.current = true;
     setSending(true);
-    const created = await createWithdrawalRequest({ teacherId: profile.id, amount: value, iban: cleanIban, ibanName: ibanName.trim(), note: note.trim() });
-    setSending(false);
-    if (!created) return setStatus({ text: t("Talep gönderilemedi. Lütfen tekrar dene."), error: true });
-    setStatus({ text: t("Talebin gönderildi ✓"), error: false });
-    setAmount('');
-    setNote('');
-    load();
+    try {
+      const created = await createWithdrawalRequest({ teacherId: profile.id, amount: value, iban: cleanIban, ibanName: ibanName.trim(), note: note.trim() });
+      if (!created) {
+        setStatus({ text: t("Talep gönderilemedi. Lütfen tekrar dene."), error: true });
+        return;
+      }
+      setStatus({ text: t("Talebin gönderildi ✓"), error: false });
+      setAmount('');
+      setNote('');
+      // the form opens again only with the new balance: until it was re-read
+      // the same money could be asked for a second time
+      await load();
+    } finally {
+      submitting.current = false;
+      setSending(false);
+    }
   }
 
   if (loading || !summary) {
@@ -95,7 +120,9 @@ export default function Earnings() {
 
   return (
     <SafeAreaView style={styles.safeRed} edges={['top']}>
-      <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {/* automaticallyAdjustKeyboardInsets: on iPhone the keyboard otherwise
+          covers the IBAN, name and note fields at the bottom of the form */}
+      <ScrollView style={styles.list} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <ScrollBand height={statsBottom + 10} inset={20} />
         <Pressable onPress={() => router.back()} style={{ marginBottom: 12 }}>
           <Text style={styles.back}>{t("← Geri")}</Text>
@@ -144,8 +171,17 @@ export default function Earnings() {
         <Text style={styles.label}>{t("Not (isteğe bağlı)")}</Text>
         <TextInput value={note} onChangeText={setNote} placeholder="" placeholderTextColor={colors.faint} style={styles.input} />
         {status && <Text style={[styles.status, status.error && { color: colors.error }]}>{status.text}</Text>}
+        {requestsFailed && (
+          <Text style={[styles.status, { color: colors.error }]}>
+            {t("Önceki para çekme taleplerin yüklenemedi, bu yüzden bakiyen şu anda kesin değil. Lütfen tekrar dene.")}
+          </Text>
+        )}
         <View style={{ marginTop: 14 }}>
-          <Button label={t("Talep Gönder")} onPress={submit} loading={sending} disabled={summary.withdrawableBalance <= 0} />
+          {requestsFailed ? (
+            <Button label={t("Tekrar dene")} variant="outline" onPress={load} />
+          ) : (
+            <Button label={t("Talep Gönder")} onPress={submit} loading={sending} disabled={summary.withdrawableBalance <= 0} />
+          )}
         </View>
 
         <Text style={styles.sectionTitle}>{t("Geçmiş talepler")}</Text>

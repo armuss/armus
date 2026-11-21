@@ -390,6 +390,11 @@ Deno.serve(async (req) => {
     if (!teacherId || !teacherName) {
       return jsonResponse({ error: "Eksik bilgi." }, 400);
     }
+    // a teacher paying for lessons with themselves: the "lessons" would
+    // count as taught hours and move them to a lower commission tier
+    if (String(teacherId) === user.id) {
+      return jsonResponse({ error: "Kendinle ders rezervasyonu yapamazsın." }, 400);
+    }
     if (type !== "package" && (!date || !time)) {
       return jsonResponse({ error: "Eksik rezervasyon bilgisi." }, 400);
     }

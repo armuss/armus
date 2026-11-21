@@ -8,35 +8,90 @@ import {
 import { Unbounded_700Bold, Unbounded_800ExtraBold } from '@expo-google-fonts/unbounded';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import LaunchAnimation from '../components/LaunchAnimation';
-import { AuthProvider, useAuth } from '../lib/auth';
+import { AuthProvider, needsEmailVerification, useAuth } from '../lib/auth';
 import { LanguageProvider } from '../lib/i18n';
 import { registerForPushNotifications } from '../lib/push';
 import { colors } from '../lib/theme';
+
+// the screens of the tab bar (app/(tabs)/*)
+const TAB_PATHS = new Set(['/lessons', '/messages', '/students', '/availability', '/profile']);
 
 // Registers this device for push once someone is signed in, and opens the
 // screen a tapped notification points at (data.path, set by
 // send-push-notification).
 function PushNotifications() {
-  const { profile } = useAuth();
+  const { session, profile, loading } = useAuth();
   const lastResponse = Platform.OS === 'web' ? null : Notifications.useLastNotificationResponse();
+  // a new account is asked about notifications once its email code is done,
+  // not over the code screen
+  const ready = !!profile && !needsEmailVerification(profile);
 
   useEffect(() => {
-    if (profile) registerForPushNotifications();
-  }, [profile?.id]);
+    if (!ready) return;
+    registerForPushNotifications();
+    // the phone's push token can change (an OS update, a restore): register
+    // the new one, or the notifications stop arriving
+    if (Platform.OS === 'web') return;
+    const sub = Notifications.addPushTokenListener(() => registerForPushNotifications());
+    return () => sub.remove();
+  }, [profile?.id, ready]);
 
   useEffect(() => {
-    if (!profile || !lastResponse || lastResponse.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    if (!lastResponse || lastResponse.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    // opened from a notification: wait until it's known who is signed in
+    if (loading) return;
+    // tapped while signed out: dropped, not kept for whoever signs in next
+    // (their own lesson or someone else's chat would open for them)
+    if (!session) {
+      Notifications.clearLastNotificationResponse();
+      return;
+    }
+    if (!ready) return;
     const path = lastResponse.notification.request.content.data?.path;
-    if (typeof path === 'string' && path.startsWith('/')) router.push(path as any);
+    // a screen of this app only: expo-router hands "//host/..." to the OS
+    // as an outside web link (hasUrlProtocolPrefix)
+    if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) {
+      // "/" is the root index (it only redirects to the tabs), and a tab
+      // ("/lessons") is already in the stack: pushing either stacked a
+      // second copy of the tabs over the first. Go back to the tabs
+      // instead; other screens (a chat) are opened on top.
+      const bare = path.split('?')[0].replace(/\/+$/, '') || '/';
+      if (bare === '/') router.navigate('/(tabs)');
+      else if (TAB_PATHS.has(bare)) router.navigate(path as any);
+      else router.push(path as any);
+    }
     Notifications.clearLastNotificationResponse();
-  }, [lastResponse, profile?.id]);
+  }, [lastResponse, profile?.id, ready, loading, !!session]);
+
+  return null;
+}
+
+// The 6-digit email code holds on every screen, like the website's
+// armusEnforceEmailVerification (every page but register/login/password
+// reset). Only the tabs checked it, so a new, unconfirmed account reached
+// booking, chat, a teacher's profile... through an armus:// link or a
+// notification.
+const OPEN_BEFORE_VERIFYING = new Set(['(auth)', 'verify-email', 'welcome']);
+
+function EmailVerificationGate() {
+  const { session, profile } = useAuth();
+  const segments = useSegments();
+  const navReady = !!useRootNavigationState()?.key;
+
+  useEffect(() => {
+    if (!navReady || !session || !needsEmailVerification(profile)) return;
+    const first = segments[0] as string | undefined;
+    // the start screen (no segment) sends a session to the tabs, which redirect
+    if (!first || OPEN_BEFORE_VERIFYING.has(first)) return;
+    router.replace('/verify-email');
+  }, [navReady, session, profile, segments]);
 
   return null;
 }
@@ -61,6 +116,7 @@ export default function RootLayout() {
       <LanguageProvider>
       <AuthProvider>
         <PushNotifications />
+        <EmailVerificationGate />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
         {/* over everything until it has played; it also lets go of the native launch screen */}
         <LaunchAnimation />

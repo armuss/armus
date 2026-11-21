@@ -1,9 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { Redirect, router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -11,18 +15,19 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import WebView from 'react-native-webview';
+import WebView, { type WebViewNavigation } from 'react-native-webview';
 
 import AttendanceFlow from '../../components/AttendanceFlow';
 import Button from '../../components/Button';
+import { CHECKIN_OK_KEY } from '../../components/LessonAftercare';
 import { NO_SHOW_GRACE_MINUTES, getAttendanceReportForBooking, type AttendanceReport } from '../../lib/attendance';
 import { useAuth } from '../../lib/auth';
 import {
-  canJoinLessonNow,
   formatLessonWhenForViewer,
   formatMinutes,
   getBookingById,
@@ -33,12 +38,52 @@ import {
 import { capitalizeName, shortDisplayName } from '../../lib/displayName';
 import { notify } from '../../lib/dialogs';
 import { getLessonNotes, saveLessonNotes } from '../../lib/lessonNotes';
+import { pinVocabEntry } from '../../lib/vocab';
 import { addReview, getReviewForBooking } from '../../lib/reviews';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
 type Phase = 'loading' | 'tooEarly' | 'tooLate' | 'noAccess' | 'cancelled' | 'room' | 'checkin' | 'review';
+
+// class.html's toolbar: no "invite", "embed" or "share link" buttons, so the
+// call's own UI doesn't hand the room's link to anyone past the two of them
+const JITSI_TOOLBAR = [
+  'microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection',
+  'hangup', 'profile', 'chat', 'raisehand', 'videoquality', 'filmstrip',
+  'tileview', 'settings', 'shortcuts',
+];
+
+// The meet.jit.si room, its settings in the URL's hash (Jitsi reads each
+// value as JSON, and only the keys on its URL whitelist). Opened in a phone
+// browser - which a WebView is to Jitsi - meet.jit.si first shows its
+// "get the Jitsi Meet app" page unless deep linking is off, and the old
+// `prejoinPageEnabled` key is no longer on the whitelist (the name-and-camera
+// page before joining kept showing).
+function jitsiRoomUrl(bookingId: string, displayName: string) {
+  const settings: [string, unknown][] = [
+    ['config.prejoinConfig.enabled', false],
+    ['config.disableDeepLinking', true],
+    ['config.deeplinking.disabled', true],
+    ['config.toolbarButtons', JITSI_TOOLBAR],
+    ['userInfo.displayName', displayName],
+  ];
+  const hash = settings.map(([key, value]) => `${key}=${encodeURIComponent(JSON.stringify(value))}`).join('&');
+  return `https://meet.jit.si/${roomNameForBooking(bookingId)}#${hash}`;
+}
+
+// Where meet.jit.si sends the page once the call is left with its own red
+// hang-up button: its welcome page ("/", where anyone can start any other
+// meeting) or a static close page. Seen from the WebView, that means the
+// person left the lesson.
+function isJitsiExitPage(url: string) {
+  const match = /^https?:\/\/meet\.jit\.si(\/[^?#]*)?/i.exec(url);
+  if (!match) return false;
+  const path = (match[1] || '/').replace(/\/+$/, '');
+  return path === '' || /^\/static\/close/i.test(path);
+}
+
+const KEEP_AWAKE_TAG = 'armus-lesson-room';
 
 function formatClock(ms: number) {
   const totalSeconds = Math.max(0, Math.round(ms / 1000));
@@ -50,11 +95,19 @@ function formatClock(ms: number) {
 export default function Class() {
   const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { profile } = useAuth();
+  const { profile, session, loading: authLoading } = useAuth();
+  const navigation = useNavigation();
+
+  // who opened the room, kept from the moment the lesson loaded: a token
+  // refresh reloads the profile, and when that read fails (a moment without
+  // signal) `profile` turns null - the call's URL (with the name in it)
+  // changed and the WebView reloaded, dropping the call, and "Ayrıl" did
+  // nothing
+  const [me, setMe] = useState<{ id: string; name: string; role: string } | null>(null);
 
   // a teacher's lessons live on the "Bugün" tab, a student's on "Derslerim"
   function goBackToLessons() {
-    router.replace(profile?.role === 'teacher' ? '/(tabs)' : '/(tabs)/lessons');
+    router.replace((me?.role ?? profile?.role) === 'teacher' ? '/(tabs)' : '/(tabs)/lessons');
   }
 
   const [phase, setPhase] = useState<Phase>('loading');
@@ -67,13 +120,21 @@ export default function Class() {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
 
-  // the bottom panel: words and a note for this lesson, kept on the device
+  // the bottom panel: a word and its meaning go onto the student's word
+  // cards (class.html's "pin a word", either side can add one); the list of
+  // words pinned in this lesson and the note stay on this device
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<'words' | 'notes'>('words');
   const [words, setWords] = useState<string[]>([]);
   const [note, setNote] = useState('');
   const [wordInput, setWordInput] = useState('');
+  const [meaningInput, setMeaningInput] = useState('');
+  const [pinning, setPinning] = useState(false);
+  const pinningRef = useRef(false);
+  const meaningField = useRef<TextInputInstance>(null);
   const notesLoaded = useRef(false);
+  const latestNotes = useRef({ words, note });
+  latestNotes.current = { words, note };
 
   useEffect(() => {
     notesLoaded.current = false;
@@ -82,6 +143,11 @@ export default function Class() {
       setNote(n.note);
       notesLoaded.current = true;
     });
+    // the save below waits 400ms after the last keystroke - leaving the
+    // room inside that time used to drop the last word or note line
+    return () => {
+      if (notesLoaded.current) saveLessonNotes(id, latestNotes.current);
+    };
   }, [id]);
 
   useEffect(() => {
@@ -93,51 +159,58 @@ export default function Class() {
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState('');
   const [savingReview, setSavingReview] = useState(false);
+  const savingReviewRef = useRef(false);
 
   const windowRef = useRef<{ start: Date; end: Date } | null>(null);
+
+  // which screen a booking opens on, right now
+  function enter(b: Booking | null, viewer: { id: string }) {
+    if (!b) {
+      setPhase('noAccess');
+      return;
+    }
+    // RLS lets more than just the two participants read a booking row
+    // (an admin, for dispute review) - getBookingById succeeding is not
+    // the same as "you belong in this call", unlike a booking that
+    // doesn't exist or isn't yours at all, which already lands here as
+    // `!b` via RLS. Mirrors class.html's explicit isStudent/isTeacher gate.
+    if (viewer.id !== b.studentId && viewer.id !== b.teacherId) {
+      setPhase('noAccess');
+      return;
+    }
+    if (b.status === 'cancelled') {
+      setPhase('cancelled');
+      return;
+    }
+
+    const { start, end, joinsFrom, joinsUntil } = lessonWindow(b);
+    windowRef.current = { start, end };
+    const now = new Date();
+
+    if (now < joinsFrom) {
+      setMinutesUntil(Math.ceil((joinsFrom.getTime() - now.getTime()) / 60000));
+      setBooking(b);
+      setPhase('tooEarly');
+      return;
+    }
+    if (now > joinsUntil) {
+      setPhase('tooLate');
+      return;
+    }
+
+    setBooking(b);
+    setPhase('room');
+  }
 
   useEffect(() => {
     if (!profile) return;
     let active = true;
+    const viewer = { id: profile.id, name: profile.name, role: profile.role };
 
     getBookingById(id).then((b) => {
       if (!active) return;
-
-      if (!b) {
-        setPhase('noAccess');
-        return;
-      }
-      // RLS lets more than just the two participants read a booking row
-      // (an admin, for dispute review) - getBookingById succeeding is not
-      // the same as "you belong in this call", unlike a booking that
-      // doesn't exist or isn't yours at all, which already lands here as
-      // `!b` via RLS. Mirrors class.html's explicit isStudent/isTeacher gate.
-      if (profile.id !== b.studentId && profile.id !== b.teacherId) {
-        setPhase('noAccess');
-        return;
-      }
-      if (b.status === 'cancelled') {
-        setPhase('cancelled');
-        return;
-      }
-
-      const { start, end, joinsFrom, joinsUntil } = lessonWindow(b);
-      windowRef.current = { start, end };
-      const now = new Date();
-
-      if (now < joinsFrom) {
-        setMinutesUntil(Math.ceil((joinsFrom.getTime() - now.getTime()) / 60000));
-        setBooking(b);
-        setPhase('tooEarly');
-        return;
-      }
-      if (now > joinsUntil) {
-        setPhase('tooLate');
-        return;
-      }
-
-      setBooking(b);
-      setPhase('room');
+      setMe(viewer);
+      enter(b, viewer);
     });
 
     return () => {
@@ -152,26 +225,34 @@ export default function Class() {
   // "tooEarly" only reflects the moment the booking was first fetched - a
   // student who opened the link early would otherwise be stuck on this
   // screen forever even once the join window actually opens, with no way
-  // back in short of leaving and re-entering. Re-checks every 15s and
-  // flips into the room once joinsFrom passes, mirroring class.html.
+  // back in short of leaving and re-entering. Re-checks every 15s; once
+  // joinsFrom passes, the booking is read again (class.html reloads the
+  // page) - a lesson cancelled or moved to another time while they waited
+  // used to open the room at the old time all the same.
   useEffect(() => {
-    if (phase !== 'tooEarly' || !booking) return;
+    if (phase !== 'tooEarly' || !booking || !me) return;
+    let active = true;
 
     const interval = setInterval(() => {
-      const { start, end, joinsFrom, joinsUntil } = lessonWindow(booking);
+      const { joinsFrom } = lessonWindow(booking);
       const now = new Date();
-      if (now >= joinsFrom && now <= joinsUntil) {
-        windowRef.current = { start, end };
-        setPhase('room');
-      } else if (now > joinsUntil) {
-        setPhase('tooLate');
+      if (now >= joinsFrom) {
+        clearInterval(interval);
+        // a failed read (no signal) keeps the booking already in hand
+        getBookingById(booking.id).then((fresh) => {
+          if (active) enter(fresh ?? booking, me);
+        });
       } else {
         setMinutesUntil(Math.ceil((joinsFrom.getTime() - now.getTime()) / 60000));
       }
     }, 15000);
 
-    return () => clearInterval(interval);
-  }, [phase, booking]);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, booking, me]);
 
   useEffect(() => {
     if (phase !== 'room' || !windowRef.current) return;
@@ -211,6 +292,17 @@ export default function Class() {
     return () => clearInterval(interval);
   }, [phase, booking]);
 
+  // the screen stays on through the lesson: when an idle phone dimmed and
+  // locked itself mid-lesson (nobody touches the screen while talking),
+  // iOS stopped the WebView's camera and microphone
+  useEffect(() => {
+    if (phase !== 'room') return;
+    activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
+    return () => {
+      deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
+    };
+  }, [phase]);
+
   // after the student leaves: the website's shared report flow, then
   // the message it filed (or the star rating)
   const [checkinMessage, setCheckinMessage] = useState('');
@@ -218,6 +310,14 @@ export default function Class() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportExisting, setReportExisting] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
+
+  // the WebView is drawn again from scratch (a new key) after a failed load
+  // or when the phone killed its web process
+  const [webViewKey, setWebViewKey] = useState(0);
+
+  function lessonStarted() {
+    return windowRef.current ? new Date() >= windowRef.current.start : false;
+  }
 
   function noShowReady() {
     return windowRef.current ? new Date() >= new Date(windowRef.current.start.getTime() + NO_SHOW_GRACE_MINUTES * 60000) : false;
@@ -233,18 +333,29 @@ export default function Class() {
   // Only the student rates a lesson or reports the teacher's attendance -
   // mirrors class.html's `if (isStudent)` gate around its whole
   // post-class modal. A teacher leaving just goes straight back.
+  const leaving = useRef(false);
   async function handleLeave() {
-    if (!booking || !profile) return;
+    if (!booking || !me || leaving.current) return;
 
-    if (profile.id !== booking.studentId) {
+    if (me.id !== booking.studentId) {
       goBackToLessons();
       return;
     }
 
+    // left before the lesson's start time (joined early, then left): there
+    // is nothing to confirm or rate yet - the check-in asked "did this
+    // lesson happen?" about a lesson still to come, every report on it was
+    // refused (one can only be filed once the lesson has started) and "yes"
+    // rated it in advance
+    if (!lessonStarted()) {
+      goBackToLessons();
+      return;
+    }
+
+    leaving.current = true;
     // asked first, every time (unless already reported from inside the
-    // room, which this screen doesn't offer yet - only the post-leave
-    // check-in below) - an existing report already answered this, so go
-    // straight to the review step same as web does.
+    // room) - an existing report already answered this, so go straight to
+    // the review step same as web does.
     const existingReport = await getAttendanceReportForBooking(booking.id);
     if (existingReport) {
       const existingReview = await getReviewForBooking(booking.id);
@@ -259,6 +370,33 @@ export default function Class() {
     setPhase('checkin');
   }
 
+  // Leaving the room by any way out goes through "Ayrıl": an iPhone's swipe
+  // from the screen's edge or Android's back button used to close the call
+  // in an instant, skipping the check-in and rating - one stray swipe ended
+  // a live lesson
+  const handleLeaveRef = useRef(handleLeave);
+  handleLeaveRef.current = handleLeave;
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: phase !== 'room' });
+    if (phase !== 'room') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleLeaveRef.current();
+      return true;
+    });
+    return () => sub.remove();
+  }, [phase, navigation]);
+
+  // Jitsi's own red hang-up button: the page moves on to meet.jit.si's
+  // welcome or close page, inside the WebView - where anyone can start any
+  // other meeting - and the lesson's check-in and rating never came (on the
+  // website, Jitsi's readyToClose event opens them). Stop that page and leave
+  // the way "Ayrıl" does.
+  function onRoomNavigation(request: WebViewNavigation & { isTopFrame?: boolean }) {
+    if (request.isTopFrame === false || !isJitsiExitPage(request.url)) return true;
+    handleLeaveRef.current();
+    return false;
+  }
+
   // "yes" (or a late start that was still held) moves on to the star
   // rating; anything else just confirms and leaves - class.html
   async function goToReview() {
@@ -271,6 +409,13 @@ export default function Class() {
     setPhase('review');
   }
 
+  // "yes, it happened" here is the same answer as on the lesson's card in
+  // Derslerim, which used to ask it all over again for the next 24 hours
+  function onHappened() {
+    if (booking) AsyncStorage.setItem(CHECKIN_OK_KEY(booking.id), '1').catch(() => {});
+    goToReview();
+  }
+
   function onCheckinFiled(report: AttendanceReport, message: string) {
     if (report.type === 'late') {
       goToReview();
@@ -280,28 +425,41 @@ export default function Class() {
   }
 
   async function submitReview() {
-    if (!booking || !profile || savingReview) return;
+    // a ref, not only the state: a quick second tap ran before the state
+    // had turned, and the second insert hit reviews' one-per-lesson rule
+    if (!booking || !me || savingReviewRef.current) return;
 
-    setSavingReview(true);
-    if (stars > 0) {
-      const saved = await addReview({
-        bookingId: booking.id,
-        teacherId: booking.teacherId,
-        studentId: profile.id,
-        studentName: profile.name,
-        stars,
-        text: comment.trim(),
-      });
-      if (!saved) {
-        // it used to leave as if the rating had been saved
-        setSavingReview(false);
-        notify(t("Kaydedilemedi"), t("Değerlendirme kaydedilemedi."));
+    if (stars === 0) {
+      // a note typed without picking stars was dropped without a word
+      if (comment.trim()) {
+        notify(t("Puan seç"), t("Lütfen bir puan seç."));
         return;
       }
+      goBackToLessons();
+      return;
     }
+
+    savingReviewRef.current = true;
+    setSavingReview(true);
+    const saved = await addReview({
+      bookingId: booking.id,
+      teacherId: booking.teacherId,
+      studentId: me.id,
+      studentName: me.name,
+      stars,
+      text: comment.trim(),
+    });
+    savingReviewRef.current = false;
     setSavingReview(false);
+    if (!saved) {
+      // it used to leave as if the rating had been saved
+      notify(t("Kaydedilemedi"), t("Değerlendirme kaydedilemedi."));
+      return;
+    }
     goBackToLessons();
   }
+
+  if (!authLoading && !session) return <Redirect href="/(auth)/login" />;
 
   if (phase === 'loading') {
     return (
@@ -335,7 +493,7 @@ export default function Class() {
   }
 
   if (phase === 'tooEarly' && booking) {
-    const isStudent = profile?.id === booking.studentId;
+    const isStudent = me?.id === booking.studentId;
     const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
     const when = formatLessonWhenForViewer(booking);
     return (
@@ -360,7 +518,7 @@ export default function Class() {
     );
   }
 
-  if (phase === 'checkin' && booking && profile) {
+  if (phase === 'checkin' && booking && me) {
     if (checkinMessage) {
       return (
         <SafeAreaView style={[styles.screen, styles.centered, { paddingHorizontal: 28 }]}>
@@ -375,19 +533,22 @@ export default function Class() {
 
     return (
       <SafeAreaView style={styles.screen}>
+        {/* "how many minutes" is typed here - on a small iPhone the keyboard covered "Devam Et" */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
         <ScrollView contentContainerStyle={styles.checkinContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.reviewTitle}>{t("Bu ders gerçekleşti mi?")}</Text>
           <Text style={[styles.gateSubtitle, { marginBottom: 20 }]}>
             {t("{0}, {1} için planlanan ders.", formatLessonWhenForViewer(booking).dateLabel, formatLessonWhenForViewer(booking).timeRange)}</Text>
           <AttendanceFlow
             booking={booking}
-            studentId={profile.id}
+            studentId={me.id}
             noShowReady={noShowReady()}
             askHappened
-            onHappened={goToReview}
+            onHappened={onHappened}
             onFiled={onCheckinFiled}
           />
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -426,28 +587,48 @@ export default function Class() {
 
   if (!booking) return null;
 
-  const isStudent = profile?.id === booking.studentId;
+  const isStudent = me?.id === booking.studentId;
   // the other person sees this name in the call - a teacher's full name is
   // never shown to a student (class.html does the same)
-  const callName = profile?.name
+  const callName = me?.name
     ? isStudent
-      ? capitalizeName(profile.name)
-      : shortDisplayName(profile.name)
+      ? capitalizeName(me.name)
+      : shortDisplayName(me.name)
     : 'ARMUS';
-  const roomUrl = `https://meet.jit.si/${roomNameForBooking(booking.id)}#config.prejoinPageEnabled=false&userInfo.displayName=%22${encodeURIComponent(
-    callName
-  )}%22`;
+  const roomUrl = jitsiRoomUrl(booking.id, callName);
 
   const otherName = isStudent ? shortDisplayName(booking.teacherName) : capitalizeName(booking.studentName);
 
-  function addWord() {
+  // The words used to be kept only in this screen, which closes for good
+  // 15 minutes after the lesson - "they stay after the lesson" was never
+  // true, and a teacher's words never reached the student. Each one now
+  // goes onto the student's word cards (Kelime kartlarım), with its meaning.
+  async function addWord() {
+    if (!booking || pinningRef.current) return;
     const w = wordInput.trim();
-    if (!w || words.some((x) => x.toLowerCase() === w.toLowerCase())) {
+    const m = meaningInput.trim();
+    if (!w) return;
+    if (words.some((x) => x.toLowerCase() === w.toLowerCase())) {
       setWordInput('');
+      setMeaningInput('');
+      return;
+    }
+    if (!m) {
+      meaningField.current?.focus();
+      return;
+    }
+    pinningRef.current = true;
+    setPinning(true);
+    const saved = await pinVocabEntry(booking.studentId, w, m);
+    pinningRef.current = false;
+    setPinning(false);
+    if (!saved) {
+      notify(t("Kaydedilemedi"), t("Kaydedilemedi. Lütfen tekrar dene."));
       return;
     }
     setWords((prev) => [...prev, w]);
     setWordInput('');
+    setMeaningInput('');
   }
 
   return (
@@ -476,16 +657,42 @@ export default function Class() {
 
       <View style={styles.videoFrame}>
         <WebView
+          key={webViewKey}
           source={{ uri: roomUrl }}
           style={{ flex: 1, backgroundColor: '#0b0b0b' }}
           allowsInlineMediaPlayback
           mediaPlaybackRequiresUserAction={false}
           mediaCapturePermissionGrantType="grant"
+          onShouldStartLoadWithRequest={onRoomNavigation}
+          // the phone ended the page's web process (low memory, or long in
+          // the background): the video went blank for good - load it again
+          onContentProcessDidTerminate={() => setWebViewKey((k) => k + 1)}
+          onRenderProcessGone={() => setWebViewKey((k) => k + 1)}
+          // a link opened from the room (Jitsi's chat, its help pages) goes
+          // to the phone's browser: loaded in here it would replace the
+          // lesson and get the camera and microphone without asking
+          onOpenWindow={(e) => {
+            const url = e.nativeEvent.targetUrl;
+            if (/^https:\/\//i.test(url)) Linking.openURL(url).catch(() => {});
+          }}
           startInLoadingState
           renderLoading={() => (
             <View style={styles.videoLoading}>
               <ActivityIndicator color={colors.gold2} />
               <Text style={styles.videoLoadingText}>{t("Ders odası açılıyor…")}</Text>
+            </View>
+          )}
+          // no connection: the WebView's own English "Error loading page"
+          // with an error code, and no way to try again
+          renderError={() => (
+            <View style={[styles.videoLoading, { paddingHorizontal: 28 }]}>
+              <Ionicons name="cloud-offline-outline" size={26} color={colors.gold2} />
+              <Text style={[styles.videoLoadingText, { textAlign: 'center', lineHeight: 19 }]}>
+                {t("Görüntülü ders bağlantısı yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.")}
+              </Text>
+              <Pressable onPress={() => setWebViewKey((k) => k + 1)} style={styles.videoRetry}>
+                <Text style={styles.videoRetryText}>{t("Tekrar dene")}</Text>
+              </Pressable>
             </View>
           )}
         />
@@ -521,26 +728,44 @@ export default function Class() {
           <>
             <View style={styles.words}>
               {words.map((w) => (
-                <Pressable key={w} onPress={() => setWords((prev) => prev.filter((x) => x !== w))} style={styles.word} accessibilityLabel={t("{0} kelimesini sil", w)}>
+                <View key={w} style={styles.word}>
+                  <Ionicons name="checkmark" size={12} color={colors.faint} />
                   <Text style={styles.wordText}>{w}</Text>
-                  <Ionicons name="close" size={12} color={colors.faint} />
-                </Pressable>
+                </View>
               ))}
-              {words.length === 0 && <Text style={styles.panelHint}>{t("Derste duyduğun yeni kelimeleri buraya yaz, ders bitince de burada kalır.")}</Text>}
+              {words.length === 0 && (
+                <Text style={styles.panelHint}>
+                  {isStudent
+                    ? t("Derste duyduğun yeni kelimeyi anlamıyla yaz, kelime kartlarına eklenir.")
+                    : t("Yeni bir kelimeyi anlamıyla yaz, öğrencinin kelime kartlarına eklenir.")}
+                </Text>
+              )}
             </View>
             <View style={styles.addRow}>
               <TextInput
                 value={wordInput}
                 onChangeText={setWordInput}
-                onSubmitEditing={addWord}
+                onSubmitEditing={() => meaningField.current?.focus()}
                 placeholder={t("Yeni kelime")}
+                placeholderTextColor={colors.faint}
+                autoCapitalize="none"
+                returnKeyType="next"
+                submitBehavior="submit"
+                style={styles.addInput}
+              />
+              <TextInput
+                ref={meaningField}
+                value={meaningInput}
+                onChangeText={setMeaningInput}
+                onSubmitEditing={addWord}
+                placeholder={t("Anlamı")}
                 placeholderTextColor={colors.faint}
                 autoCapitalize="none"
                 returnKeyType="done"
                 style={styles.addInput}
               />
-              <Pressable onPress={addWord} style={styles.addBtn} accessibilityLabel={t("Kelime ekle")}>
-                <Ionicons name="add" size={20} color={colors.gold2} />
+              <Pressable onPress={addWord} disabled={pinning} style={[styles.addBtn, pinning && { opacity: 0.6 }]} accessibilityLabel={t("Kelime ekle")}>
+                {pinning ? <ActivityIndicator size="small" color={colors.gold2} /> : <Ionicons name="add" size={20} color={colors.gold2} />}
               </Pressable>
             </View>
           </>
@@ -580,12 +805,13 @@ export default function Class() {
               </View>
             </>
           ) : (
-            profile && (
+            me && (
               <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <Text style={[styles.reportText, { marginBottom: 14 }]}>{t("Öğretmenle ilgili ne bildirmek istiyorsun?")}</Text>
                 <AttendanceFlow
                   booking={booking}
-                  studentId={profile.id}
+                  studentId={me.id}
+                  lessonStarted={lessonStarted()}
                   noShowReady={noShowReady()}
                   onCancel={() => setReportOpen(false)}
                   onFiled={(_report, message) => setReportMessage(message)}
@@ -680,6 +906,8 @@ const styles = StyleSheet.create({
   videoFrame: { flex: 1, marginHorizontal: 10, borderRadius: 24, overflow: 'hidden', backgroundColor: '#161616' },
   videoLoading: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#161616' },
   videoLoadingText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: '#aaa' },
+  videoRetry: { marginTop: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 18, paddingVertical: 9 },
+  videoRetryText: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff' },
   panel: { backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: 10, paddingHorizontal: 16 },
   grabArea: { alignItems: 'center', paddingTop: 10, paddingBottom: 10 },
   grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#ddd' },
@@ -691,7 +919,7 @@ const styles = StyleSheet.create({
   wordText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
   panelHint: { fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 18, color: colors.faint },
   addRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  addInput: { flex: 1, height: 46, borderRadius: 14, backgroundColor: colors.panel2, paddingHorizontal: 14, fontFamily: fonts.bodyMedium, fontSize: 14.5, color: colors.ink },
+  addInput: { flex: 1, minWidth: 0, height: 46, borderRadius: 14, backgroundColor: colors.panel2, paddingHorizontal: 14, fontFamily: fonts.bodyMedium, fontSize: 14.5, color: colors.ink },
   addBtn: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.dark, alignItems: 'center', justifyContent: 'center' },
   noteInput: {
     minHeight: 96,

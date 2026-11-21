@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -24,7 +24,9 @@ import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
 
-const PENDING_FIELDS = ['title', 'price', 'availability', 'bio'] as const;
+// every field dashboard.html sends for review (subject and languages are
+// edited there only, but a change waiting for them is still a pending change)
+const PENDING_FIELDS = ['title', 'price', 'availability', 'bio', 'subject_taught', 'languages'] as const;
 // apply-teacher.html's and dashboard.html's minimum
 const TEACHER_MIN_BIO_CHARS = 400;
 
@@ -47,7 +49,10 @@ export default function EditProfile() {
   const [checkingPhoto, setCheckingPhoto] = useState(false);
   // an approved teacher's photo is part of their checked application: the
   // database refuses a direct change (application_locked), like the site
-  const [photoLocked, setPhotoLocked] = useState(false);
+  const [approvedTeacher, setApprovedTeacher] = useState(false);
+  const photoLocked = approvedTeacher;
+  // a second tap while the picker or the photo check is still busy
+  const pickingRef = useRef(false);
 
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -68,15 +73,15 @@ export default function EditProfile() {
       .select('*')
       .eq('id', profile.id)
       .single()
-      .then(({ data }) => {
-        if (!data) {
-          setLoading(false);
-          return;
-        }
+      .then(({ data: row }) => {
+        // the read failed (no network): start from the profile the app
+        // already has - empty fields here were saved over the real name,
+        // city and photo
+        const data: any = row ?? profile;
         setName(data.name || '');
         setCity(data.city || '');
         setPhotoUrl(data.photo_url || null);
-        setPhotoLocked(data.role === 'teacher' && data.status === 'approved');
+        setApprovedTeacher(data.role === 'teacher' && data.status === 'approved');
 
         const pending = data.pending_changes || null;
         setPendingChanges(pending);
@@ -95,32 +100,38 @@ export default function EditProfile() {
   // plain white background and is re-encoded like the site does; a
   // student's may be at most 5MB
   async function pickPhoto() {
+    if (pickingRef.current) return;
     setStatus('');
     if (photoLocked) {
       setStatus(t("Onaylı öğretmenler profil fotoğrafını buradan değiştiremez. Fotoğrafını güncellemek için bize ulaş."));
       return;
     }
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setStatus(t("Fotoğraf seçmek için galeri izni gerekiyor."));
+
+    // The system photo picker needs no permission (iOS and Android hand
+    // over only the photo picked), so none is asked: asking first only
+    // added a prompt, and someone who had answered "Don't Allow" could
+    // never change their photo again.
+    pickingRef.current = true;
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        // a teacher's photo keeps its own framing (the site doesn't crop it);
+        // a student's avatar is cropped square
+        allowsEditing: !isTeacher,
+        aspect: [1, 1],
+        quality: 0.9,
+      });
+    } catch {
+      pickingRef.current = false;
+      setStatus(t("Fotoğraf okunamadı."));
       return;
     }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      // a teacher's photo keeps its own framing (the site doesn't crop it);
-      // a student's avatar is cropped square
-      allowsEditing: !isTeacher,
-      aspect: [1, 1],
-      quality: 0.9,
-    });
-    if (result.canceled || !result.assets[0]) return;
+    if (result.canceled || !result.assets?.[0]) {
+      pickingRef.current = false;
+      return;
+    }
     const asset = result.assets[0];
-
-    if (!isTeacher && asset.fileSize && asset.fileSize > STUDENT_PHOTO_MAX_BYTES) {
-      setStatus(t("Dosya çok büyük (maks 5MB)."));
-      return;
-    }
 
     // every photo becomes a JPEG of at most 1024px before upload (the
     // bucket takes JPEG/PNG only); a teacher's also needs the white background
@@ -131,11 +142,19 @@ export default function EditProfile() {
         setStatus(t(PHOTO_NEEDS_WHITE_BG));
         return;
       }
+      // the site's 5MB rule is on the file that is uploaded - here the JPEG
+      // above, not the phone's original (a full-size photo from a recent
+      // phone is often bigger, and was turned away for nothing)
+      if (!isTeacher && Math.floor((prepared.base64.length * 3) / 4) > STUDENT_PHOTO_MAX_BYTES) {
+        setStatus(t("Dosya çok büyük (maks 5MB)."));
+        return;
+      }
       setLocalPhoto({ uri: prepared.uri, base64: prepared.base64 });
     } catch {
       setStatus(t("Fotoğraf okunamadı."));
     } finally {
       setCheckingPhoto(false);
+      pickingRef.current = false;
     }
   }
 
@@ -275,7 +294,10 @@ export default function EditProfile() {
             loading={saving}
           />
 
-          {isTeacher && (
+          {/* edits for review are an approved teacher's: admin.html only lists
+              pending changes of approved teachers, so one sent while the
+              application waited was "sent for approval" and never seen */}
+          {isTeacher && approvedTeacher && (
             <View style={styles.teacherSection}>
               <Text style={styles.sectionTitle}>{t("Öğretmen profili")}</Text>
               <Text style={styles.sectionNote}>

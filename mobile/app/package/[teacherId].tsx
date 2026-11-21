@@ -12,7 +12,16 @@ import WithdrawalConsent from '../../components/WithdrawalConsent';
 import { formatLessonWhenForViewer } from '../../lib/bookings';
 import { isValidTurkishIdentityNumber, normalizeTurkishPhone } from '../../lib/payer';
 import { shortDisplayName } from '../../lib/displayName';
-import { createPayment, parsePaymentRedirect } from '../../lib/payments';
+import { useAuth } from '../../lib/auth';
+import { formatMoney } from '../../lib/credits';
+import {
+  createPayment,
+  forgetCheckout,
+  openCheckoutFor,
+  parsePaymentRedirect,
+  rememberCheckout,
+  type CreatePaymentParams,
+} from '../../lib/payments';
 import { findMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -40,6 +49,7 @@ export default function PackageOffer() {
   // bookedDate / bookedTime: the trial just booked (the booking screen
   // comes here right after it)
   const { teacherId, bookedDate, bookedTime } = useLocalSearchParams<{ teacherId: string; bookedDate?: string; bookedTime?: string }>();
+  const { profile } = useAuth();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>('options');
@@ -57,6 +67,8 @@ export default function PackageOffer() {
   const confirming = useRef(false);
   // the checkout WebView reports the same redirect more than once
   const checkoutHandled = useRef(false);
+  // what the open checkout page is paying for
+  const checkoutParams = useRef<CreatePaymentParams | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -103,9 +115,7 @@ export default function PackageOffer() {
     }
 
     setError('');
-    confirming.current = true;
-    setSubmitting(true);
-    const result = await createPayment({
+    const params: CreatePaymentParams = {
       teacherId: teacher.id,
       teacherName: teacher.name,
       type: 'package',
@@ -114,7 +124,23 @@ export default function PackageOffer() {
       phone: normalizeTurkishPhone(phone) || phone,
       identityNumber: identityNumber.replace(/\D/g, ''),
       withdrawalConsent: withdrawalConsent,
-    }).finally(() => {
+    };
+    const studentId = profile?.id || '';
+
+    // this package's checkout the student stepped back out of: opened again
+    // (create-payment refuses a second one while it's open)
+    const reopen = openCheckoutFor(studentId, params);
+    if (reopen) {
+      checkoutParams.current = params;
+      checkoutHandled.current = false;
+      setCheckoutUrl(reopen);
+      setPhase('checkout');
+      return;
+    }
+
+    confirming.current = true;
+    setSubmitting(true);
+    const result = await createPayment(params).finally(() => {
       confirming.current = false;
       setSubmitting(false);
     });
@@ -127,6 +153,8 @@ export default function PackageOffer() {
       setPhase('success');
       return;
     }
+    rememberCheckout(studentId, params, result.paymentPageUrl);
+    checkoutParams.current = params;
     checkoutHandled.current = false;
     setCheckoutUrl(result.paymentPageUrl);
     setPhase('checkout');
@@ -171,6 +199,7 @@ export default function PackageOffer() {
             const status = parsePaymentRedirect(navState.url);
             if (!status || checkoutHandled.current) return;
             checkoutHandled.current = true;
+            if (checkoutParams.current) forgetCheckout(profile?.id || '', checkoutParams.current);
             if (status === 'success') {
               setPhase('success');
             } else if (status === 'failed') {
@@ -229,7 +258,7 @@ export default function PackageOffer() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{t("Tutar")}</Text>
-              <Text style={styles.summaryValue}>₺{selected.totalPrice.toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>{formatMoney(selected.totalPrice)}</Text>
             </View>
 
             <View style={styles.field}>
@@ -312,7 +341,7 @@ export default function PackageOffer() {
             </Text>
             <Text style={styles.optionMeta}>
               {option.totalLessons} {t(" ders x ₺")}{teacher.price} · {WEEKS_PER_PACKAGE} {t(" haftada bir")}{' '}
-              <Text style={styles.optionMetaBold}>₺{option.totalPrice.toFixed(2)}</Text>
+              <Text style={styles.optionMetaBold}>{formatMoney(option.totalPrice)}</Text>
             </Text>
             {option.lessonsPerWeek === 3 && (
               <View style={styles.popularBadge}>

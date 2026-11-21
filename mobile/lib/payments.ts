@@ -56,6 +56,41 @@ export async function createPayment(params: CreatePaymentParams): Promise<Create
   return { ok: true, bookedDirectly: false, paymentPageUrl: data.paymentPageUrl };
 }
 
+// A checkout page the student stepped back out of ("← Vazgeç") stays open
+// on iyzico's side for a while, and create-payment refuses a second
+// payment for the same lesson or package until that one resolves (20
+// minutes: "Bu işlem için zaten bir ödemen devam ediyor") - on the website
+// the student can go forward to the page again, but the app dropped it, so
+// the same time (or package) couldn't be paid for at all for 20 minutes.
+// The page is kept here and opened again for the same lesson / package.
+// iyzico's checkout token lives 30 minutes, so a page is reused only
+// within the server's own 20-minute window.
+const REOPEN_CHECKOUT_MS = 20 * 60_000;
+const openCheckouts = new Map<string, { url: string; at: number }>();
+
+function checkoutKey(studentId: string, params: CreatePaymentParams) {
+  return params.type === 'package'
+    ? [studentId, params.teacherId, 'package', params.quantity].join('|')
+    : [studentId, params.teacherId, params.type, params.date, params.time].join('|');
+}
+
+export function rememberCheckout(studentId: string, params: CreatePaymentParams, url: string) {
+  openCheckouts.set(checkoutKey(studentId, params), { url, at: Date.now() });
+}
+
+export function openCheckoutFor(studentId: string, params: CreatePaymentParams): string | null {
+  const key = checkoutKey(studentId, params);
+  const open = openCheckouts.get(key);
+  if (open && Date.now() - open.at < REOPEN_CHECKOUT_MS) return open.url;
+  openCheckouts.delete(key);
+  return null;
+}
+
+// once the page has come back with a result it can't be used again
+export function forgetCheckout(studentId: string, params: CreatePaymentParams) {
+  openCheckouts.delete(checkoutKey(studentId, params));
+}
+
 // payment-callback (supabase/functions/payment-callback) only ever
 // redirects here - to ARMUS's own real site - after it has already
 // re-verified the charge with iyzico itself server-side; it never trusts

@@ -14,6 +14,7 @@ export default function PasswordSettings() {
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
 
   async function save() {
+    if (saving) return;
     if (password.length < 6) {
       setMessage({ text: t("Şifre en az 6 karakter olmalı."), error: true });
       return;
@@ -27,7 +28,18 @@ export default function PasswordSettings() {
     const { error } = await supabase.auth.updateUser({ password });
     setSaving(false);
     if (error) {
-      setMessage({ text: error.message || t("Kaydedilemedi. Lütfen tekrar dene."), error: true });
+      // Supabase's own messages are English (and technical): the known
+      // ones in the app's words, any other the general one
+      const code = (error as any).code as string | undefined;
+      const text =
+        code === 'same_password'
+          ? t("Yeni şifren eski şifrenden farklı olmalı.")
+          : code === 'weak_password'
+            ? t("Bu şifre çok zayıf. Daha uzun ya da tahmini daha zor bir şifre seç.")
+            : code === 'reauthentication_needed'
+              ? t("Güvenliğin için önce çıkış yapıp yeniden giriş yap, sonra şifreni değiştir.")
+              : t("Kaydedilemedi. Lütfen tekrar dene.");
+      setMessage({ text, error: true });
       return;
     }
     setPassword('');

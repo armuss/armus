@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,13 +9,14 @@ import { TeacherPhoto } from '../../components/TeacherCard';
 import TeacherReportSheet from '../../components/TeacherReportSheet';
 import TeacherVideo from '../../components/TeacherVideo';
 import { useAuth } from '../../lib/auth';
-import { DAY_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
+import { amIBlockedBy } from '../../lib/blocks';
+import { DAY_NAMES, MONTH_NAMES, getTeacherBusyTimes, localDateKey, slotsForDate, todayIn, zonedTimeToUtc, type BusyTime } from '../../lib/bookings';
 import { hasTakenTrialWith } from '../../lib/credits';
 import { notify } from '../../lib/dialogs';
 import { shortDisplayName } from '../../lib/displayName';
-import { isFavorite as checkIsFavorite, toggleFavorite } from '../../lib/favorites';
+import { isFavorite as checkIsFavorite, setFavorite } from '../../lib/favorites';
 import { getOrCreateConversation } from '../../lib/messages';
-import { findMarketplaceTeacher } from '../../lib/teachers';
+import { loadMarketplaceTeacher } from '../../lib/teachers';
 import type { Teacher } from '../../lib/teachers-data';
 import { colors, fonts, radius } from '../../lib/theme';
 import { useT } from '../../lib/i18n';
@@ -30,6 +31,9 @@ export default function TeacherDetail() {
   const insets = useSafeAreaInsets();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
+  // couldn't load (no connection) - not the same as "no such teacher"
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [messaging, setMessaging] = useState(false);
   const [isFav, setIsFav] = useState(false);
   // the red band reaches just past the photo and the name
@@ -38,6 +42,9 @@ export default function TeacherDetail() {
   const [trialTaken, setTrialTaken] = useState(false);
   const [tab, setTab] = useState<Tab>('about');
   const [reportOpen, setReportOpen] = useState(false);
+  // the intro video wouldn't play (a deleted file, a format the phone can't
+  // play): the big photo again
+  const [videoFailed, setVideoFailed] = useState(false);
   const [busyTimes, setBusyTimes] = useState<BusyTime[]>([]);
 
   useEffect(() => {
@@ -62,11 +69,22 @@ export default function TeacherDetail() {
   function book(type: 'trial' | 'lesson', date?: string) {
     if (!teacher) return;
     if (!profile) {
-      router.push('/(auth)/login');
+      // back to this teacher once signed in
+      router.push({ pathname: '/(auth)/login', params: { next: `/teacher/${id}` } });
       return;
     }
     router.push({ pathname: '/booking/[id]', params: date ? { id: teacher.id, type, date } : { id: teacher.id, type } });
   }
+
+  // bumped each time the page comes back into view (from the booking
+  // screen, a chat): the open times are worked out again then - a time just
+  // booked, or one that has passed meanwhile, used to stay listed as open
+  const [focusCount, setFocusCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setFocusCount((n) => n + 1);
+    }, [])
+  );
 
   // the "Saatler" tab: open times for each of the next 7 days, read the
   // same way the booking screen reads them (taken and past times excluded)
@@ -79,7 +97,7 @@ export default function TeacherDetail() {
     return () => {
       active = false;
     };
-  }, [tab, teacher]);
+  }, [tab, teacher, focusCount]);
 
   // the days start on the teacher's own today, like the booking screen's
   // (lesson dates are the teacher's calendar dates), so a day picked here
@@ -97,25 +115,43 @@ export default function TeacherDetail() {
       );
       return { key, dayName: DAY_NAMES[date.getDay()], dayNum: date.getDate(), open: open.length };
     });
-  }, [teacher, busyTimes]);
+    // focusCount: "now" and "today" read again on coming back; t: the day
+    // names follow a language change
+  }, [teacher, busyTimes, focusCount, t]);
 
-  async function handleToggleFavorite() {
-    const next = await toggleFavorite(id);
-    setIsFav(next);
+  // the heart changes at once and storage gets the state it shows (like
+  // Keşfet): a quick second tap read the same stored list before the first
+  // had saved it, so both "added" the teacher and the heart stayed on
+  function handleToggleFavorite() {
+    const on = !isFav;
+    setIsFav(on);
+    setFavorite(id, on);
   }
 
+  // set at once: `messaging` only disables the button after a redraw, and a
+  // quick second tap opened the chat twice
+  const messagingRef = useRef(false);
   async function handleMessage() {
-    if (!teacher || messaging) return;
+    if (!teacher || messagingRef.current) return;
     if (!profile) {
-      router.push('/(auth)/login');
+      router.push({ pathname: '/(auth)/login', params: { next: `/teacher/${id}` } });
       return;
     }
+    messagingRef.current = true;
     setMessaging(true);
     const conversation = await getOrCreateConversation(profile.id, profile.role, teacher.id);
+    // a teacher who blocked this student refuses a new conversation
+    // (is_pair_blocked) - say that, not "try again", which can never work
+    const blocked = !conversation && profile.role === 'student' && (await amIBlockedBy(teacher.id));
+    messagingRef.current = false;
     setMessaging(false);
     if (!conversation) {
       // the tap used to do nothing at all
-      notify(t("Sohbet başlatılamadı. Lütfen tekrar dene."));
+      notify(
+        blocked
+          ? t("Bu öğretmen seni engelledi. Artık ona mesaj gönderemez ya da onunla yeni bir ders rezervasyonu yapamazsın.")
+          : t("Sohbet başlatılamadı. Lütfen tekrar dene.")
+      );
       return;
     }
     router.push({
@@ -127,29 +163,51 @@ export default function TeacherDetail() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    findMarketplaceTeacher(id).then((t) => {
+    setLoadError(false);
+    loadMarketplaceTeacher(id).then((result) => {
       if (active) {
-        setTeacher(t);
+        setTeacher(result === 'error' ? null : result);
+        setLoadError(result === 'error');
         setLoading(false);
       }
     });
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, reloadKey]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={colors.ink} />
-      </SafeAreaView>
-    );
+  // opened straight from a link (nothing under it in the stack): back goes
+  // home - router.back() alone did nothing there, and with no dock on this
+  // page that left no way out
+  function goBack() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
   }
 
-  if (!teacher) {
+  if (loading || !teacher) {
     return (
       <SafeAreaView style={styles.screen}>
-        <Text style={styles.notFound}>{t("Öğretmen bulunamadı.")}</Text>
+        <View style={styles.plainTop}>
+          <Pressable onPress={goBack} style={styles.plainBackBtn} hitSlop={6} accessibilityLabel={t("Geri")}>
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+          </Pressable>
+        </View>
+        {loading ? (
+          <View style={[styles.screen, styles.centered]}>
+            <ActivityIndicator color={colors.ink} />
+          </View>
+        ) : (
+          <>
+            <Text style={styles.notFound}>
+              {loadError ? t("Öğretmen yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.") : t("Öğretmen bulunamadı.")}
+            </Text>
+            {loadError && (
+              <Pressable onPress={() => setReloadKey((k) => k + 1)} hitSlop={8} style={styles.retryBtn}>
+                <Text style={styles.retryText}>{t("Tekrar dene")}</Text>
+              </Pressable>
+            )}
+          </>
+        )}
       </SafeAreaView>
     );
   }
@@ -172,7 +230,7 @@ export default function TeacherDetail() {
       <ScrollView style={styles.list} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScrollBand height={headBottom - 4} fade={72} />
         <View style={styles.topBar}>
-          <Pressable onPress={() => router.back()} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
+          <Pressable onPress={goBack} style={styles.roundBtn} accessibilityLabel={t("Geri")}>
             <Ionicons name="chevron-back" size={20} color={colors.onRed} />
           </Pressable>
           <Pressable
@@ -219,8 +277,13 @@ export default function TeacherDetail() {
         {tab === 'about' && (
           <>
             {/* the intro video when the teacher has one (like the website), else the big photo */}
-            {teacher.video && /^https:\/\//i.test(teacher.video) ? (
-              <TeacherVideo uri={teacher.video} style={styles.mediaVideo} badge={teacher.availability ? t(teacher.availability) : undefined} />
+            {teacher.video && /^https:\/\//i.test(teacher.video) && !videoFailed ? (
+              <TeacherVideo
+                uri={teacher.video}
+                style={styles.mediaVideo}
+                badge={teacher.availability ? t(teacher.availability) : undefined}
+                onError={() => setVideoFailed(true)}
+              />
             ) : (
               <View style={styles.media}>
                 <TeacherPhoto teacher={teacher} style={StyleSheet.absoluteFill} initialsSize={48} />
@@ -302,7 +365,12 @@ export default function TeacherDetail() {
                   <View style={styles.reviewAvatar}>
                     <Text style={styles.reviewAvatarText}>{r.name.charAt(0)}</Text>
                   </View>
-                  <Text style={styles.reviewName}>{r.name}</Text>
+                  <View style={styles.reviewWho}>
+                    <Text style={styles.reviewName} numberOfLines={1}>
+                      {r.name}
+                    </Text>
+                    {!!r.date && <Text style={styles.reviewDate}>{formatReviewDate(r.date)}</Text>}
+                  </View>
                   <Text style={styles.reviewStars}>{'★'.repeat(r.stars)}</Text>
                 </View>
                 {!!r.text && <Text style={styles.reviewText}>{r.text}</Text>}
@@ -353,11 +421,33 @@ export default function TeacherDetail() {
   );
 }
 
-// "English / Türkçe" → "EN / TR" so it fits the fact tile
+// "12 Kas 2026" / "12 Nov 2026" - teacher.html's formatReviewDate, in the
+// phone's own time zone (when the student wrote it)
+function formatReviewDate(iso: string) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// "English / Türkçe" → "EN / TR" so it fits the fact tile. A real teacher's
+// languages are typed on the application form, usually in Turkish
+// ("Türkçe (Ana dil), İngilizce (C1)") - only the English names used to be
+// known, so the tile read "TR / İngilizce", in English mode too.
 function shortLanguages(languages: string) {
-  const map: Record<string, string> = { english: 'EN', türkçe: 'TR', turkish: 'TR', deutsch: 'DE', german: 'DE', español: 'ES', spanish: 'ES', français: 'FR', french: 'FR', arabic: 'AR', русский: 'RU', russian: 'RU' };
+  const map: Record<string, string> = {
+    english: 'EN', ingilizce: 'EN',
+    türkçe: 'TR', turkce: 'TR', turkish: 'TR',
+    deutsch: 'DE', german: 'DE', almanca: 'DE',
+    español: 'ES', spanish: 'ES', ispanyolca: 'ES',
+    français: 'FR', french: 'FR', fransizca: 'FR',
+    italiano: 'IT', italian: 'IT', italyanca: 'IT',
+    arabic: 'AR', arapça: 'AR', arapca: 'AR',
+    русский: 'RU', russian: 'RU', rusça: 'RU', rusca: 'RU',
+  };
+  // Turkish İ/ı and plain I/i read as the same letter ("İngilizce", "INGILIZCE", "ingilizce")
+  const key = (p: string) => p.replace(/[İIı]/g, 'i').toLowerCase();
   const parts = languages.split(/\s*[\/,]\s*/).map((p) => p.replace(/\s*\(.*?\)\s*/g, '').trim()).filter(Boolean);
-  return parts.map((p) => map[p.toLowerCase()] ?? p).join(' / ');
+  return [...new Set(parts.map((p) => map[key(p)] ?? p))].join(' / ');
 }
 
 const styles = StyleSheet.create({
@@ -367,7 +457,11 @@ const styles = StyleSheet.create({
   list: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 16, paddingBottom: 30 },
-  notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 60 },
+  notFound: { fontFamily: fonts.body, color: colors.muted, textAlign: 'center', marginTop: 40, paddingHorizontal: 28, lineHeight: 21 },
+  plainTop: { paddingHorizontal: 16, marginTop: 6 },
+  plainBackBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
+  retryBtn: { alignSelf: 'center', marginTop: 14 },
+  retryText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.red, textDecorationLine: 'underline' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, marginBottom: 12 },
   // on the red band: see-through cream buttons, the name in cream
   roundBtn: {
@@ -451,7 +545,9 @@ const styles = StyleSheet.create({
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 6 },
   reviewAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   reviewAvatarText: { fontFamily: fonts.bodyExtraBold, fontSize: 13, color: colors.muted },
-  reviewName: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  reviewWho: { flex: 1, minWidth: 0 },
+  reviewName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  reviewDate: { fontFamily: fonts.bodyMedium, fontSize: 11.5, color: colors.faint, marginTop: 1 },
   reviewStars: { fontSize: 12, color: colors.goldDot },
   reviewText: { fontFamily: fonts.body, fontSize: 14, color: '#444', lineHeight: 20 },
   lessonLink: { alignSelf: 'center', marginTop: 18 },

@@ -136,12 +136,19 @@ export async function getTeacherCredits(teacherId: string): Promise<TeacherCredi
 }
 
 export async function getWithdrawalRequests(teacherId: string): Promise<WithdrawalRequest[]> {
+  return (await fetchWithdrawalRequests(teacherId)) ?? [];
+}
+
+// null when the read failed. The withdrawable balance takes the earlier
+// requests off: read as "none" after a network blip, it showed money already
+// asked for as withdrawable again, and the form took a second request for it.
+export async function fetchWithdrawalRequests(teacherId: string): Promise<WithdrawalRequest[] | null> {
   const { data, error } = await supabase
     .from('withdrawal_requests')
     .select('*')
     .eq('teacher_id', teacherId)
     .order('requested_at', { ascending: false });
-  if (error || !data) return [];
+  if (error || !data) return null;
   return data as WithdrawalRequest[];
 }
 
@@ -173,6 +180,25 @@ export function normalizeIban(raw: string) {
   return raw.replace(/\s+/g, '').toUpperCase();
 }
 
+// The format alone let a mistyped IBAN through (the money would go to the
+// wrong account or bounce) - the two check digits are tested too, the
+// standard ISO 13616 mod-97 test. Same check as dashboard.html's form.
 export function isValidTurkishIban(iban: string) {
-  return /^TR\d{24}$/.test(iban);
+  if (!/^TR\d{24}$/.test(iban)) return false;
+  const digits = (iban.slice(4) + iban.slice(0, 4)).replace(/[A-Z]/g, (ch) => String(ch.charCodeAt(0) - 55));
+  let rest = 0;
+  for (const d of digits) rest = (rest * 10 + Number(d)) % 97;
+  return rest === 1;
+}
+
+// The amount typed into the withdrawal form, in lira: digits with at most one
+// decimal separator ("," or ".") and kuruş after it. Anything else is refused
+// rather than guessed at - "1.500" (a thousands dot) used to be read as 1.5
+// and sent as a ₺1,50 request.
+export function parseWithdrawalAmount(raw: string): number | null {
+  const text = String(raw || '').replace(/\s+/g, '');
+  const m = text.match(/^(\d+)(?:[.,](\d{0,2}))?$/);
+  if (!m) return null;
+  const value = Number(`${m[1]}.${m[2] || '0'}`);
+  return Number.isFinite(value) && value > 0 ? Math.round(value * 100) / 100 : null;
 }

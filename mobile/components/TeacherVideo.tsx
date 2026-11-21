@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useEventListener } from 'expo';
 import { useFocusEffect } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useState } from 'react';
@@ -18,16 +19,28 @@ export default function TeacherVideo({
   uri,
   style,
   badge,
+  onError,
 }: {
   uri: string;
   style?: StyleProp<ViewStyle>;
   /** a small caption over the corner until it starts, e.g. the teacher's availability */
   badge?: string;
+  /**
+   * The video can't be played - its file is gone, or it's in a format this
+   * phone can't play (the application form also takes WebM, which an
+   * iPhone can't). The caller shows the photo instead of a black box whose
+   * play button does nothing.
+   */
+  onError?: () => void;
 }) {
   const t = useT();
   const [started, setStarted] = useState(false);
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
+  });
+
+  useEventListener(player, 'statusChange', ({ status }) => {
+    if (status === 'error') onError?.();
   });
 
   useFocusEffect(

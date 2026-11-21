@@ -65,20 +65,77 @@ export async function registerForPushNotifications() {
     const { error } = await supabase.rpc('register_expo_push_token', { p_token: token, p_platform: Platform.OS });
     if (error) throw error;
     registeredToken = token;
+    // kept on the phone too, so a sign-out can take it off the account even
+    // when this run of the app never got to register (no network at launch)
+    try {
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+      await AsyncStorage.removeItem(UNBIND_KEY);
+    } catch {
+      // only the clean-up on sign-out leans on this
+    }
   } catch (err) {
     console.warn('push registration failed', err);
   }
 }
 
-// On sign-out: this device stops getting the signed-out user's notifications.
-export async function unregisterPushNotifications() {
-  if (!registeredToken) return;
+// this phone's token while it is on someone's account
+const TOKEN_KEY = 'armus_push_token';
+// a sign-out whose token removal didn't go through yet (tried again later)
+const UNBIND_KEY = 'armus_push_unbind';
+
+async function readKey(key: string): Promise<string | null> {
   try {
-    await supabase.from('expo_push_tokens').delete().eq('token', registeredToken);
+    return await AsyncStorage.getItem(key);
   } catch {
-    // the row is cleaned up anyway the first time Expo reports the token gone
+    return null;
   }
+}
+
+// Deletes this phone's row: unregister_expo_push_token (migration_129.sql)
+// works signed in or out; until that migration has run, the plain delete,
+// which RLS allows only while still signed in.
+async function removeToken(token: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc('unregister_expo_push_token', { p_token: token });
+    if (!error) return true;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return false;
+    const { error: deleteError } = await supabase.from('expo_push_tokens').delete().eq('token', token);
+    return !deleteError;
+  } catch {
+    return false;
+  }
+}
+
+// Takes this phone off the account's notifications: on sign-out (before
+// the session goes) and when the switch in Profil is turned off. A removal
+// that doesn't go through (no network) is kept and tried again by
+// releasePushToken, so a signed-out phone doesn't go on getting that
+// person's lesson and message notifications.
+export async function unregisterPushNotifications() {
+  const token = registeredToken ?? (await readKey(TOKEN_KEY)) ?? (await readKey(UNBIND_KEY));
   registeredToken = null;
+  if (!token) return;
+  const removed = await removeToken(token);
+  try {
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    if (removed) await AsyncStorage.removeItem(UNBIND_KEY);
+    else await AsyncStorage.setItem(UNBIND_KEY, token);
+  } catch {
+    // nothing more to do on this phone
+  }
+}
+
+// Signed out, however it happened (the sign-out button, or the session
+// ending on the server, when the app's own clean-up never ran): finishes
+// taking the token off the account, and clears that person's
+// notifications from the phone, so nobody opens them after them.
+export async function releasePushToken() {
+  if (Platform.OS === 'web') return;
+  Notifications.dismissAllNotificationsAsync().catch(() => {});
+  if (registeredToken || (await readKey(TOKEN_KEY)) || (await readKey(UNBIND_KEY))) {
+    await unregisterPushNotifications();
+  }
 }
 
 // Profil > Bildirimler: a per-phone switch. Off removes this phone's token

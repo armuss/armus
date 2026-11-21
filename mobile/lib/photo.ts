@@ -1,6 +1,7 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { decode } from 'jpeg-js';
+import { decode, encode } from 'jpeg-js';
 import { tr } from './i18n';
+import { decodePng, flattenOnWhite, type Pixels } from './png';
 
 // The website's photo rules (apply-teacher.html / settings.html), the same
 // numbers here so the app accepts and rejects exactly what the site does:
@@ -48,6 +49,41 @@ export function base64ToBytes(b64: string): Uint8Array {
   return out;
 }
 
+// bytes -> base64 without relying on a global btoa / Buffer
+export function bytesToBase64(bytes: Uint8Array): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const n = (bytes[i] << 16) | ((bytes[i + 1] ?? 0) << 8) | (bytes[i + 2] ?? 0);
+    out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63];
+    out += i + 1 < bytes.length ? B64[(n >> 6) & 63] : '=';
+    out += i + 2 < bytes.length ? B64[n & 63] : '=';
+  }
+  return out;
+}
+
+// The manipulator's PNG of an image, read into RGBA pixels (null if unreadable)
+async function pngPixels(image: { saveAsync: (o: { format: SaveFormat; base64: boolean }) => Promise<{ base64?: string }> }): Promise<Pixels | null> {
+  try {
+    const png = await image.saveAsync({ format: SaveFormat.PNG, base64: true });
+    return png.base64 ? decodePng(base64ToBytes(png.base64)) : null;
+  } catch {
+    return null;
+  }
+}
+
+// jpeg-js's encoder hands its bytes back through Node's Buffer, which React
+// Native doesn't have: lend it a minimal one for this synchronous call
+function encodeJpeg(pixels: Pixels, quality: number): Uint8Array {
+  const scope = globalThis as any;
+  const lent = typeof scope.Buffer === 'undefined';
+  if (lent) scope.Buffer = { from: (a: ArrayLike<number>) => Uint8Array.from(a) };
+  try {
+    return new Uint8Array(encode(pixels, quality).data as unknown as ArrayLike<number>);
+  } finally {
+    if (lent) delete scope.Buffer;
+  }
+}
+
 /** The share of the edge band that is near-white, 0..1 (the site's measure). */
 function whiteEdgeRatio(data: Uint8Array, width: number, height: number) {
   const margin = Math.max(1, Math.round(Math.min(width, height) * PHOTO_WHITE_BG_MARGIN_RATIO));
@@ -69,6 +105,12 @@ function whiteEdgeRatio(data: Uint8Array, width: number, height: number) {
  * 1024px, and (for a teacher) whether its background passes the white
  * check. The check runs on a 256px copy - the same edge-band ratio, far
  * less to decode on a phone.
+ *
+ * See-through pixels go onto white first, like the website's canvas: the
+ * manipulator's own JPEG turns them black, so a transparent PNG (a
+ * portrait with its background removed) uploaded on black and failed the
+ * white-background check. The 256px copy is read as a PNG to find them;
+ * only a photo that has them is flattened and encoded here, in JS.
  */
 export async function preparePhoto(
   uri: string,
@@ -82,23 +124,40 @@ export async function preparePhoto(
           .resize({ width: Math.round(full.width * scale), height: Math.round(full.height * scale) })
           .renderAsync()
       : full;
-  // the bytes come back with it: they're what gets uploaded (a JPEG the
-  // storage bucket accepts, whatever format the phone picked)
-  const saved = await sized.saveAsync({ format: SaveFormat.JPEG, compress: PHOTO_JPEG_QUALITY, base64: true });
-  if (!saved.base64) throw new Error('Fotoğraf okunamadı.');
-
-  if (!checkWhiteBackground) return { uri: saved.uri, base64: saved.base64, isWhiteBackground: true };
 
   const small = Math.min(1, 256 / Math.max(full.width, full.height));
   const probe = await ImageManipulator.manipulate(uri)
     .resize({ width: Math.max(1, Math.round(full.width * small)), height: Math.max(1, Math.round(full.height * small)) })
     .renderAsync();
-  const probeSaved = await probe.saveAsync({ format: SaveFormat.JPEG, compress: 0.9, base64: true });
-  if (!probeSaved.base64) throw new Error(tr("Fotoğraf okunamadı."));
-  const pixels = decode(base64ToBytes(probeSaved.base64), { useTArray: true, formatAsRGBA: true });
+  let probePixels = await pngPixels(probe);
+  const seeThrough = !!probePixels && flattenOnWhite(probePixels);
+
+  let result: { uri: string; base64: string };
+  if (seeThrough) {
+    const pixels = await pngPixels(sized);
+    // never upload it on black
+    if (!pixels) throw new Error(tr("Fotoğraf okunamadı."));
+    flattenOnWhite(pixels);
+    const base64 = bytesToBase64(encodeJpeg(pixels, Math.round(PHOTO_JPEG_QUALITY * 100)));
+    result = { uri: `data:image/jpeg;base64,${base64}`, base64 };
+  } else {
+    // the bytes come back with it: they're what gets uploaded (a JPEG the
+    // storage bucket accepts, whatever format the phone picked)
+    const saved = await sized.saveAsync({ format: SaveFormat.JPEG, compress: PHOTO_JPEG_QUALITY, base64: true });
+    if (!saved.base64) throw new Error(tr("Fotoğraf okunamadı."));
+    result = { uri: saved.uri, base64: saved.base64 };
+  }
+
+  if (!checkWhiteBackground) return { ...result, isWhiteBackground: true };
+
+  if (!probePixels) {
+    // the PNG copy couldn't be read: check a JPEG copy, as before
+    const probeSaved = await probe.saveAsync({ format: SaveFormat.JPEG, compress: 0.9, base64: true });
+    if (!probeSaved.base64) throw new Error(tr("Fotoğraf okunamadı."));
+    probePixels = decode(base64ToBytes(probeSaved.base64), { useTArray: true, formatAsRGBA: true });
+  }
   return {
-    uri: saved.uri,
-    base64: saved.base64,
-    isWhiteBackground: whiteEdgeRatio(pixels.data, pixels.width, pixels.height) >= PHOTO_WHITE_BG_MIN_RATIO,
+    ...result,
+    isWhiteBackground: whiteEdgeRatio(probePixels.data, probePixels.width, probePixels.height) >= PHOTO_WHITE_BG_MIN_RATIO,
   };
 }

@@ -20,6 +20,7 @@ const STEPS: [string, string][] = [
 export default function Referral() {
   const t = useT();
   const { profile } = useAuth();
+  // null: still loading, or the count couldn't be read (shown as "–")
   const [rewards, setRewards] = useState<number | null>(null);
   const link = referralLink(profile?.referral_code);
 
@@ -57,8 +58,9 @@ export default function Referral() {
           <Text style={styles.linkLabel}>{t("Davet linkin")}</Text>
           {link ? (
             <>
+              {/* the whole link: cut to one line, the invite code at its end was the part hidden */}
               <View style={styles.linkBox}>
-                <Text style={styles.linkText} selectable numberOfLines={1}>
+                <Text style={styles.linkText} selectable>
                   {link}
                 </Text>
               </View>
@@ -104,7 +106,7 @@ const styles = StyleSheet.create({
   rewardNum: { fontFamily: fonts.display, fontSize: 32, color: colors.red },
   rewardLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   linkLabel: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: colors.muted, marginTop: 14, marginBottom: 6 },
-  linkBox: { height: 48, borderRadius: 14, borderWidth: 1, borderColor: '#e8ddcc', backgroundColor: colors.bg, paddingHorizontal: 14, justifyContent: 'center' },
+  linkBox: { minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: '#e8ddcc', backgroundColor: colors.bg, paddingHorizontal: 14, paddingVertical: 12, justifyContent: 'center' },
   linkText: { fontFamily: fonts.bodyMedium, fontSize: 13.5, color: colors.ink },
   shareBtn: { marginTop: 10, height: 50, borderRadius: 15, backgroundColor: colors.red, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   shareText: { fontFamily: fonts.bodyExtraBold, fontSize: 15, color: colors.onRed },

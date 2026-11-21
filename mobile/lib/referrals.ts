@@ -9,9 +9,10 @@ export function referralLink(code: string | null | undefined): string | null {
   return code ? `${SITE_URL}/register?ref=${encodeURIComponent(code)}` : null;
 }
 
-// how many free lessons the invitations have earned so far
-export async function getReferralRewardCount(userId: string): Promise<number> {
+// how many free lessons the invitations have earned so far - null when it
+// couldn't be read, so the page doesn't claim a 0 it never saw
+export async function getReferralRewardCount(userId: string): Promise<number | null> {
   const { data, error } = await supabase.from('referrals').select('id').eq('referrer_id', userId).eq('status', 'rewarded');
-  if (error) return 0;
+  if (error) return null;
   return (data || []).length;
 }

@@ -212,7 +212,9 @@ function mapBookingRow(row: any): Booking {
   };
 }
 
-export async function getBookingsForStudent(studentId: string): Promise<Booking[]> {
+// null when the read failed (no connection) - Derslerim tells that apart
+// from a student who simply has no lessons
+export async function getBookingsForStudent(studentId: string): Promise<Booking[] | null> {
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
@@ -220,20 +222,37 @@ export async function getBookingsForStudent(studentId: string): Promise<Booking[
     .order('lesson_date', { ascending: true })
     .order('lesson_time', { ascending: true });
 
-  if (error || !data) return [];
+  if (error || !data) return null;
   return data.map(mapBookingRow);
 }
 
-export async function getBookingsForTeacher(teacherId: string): Promise<Booking[]> {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('teacher_id', teacherId)
-    .order('lesson_date', { ascending: true })
-    .order('lesson_time', { ascending: true });
+// PostgREST answers at most 1000 rows a request, and this list runs oldest
+// first: a teacher with more than 1000 bookings (cancelled ones count) lost
+// the newest ones - their upcoming lessons among them - from the Bugün tab,
+// the students list and the earnings. Read page by page instead (id breaks
+// ties, so no row falls between two pages). null when a read fails.
+const TEACHER_BOOKINGS_PAGE = 1000;
 
-  if (error || !data) return [];
-  return data.map(mapBookingRow);
+export async function getAllBookingsForTeacher(teacherId: string): Promise<Booking[] | null> {
+  const rows: any[] = [];
+  for (let from = 0; ; from += TEACHER_BOOKINGS_PAGE) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('lesson_date', { ascending: true })
+      .order('lesson_time', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + TEACHER_BOOKINGS_PAGE - 1);
+    if (error || !data) return null;
+    rows.push(...data);
+    if (data.length < TEACHER_BOOKINGS_PAGE) break;
+  }
+  return rows.map(mapBookingRow);
+}
+
+export async function getBookingsForTeacher(teacherId: string): Promise<Booking[]> {
+  return (await getAllBookingsForTeacher(teacherId)) ?? [];
 }
 
 // A single booking by id - RLS already restricts this to the student, the
@@ -267,20 +286,30 @@ export function roomNameForBooking(bookingId: string) {
 // off from the real scheduled time.
 export function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
   const guess = new Date(`${dateStr}T${timeStr}:00Z`);
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: timeZone || 'Europe/Istanbul',
-      hour12: false,
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-    }).formatToParts(guess).map((p) => [p.type, p.value])
-  );
-  const hour = parts.hour === '24' ? 0 : Number(parts.hour);
-  const asIfUtc = Date.UTC(
-    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
-    hour, Number(parts.minute), Number(parts.second)
-  );
-  return new Date(guess.getTime() + (guess.getTime() - asIfUtc));
+  // the zone's UTC offset (ms) at one instant
+  const offsetAt = (instant: Date) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone || 'Europe/Istanbul',
+        hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }).formatToParts(instant).map((p) => [p.type, p.value])
+    );
+    const hour = parts.hour === '24' ? 0 : Number(parts.hour);
+    const asIfUtc = Date.UTC(
+      Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+      hour, Number(parts.minute), Number(parts.second)
+    );
+    return asIfUtc - instant.getTime();
+  };
+  // The offset is read a second time at the first answer: the guess sits
+  // hours away from the real instant, so on a DST-change day it could fall
+  // on the other side of the change - a 03:30 New York lesson on the day
+  // the clocks go forward came out an hour late (and the database, which
+  // converts it correctly, refused a report the app allowed).
+  const first = new Date(guess.getTime() - offsetAt(guess));
+  return new Date(guess.getTime() - offsetAt(first));
 }
 
 const JOIN_EARLY_MINUTES = 15;

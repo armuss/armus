@@ -47,6 +47,14 @@ export async function addVocabEntry(studentId: string, term: string, meaning: st
   return mapEntry(data);
 }
 
+// A word pinned to the student's cards from inside a lesson, by the student
+// or their teacher (class.html's armusPinVocabEntry). No row is read back:
+// the teacher may add one (vocab_entries_insert_teacher) but not read it.
+export async function pinVocabEntry(studentId: string, term: string, meaning: string): Promise<boolean> {
+  const { error } = await supabase.from('vocab_entries').insert({ student_id: studentId, term, meaning, category: 'Genel' });
+  return !error;
+}
+
 export async function deleteVocabEntry(id: string): Promise<boolean> {
   const { error } = await supabase.from('vocab_entries').delete().eq('id', id);
   return !error;
