@@ -1,0 +1,544 @@
+/* One exam's own page (ydt.html, yokdil.html), opened from the header's
+   "Sınavlar" menu: a hero with the exam's format card, four facts, who it
+   is for, how to prepare on ARMUS, questions, then the other exams. */
+
+.xp-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 56px 0 40px;
+}
+
+.xp-kicker {
+  font: 700 12px Inter, sans-serif;
+  letter-spacing: 2px;
+  color: var(--armus-gold-text);
+}
+
+.xp-hero h1 {
+  font: 800 clamp(34px, 4.6vw, 56px)/1.04 "Unbounded", "Inter", sans-serif;
+  letter-spacing: -2px;
+  margin: 14px 0 14px;
+  text-wrap: balance;
+}
+
+.xp-hero h1 em {
+  font-style: normal;
+  display: block;
+  background: var(--armus-gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.xp-lead {
+  font-size: 17px;
+  line-height: 1.6;
+  color: #3c3c3c;
+  max-width: 540px;
+  margin: 0;
+}
+
+.xp-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.xp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 16px 22px;
+  font: 700 15px Inter, sans-serif;
+  text-decoration: none;
+  transition: transform 0.15s;
+}
+
+.xp-btn:hover {
+  transform: translateY(-1px);
+}
+
+.xp-btn.primary {
+  background: var(--armus-gold-gradient);
+  color: var(--armus-on-gold);
+}
+
+.xp-btn.ghost {
+  border: 1px solid var(--armus-border);
+  color: var(--armus-ink);
+  background: #fff;
+}
+
+/* the format card on the right */
+.xp-format {
+  border-radius: 28px;
+  padding: 28px;
+}
+
+.xp-format.ydt {
+  background: var(--armus-champagne);
+  color: var(--armus-ink);
+}
+
+.xp-format.yokdil {
+  background: linear-gradient(160deg, #1f2a44, #141b2e);
+  color: #f4efe4;
+}
+
+.xp-format-head {
+  font: 700 12px Inter, sans-serif;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.xp-format.ydt .xp-format-head {
+  color: var(--armus-gold-text);
+}
+
+.xp-format.yokdil .xp-format-head {
+  color: var(--armus-champagne-deep);
+}
+
+.xp-types {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.xp-types li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 14.5px;
+}
+
+.xp-format.ydt .xp-types li {
+  background: #fff;
+}
+
+.xp-format.yokdil .xp-types li {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(243, 229, 207, 0.14);
+}
+
+.xp-types .xp-tag {
+  font: 800 12px "Unbounded", Inter, sans-serif;
+  color: var(--armus-gold-2);
+  flex: none;
+}
+
+.xp-format.yokdil .xp-types .xp-tag {
+  color: var(--armus-champagne-deep);
+}
+
+.xp-format-note {
+  margin: 14px 2px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+/* YÖKDİL: pick a field, the text under it follows */
+.xp-fields-label {
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--armus-champagne);
+}
+
+.xp-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.xp-field {
+  border: 1px solid rgba(243, 229, 207, 0.45);
+  background: transparent;
+  color: var(--armus-champagne);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font: 700 13.5px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.xp-field[aria-selected="true"] {
+  background: var(--armus-champagne);
+  border-color: var(--armus-champagne);
+  color: #141b2e;
+}
+
+.xp-field:focus-visible {
+  outline: 2px solid var(--armus-champagne);
+  outline-offset: 2px;
+}
+
+.xp-field-text {
+  margin: 14px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #e9e2d3;
+  min-height: 46px;
+}
+
+/* four facts */
+.xp-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 10px 0 0;
+}
+
+.xp-fact {
+  border: 1px solid var(--armus-border-soft);
+  border-radius: 20px;
+  padding: 20px;
+  background: #fff;
+}
+
+.xp-fact b {
+  display: block;
+  font: 800 30px/1.1 "Unbounded", "Inter", sans-serif;
+  letter-spacing: -1px;
+  color: var(--armus-gold-2);
+}
+
+.xp-fact span {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--armus-muted);
+  line-height: 1.45;
+}
+
+/* sections below the hero */
+.xp-sec {
+  padding: 64px 0 0;
+}
+
+.xp-sec > h2 {
+  font: 800 28px "Unbounded", "Inter", sans-serif;
+  letter-spacing: -0.8px;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.xp-sec > p {
+  color: var(--armus-muted);
+  font-size: 15.5px;
+  line-height: 1.6;
+  max-width: 680px;
+  margin: 10px 0 0;
+}
+
+.xp-who {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.xp-who h2 {
+  font: 800 28px "Unbounded", "Inter", sans-serif;
+  letter-spacing: -0.8px;
+  margin: 0 0 10px;
+}
+
+.xp-who p {
+  color: #3c3c3c;
+  font-size: 15.5px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.xp-list-head {
+  font: 700 12px Inter, sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--armus-muted);
+  margin: 6px 2px 10px;
+}
+
+.xp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--armus-border-soft);
+}
+
+.xp-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 2px;
+  border-bottom: 1px solid var(--armus-border-soft);
+  font-weight: 650;
+  font-size: 15px;
+}
+
+.xp-list li::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--armus-gold-gradient);
+}
+
+/* three steps: a real order, so they are numbered */
+.xp-steps {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  counter-reset: xp;
+}
+
+.xp-steps li {
+  counter-increment: xp;
+  border-radius: 22px;
+  padding: 24px;
+  background: #f7f3ea;
+}
+
+.xp-steps li::before {
+  content: counter(xp, decimal-leading-zero);
+  display: block;
+  font: 800 14px "Unbounded", Inter, sans-serif;
+  color: var(--armus-gold-2);
+  margin-bottom: 14px;
+}
+
+.xp-steps b {
+  display: block;
+  font: 800 18px "Unbounded", Inter, sans-serif;
+  letter-spacing: -0.4px;
+  margin-bottom: 8px;
+}
+
+.xp-steps span {
+  color: var(--armus-muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+/* questions */
+.xp-faq {
+  margin-top: 18px;
+  border-top: 1px solid var(--armus-border-soft);
+}
+
+.xp-faq details {
+  border-bottom: 1px solid var(--armus-border-soft);
+}
+
+.xp-faq summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 2px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.xp-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.xp-faq summary::after {
+  content: "+";
+  flex: none;
+  font: 800 20px Inter, sans-serif;
+  color: var(--armus-gold-2);
+}
+
+.xp-faq details[open] summary::after {
+  content: "−";
+}
+
+.xp-faq details p {
+  margin: 0 2px 18px;
+  color: #3c3c3c;
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 760px;
+}
+
+.xp-faq a,
+.xp-who a {
+  color: var(--armus-gold-2);
+  font-weight: 700;
+}
+
+/* the other exams and the level test */
+.xp-more {
+  padding: 64px 0 90px;
+}
+
+.xp-more h2 {
+  font: 800 22px "Unbounded", "Inter", sans-serif;
+  letter-spacing: -0.6px;
+  margin: 0 0 14px;
+}
+
+.xp-others {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.xp-other {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--armus-border-soft);
+  border-radius: 18px;
+  color: var(--armus-ink);
+  text-decoration: none;
+  transition: background 0.12s;
+}
+
+.xp-other:hover {
+  background: #faf7f1;
+}
+
+.xp-other .nav-exam-badge {
+  width: 84px;
+}
+
+.xp-other b {
+  display: block;
+  font-size: 15px;
+}
+
+.xp-other small {
+  color: var(--armus-muted);
+  font-size: 13px;
+}
+
+.xp-strip {
+  margin-top: 28px;
+  border-radius: 22px;
+  background: #f5f4f0;
+  padding: 22px 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.xp-strip b {
+  font: 800 18px "Unbounded", "Inter", sans-serif;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.xp-strip > div > span {
+  color: var(--armus-muted);
+  font-size: 14px;
+}
+
+.xp-strip .hero-cta {
+  max-width: 260px;
+  padding: 18px 26px;
+  flex: none;
+}
+
+.xp-note {
+  font-size: 12.5px;
+  color: var(--armus-faint);
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .xp-hero {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 26px 0 24px;
+  }
+
+  .xp-hero h1 {
+    letter-spacing: -1.2px;
+  }
+
+  .xp-lead {
+    font-size: 15.5px;
+  }
+
+  .xp-format {
+    padding: 22px;
+  }
+
+  .xp-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .xp-fact b {
+    font-size: 24px;
+  }
+
+  .xp-sec {
+    padding-top: 46px;
+  }
+
+  .xp-sec > h2,
+  .xp-who h2 {
+    font-size: 22px;
+  }
+
+  .xp-who {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .xp-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .xp-others {
+    grid-template-columns: 1fr;
+  }
+
+  .xp-more {
+    padding: 46px 0 60px;
+  }
+
+  .xp-strip {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .xp-strip .hero-cta {
+    max-width: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .xp-ctas .xp-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-btn,
+  .xp-other {
+    transition: none;
+  }
+}

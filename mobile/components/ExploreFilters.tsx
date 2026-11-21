@@ -87,7 +87,7 @@ const LEVELS: [string, string][] = [
   ['Orta', 'B1–B2'],
   ['İleri', 'C1–C2'],
 ];
-const TAGS = ['Konuşma', 'IELTS', 'TOEFL', 'YDS', 'İş İngilizcesi'];
+const TAGS = ['Konuşma', 'IELTS', 'TOEFL', 'YDS', 'YÖKDİL', 'YDT', 'İş İngilizcesi'];
 // a language and the ways a teacher's profile may write it, already folded
 // (see fold) - the website's LANGUAGE_NAMES (teachers.html)
 const LANGS: [string, string[]][] = [

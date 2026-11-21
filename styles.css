@@ -72,12 +72,151 @@ body {
   align-items: center;
   gap: 6px;
 }
-.nav nav a[aria-current="page"] {
+/* "page" on the page's own link; "true" on Sınavlar while on one exam's
+   page (ydt, yokdil) */
+.nav nav a[aria-current] {
   box-shadow: inset 0 -2px 0 var(--armus-gold-2);
   padding-bottom: 3px;
 }
 .nav nav a {
   white-space: nowrap;
+}
+/* "Sınavlar ▾" and its panel of the four exams (exam-menu.js) */
+.nav-exam-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-exam-chev {
+  transition: transform 0.15s;
+}
+.nav-exam-wrap.open .nav-exam-chev {
+  transform: rotate(180deg);
+}
+.nav-exam-panel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  /* the transparent top padding is the bridge the pointer crosses from
+     "Sınavlar" down to the box without closing it */
+  padding-top: 18px;
+  width: 600px;
+  z-index: 30;
+  visibility: hidden;
+  opacity: 0;
+  /* hides only once the fade-out is over... */
+  transition: opacity 0.14s, visibility 0s linear 0.14s;
+}
+.nav-exam-wrap.open .nav-exam-panel {
+  visibility: visible;
+  opacity: 1;
+  /* ...but shows at once, so a quick Tab from "Sınavlar" lands on the
+     first exam instead of skipping a still-hidden panel */
+  transition: opacity 0.14s, visibility 0s;
+}
+.nav-exam-box {
+  background: #fff;
+  border: 1px solid var(--armus-border-soft);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(35, 26, 10, 0.16);
+  padding: 12px;
+}
+.nav-exam-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.nav .nav-exam-panel a {
+  white-space: normal;
+}
+.nav nav .nav-exam-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #faf7f1;
+  color: var(--armus-ink);
+  font-weight: 400;
+  transition: background 0.12s;
+}
+.nav nav .nav-exam-tile:hover,
+.nav nav .nav-exam-tile:focus-visible {
+  background: var(--armus-champagne);
+}
+.nav nav .nav-exam-tile[aria-current="page"] {
+  box-shadow: inset 0 0 0 2px var(--armus-gold-2);
+  padding-bottom: 10px;
+}
+.nav-exam-badge {
+  flex: none;
+  width: 78px;
+  text-align: center;
+  padding: 12px 0;
+  border-radius: 10px;
+  font: 800 12.5px "Unbounded", Inter, sans-serif;
+  letter-spacing: -0.2px;
+}
+.nav-exam-badge.yds {
+  background: var(--armus-gold-2);
+  color: var(--armus-cream);
+}
+.nav-exam-badge.yokdil {
+  background: #141b2e;
+  color: var(--armus-champagne);
+}
+.nav-exam-badge.ydt {
+  background: var(--armus-champagne);
+  color: var(--armus-gold-2);
+  box-shadow: inset 0 0 0 1px var(--armus-champagne-deep);
+}
+.nav-exam-badge.ielts {
+  background: #0b0b0b;
+  color: var(--armus-red-on-dark);
+}
+.nav-exam-text b {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+}
+.nav-exam-text b em {
+  font: 800 9px Inter, sans-serif;
+  font-style: normal;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  background: var(--armus-gold-2);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 6px;
+  vertical-align: 2px;
+}
+.nav-exam-text small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--armus-muted);
+  font-weight: 500;
+}
+.nav nav .nav-exam-all {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 10px 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--armus-muted);
+}
+.nav nav .nav-exam-all b {
+  color: var(--armus-gold-2);
+  font-weight: 800;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-exam-chev,
+  .nav-exam-panel,
+  .nav nav .nav-exam-tile {
+    transition: none;
+  }
 }
 /* small laptops: the menu is back (it hides below 901px) but six links
    don't fit next to the logo and the buttons, so tighten the gaps and
@@ -232,6 +371,44 @@ html.nav-sheet-open body {
 }
 .nav-sheet-exam[aria-current="page"] {
   box-shadow: inset 0 0 0 2px var(--armus-gold-2);
+}
+/* the exams card: a heading link to the hub and the four exams as chips */
+.nav-sheet-exams {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+.nav-sheet-exams-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+.nav-sheet-exam-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.nav-sheet-exam-chips a {
+  display: block;
+  text-align: center;
+  padding: 11px 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f4f4f2;
+  text-decoration: none;
+  font: 800 11.5px "Unbounded", Inter, sans-serif;
+  letter-spacing: -0.2px;
+}
+.nav-sheet-exam-chips a[aria-current="page"],
+.nav-sheet-exams-head[aria-current="page"] b {
+  color: var(--armus-red-on-dark);
+}
+.nav-sheet-exam-chips a[aria-current="page"] {
+  border-color: var(--armus-red-on-dark);
 }
 .nav-sheet-free {
   font: 700 9.5px Inter, sans-serif;
