@@ -45,7 +45,7 @@
        theme.css has been read (theme.css is what names the file) -->
   <link rel="preload" href="fonts/unbounded-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="theme.css?v=18" />
-  <link rel="stylesheet" href="styles.css?v=39" />
+  <link rel="stylesheet" href="styles.css?v=40" />
   <link rel="stylesheet" href="home-kinetic.css?v=20" />
   <style>
     /* homepage-only intro: the mark writes itself big and centered,
@@ -205,11 +205,46 @@
         <div class="eyebrow" data-i18n="index.eyebrow"><span class="dot"></span> Türkiye'nin İngilizce öğrenme platformu</div>
         <h1><span data-i18n="index.hero.title1">İngilizce öğrenmenin</span><br><span data-i18n="index.hero.title2">daha iyi bir yolu.</span></h1>
         <p data-i18n="index.hero.subtitle">Sana uygun İngilizce öğretmenini bul. Hedefine, seviyene ve bütçene göre dersini seç.</p>
-        <div class="hero-mobile-photo">
-          <img src="avatars/hero-mobile-video-call.jpg" alt="Bir ARMUS öğrencisi öğretmeniyle online ders yapıyor">
+        <!-- phones only: the learner and the teacher as two polaroids, with
+             two example cards from the ARMUS experience (skill scores from
+             the level test, the next lesson). Decorative, so hidden from
+             screen readers; on wide screens the first <source> hands the
+             browser a 1px gif, so the photos are never downloaded there. -->
+        <div class="hero-pola" aria-hidden="true">
+          <figure class="hero-pola-photo learner">
+            <picture>
+              <source media="(min-width: 901px)" srcset="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+              <source type="image/webp" srcset="avatars/hero-learner-640.webp 640w, avatars/hero-learner-960.webp 960w" sizes="220px">
+              <img src="avatars/hero-learner-640.jpg" srcset="avatars/hero-learner-640.jpg 640w, avatars/hero-learner-960.jpg 960w" sizes="220px" alt="" width="640" height="960" fetchpriority="high">
+            </picture>
+            <figcaption data-i18n="index.hero.you">Sen</figcaption>
+          </figure>
+          <figure class="hero-pola-photo teacher">
+            <picture>
+              <source media="(min-width: 901px)" srcset="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+              <source type="image/webp" srcset="avatars/hero-teacher-400.webp 400w, avatars/hero-teacher-600.webp 600w" sizes="140px">
+              <img src="avatars/hero-teacher-400.jpg" srcset="avatars/hero-teacher-400.jpg 400w, avatars/hero-teacher-600.jpg 600w" sizes="140px" alt="" width="400" height="600">
+            </picture>
+            <figcaption data-i18n="index.hero.yourTeacher">Öğretmenin</figcaption>
+          </figure>
+          <div class="hero-pola-card skills">
+            <small data-i18n="index.hero.cardSkills">Beceri puanların</small>
+            <div class="hero-pola-bar"><span data-i18n="levelTest.skill.grammar">Dil bilgisi</span><i style="--v: 72%"></i><b data-i18n="index.hero.p72">%72</b></div>
+            <div class="hero-pola-bar"><span data-i18n="levelTest.skill.vocabulary">Kelime</span><i style="--v: 64%"></i><b data-i18n="index.hero.p64">%64</b></div>
+            <div class="hero-pola-bar"><span data-i18n="levelTest.skill.reading">Okuma</span><i style="--v: 80%"></i><b data-i18n="index.hero.p80">%80</b></div>
+          </div>
+          <div class="hero-pola-card next">
+            <span class="hero-pola-time">19:00</span>
+            <span>
+              <small data-i18n="index.hero.cardNext">Sıradaki ders</small>
+              <b data-i18n="index.hero.cardWhen">Yarın · 50 dk</b>
+              <em data-i18n="index.hero.cardTopic">Konuşma pratiği</em>
+            </span>
+          </div>
         </div>
         <div class="hero-actions">
           <a class="btn btn-light hero-cta" href="teachers"><span data-i18n="index.hero.cta">Öğretmen Bul</span> <span>→</span></a>
+          <a class="hero-test-link" href="seviye-testi" data-i18n="index.hero.testCta">Ücretsiz seviye testi · 10 dk</a>
         </div>
         <div class="social-proof">
           <div class="avatars">
@@ -484,7 +519,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
   </button>
 
-  <script src="i18n.js?v=47"></script>
+  <script src="i18n.js?v=48"></script>
   <script src="nav-sheet.js?v=3"></script>
   <script src="exam-menu.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
