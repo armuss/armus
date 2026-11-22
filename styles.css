@@ -683,13 +683,13 @@ html.nav-sheet-open body {
   gap: 10px;
   margin-top: 28px;
 }
-/* mobile-only hero photo, replacing the desktop teacher-stack visual
-   (hidden here, shown under the 900px breakpoint below) - lives inside
-   .hero-copy so the gold .hero-band background wraps all the way around
-   it instead of cutting to white right after the subtitle text, which
-   is what happened before this existed (teacher-stack hidden, nothing
-   else in the gold band to give it height) */
-.hero-mobile-photo {
+/* phones only (see the 900px breakpoint below): the learner and the
+   teacher as two polaroids with two example cards, in place of the
+   desktop teacher-stack. It lives inside .hero-copy so the red
+   .hero-band wraps all the way around it. The level test link under
+   "Öğretmen Bul" is phones only too. */
+.hero-pola,
+.hero-test-link {
   display: none;
 }
 .social-proof {
@@ -1308,30 +1308,170 @@ html.nav-sheet-open body {
   .teacher-stack {
     display: none;
   }
-  .hero-mobile-photo {
+  .hero-pola {
     display: block;
     position: relative;
-    margin: 26px 0 6px;
-    border-radius: 26px;
-    overflow: hidden;
-    box-shadow: 0 24px 54px rgba(35, 26, 10, 0.28);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    max-width: 400px;
+    height: 338px;
+    margin: 18px auto 4px;
   }
-  .hero-mobile-photo::after {
-    /* a soft red veil ties the photo into the band's own gradient
-       instead of it sitting on top like a pasted-in sticker */
+  .hero-pola-photo {
+    position: absolute;
+    margin: 0;
+    padding: 8px 8px 34px;
+    background: var(--armus-cream);
+    border-radius: 6px;
+    box-shadow: 0 18px 40px rgba(30, 0, 0, 0.35);
+  }
+  .hero-pola-photo picture,
+  .hero-pola-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .hero-pola-photo img {
+    object-fit: cover;
+    border-radius: 3px;
+  }
+  .hero-pola-photo figcaption {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 8px;
+    font: 800 13px/1.2 "Unbounded", "Inter", sans-serif;
+    color: var(--armus-gold-3);
+  }
+  .hero-pola-photo.learner {
+    left: 2%;
+    top: 24px;
+    width: 56%;
+    height: 240px;
+    transform: rotate(-4deg);
+  }
+  .hero-pola-photo.learner img {
+    object-position: 50% 22%;
+  }
+  .hero-pola-photo.teacher {
+    right: 0;
+    top: 0;
+    width: 36%;
+    height: 160px;
+    transform: rotate(6deg);
+    z-index: 2;
+  }
+  .hero-pola-photo.teacher img {
+    object-position: 50% 30%;
+  }
+  .hero-pola-photo.teacher figcaption {
+    left: 4px;
+    right: 4px;
+    text-align: center;
+    white-space: nowrap;
+    /* shrinks with the polaroid, so "Öğretmenin" / "Your teacher" still
+       fits on a 320px phone */
+    font-size: clamp(9px, 3vw, 11.5px);
+  }
+  .hero-pola-card {
+    position: absolute;
+    z-index: 3;
+    background: #fff;
+    color: var(--armus-ink);
+    border-radius: 16px;
+    padding: 11px 13px;
+    box-shadow: 0 14px 34px rgba(30, 10, 10, 0.24);
+  }
+  .hero-pola-card small {
+    display: block;
+    font: 700 10px Inter, sans-serif;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #8a7f78;
+  }
+  .hero-pola-card.skills {
+    right: -4px;
+    top: 178px;
+    width: 190px;
+  }
+  .hero-pola-bar {
+    display: grid;
+    grid-template-columns: 64px 1fr 32px;
+    gap: 6px;
+    align-items: center;
+    margin-top: 6px;
+    font: 600 11.5px Inter, sans-serif;
+  }
+  .hero-pola-bar i {
+    position: relative;
+    height: 7px;
+    border-radius: 9px;
+    background: var(--armus-champagne);
+    overflow: hidden;
+  }
+  .hero-pola-bar i::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(109, 22, 28, 0) 55%, rgba(109, 22, 28, 0.35) 100%);
-    pointer-events: none;
+    width: var(--v);
+    border-radius: 9px;
+    background: var(--armus-gold-2);
   }
-  .hero-mobile-photo img {
+  .hero-pola-bar b {
+    font-size: 11px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-pola-card.next {
+    left: 0;
+    top: 268px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 4;
+  }
+  .hero-pola-time {
+    flex: none;
+    background: var(--armus-gold-2);
+    color: #fff;
+    border-radius: 11px;
+    padding: 10px 9px;
+    font: 800 15px "Unbounded", "Inter", sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-pola-card.next b {
     display: block;
-    width: 100%;
-    height: 240px;
-    object-fit: cover;
-    object-position: center 20%;
+    margin-top: 2px;
+    font: 800 14px Inter, sans-serif;
+  }
+  .hero-pola-card.next em {
+    font-style: normal;
+    font-size: 12px;
+    color: #6d6560;
+  }
+  .hero-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 22px;
+    /* "Öğretmen Bul" stops at 480px on tablets; the level test link
+       matches it */
+    max-width: 480px;
+  }
+  .hero-test-link {
+    display: block;
+    text-align: center;
+    padding: 15px 18px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(250, 245, 226, 0.5);
+    color: var(--armus-on-gold);
+    font: 700 15px Inter, sans-serif;
+    text-decoration: none;
+  }
+  .hero-test-link:hover {
+    background: rgba(250, 245, 226, 0.08);
+  }
+  /* the polaroids take the space the "10.000+" line used to; it stays on
+     wide screens */
+  .hero-band .social-proof {
+    display: none;
   }
   .search-row {
     flex-wrap: wrap;
@@ -1387,17 +1527,20 @@ html.nav-sheet-open body {
     font-size: 20px;
   }
   .hero {
-    padding-top: 50px;
+    padding-top: 28px;
   }
+  /* three lines ("İngilizce / öğrenmenin / daha iyi bir yolu."), so the
+     polaroids and "Öğretmen Bul" come up on the first screen.
+     "öğrenmenin" alone is ~7.3 times the font size wide, which this
+     keeps well inside even a 320px phone */
   .hero h1 {
-    font-size: 48px;
+    font-size: clamp(28px, 8.6vw, 36px);
+    letter-spacing: -1.2px;
+    margin: 12px 0 10px;
   }
-  /* "öğrenmenin" alone is ~7.3 times the font size wide - at 48px it no
-     longer fits a phone under ~414px and pushed the page sideways */
-  @media (max-width: 413px) {
-    .hero h1 {
-      font-size: 11.6vw;
-    }
+  .hero-copy > p {
+    font-size: 15px;
+    line-height: 1.5;
   }
   .features,
   .testimonial-grid {
