@@ -388,10 +388,10 @@
 
       <button type="submit" class="submit-btn" id="submitBtn" data-i18n="register.submit">Hesap Oluştur</button>
 
-      <p class="consent-note" data-i18n="register.consentNote">
-        Hesap oluşturarak <a href="kullanim-sartlari" target="_blank" rel="noopener">Kullanım Şartları</a>'nı
-        ve <a href="gizlilik-politikasi" target="_blank" rel="noopener">Gizlilik Politikası</a>'nı
-        kabul etmiş olursun.
+      <p class="consent-note" data-i18n="register.consentNote2">
+        Bir sonraki adımda <a href="kullanim-sartlari" target="_blank" rel="noopener">Kullanım Şartları</a>'nı
+        ve <a href="kvkk-aydinlatma-metni" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni
+        okuyup onaylaman istenecek. Ayrıntılar: <a href="gizlilik-politikasi" target="_blank" rel="noopener">Gizlilik Politikası</a>.
       </p>
 
     </form>
@@ -427,13 +427,14 @@
 
   </main>
 
-  <script src="i18n.js?v=48"></script>
+  <script src="i18n.js?v=49"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
 
   <script src="supabase-config.js?v=4"></script>
   <script src="site-settings.js?v=5"></script>
 
-  <script src="auth.js?v=16"></script>
+  <script src="auth.js?v=17"></script>
+  <script src="legal-consent.js?v=1"></script>
   <script>
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -529,8 +530,16 @@
         return;
       }
 
+      // the Kullanım Şartları and the KVKK Aydınlatma Metni, read to the
+      // end and ticked, before the account exists (legal-consent.js)
       submitBtn.disabled = true;
-      const { data, error } = await armusSignUp({ name, email, password, role: selectedRole, city });
+      const consents = await armusLegalConsent.open({ role: selectedRole });
+      if (!consents) {
+        submitBtn.disabled = false;
+        return;
+      }
+
+      const { data, error } = await armusSignUp({ name, email, password, role: selectedRole, city, consents });
       submitBtn.disabled = false;
 
       if (error) {

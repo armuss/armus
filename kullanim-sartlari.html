@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <script>if("scrollRestoration" in history){history.scrollRestoration="manual";}</script>
-  <script>(function(){try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
+  <script>(function(){if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add("legal-embed");try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
   <link rel="alternate icon" href="favicon.ico?v=2">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=2">
@@ -23,217 +23,41 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
   <link rel="stylesheet" href="theme.css?v=18">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: "Inter", sans-serif;
-      background-color: var(--armus-bg);
-      background-image: var(--armus-bg-glow);
-      color: var(--armus-ink);
-      line-height: 1.7;
-    }
-
-    a {
-      color: var(--armus-gold-text);
-      text-decoration: underline;
-    }
-
-    .container {
-      width: min(720px, calc(100% - 40px));
-      margin: auto;
-    }
-
-    nav {
-      height: 76px;
-      border-bottom: 1px solid var(--armus-border-soft);
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-inner {
-      width: min(720px, calc(100% - 40px));
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -1px;
-      background: var(--armus-gold-gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-decoration: none;
-    }
-
-    .back {
-      color: var(--armus-muted);
-      font-size: 13px;
-      text-decoration: none;
-    }
-
-    .back:hover {
-      color: var(--armus-ink);
-    }
-
-    main.container {
-      padding: 50px 0 100px;
-    }
-
-    .eyebrow {
-      color: var(--armus-muted);
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: clamp(28px, 4vw, 36px);
-      letter-spacing: -1px;
-      margin-bottom: 8px;
-    }
-
-    .updated {
-      color: var(--armus-muted);
-      font-size: 12.5px;
-      margin-bottom: 40px;
-    }
-
-    h2 {
-      font-size: 18px;
-      margin: 36px 0 12px;
-      letter-spacing: -0.3px;
-    }
-
-    p, li {
-      color: var(--armus-ink);
-      font-size: 14.5px;
-      margin-bottom: 12px;
-    }
-
-    ul {
-      padding-left: 20px;
-      margin-bottom: 12px;
-    }
-
-    .commission-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 16px 0 24px;
-      font-size: 13.5px;
-    }
-
-    .commission-table th,
-    .commission-table td {
-      text-align: left;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--armus-border-soft);
-      color: var(--armus-ink);
-    }
-
-    .commission-table th {
-      color: var(--armus-muted);
-      font-weight: 600;
-      font-size: 12px;
-    }
-
-    .note {
-      margin-top: 40px;
-      padding: 16px 18px;
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 14px;
-      color: var(--armus-muted);
-      font-size: 13px;
-    }
-  
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .nav-utility {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lang-toggle {
-      border: 1px solid var(--armus-border);
-      background: transparent;
-      color: var(--armus-ink);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font: 700 12.5px Inter, sans-serif;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .lang-toggle:hover {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .help-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--armus-border);
-      color: var(--armus-muted);
-      flex-shrink: 0;
-    }
-
-    .help-btn:hover {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .help-btn svg {
-      width: 17px;
-      height: 17px;
-    }
-  </style>
+  <link rel="stylesheet" href="legal.css?v=1">
 </head>
 
 <body>
 
-  <nav>
-    <div class="nav-inner">
-      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-      <div class="nav-right">
-        <div class="nav-utility">
-          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          </a>
-        </div>
+  <nav class="legal-nav">
+    <div class="legal-nav-inner">
+      <a href="/"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <div class="legal-nav-right">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
         <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
       </div>
     </div>
   </nav>
 
-  <main class="container">
+  <main class="legal-main">
+    <div class="legal-tabs">
+      <a href="gizlilik-politikasi">Gizlilik Politikası</a>
+      <a href="kvkk-aydinlatma-metni">KVKK Aydınlatma Metni</a>
+      <a href="cerez-politikasi">Çerez Politikası</a>
+      <a href="ticari-ileti-onayi">Ticari İleti Onayı</a>
+      <a href="kullanim-sartlari" aria-current="page">Kullanım Şartları</a>
+    </div>
+
+    <article class="legal-doc" data-doc="terms" data-version="2026-11-25">
 
     <div class="eyebrow" data-i18n="terms.eyebrow">YASAL</div>
     <h1 data-i18n="terms.title">Kullanım Şartları</h1>
-    <div class="updated" data-i18n="terms.updated">Son güncelleme: 17.09.2026</div>
+    <div class="updated" data-i18n="terms.updated">Yürürlük tarihi: 25.11.2026 · Sürüm: 2026-11-25</div>
 
     <p data-i18n="terms.intro">
-      Bu Kullanım Şartları, ARMUS platformunu kullanan öğrenciler ve
-      öğretmenler için geçerlidir. Platformu kullanarak bu şartları kabul
-      etmiş olursun.
+      Bu Kullanım Şartları, [ŞİRKET ÜNVANI] ("ARMUS") tarafından işletilen
+      armus.com.tr ve ARMUS mobil uygulamasını kullanan öğrenciler ve
+      öğretmenler için geçerlidir. Hesap oluştururken bu şartları okuyup
+      kabul edersin.
     </p>
 
     <h2 data-i18n="terms.s1Title">1. Hesaplar</h2>
@@ -241,7 +65,13 @@
       Hesap oluştururken verdiğin bilgilerin doğru olduğunu kabul edersin.
       Şifreni gizli tutmaktan ve hesabınla yapılan işlemlerden sen
       sorumlusun. 18 yaşından küçüklerin öğretmen olarak başvurması kabul
-      edilmez.
+      edilmez. 18 yaşından küçükler Platform'u öğrenci olarak yalnızca veli
+      veya yasal temsilcilerinin bilgisi ve onayıyla kullanabilir; ödeme
+      yapmak ve paket satın almak veli ya da yasal temsilci tarafından veya
+      onun onayıyla yapılır. Kişisel verilerin
+      <a href="gizlilik-politikasi">Gizlilik Politikası</a> ve
+      <a href="kvkk-aydinlatma-metni">KVKK Aydınlatma Metni</a>'nde
+      anlatıldığı şekilde işlenir.
     </p>
 
     <h2 data-i18n="terms.s2Title">2. Öğretmen başvurusu ve onay süreci</h2>
@@ -345,14 +175,14 @@
       ARMUS, bir öğretmenin tamamladığı toplam başarılı ders saatine göre
       her dersten aşağıdaki oranlarda komisyon alır:
     </p>
-    <table class="commission-table">
+    <div class="table-wrap"><table class="commission-table">
       <tr><th data-i18n="terms.s5Th1">Başarılı ders saati</th><th data-i18n="terms.s5Th2">Komisyon</th></tr>
       <tr><td>0 – 100 saat</td><td>%30</td></tr>
       <tr><td>100 – 200 saat</td><td>%28</td></tr>
       <tr><td>200 – 300 saat</td><td>%25</td></tr>
       <tr><td>300 – 500 saat</td><td>%20</td></tr>
       <tr><td>500+ saat</td><td>%15</td></tr>
-    </table>
+    </table></div>
     <p data-i18n="terms.s5Hold">
       Bir dersin ücreti, dersten 7 gün sonra öğretmenin çekilebilir
       bakiyesine geçer. Bu süre, derse gelmeme bildirimlerinin ve
@@ -377,6 +207,14 @@
       saklanır ve aynı kişiye ait olduğu düşünülen hesaplar incelenebilir.
     </p>
 
+    <h2 data-i18n="terms.s6bTitle">6.1. Gizlilik, ders kaydı ve kişisel veriler</h2>
+    <ul>
+      <li data-i18n="terms.s6bLi1">Dersleri, karşı tarafın sesini veya görüntüsünü onun açık izni olmadan kaydetmek, ekran görüntüsü almak ve bunları paylaşmak yasaktır. ARMUS dersleri kaydetmez.</li>
+      <li data-i18n="terms.s6bLi2">Öğretmenler, öğrencilerinin adını, ders bilgilerini, mesajlarını ve ders notlarını yalnızca o öğrenciye ders vermek için kullanabilir; bu bilgileri Platform dışına çıkaramaz, başkalarıyla paylaşamaz ve öğrenciyle Platform dışından iletişime geçmek için kullanamaz.</li>
+      <li data-i18n="terms.s6bLi3">Mesajlarda telefon numarası veya e-posta adresi paylaşılması otomatik olarak engellenir. Bir mesaj şikâyet edildiğinde ya da bir ders veya ödemeyle ilgili anlaşmazlık olduğunda, ARMUS yetkilileri konuyla ilgili mesajları inceleyebilir.</li>
+      <li data-i18n="terms.s6bLi4">Başkasına ait kişisel verileri (ör. bir başkasının fotoğrafını, kimlik veya iletişim bilgisini) onun izni olmadan Platform'a yüklemek ya da paylaşmak yasaktır. Sağlık bilgisi gibi özel nitelikli kişisel verilerini mesajlarda, tanıtım metinlerinde veya şikâyetlerde paylaşmamanı rica ederiz.</li>
+    </ul>
+
     <h2 data-i18n="terms.s7Title">7. Sorumluluk sınırı</h2>
     <p data-i18n="terms.s7Text">
       ARMUS platformu "olduğu gibi" sunulur; kesintisiz veya hatasız
@@ -388,9 +226,10 @@
 
     <h2 data-i18n="terms.s8Title">8. Değişiklikler</h2>
     <p data-i18n="terms.s8Text">
-      Bu şartları zaman zaman güncelleyebiliriz. Önemli değişikliklerde
-      seni bilgilendirmeye çalışırız. Güncel sürüm her zaman bu sayfada
-      yer alır.
+      Bu şartları zaman zaman güncelleyebiliriz. Önemli değişiklikleri
+      yürürlüğe girmeden önce e-posta veya Platform içi bildirimle duyurur,
+      gerektiğinde onayını isteriz. Güncel sürüm her zaman bu sayfada yer
+      alır; kabul ettiğin sürüm hesabınla birlikte kayıt altında tutulur.
     </p>
 
     <div class="note" data-i18n="terms.note">
@@ -398,9 +237,10 @@
       <a href="iletisim">bize ulaşabilirsin</a>.
     </div>
 
+    </article>
   </main>
 
-  <script src="i18n.js?v=48"></script>
+  <script src="i18n.js?v=49"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="logo-panel-link.js?v=1"></script>

@@ -263,6 +263,8 @@ export default function Profile() {
 
         <SettingsGroup label={t("YASAL")}>
           <Row icon="shield-outline" label={t("Gizlilik Politikası")} onPress={() => open('/gizlilik-politikasi')} />
+          <Row icon="reader-outline" label={t("KVKK Aydınlatma Metni")} onPress={() => open('/kvkk-aydinlatma-metni')} />
+          <Row icon="information-circle-outline" label={t("Çerez Politikası")} onPress={() => open('/cerez-politikasi')} />
           <Row icon="document-text-outline" label={t("Kullanım Şartları")} onPress={() => open('/kullanim-sartlari')} last />
         </SettingsGroup>
 

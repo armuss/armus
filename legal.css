@@ -1,0 +1,270 @@
+/* The legal pages (gizlilik-politikasi, kvkk-aydinlatma-metni,
+   cerez-politikasi, ticari-ileti-onayi): a plain reading column, tables
+   that scroll sideways on a phone, and an "?embed=1" mode (legal-embed
+   on <html>) without the header, footer or chat button. The document
+   itself is the <article class="legal-doc">; the signup step
+   (legal-consent.js) reads that element straight from the page. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--armus-bg);
+  background-image: var(--armus-bg-glow);
+  color: var(--armus-ink);
+  line-height: 1.7;
+}
+
+a {
+  color: var(--armus-gold-text);
+  text-decoration: underline;
+}
+
+.legal-nav {
+  height: 76px;
+  border-bottom: 1px solid var(--armus-border-soft);
+  display: flex;
+  align-items: center;
+}
+
+.legal-nav-inner {
+  width: min(820px, calc(100% - 32px));
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.legal-nav .logo-img {
+  height: 30px;
+  display: block;
+}
+
+.legal-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.legal-nav .back {
+  color: var(--armus-muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.legal-nav .back:hover {
+  color: var(--armus-ink);
+}
+
+.lang-toggle {
+  border: 1px solid var(--armus-border);
+  background: transparent;
+  color: var(--armus-ink);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: 700 11px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.legal-main {
+  width: min(820px, calc(100% - 32px));
+  margin: auto;
+  padding: 44px 0 90px;
+}
+
+/* the other legal texts, as tabs over the document */
+.legal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 26px;
+}
+
+.legal-tabs a {
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--armus-muted);
+  border: 1px solid var(--armus-border-soft);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: #fff;
+}
+
+.legal-tabs a[aria-current="page"] {
+  color: #fff;
+  background: var(--armus-gold-2);
+  border-color: var(--armus-gold-2);
+}
+
+.legal-en-note {
+  display: none;
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--armus-panel);
+  border: 1px solid var(--armus-border);
+  color: var(--armus-muted);
+  font-size: 13px;
+}
+
+html[lang="en"] .legal-en-note {
+  display: block;
+}
+
+.legal-doc .eyebrow {
+  color: var(--armus-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  margin-bottom: 8px;
+}
+
+.legal-doc h1 {
+  font-size: clamp(26px, 4vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+  margin-bottom: 10px;
+  text-wrap: balance;
+}
+
+.legal-doc .updated {
+  color: var(--armus-muted);
+  font-size: 12.5px;
+  margin-bottom: 28px;
+}
+
+.legal-doc h2 {
+  font-size: 18.5px;
+  line-height: 1.35;
+  margin: 34px 0 12px;
+  letter-spacing: -0.3px;
+  scroll-margin-top: 20px;
+}
+
+.legal-doc h3 {
+  font-size: 15.5px;
+  margin: 22px 0 8px;
+}
+
+.legal-doc p,
+.legal-doc li {
+  font-size: 14.5px;
+  margin-bottom: 10px;
+}
+
+.legal-doc ul,
+.legal-doc ol {
+  padding-left: 22px;
+  margin-bottom: 12px;
+}
+
+.legal-doc li::marker {
+  color: var(--armus-gold-2);
+}
+
+.legal-doc .summary {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--armus-border-soft);
+  margin-bottom: 24px;
+}
+
+.legal-doc .summary p:last-child,
+.legal-doc .summary ul:last-child {
+  margin-bottom: 0;
+}
+
+.legal-doc .toc {
+  columns: 2;
+  column-gap: 28px;
+  font-size: 13.5px;
+}
+
+.legal-doc .toc li {
+  font-size: 13.5px;
+  margin-bottom: 4px;
+  break-inside: avoid;
+}
+
+.legal-doc .table-wrap {
+  overflow-x: auto;
+  margin: 8px 0 18px;
+  border: 1px solid var(--armus-border-soft);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.legal-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 560px;
+}
+
+.legal-doc th,
+.legal-doc td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--armus-border-soft);
+  line-height: 1.5;
+}
+
+.legal-doc tr:last-child td {
+  border-bottom: 0;
+}
+
+.legal-doc th {
+  background: #faf7f1;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--armus-muted);
+}
+
+.legal-doc td:first-child {
+  font-weight: 600;
+}
+
+.legal-doc .note {
+  margin-top: 30px;
+  padding: 14px 16px;
+  background: var(--armus-panel);
+  border: 1px solid var(--armus-border);
+  border-radius: 14px;
+  color: var(--armus-muted);
+  font-size: 13px;
+}
+
+/* ?embed=1: only the document (the app shows it this way) */
+html.legal-embed .legal-nav,
+html.legal-embed .legal-tabs,
+html.legal-embed #armusChatRoot {
+  display: none !important;
+}
+
+html.legal-embed .legal-main {
+  padding: 18px 0 40px;
+}
+
+@media (max-width: 600px) {
+  .legal-main {
+    padding-top: 28px;
+  }
+
+  .legal-doc .toc {
+    columns: 1;
+  }
+
+  .legal-doc table {
+    font-size: 12.5px;
+  }
+}

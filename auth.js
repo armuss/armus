@@ -70,11 +70,16 @@ async function armusEdgeErrorMessage(error) {
   return null;
 }
 
-async function armusSignUp({ name, email, password, role, city }) {
+// consents: what legal-consent.js returned (which texts were accepted, in
+// which version); handle_new_user (migration_130.sql) keeps it in
+// user_consents as the proof of the signup's approvals
+async function armusSignUp({ name, email, password, role, city, consents }) {
+  const data = { name, role, city: city || null };
+  if (consents) data.consents = consents;
   return armusSupabase.auth.signUp({
     email,
     password,
-    options: { data: { name, role, city: city || null } },
+    options: { data },
   });
 }
 

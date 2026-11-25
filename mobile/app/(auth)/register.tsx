@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollBand } from '../../components/Band';
 import Button from '../../components/Button';
+import LegalConsent, { type Consents } from '../../components/LegalConsent';
 import Logo from '../../components/Logo';
 import { supabase } from '../../lib/supabase';
 import { colors, fonts, radius } from '../../lib/theme';
@@ -35,9 +36,12 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
+  const [consentOpen, setConsentOpen] = useState(false);
 
-  // the website's signup rules (register.html), word for word
-  async function handleRegister() {
+  // the website's signup rules (register.html), word for word; then the
+  // Kullanım Şartları and the Aydınlatma Metni (LegalConsent), and only
+  // then the account
+  function handleRegister() {
     setError('');
     setNotice('');
     const cleanName = name.trim();
@@ -59,11 +63,19 @@ export default function Register() {
       setError(t("Şifreler birbiriyle eşleşmiyor."));
       return;
     }
+    setConsentOpen(true);
+  }
+
+  async function createAccount(consents: Consents) {
+    setConsentOpen(false);
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
     setLoading(true);
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
-      options: { data: { name: cleanName, role: 'student', city: city.trim() || null } },
+      // consents: kept in user_consents by handle_new_user (migration_130.sql)
+      options: { data: { name: cleanName, role: 'student', city: city.trim() || null, consents } },
     });
     setLoading(false);
     if (signUpError) {
@@ -164,6 +176,9 @@ export default function Register() {
             <Button label={t("Kayıt Ol")} onPress={handleRegister} loading={loading} />
           </View>
 
+          <Text style={styles.consentNote}>
+            {t("Bir sonraki adımda Kullanım Şartları'nı ve KVKK Aydınlatma Metni'ni okuyup onaylaman istenecek.")}</Text>
+
           <Text style={styles.switchRow}>
             {t("Zaten hesabın var mı?")}{' '}
             <Link href="/(auth)/login" style={styles.switchLink}>
@@ -177,6 +192,7 @@ export default function Register() {
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LegalConsent visible={consentOpen} onCancel={() => setConsentOpen(false)} onDone={createAccount} />
     </SafeAreaView>
   );
 }
@@ -250,6 +266,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.error,
     marginBottom: 14,
+  },
+  consentNote: {
+    fontFamily: fonts.body,
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: 14,
   },
   switchRow: {
     fontFamily: fonts.body,

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <script>if("scrollRestoration" in history){history.scrollRestoration="manual";}</script>
-  <script>(function(){try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
+  <script>(function(){if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add("legal-embed");try{if(sessionStorage.getItem("armusLogoPlayed")){document.documentElement.classList.add("armus-logo-static");}else{sessionStorage.setItem("armusLogoPlayed","1");}}catch(e){}})();</script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
   <link rel="alternate icon" href="favicon.ico?v=2">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=2">
@@ -14,299 +14,215 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Gizlilik Politikası | ARMUS</title>
-  <meta name="description" content="ARMUS'un kişisel verilerinizi nasıl topladığı, kullandığı ve koruduğu hakkında bilgi alın.">
+  <meta name="description" content="ARMUS'ta hangi bilgilerin neden toplandığı, kimlerin neleri görebildiği, canlı dersler, mesajlar, ödemeler, güvenlik, çocuklar ve verilerin üzerindeki kontrolün hakkında ayrıntılı bilgi.">
   <link rel="canonical" href="https://armus.com.tr/gizlilik-politikasi">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="theme.css?v=18">
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: "Inter", sans-serif;
-      background-color: var(--armus-bg);
-      background-image: var(--armus-bg-glow);
-      color: var(--armus-ink);
-      line-height: 1.7;
-    }
-
-    a {
-      color: var(--armus-gold-text);
-      text-decoration: underline;
-    }
-
-    .container {
-      width: min(720px, calc(100% - 40px));
-      margin: auto;
-    }
-
-    nav {
-      height: 76px;
-      border-bottom: 1px solid var(--armus-border-soft);
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-inner {
-      width: min(720px, calc(100% - 40px));
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -1px;
-      background: var(--armus-gold-gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-decoration: none;
-    }
-
-    .back {
-      color: var(--armus-muted);
-      font-size: 13px;
-      text-decoration: none;
-    }
-
-    .back:hover {
-      color: var(--armus-ink);
-    }
-
-    main.container {
-      padding: 50px 0 100px;
-    }
-
-    .eyebrow {
-      color: var(--armus-muted);
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: clamp(28px, 4vw, 36px);
-      letter-spacing: -1px;
-      margin-bottom: 8px;
-    }
-
-    .updated {
-      color: var(--armus-muted);
-      font-size: 12.5px;
-      margin-bottom: 40px;
-    }
-
-    h2 {
-      font-size: 18px;
-      margin: 36px 0 12px;
-      letter-spacing: -0.3px;
-    }
-
-    p, li {
-      color: var(--armus-ink);
-      font-size: 14.5px;
-      margin-bottom: 12px;
-    }
-
-    ul {
-      padding-left: 20px;
-      margin-bottom: 12px;
-    }
-
-    .note {
-      margin-top: 40px;
-      padding: 16px 18px;
-      background: var(--armus-panel);
-      border: 1px solid var(--armus-border);
-      border-radius: 14px;
-      color: var(--armus-muted);
-      font-size: 13px;
-    }
-  
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .nav-utility {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lang-toggle {
-      border: 1px solid var(--armus-border);
-      background: transparent;
-      color: var(--armus-ink);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font: 700 12.5px Inter, sans-serif;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .lang-toggle:hover {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .help-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--armus-border);
-      color: var(--armus-muted);
-      flex-shrink: 0;
-    }
-
-    .help-btn:hover {
-      border-color: var(--armus-gold-2);
-      color: var(--armus-gold-text);
-    }
-
-    .help-btn svg {
-      width: 17px;
-      height: 17px;
-    }
-  </style>
+  <link rel="stylesheet" href="legal.css?v=1">
 </head>
 
 <body>
 
-  <nav>
-    <div class="nav-inner">
-      <a href="/" class="logo"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
-      <div class="nav-right">
-        <div class="nav-utility">
-          <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
-          <a class="help-btn" href="sss" title="Yardım Merkezi" aria-label="Yardım Merkezi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          </a>
-        </div>
+  <nav class="legal-nav">
+    <div class="legal-nav-inner">
+      <a href="/"><img src="logo-black.png" alt="ARMUS" class="logo-img"></a>
+      <div class="legal-nav-right">
+        <button type="button" class="lang-toggle" data-lang-toggle title="Dili değiştir / Change language">EN</button>
         <a href="/" class="back" data-i18n="nav.backHome">← Ana sayfa</a>
       </div>
     </div>
   </nav>
 
-  <main class="container">
-
-    <div class="eyebrow" data-i18n="privacy.eyebrow">YASAL</div>
-    <h1 data-i18n="privacy.title">Gizlilik Politikası</h1>
-    <div class="updated" data-i18n="privacy.updated">Son güncelleme: 26.09.2026</div>
-
-    <p data-i18n="privacy.intro">
-      Bu Gizlilik Politikası, ARMUS'u ("biz", "platform") kullanırken hangi
-      kişisel verilerini topladığımızı, bunları neden ve nasıl işlediğimizi
-      ve haklarını açıklar. ARMUS, Türkiye'de İngilizce öğrenmek isteyen
-      öğrencileri İngilizce öğretmenleriyle buluşturan bir platformdur.
-    </p>
-
-    <h2 data-i18n="privacy.s1Title">1. Hangi verileri topluyoruz?</h2>
-    <p data-i18n="privacy.s1Intro">Hesabına ve kullanımına bağlı olarak şu bilgileri toplayabiliriz:</p>
-    <ul>
-      <li data-i18n="privacy.s1Li1">Ad, soyad, e-posta adresi ve şifre (hesap oluşturma sırasında)</li>
-      <li data-i18n="privacy.s1Li2">Öğretmenler için: ülke, öğretilen konu, konuşulan diller, telefon
-        numarası, fotoğraf, sertifika ve eğitim bilgileri, tanıtım videosu</li>
-      <li data-i18n="privacy.s1Li3">Ders geçmişi, rezervasyon bilgileri ve öğrenci değerlendirmeleri</li>
-      <li data-i18n="privacy.s1Li4">Ödeme yaparken: telefon numaran ve T.C. kimlik numaran, ödemeni
-        işlemek üzere ödeme sağlayıcımız iyzico'ya iletilir; bu bilgileri
-        kendi veritabanımızda saklamayız. Kart numaranın tamamı hiçbir
-        zaman bize ulaşmaz, doğrudan iyzico üzerinden işlenir; iyzico'nun
-        bize ilettiği kartın ilk 6 ve son 4 hanesini dolandırıcılığı ve
-        haksız ödeme itirazlarını önlemek için saklarız.</li>
-      <li data-i18n="privacy.s1Li5">İletişim formu üzerinden bize ulaştığında, kötüye kullanımı
-        (örneğin otomatik spam) önlemek amacıyla IP adresini 30 gün
-        boyunca saklarız, ardından kaydından kaldırırız.</li>
-      <li data-i18n="privacy.s1Li6">Sitedeki yapay zeka sohbet kutusunu kullandığında, yanıt
-        kalitesini iyileştirmek ve kötüye kullanımı önlemek amacıyla
-        mesajını, verdiğimiz yanıtı ve IP adresini kaydederiz (IP adresi
-        30 gün sonra kayıttan kaldırılır); giriş yapmış durumdaysan bu
-        kayıt hesabınla ilişkilendirilir.</li>
-      <li data-i18n="privacy.s1Li7">Giriş yaptığında ve ödeme başlattığında, hesap güvenliği ve
-        sahte hesapların tespiti amacıyla IP adresini kaydederiz; giriş
-        kayıtları 90 gün sonra silinir.</li>
-      <li data-i18n="privacy.s1Li8">Ders odasına girdiğinde, derse ne zaman girdiğini ve ne kadar
-        kaldığını kaydederiz; bu kayıt sadece dersle ilgili bir bildirim,
-        anlaşmazlık ya da ödeme itirazı incelenirken kullanılır. Görüntü
-        ve ses kaydedilmez.</li>
-    </ul>
-
-    <h2 data-i18n="privacy.s2Title">2. Verilerini neden işliyoruz?</h2>
-    <ul>
-      <li data-i18n="privacy.s2Li1">Hesabını oluşturmak ve platformu kullanmanı sağlamak</li>
-      <li data-i18n="privacy.s2Li2">Öğretmen başvurularını incelemek ve onaylamak</li>
-      <li data-i18n="privacy.s2Li3">Rezervasyon, ders ve değerlendirme sistemlerinin çalışmasını sağlamak</li>
-      <li data-i18n="privacy.s2Li4">Dolandırıcılık ve kötüye kullanımı önlemek</li>
-      <li data-i18n="privacy.s2Li5">Yasal yükümlülüklerimizi yerine getirmek</li>
-    </ul>
-
-    <h2 data-i18n="privacy.s3Title">3. Verilerini kimlerle paylaşıyoruz?</h2>
-    <p data-i18n="privacy.s3Text">
-      Verilerini, hizmeti sağlamak için gerekli olmadıkça üçüncü taraflarla
-      paylaşmayız. Örneğin bir öğretmenin profili, ders almayı düşünen
-      öğrencilerin görebileceği şekilde herkese açık gösterilir (ad, fotoğraf,
-      tanıtım metni, değerlendirmeler gibi). Ödeme ve barındırma
-      altyapısı için kullandığımız hizmet sağlayıcılarla, yalnızca
-      hizmeti sunmak için gerekli ölçüde veri paylaşılır.
-    </p>
-
-    <h2 data-i18n="privacy.s4Title">4. Verilerini nerede saklıyoruz?</h2>
-    <p data-i18n="privacy.s4Text">
-      Verilerin, Supabase altyapısı üzerinde barındırılan güvenli bir
-      veritabanında saklanır ve satır düzeyinde erişim kurallarıyla
-      (Row Level Security) korunur - yani her kullanıcı yalnızca kendi
-      verisine ve platformun izin verdiği ölçüde başkalarının herkese
-      açık bilgilerine (örneğin bir öğretmenin profili) erişebilir.
-    </p>
-
-    <h2 data-i18n="privacy.s5Title">5. Haklarların (KVKK)</h2>
-    <p data-i18n="privacy.s5Text">
-      6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında
-      şu haklara sahipsin: kişisel verinin işlenip işlenmediğini öğrenme;
-      işlenmişse buna ilişkin bilgi talep etme; işlenme amacını ve
-      amacına uygun kullanılıp kullanılmadığını öğrenme; yurt içinde veya
-      yurt dışında verilerin aktarıldığı üçüncü kişileri bilme; eksik
-      veya yanlış işlenmişse düzeltilmesini isteme; işlenmesini
-      gerektiren sebepler ortadan kalktığında silinmesini veya yok
-      edilmesini isteme; düzeltme veya silme işlemlerinin verilerin
-      aktarıldığı üçüncü kişilere bildirilmesini isteme; münhasıran
-      otomatik sistemler üzerinden analiz edilmesi suretiyle aleyhine bir
-      sonucun ortaya çıkmasına itiraz etme; kanuna aykırı işlenme
-      sebebiyle zarara uğraman hâlinde zararın giderilmesini talep etme.
-      Bu haklarını kullanmak için <a href="iletisim">iletişim
-      sayfamızdan</a> bize ulaşabilirsin.
-    </p>
-
-    <h2 data-i18n="privacy.s6Title">6. Bize ulaşmak</h2>
-    <p data-i18n="privacy.s6Text">
-      Gizlilik politikasıyla ilgili sorular için
-      <a href="iletisim">iletişim sayfamızdan</a> bize ulaşabilirsin.
-    </p>
-
-    <div class="note" data-i18n="privacy.note">
-      ARMUS sürekli gelişen bir platformdur; bu politikayı zaman zaman
-      güncelleyebiliriz. Önemli değişikliklerde seni bilgilendirmeye
-      çalışırız. Güncel sürüm her zaman bu sayfada yer alır.
+  <main class="legal-main">
+    <div class="legal-tabs">
+      <a href="gizlilik-politikasi" aria-current="page">Gizlilik Politikası</a>
+      <a href="kvkk-aydinlatma-metni">KVKK Aydınlatma Metni</a>
+      <a href="cerez-politikasi">Çerez Politikası</a>
+      <a href="ticari-ileti-onayi">Ticari İleti Onayı</a>
+      <a href="kullanim-sartlari">Kullanım Şartları</a>
     </div>
+    <p class="legal-en-note" data-i18n="legal.enNote">This document is published in Turkish, and the Turkish text is the binding version. Our privacy practices are the same for every user, whichever language you use the site in. If you need help understanding any part of it, write to us at armus.support@gmail.com.</p>
 
+    <article class="legal-doc" data-doc="privacy_policy" data-version="2026-11-25">
+      <div class="eyebrow">YASAL</div>
+      <h1>Gizlilik Politikası</h1>
+      <div class="updated">Yürürlük tarihi: 25.11.2026 · Sürüm: 2026-11-25</div>
+
+      <div class="summary">
+        <p><strong>Özetle:</strong></p>
+        <ul>
+          <li>Yalnızca hizmeti sunmak, ödemeleri yürütmek, Platform'u güvende tutmak ve yasal yükümlülüklerimizi yerine getirmek için gereken bilgileri topluyoruz.</li>
+          <li>Verilerini satmıyoruz ve reklam amacıyla kimseyle paylaşmıyoruz. Sitede reklam veya takip çerezi kullanmıyoruz.</li>
+          <li>Canlı dersler kaydedilmez. Kart bilgilerin bize hiç ulaşmaz, doğrudan ödeme kuruluşuna iletilir.</li>
+          <li>Öğretmenler senin e-posta adresini ve telefon numaranı görmez; mesajlaşma Platform içinde kalır.</li>
+          <li>Hesabını istediğin zaman kendin silebilir, bilgilerini düzeltebilir ve KVKK kapsamındaki haklarını kullanabilirsin.</li>
+        </ul>
+      </div>
+
+      <p>Bu Gizlilik Politikası, armus.com.tr internet sitesini ve ARMUS mobil uygulamasını (birlikte "<strong>Platform</strong>") kullanırken bilgilerinin nasıl işlendiğini sade bir dille anlatır. Veri sorumlusu [ŞİRKET ÜNVANI]'dır ("<strong>ARMUS</strong>", "<strong>biz</strong>"). Hangi verinin hangi hukuki sebebe dayanılarak işlendiği, aktarıldığı ve ne kadar saklandığı, tablolar hâlinde <a href="kvkk-aydinlatma-metni">KVKK Aydınlatma Metni</a>'nde yer alır; bu politika ile Aydınlatma Metni birlikte okunmalıdır.</p>
+
+      <ol class="toc">
+        <li><a href="#topladiklarimiz">Hangi bilgileri topluyoruz?</a></li>
+        <li><a href="#kullanim">Bilgilerini ne için kullanıyoruz?</a></li>
+        <li><a href="#gorunurluk">Kim neyi görür?</a></li>
+        <li><a href="#mesajlar">Mesajlar ve denetim</a></li>
+        <li><a href="#dersler">Canlı dersler</a></li>
+        <li><a href="#odemeler">Ödemeler</a></li>
+        <li><a href="#asistan">Yapay zekâ sohbet asistanı</a></li>
+        <li><a href="#bildirimler">E-postalar ve bildirimler</a></li>
+        <li><a href="#cerezler">Çerezler ve tarayıcı depolaması</a></li>
+        <li><a href="#paylasim">Kimlerle paylaşıyoruz?</a></li>
+        <li><a href="#yurtdisi">Yurt dışındaki hizmet sağlayıcılar</a></li>
+        <li><a href="#saklama">Ne kadar saklıyoruz?</a></li>
+        <li><a href="#guvenlik">Güvenlik</a></li>
+        <li><a href="#cocuklar">Çocuklar ve veliler</a></li>
+        <li><a href="#ogretmenler">Öğretmenlerin sorumlulukları</a></li>
+        <li><a href="#kontrol">Verilerin üzerindeki kontrolün</a></li>
+        <li><a href="#haklar">KVKK hakların ve başvuru</a></li>
+        <li><a href="#degisiklik">Değişiklikler ve iletişim</a></li>
+      </ol>
+
+      <h2 id="topladiklarimiz">1. Hangi bilgileri topluyoruz?</h2>
+      <h3>Kayıt olurken</h3>
+      <p>Ad ve soyad, e-posta adresi, şifre (yalnızca geri döndürülemez biçimde şifrelenmiş hâli saklanır), isteğe bağlı olarak şehir, öğrenci mi öğretmen mi olduğun, Kullanım Şartları'nı kabul ettiğin, bu politikayı ve Aydınlatma Metni'ni okuduğun, yaş beyanın ve ticari ileti tercihin (her biri tarih ve metin sürümüyle).</p>
+      <h3>Öğretmen başvurusunda</h3>
+      <p>Telefon numarası, ülke, öğrettiğin konu, konuştuğun diller, profil fotoğrafı, tanıtım metni ve videosu, sertifika adı, yılı ve dosyası, üniversite, bölüm ve mezuniyet yılı, uzmanlık alanı, ders ücreti, haftalık uygunluk takvimi, 18 yaşını doldurduğuna ilişkin beyanın. Ödeme talep ettiğinde IBAN'ın ve hesap sahibinin adı.</p>
+      <h3>Platform'u kullanırken</h3>
+      <ul>
+        <li>Rezervasyonlar, iptaller, saat değişiklikleri, ders hakları, paketler ve cüzdan hareketleri;</li>
+        <li>Mesajlar (metin, ses, fotoğraf ve video ekleri), mesaj düzenleme geçmişi ve şikâyet edilen mesajlar;</li>
+        <li>Değerlendirmeler, ders sonrası "kendini nasıl hissettin" puanları, ders sorunu bildirimleri ve anlaşmazlıklar;</li>
+        <li>Seviye testi sonucu (seviye, beceri puanları, hedef), kelime listen, haftalık ders hedefin, favori öğretmenlerin;</li>
+        <li>Öğretmenin, senin için yalnızca kendisinin görebildiği ders notları;</li>
+        <li>Destek talepleri, iletişim formu mesajları ve sohbet asistanı yazışmaları.</li>
+      </ul>
+      <h3>Otomatik olarak</h3>
+      <ul>
+        <li>Giriş yaptığında: tarih, IP adresi ve tarayıcı/cihaz bilgisi; başarısız giriş denemeleri;</li>
+        <li>Ödeme başlattığında: IP adresi ve kartın tekrar kullanıldığını anlamaya yarayan kart parmak izi (kart numarası değildir);</li>
+        <li>Ders odasına girdiğinde: giriş ve çıkış zamanları, derste kalma süresi;</li>
+        <li>Bir hata oluştuğunda: hata mesajı, sayfa adresi ve tarayıcı bilgisi;</li>
+        <li>Mobil uygulamada bildirimleri açtığında: anlık bildirim anahtarı ve cihaz platformu.</li>
+      </ul>
+      <p>Sitede ziyaretçi davranışını izleyen analiz, reklam veya sosyal medya takip araçları kullanmıyoruz.</p>
+
+      <h2 id="kullanim">2. Bilgilerini ne için kullanıyoruz?</h2>
+      <ul>
+        <li><strong>Hizmeti sunmak için:</strong> hesabını açmak, öğretmen bulmanı, ders rezerve etmeni, dersi yapmanı, mesajlaşmanı ve ilerlemeni takip etmeni sağlamak; öğretmen başvurularını incelemek ve profilleri yayımlamak.</li>
+        <li><strong>Ödemeler için:</strong> ders ve paket ücretlerini almak, iade etmek, ders haklarını ve cüzdanı yönetmek, öğretmenlere ödeme yapmak.</li>
+        <li><strong>Güvenlik için:</strong> sahte hesapları, dolandırıcılığı, hesap ele geçirmeyi, Platform dışı ödeme yönlendirmelerini ve kötüye kullanımı önlemek.</li>
+        <li><strong>Adil bir ortam için:</strong> ders sorunu bildirimlerini, anlaşmazlıkları, şikâyetleri ve bankaya yapılan ödeme itirazlarını kayıtlara bakarak incelemek; Kullanım Şartları'nı uygulamak.</li>
+        <li><strong>Seninle iletişim için:</strong> ders onayı, hatırlatma, iptal, ödeme ve hesap güvenliğiyle ilgili zorunlu bildirimleri göndermek, destek taleplerini yanıtlamak.</li>
+        <li><strong>Platform'u iyileştirmek için:</strong> hataları gidermek ve hizmetin nasıl kullanıldığını toplu, mümkünse anonim istatistiklerle ölçmek.</li>
+        <li><strong>Yasal yükümlülükler için:</strong> vergi, ticaret ve tüketici mevzuatının gerektirdiği kayıtları tutmak, yetkili makamların taleplerini karşılamak.</li>
+        <li><strong>Yalnızca onay verirsen:</strong> kampanya, indirim ve yeniliklerle ilgili ticari elektronik iletiler göndermek (<a href="ticari-ileti-onayi">Ticari Elektronik İleti Onay Metni</a>).</li>
+      </ul>
+      <p>Bilgilerini; profil çıkarıp reklam hedeflemek, üçüncü kişilere satmak ya da yapay zekâ modellerini eğitmek için kullanmayız.</p>
+
+      <h2 id="gorunurluk">3. Kim neyi görür?</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Bilgi</th><th>Herkes</th><th>Ders aldığın / verdiğin kişi</th><th>ARMUS yetkilileri</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Öğretmen adı</td><td>Ad ve soyadın baş harfi (ör. "Ayşe K.")</td><td>Ad ve soyadın baş harfi</td><td>Tam ad</td></tr>
+            <tr><td>Öğretmen profili (fotoğraf, unvan, konu, diller, tanıtım metni ve videosu, ücret, uygun saatler)</td><td>Evet</td><td>Evet</td><td>Evet</td></tr>
+            <tr><td>Öğrenci adı ve fotoğrafı</td><td>Hayır</td><td>Evet</td><td>Evet</td></tr>
+            <tr><td>Değerlendirmeler</td><td>Evet; öğrencinin adı ve soyadının baş harfiyle</td><td>Evet</td><td>Evet</td></tr>
+            <tr><td>E-posta adresi ve telefon numarası</td><td>Hayır</td><td>Hayır</td><td>Evet</td></tr>
+            <tr><td>Sertifika dosyası, üniversite ve mezuniyet bilgisi</td><td>Hayır</td><td>Hayır</td><td>Evet (başvuru incelemesi için)</td></tr>
+            <tr><td>Mesajlar</td><td>Hayır</td><td>Yalnızca mesajlaştığın kişi</td><td>Şikâyet, anlaşmazlık veya güvenlik incelemesi gerektiğinde</td></tr>
+            <tr><td>Seviye testi sonucu, kelime listesi</td><td>Hayır</td><td>Hayır</td><td>Gerektiğinde</td></tr>
+            <tr><td>IBAN, ödeme ve kazanç bilgileri</td><td>Hayır</td><td>Hayır</td><td>Evet (ödeme işlemleri için)</td></tr>
+            <tr><td>Öğretmenin ders notları</td><td>Hayır</td><td>Yalnızca notu yazan öğretmen</td><td>Gerektiğinde</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>ARMUS yetkilileri yalnızca görevlerinin gerektirdiği verilere erişir; yönetici işlemleri kayıt altına alınır.</p>
+
+      <h2 id="mesajlar">4. Mesajlar ve denetim</h2>
+      <p>Platform'daki mesajlaşma, ders ayarlamak ve dersle ilgili konuşmak içindir. Öğrencilerin ve öğretmenlerin güvenliği ve Platform dışı ödemelerin önlenmesi için:</p>
+      <ul>
+        <li>Telefon numarası veya e-posta adresi içeren mesajlar otomatik olarak tespit edilir ve gönderilmez. Bu kontrol bir yazılım kuralıdır; mesajlarını bir insan okumaz.</li>
+        <li>Bir mesajı şikâyet ettiğinde ya da bir ders veya ödemeyle ilgili anlaşmazlık olduğunda, yetkili bir ARMUS çalışanı yalnızca konuyla ilgili mesajları inceleyebilir.</li>
+        <li>Mesajlarda kişisel, hassas veya özel nitelikli bilgiler (sağlık bilgisi, kimlik veya kart numarası gibi) paylaşma.</li>
+      </ul>
+
+      <h2 id="dersler">5. Canlı dersler</h2>
+      <p>Canlı dersler, ARMUS'un ders odası üzerinden Jitsi (meet.jit.si) altyapısıyla görüntülü ve sesli olarak yapılır. ARMUS dersleri <strong>kaydetmez</strong>; görüntü ve ses yalnızca ders sırasında karşı tarafa iletilir. Derste görünen adın ve iletilen görüntü ile ses, bağlantının kurulabilmesi için Jitsi'nin sunucularından geçer. Ders odasına giriş ve çıkış zamanların, yalnızca ders sorunu bildirimlerini, anlaşmazlıkları ve ödeme itirazlarını incelemek için kaydedilir.</p>
+      <p>Öğretmenlerin ve öğrencilerin dersi ya da karşı tarafı kendi cihazlarıyla kaydetmesi, ekran görüntüsü alıp paylaşması karşı tarafın açık izni olmadan yasaktır.</p>
+
+      <h2 id="odemeler">6. Ödemeler</h2>
+      <p>Kartla yapılan ödemeler, lisanslı ödeme kuruluşu iyzico üzerinden alınır. Kart numaran, son kullanma tarihin ve güvenlik kodun doğrudan iyzico'ya girilir; ARMUS bu bilgileri görmez ve saklamaz. Ödeme kuruluşunun mevzuat gereği istediği T.C. kimlik numarası ve telefon numarası, ödeme anında iyzico'ya iletilir ve ARMUS'un veritabanında saklanmaz. iyzico'nun bize ilettiği işlem numaraları, kartın ilk 6 ve son 4 hanesi ve kart parmak izi; iade, dolandırıcılık önleme ve ödeme itirazlarının incelenmesi için saklanır. Ödeme kayıtları vergi ve ticaret mevzuatı gereği 10 yıl saklanır.</p>
+      <p>Öğretmenler kazançlarını çekmek için IBAN ve hesap sahibi adı bildirir. Bu bilgiler yalnızca ödeme yapmak için kullanılır ve öğrencilerle paylaşılmaz.</p>
+
+      <h2 id="asistan">7. Yapay zekâ sohbet asistanı</h2>
+      <p>Sitedeki sohbet asistanı, sorularını yanıtlamak için Anthropic'in yapay zekâ modelini kullanır. Yazdığın mesajlar yanıt üretilmesi için Anthropic'e iletilir; adın, e-posta adresin veya hesap bilgilerin iletilmez. Anthropic, API üzerinden gelen verileri kendi modellerini eğitmek için kullanmaz ve genel olarak 30 gün içinde siler. ARMUS, yanıt kalitesini iyileştirmek ve kötüye kullanımı önlemek için yazışmayı 1 yıl, IP adresini 30 gün saklar; giriş yapmışsan yazışma hesabınla ilişkilendirilir. Asistana kişisel, hassas veya kart bilgisi yazma. Asistanın yanıtları bilgilendirme amaçlıdır ve hata içerebilir; hesabınla ya da ödemenle ilgili konularda destek ekibine yaz.</p>
+
+      <h2 id="bildirimler">8. E-postalar ve bildirimler</h2>
+      <p>Hesap doğrulama, ders onayı, hatırlatma, iptal, saat değişikliği, ödeme, ders hakkı süresi, güvenlik ve politika değişikliği bildirimleri hizmetin bir parçasıdır ve hesabın açık olduğu sürece gönderilir. Mobil uygulamada anlık bildirimleri cihaz ayarlarından kapatabilirsin.</p>
+      <p>Kampanya, indirim ve yenilik içeren ticari iletiler yalnızca ayrıca onay verdiysen gönderilir. Onay vermek tamamen isteğe bağlıdır; vermemen hiçbir hizmeti kullanmanı engellemez. Onayını her iletideki bağlantıdan ya da bize yazarak dilediğin zaman geri alabilirsin.</p>
+
+      <h2 id="cerezler">9. Çerezler ve tarayıcı depolaması</h2>
+      <p>Site, reklam veya takip çerezi kullanmaz. Oturumunu açık tutmak, dil tercihini hatırlamak ve bazı küçük kullanım kolaylıkları için yalnızca tarayıcının yerel depolamasını kullanır. Ayrıntılar ve tam liste: <a href="cerez-politikasi">Çerez Politikası</a>.</p>
+
+      <h2 id="paylasim">10. Kimlerle paylaşıyoruz?</h2>
+      <ul>
+        <li><strong>Ders aldığın ya da verdiğin kişiyle:</strong> Bölüm 3'teki tabloda gösterilen bilgiler.</li>
+        <li><strong>Ödeme kuruluşu iyzico ve bankalarla:</strong> ödeme almak, iade yapmak ve öğretmenlere ödeme göndermek için gereken bilgiler.</li>
+        <li><strong>Altyapı hizmet sağlayıcılarıyla:</strong> veritabanı, barındırma, e-posta, canlı ders, anlık bildirim ve sohbet asistanı hizmetleri için; bu sağlayıcılar verileri yalnızca bizim talimatımızla ve hizmeti sunmak için işler.</li>
+        <li><strong>Avukat, mali müşavir ve denetçilerle:</strong> yasal yükümlülüklerimiz ve haklarımızın korunması için gerektiği ölçüde.</li>
+        <li><strong>Yetkili kamu kurumları ve yargı mercileriyle:</strong> kanunen zorunlu olduğunda.</li>
+        <li><strong>Şirket birleşmesi veya devri hâlinde:</strong> Platform'un faaliyetlerinin devredilmesi durumunda, devralan şirket bu politikayla bağlı olmak kaydıyla.</li>
+      </ul>
+      <p>Verilerini satmayız, kiralamayız ve reklam ağlarıyla paylaşmayız.</p>
+
+      <h2 id="yurtdisi">11. Yurt dışındaki hizmet sağlayıcılar</h2>
+      <p>Veritabanı (Supabase), site barındırma (Vercel), e-posta gönderimi (Resend), canlı ders bağlantısı (Jitsi), anlık bildirimler (Expo, Apple, Google) ve sohbet asistanı (Anthropic) gibi bazı altyapı hizmetlerini yurt dışında yerleşik sağlayıcılardan alıyoruz. Bu aktarımlar KVKK m.9 uyarınca, Kişisel Verileri Koruma Kurulu'nun ilan ettiği standart sözleşmelerle ve Kurum'a bildirilerek yapılır. Hangi sağlayıcıya hangi verinin aktarıldığının listesi <a href="kvkk-aydinlatma-metni#aktarim-yurtdisi">KVKK Aydınlatma Metni</a>'ndedir.</p>
+
+      <h2 id="saklama">12. Ne kadar saklıyoruz?</h2>
+      <p>Bilgilerini hesabın açık olduğu sürece saklarız. Hesabını sildiğinde profilin, mesajların, öğrenme verilerin ve yüklediğin dosyalar silinir. Ödeme kayıtları ve onay kayıtları gibi kanunen ya da olası uyuşmazlıklarda ispat için saklamamız gereken kayıtlar, ilgili süre boyunca saklanır ve bu süre sonunda silinir. Giriş kayıtları 90 gün, iletişim formu ve sohbet asistanı kayıtlarındaki IP adresleri 30 gün saklanır. Tüm süreler: <a href="kvkk-aydinlatma-metni#saklama">KVKK Aydınlatma Metni, Bölüm 10</a>.</p>
+
+      <h2 id="guvenlik">13. Güvenlik</h2>
+      <ul>
+        <li>Tüm bağlantılar HTTPS ile şifrelenir; şifreler yalnızca geri döndürülemez biçimde saklanır.</li>
+        <li>Veritabanında satır düzeyinde erişim kuralları uygulanır: her kullanıcı yalnızca kendi verisine ve izin verilen ölçüde başkalarının herkese açık bilgilerine erişebilir.</li>
+        <li>Yönetici erişimi yetkiye bağlıdır ve yönetici işlemleri kayıt altına alınır.</li>
+        <li>Giriş denemeleri sınırlandırılır, şüpheli ödemeler incelenir.</li>
+        <li>E-posta adresini kayıt sırasında doğrulamanı isteriz.</li>
+      </ul>
+      <p>Hiçbir sistem tamamen risksiz değildir. Şifreni kimseyle paylaşma ve başka hizmetlerde kullandığın bir şifreyi kullanma. Hesabının izinsiz kullanıldığını düşünüyorsan hemen şifreni değiştir ve bize yaz. Bir veri ihlali olması hâlinde, durumu öğrenmemizden itibaren en geç 72 saat içinde Kişisel Verileri Koruma Kurulu'na ve en kısa sürede etkilenen kullanıcılara bildiririz.</p>
+
+      <h2 id="cocuklar">14. Çocuklar ve veliler</h2>
+      <p>Öğretmen olmak için 18 yaşını doldurmuş olmak gerekir. 18 yaşından küçükler öğrenci olarak Platform'u yalnızca veli veya yasal temsilcilerinin bilgisi ve onayıyla kullanabilir. 18 yaşından küçük bir öğrenci için hesabı velinin açması, ödemeleri velinin yapması ve derslerin veli bilgisi dahilinde yapılması önerilir. Veliler, çocuklarının hesabına ilişkin bilgi isteyebilir, düzeltme veya silme talep edebilir. Veli onayı olmadan açılmış bir hesabı fark edersek askıya alabilir ve veliyle iletişime geçebiliriz.</p>
+
+      <h2 id="ogretmenler">15. Öğretmenlerin sorumlulukları</h2>
+      <p>Öğretmenler, öğrencilerinin adını, ders bilgilerini, mesajlarını ve ders notlarını yalnızca o öğrenciye ders vermek için kullanabilir. Öğrenci bilgilerini Platform dışına çıkarmak, kaydetmek, başkalarıyla paylaşmak, Platform dışından iletişime geçmek ya da reklam amacıyla kullanmak yasaktır ve hesabın kapatılmasına yol açar. Bu kurala aykırı davranan öğretmen, bu işlemden kendisi sorumludur.</p>
+
+      <h2 id="kontrol">16. Verilerin üzerindeki kontrolün</h2>
+      <ul>
+        <li><strong>Düzeltme:</strong> Adını, şehrini, fotoğrafını ve profil bilgilerini Ayarlar'dan güncelleyebilirsin. Öğretmen profilindeki bazı değişiklikler yayımlanmadan önce incelenir.</li>
+        <li><strong>Silme:</strong> Hesabını sitede Ayarlar sayfasındaki "Hesabını Sil" bölümünden ya da uygulamada Ayarlar &gt; Hesap bölümünden silebilirsin. Silme işlemi geri alınamaz.</li>
+        <li><strong>Bilgi ve kopya:</strong> Hakkında hangi verileri işlediğimizi öğrenmek ya da bir kopyasını almak için bize başvurabilirsin.</li>
+        <li><strong>Ticari ileti:</strong> Onayını dilediğin zaman geri alabilirsin.</li>
+        <li><strong>Bildirimler:</strong> Mobil uygulamanın anlık bildirimlerini cihaz ayarlarından kapatabilirsin.</li>
+        <li><strong>Şikâyet:</strong> Rahatsız edici bir mesajı Platform içinden şikâyet edebilir, diğer konular için destek talebi açabilirsin. Öğretmenler bir öğrenciyi engelleyebilir.</li>
+      </ul>
+
+      <h2 id="haklar">17. KVKK hakların ve başvuru</h2>
+      <p>KVKK m.11 kapsamındaki hakların (bilgi talep etme, düzeltme, silme, itiraz, zararın giderilmesi gibi) ve başvurunu nasıl yapacağın <a href="kvkk-aydinlatma-metni#haklar">KVKK Aydınlatma Metni</a>'nde ayrıntılı olarak anlatılır. Başvurularını en geç 30 gün içinde ücretsiz olarak yanıtlarız.</p>
+
+      <h2 id="degisiklik">18. Değişiklikler ve iletişim</h2>
+      <p>Bu politikayı Platform'daki ya da mevzuattaki değişikliklere göre güncelleyebiliriz. Güncel sürüm her zaman bu sayfada yayımlanır ve sayfanın başındaki sürüm ve yürürlük tarihi değişir. Önemli değişiklikleri e-posta ya da Platform içi bildirimle ayrıca duyururuz.</p>
+      <p>Sorularını <a href="mailto:armus.support@gmail.com">armus.support@gmail.com</a> adresine ya da <a href="iletisim">iletişim sayfamızdan</a> iletebilirsin. Veri sorumlusu: [ŞİRKET ÜNVANI], [ADRES].</p>
+    </article>
   </main>
 
-  <script src="i18n.js?v=48"></script>
+  <script src="i18n.js?v=49"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="logo-panel-link.js?v=1"></script>

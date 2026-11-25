@@ -2033,3 +2033,28 @@ html.nav-sheet-open body {
     padding: 17px 24px;
   }
 }
+
+/* the bülten's own ticari ileti onayı, under the e-mail box */
+.newsletter-consent {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--armus-muted);
+  cursor: pointer;
+}
+.newsletter-consent input {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin: 1px 0 0;
+  accent-color: var(--armus-gold-2);
+}
+.footer .newsletter-consent a {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  text-decoration: underline;
+}
