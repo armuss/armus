@@ -16,10 +16,31 @@ export type Message = {
   attachmentType: AttachmentType | null;
   readAt: string | null;
   createdAt: string;
-  // the sender corrected it on the website (within 2 minutes) - shown as
-  // "(düzenlendi)" like mesajlar.html
+  // the sender corrected it (within 15 minutes; an admin any time -
+  // migration_132.sql) - shown as "(düzenlendi)" like mesajlar.html
   editedAt: string | null;
+  // the sender deleted it: no text or attachment left, the chat shows
+  // "Bu mesaj silindi" (only admins can still read what it said)
+  deletedAt: string | null;
 };
+
+// how long after sending a student or teacher can still edit
+// (messages_enforce_edit_rules, migration_132.sql)
+export const EDIT_WINDOW_MS = 15 * 60 * 1000;
+
+export function canEditMessage(message: Message, myId: string | undefined, isAdmin: boolean): boolean {
+  return (
+    !!myId &&
+    message.senderId === myId &&
+    !!message.body &&
+    !message.deletedAt &&
+    (isAdmin || Date.now() - new Date(message.createdAt).getTime() < EDIT_WINDOW_MS)
+  );
+}
+
+export function canDeleteMessage(message: Message, myId: string | undefined): boolean {
+  return !!myId && message.senderId === myId && !message.deletedAt;
+}
 
 function mapMessageRow(row: any): Message {
   const url = typeof row.attachment_url === 'string' && /^https:\/\//i.test(row.attachment_url) ? row.attachment_url : null;
@@ -34,6 +55,7 @@ function mapMessageRow(row: any): Message {
     readAt: row.read_at,
     createdAt: row.created_at,
     editedAt: row.edited_at || null,
+    deletedAt: row.deleted_at || null,
   };
 }
 
@@ -119,7 +141,11 @@ export async function getConversations(userId: string): Promise<Conversation[] |
         // (its first letter is the avatar)
         otherName: otherProfile.name || tr("Kullanıcı"),
         otherPhoto: otherProfile.photo_url || null,
-        lastMessageText: hasLast ? preview.last_message_body || attachmentPreviewLabel(preview.last_message_attachment_type) : null,
+        // neither text nor attachment: it was deleted (migration_132.sql)
+        lastMessageText: hasLast
+          ? preview.last_message_body ||
+            (preview.last_message_attachment_type ? attachmentPreviewLabel(preview.last_message_attachment_type) : tr("🚫 Bu mesaj silindi"))
+          : null,
         lastMessageAt: hasLast ? preview.last_message_created_at : null,
         unreadCount: preview ? Number(preview.unread_count) || 0 : 0,
       };
@@ -204,6 +230,35 @@ export async function sendMessage(
   return mapMessageRow(data);
 }
 
+// Edits one of your own messages. The new message, or why not:
+// 'expired' (past the 15 minutes), 'denied', 'deleted', or null.
+export async function editMessage(
+  messageId: string,
+  body: string
+): Promise<Message | 'expired' | 'denied' | 'deleted' | null> {
+  const { data, error } = await supabase.from('messages').update({ body }).eq('id', messageId).select().single();
+
+  if (error) {
+    const text = error.message || '';
+    if (text.includes('message_edit_expired')) return 'expired';
+    if (text.includes('message_edit_denied')) return 'denied';
+    if (text.includes('message_deleted')) return 'deleted';
+    if (text.includes('contact_sharing_blocked')) return 'denied';
+    return null;
+  }
+  return mapMessageRow(data);
+}
+
+// Deletes one of your own messages (delete_message, migration_132.sql):
+// 'deleted' - it stays as "Bu mesaj silindi"; 'removed' - an admin's
+// message, gone for good (and its conversation, if it was the only one);
+// null if it failed.
+export async function deleteMessage(messageId: string): Promise<'deleted' | 'removed' | null> {
+  const { data, error } = await supabase.rpc('delete_message', { p_message_id: messageId });
+  if (error) return null;
+  return data === 'deleted' || data === 'removed' ? data : null;
+}
+
 export async function markMessagesRead(conversationId: string, myUserId: string) {
   await supabase
     .from('messages')
@@ -214,14 +269,16 @@ export async function markMessagesRead(conversationId: string, myUserId: string)
 }
 
 // Calls onInsert whenever a new message arrives in this conversation, and
-// onUpdate when one changes - the website lets the sender correct a message
-// for 2 minutes (mesajlar.html), and the open chat kept showing the old text.
-// Returns the channel so the caller can supabase.removeChannel(channel)
-// when leaving the thread.
+// onUpdate when one changes (edited, deleted by its sender, read).
+// onRemove(id) hears an admin's message removed for good - Supabase can't
+// filter DELETE events by conversation and only sends the id, so the
+// caller just drops that id if it has it. Returns the channel so the
+// caller can supabase.removeChannel(channel) when leaving the thread.
 export function subscribeToMessages(
   conversationId: string,
   onInsert: (message: Message) => void,
-  onUpdate?: (message: Message) => void
+  onUpdate?: (message: Message) => void,
+  onRemove?: (messageId: string) => void
 ): RealtimeChannel {
   const filter = `conversation_id=eq.${conversationId}`;
   return supabase
@@ -232,6 +289,10 @@ export function subscribeToMessages(
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter }, (payload) =>
       onUpdate?.(mapMessageRow(payload.new))
     )
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+      const removedId = (payload.old as { id?: string } | null)?.id;
+      if (removedId) onRemove?.(removedId);
+    })
     .subscribe();
 }
 

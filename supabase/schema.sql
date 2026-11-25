@@ -1204,8 +1204,27 @@ create table messages (
   created_at timestamptz not null default now(),
   read_at timestamptz,
   edited_at timestamptz,
-  constraint messages_body_or_attachment check (body <> '' or attachment_url is not null)
+  -- migration_132.sql: the sender deleted it - text and attachment are
+  -- cleared ("Bu mesaj silindi"), a copy is in message_edit_history
+  deleted_at timestamptz,
+  constraint messages_body_or_attachment check (body <> '' or attachment_url is not null or deleted_at is not null)
 );
+
+-- migration_132.sql: a new message is never born deleted (that would let
+-- an empty message through the check above)
+create or replace function public.messages_not_deleted_on_insert()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.deleted_at := null;
+  return new;
+end;
+$$;
+
+create trigger messages_not_deleted_on_insert
+  before insert on messages
+  for each row execute procedure public.messages_not_deleted_on_insert();
 
 alter table conversations enable row level security;
 alter table messages enable row level security;
@@ -1390,8 +1409,8 @@ create policy "messages_update_participant"
     )
   );
 
--- only the sender can edit a message's body, and only within 2 minutes
--- of sending it - RLS alone can't express "this column, this
+-- only the sender can edit a message's body, and only within 15 minutes
+-- of sending it (migration_132.sql; any time for an admin) - RLS alone can't express "this column, this
 -- condition, one specific role" cleanly, hence a trigger.
 --
 -- messages_update_participant is deliberately broad (both participants
@@ -1416,7 +1435,10 @@ create table message_edit_history (
   body text not null default '',
   attachment_url text,
   attachment_type text,
-  edited_at timestamptz not null default now()
+  edited_at timestamptz not null default now(),
+  -- migration_132.sql: 'edit' = the version before an edit, 'delete' =
+  -- what a deleted message said
+  kind text not null default 'edit' constraint message_edit_history_kind_check check (kind in ('edit', 'delete'))
 );
 
 alter table message_edit_history enable row level security;
@@ -1430,12 +1452,17 @@ create policy "message_edit_history_select_admin"
 -- nobody but an admin should ever write into or read that table
 -- directly, so there's deliberately no client-facing insert policy on
 -- it for a participant to satisfy; this trigger is the only path in.
+-- migration_132.sql: a deleted message never changes again, deleting is
+-- the sender's alone and keeps a copy, and the edit window is 15 minutes
+-- (any time for an admin's own messages).
 create or replace function public.enforce_message_edit_rules()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  caller_is_admin boolean := coalesce((select p.is_admin from profiles p where p.id = auth.uid()), false);
 begin
 
   if new.sender_id is distinct from old.sender_id
@@ -1446,6 +1473,37 @@ begin
     raise exception 'message_locked: sender_id, conversation_id, created_at, and corrected_of_id cannot be changed after sending';
   end if;
 
+  -- already deleted: only read_at may still change
+  if old.deleted_at is not null then
+    if new.deleted_at is distinct from old.deleted_at
+      or new.body is distinct from old.body
+      or new.attachment_url is distinct from old.attachment_url
+      or new.attachment_type is distinct from old.attachment_type
+      or new.edited_at is distinct from old.edited_at
+    then
+      raise exception 'message_deleted: a deleted message cannot be changed';
+    end if;
+    return new;
+  end if;
+
+  -- deleting
+  if new.deleted_at is not null then
+    if auth.uid() <> old.sender_id then
+      raise exception 'message_delete_denied: only the sender can delete a message';
+    end if;
+
+    insert into message_edit_history (message_id, body, attachment_url, attachment_type, edited_at, kind)
+    values (old.id, old.body, old.attachment_url, old.attachment_type, now(), 'delete');
+
+    new.deleted_at := now();
+    new.body := '';
+    new.attachment_url := null;
+    new.attachment_type := null;
+    new.edited_at := old.edited_at;
+    return new;
+  end if;
+
+  -- editing
   if new.body is distinct from old.body
     or new.attachment_url is distinct from old.attachment_url
     or new.attachment_type is distinct from old.attachment_type
@@ -1455,12 +1513,12 @@ begin
       raise exception 'message_edit_denied: only the sender can edit a message';
     end if;
 
-    if old.created_at < now() - interval '2 minutes' then
-      raise exception 'message_edit_expired: messages can only be edited within 2 minutes of sending';
+    if not caller_is_admin and old.created_at < now() - interval '15 minutes' then
+      raise exception 'message_edit_expired: messages can only be edited within 15 minutes of sending';
     end if;
 
-    insert into message_edit_history (message_id, body, attachment_url, attachment_type, edited_at)
-    values (old.id, old.body, old.attachment_url, old.attachment_type, now());
+    insert into message_edit_history (message_id, body, attachment_url, attachment_type, edited_at, kind)
+    values (old.id, old.body, old.attachment_url, old.attachment_type, now(), 'edit');
 
     new.edited_at := now();
   end if;
@@ -1472,6 +1530,51 @@ $$;
 create trigger messages_enforce_edit_rules
   before update on messages
   for each row execute procedure public.enforce_message_edit_rules();
+
+-- === DELETE =============================================================
+-- Returns 'deleted' (the "Bu mesaj silindi" placeholder stays),
+-- 'removed' (an admin's message, gone for good) or 'not_found'.
+
+create or replace function public.delete_message(p_message_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  m public.messages%rowtype;
+  me uuid := auth.uid();
+begin
+  if me is null then
+    raise exception 'not signed in';
+  end if;
+
+  select * into m from public.messages where id = p_message_id;
+  if not found then
+    return 'not_found';
+  end if;
+
+  if m.sender_id <> me then
+    raise exception 'message_delete_denied: only the sender can delete a message';
+  end if;
+
+  if coalesce((select p.is_admin from public.profiles p where p.id = me), false) then
+    delete from public.messages where id = m.id;
+    delete from public.conversations c
+    where c.id = m.conversation_id
+      and not exists (select 1 from public.messages x where x.conversation_id = c.id);
+    return 'removed';
+  end if;
+
+  if m.deleted_at is null then
+    update public.messages set deleted_at = now() where id = m.id;
+  end if;
+  return 'deleted';
+end;
+$$;
+
+revoke all on function public.delete_message(uuid) from public, anon;
+grant execute on function public.delete_message(uuid) to authenticated;
 
 alter publication supabase_realtime add table messages;
 
@@ -1577,6 +1680,7 @@ as $$
     where m2.conversation_id = c.id
       and m2.sender_id <> auth.uid()
       and m2.read_at is null
+      and m2.deleted_at is null
   ) uc on true
   where c.student_id = auth.uid() or c.teacher_id = auth.uid();
 $$;

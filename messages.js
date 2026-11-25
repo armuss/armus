@@ -96,6 +96,13 @@ async function armusGetConversations() {
       const lastMessage = preview && preview.last_message_id
         ? { id: preview.last_message_id, body: preview.last_message_body, attachment_type: preview.last_message_attachment_type, sender_id: preview.last_message_sender_id, created_at: preview.last_message_created_at }
         : null;
+      // a message only ever has neither text nor attachment once it has
+      // been deleted (migration_132.sql) - every list that previews the
+      // last message (this page, the nav bell, the dashboards) says so
+      if (lastMessage && !lastMessage.body && !lastMessage.attachment_type) {
+        lastMessage.deleted = true;
+        lastMessage.body = armusT("messages.deletedPreview", "🚫 Bu mesaj silindi");
+      }
       const unreadCount = preview ? Number(preview.unread_count) : 0;
 
       return {
@@ -158,10 +165,11 @@ async function armusSendMessage(conversationId, body, options = {}) {
 }
 
 // Edits a message's text. Returns the updated row on success, false on
-// a generic failure, or "denied"/"expired" for the two specific cases
-// the messages_enforce_edit_rules trigger (migration_20.sql) rejects -
-// only the original sender can edit, and only within 2 minutes of
-// sending. That trigger is the real enforcement; callers should also
+// a generic failure, or "denied"/"expired"/"deleted" for the specific
+// cases the messages_enforce_edit_rules trigger rejects - only the
+// original sender can edit, only within 15 minutes of sending (an
+// admin's own messages any time - migration_132.sql), and never once
+// deleted. That trigger is the real enforcement; callers should also
 // hide the edit affordance client-side once a message ages past that
 // window instead of relying on this error.
 async function armusEditMessage(messageId, newBody) {
@@ -176,9 +184,39 @@ async function armusEditMessage(messageId, newBody) {
   if (error) {
     if (error.message && error.message.includes("message_edit_denied")) return "denied";
     if (error.message && error.message.includes("message_edit_expired")) return "expired";
+    if (error.message && error.message.includes("message_deleted")) return "deleted";
     return false;
   }
   return data;
+}
+
+// Deletes one of the current user's own messages (delete_message,
+// migration_132.sql). Returns "deleted" (a student's or teacher's
+// message: it stays in the thread as "Bu mesaj silindi", and only admins
+// can still read what it said), "removed" (an admin's message: gone for
+// good, and its conversation too if it was the only message), or false.
+async function armusDeleteMessage(messageId) {
+
+  const { data, error } = await armusSupabase.rpc("delete_message", { p_message_id: messageId });
+
+  if (error) return false;
+  return data === "deleted" || data === "removed" ? data : false;
+}
+
+// Admin-only (message_edit_history_select_admin): what each of these
+// deleted messages said before it was deleted, keyed by message id.
+async function armusAdminGetDeletedOriginals(messageIds) {
+
+  if (!messageIds.length) return {};
+
+  const { data, error } = await armusSupabase
+    .from("message_edit_history")
+    .select("message_id, body, attachment_url, attachment_type, edited_at")
+    .in("message_id", messageIds)
+    .eq("kind", "delete");
+
+  if (error || !data) return {};
+  return Object.fromEntries(data.map(h => [h.message_id, h]));
 }
 
 // Reports one of the OTHER party's messages as harassment, spam, or
@@ -236,10 +274,18 @@ async function armusAdminGetAllMessageReports() {
 
   const { data, error } = await armusSupabase
     .from("message_reports")
-    .select("*, message:messages(body, attachment_type, created_at)")
+    .select("*, message:messages(body, attachment_type, created_at, deleted_at)")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
+
+  // a reported message its sender has since deleted (migration_132.sql):
+  // what it said comes from message_edit_history
+  const deletedIds = data.filter(r => r.message && r.message.deleted_at).map(r => r.message_id);
+  const originals = await armusAdminGetDeletedOriginals([...new Set(deletedIds)]);
+  data.forEach(r => {
+    if (r.message && originals[r.message_id]) r.message.deleted_original = originals[r.message_id];
+  });
   return data;
 }
 
@@ -371,11 +417,14 @@ async function armusMarkMessagesRead(conversationId, myUserId) {
 }
 
 // Calls onInsert(messageRow) whenever a new message arrives, and
-// onUpdate(messageRow) (optional) whenever one is edited or its read_at
-// changes, in this conversation. Returns the channel, so the caller can
-// unsubscribe (armusSupabase.removeChannel(channel)) when leaving the
-// page/thread.
-function armusSubscribeToMessages(conversationId, onInsert, onUpdate) {
+// onUpdate(messageRow) (optional) whenever one is edited, deleted by
+// its sender or its read_at changes, in this conversation. onRemove(id)
+// (optional) hears an admin's message being removed for good -
+// Supabase can't filter DELETE events by conversation and only sends
+// the row's id, so the caller just drops that id if it has it. Returns
+// the channel, so the caller can unsubscribe
+// (armusSupabase.removeChannel(channel)) when leaving the page/thread.
+function armusSubscribeToMessages(conversationId, onInsert, onUpdate, onRemove) {
 
   const channel = armusSupabase
     .channel(`messages-${conversationId}`)
@@ -390,6 +439,14 @@ function armusSubscribeToMessages(conversationId, onInsert, onUpdate) {
       "postgres_changes",
       { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
       payload => onUpdate(payload.new)
+    );
+  }
+
+  if (onRemove) {
+    channel.on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "messages" },
+      payload => payload.old && payload.old.id && onRemove(payload.old.id)
     );
   }
 

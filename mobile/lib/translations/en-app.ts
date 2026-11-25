@@ -831,4 +831,17 @@ export const EN_APP: Record<string, string | [string, string]> = {
   'Favorilerim': 'My favourites',
   'Filtreleri temizle': 'Clear filters',
   'Kapat': 'Close',
+  // editing and deleting a message (app/chat/[id].tsx, migration_132.sql)
+  'Düzenle': 'Edit',
+  'Bu mesaj silinsin mi?': 'Delete this message?',
+  'Mesaj karşı taraftan da tamamen kaldırılır.': 'It will be removed for the other person too.',
+  'Karşı taraf yerinde “Bu mesaj silindi” görür.': 'The other person will see “This message was deleted” in its place.',
+  'Mesaj silinemedi.': 'The message could not be deleted.',
+  'Bu mesajı düzenleme süresi doldu (gönderildikten sonraki 15 dakika içinde düzenlenebilir).': 'The window to edit this message has closed (you can edit within 15 minutes of sending).',
+  'Mesaj düzenlenemedi.': 'The message could not be edited.',
+  'Bu mesaj silindi': 'This message was deleted',
+  'Bu mesajı sildin': 'You deleted this message',
+  '🚫 Bu mesaj silindi': '🚫 This message was deleted',
+  'Düzenlemek veya silmek için basılı tut': 'Touch and hold to edit or delete',
+  'Mesajı düzenliyorsun': 'Editing message',
 };
