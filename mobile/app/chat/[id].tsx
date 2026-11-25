@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   AppState,
   FlatList,
   Image,
@@ -20,8 +21,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLightStatusBar } from '../../components/Band';
 import { amIBlockedBy, getBlockedStudents } from '../../lib/blocks';
 import { useAuth } from '../../lib/auth';
+import { confirmAsync } from '../../lib/dialogs';
 import {
   attachmentPreviewLabel,
+  canDeleteMessage,
+  canEditMessage,
+  deleteMessage,
+  editMessage,
   getMessages,
   hasBookingWithOtherParty,
   markMessagesRead,
@@ -77,6 +83,9 @@ export default function Chat() {
   const [canShareContact, setCanShareContact] = useState(false);
   // a teacher who blocked this student (teacher-blocks.js): no new messages
   const [blockedByTeacher, setBlockedByTeacher] = useState(false);
+  // the message being edited in the box below (long-press -> Düzenle)
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const isAdmin = !!profile?.is_admin;
   const listRef = useRef<FlatList<Message>>(null);
   useLightStatusBar();
 
@@ -118,7 +127,9 @@ export default function Chat() {
         setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
         if (message.senderId !== myId) markMessagesRead(id, myId);
       },
-      (message) => setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)))
+      (message) => setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m))),
+      // an admin's message removed for good
+      (messageId) => setMessages((prev) => prev.filter((m) => m.id !== messageId))
     );
 
     // the live connection drops while the app is in the background, and
@@ -212,9 +223,101 @@ export default function Chat() {
     if (messages.length) scrollToEnd();
   }, [messages.length, scrollToEnd]);
 
+  // long-press on your own message: edit (15 minutes; an admin any
+  // time) or delete
+  function openMessageActions(item: Message) {
+    const editable = canEditMessage(item, profile?.id, isAdmin);
+    const deletable = canDeleteMessage(item, profile?.id);
+    if (!editable && !deletable) return;
+    if (Platform.OS === 'web') {
+      if (deletable) handleDelete(item);
+      return;
+    }
+    Alert.alert(
+      t("Mesaj"),
+      undefined,
+      [
+        ...(editable ? [{ text: t("Düzenle"), onPress: () => startEdit(item) }] : []),
+        // the confirmation is a second alert: let this one close first
+        ...(deletable ? [{ text: t("Sil"), style: 'destructive' as const, onPress: () => setTimeout(() => handleDelete(item), 300) }] : []),
+        { text: t("Vazgeç"), style: 'cancel' as const },
+      ],
+      { cancelable: true }
+    );
+  }
+
+  function startEdit(item: Message) {
+    setWarning(null);
+    setEditingId(item.id);
+    setText(item.body);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setText('');
+  }
+
+  async function handleDelete(item: Message) {
+    const ok = await confirmAsync(
+      t("Bu mesaj silinsin mi?"),
+      isAdmin
+        ? t("Mesaj karşı taraftan da tamamen kaldırılır.")
+        : t("Karşı taraf yerinde “Bu mesaj silindi” görür."),
+      t("Sil"),
+      true
+    );
+    if (!ok) return;
+    const result = await deleteMessage(item.id);
+    if (!result) {
+      setWarning(t("Mesaj silinemedi."));
+      return;
+    }
+    if (editingId === item.id) cancelEdit();
+    if (result === 'removed') {
+      const rest = messages.filter((m) => m.id !== item.id);
+      setMessages(rest);
+      // it was the only message: the conversation is gone too
+      if (!rest.length) goBack();
+      return;
+    }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === item.id ? { ...m, body: '', attachmentUrl: null, attachmentType: null, deletedAt: new Date().toISOString() } : m
+      )
+    );
+  }
+
+  async function saveEdit(messageId: string, body: string) {
+    if (!canShareContact && messageViolatesContactPolicy(body)) {
+      setWarning(t("Bu mesaj gönderilemedi: platform dışı iletişim bilgisi paylaşımı henüz yasak."));
+      return;
+    }
+    setSending(true);
+    const result = await editMessage(messageId, body);
+    setSending(false);
+    if (result && typeof result === 'object') {
+      setMessages((prev) => prev.map((m) => (m.id === result.id ? result : m)));
+      cancelEdit();
+      setWarning(null);
+      return;
+    }
+    if (result === 'expired') {
+      cancelEdit();
+      setWarning(t("Bu mesajı düzenleme süresi doldu (gönderildikten sonraki 15 dakika içinde düzenlenebilir)."));
+      return;
+    }
+    if (result === 'deleted') cancelEdit();
+    setWarning(t("Mesaj düzenlenemedi."));
+  }
+
   async function handleSend() {
     const body = text.trim();
     if (!body || !profile || sending || blockedByTeacher) return;
+
+    if (editingId) {
+      await saveEdit(editingId, body);
+      return;
+    }
 
     if (!canShareContact && messageViolatesContactPolicy(body)) {
       setWarning(
@@ -288,9 +391,28 @@ export default function Chat() {
             onContentSizeChange={scrollToEnd}
             renderItem={({ item }) => {
               const isMine = item.senderId === profile?.id;
+              if (item.deletedAt) {
+                return (
+                  <View style={[styles.row, isMine && styles.rowMine]}>
+                    <View style={[styles.bubble, styles.bubbleDeleted]}>
+                      <Text style={styles.deletedText}>
+                        🚫 {isMine ? t("Bu mesajı sildin") : t("Bu mesaj silindi")}
+                      </Text>
+                      <Text style={styles.time}>{formatMessageTime(item.createdAt)}</Text>
+                    </View>
+                  </View>
+                );
+              }
+              const hasActions = canEditMessage(item, profile?.id, isAdmin) || canDeleteMessage(item, profile?.id);
               return (
                 <View style={[styles.row, isMine && styles.rowMine]}>
-                  <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                  <Pressable
+                    onLongPress={hasActions ? () => openMessageActions(item) : undefined}
+                    delayLongPress={350}
+                    disabled={!hasActions}
+                    accessibilityHint={hasActions ? t("Düzenlemek veya silmek için basılı tut") : undefined}
+                    style={({ pressed }) => [styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs, pressed && hasActions && { opacity: 0.8 }, editingId === item.id && styles.bubbleEditing]}
+                  >
                     {/* a photo / video / voice message sent from the website:
                         the photo shows here, the others open in the browser */}
                     {item.attachmentUrl && item.attachmentType === 'image' && (
@@ -313,7 +435,7 @@ export default function Chat() {
                       {formatMessageTime(item.createdAt)}
                       {item.editedAt ? ` ${t("(düzenlendi)")}` : ''}
                     </Text>
-                  </View>
+                  </Pressable>
                 </View>
               );
             }}
@@ -324,6 +446,15 @@ export default function Chat() {
         )}
 
         {warning && <Text style={styles.warning}>{warning}</Text>}
+
+        {editingId && (
+          <View style={styles.editBar}>
+            <Text style={styles.editBarText}>{t("Mesajı düzenliyorsun")}</Text>
+            <Pressable onPress={cancelEdit} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.editBarCancel}>{t("Vazgeç")}</Text>
+            </Pressable>
+          </View>
+        )}
 
         <View style={[styles.inputRow, { paddingBottom: keyboardOpen ? 10 : Math.max(14, insets.bottom + 6) }]}>
           <TextInput
@@ -340,7 +471,7 @@ export default function Chat() {
             disabled={!text.trim() || sending || blockedByTeacher}
             style={[styles.sendBtn, (!text.trim() || sending || blockedByTeacher) && styles.sendBtnDisabled]}
           >
-            <Text style={styles.sendBtnText}>{t("Gönder")}</Text>
+            <Text style={styles.sendBtnText}>{editingId ? t("Kaydet") : t("Gönder")}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -429,6 +560,43 @@ const styles = StyleSheet.create({
   },
   bubbleTextMine: {
     color: colors.onRed,
+  },
+  // deleted by its sender: an outline where the bubble was
+  bubbleDeleted: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.border,
+  },
+  deletedText: {
+    fontFamily: fonts.body,
+    fontStyle: 'italic',
+    fontSize: 13.5,
+    color: colors.muted,
+  },
+  bubbleEditing: {
+    borderWidth: 2,
+    borderColor: colors.goldDot,
+  },
+  editBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: colors.goldPale,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+  },
+  editBarText: {
+    fontFamily: fonts.bodySemibold,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  editBarCancel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.goldText,
   },
   attachmentImage: {
     width: 200,

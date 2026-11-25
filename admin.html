@@ -1486,6 +1486,20 @@
       font-weight: 700;
     }
 
+    /* migration_132.sql: deleted by its sender - the text is shown as it was */
+    .admin-msg-bubble.deleted {
+      border-style: dashed;
+      border-color: #b3261e;
+    }
+
+    .admin-msg-deleted-tag {
+      display: inline-block;
+      margin-right: 8px;
+      color: #b3261e;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
     .admin-msg-body {
       font-size: 13.5px;
       line-height: 1.6;
@@ -3059,7 +3073,7 @@
 
   </div>
 
-  <script src="i18n.js?v=48"></script>
+  <script src="i18n.js?v=49"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
   <script src="auth.js?v=16"></script>
@@ -3069,7 +3083,7 @@
   <script src="disputes.js?v=4"></script>
   <script src="attendance.js?v=9"></script>
   <script src="support-tickets.js?v=1"></script>
-  <script src="messages.js?v=5"></script>
+  <script src="messages.js?v=6"></script>
   <script src="site-settings.js?v=5"></script>
   <script>
 
@@ -3833,7 +3847,7 @@
       // asked for by this conversation's edited messages - reading the
       // whole table got only its oldest 1000 rows, and a newer
       // conversation's earlier versions never showed
-      const editedIds = messages.filter(m => m.edited_at).map(m => m.id);
+      const editedIds = messages.filter(m => m.edited_at || m.deleted_at).map(m => m.id);
       const historyParts = await armusAdminInChunks(editedIds, ids => armusSupabase
         .from("message_edit_history").select("*").in("message_id", ids)
         .order("edited_at", { ascending: true }).limit(ARMUS_ADMIN_PAGE_SIZE));
@@ -3857,10 +3871,17 @@
         <div class="admin-msg-thread">
           ${messages.map(m => {
             const senderLabel = m.sender_id === conversation.student_id ? studentLabel : teacherLabel;
-            const history = historyByMessage.get(m.id) || [];
+            const allHistory = historyByMessage.get(m.id) || [];
+            // migration_132.sql: a deleted message's own text lives in its
+            // 'delete' history row; the 'edit' rows are its earlier versions
+            const deletion = allHistory.find(h => h.kind === "delete");
+            const history = allHistory.filter(h => h.kind !== "delete");
             return `
-              <div class="admin-msg-bubble">
-                ${renderAdminMsgVersion(senderLabel, timeLabel(m.created_at), m.body, m.attachment_type)}
+              <div class="admin-msg-bubble${m.deleted_at ? " deleted" : ""}">
+                ${deletion
+                  ? renderAdminMsgVersion(senderLabel, timeLabel(m.created_at), deletion.body, deletion.attachment_type)
+                  : renderAdminMsgVersion(senderLabel, timeLabel(m.created_at), m.body, m.attachment_type)}
+                ${m.deleted_at ? `<span class="admin-msg-deleted-tag">🚫 ${armusT("admin.messageDeleted", "gönderen sildi")} · ${timeLabel(m.deleted_at)}</span>` : ""}
                 ${m.edited_at ? `<span class="admin-msg-edited-tag">${armusT("admin.messageEdited", "düzenlendi")}</span>` : ""}
                 ${history.length ? `
                   <details class="admin-msg-history">
@@ -5571,7 +5592,10 @@
         const reporterLabel = reporter ? armusEscapeHtml(reporter.name) : armusEscapeHtml(r.reporter_id);
         const reportedLabel = reported ? armusEscapeHtml(reported.name) : armusEscapeHtml(r.reported_user_id);
         const dateLabel = new Date(r.created_at).toLocaleDateString(lang);
-        const messageBody = (r.message && r.message.body) || armusT("admin.messageReportAttachmentOnly", "(sadece ek dosya)");
+        const deletedOriginal = r.message && r.message.deleted_at ? r.message.deleted_original : null;
+        const messageBody = r.message && r.message.deleted_at
+          ? `🚫 ${armusT("admin.messageDeleted", "gönderen sildi")}: ${(deletedOriginal && deletedOriginal.body) || armusT("admin.messageReportAttachmentOnly", "(sadece ek dosya)")}`
+          : (r.message && r.message.body) || armusT("admin.messageReportAttachmentOnly", "(sadece ek dosya)");
 
         const row = document.createElement("tr");
         row.innerHTML = `

@@ -549,6 +549,95 @@
       color: var(--armus-gold-text);
     }
 
+    /* migration_132.sql: deleting your own message */
+    .msg-delete-btn {
+      border: none;
+      background: transparent;
+      color: var(--armus-muted);
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .msg-delete-btn:hover {
+      color: #b3261e;
+    }
+
+    .msg-edit-btn:focus-visible,
+    .msg-delete-btn:focus-visible {
+      outline: 2px solid var(--armus-gold-2);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    .delete-confirm-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: 4px 0 10px;
+      font-size: 12.5px;
+      color: var(--armus-ink);
+    }
+
+    .delete-confirm-wrap .delete-confirm-text {
+      flex-basis: 100%;
+      text-align: right;
+      color: var(--armus-muted);
+    }
+
+    .delete-confirm-wrap button {
+      border: 1px solid var(--armus-border);
+      border-radius: 10px;
+      padding: 6px 14px;
+      background: var(--armus-panel);
+      color: var(--armus-ink);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .delete-confirm-wrap button.danger {
+      border-color: #b3261e;
+      background: #b3261e;
+      color: #fff;
+    }
+
+    .msg-bubble.deleted,
+    .msg-row.mine .msg-bubble.deleted {
+      background: transparent;
+      border: 1px dashed var(--armus-border);
+      color: var(--armus-muted);
+      font-style: italic;
+    }
+
+    .msg-deleted-original {
+      display: block;
+      margin-top: 8px;
+      padding: 7px 9px;
+      border-radius: 10px;
+      background: rgba(179, 38, 30, .07);
+      color: var(--armus-ink);
+      font-style: normal;
+      white-space: pre-wrap;
+    }
+
+    .msg-deleted-original b {
+      display: block;
+      font-size: 10.5px;
+      letter-spacing: .3px;
+      color: #b3261e;
+      margin-bottom: 2px;
+    }
+
+    .msg-deleted-original a {
+      color: var(--armus-gold-text);
+    }
+
     .edit-form-wrap {
       display: flex;
       gap: 8px;
@@ -1034,7 +1123,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=48"></script>
+  <script src="i18n.js?v=49"></script>
   <script src="teachers-data.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.min.js"></script>
   <script src="supabase-config.js?v=4"></script>
@@ -1043,7 +1132,7 @@
   <script src="bookings.js?v=12"></script>
   <script src="reviews.js?v=5"></script>
   <script src="marketplace.js?v=6"></script>
-  <script src="messages.js?v=5"></script>
+  <script src="messages.js?v=6"></script>
   <script src="teacher-blocks.js?v=2"></script>
   <script>
 
@@ -1277,9 +1366,18 @@
             armusMarkMessagesRead(conversationId, currentSession.id);
           }
         },
-        message => {
+        async message => {
           if (activeConversationId !== conversationId) return;
+          if (message.deleted_at && currentSession.is_admin && !deletedOriginals[message.id]) {
+            Object.assign(deletedOriginals, await armusAdminGetDeletedOriginals([message.id]));
+            if (activeConversationId !== conversationId) return;
+          }
           updateMessageInPlace(message);
+          if (message.deleted_at) refreshConvoList(conversationId);
+        },
+        messageId => {
+          if (activeConversationId !== conversationId) return;
+          if (messagesById[messageId]) removeMessageRow(messageId);
         }
       );
 
@@ -1336,6 +1434,9 @@
     // so the report button correctly stays hidden across a reload too,
     // not just for the rest of this one session.
     let reportedMessageIds = new Set();
+    // admins only: what each deleted message in the open thread said
+    // (message_edit_history, migration_132.sql), keyed by message id
+    let deletedOriginals = {};
 
     function escapeHtml(str) {
       const div = document.createElement("div");
@@ -1351,6 +1452,7 @@
     }
 
     const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+    const DELETE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>';
     const REPORT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="3"></line></svg>';
 
     // Promise-based, same pattern as dashboard.html's own block-reason
@@ -1530,12 +1632,19 @@
       });
     }
 
-    const EDIT_WINDOW_MS = 2 * 60 * 1000;
+    // migration_132.sql: 15 minutes (was 2); an admin's own messages any time
+    const EDIT_WINDOW_MS = 15 * 60 * 1000;
 
     function canEditMessage(message) {
       return message.sender_id === currentSession.id
         && Boolean(message.body)
-        && (Date.now() - new Date(message.created_at).getTime()) < EDIT_WINDOW_MS;
+        && !message.deleted_at
+        && (Boolean(currentSession.is_admin) || (Date.now() - new Date(message.created_at).getTime()) < EDIT_WINDOW_MS);
+    }
+
+    // your own messages, any time (delete_message, migration_132.sql)
+    function canDeleteMessage(message) {
+      return message.sender_id === currentSession.id && !message.deleted_at;
     }
 
     // canEditMessage() above is only ever checked once, at the moment a
@@ -1556,7 +1665,27 @@
       });
     }, 10000);
 
+    function buildDeletedContent(message) {
+
+      const isMine = message.sender_id === currentSession.id;
+      let html = `<span class="msg-deleted-label">🚫 ${isMine
+        ? armusT("messages.deletedByMe", "Bu mesajı sildin")
+        : armusT("messages.deleted", "Bu mesaj silindi")}</span>`;
+
+      // admins: what it said, for looking into complaints
+      const original = deletedOriginals[message.id];
+      if (original) {
+        const url = armusSafeUrl(original.attachment_url);
+        html += `<span class="msg-deleted-original"><b>${armusT("messages.deletedOriginal", "Silinen içerik · yalnızca yöneticiler görür")}</b>${escapeHtml(original.body || "")}${url ? `${original.body ? "<br>" : ""}<a href="${url}" target="_blank" rel="noopener">${escapeHtml(attachmentPreviewLabel(original.attachment_type))}</a>` : ""}</span>`;
+      }
+
+      html += `<span class="msg-time">${formatTime(message.created_at)}</span>`;
+      return html;
+    }
+
     function buildBubbleContent(message) {
+
+      if (message.deleted_at) return buildDeletedContent(message);
 
       let html = "";
 
@@ -1610,13 +1739,111 @@
         wrap.remove();
 
         if (result === "expired") {
-          showChatWarning(armusT("messages.editExpired", "Bu mesajı düzenleme süresi doldu (gönderildikten sonraki 2 dakika içinde düzenlenebilir)."));
+          showChatWarning(armusT("messages.editExpired15", "Bu mesajı düzenleme süresi doldu (gönderildikten sonraki 15 dakika içinde düzenlenebilir)."));
         } else if (result === "denied" || result === false) {
           showChatWarning(armusT("messages.editDenied", "Mesaj düzenlenemedi."));
         } else {
           updateMessageInPlace(result);
         }
       });
+    }
+
+    function openDeleteConfirm(message, row) {
+
+      const existing = row.nextElementSibling;
+      if (existing && existing.classList.contains("delete-confirm-wrap")) {
+        existing.remove();
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.className = "delete-confirm-wrap";
+      wrap.innerHTML = `
+        <span class="delete-confirm-text">${currentSession.is_admin
+          ? armusT("messages.deleteConfirmAdmin", "Bu mesaj silinsin mi? Karşı taraftan da tamamen kaldırılır.")
+          : armusT("messages.deleteConfirm", "Bu mesaj silinsin mi? Karşı taraf yerinde “Bu mesaj silindi” görür.")}</span>
+        <button type="button" class="cancel">${armusT("messages.cancel", "Vazgeç")}</button>
+        <button type="button" class="danger">${armusT("messages.delete", "Sil")}</button>
+      `;
+      row.insertAdjacentElement("afterend", wrap);
+      wrap.querySelector(".danger").focus();
+
+      wrap.querySelector(".cancel").addEventListener("click", () => wrap.remove());
+      wrap.querySelector(".danger").addEventListener("click", async () => {
+
+        wrap.querySelectorAll("button").forEach(b => { b.disabled = true; });
+        const result = await armusDeleteMessage(message.id);
+        wrap.remove();
+
+        if (result === "removed") {
+          removeMessageRow(message.id);
+        } else if (result === "deleted") {
+          updateMessageInPlace({ ...message, body: "", attachment_url: null, attachment_type: null, deleted_at: new Date().toISOString() });
+          refreshConvoList(activeConversationId);
+        } else {
+          showChatWarning(armusT("messages.deleteFailed", "Mesaj silinemedi."));
+        }
+      });
+    }
+
+    // an admin's message removed for good (delete_message, or its realtime
+    // DELETE event on the other side)
+    function removeMessageRow(messageId) {
+
+      const row = document.querySelector(`.msg-row[data-msg-id="${messageId}"]`);
+      if (!row) return;
+      const next = row.nextElementSibling;
+      if (next && (next.classList.contains("edit-form-wrap") || next.classList.contains("delete-confirm-wrap"))) next.remove();
+      row.remove();
+      delete messagesById[messageId];
+
+      const body = document.getElementById("threadBody");
+      if (!body.querySelector(".msg-row")) {
+        body.innerHTML = `<div class="thread-placeholder">${armusT("messages.emptyThread", "Henüz mesaj yok, ilk mesajı sen gönder.")}</div>`;
+      }
+
+      // the conversation itself is gone once its last message is
+      // (delete_message) - leave it instead of writing into nothing
+      refreshConvoList(activeConversationId).then(conversations => {
+        if (activeConversationId && !(conversations || []).some(c => c.id === activeConversationId)) {
+          if (currentChannel) armusSupabase.removeChannel(currentChannel);
+          currentChannel = null;
+          activeConversationId = null;
+          document.getElementById("threadHeader").style.display = "none";
+          document.getElementById("threadForm").style.display = "none";
+          body.innerHTML = `<div class="thread-placeholder">${armusT("messages.threadPlaceholder", "Yazışmalarını görmek için soldan bir kişi seç.")}</div>`;
+        }
+      });
+    }
+
+    // the bubble and its buttons (edit, delete, report) - shared by a new
+    // row and an updated one
+    function fillMessageRow(row, message) {
+
+      const isMine = message.sender_id === currentSession.id;
+      row.innerHTML = `
+        <div class="msg-bubble${message.deleted_at ? " deleted" : ""}">
+          ${buildBubbleContent(message)}
+        </div>
+        ${canEditMessage(message) ? `<button type="button" class="msg-edit-btn" title="${armusT("messages.editTitle", "Düzenle")}" aria-label="${armusT("messages.editTitle", "Düzenle")}">${EDIT_ICON_SVG}</button>` : ""}
+        ${canDeleteMessage(message) ? `<button type="button" class="msg-delete-btn" title="${armusT("messages.deleteTitle", "Sil")}" aria-label="${armusT("messages.deleteTitle", "Sil")}">${DELETE_ICON_SVG}</button>` : ""}
+        ${!isMine ? (
+          reportedMessageIds.has(message.id)
+            ? `<span class="msg-reported-tag">${armusT("messages.reportedTag", "Bildirildi")}</span>`
+            : `<button type="button" class="msg-report-btn" title="${armusT("messages.reportTitle", "Mesajı bildir")}">${REPORT_ICON_SVG}</button>`
+        ) : ""}
+      `;
+
+      const editBtn = row.querySelector(".msg-edit-btn");
+      if (editBtn) editBtn.addEventListener("click", () => openEditForm(message, row));
+
+      const deleteBtn = row.querySelector(".msg-delete-btn");
+      if (deleteBtn) deleteBtn.addEventListener("click", () => openDeleteConfirm(message, row));
+
+      const reportBtn = row.querySelector(".msg-report-btn");
+      if (reportBtn) reportBtn.addEventListener("click", () => reportMessageFlow(message, row));
+
+      wireVoicePlayers(row);
     }
 
     function appendMessage(message) {
@@ -1638,34 +1865,15 @@
       const row = document.createElement("div");
       row.className = "msg-row" + (isMine ? " mine" : "");
       row.dataset.msgId = message.id;
-      row.innerHTML = `
-        <div class="msg-bubble">
-          ${buildBubbleContent(message)}
-        </div>
-        ${canEditMessage(message) ? `<button type="button" class="msg-edit-btn" title="${armusT("messages.editTitle", "Düzenle")}">${EDIT_ICON_SVG}</button>` : ""}
-        ${!isMine ? (
-          reportedMessageIds.has(message.id)
-            ? `<span class="msg-reported-tag">${armusT("messages.reportedTag", "Bildirildi")}</span>`
-            : `<button type="button" class="msg-report-btn" title="${armusT("messages.reportTitle", "Mesajı bildir")}">${REPORT_ICON_SVG}</button>`
-        ) : ""}
-      `;
-
-      if (canEditMessage(message)) {
-        row.querySelector(".msg-edit-btn").addEventListener("click", () => openEditForm(message, row));
-      }
-
-      const reportBtn = row.querySelector(".msg-report-btn");
-      if (reportBtn) reportBtn.addEventListener("click", () => reportMessageFlow(message, row));
-
-      wireVoicePlayers(row);
+      fillMessageRow(row, message);
 
       body.appendChild(row);
       body.scrollTop = body.scrollHeight;
     }
 
-    // Applies an edited/updated message (from a successful edit, or a
-    // realtime UPDATE event) to an already-rendered row in place,
-    // instead of re-appending it as a new bubble.
+    // Applies an edited/updated message (from a successful edit, a
+    // deletion, or a realtime UPDATE event) to an already-rendered row in
+    // place, instead of re-appending it as a new bubble.
     function updateMessageInPlace(message) {
 
       messagesById[message.id] = message;
@@ -1673,27 +1881,12 @@
       const row = document.querySelector(`.msg-row[data-msg-id="${message.id}"]`);
       if (!row) return;
 
-      const isMine = message.sender_id === currentSession.id;
-      row.innerHTML = `
-        <div class="msg-bubble">
-          ${buildBubbleContent(message)}
-        </div>
-        ${canEditMessage(message) ? `<button type="button" class="msg-edit-btn" title="${armusT("messages.editTitle", "Düzenle")}">${EDIT_ICON_SVG}</button>` : ""}
-        ${!isMine ? (
-          reportedMessageIds.has(message.id)
-            ? `<span class="msg-reported-tag">${armusT("messages.reportedTag", "Bildirildi")}</span>`
-            : `<button type="button" class="msg-report-btn" title="${armusT("messages.reportTitle", "Mesajı bildir")}">${REPORT_ICON_SVG}</button>`
-        ) : ""}
-      `;
-
-      if (canEditMessage(message)) {
-        row.querySelector(".msg-edit-btn").addEventListener("click", () => openEditForm(message, row));
+      if (message.deleted_at) {
+        const next = row.nextElementSibling;
+        if (next && (next.classList.contains("edit-form-wrap") || next.classList.contains("delete-confirm-wrap"))) next.remove();
       }
 
-      const reportBtn = row.querySelector(".msg-report-btn");
-      if (reportBtn) reportBtn.addEventListener("click", () => reportMessageFlow(message, row));
-
-      wireVoicePlayers(row);
+      fillMessageRow(row, message);
     }
 
     async function loadThread(conversationId) {
@@ -1706,6 +1899,11 @@
       // the user may have opened another conversation while this one's
       // messages were loading - its thread has been cleared for that one
       // by now, and these don't belong in it
+      if (activeConversationId !== conversationId) return;
+
+      deletedOriginals = currentSession.is_admin
+        ? await armusAdminGetDeletedOriginals(messages.filter(m => m.deleted_at).map(m => m.id))
+        : {};
       if (activeConversationId !== conversationId) return;
 
       if (messages.length === 0) {
